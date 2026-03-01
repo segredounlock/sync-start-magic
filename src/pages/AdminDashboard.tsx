@@ -2287,9 +2287,9 @@ export default function AdminDashboard() {
                     <p className="text-xs text-muted-foreground mt-1">Mínimo 3 caracteres. Apenas letras, números e hífens.</p>
                     {storeSlug && storeSlug.length >= 3 && (
                       <div className="mt-2 glass-input rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer"
-                        onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/loja/${storeSlug}`); toast.success("Link copiado!"); }}>
+                        onClick={() => { navigator.clipboard.writeText(`https://recargasbrasill.com/loja/${storeSlug}`); toast.success("Link copiado!"); }}>
                         <Link2 className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-sm text-foreground font-mono truncate">{window.location.origin}/loja/{storeSlug}</span>
+                        <span className="text-sm text-foreground font-mono truncate">https://recargasbrasill.com/loja/{storeSlug}</span>
                         <Copy className="h-4 w-4 text-muted-foreground shrink-0 ml-auto" />
                       </div>
                     )}
