@@ -68,7 +68,7 @@ export default function RecargasTicker() {
 
   if (recargas.length === 0) {
     return (
-      <div className="fixed top-0 md:bottom-0 md:top-auto left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-b md:border-b-0 md:border-t border-border">
+      <div className="sticky top-[57px] md:top-0 left-0 right-0 z-10 bg-card/90 backdrop-blur-md border-b border-border">
         <div className="flex items-center h-8">
           <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full">
             <Smartphone className="h-3.5 w-3.5 text-primary" />
@@ -96,7 +96,7 @@ export default function RecargasTicker() {
   const shouldAnimate = recargas.length >= 5;
 
   return (
-    <div className="fixed top-0 md:bottom-0 md:top-auto left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-b md:border-b-0 md:border-t border-border overflow-hidden">
+    <div className="sticky top-[57px] md:top-0 left-0 right-0 z-10 bg-card/90 backdrop-blur-md border-b border-border overflow-hidden">
       <div className="flex items-center h-8">
         <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full">
           <Smartphone className="h-3.5 w-3.5 text-primary" />

@@ -698,7 +698,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   return (
     <div className="min-h-screen md:flex pb-8">
-      <RecargasTicker />
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
         <>
@@ -883,6 +882,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <AvatarDisplay size="w-9 h-9" textSize="text-xs" />
           </div>
         </header>
+        <RecargasTicker />
 
         <main className="max-w-5xl mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-5">
           {/* Stats */}
