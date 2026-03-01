@@ -1,34 +1,17 @@
-## Plano: Criar role "usuario" para usuários sem função
 
-### Contexto
 
-Atualmente, 3 usuários cadastrados não possuem role atribuída. O plano é criar o role `usuario` que funciona como um papel padrão — sem permissões especiais, mas com uma identificação clara no sistema.
+## Plano: Corrigir flash do banner promocional
 
-### Alterações
+### Problema
 
-**1. Banco de dados — Atribuir role "usuario" aos 3 usuários existentes sem role**
+O estado inicial do `bannerConfig` em `RevendedorPainel.tsx` define `enabled: true` por padrão. Quando a página carrega, o banner aparece imediatamente. Logo depois, o `useEffect` busca a configuração real do banco e, se o banner estiver desativado, atualiza para `enabled: false` — causando o efeito de "aparece e some".
 
-- INSERT na tabela `user_roles` para os 3 usuários órfãos com `role = 'usuario'`
+### Correção
 
-**2. Edge function `admin-create-user` — Aceitar "usuario" como role válido**
+**Arquivo: `src/pages/RevendedorPainel.tsx`**
 
-- Atualizar a validação de role para incluir `"usuario"` como opção válida (além de admin e revendedor)
-- &nbsp;
+1. Alterar o estado inicial de `bannerConfig.enabled` de `true` para `false` (linha 138)
+2. Assim o banner só aparece **depois** que o banco confirmar que está ativado — eliminando o flash
 
-**4. `src/hooks/useAuth.tsx` — Incluir "usuario" no tipo AppRole**
+Mudança de 1 linha: `{ enabled: true, ...}` → `{ enabled: false, ...}`
 
-- Atualizar `type AppRole` para incluir `"usuario"`
-
-**5. `src/components/ProtectedRoute.tsx` — Nenhuma alteração necessária**
-
-- Já funciona com qualquer string de role via `allowedRoles`
-
-**6. Painel Admin (Principal) — Exibir "usuario" como opção ao criar/editar usuários**
-
-- Atualizar o formulário de criação de usuário para incluir "usuario" no dropdown de roles
-
-### Detalhes Técnicos
-
-- O tipo `AppRole` passa de `"admin" | "revendedor" | "cliente"` para `"admin" | "revendedor" | "cliente" | "usuario"`
-- A edge function `admin-create-user` aceita `role = "usuario"` no array de roles válidos
-- O `Auth.tsx` perde ~50 linhas de código do formulário de cadastro, ficando mais limpo e seguro
