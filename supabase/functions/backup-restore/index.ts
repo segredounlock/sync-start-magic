@@ -71,14 +71,47 @@ serve(async (req) => {
     const backupInfo = JSON.parse(await infoFile.async("string"));
     const results: { table: string; status: string; count: number; skipped?: number; error?: string }[] = [];
 
-    // Get existing auth user IDs to filter FK-dependent rows
-    const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    const validUserIds = new Set((authUsers?.users || []).map(u => u.id));
+    // Get existing auth user IDs to filter profiles rows (profiles.id -> auth users)
+    const { data: authUsersPage } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const validAuthUserIds = new Set((authUsersPage?.users || []).map(u => u.id));
 
-    // Tables that have user_id referencing auth.users
-    const userFkTables = new Set(["profiles", "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config", "transactions"]);
-    // profiles.id references auth.users.id (not user_id)
-    const profileIdTable = "profiles";
+    // Tables that have user_id referencing profiles.id
+    const profileFkTables = new Set([
+      "user_roles",
+      "saldos",
+      "recargas",
+      "reseller_pricing_rules",
+      "reseller_config",
+      "transactions",
+    ]);
+
+    const getExistingProfileIds = async () => {
+      const ids = new Set<string>();
+      const batchSize = 1000;
+      let from = 0;
+
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .range(from, from + batchSize - 1);
+
+        if (error) {
+          console.error("Error loading profile IDs:", error.message);
+          break;
+        }
+
+        const rows = data || [];
+        for (const row of rows as { id: string }[]) ids.add(row.id);
+
+        if (rows.length < batchSize) break;
+        from += batchSize;
+      }
+
+      return ids;
+    };
+
+    let validProfileIds = await getExistingProfileIds();
 
     // Restore order matters due to foreign keys
     const restoreOrder = [
@@ -117,11 +150,13 @@ serve(async (req) => {
 
         const originalCount = rows.length;
 
-        // Filter out rows with user_ids that don't exist in auth.users
-        if (table === profileIdTable) {
-          rows = rows.filter((row: any) => validUserIds.has(row.id));
-        } else if (userFkTables.has(table)) {
-          rows = rows.filter((row: any) => validUserIds.has(row.user_id));
+        // Filter out rows with invalid foreign-key references
+        if (table === "profiles") {
+          // profiles.id must exist in auth users
+          rows = rows.filter((row: any) => row?.id && validAuthUserIds.has(row.id));
+        } else if (profileFkTables.has(table)) {
+          // dependent tables user_id must exist in profiles.id
+          rows = rows.filter((row: any) => row?.user_id && validProfileIds.has(row.user_id));
         }
 
         const skipped = originalCount - rows.length;
@@ -139,6 +174,9 @@ serve(async (req) => {
               .upsert(row, { onConflict: "key" });
           }
           results.push({ table, status: "restored", count: rows.length, skipped });
+          if (table === "profiles") {
+            validProfileIds = await getExistingProfileIds();
+          }
           continue;
         }
 
@@ -150,6 +188,9 @@ serve(async (req) => {
               .upsert(row, { onConflict: "chat_id" });
           }
           results.push({ table, status: "restored", count: rows.length, skipped });
+          if (table === "profiles") {
+            validProfileIds = await getExistingProfileIds();
+          }
           continue;
         }
 
@@ -163,6 +204,9 @@ serve(async (req) => {
             if (!error) successCount++;
           }
           results.push({ table, status: "restored", count: successCount, skipped });
+          if (table === "profiles") {
+            validProfileIds = await getExistingProfileIds();
+          }
           continue;
         }
 
@@ -202,6 +246,10 @@ serve(async (req) => {
           skipped,
           error: lastError && totalRestored < rows.length ? `${rows.length - totalRestored} registros falharam: ${lastError}` : undefined
         });
+
+        if (table === "profiles") {
+          validProfileIds = await getExistingProfileIds();
+        }
       } catch (err: any) {
         console.error(`Error restoring ${table}:`, err.message);
         results.push({ table, status: "error", count: 0, error: err.message });
