@@ -771,7 +771,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <div className="glass-card rounded-lg p-3 flex items-center gap-3 rgb-border">
               <AvatarDisplay />
               <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground truncate uppercase">{userLabel}</p>
+                <p className="text-sm font-bold text-foreground truncate uppercase flex items-center gap-1.5">
+                  {userLabel}
+                  {role === "admin" && (
+                    <svg className="h-4 w-4 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2L14.09 8.26L21 9.27L16.18 13.14L17.64 20.02L12 16.77L6.36 20.02L7.82 13.14L3 9.27L9.91 8.26L12 2Z" />
+                      <path d="M9.5 12.5L11 14L14.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </svg>
+                  )}
+                </p>
                 <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
             </div>
@@ -1485,7 +1493,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
                   </label>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-lg text-foreground truncate uppercase">{userLabel}</p>
+                    <p className="font-bold text-lg text-foreground truncate uppercase flex items-center gap-1.5">
+                      {userLabel}
+                      {role === "admin" && (
+                        <svg className="h-5 w-5 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2L14.09 8.26L21 9.27L16.18 13.14L17.64 20.02L12 16.77L6.36 20.02L7.82 13.14L3 9.27L9.91 8.26L12 2Z" />
+                          <path d="M9.5 12.5L11 14L14.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                        </svg>
+                      )}
+                    </p>
                     <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
                     <span className="inline-block mt-1 px-2.5 py-0.5 rounded-md bg-primary/15 text-primary text-xs font-semibold capitalize">
                       {role || "Revendedor"}
