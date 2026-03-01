@@ -188,7 +188,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative hidden lg:flex items-center justify-center"
+            className="relative flex items-center justify-center"
           >
             {/* Mock Dashboard */}
             <div className="w-full max-w-[440px] glass rounded-3xl p-5 border border-border/50 relative overflow-hidden">
