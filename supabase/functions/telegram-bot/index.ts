@@ -208,6 +208,20 @@ async function clearSession(supabase: any, chatId: string) {
   supabase.from("telegram_sessions").delete().eq("chat_id", chatId).then(() => {});
 }
 
+// Register/update user in telegram_users table for broadcast counting
+async function ensureTelegramUser(supabase: any, telegramId: number, firstName?: string, username?: string) {
+  await supabase.from("telegram_users").upsert(
+    {
+      telegram_id: telegramId,
+      first_name: firstName || null,
+      username: username || null,
+      is_registered: true,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "telegram_id" }
+  );
+}
+
 // Fetch catalog from Recarga Express API
 async function fetchCatalog(supabase: any): Promise<any[]> {
   const { data: apiKeyRow } = await supabase
@@ -347,10 +361,11 @@ serve(async (req) => {
         const telegramUsername = message.from.username || "";
         const chatIdStr = String(chatId);
 
-        // Parallel: find user + session
+        // Parallel: find user + session + register telegram_user
         const [linkedUser, session] = await Promise.all([
           findUserByTelegram(supabase, telegramId),
           getSession(supabase, chatIdStr),
+          ensureTelegramUser(supabase, message.from.id, message.from.first_name, telegramUsername),
         ]);
 
           if (text === "/start" || text === "/menu") {
@@ -682,6 +697,9 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   const msgId = callback.message.message_id;
   const data = callback.data;
   const telegramId = String(callback.from.id);
+
+  // Register telegram user (fire-and-forget)
+  ensureTelegramUser(supabase, callback.from.id, callback.from.first_name, callback.from.username).catch(() => {});
 
   // Answer callback immediately (fire-and-forget) — except menu_saldo which sends its own popup
   if (data !== "menu_saldo") {
