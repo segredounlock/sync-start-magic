@@ -813,7 +813,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             {!isClientMode && (role === "admin" || role === "revendedor") && (
               <div className="pt-3 mt-3 border-t border-border space-y-1">
                 <div className="px-2 text-[10px] tracking-widest text-muted-foreground uppercase">Administração</div>
-                <a href="/admin" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+                <a href="/admin" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-primary hover:text-foreground hover:bg-muted/40 transition-colors">
                   <Shield className="h-4 w-4" /> <span>Painel Admin</span>
                 </a>
                 {role === "admin" && (
