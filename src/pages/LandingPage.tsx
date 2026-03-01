@@ -1,41 +1,111 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   Smartphone, Zap, Shield, Users, TrendingUp, CreditCard,
-  ArrowRight, Globe, Headphones, ChevronDown, Sparkles, Activity,
+  ArrowRight, Globe, Headphones, Sparkles, Activity,
 } from "lucide-react";
 
 const features = [
-  { icon: Zap, title: "Instantânea", desc: "Recarga processada em menos de 3 segundos. Sem filas, sem espera.", accent: "from-yellow-400 to-orange-500" },
-  { icon: Shield, title: "Blindada", desc: "Criptografia ponta-a-ponta. Seu dinheiro e dados 100% seguros.", accent: "from-emerald-400 to-cyan-500" },
-  { icon: TrendingUp, title: "Inteligente", desc: "Dashboard com métricas em tempo real. Tome decisões com dados.", accent: "from-violet-400 to-purple-500" },
-  { icon: CreditCard, title: "Flexível", desc: "PIX, MercadoPago, VirtualPay — todos integrados.", accent: "from-pink-400 to-rose-500" },
-  { icon: Users, title: "Escalável", desc: "Gerencie centenas de revendedores em uma única plataforma.", accent: "from-blue-400 to-indigo-500" },
-  { icon: Globe, title: "Universal", desc: "Funciona em qualquer dispositivo. Desktop, tablet ou celular.", accent: "from-teal-400 to-green-500" },
+  { icon: Zap, title: "Instantânea", desc: "Recarga processada em menos de 3 segundos.", accent: "from-yellow-400 to-orange-500" },
+  { icon: Shield, title: "Blindada", desc: "Criptografia ponta-a-ponta. 100% seguro.", accent: "from-emerald-400 to-cyan-500" },
+  { icon: TrendingUp, title: "Inteligente", desc: "Dashboard com métricas em tempo real.", accent: "from-violet-400 to-purple-500" },
+  { icon: CreditCard, title: "Flexível", desc: "PIX, MercadoPago e mais integrados.", accent: "from-pink-400 to-rose-500" },
+  { icon: Users, title: "Escalável", desc: "Gerencie centenas de revendedores.", accent: "from-blue-400 to-indigo-500" },
+  { icon: Globe, title: "Universal", desc: "Desktop, tablet ou celular.", accent: "from-teal-400 to-green-500" },
 ];
+
+// Floating particle component
+function FloatingParticles() {
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 3 + 1,
+    duration: Math.random() * 15 + 10,
+    delay: Math.random() * 5,
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full bg-primary/20"
+          style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
+          animate={{
+            y: [0, -40, 0],
+            opacity: [0, 0.6, 0],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Typed text effect
+function TypedText({ words }: { words: string[] }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % words.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [words.length]);
+
+  return (
+    <span className="inline-block min-w-[200px] sm:min-w-[280px]">
+      <motion.span
+        key={words[index]}
+        initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
+        transition={{ duration: 0.5 }}
+        className="bg-gradient-to-r from-primary via-emerald-400 to-primary bg-clip-text text-transparent"
+      >
+        {words[index]}
+      </motion.span>
+    </span>
+  );
+}
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))] overflow-x-hidden">
-      {/* Animated Grid Background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--primary)/0.03)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--primary)/0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--primary)/0.08),transparent_70%)]" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse,hsl(var(--accent)/0.05),transparent_70%)]" />
-      </div>
+    <div ref={containerRef} className="min-h-screen bg-[hsl(var(--background))] overflow-x-hidden">
+      {/* Immersive fullscreen background */}
+      <motion.div className="fixed inset-0 pointer-events-none z-0" style={{ y: bgY }}>
+        {/* Central glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(ellipse,hsl(var(--primary)/0.12),transparent_60%)]" />
+        {/* Corner accents */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--accent)/0.06),transparent_70%)]" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse,hsl(var(--primary)/0.06),transparent_70%)]" />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--primary)/0.02)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--primary)/0.02)_1px,transparent_1px)] bg-[size:80px_80px]" />
+        <FloatingParticles />
+      </motion.div>
 
-      {/* Header */}
+      {/* Floating Header */}
       <header className="fixed top-0 left-0 right-0 z-50">
-        <div className="mx-4 mt-4">
-          <div className="max-w-6xl mx-auto glass rounded-2xl px-6 py-3 flex items-center justify-between">
+        <div className="mx-3 sm:mx-6 mt-3">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto glass rounded-2xl px-5 py-2.5 flex items-center justify-between"
+          >
             <h1 className="font-display text-lg font-bold shimmer-letters tracking-tight">
               Recargas <span className="brasil-word">Brasil</span>
             </h1>
@@ -48,224 +118,231 @@ export default function LandingPage() {
                 Entrar
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <motion.section
-        ref={heroRef}
-        style={{ opacity: heroOpacity, scale: heroScale }}
-        className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-16 z-10"
-      >
-        {/* Floating badges */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 px-4 py-2 rounded-full glass text-xs font-semibold text-primary mb-8 tracking-wider uppercase"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Plataforma #1 de Recargas do Brasil
-        </motion.div>
+      {/* ===== HERO: Fullscreen Immersive ===== */}
+      <section className="relative min-h-screen flex items-center justify-center z-10">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Pulsing ring */}
+          <motion.div
+            className="w-[500px] h-[500px] sm:w-[700px] sm:h-[700px] rounded-full border border-primary/10"
+            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <motion.div
+            className="w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] rounded-full border border-primary/5"
+            animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.3, 0.1] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
 
-        {/* Main headline - dramatic typography */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center max-w-4xl"
-        >
-          <h2 className="font-display text-5xl sm:text-6xl lg:text-8xl font-bold text-foreground leading-[0.95] tracking-tight">
+        <div className="relative text-center px-6 max-w-5xl mx-auto">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, type: "spring" }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs font-bold text-primary tracking-[0.15em] uppercase mb-10"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Plataforma #1 de Recargas
+          </motion.div>
+
+          {/* Headline */}
+          <motion.h2
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="font-display text-[3rem] sm:text-[4.5rem] lg:text-[6.5rem] font-bold text-foreground leading-[0.9] tracking-tighter"
+          >
             Recargas
             <br />
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-primary via-emerald-400 to-primary bg-clip-text text-transparent">
-                sem limites
-              </span>
-              <motion.div
-                className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-              />
-            </span>
-          </h2>
-        </motion.div>
+            <TypedText words={["sem limites", "instantâneas", "seguras", "inteligentes"]} />
+          </motion.h2>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto text-center mt-8 leading-relaxed"
-        >
-          Sistema completo para quem vende recargas.
-          <br className="hidden sm:block" />
-          Rápido, seguro e sem complicação.
-        </motion.p>
-
-        {/* CTA buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="flex flex-col sm:flex-row items-center gap-4 mt-10"
-        >
-          <button
-            onClick={() => navigate("/login")}
-            className="group relative px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200"
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mt-8 leading-relaxed"
           >
-            <span className="relative z-10 flex items-center gap-2">
-              Começar Agora
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-400 to-primary bg-[length:200%_100%] animate-gradient-x opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
-          <button
-            onClick={() => navigate("/recarga")}
-            className="px-8 py-4 rounded-2xl glass text-foreground font-semibold text-base hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2"
-          >
-            <Smartphone className="h-5 w-5" /> Fazer Recarga
-          </button>
-        </motion.div>
+            Sistema completo para quem vende recargas.
+            <br className="hidden sm:block" />
+            Rápido, seguro e sem complicação.
+          </motion.p>
 
-        {/* Stats row - floating */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.6 }}
-          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-3xl"
-        >
-          {[
-            { value: "99.9%", label: "Uptime", icon: Activity },
-            { value: "<3s", label: "Velocidade", icon: Zap },
-            { value: "24/7", label: "Online", icon: Globe },
-            { value: "100%", label: "Digital", icon: Sparkles },
-          ].map((s, i) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 + i * 0.1 }}
-              className="glass-card rounded-2xl p-4 text-center group hover:border-primary/30 transition-all duration-300"
-            >
-              <s.icon className="h-4 w-4 text-primary mx-auto mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
-              <p className="text-2xl sm:text-3xl font-bold text-primary font-display">{s.value}</p>
-              <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{s.label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
+          {/* CTAs */}
           <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10"
           >
-            <ChevronDown className="h-6 w-6 text-muted-foreground/50" />
-          </motion.div>
-        </motion.div>
-      </motion.section>
-
-      {/* Features Section - Bento Grid */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 pb-32">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          className="text-center mb-16"
-        >
-          <span className="text-xs font-semibold text-primary uppercase tracking-[0.2em] mb-3 block">
-            Funcionalidades
-          </span>
-          <h3 className="font-display text-3xl sm:text-5xl font-bold text-foreground">
-            Feito para quem{" "}
-            <span className="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
-              vende de verdade
-            </span>
-          </h3>
-        </motion.div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: i * 0.08, duration: 0.5 }}
-              className={`group relative glass-card rounded-2xl p-6 overflow-hidden hover:scale-[1.02] transition-all duration-300 cursor-default ${
-                i === 0 ? "sm:col-span-2 lg:col-span-1" : ""
-              }`}
+            <button
+              onClick={() => navigate("/login")}
+              className="group relative px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200 glow-primary"
             >
-              {/* Gradient accent on hover */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${f.accent} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-500`} />
-              
-              <div className="relative z-10">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${f.accent} flex items-center justify-center mb-4 shadow-lg`}>
-                  <f.icon className="h-5 w-5 text-white" />
-                </div>
-                <h4 className="font-display text-xl font-bold text-foreground mb-2">{f.title}</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-              </div>
+              <span className="relative z-10 flex items-center gap-2">
+                Começar Agora
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-400 to-primary bg-[length:200%_100%] animate-gradient-x opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+            <button
+              onClick={() => navigate("/recarga")}
+              className="px-8 py-4 rounded-2xl glass text-foreground font-semibold text-base hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2"
+            >
+              <Smartphone className="h-5 w-5" /> Fazer Recarga
+            </button>
+          </motion.div>
+
+          {/* Scroll hint */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5 }}
+            className="mt-20"
+          >
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+              className="w-6 h-10 rounded-full border-2 border-muted-foreground/20 mx-auto flex justify-center pt-2"
+            >
+              <motion.div
+                animate={{ opacity: [1, 0], y: [0, 12] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                className="w-1.5 h-1.5 rounded-full bg-primary"
+              />
             </motion.div>
-          ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Social proof / marquee section */}
-      <section className="relative z-10 pb-32">
+      {/* ===== Stats: Horizontal Strip ===== */}
+      <section className="relative z-10 py-10">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="glass-card rounded-3xl p-8 sm:p-12 relative overflow-hidden"
+            className="glass rounded-3xl p-1"
           >
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(ellipse,hsl(var(--primary)/0.1),transparent_70%)]" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[radial-gradient(ellipse,hsl(var(--accent)/0.08),transparent_70%)]" />
-
-            <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-              {/* Left: Big number */}
-              <div className="flex-shrink-0 text-center lg:text-left">
-                <motion.p
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+            <div className="grid grid-cols-2 md:grid-cols-4">
+              {[
+                { value: "99.9%", label: "Uptime", icon: Activity },
+                { value: "<3s", label: "Velocidade", icon: Zap },
+                { value: "24/7", label: "Online", icon: Globe },
+                { value: "100%", label: "Digital", icon: Sparkles },
+              ].map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ type: "spring", damping: 10 }}
-                  className="font-display text-7xl sm:text-8xl font-bold bg-gradient-to-b from-primary to-primary/50 bg-clip-text text-transparent"
+                  transition={{ delay: i * 0.1 }}
+                  className="p-6 text-center group"
                 >
-                  10k+
-                </motion.p>
-                <p className="text-sm text-muted-foreground mt-1">recargas processadas</p>
-              </div>
+                  <s.icon className="h-5 w-5 text-primary mx-auto mb-3 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  <p className="text-3xl sm:text-4xl font-bold text-primary font-display">{s.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1.5 uppercase tracking-[0.2em]">{s.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-              {/* Right: text + CTA */}
-              <div className="flex-1 text-center lg:text-left">
-                <h3 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-4">
-                  Junte-se a quem já está lucrando
-                </h3>
-                <p className="text-muted-foreground mb-6 max-w-md">
-                  Revendedores em todo o Brasil confiam na nossa plataforma para processar recargas todos os dias. Comece agora, sem taxas ocultas.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start">
-                  <button
-                    onClick={() => navigate("/login")}
-                    className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2"
-                  >
-                    Criar Conta Grátis <ArrowRight className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    Ativação imediata
-                  </span>
+      {/* ===== Features: Cinematic Scroll ===== */}
+      <section className="relative z-10 py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            className="text-center mb-20"
+          >
+            <span className="text-xs font-semibold text-primary uppercase tracking-[0.25em] mb-4 block">
+              Funcionalidades
+            </span>
+            <h3 className="font-display text-3xl sm:text-5xl font-bold text-foreground leading-tight">
+              Tudo que você precisa.
+              <br />
+              <span className="text-muted-foreground">Nada que você não precisa.</span>
+            </h3>
+          </motion.div>
+
+          <div className="space-y-6">
+            {features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -60 : 60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="glass-card rounded-2xl p-6 sm:p-8 flex items-center gap-6 group hover:scale-[1.01] transition-all duration-300"
+              >
+                <div className={`flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br ${f.accent} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                  <f.icon className="h-6 w-6 text-white" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-display text-xl font-bold text-foreground">{f.title}</h4>
+                  <p className="text-sm text-muted-foreground mt-1">{f.desc}</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0 hidden sm:block" />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA Section ===== */}
+      <section className="relative z-10 pb-32">
+        <div className="max-w-4xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="relative rounded-3xl overflow-hidden"
+          >
+            {/* Gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-accent/10" />
+            <div className="absolute inset-0 glass" />
+
+            <div className="relative p-10 sm:p-16 text-center">
+              <motion.p
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", damping: 10 }}
+                className="font-display text-7xl sm:text-8xl font-bold bg-gradient-to-b from-primary to-primary/40 bg-clip-text text-transparent mb-4"
+              >
+                10k+
+              </motion.p>
+              <p className="text-sm text-muted-foreground mb-8">recargas processadas</p>
+
+              <h3 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-4">
+                Pronto para começar?
+              </h3>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                Junte-se à maior plataforma de recargas do Brasil. Comece a vender hoje mesmo.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button
+                  onClick={() => navigate("/login")}
+                  className="px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 glow-primary"
+                >
+                  Criar Conta Grátis <ArrowRight className="h-5 w-5" />
+                </button>
+                <span className="text-xs text-muted-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Sem taxas ocultas · Ativação imediata
+                </span>
               </div>
             </div>
           </motion.div>
@@ -273,7 +350,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-border/50 px-6 py-8">
+      <footer className="relative z-10 border-t border-border/30 px-6 py-8">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Headphones className="h-4 w-4 text-primary" />
