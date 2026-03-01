@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Star wobble animation - spins forward then back */
+@keyframes spin-wobble {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(180deg) scale(1.2); }
+  50% { transform: rotate(0deg) scale(1); }
+  75% { transform: rotate(-180deg) scale(1.2); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
 /* Subtle RGB border animation */
 @keyframes rgb-border {
   0% { border-color: hsl(0, 70%, 60%); }
