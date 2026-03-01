@@ -1573,17 +1573,17 @@ export default function Principal() {
 
               {/* Desktop: Table */}
               <div className="hidden md:block glass-card rounded-xl overflow-x-auto">
-                <table className="w-full text-sm min-w-[900px]">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/60 bg-muted/30">
                       <th className="text-left px-3 lg:px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Usuário</th>
                       <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Tipo</th>
-                      <th className="text-right px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Saldo</th>
-                      <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recargas</th>
-                      <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Hoje</th>
-                      <th className="text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Total Vendido</th>
-                      <th className="text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lucro</th>
-                      <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="text-right px-2 lg:px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Saldo</th>
+                      <th className="text-center px-2 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recargas</th>
+                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Hoje</th>
+                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Total Vendido</th>
+                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lucro</th>
+                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                       <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
@@ -1639,16 +1639,16 @@ export default function Principal() {
                                 {r.role === "sem_role" ? "Sem função" : r.role === "usuario" ? "Usuário" : r.role}
                               </span>
                             </td>
-                            <td className="px-3 py-3 text-right">
+                            <td className="px-2 lg:px-3 py-3 text-right">
                               <div>
                                 <span className={`font-mono font-bold tabular-nums text-sm ${saldoBaixo ? "text-warning" : "text-foreground"}`}>{fmt(r.saldo)}</span>
                                 {saldoBaixo && <p className="text-[10px] text-warning mt-0.5">Saldo baixo</p>}
                               </div>
                             </td>
-                            <td className="px-2 lg:px-4 py-3 text-center">
+                            <td className="px-2 py-3 text-center">
                               <span className="font-mono font-semibold text-muted-foreground tabular-nums text-sm">{recCount}</span>
                             </td>
-                            <td className="px-2 lg:px-4 py-3 text-center">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-center">
                               {recHoje > 0 ? (
                                 <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full text-xs font-bold bg-primary/15 text-primary">
                                   {recHoje}
@@ -1657,13 +1657,13 @@ export default function Principal() {
                                 <span className="text-muted-foreground/50 text-xs">0</span>
                               )}
                             </td>
-                            <td className="px-2 lg:px-4 py-3 text-right">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-right">
                               <span className="font-mono font-bold text-success tabular-nums text-sm">{fmt(totalVendido)}</span>
                             </td>
-                            <td className="px-2 lg:px-4 py-3 text-right">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-right">
                               <span className={`font-mono font-bold tabular-nums text-sm ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(lucroDesk)}</span>
                             </td>
-                            <td className="px-2 lg:px-4 py-3 text-center">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-center">
                               <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${r.active ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-success animate-pulse" : "bg-destructive"}`} />
                                 {r.active ? "Ativo" : "Inativo"}
