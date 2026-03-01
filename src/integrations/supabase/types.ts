@@ -289,6 +289,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           custo: number
+          custo_api: number
           external_id: string | null
           id: string
           operadora: string | null
@@ -302,6 +303,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           custo?: number
+          custo_api?: number
           external_id?: string | null
           id?: string
           operadora?: string | null
@@ -315,6 +317,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           custo?: number
+          custo_api?: number
           external_id?: string | null
           id?: string
           operadora?: string | null
