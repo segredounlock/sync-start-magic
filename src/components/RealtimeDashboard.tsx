@@ -213,7 +213,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
         <div className="glass-card rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4 text-success" />
-            <span className="text-xs text-muted-foreground">Cobrado Total</span>
+            <span className="text-xs text-muted-foreground">Vendas Hoje</span>
           </div>
           <AnimatedCounter value={stats.totalValue} prefix="R$&nbsp;" className="text-xl font-bold text-success" />
         </div>
