@@ -153,6 +153,40 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "query-operator": {
+        const { phoneNumber: qPhone } = params;
+        if (!qPhone) throw new Error("phoneNumber é obrigatório");
+
+        // Get consulta operadora URL and Key from system_config
+        const { data: consultaUrl } = await adminClient
+          .from("system_config")
+          .select("value")
+          .eq("key", "consultaOperadoraURL")
+          .single();
+        const { data: consultaKey } = await adminClient
+          .from("system_config")
+          .select("value")
+          .eq("key", "consultaOperadoraKey")
+          .single();
+
+        if (!consultaUrl?.value || !consultaKey?.value) {
+          throw new Error("API de consulta de operadora não configurada");
+        }
+
+        const queryResp = await fetch(consultaUrl.value, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": consultaKey.value,
+          },
+          body: JSON.stringify({ phoneNumber: qPhone }),
+        });
+        const queryData = await queryResp.json();
+        console.log("query-operator response:", JSON.stringify(queryData));
+        result = { success: true, data: queryData };
+        break;
+      }
+
       case "recharge": {
         const { carrierId, phoneNumber, valueId, extraData, webhookUrl, saldo_tipo } = params;
         const saldoTipo = saldo_tipo || "revenda";
