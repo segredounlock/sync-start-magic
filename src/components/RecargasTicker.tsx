@@ -81,6 +81,9 @@ export default function RecargasTicker() {
     </span>
   ));
 
+  // Only animate if enough items to fill the screen (roughly >5)
+  const shouldAnimate = recargas.length >= 5;
+
   return (
     <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-t border-border overflow-hidden">
       <div className="flex items-center h-8">
@@ -89,9 +92,9 @@ export default function RecargasTicker() {
           <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
         </div>
         <div className="overflow-hidden flex-1">
-          <div className="ticker-scroll flex items-center">
+          <div className={`flex items-center ${shouldAnimate ? "ticker-scroll" : ""}`}>
             {items}
-            {items}
+            {shouldAnimate && items}
           </div>
         </div>
       </div>
