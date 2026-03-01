@@ -1211,7 +1211,7 @@ export default function Principal() {
               </button>
             )}
             <RealtimeNotifications
-              listenTo={["deposit", "recarga"]}
+              listenTo={["deposit", "recarga", "new_user"]}
               revendedores={revendedores.map(r => ({ id: r.id, nome: r.nome, email: r.email }))}
               showFilter={true}
             />

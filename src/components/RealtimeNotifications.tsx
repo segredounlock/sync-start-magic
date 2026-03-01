@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, X, DollarSign, Smartphone, Filter } from "lucide-react";
+import { Bell, X, DollarSign, Smartphone, Filter, UserPlus, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 export interface Notification {
   id: string;
-  type: "deposit" | "recarga";
+  type: "deposit" | "recarga" | "new_user_web" | "new_user_telegram";
   message: string;
   amount: number;
   user_id: string;
@@ -17,11 +17,8 @@ export interface Notification {
 }
 
 interface Props {
-  /** Which event types to listen for */
-  listenTo: ("deposit" | "recarga")[];
-  /** List of resellers for filtering (Principal page) */
+  listenTo: ("deposit" | "recarga" | "new_user")[];
   revendedores?: { id: string; nome: string | null; email: string | null }[];
-  /** Show reseller filter dropdown */
   showFilter?: boolean;
 }
 
@@ -147,6 +144,83 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
       channels.push(ch);
     }
 
+    if (listenTo.includes("new_user")) {
+      // Web signups (profiles INSERT)
+      const chWeb = supabase.channel("notif-new-web-users")
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "profiles",
+        }, (payload) => {
+          const row = payload.new as any;
+          if (!row?.id) return;
+          const label = row.nome?.trim() || row.email?.trim() || "Usuário";
+          const notif: Notification = {
+            id: `web-${row.id}`,
+            type: "new_user_web",
+            message: `Novo cadastro Web: ${label}`,
+            amount: 0,
+            user_id: row.id,
+            user_nome: row.nome || undefined,
+            user_email: row.email || undefined,
+            status: "new",
+            created_at: row.created_at || new Date().toISOString(),
+          };
+          setNotifications(prev => [notif, ...prev].slice(0, 50));
+          setUnreadCount(prev => prev + 1);
+        })
+        .subscribe();
+      channels.push(chWeb);
+
+      // Telegram signups
+      const chTg = supabase.channel("notif-new-telegram-users")
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "telegram_users",
+        }, (payload) => {
+          const row = payload.new as any;
+          if (!row?.is_registered) return;
+          const label = row.username?.trim() ? `@${row.username.trim()}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
+          const notif: Notification = {
+            id: `tg-${row.id}`,
+            type: "new_user_telegram",
+            message: `Novo cadastro Telegram: ${label}`,
+            amount: 0,
+            user_id: row.id,
+            user_nome: label,
+            status: "new",
+            created_at: row.created_at || new Date().toISOString(),
+          };
+          setNotifications(prev => [notif, ...prev].slice(0, 50));
+          setUnreadCount(prev => prev + 1);
+        })
+        .on("postgres_changes", {
+          event: "UPDATE",
+          schema: "public",
+          table: "telegram_users",
+        }, (payload) => {
+          const row = payload.new as any;
+          const oldRow = payload.old as any;
+          if (!row?.is_registered || oldRow?.is_registered === row.is_registered) return;
+          const label = row.username?.trim() ? `@${row.username.trim()}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
+          const notif: Notification = {
+            id: `tg-upd-${row.id}`,
+            type: "new_user_telegram",
+            message: `Novo cadastro Telegram: ${label}`,
+            amount: 0,
+            user_id: row.id,
+            user_nome: label,
+            status: "new",
+            created_at: row.updated_at || new Date().toISOString(),
+          };
+          setNotifications(prev => [notif, ...prev].slice(0, 50));
+          setUnreadCount(prev => prev + 1);
+        })
+        .subscribe();
+      channels.push(chTg);
+    }
+
     return () => {
       channels.forEach(ch => supabase.removeChannel(ch));
     };
@@ -245,9 +319,15 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        n.type === "deposit" ? "bg-success/15 text-success" : "bg-primary/15 text-primary"
+                        n.type === "deposit" ? "bg-success/15 text-success" 
+                        : n.type === "new_user_web" ? "bg-emerald-500/15 text-emerald-500"
+                        : n.type === "new_user_telegram" ? "bg-blue-500/15 text-blue-500"
+                        : "bg-primary/15 text-primary"
                       }`}>
-                        {n.type === "deposit" ? <DollarSign className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+                        {n.type === "deposit" ? <DollarSign className="h-4 w-4" /> 
+                        : n.type === "new_user_web" ? <UserPlus className="h-4 w-4" />
+                        : n.type === "new_user_telegram" ? <Bot className="h-4 w-4" />
+                        : <Smartphone className="h-4 w-4" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-foreground leading-tight">{n.message}</p>
@@ -259,9 +339,10 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
                         n.status === "completed" || n.status === "concluida" || n.status === "paid"
                           ? "bg-success/15 text-success"
                           : n.status === "falha" ? "bg-destructive/15 text-destructive"
+                          : n.status === "new" ? "bg-blue-500/15 text-blue-500"
                           : "bg-warning/15 text-warning"
                       }`}>
-                        {n.status === "completed" || n.status === "concluida" || n.status === "paid" ? "✓" : n.status === "falha" ? "✗" : "⏳"}
+                        {n.status === "completed" || n.status === "concluida" || n.status === "paid" ? "✓" : n.status === "falha" ? "✗" : n.status === "new" ? "🆕" : "⏳"}
                       </span>
                     </div>
                   </motion.div>
