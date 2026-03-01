@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { usePrincipalNewUserToasts } from "@/hooks/usePrincipalNewUserToasts";
 import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { SkeletonRow, SkeletonCard, SkeletonValue } from "@/components/Skeleton";
@@ -75,6 +76,7 @@ type Period = "hoje" | "7dias" | "mes" | "total";
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
+  usePrincipalNewUserToasts();
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
