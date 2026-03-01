@@ -30,8 +30,8 @@ export default function LandingPage() {
       {/* Header */}
       <header className="glass-header px-6 py-4 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <h1 className="font-display text-xl font-bold text-foreground">
-            Recargas <span className="text-primary glow-text">Brasil</span>
+          <h1 className="font-display text-xl font-bold shimmer-letters">
+            Recargas <span className="brasil-word">Brasil</span>
           </h1>
           <div className="flex items-center gap-3">
             <ThemeToggle />
