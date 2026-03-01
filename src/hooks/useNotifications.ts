@@ -135,10 +135,16 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
         }, async (payload) => {
           const r = payload.new as any;
           const profile = await getProfile(r.user_id);
+          const insertStatusMap: Record<string, string> = {
+            completed: "Concluída", concluida: "Concluída",
+            falha: "Falhou", pending: "Processando", pendente: "Processando",
+            processing: "Processando", cancelled: "Cancelada",
+          };
+          const insertLabel = insertStatusMap[r.status] || r.status;
           addNotification({
             id: r.id,
             type: "recarga",
-            message: `Recarga ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)} — ${r.telefone}`,
+            message: `Recarga ${insertLabel} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
             amount: Number(r.valor),
             user_id: r.user_id,
             user_nome: profile.nome || undefined,
