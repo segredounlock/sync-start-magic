@@ -135,7 +135,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [profileSlug, setProfileSlug] = useState("");
 
   // Banner config from system_config
-  const [bannerConfig, setBannerConfig] = useState<{ enabled: boolean; title: string; subtitle: string; link: string }>({ enabled: true, title: "", subtitle: "", link: "" });
+  const [bannerConfig, setBannerConfig] = useState<{ enabled: boolean; title: string; subtitle: string; link: string }>({ enabled: false, title: "", subtitle: "", link: "" });
 
 
   // Call edge function helper
