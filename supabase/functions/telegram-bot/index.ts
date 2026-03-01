@@ -229,10 +229,10 @@ async function fetchCatalog(supabase: any): Promise<any[]> {
 async function findUserByTelegram(supabase: any, telegramId: string) {
   const { data } = await supabase
     .from("profiles")
-    .select("id, nome, email, active, telefone")
+    .select("id, nome, email, active, whatsapp_number")
     .eq("telegram_id", telegramId)
     .maybeSingle();
-  return data;
+  return data ? { ...data, telefone: data.whatsapp_number } : null;
 }
 
 function generatePassword(): string {
