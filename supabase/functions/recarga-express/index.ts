@@ -146,9 +146,27 @@ Deno.serve(async (req) => {
       case "check-phone": {
         const { phoneNumber, carrierId } = params;
         if (!phoneNumber) throw new Error("phoneNumber é obrigatório");
+
+        // Resolve carrierId: if it's a UUID (from local DB), find the API carrierId via catalog
+        let resolvedCarrierId = carrierId;
+        const isUuidCheck = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+        if (carrierId && isUuidCheck(carrierId)) {
+          try {
+            const { data: opData } = await adminClient.from("operadoras").select("nome").eq("id", carrierId).single();
+            if (opData?.nome) {
+              const catResp = await proxyGet(apiKey, "/catalog");
+              if (catResp?.success && catResp.data) {
+                const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+                const matched = catResp.data.find((c: any) => norm(c.name) === norm(opData.nome));
+                if (matched) resolvedCarrierId = matched.carrierId;
+              }
+            }
+          } catch { /* fallback to original */ }
+        }
+
         result = await proxyPost(apiKey, "/utils/check-phone", {
           phoneNumber,
-          carrierId: carrierId || undefined,
+          carrierId: resolvedCarrierId || undefined,
         });
         break;
       }
