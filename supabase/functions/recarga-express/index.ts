@@ -282,10 +282,39 @@ Deno.serve(async (req) => {
         // Get API catalog cost and recharge face value using resolved carrierId
         let apiCost = 0;
         let catalogValue = 0;
+        let resolvedValueId = valueId; // may need to resolve local valueId to API valueId
+
+        // Extract numeric value from local valueId format (e.g. "uuid_30" → 30)
+        const localValueMatch = valueId.match(/_(\d+)$/);
+        const localFaceValue = localValueMatch ? Number(localValueMatch[1]) : 0;
+
         if (catalogResp?.success && catalogResp.data) {
           for (const carrier of catalogResp.data) {
             if (carrier.carrierId === resolvedCarrierId) {
-              const valueObj = carrier.values?.find((v: any) => v.valueId === valueId);
+              // First try exact valueId match
+              let valueObj = carrier.values?.find((v: any) => v.valueId === valueId);
+
+              // If not found and valueId looks local (contains uuid), match by face value
+              if (!valueObj && localFaceValue > 0 && carrier.values) {
+                valueObj = carrier.values.find((v: any) => {
+                  const fv = Number(v.value) || Number(v.faceValue) || Number(v.amount) || Number(v.rechargeValue) || 0;
+                  return fv === localFaceValue;
+                });
+                // Also try matching by cost label
+                if (!valueObj) {
+                  valueObj = carrier.values.find((v: any) => {
+                    const label = String(v.label || "").replace(/,/g, ".");
+                    const nums = label.match(/\d+(?:\.\d{1,2})?/g);
+                    if (!nums?.length) return false;
+                    return nums.some((n: string) => Number(n) === localFaceValue);
+                  });
+                }
+                if (valueObj) {
+                  resolvedValueId = valueObj.valueId;
+                  console.log(`Resolved local valueId ${valueId} → API valueId ${resolvedValueId} (face value: ${localFaceValue})`);
+                }
+              }
+
               if (valueObj) {
                 apiCost = Number(valueObj.cost) || 0;
                 catalogValue =
@@ -374,7 +403,7 @@ Deno.serve(async (req) => {
         const rechargeBody: Record<string, unknown> = {
           carrierId: resolvedCarrierId,
           phoneNumber,
-          valueId,
+          valueId: resolvedValueId,
         };
         if (extraData) rechargeBody.extraData = extraData;
         if (webhookUrl) rechargeBody.webhookUrl = webhookUrl;
