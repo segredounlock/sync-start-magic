@@ -412,16 +412,30 @@ export default function AdminDashboard() {
       const { data } = await supabase.from("system_config").select("key, value");
       const map: Record<string, string> = {};
       data?.forEach(row => { map[row.key] = row.value || ""; });
+
+      // Revendedor: load bot token from own profile (isolated), not system_config
+      if (role === "revendedor" && user?.id) {
+        const { data: profile } = await supabase.from("profiles").select("telegram_bot_token").eq("id", user.id).maybeSingle();
+        map.telegramBotToken = profile?.telegram_bot_token || "";
+      }
+
       setConfigData(map);
     } catch (err) { console.error(err); }
     setConfigLoading(false);
-  }, []);
+  }, [role, user]);
 
   const saveConfig = async () => {
     setConfigSaving(true);
     try {
       const entries = Object.entries(configData);
       for (const [key, value] of entries) {
+        // Revendedor: save bot token to own profile, not system_config
+        if (key === "telegramBotToken" && role === "revendedor" && user?.id) {
+          await supabase.from("profiles").update({ telegram_bot_token: value }).eq("id", user.id);
+          continue;
+        }
+        // Revendedor should not write telegramBotToken to system_config
+        if (key === "telegramBotToken" && role === "revendedor") continue;
         await supabase.from("system_config").upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
       }
       toast.success("Configurações salvas com sucesso!");
@@ -2912,7 +2926,10 @@ export default function AdminDashboard() {
                             toast.info("Resetando webhook...");
                             await fetch(`https://api.telegram.org/bot${configData.telegramBotToken}/deleteWebhook?drop_pending_updates=true`);
                             await new Promise(r => setTimeout(r, 1000));
-                            const resp = await supabase.functions.invoke("telegram-setup");
+                            // Pass the token in body so telegram-setup uses the correct bot (isolated per reseller)
+                            const resp = await supabase.functions.invoke("telegram-setup", {
+                              body: { token: configData.telegramBotToken, action: "reset" },
+                            });
                             if (resp.error) throw resp.error;
                             toast.success("✅ Webhook resetado e reconfigurado!");
                             const whResp = await fetch(`https://api.telegram.org/bot${configData.telegramBotToken}/getWebhookInfo`);
@@ -2979,8 +2996,12 @@ export default function AdminDashboard() {
                                 const resp = await fetch(`https://api.telegram.org/bot${token}/getMe`);
                                 const data = await resp.json();
                                 if (data.ok) {
-                                  // Auto-save token to system_config
-                                  await supabase.from("system_config").upsert({ key: "telegramBotToken", value: token }, { onConflict: "key" });
+                                  // Revendedor: save to profiles (isolated), Admin: save to system_config (global)
+                                  if (role === "revendedor" && user?.id) {
+                                    await supabase.from("profiles").update({ telegram_bot_token: token }).eq("id", user.id);
+                                  } else {
+                                    await supabase.from("system_config").upsert({ key: "telegramBotToken", value: token }, { onConflict: "key" });
+                                  }
                                   toast.success(`Token válido e salvo! Bot: ${data.result.first_name} (@${data.result.username})`);
                                   setBotStatus({ connected: true, loading: false, botName: data.result.first_name, botUsername: data.result.username, botId: String(data.result.id), error: null, webhookUrl: null, webhookError: null, pendingUpdates: null });
                                 } else {
