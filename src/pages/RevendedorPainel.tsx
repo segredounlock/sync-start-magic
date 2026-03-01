@@ -192,7 +192,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     setLoading(true);
     try {
       const [{ data: saldoData }, { data: recargasData }, { data: profile }] = await Promise.all([
-        supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", (role === "admin" || role === "revendedor") && !isClientMode ? "pessoal" : "revenda").maybeSingle(),
+        supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
         supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_bot_token, telegram_id, slug, avatar_url").eq("id", user.id).single(),
       ]);
