@@ -75,7 +75,7 @@ export default function RecargasTicker() {
     <span key={r.id} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
       {statusIcon(r.status)}
       <span className={`font-semibold text-xs ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
-      <span className="text-xs text-muted-foreground font-mono">{r.telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
+      <span className="text-xs text-muted-foreground font-mono">{r.telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")}</span>
       <span className="text-xs font-bold text-foreground">R$ {Number(r.valor).toFixed(2)}</span>
       <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
     </span>
