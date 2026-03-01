@@ -15,10 +15,8 @@ const COOLDOWN_MS = 60_000;
 export default function Auth() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nome, setNome] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
@@ -89,7 +87,7 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isLogin && isLocked) {
+    if (isLocked) {
       toast.error(`Muitas tentativas. Aguarde ${cooldownRemaining}s`);
       return;
     }
@@ -98,38 +96,37 @@ export default function Auth() {
     animatingRef.current = true;
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          const newAttempts = failedAttempts + 1;
-          setFailedAttempts(newAttempts);
-          if (newAttempts >= MAX_ATTEMPTS) {
-            startCooldown();
-            toast.error(`Bloqueado por 60 segundos após ${MAX_ATTEMPTS} tentativas`);
-          }
-          throw error;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        const newAttempts = failedAttempts + 1;
+        setFailedAttempts(newAttempts);
+        if (newAttempts >= MAX_ATTEMPTS) {
+          startCooldown();
+          toast.error(`Bloqueado por 60 segundos após ${MAX_ATTEMPTS} tentativas`);
         }
-        // Reset on success
-        setFailedAttempts(0);
+        throw error;
+      }
+      // Reset on success
+      setFailedAttempts(0);
 
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", (await supabase.auth.getUser()).data.user?.id || "")
-          .maybeSingle();
+      // Check role - block users without role
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id || "")
+        .maybeSingle();
 
-        setDestination(roleData?.role === "admin" ? "/principal" : "/painel");
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { nome }, emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        setDestination("/painel");
+      if (!roleData) {
+        await supabase.auth.signOut();
+        toast.error("Sua conta ainda não foi aprovada. Contate o administrador.");
+        setSubmitting(false);
+        animatingRef.current = false;
+        return;
       }
 
-      toast.success(isLogin ? "Login realizado!" : "Conta criada com sucesso!");
+      setDestination(roleData.role === "admin" ? "/principal" : "/painel");
+
+      toast.success("Login realizado!");
       setPhase("success");
 
       setTimeout(() => {
@@ -194,7 +191,6 @@ export default function Auth() {
         <AnimatePresence
           onExitComplete={() => {
             if (phase === "card-exit") {
-              // After card disappears, start logo exit
               setTimeout(() => setPhase("logo-exit"), 200);
             }
           }}
@@ -255,43 +251,11 @@ export default function Auth() {
                 )}
               </AnimatePresence>
 
-              <div className="flex mb-6 rounded-lg overflow-hidden glass">
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(true)}
-                  disabled={submitting}
-                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-                    isLogin ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Entrar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(false)}
-                  disabled={submitting}
-                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-                    !isLogin ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Cadastrar
-                </button>
+              <div className="text-center mb-6">
+                <h2 className="text-lg font-semibold text-foreground">Entrar</h2>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {!isLogin && (
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">Nome</label>
-                    <input
-                      type="text"
-                      value={nome}
-                      onChange={(e) => setNome(e.target.value)}
-                      required={!isLogin}
-                      className="w-full px-3 py-2.5 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="Seu nome completo"
-                    />
-                  </div>
-                )}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1.5">E-mail</label>
                   <input
@@ -316,15 +280,13 @@ export default function Auth() {
                   />
                 </div>
 
-                {isLogin && (
-                  <button
-                    type="button"
-                    onClick={() => { setPhase("forgot"); setForgotEmail(email); setForgotSent(false); }}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Esqueci minha senha
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => { setPhase("forgot"); setForgotEmail(email); setForgotSent(false); }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Esqueci minha senha
+                </button>
 
                 {isLocked && (
                   <div className="text-center py-2 px-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">
@@ -337,7 +299,7 @@ export default function Auth() {
                   disabled={submitting || isLocked}
                   className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity disabled:opacity-50 glow-primary"
                 >
-                  {submitting ? "Aguarde..." : isLogin ? "Entrar" : "Criar conta"}
+                  {submitting ? "Aguarde..." : "Entrar"}
                 </button>
               </form>
             </motion.div>
