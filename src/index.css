@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* White Premium Glass Theme */
+    --background: 220 20% 95%;
+    --foreground: 220 25% 10%;
+    --card: 0 0% 100% / 0.55;
+    --card-foreground: 220 25% 10%;
+    --popover: 0 0% 100% / 0.7;
+    --popover-foreground: 220 25% 10%;
+    --primary: 145 70% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 92% / 0.6;
+    --secondary-foreground: 220 20% 20%;
+    --muted: 220 15% 93% / 0.5;
+    --muted-foreground: 220 10% 42%;
+    --accent: 200 80% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 145 63% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 220 15% 85% / 0.6;
+    --input: 220 15% 88% / 0.5;
+    --ring: 145 70% 40%;
+    --radius: 0.75rem;
+    --sidebar-background: 220 20% 14%;
+    --sidebar-foreground: 220 10% 90%;
+    --sidebar-primary: 145 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 20%;
+    --sidebar-accent-foreground: 220 10% 90%;
+    --sidebar-border: 220 15% 22%;
+    --sidebar-ring: 145 70% 50%;
+
+    --glass-bg: rgba(255, 255, 255, 0.35);
+    --glass-border: rgba(255, 255, 255, 0.45);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    --glass-blur: 24px;
+    --gradient-bg: linear-gradient(135deg, hsl(220 30% 96%), hsl(200 20% 94%), hsl(260 20% 96%));
+  }
+
+  .dark {
+    /* Black Premium Glass Theme */
+    --background: 220 25% 6%;
+    --foreground: 220 10% 95%;
+    --card: 220 20% 12% / 0.5;
+    --card-foreground: 220 10% 95%;
+    --popover: 220 20% 10% / 0.7;
+    --popover-foreground: 220 10% 95%;
+    --primary: 145 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 16% / 0.5;
+    --secondary-foreground: 220 10% 90%;
+    --muted: 220 15% 13% / 0.5;
+    --muted-foreground: 220 10% 55%;
+    --accent: 200 80% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 145 63% 49%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+    --border: 220 15% 18% / 0.6;
+    --input: 220 15% 16% / 0.5;
+    --ring: 145 70% 50%;
+    --sidebar-background: 220 20% 4%;
+    --sidebar-foreground: 220 10% 90%;
+    --sidebar-primary: 145 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 10%;
+    --sidebar-accent-foreground: 220 10% 90%;
+    --sidebar-border: 220 15% 12%;
+    --sidebar-ring: 145 70% 50%;
+
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+    --glass-blur: 24px;
+    --gradient-bg: linear-gradient(135deg, hsl(220 30% 6%), hsl(250 25% 8%), hsl(200 20% 7%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-foreground;
+    background: var(--gradient-bg);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* Smooth theme transition for all glass elements */
+  .glass,
+  .glass-card,
+  .glass-input,
+  .glass-header,
+  .glass-modal {
+    transition: background 0.5s ease, border-color 0.4s ease, box-shadow 0.5s ease, color 0.4s ease;
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: var(--glass-shadow), 0 0 30px rgba(34, 197, 94, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-input {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-header {
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-modal {
+    background: var(--glass-bg);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 60px hsl(var(--primary) / 0.1);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 30px hsl(var(--primary) / 0.5);
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.55);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Fix select/option dark mode */
+select option {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Animated check draw loop */
+@keyframes draw-circle {
+  0% { stroke-dashoffset: 63; }
+  40% { stroke-dashoffset: 0; }
+  80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 63; }
+}
+
+@keyframes draw-tick {
+  0% { stroke-dashoffset: 20; }
+  30% { stroke-dashoffset: 20; }
+  60% { stroke-dashoffset: 0; }
+  80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 20; }
+}
+
+/* Shimmer: brilho verde passa pelas letras, sem sombra */
+@keyframes shimmer-letters {
+  0%, 100% { background-position: 200% center; }
+  40% { background-position: -200% center; }
+}
+
+.shimmer-letters {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--foreground)) 0%,
+    hsl(var(--foreground)) 38%,
+    hsl(145, 80%, 65%) 50%,
+    hsl(var(--foreground)) 62%,
+    hsl(var(--foreground)) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-letters 4s ease-in-out infinite;
+}
+
+.shimmer-letters .brasil-word {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary)) 38%,
+    hsl(145, 90%, 80%) 50%,
+    hsl(var(--primary)) 62%,
+    hsl(var(--primary)) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-letters 4s ease-in-out infinite;
+}

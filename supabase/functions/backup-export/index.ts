@@ -1,0 +1,153 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import JSZip from "https://esm.sh/jszip@3.10.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Verify admin role
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const supabaseUser = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user } } = await supabaseUser.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check admin role
+    const { data: roleData } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(JSON.stringify({ error: "Acesso negado. Apenas admins." }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const includeDatabase = body.includeDatabase !== false;
+
+    const zip = new JSZip();
+
+    // Metadata
+    zip.file("backup-info.json", JSON.stringify({
+      version: "1.0",
+      created_at: new Date().toISOString(),
+      created_by: user.email,
+      include_database: includeDatabase,
+      tables: includeDatabase ? [
+        "profiles", "user_roles", "saldos", "operadoras", "pricing_rules",
+        "reseller_pricing_rules", "reseller_config", "recargas", "transactions",
+        "system_config", "telegram_sessions"
+      ] : [],
+    }, null, 2));
+
+    if (includeDatabase) {
+      const tables = [
+        "profiles", "user_roles", "saldos", "operadoras", "pricing_rules",
+        "reseller_pricing_rules", "reseller_config", "recargas", "transactions",
+        "system_config", "telegram_sessions"
+      ];
+
+      const dbFolder = zip.folder("database");
+
+      for (const table of tables) {
+        try {
+          // Fetch all rows in batches
+          let allRows: any[] = [];
+          let from = 0;
+          const batchSize = 1000;
+          let hasMore = true;
+
+          while (hasMore) {
+            const { data, error } = await supabaseAdmin
+              .from(table)
+              .select("*")
+              .range(from, from + batchSize - 1);
+
+            if (error) {
+              console.error(`Error fetching ${table}:`, error.message);
+              dbFolder!.file(`${table}.json`, JSON.stringify({
+                error: error.message,
+                rows: [],
+                count: 0,
+              }, null, 2));
+              hasMore = false;
+              continue;
+            }
+
+            allRows = allRows.concat(data || []);
+            if (!data || data.length < batchSize) {
+              hasMore = false;
+            } else {
+              from += batchSize;
+            }
+          }
+
+          dbFolder!.file(`${table}.json`, JSON.stringify({
+            table,
+            count: allRows.length,
+            exported_at: new Date().toISOString(),
+            rows: allRows,
+          }, null, 2));
+        } catch (err: any) {
+          dbFolder!.file(`${table}.json`, JSON.stringify({
+            table,
+            error: err.message,
+            rows: [],
+            count: 0,
+          }, null, 2));
+        }
+      }
+    }
+
+    // Generate ZIP as base64
+    const zipBlob = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+
+    return new Response(zipBlob, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="backup-recargas-${new Date().toISOString().slice(0, 10)}.zip"`,
+      },
+    });
+  } catch (error: any) {
+    console.error("Backup error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

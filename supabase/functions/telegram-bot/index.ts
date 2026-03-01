@@ -1,0 +1,1333 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const TELEGRAM_API = "https://api.telegram.org/bot";
+
+// Reuse supabase client across requests (connection pooling)
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+  }
+  return _supabase;
+}
+
+// Token cache with longer TTL since token issue is resolved
+const tokenCache: Map<string, { token: string; time: number }> = new Map();
+const TOKEN_CACHE_TTL = 120_000; // 2 minutes
+
+async function resolveBotToken(supabase: any, botId?: string): Promise<string> {
+  const cacheKey = botId || "__default__";
+  const cached = tokenCache.get(cacheKey);
+  if (cached && (Date.now() - cached.time) < TOKEN_CACHE_TTL) {
+    return cached.token;
+  }
+
+  // 1. system_config (admin master)
+  const { data: sysData } = await supabase
+    .from("system_config")
+    .select("value")
+    .eq("key", "telegramBotToken")
+    .maybeSingle();
+  const sysToken = typeof sysData?.value === "string" ? sysData.value.trim() : "";
+  if (sysToken) {
+    tokenCache.set(cacheKey, { token: sysToken, time: Date.now() });
+    return sysToken;
+  }
+
+  // 2. env variable
+  const envToken = (Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "").trim();
+  if (envToken) {
+    tokenCache.set(cacheKey, { token: envToken, time: Date.now() });
+    return envToken;
+  }
+
+  // 3. profiles (reseller tokens)
+  if (botId) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("telegram_bot_token")
+      .like("telegram_bot_token", `${botId}:%`);
+    if (profiles?.length) {
+      const tkn = (profiles[0].telegram_bot_token || "").trim();
+      if (tkn) {
+        tokenCache.set(cacheKey, { token: tkn, time: Date.now() });
+        return tkn;
+      }
+    }
+  }
+
+  throw new Error("Telegram token não configurado");
+}
+
+// ===== TELEGRAM API HELPERS (fire-and-forget where possible) =====
+
+function generateQRCodeUrl(pixCode: string): string {
+  return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pixCode)}&size=400x400&margin=20&format=png`;
+}
+
+async function fetchJsonWithTimeout(url: string, init: RequestInit, timeoutMs = 12000): Promise<any> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const resp = await fetch(url, { ...init, signal: controller.signal });
+    const raw = await resp.text();
+    let parsed: any = null;
+
+    if (raw) {
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        throw new Error("Resposta inválida do serviço de PIX");
+      }
+    }
+
+    if (!resp.ok) {
+      throw new Error(parsed?.error || parsed?.message || `HTTP ${resp.status}`);
+    }
+
+    return parsed;
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      throw new Error("Tempo limite ao gerar PIX. Tente novamente.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function sendPhoto(token: string, chatId: number, photoSource: string, caption: string, keyboard?: any[][]): Promise<number | null> {
+  const body: any = { chat_id: chatId, caption, parse_mode: "HTML" };
+  if (keyboard) body.reply_markup = { inline_keyboard: keyboard };
+
+  if (photoSource.startsWith("data:")) {
+    const base64Data = photoSource.replace(/^data:image\/\w+;base64,/, "");
+    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    const formData = new FormData();
+    formData.append("chat_id", String(chatId));
+    formData.append("caption", caption);
+    formData.append("parse_mode", "HTML");
+    if (keyboard) formData.append("reply_markup", JSON.stringify({ inline_keyboard: keyboard }));
+    formData.append("photo", new Blob([binaryData], { type: "image/png" }), "qrcode.png");
+    const resp = await fetch(`${TELEGRAM_API}${token}/sendPhoto`, { method: "POST", body: formData });
+    const result = await resp.json();
+    return result?.result?.message_id || null;
+  } else {
+    body.photo = photoSource;
+    const resp = await fetch(`${TELEGRAM_API}${token}/sendPhoto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const result = await resp.json();
+    return result?.result?.message_id || null;
+  }
+}
+
+async function sendMessage(token: string, chatId: number, text: string): Promise<number | null> {
+  const resp = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+  });
+  const result = await resp.json();
+  return result?.result?.message_id || null;
+}
+
+async function sendMessageWithKeyboard(token: string, chatId: number, text: string, keyboard: any[][]): Promise<number | null> {
+  const resp = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId, text, parse_mode: "HTML",
+      reply_markup: { inline_keyboard: keyboard },
+    }),
+  });
+  const result = await resp.json();
+  if (!result?.ok) {
+    console.error(`[ERROR] sendMessageWithKeyboard failed: ${JSON.stringify(result)}`);
+  }
+  return result?.result?.message_id || null;
+}
+
+async function editMessageWithKeyboard(token: string, chatId: number, messageId: number, text: string, keyboard: any[][]) {
+  await fetch(`${TELEGRAM_API}${token}/editMessageText`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId, message_id: messageId, text, parse_mode: "HTML",
+      reply_markup: { inline_keyboard: keyboard },
+    }),
+  }).catch(() => {});
+}
+
+// Fire-and-forget delete - don't await
+function deleteMessageFire(token: string, chatId: number, messageId: number) {
+  fetch(`${TELEGRAM_API}${token}/deleteMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message_id: messageId }),
+  }).catch(() => {});
+}
+
+// Parallel delete - fire all at once
+function deleteMessagesBatch(token: string, chatId: number, messageIds: number[]) {
+  for (const id of messageIds) {
+    deleteMessageFire(token, chatId, id);
+  }
+}
+
+// Session helpers
+async function getSession(supabase: any, chatId: string) {
+  const { data } = await supabase
+    .from("telegram_sessions")
+    .select("*")
+    .eq("chat_id", chatId)
+    .maybeSingle();
+  return data;
+}
+
+async function setSession(supabase: any, chatId: string, step: string, data: any = {}) {
+  await supabase
+    .from("telegram_sessions")
+    .upsert({ chat_id: chatId, step, data, updated_at: new Date().toISOString() }, { onConflict: "chat_id" });
+}
+
+async function clearSession(supabase: any, chatId: string) {
+  // Fire and forget
+  supabase.from("telegram_sessions").delete().eq("chat_id", chatId).then(() => {});
+}
+
+// Fetch catalog from Recarga Express API
+async function fetchCatalog(supabase: any): Promise<any[]> {
+  const { data: apiKeyRow } = await supabase
+    .from("system_config")
+    .select("value")
+    .eq("key", "apiKey")
+    .single();
+  
+  if (!apiKeyRow?.value) return [];
+  
+  const resp = await fetch("https://express.poeki.dev/api/v1/catalog", {
+    headers: { "X-API-Key": apiKeyRow.value, Accept: "application/json" },
+  });
+  const result = await resp.json();
+  if (!result?.success || !result.data) return [];
+  return result.data;
+}
+
+async function findUserByTelegram(supabase: any, telegramId: string) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, nome, email, active, telefone")
+    .eq("telegram_id", telegramId)
+    .maybeSingle();
+  return data;
+}
+
+function generatePassword(): string {
+  const chars = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#";
+  let pass = "";
+  for (let i = 0; i < 10; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+  return pass;
+}
+
+// Send pending deposit notifications that weren't delivered yet
+async function sendPendingNotifications(supabase: any, token: string, chatId: number, userId: string) {
+  try {
+    const { data: pending } = await supabase
+      .from("transactions")
+      .select("id, amount, created_at, metadata")
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .eq("telegram_notified", false)
+      .eq("type", "deposit")
+      .order("created_at", { ascending: true })
+      .limit(10);
+
+    if (!pending || pending.length === 0) return;
+
+    // Get current balance
+    const { data: saldo } = await supabase
+      .from("saldos")
+      .select("valor")
+      .eq("user_id", userId)
+      .eq("tipo", "revenda")
+      .maybeSingle();
+    const currentBalance = saldo?.valor || 0;
+
+    for (const tx of pending) {
+      const valorFmt = Number(tx.amount).toFixed(2).replace(".", ",");
+      const saldoFmt = Number(currentBalance).toFixed(2).replace(".", ",");
+      const confirmedAt = tx.metadata?.confirmed_at
+        ? new Date(tx.metadata.confirmed_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
+        : "";
+      
+      const msg = `✅ <b>Pagamento Confirmado!</b>\n\n💰 Valor: <b>R$ ${valorFmt}</b>\n💳 Saldo atual: <b>R$ ${saldoFmt}</b>${confirmedAt ? `\n🕐 Confirmado em: ${confirmedAt}` : ""}\n\n🎉 Saldo creditado com sucesso!`;
+
+      const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: msg,
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "💰 Ver Saldo", callback_data: "menu_saldo" }, { text: "📱 Fazer Recarga", callback_data: "menu_recarga" }],
+              [{ text: "📖 Menu", callback_data: "menu_main" }],
+            ],
+          },
+        }),
+      });
+      const result = await resp.json();
+      if (result?.ok) {
+        await supabase.from("transactions").update({ telegram_notified: true }).eq("id", tx.id);
+        console.log(`[PENDING] Sent delayed notification for tx ${tx.id}`);
+      }
+    }
+  } catch (err) {
+    console.error("[PENDING] Error sending pending notifications:", err);
+  }
+}
+
+// ===== MAIN HANDLER =====
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const t0 = Date.now();
+
+  try {
+    const supabase = getSupabase();
+
+    // Extract bot_id from URL
+    const url = new URL(req.url);
+    const botIdParam = url.searchParams.get("bot_id") || undefined;
+
+    // Resolve token (usually cached, ~0ms)
+    const BOT_TOKEN = await resolveBotToken(supabase, botIdParam);
+
+    let update: any = null;
+    try {
+      update = await req.json();
+    } catch {
+      return new Response("ok", { headers: corsHeaders });
+    }
+
+    const message = update?.message;
+    const callbackQuery = update?.callback_query;
+
+    // Process in background, return 200 immediately to Telegram
+    // This prevents "Read timeout expired"
+    const processPromise = (async () => {
+      try {
+        if (callbackQuery) {
+          await handleCallback(supabase, BOT_TOKEN, callbackQuery);
+          return;
+        }
+
+        if (!message?.text) return;
+
+        const chatId = message.chat.id;
+        const text = message.text.trim();
+        const telegramId = String(message.from.id);
+        const telegramUsername = message.from.username || "";
+        const chatIdStr = String(chatId);
+
+        // Parallel: find user + session
+        const [linkedUser, session] = await Promise.all([
+          findUserByTelegram(supabase, telegramId),
+          getSession(supabase, chatIdStr),
+        ]);
+
+          if (text === "/start" || text === "/menu") {
+          if (linkedUser) {
+            // Send menu first for snappy UX, then send pending notifications in background
+            await sendMainMenu(BOT_TOKEN, chatId, linkedUser);
+            sendPendingNotifications(supabase, BOT_TOKEN, chatId, linkedUser.id).catch((e) =>
+              console.error("[PENDING] Background send failed:", e)
+            );
+          } else {
+            await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
+            const botMsgId = await sendMessage(BOT_TOKEN, chatId,
+              `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
+            );
+            if (botMsgId) {
+              await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
+            }
+          }
+          return;
+        }
+
+        // Onboarding flow
+        if (!linkedUser && session) {
+          const userMsgId = message.message_id;
+          if (session.step === "awaiting_email") {
+            await handleEmailStep(supabase, BOT_TOKEN, chatId, chatIdStr, telegramId, text, session, userMsgId);
+            return;
+          }
+          if (session.step === "awaiting_password") {
+            await handlePasswordStep(supabase, BOT_TOKEN, chatId, chatIdStr, telegramId, text, session, userMsgId);
+            return;
+          }
+        }
+
+        if (!linkedUser) {
+          await sendMessage(BOT_TOKEN, chatId, "❌ Conta não vinculada. Use /start para começar.");
+          return;
+        }
+
+        // Linked user commands
+        if (session?.step === "awaiting_deposit_amount") {
+          await handleDepositAmount(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
+          return;
+        }
+
+        if (session?.step === "awaiting_recarga_phone") {
+          await handleRecargaPhone(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
+          return;
+        }
+
+        if (text === "/saldo") {
+          await handleSaldo(supabase, BOT_TOKEN, chatId, linkedUser);
+        } else if (text === "/recargas") {
+          await handleRecargas(supabase, BOT_TOKEN, chatId, linkedUser);
+        } else if (text === "/recarga" || text.startsWith("/recarga ")) {
+          await handleRecarga(supabase, BOT_TOKEN, chatId, linkedUser, text);
+        } else if (text === "/deposito") {
+          await setSession(supabase, chatIdStr, "awaiting_deposit_amount", { user_id: linkedUser.id });
+          await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+            "💳 <b>Depósito PIX</b>\n\nEscolha um valor ou digite manualmente:",
+            [
+              [{ text: "R$ 10", callback_data: "deposit_10" }, { text: "R$ 15", callback_data: "deposit_15" }, { text: "R$ 20", callback_data: "deposit_20" }],
+              [{ text: "R$ 30", callback_data: "deposit_30" }, { text: "R$ 50", callback_data: "deposit_50" }, { text: "R$ 100", callback_data: "deposit_100" }],
+              [{ text: "R$ 200", callback_data: "deposit_200" }],
+              [{ text: "⬅️ Voltar", callback_data: "menu_main" }]
+            ]
+          );
+        } else if (text === "/ajuda" || text === "/help") {
+          await handleAjuda(BOT_TOKEN, chatId);
+        } else {
+          const quickMatch = text.match(/^(\d{10,11})\s+([\d.,]+)$/);
+          if (quickMatch) {
+            await executeRecarga(supabase, BOT_TOKEN, chatId, linkedUser, quickMatch[1], quickMatch[2]);
+          } else {
+            await handleAjuda(BOT_TOKEN, chatId);
+          }
+        }
+      } catch (err) {
+        console.error(`[ERROR] processUpdate:`, err);
+      }
+    })();
+
+    // Return 200 immediately to Telegram, but keep processing alive
+    // Deno Deploy keeps the isolate alive while promises are pending
+    (globalThis as any).__processPromise = processPromise;
+
+    console.log(`[TIMING] response sent in ${Date.now() - t0}ms | update_id=${update?.update_id}`);
+    return new Response("ok", { headers: corsHeaders });
+  } catch (error: unknown) {
+    console.error(`[ERROR] fatal (${Date.now() - t0}ms):`, error);
+    return new Response("ok", { headers: corsHeaders });
+  }
+});
+
+// ===== ONBOARDING HANDLERS =====
+
+async function handleEmailStep(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, email: string, session: any, userMsgId: number) {
+  const prevMsgIds: number[] = session.data?.msg_ids || [];
+  const allMsgIds = [...prevMsgIds, userMsgId];
+  const emailClean = email.toLowerCase().trim();
+
+  if (!emailClean.includes("@") || !emailClean.includes(".")) {
+    deleteMessageFire(token, chatId, userMsgId);
+    const botMsgId = await sendMessage(token, chatId, "❌ E-mail inválido. Por favor, digite um e-mail válido:");
+    await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: session.data?.telegram_username, msg_ids: [...prevMsgIds, ...(botMsgId ? [botMsgId] : [])] });
+    return;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, nome, email, telegram_id")
+    .eq("email", emailClean)
+    .maybeSingle();
+
+  if (profile) {
+    if (profile.telegram_id && profile.telegram_id !== telegramId) {
+      deleteMessagesBatch(token, chatId, allMsgIds);
+      await sendMessage(token, chatId, "⚠️ Este e-mail já está vinculado a outro Telegram.\n\nUse outro e-mail ou entre em contato com o suporte.");
+      clearSession(supabase, chatIdStr);
+      return;
+    }
+
+    if (profile.telegram_id === telegramId) {
+      deleteMessagesBatch(token, chatId, allMsgIds);
+      await sendMainMenu(token, chatId, { nome: profile.nome, email: profile.email });
+      clearSession(supabase, chatIdStr);
+      return;
+    }
+
+    deleteMessageFire(token, chatId, userMsgId);
+    const botMsgId = await sendMessage(token, chatId, `🔐 Para vincular, digite sua <b>senha</b>:`);
+    await setSession(supabase, chatIdStr, "awaiting_password", {
+      telegram_id: telegramId, telegram_username: session.data?.telegram_username, email: emailClean, user_id: profile.id,
+      msg_ids: [...prevMsgIds, ...(botMsgId ? [botMsgId] : [])],
+    });
+  } else {
+    deleteMessagesBatch(token, chatId, allMsgIds);
+    await createAccountAndLink(supabase, token, chatId, chatIdStr, telegramId, emailClean);
+  }
+}
+
+async function handlePasswordStep(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, password: string, session: any, userMsgId: number) {
+  const email = session.data?.email;
+  const userId = session.data?.user_id;
+  const prevMsgIds: number[] = session.data?.msg_ids || [];
+
+  deleteMessageFire(token, chatId, userMsgId);
+
+  if (!email || !userId) {
+    deleteMessagesBatch(token, chatId, prevMsgIds);
+    clearSession(supabase, chatIdStr);
+    await sendMessage(token, chatId, "❌ Sessão expirada. Use /start para recomeçar.");
+    return;
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const anonClient = createClient(supabaseUrl, anonKey);
+
+  const { error } = await anonClient.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    const botMsgId = await sendMessage(token, chatId, "❌ Senha incorreta. Tente novamente:");
+    await setSession(supabase, chatIdStr, "awaiting_password", {
+      ...session.data,
+      msg_ids: [...prevMsgIds, ...(botMsgId ? [botMsgId] : [])],
+    });
+    return;
+  }
+
+  deleteMessagesBatch(token, chatId, prevMsgIds);
+  const tgUsername = session.data?.telegram_username || "";
+  await supabase.from("profiles").update({ telegram_id: telegramId, ...(tgUsername ? { telegram_username: tgUsername } : {}) }).eq("id", userId);
+  clearSession(supabase, chatIdStr);
+
+  await sendMessageWithKeyboard(token, chatId,
+    `✅ <b>Conta vinculada com sucesso!</b>`,
+    [[
+      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
+      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+    ], [
+      { text: "📋 Histórico", callback_data: "menu_recargas" },
+      { text: "📖 Menu", callback_data: "menu_main" },
+    ]]
+  );
+}
+
+async function createAccountAndLink(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, email: string) {
+  const password = generatePassword();
+
+  const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { nome: email.split("@")[0] },
+  });
+
+  if (createError) {
+    console.error("Create user error:", createError);
+    await sendMessage(token, chatId, "❌ Erro ao criar conta. Tente novamente com /start.");
+    clearSession(supabase, chatIdStr);
+    return;
+  }
+
+  const userId = newUser.user.id;
+  await supabase.from("user_roles").insert({ user_id: userId, role: "revendedor" });
+
+  // Wait for trigger to create profile
+  await new Promise((r) => setTimeout(r, 800));
+  const tgUser = session.data?.telegram_username || "";
+  await supabase.from("profiles").update({ telegram_id: telegramId, ...(tgUser ? { telegram_username: tgUser } : {}) }).eq("id", userId);
+
+  clearSession(supabase, chatIdStr);
+
+  await sendMessageWithKeyboard(token, chatId,
+    `✅ <b>Conta criada e vinculada!</b>\n\n📧 E-mail: <code>${email}</code>\n🔐 Senha: <code>${password}</code>\n\n⚠️ <b>Guarde sua senha!</b> Use para acessar o painel web.`,
+    [[
+      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
+      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+    ], [
+      { text: "📋 Histórico", callback_data: "menu_recargas" },
+      { text: "📖 Menu", callback_data: "menu_main" },
+    ]]
+  );
+}
+
+// ===== COMMAND HANDLERS =====
+
+async function handleSaldo(supabase: any, token: string, chatId: number, user: any) {
+  const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").single();
+  const valor = Number(saldo?.valor || 0);
+  await sendMessageWithKeyboard(token, chatId,
+    `💰 <b>Seu Saldo</b>\n\n<b>R$ ${valor.toFixed(2).replace(".", ",")}</b>`,
+    [[
+      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+      { text: "📖 Menu", callback_data: "menu_main" },
+    ]]
+  );
+}
+
+function formatRecargaHistory(recargas: any[]): string {
+  let msg = `📋 <b>Seus últimos ${recargas.length} pedidos:</b>\n\n`;
+  for (const r of recargas) {
+    const date = new Date(r.created_at).toLocaleDateString("pt-BR");
+    const tel = (r.telefone || "").replace(/\D/g, "");
+    const formattedPhone = tel.length === 11
+      ? `(${tel.slice(0,2)}) ${tel.slice(2,7)}-${tel.slice(7)}`
+      : tel.length === 10
+        ? `(${tel.slice(0,2)}) ${tel.slice(2,6)}-${tel.slice(6)}`
+        : r.telefone;
+    const operadora = r.operadora || "—";
+    const valor = Number(r.valor).toFixed(2).replace(".", ",");
+    let statusIcon = "⏳";
+    let statusText = "Processando";
+    if (r.status === "completed") { statusIcon = "✅"; statusText = "Concluído"; }
+    else if (r.status === "falha" || r.status === "canceled" || r.status === "cancelled") { statusIcon = "❌"; statusText = "Cancelado"; }
+    msg += `<blockquote>📅 <b>${date}</b> — <i>${operadora}</i>\n📞 ${formattedPhone}\n💰 Valor: <b>R$ ${valor}</b>\n${statusIcon} Status: <b>${statusText}</b></blockquote>\n`;
+  }
+  return msg;
+}
+
+async function handleRecargas(supabase: any, token: string, chatId: number, user: any) {
+  const { data: recargas } = await supabase
+    .from("recargas")
+    .select("telefone, valor, operadora, status, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (!recargas?.length) {
+    await sendMessageWithKeyboard(token, chatId,
+      "📋 Nenhuma recarga encontrada.",
+      [[{ text: "📱 Fazer Recarga", callback_data: "menu_recarga" }, { text: "📖 Menu", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+
+  await sendMessageWithKeyboard(token, chatId, formatRecargaHistory(recargas), [[
+    { text: "⬅️ Voltar", callback_data: "menu_main" },
+  ]]);
+}
+
+async function handleRecarga(supabase: any, token: string, chatId: number, user: any, text: string) {
+  const parts = text.replace("/recarga", "").trim().split(/\s+/);
+  if (parts.length < 2 || !parts[0]) {
+    await sendMessageWithKeyboard(token, chatId,
+      "📱 <b>Como fazer recarga:</b>\n\nEnvie: <code>TELEFONE VALOR</code>\n\nExemplo: <code>11999998888 20</code>",
+      [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+  await executeRecarga(supabase, token, chatId, user, parts[0], parts[1]);
+}
+
+async function executeRecarga(supabase: any, token: string, chatId: number, user: any, phone: string, valorStr: string) {
+  const telefone = phone.replace(/\D/g, "");
+  if (telefone.length < 10 || telefone.length > 11) {
+    await sendMessage(token, chatId, "❌ Telefone inválido. Use DDD + número (10 ou 11 dígitos).");
+    return;
+  }
+
+  const valor = parseFloat(valorStr.replace(",", "."));
+  if (isNaN(valor) || valor <= 0 || valor > 500) {
+    await sendMessage(token, chatId, "❌ Valor inválido. Informe um valor entre R$ 1,00 e R$ 500,00.");
+    return;
+  }
+
+  const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").single();
+  const saldoAtual = Number(saldo?.valor || 0);
+
+  if (valor > saldoAtual) {
+    await sendMessage(token, chatId,
+      `❌ <b>Saldo insuficiente</b>\n\nSaldo: R$ ${saldoAtual.toFixed(2).replace(".", ",")}\nRecarga: R$ ${valor.toFixed(2).replace(".", ",")}`
+    );
+    return;
+  }
+
+  await sendMessageWithKeyboard(token, chatId,
+    `📱 <b>Confirmar Recarga</b>\n\n📞 Telefone: <code>${telefone}</code>\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>\n\nSaldo atual: R$ ${saldoAtual.toFixed(2).replace(".", ",")}`,
+    [[
+      { text: "✅ Confirmar", callback_data: `confirm_${telefone}_${valor}_${user.id}` },
+      { text: "❌ Cancelar", callback_data: "cancel" },
+    ]]
+  );
+}
+
+async function handleCallback(supabase: any, token: string, callback: any) {
+  const chatId = callback.message.chat.id;
+  const msgId = callback.message.message_id;
+  const data = callback.data;
+  const telegramId = String(callback.from.id);
+
+  // Answer callback immediately (fire-and-forget) — except menu_saldo which sends its own popup
+  if (data !== "menu_saldo") {
+    fetch(`${TELEGRAM_API}${token}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callback.id }),
+    }).catch(() => {});
+  }
+
+  const webAppUrl = "https://recarg17asbrasil.lovable.app/miniapp";
+  const menuKb = (extra?: any[][]) => [
+    ...(extra || []),
+    [
+      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
+      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+    ],
+    [
+      { text: "📋 Histórico", callback_data: "menu_recargas" },
+      { text: "💳 Depositar PIX", callback_data: "menu_deposito" },
+    ],
+    [
+      { text: "👤 Minha Conta", callback_data: "menu_conta" },
+      { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
+    ],
+  ];
+
+  if (data === "menu_main") {
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (user) {
+      // Show menu immediately, then process pending notifications in background
+      await editMessageWithKeyboard(token, chatId, msgId,
+        `👋 Olá, <b>${user.nome || user.email}</b>!\n\nEscolha uma opção:`,
+        menuKb()
+      );
+      sendPendingNotifications(supabase, token, chatId, user.id).catch((e) =>
+        console.error("[PENDING] Background send failed:", e)
+      );
+    }
+    return;
+  }
+
+  if (data === "menu_saldo") {
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (!user) return;
+    const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle();
+    const valor = Number(saldo?.valor || 0);
+    const valorFmt = valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Send as popup alert (showAlert: true shows a native Telegram popup)
+    fetch(`${TELEGRAM_API}${token}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        callback_query_id: callback.id,
+        text: `💰 Seu saldo atual é de: R$ ${valorFmt}`,
+        show_alert: true,
+      }),
+    }).catch(() => {});
+
+    // Also update the message with buttons
+    await editMessageWithKeyboard(token, chatId, msgId,
+      `💰 Seu saldo atual é de: <b>R$ ${valorFmt}</b>`,
+      [
+        [{ text: "➕ Fazer Depósito", callback_data: "menu_deposito" }],
+        [{ text: "⬅️ Voltar ao Menu Principal", callback_data: "menu_main" }],
+      ]
+    );
+    return;
+  }
+
+  if (data === "menu_conta") {
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, nome, email, telefone, telegram_id, telegram_username, created_at")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) return;
+
+    const membroDesde = new Date(profile.created_at).toLocaleDateString("pt-BR", {
+      day: "2-digit", month: "long", year: "numeric",
+    });
+
+    let msg = `👤 <b>Minha Conta</b>\n\n`;
+    msg += `📛 <b>Nome:</b> ${profile.nome || "Não informado"}\n`;
+    msg += `📧 <b>E-mail:</b> ${profile.email || "Não informado"}\n`;
+    if (profile.telefone) msg += `📞 <b>Telefone:</b> ${profile.telefone}\n`;
+    msg += `\n🆔 <b>ID Telegram:</b> <code>${profile.telegram_id || telegramId}</code>\n`;
+    if (profile.telegram_username) msg += `👤 <b>Username:</b> @${profile.telegram_username}\n`;
+    msg += `\n📅 <b>Membro desde:</b> ${membroDesde}`;
+
+    await editMessageWithKeyboard(token, chatId, msgId, msg,
+      [[{ text: "⬅️ Voltar ao Menu Principal", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+
+  if (data === "menu_recarga") {
+    // Fetch operators from Recarga Express API catalog
+    const catalog = await fetchCatalog(supabase);
+
+    if (!catalog?.length) {
+      await editMessageWithKeyboard(token, chatId, msgId,
+        "⚠️ Nenhuma operadora disponível no momento.",
+        [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+      );
+      return;
+    }
+
+    const opButtons = catalog.map((carrier: any) => [{ text: carrier.name || carrier.carrierId, callback_data: `rec_op_${carrier.carrierId}` }]);
+    opButtons.push([{ text: "⬅️ Voltar ao Menu Principal", callback_data: "menu_main" }]);
+
+    await editMessageWithKeyboard(token, chatId, msgId,
+      "📱 <b>VAMOS FAZER UMA RECARGA!</b>\n\nSelecione a operadora:",
+      opButtons
+    );
+    return;
+  }
+
+  // Recarga: operator selected → show values from API catalog with pricing
+  if (data.startsWith("rec_op_")) {
+    const carrierId = data.replace("rec_op_", "");
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (!user) return;
+
+    const catalog = await fetchCatalog(supabase);
+    const carrier = catalog.find((c: any) => c.carrierId === carrierId);
+
+    if (!carrier || !carrier.values?.length) {
+      await editMessageWithKeyboard(token, chatId, msgId,
+        "⚠️ Nenhum valor disponível para esta operadora.",
+        [[{ text: "⬅️ Voltar", callback_data: "menu_recarga" }]]
+      );
+      return;
+    }
+
+    // Get user role and pricing rules
+    const { data: roleData } = await supabase
+      .from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
+    const userRole = roleData?.role || "cliente";
+
+    let resellerId: string | null = null;
+    if (userRole === "cliente") {
+      const { data: profileData } = await supabase
+        .from("profiles").select("reseller_id").eq("id", user.id).single();
+      resellerId = profileData?.reseller_id || null;
+    }
+
+    // Resolve operadora_id (API sometimes returns external non-UUID ids)
+    const isUuid = (value: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+    const normalize = (value?: string) =>
+      (value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    let operadoraId: string | null = isUuid(carrierId) ? carrierId : null;
+
+    if (!operadoraId) {
+      const { data: opsData } = await supabase.from("operadoras").select("id, nome").eq("ativo", true);
+      const targetName = normalize(carrier.name);
+      const matchedOp = (opsData || []).find((op: any) => {
+        const dbName = normalize(op.nome);
+        return dbName === targetName || dbName.includes(targetName) || targetName.includes(dbName);
+      });
+      operadoraId = matchedOp?.id || null;
+    }
+
+    // Fetch applicable pricing rules (merge reseller + global fallback per value)
+    let pricingRules: any[] = [];
+    console.log(`[PRICING] role=${userRole} userId=${user.id} carrier=${carrier.name} carrierId=${carrierId} operadoraId=${operadoraId}`);
+
+    if (!operadoraId) {
+      pricingRules = [];
+    } else if (userRole === "admin") {
+      const { data: rules } = await supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId);
+      pricingRules = rules || [];
+    } else if (userRole === "revendedor" || (userRole === "cliente" && resellerId)) {
+      const ruleUserId = userRole === "revendedor" ? user.id : resellerId;
+      const [{ data: resellerRules }, { data: globalRules }] = await Promise.all([
+        supabase.from("reseller_pricing_rules").select("*").eq("user_id", ruleUserId).eq("operadora_id", operadoraId),
+        supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId),
+      ]);
+      // Merge: use reseller rule if exists for that value, otherwise global
+      const resellerMap = new Map((resellerRules || []).map((r: any) => [Number(r.valor_recarga), r]));
+      const globalMap = new Map((globalRules || []).map((r: any) => [Number(r.valor_recarga), r]));
+      const allValues = new Set([...resellerMap.keys(), ...globalMap.keys()]);
+      for (const v of allValues) {
+        pricingRules.push(resellerMap.get(v) || globalMap.get(v));
+      }
+    } else {
+      const { data: globalRules } = await supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId);
+      pricingRules = globalRules || [];
+    }
+
+    // Calculate user cost for each value
+    const vals = carrier.values.sort((a: any, b: any) => (a.value || a.cost) - (b.value || b.cost));
+
+    function getUserCost(apiCost: number, faceValue: number): number {
+      const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
+      if (rule) {
+        return rule.tipo_regra === "fixo"
+          ? Number(rule.regra_valor)
+          : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
+      }
+      return apiCost;
+    }
+
+    // Build description — two lines per value, aligned vertically
+    let msgText = `📱 <b>${carrier.name}</b>\n\nEscolha um dos valores abaixo:\n\n`;
+    for (const v of vals) {
+      const faceValue = v.value || v.cost;
+      const userCost = getUserCost(v.cost, faceValue);
+      const faceStr = Number(faceValue).toFixed(2).replace(".", ",");
+      const costStr = Number(userCost).toFixed(2).replace(".", ",");
+      if (Number(faceValue) !== Number(userCost)) {
+        msgText += `📦 Recarga: <b>R$ ${faceStr}</b>\n💵 Você paga: <b>R$ ${costStr}</b>\n\n`;
+      } else {
+        msgText += `📦 Recarga: <b>R$ ${faceStr}</b>\n\n`;
+      }
+    }
+
+    const valButtons: any[][] = [];
+    for (let i = 0; i < vals.length; i += 2) {
+      const row = vals.slice(i, i + 2).map((v: any) => {
+        const faceValue = v.value || v.cost;
+        const userCost = getUserCost(v.cost, faceValue);
+        return {
+          text: `R$ ${Number(faceValue).toFixed(2).replace(".", ",")}`,
+          callback_data: `rec_val_${carrierId}_${v.valueId}_${userCost.toFixed(2)}`,
+        };
+      });
+      valButtons.push(row);
+    }
+    valButtons.push([{ text: "⬅️ Voltar", callback_data: "menu_recarga" }]);
+
+    await editMessageWithKeyboard(token, chatId, msgId, msgText, valButtons);
+    return;
+  }
+
+  // Recarga: value selected → ask for phone number
+  if (data.startsWith("rec_val_")) {
+    // Format: rec_val_{carrierId}_{valueId}_{cost}
+    const parts = data.replace("rec_val_", "").split("_");
+    const carrierId = parts[0];
+    const valueId = parts[1];
+    const cost = parseFloat(parts[2]);
+
+    // Get carrier name from catalog
+    const catalog = await fetchCatalog(supabase);
+    const carrier = catalog.find((c: any) => c.carrierId === carrierId);
+    const carrierName = carrier?.name || carrierId;
+
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (!user) return;
+
+    await setSession(supabase, String(chatId), "awaiting_recarga_phone", {
+      user_id: user.id,
+      carrier_id: carrierId,
+      value_id: valueId,
+      operadora_nome: carrierName,
+      valor: cost,
+      bot_msg_id: msgId,
+    });
+
+    await editMessageWithKeyboard(token, chatId, msgId,
+      `📱 <b>Recarga ${carrierName}</b>\n💰 Valor: <b>R$ ${cost.toFixed(2).replace(".", ",")}</b>\n\nDigite o <b>número de telefone com DDD</b> (apenas 11 dígitos):`,
+      [[{ text: "⬅️ Voltar", callback_data: `rec_op_${carrierId}` }, { text: "❌ Cancelar", callback_data: "cancel" }]]
+    );
+    return;
+  }
+
+  if (data === "menu_recargas") {
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (!user) return;
+    const { data: recargas } = await supabase
+      .from("recargas")
+      .select("telefone, valor, operadora, status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const msg = (!recargas?.length)
+      ? "📋 Nenhuma recarga encontrada."
+      : formatRecargaHistory(recargas);
+
+    await editMessageWithKeyboard(token, chatId, msgId, msg,
+      [[{ text: "⬅️ Voltar", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+
+  if (data === "cancel") {
+    await editMessageWithKeyboard(token, chatId, msgId,
+      "❌ Operação cancelada.",
+      [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+
+  // Deposit quick values
+  if (data.startsWith("deposit_")) {
+    const amount = data.replace("deposit_", "");
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (!user) return;
+    const session = await getSession(supabase, String(chatId));
+    await handleDepositAmount(supabase, token, chatId, String(chatId), user, amount, session, msgId);
+    return;
+  }
+
+  // Deposito PIX
+  if (data === "menu_deposito") {
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (!user) return;
+
+    // Check gateway in parallel
+    const [resellerCfg, globalCfg] = await Promise.all([
+      supabase.from("reseller_config").select("key, value").eq("user_id", user.id).eq("key", "paymentModule").maybeSingle(),
+      supabase.from("system_config").select("value").eq("key", "paymentModule").maybeSingle(),
+    ]);
+
+    const hasGateway = !!resellerCfg?.data?.value || !!globalCfg?.data?.value;
+
+    if (!hasGateway) {
+      await editMessageWithKeyboard(token, chatId, msgId,
+        "⚠️ <b>Gateway não configurada</b>\n\nNenhuma gateway de pagamento foi configurada.\n\nAcesse o painel web e vá em <b>Gateway de Pagamento</b> para configurar sua gateway antes de gerar PIX.",
+        [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+      );
+      return;
+    }
+
+    await setSession(supabase, String(chatId), "awaiting_deposit_amount", { user_id: user.id, bot_msg_id: msgId });
+    await editMessageWithKeyboard(token, chatId, msgId,
+      "💳 <b>Depósito PIX</b>\n\nEscolha um valor ou digite manualmente:",
+      [
+        [{ text: "R$ 10", callback_data: "deposit_10" }, { text: "R$ 15", callback_data: "deposit_15" }, { text: "R$ 20", callback_data: "deposit_20" }],
+        [{ text: "R$ 30", callback_data: "deposit_30" }, { text: "R$ 50", callback_data: "deposit_50" }, { text: "R$ 100", callback_data: "deposit_100" }],
+        [{ text: "R$ 200", callback_data: "deposit_200" }],
+        [{ text: "⬅️ Voltar", callback_data: "menu_main" }]
+      ]
+    );
+    return;
+  }
+
+  if (data.startsWith("rconfirm_")) {
+    // Format: rconfirm_{telefone}_{carrierId}_{valueId}_{cost}_{userId}
+    const parts = data.replace("rconfirm_", "").split("_");
+    const telefone = parts[0];
+    const carrierId = parts[1];
+    const valueId = parts[2];
+    const cost = parseFloat(parts[3]);
+    const userId = parts[4];
+
+    await editMessageWithKeyboard(token, chatId, msgId,
+      "⏳ <b>Processando recarga...</b>\n\nAguarde um momento.",
+      []
+    );
+
+    try {
+      // Check balance
+      const { data: saldoData } = await supabase.from("saldos").select("valor").eq("user_id", userId).eq("tipo", "revenda").single();
+      const userBalance = Number(saldoData?.valor || 0);
+      if (cost > userBalance) throw new Error("Saldo insuficiente");
+
+      // Get API key
+      const { data: apiKeyRow } = await supabase.from("system_config").select("value").eq("key", "apiKey").single();
+      if (!apiKeyRow?.value) throw new Error("API Key não configurada");
+
+      // Call Recarga Express API directly
+      const rechargeResp = await fetch("https://express.poeki.dev/api/v1/recharges", {
+        method: "POST",
+        headers: { "X-API-Key": apiKeyRow.value, "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ carrierId, phoneNumber: telefone, valueId }),
+      });
+      const rechargeResult = await rechargeResp.json();
+
+      console.log("Telegram recarga API response:", JSON.stringify(rechargeResult));
+
+      if (!rechargeResult?.success) {
+        throw new Error(rechargeResult?.message || rechargeResult?.error || "Erro ao processar recarga na API");
+      }
+
+      // Deduct balance
+      const newBalance = userBalance - cost;
+      await supabase.from("saldos").update({ valor: newBalance }).eq("user_id", userId).eq("tipo", "revenda");
+
+      // Save recarga locally
+      const orderData = rechargeResult.data || {};
+      const externalId = orderData._id || orderData.id || orderData.orderId || null;
+      const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
+
+      await supabase.from("recargas").insert({
+        user_id: userId,
+        telefone,
+        operadora: orderData.carrier?.name || carrierId,
+        valor: cost,
+        custo: cost,
+        status: isCompleted ? "completed" : "pending",
+        external_id: externalId,
+        completed_at: isCompleted ? new Date().toISOString() : null,
+      });
+
+      const operadoraNome = orderData.carrier?.name || carrierId;
+      const horario = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      const formattedPhone = telefone.length === 11
+        ? `(${telefone.slice(0,2)}) ${telefone.slice(2,7)}-${telefone.slice(7)}`
+        : `(${telefone.slice(0,2)}) ${telefone.slice(2,6)}-${telefone.slice(6)}`;
+
+      let msgSucesso = `✅ <b>Recarga realizada!</b>\n\n📡 Operadora: <b>${operadoraNome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor: <b>R$ ${cost.toFixed(2).replace(".", ",")}</b>\n💳 Novo saldo: <b>R$ ${Number(newBalance).toFixed(2).replace(".", ",")}</b>\n🕐 Horário: ${horario}`;
+      if (externalId) msgSucesso += `\n🔖 Pedido: <code>${externalId}</code>`;
+
+      await editMessageWithKeyboard(token, chatId, msgId,
+        msgSucesso,
+        [[
+          { text: "📱 Nova Recarga", callback_data: "menu_recarga" },
+          { text: "📖 Menu", callback_data: "menu_main" },
+        ]]
+      );
+    } catch (err: any) {
+      console.error("Telegram recarga error:", err);
+      await editMessageWithKeyboard(token, chatId, msgId,
+        `❌ <b>Erro na recarga</b>\n\n${err?.message || "Erro interno. Tente novamente."}`,
+        [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+      );
+    }
+  }
+
+  // Legacy confirm handler (kept for backward compatibility)
+  if (data.startsWith("confirm_")) {
+    const parts = data.split("_");
+    const telefone = parts[1];
+    const valor = parseFloat(parts[2]);
+    const userId = parts[3];
+
+    const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", userId).eq("tipo", "revenda").maybeSingle();
+    const saldoAtual = Number(saldo?.valor || 0);
+
+    if (valor > saldoAtual) {
+      await editMessageWithKeyboard(token, chatId, msgId,
+        "❌ Saldo insuficiente. A recarga foi cancelada.",
+        [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+      );
+      return;
+    }
+
+    const { error: recError } = await supabase.from("recargas").insert({
+      user_id: userId, telefone, valor, custo: valor, status: "completed",
+    });
+
+    if (recError) {
+      console.error("Recarga insert error:", recError);
+      await editMessageWithKeyboard(token, chatId, msgId,
+        "❌ Erro ao processar recarga. Tente novamente.",
+        [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+      );
+      return;
+    }
+
+    const newSaldo = saldoAtual - valor;
+    await supabase.from("saldos").update({ valor: newSaldo }).eq("user_id", userId).eq("tipo", "revenda");
+
+    await editMessageWithKeyboard(token, chatId, msgId,
+      `✅ <b>Recarga realizada!</b>\n\n📞 ${telefone}\n💰 R$ ${valor.toFixed(2).replace(".", ",")}\n💳 Novo saldo: <b>R$ ${newSaldo.toFixed(2).replace(".", ",")}</b>`,
+      [[
+        { text: "📱 Nova Recarga", callback_data: "menu_recarga" },
+        { text: "📖 Menu", callback_data: "menu_main" },
+      ]]
+    );
+  }
+}
+
+// ===== RECARGA PHONE HANDLER =====
+
+async function handleRecargaPhone(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number) {
+  deleteMessageFire(token, chatId, userMsgId);
+
+  const telefone = text.replace(/\D/g, "");
+  if (telefone.length < 10 || telefone.length > 11) {
+    await sendMessage(token, chatId, "❌ Número inválido. Digite DDD + número (10 ou 11 dígitos):");
+    return;
+  }
+
+  const { carrier_id, value_id, operadora_nome, valor, bot_msg_id } = session.data || {};
+
+  // Check balance
+  const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").single();
+  const saldoAtual = Number(saldo?.valor || 0);
+
+  if (valor > saldoAtual) {
+    clearSession(supabase, chatIdStr);
+    if (bot_msg_id) deleteMessageFire(token, chatId, bot_msg_id);
+    await sendMessageWithKeyboard(token, chatId,
+      `❌ <b>Saldo insuficiente</b>\n\nSaldo: R$ ${saldoAtual.toFixed(2).replace(".", ",")}\nRecarga: R$ ${Number(valor).toFixed(2).replace(".", ",")}`,
+      [[{ text: "💳 Depositar", callback_data: "menu_deposito" }, { text: "📖 Menu", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+
+  clearSession(supabase, chatIdStr);
+  if (bot_msg_id) deleteMessageFire(token, chatId, bot_msg_id);
+
+  const formattedPhone = telefone.length === 11
+    ? `(${telefone.slice(0,2)}) ${telefone.slice(2,7)}-${telefone.slice(7)}`
+    : `(${telefone.slice(0,2)}) ${telefone.slice(2,6)}-${telefone.slice(6)}`;
+
+  await sendMessageWithKeyboard(token, chatId,
+    `📱 <b>Confirmar Recarga</b>\n\n📡 Operadora: <b>${operadora_nome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor: <b>R$ ${Number(valor).toFixed(2).replace(".", ",")}</b>\n💳 Saldo atual: R$ ${saldoAtual.toFixed(2).replace(".", ",")}`,
+    [[
+      { text: "✅ Confirmar", callback_data: `rconfirm_${telefone}_${carrier_id}_${value_id}_${valor}_${user.id}` },
+      { text: "❌ Cancelar", callback_data: "cancel" },
+    ]]
+  );
+}
+
+// ===== MAIN MENU =====
+
+async function sendMainMenu(token: string, chatId: number, user: any) {
+  const webAppUrl = "https://recarg17asbrasil.lovable.app/miniapp";
+  await sendMessageWithKeyboard(token, chatId,
+    `👋 Olá, <b>${user.nome || user.email}</b>!\n\nEscolha uma opção:`,
+    [[
+      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
+      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+    ], [
+      { text: "📋 Histórico", callback_data: "menu_recargas" },
+      { text: "💳 Depositar PIX", callback_data: "menu_deposito" },
+    ], [
+      { text: "👤 Minha Conta", callback_data: "menu_conta" },
+      { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
+    ]]
+  );
+}
+
+async function handleAjuda(token: string, chatId: number) {
+  await sendMessageWithKeyboard(token, chatId,
+    `❓ <b>Menu de Ajuda</b>\n\n<b>Atalho:</b> envie <code>telefone valor</code> diretamente!\n<b>Depósito:</b> /deposito`,
+    [[
+      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
+      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+    ], [
+      { text: "📋 Histórico", callback_data: "menu_recargas" },
+      { text: "💳 Depositar PIX", callback_data: "menu_deposito" },
+    ], [
+      { text: "📖 Menu", callback_data: "menu_main" },
+    ]]
+  );
+}
+
+// ===== DEPOSIT HANDLER =====
+
+async function handleDepositAmount(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number) {
+  deleteMessageFire(token, chatId, userMsgId);
+
+  const valor = parseFloat(text.replace(",", "."));
+  if (isNaN(valor) || valor <= 0 || valor > 10000) {
+    await sendMessage(token, chatId, "❌ Valor inválido. Digite um valor entre R$ 1,00 e R$ 10.000,00:");
+    return;
+  }
+
+  clearSession(supabase, chatIdStr);
+
+  const botMsgId = session?.data?.bot_msg_id;
+  if (botMsgId) deleteMessageFire(token, chatId, botMsgId);
+
+  const loadingMsg = await sendMessage(token, chatId, "⏳ Gerando PIX...");
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const result = await fetchJsonWithTimeout(
+      `${supabaseUrl}/functions/v1/create-pix`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({
+          amount: valor,
+          email: user.email || "",
+          name: user.nome || "",
+          reseller_user_id: user.id,
+        }),
+      },
+      12000,
+    );
+
+    if (loadingMsg) deleteMessageFire(token, chatId, loadingMsg);
+
+    if (!result.success || !result.data) {
+      await sendMessageWithKeyboard(token, chatId,
+        `❌ <b>Erro ao gerar PIX</b>\n\n${result.error || "Tente novamente."}`,
+        [[{ text: "🔄 Tentar Novamente", callback_data: "menu_deposito" }, { text: "📖 Menu", callback_data: "menu_main" }]]
+      );
+      return;
+    }
+
+    const pix = result.data;
+    const buttons = [
+      [{ text: "💰 Ver Saldo", callback_data: "menu_saldo" }],
+      [{ text: "📖 Menu", callback_data: "menu_main" }],
+    ];
+
+    if (pix.qr_code) {
+      const qrUrl = generateQRCodeUrl(pix.qr_code);
+      let caption = `💳 <b>PIX Gerado!</b>\n\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>\n🏦 Pagamento via PIX\n\n`;
+      caption += `📋 <b>Código Copia e Cola:</b>\n<code>${pix.qr_code}</code>\n\n`;
+      if (pix.payment_link) caption += `🔗 <a href="${pix.payment_link}">Link de pagamento</a>\n\n`;
+      caption += `⏱ Aguardando pagamento...`;
+
+      const sent = await sendPhoto(token, chatId, qrUrl, caption, buttons);
+      if (sent && pix.payment_id) {
+        // Save message_id + chat_id in transaction metadata so webhook can delete it after payment
+        await supabase.from("transactions").update({
+          metadata: { ...((await supabase.from("transactions").select("metadata").eq("payment_id", pix.payment_id).maybeSingle()).data?.metadata || {}), telegram_pix_msg_id: sent, telegram_chat_id: chatId }
+        }).eq("payment_id", pix.payment_id);
+      }
+      if (sent) return;
+    }
+
+    let msg = `💳 <b>PIX Gerado!</b>\n\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>\n🏦 Pagamento via PIX\n\n`;
+    if (pix.qr_code) msg += `📋 <b>Copie o código PIX abaixo:</b>\n\n<code>${pix.qr_code}</code>\n\n`;
+    if (pix.payment_link) msg += `🔗 <a href="${pix.payment_link}">Link de pagamento</a>\n\n`;
+    msg += `⏱ Aguardando pagamento...`;
+
+    const fallbackMsgId = await sendMessageWithKeyboard(token, chatId, msg, buttons);
+    if (fallbackMsgId && pix.payment_id) {
+      await supabase.from("transactions").update({
+        metadata: { ...((await supabase.from("transactions").select("metadata").eq("payment_id", pix.payment_id).maybeSingle()).data?.metadata || {}), telegram_pix_msg_id: fallbackMsgId, telegram_chat_id: chatId }
+      }).eq("payment_id", pix.payment_id);
+    }
+  } catch (err: any) {
+    if (loadingMsg) deleteMessageFire(token, chatId, loadingMsg);
+    console.error("Deposit error:", err);
+    const errorMessage = err?.message || "Erro interno";
+    await sendMessageWithKeyboard(token, chatId,
+      `❌ <b>Erro ao gerar PIX</b>\n\n${errorMessage}`,
+      [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+    );
+  }
+}

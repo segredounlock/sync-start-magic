@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Recarga de Celular - Estrelar</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/recarga.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="recarga-page">
+    <!-- Header -->
+    <header class="recarga-header">
+        <div class="recarga-header-content">
+            <div class="recarga-logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">Recarga Rápida</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="recarga-main">
+        <div class="recarga-container">
+            <!-- Step 0: Landing / Divulgação -->
+            <div id="step0" class="recarga-step recarga-landing active">
+                <div class="landing-hero">
+                    <div class="landing-glow"></div>
+                    <div class="landing-content">
+                        <div class="landing-icon-wrap">
+                            <span class="landing-icon">⚡</span>
+                        </div>
+                        <h1 class="landing-title"><span id="landingTitle">Recarga de Celular</span><br><span class="landing-title-accent" id="landingTitleAccent">na Hora</span></h1>
+                        <p class="landing-desc" id="landingDesc">Escolha sua operadora, o valor e pague via PIX. Aprovação imediata, sem complicação.</p>
+                        <div class="landing-benefits">
+                            <span class="landing-pill" id="landingPill1">📱 Todas as operadoras</span>
+                            <span class="landing-pill" id="landingPill2">💳 PIX instantâneo</span>
+                            <span class="landing-pill" id="landingPill3">💰 A partir de R$ 5</span>
+                        </div>
+                        <button type="button" class="btn-landing-cta" id="btnComecarRecarga">
+                            <span class="btn-landing-text" id="landingBtnText">Fazer recarga agora</span>
+                            <span class="btn-landing-arrow">→</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Fluxo de seleção (operadoras → valores → resumo → número) -->
+            <div id="step1" class="recarga-step" style="display: none;">
+                <!-- Tela A: Só operadoras -->
+                <div id="recargaScreenOperators" class="recarga-screen">
+                    <div class="step-header">
+                        <h1>Selecione a Operadora</h1>
+                    </div>
+                    <div class="recarga-section">
+                        <div class="operators-grid" id="operatorsGrid">
+                            <div class="loading">Carregando operadoras...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tela B: Só valores (com voltar) -->
+                <div id="recargaScreenValues" class="recarga-screen" style="display: none;">
+                    <div class="step-header">
+                        <button type="button" class="back-btn recarga-back" id="btnVoltarOperadora" aria-label="Voltar para operadoras"><span>←</span> Voltar</button>
+                        <h1>Escolha o Valor</h1>
+                    </div>
+                    <div class="recarga-section">
+                        <p class="recarga-subtitle" id="valuesOperadoraNome"></p>
+                        <div class="values-grid" id="valuesGrid"></div>
+                    </div>
+                </div>
+
+                <!-- Tela C: Resumo (operadora + valor) + Trocar + Continuar -->
+                <div id="recargaScreenSummary" class="recarga-screen" style="display: none;">
+                    <div class="step-header">
+                        <h1>Confirme sua recarga</h1>
+                    </div>
+                    <div class="recarga-summary-card">
+                        <div class="summary-row">
+                            <span class="summary-label">Operadora</span>
+                            <span class="summary-value" id="summaryOperadora"></span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Valor</span>
+                            <span class="summary-value summary-valor" id="summaryValor"></span>
+                        </div>
+                        <button type="button" class="btn-trocar" id="btnTrocarOperadoraValor">
+                            ↺ Trocar operadora ou valor
+                        </button>
+                        <button type="button" class="btn-continuar" id="btnContinuarNumero">
+                            Continuar para o número
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tela D: Número + Pagar -->
+                <div id="recargaScreenPhone" class="recarga-screen" style="display: none;">
+                    <div class="step-header">
+                        <button type="button" class="back-btn recarga-back" id="btnVoltarResumo" aria-label="Voltar ao resumo"><span>←</span> Voltar</button>
+                        <h1>Número com DDD</h1>
+                    </div>
+                    <div class="recarga-section">
+                        <p class="recarga-subtitle">Digite o número que receberá a recarga</p>
+                        <div class="phone-input-wrapper">
+                            <input type="tel" id="phoneNumber" class="phone-input" placeholder="(11) 99999-9999" maxlength="15">
+                            <span class="phone-check" id="phoneCheck" style="display: none;">✓</span>
+                        </div>
+                        <div class="phone-hint" id="phoneHint"></div>
+                    </div>
+                    <div class="recarga-section" id="paymentBtnSection">
+                        <button class="btn-pagar" id="btnPagar">
+                            <span>✓</span> Pagar <span id="valorPagar">R$ 0,00</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Checkout -->
+            <div id="step2" class="recarga-step checkout-step">
+                <div class="checkout-container">
+                    <div class="checkout-left">
+                        <!-- Revisão dos Itens -->
+                        <div class="checkout-section">
+                            <h3>2 Revisão dos Itens</h3>
+                            <div class="checkout-item" id="checkoutItem">
+                                <!-- Item será preenchido aqui -->
+                            </div>
+                        </div>
+
+                        <!-- Método de Pagamento -->
+                        <div class="checkout-section">
+                            <h3>3 Método de Pagamento</h3>
+                            <div class="payment-method selected" id="pixMethod">
+                                <div class="payment-method-icon">○</div>
+                                <div class="payment-method-info">
+                                    <div class="payment-method-name">Pix</div>
+                                    <div class="payment-method-desc">Escanele ou copie e cola</div>
+                                </div>
+                                <div class="payment-method-badge">
+                                    <span>💎</span> APROVAÇÃO IMEDIATA
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="checkout-right">
+                        <div class="checkout-summary">
+                            <h3>RESUMO DO PEDIDO</h3>
+                            <div class="summary-line">
+                                <span>Subtotal (1 itens):</span>
+                                <span id="summarySubtotal">R$ 0,00</span>
+                            </div>
+                            <div class="summary-total">
+                                <span>Total a Pagar:</span>
+                                <span id="summaryTotal">R$ 0,00</span>
+                            </div>
+                            <button class="btn-pix" id="btnFinalizarPix">
+                                Pagar via Pix
+                            </button>
+                            <div class="security-note">
+                                <span>🔒</span> Ambiente criptografado e seguro
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: PIX Payment -->
+            <div id="step3" class="recarga-step pix-step">
+                <div class="pix-container">
+                    <h2>Pagamento via PIX</h2>
+                    <div class="pix-qrcode" id="pixQRCode">
+                        <div class="qrcode-placeholder">
+                            <div class="qrcode-icon">📱</div>
+                            <p>Gerando QR Code...</p>
+                        </div>
+                    </div>
+                    <div class="pix-code">
+                        <label>Código PIX (Copiar e Colar):</label>
+                        <div class="pix-code-wrapper">
+                            <input type="text" id="pixCode" readonly>
+                            <button class="btn-copy" id="btnCopyPix">Copiar</button>
+                        </div>
+                    </div>
+                    <div class="pix-info">
+                        <p><strong>Valor:</strong> <span id="pixValue">R$ 0,00</span></p>
+                        <p><strong>Vencimento:</strong> <span id="pixExpiry">30 minutos</span></p>
+                    </div>
+                    <div class="pix-status" id="pixStatus">
+                        <div class="status-loading">
+                            <span>⏳</span> Aguardando pagamento...
+                        </div>
+                    </div>
+                    <button class="btn-cancel" id="btnCancelPix">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirmação (após pagamento) -->
+            <div id="step4" class="recarga-step confirmation-step">
+                <div class="confirmation-container">
+                    <div class="confirmation-icon success" id="confirmationIconMain">✓</div>
+                    <h2 class="confirmation-title" id="confirmationTitle">Pagamento confirmado</h2>
+                    <p class="confirmation-subtitle" id="confirmationSubtitle">Sua recarga está sendo processada. Guarde o link abaixo para acompanhar.</p>
+                    
+                    <!-- Status badge -->
+                    <div class="confirmation-status-badge" id="confirmationStatusBadge">
+                        <span class="status-badge-dot"></span>
+                        <span class="status-badge-text" id="confirmationStatusBadgeText">Processando</span>
+                    </div>
+                    
+                    <!-- Link fixo para acompanhar (sempre visível) -->
+                    <div class="confirmation-link-box">
+                        <p class="confirmation-link-label">Link para acompanhar o status (funciona mesmo se você sair da página)</p>
+                        <div class="confirmation-link-row">
+                            <input type="text" id="confirmationStatusLinkInput" readonly class="confirmation-link-input" aria-label="Link do pedido">
+                            <button type="button" class="btn-confirmation-copy" id="btnCopyStatusLink" aria-label="Copiar link">Copiar</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Comprovante (válido quando recarga concluída) -->
+                    <div class="confirmation-receipt-wrap" id="receiptWrap">
+                        <div class="confirmation-receipt-note" id="receiptNote">Quando a recarga for concluída, o comprovante abaixo será válido.</div>
+                        <div id="receiptContainer" class="receipt-card">
+                            <div class="receipt-card-header">
+                                <span class="receipt-card-title">Comprovante de recarga</span>
+                                <span class="receipt-card-date" id="receiptDate"></span>
+                            </div>
+                            <div class="receipt-card-body">
+                                <div class="receipt-row"><span class="receipt-label">Operadora</span><span id="receiptCarrier"></span></div>
+                                <div class="receipt-row"><span class="receipt-label">Número</span><span id="receiptPhone"></span></div>
+                                <div class="receipt-row"><span class="receipt-label">Valor recarga</span><span id="receiptValue"></span></div>
+                                <div class="receipt-row"><span class="receipt-label">Valor pago</span><span id="receiptPaid"></span></div>
+                                <div class="receipt-row receipt-row-id"><span class="receipt-label">ID do pedido</span><span id="receiptOrderId" class="receipt-order-id"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-details" id="confirmationDetails" style="display: none;"></div>
+                    
+                    <div class="confirmation-actions">
+                        <button type="button" class="btn btn-secondary" id="btnAtualizarStatusConfirm">Atualizar status</button>
+                        <button type="button" class="btn btn-secondary" id="btnDownloadPDF">Baixar PDF</button>
+                        <button type="button" class="btn btn-secondary" id="btnDownloadTIM">Comprovante TIM</button>
+                        <a href="" class="btn btn-primary btn-confirmation-new" id="btnNovaRecargaConfirm">Nova recarga</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Status do pedido (link fixo - abre com ?revendedor=X&pedido=Y) -->
+            <div id="step5" class="recarga-step status-step">
+                <div class="status-container">
+                    <div class="status-header">
+                        <h1 class="status-title">Status da recarga</h1>
+                        <p class="status-subtitle" id="statusPageSubtitle">Acompanhe seu pedido</p>
+                    </div>
+                    <div id="statusContent" class="status-content">
+                        <div class="status-loading-state">
+                            <span class="status-loading-spinner"></span>
+                            <p>Carregando status...</p>
+                        </div>
+                    </div>
+                    <div class="status-actions" id="statusActions" style="display: none;">
+                        <a href="" id="statusBtnNovaRecarga" class="btn btn-primary btn-status-new">Fazer nova recarga</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- SweetAlert2 para alertas de sucesso -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Scripts -->
+    <script src="/api.js?v=18"></script>
+    <script src="/database.js?v=18"></script>
+    <script src="/mercadopago.js?v=18"></script>
+    <script src="/virtualpay.js?v=21"></script>
+    <script src="/pushinpay.js?v=1"></script>
+    <script src="/recarga.js?v=20"></script>
+</body>
+</html>

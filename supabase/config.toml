@@ -1,0 +1,40 @@
+project_id = "rqhrvfahnoovysfgdwwu"
+
+[functions.telegram-bot]
+verify_jwt = false
+
+[functions.telegram-setup]
+verify_jwt = false
+
+[functions.pix-webhook]
+verify_jwt = false
+
+[functions.github-sync]
+verify_jwt = false
+
+[functions.telegram-miniapp]
+verify_jwt = false
+
+[functions.create-pix]
+verify_jwt = false
+
+[functions.recarga-express]
+verify_jwt = false
+
+[functions.admin-create-user]
+verify_jwt = false
+
+[functions.admin-toggle-role]
+verify_jwt = false
+
+[functions.backup-export]
+verify_jwt = false
+
+[functions.backup-restore]
+verify_jwt = false
+
+[functions.client-register]
+verify_jwt = false
+
+[functions.telegram-notify]
+verify_jwt = false
