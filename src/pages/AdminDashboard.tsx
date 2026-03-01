@@ -1066,19 +1066,19 @@ export default function AdminDashboard() {
             {/* Performance Financeira */}
             <h3 className="font-display text-lg font-bold text-foreground mb-3">Performance Financeira & Operacional</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              {/* Resultado Financeiro - span 1 */}
+              {/* Lucro do Período */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center">
                     <AnimatedIcon icon={TrendingUp} className="h-4 w-4 text-success" animation="bounce" delay={0.05} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Resultado Financeiro</span>
+                  <span className="text-sm text-muted-foreground">Lucro do Período</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground">{fmt(analytics.lucro)}</p>
                 <span className="text-xs font-semibold text-success">Lucro Bruto</span>
                 <div className="flex justify-between mt-3 pt-3 border-t border-border">
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Cobrado Revend.</p>
+                    <p className="text-[10px] text-muted-foreground">Vendas Revend.</p>
                     <p className="text-sm font-bold text-foreground">{fmt(analytics.totalCobrado)}</p>
                   </div>
                   {role === "admin" && (
@@ -1096,28 +1096,28 @@ export default function AdminDashboard() {
                 </div>
               </motion.div>
 
-              {/* Total Depositado */}
+              {/* Depósitos Recebidos */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
                     <AnimatedIcon icon={CreditCard} className="h-4 w-4 text-primary" animation="pulse" delay={0.1} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Total Depositado</span>
+                  <span className="text-sm text-muted-foreground">Depósitos Recebidos</span>
                   <span className="ml-auto text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">{analytics.txCount} txs</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground">{fmt(analytics.totalDeposited)}</p>
               </motion.div>
 
-              {/* Saldo em Carteiras */}
+              {/* Saldo dos Revendedores */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center">
                     <AnimatedIcon icon={Wallet} className="h-4 w-4 text-warning" animation="wiggle" delay={0.15} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Saldo em Carteiras</span>
+                  <span className="text-sm text-muted-foreground">Saldo dos Revendedores</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground">{fmt(analytics.saldoCarteiras)}</p>
-                <span className="text-xs text-success">Passivo do Sistema</span>
+                <span className="text-xs text-success">Dinheiro a devolver</span>
               </motion.div>
             </div>
 
@@ -1148,13 +1148,13 @@ export default function AdminDashboard() {
                 </div>
               </motion.div>
 
-              {/* Usuários Únicos */}
+              {/* Revendedores Cadastrados */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
                     <AnimatedIcon icon={Users} className="h-4 w-4 text-primary" animation="pulse" delay={0.25} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Usuários Únicos</span>
+                  <span className="text-sm text-muted-foreground">Revendedores Cadastrados</span>
                   {allProfiles.filter(p => p.created_at >= periodStart).length > 0 && (
                     <span className="ml-auto text-xs bg-success/15 text-success px-2 py-0.5 rounded-full font-medium flex items-center gap-0.5">
                       <ArrowUpRight className="h-3 w-3" />+{allProfiles.filter(p => p.created_at >= periodStart).length} novos
@@ -1179,13 +1179,13 @@ export default function AdminDashboard() {
                 </div>
               </motion.div>
 
-              {/* Ticket Médio */}
+              {/* Valor Médio por Recarga */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
                     <AnimatedIcon icon={FileText} className="h-4 w-4 text-accent-foreground" animation="bounce" delay={0.3} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Ticket Médio</span>
+                  <span className="text-sm text-muted-foreground">Valor Médio por Recarga</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground">{fmt(analytics.ticketMedio)}</p>
               </motion.div>
@@ -1962,7 +1962,7 @@ export default function AdminDashboard() {
             <h2 className="font-display text-2xl font-bold text-foreground">Depósitos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <div className="glass-card rounded-xl p-5">
-                <p className="text-xs text-muted-foreground">Total Depositado</p>
+                <p className="text-xs text-muted-foreground">Depósitos Recebidos</p>
                 <p className="text-2xl font-bold text-foreground">{fmt(analytics.totalDeposited)}</p>
               </div>
               <div className="glass-card rounded-xl p-5">
