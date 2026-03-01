@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
 import RealtimeDashboard from "@/components/RealtimeDashboard";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
+import { usePrincipalNewUserToasts } from "@/hooks/usePrincipalNewUserToasts";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -183,6 +184,8 @@ function TestConsultaButton({ url, apiKey }: { url: string; apiKey: string }) {
 export default function Principal() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  usePrincipalNewUserToasts();
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
