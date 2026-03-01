@@ -413,8 +413,9 @@ export default function AdminDashboard() {
       const map: Record<string, string> = {};
       data?.forEach(row => { map[row.key] = row.value || ""; });
 
-      // /admin: always load bot token from own profile (isolated per logged user)
-      if (user?.id) {
+      // Revendedor: load bot token from own profile (isolated)
+      // Admin: keeps system_config token (same as /principal)
+      if (role === "revendedor" && user?.id) {
         const { data: profile } = await supabase.from("profiles").select("telegram_bot_token").eq("id", user.id).maybeSingle();
         map.telegramBotToken = profile?.telegram_bot_token || "";
       }
@@ -422,15 +423,16 @@ export default function AdminDashboard() {
       setConfigData(map);
     } catch (err) { console.error(err); }
     setConfigLoading(false);
-  }, [user]);
+  }, [role, user]);
 
   const saveConfig = async () => {
     setConfigSaving(true);
     try {
       const entries = Object.entries(configData);
       for (const [key, value] of entries) {
-        // /admin: bot token is always personal (profiles), never global system_config
-        if (key === "telegramBotToken") {
+        // Revendedor: save bot token to own profile (isolated)
+        // Admin: save to system_config (global, same as /principal)
+        if (key === "telegramBotToken" && role === "revendedor") {
           if (user?.id) {
             await supabase.from("profiles").update({ telegram_bot_token: value }).eq("id", user.id);
           }
@@ -2996,9 +2998,13 @@ export default function AdminDashboard() {
                                 const resp = await fetch(`https://api.telegram.org/bot${token}/getMe`);
                                 const data = await resp.json();
                                 if (data.ok) {
-                                  // /admin: always save token to own profile (isolated)
+                                  // Revendedor: save to profiles (isolated). Admin: save to system_config (global)
                                   if (!user?.id) { toast.error("Sessão inválida. Faça login novamente."); return; }
-                                  await supabase.from("profiles").update({ telegram_bot_token: token }).eq("id", user.id);
+                                  if (role === "revendedor") {
+                                    await supabase.from("profiles").update({ telegram_bot_token: token }).eq("id", user.id);
+                                  } else {
+                                    await supabase.from("system_config").upsert({ key: "telegramBotToken", value: token }, { onConflict: "key" });
+                                  }
                                   toast.success(`Token válido e salvo! Bot: ${data.result.first_name} (@${data.result.username})`);
                                   setBotStatus({ connected: true, loading: false, botName: data.result.first_name, botUsername: data.result.username, botId: String(data.result.id), error: null, webhookUrl: null, webhookError: null, pendingUpdates: null });
                                 } else {
