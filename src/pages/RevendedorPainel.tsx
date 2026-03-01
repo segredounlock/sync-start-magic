@@ -405,8 +405,58 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const handleCheckPhone = async () => {
     if (!telefone.trim()) { toast.error("Digite o número"); return; }
+    
+    const normalizedPhone = telefone.replace(/\D/g, "");
+
+    // If no carrier selected, try to auto-detect operator first
     if (!selectedCarrier?.carrierId) {
-      toast.warning("Selecione a operadora antes de verificar. O cooldown pode variar por operadora.");
+      setCheckingPhone(true);
+      setPhoneCheckResult(null);
+      try {
+        const queryResp = await callApi("query-operator", { phoneNumber: normalizedPhone });
+        console.log("query-operator result:", queryResp);
+        
+        if (queryResp?.success && queryResp.data) {
+          // Try to match operator name from response to catalog
+          const operatorName = queryResp.data.carrier?.name || queryResp.data.operator || queryResp.data.operadora || queryResp.data.name || "";
+          if (operatorName) {
+            const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            const matched = catalog.find(c => normalize(c.name).includes(normalize(operatorName)) || normalize(operatorName).includes(normalize(c.name)));
+            if (matched) {
+              setSelectedCarrier(matched);
+              toast.success(`Operadora detectada: ${matched.name}`);
+              // Now proceed to check-phone with the detected carrier
+              try {
+                const resp = await callApi("check-phone", { phoneNumber: normalizedPhone, carrierId: matched.carrierId });
+                if (resp?.success && resp.data) {
+                  const checkResult = {
+                    ...resp.data,
+                    message: resp.data.status === "COOLDOWN"
+                      ? formatCooldownMessage(resp.data.message)
+                      : (resp.data.message || "Número disponível para recarga."),
+                  };
+                  setPhoneCheckResult(checkResult);
+                  if (checkResult.status === "CLEAR") toast.success("Número disponível!");
+                  else if (checkResult.status === "COOLDOWN") toast.warning(checkResult.message);
+                  else if (checkResult.status === "BLACKLISTED") toast.error(checkResult.message);
+                }
+              } catch { /* ignore check-phone error after auto-detect */ }
+              setCheckingPhone(false);
+              return;
+            } else {
+              toast.warning(`Operadora "${operatorName}" detectada, mas não encontrada no catálogo. Selecione manualmente.`);
+            }
+          } else {
+            toast.warning("Não foi possível detectar a operadora. Selecione manualmente.");
+          }
+        } else {
+          toast.warning("Não foi possível detectar a operadora. Selecione manualmente.");
+        }
+      } catch (err: any) {
+        console.warn("Auto-detect operator failed:", err.message);
+        toast.warning("Selecione a operadora manualmente.");
+      }
+      setCheckingPhone(false);
       return;
     }
 
@@ -414,7 +464,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     setPhoneCheckResult(null);
     try {
       const resp = await callApi("check-phone", {
-        phoneNumber: telefone.replace(/\D/g, ""),
+        phoneNumber: normalizedPhone,
         carrierId: selectedCarrier.carrierId,
       });
 
@@ -1074,7 +1124,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             required maxLength={16}
                             className="flex-1 min-w-0 px-5 py-4 rounded-xl glass-input text-foreground placeholder:text-muted-foreground/60 text-xl tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-primary/40 font-mono transition-all"
                             placeholder="(00) 00000-0000" />
-                          <button type="button" onClick={handleCheckPhone} disabled={checkingPhone || !telefone.trim() || !selectedCarrier}
+                          <button type="button" onClick={handleCheckPhone} disabled={checkingPhone || !telefone.trim()}
                             className="w-full sm:w-auto px-5 py-3 rounded-xl glass-card text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40 transition-all shrink-0 border border-primary/20">
                             {checkingPhone ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Verificar"}
                           </button>
