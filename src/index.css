@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Subtle RGB border animation */
+@keyframes rgb-border {
+  0% { border-color: hsl(0, 70%, 60%); }
+  16% { border-color: hsl(60, 70%, 55%); }
+  33% { border-color: hsl(120, 70%, 50%); }
+  50% { border-color: hsl(180, 70%, 50%); }
+  66% { border-color: hsl(240, 70%, 60%); }
+  83% { border-color: hsl(300, 70%, 55%); }
+  100% { border-color: hsl(360, 70%, 60%); }
+}
+
+.rgb-border {
+  border: 1.5px solid transparent;
+  animation: rgb-border 6s linear infinite;
+}
+
 @layer base {
   :root {
     /* White Premium Glass Theme */

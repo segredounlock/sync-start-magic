@@ -639,7 +639,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
 
             {/* User Info */}
-            <div className="mx-4 mb-3 p-3 rounded-xl bg-muted/50">
+            <div className="mx-4 mb-3 p-3 rounded-xl bg-muted/50 rgb-border">
               <div className="flex items-center gap-3">
                 <AvatarDisplay />
                 <div className="min-w-0">
@@ -716,7 +716,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           </div>
 
           <div className="p-4 space-y-3 border-b border-border">
-            <div className="glass-card rounded-lg p-3 flex items-center gap-3">
+            <div className="glass-card rounded-lg p-3 flex items-center gap-3 rgb-border">
               <AvatarDisplay />
               <div className="min-w-0">
                 <p className="text-sm font-bold text-foreground truncate uppercase">{userLabel}</p>
