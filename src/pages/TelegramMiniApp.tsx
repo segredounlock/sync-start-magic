@@ -879,10 +879,14 @@ export default function TelegramMiniApp() {
                   {recargaStep === "phone" && (
                     <div className="rounded-2xl p-6 space-y-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
                       <div className="text-center">
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
-                          style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)" }}>
+                        <motion.div
+                          className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
+                          style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)" }}
+                          animate={{ y: [0, -6, 0], rotate: [0, -8, 8, 0] }}
+                          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                        >
                           <Smartphone className="w-7 h-7" style={st.link} />
-                        </div>
+                        </motion.div>
                         <h2 className="text-lg font-bold" style={st.text}>Qual o número?</h2>
                         <p className="text-sm mt-1" style={st.hint}>Digite o DDD + Número do celular</p>
                       </div>
