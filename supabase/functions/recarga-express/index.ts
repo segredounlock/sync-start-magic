@@ -407,6 +407,7 @@ Deno.serve(async (req) => {
           operadora: orderData.carrier?.name || carrierId,
           valor: catalogValue,
           custo: chargedCost,
+          custo_api: apiCost,
           status: isCompleted ? "completed" : "pending",
           external_id: externalId,
           completed_at: isCompleted ? new Date().toISOString() : null,

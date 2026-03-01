@@ -556,8 +556,10 @@ export default function AdminDashboard() {
   // Analytics computations
   const analytics = useMemo(() => {
     const totalVendas = filteredRecargas.reduce((s, r) => s + r.valor, 0);
-    const totalCusto = filteredRecargas.reduce((s, r) => s + r.custo, 0);
-    const lucro = totalVendas - totalCusto;
+    const totalCobrado = filteredRecargas.reduce((s, r) => s + r.custo, 0);
+    const totalCustoApi = filteredRecargas.reduce((s, r) => s + (Number((r as any).custo_api) || 0), 0);
+    // Lucro real = o que foi cobrado dos revendedores - custo real da API
+    const lucro = totalCobrado - totalCustoApi;
     const totalDeposited = filteredTransactions.filter(t => (t.status === "completed" || t.status === "confirmado") && (t.type === "deposit" || t.type === "deposito")).reduce((s, t) => s + t.amount, 0);
     const txCount = filteredTransactions.length;
     const saldoCarteiras = revendedores.reduce((s, r) => s + r.saldo, 0);
@@ -566,7 +568,7 @@ export default function AdminDashboard() {
     const pendingRec = filteredRecargas.filter(r => r.status === "pending" || r.status === "pendente").length;
     const ticketMedio = totalRec > 0 ? totalVendas / totalRec : 0;
 
-    return { totalVendas, totalCusto, lucro, totalDeposited, txCount, saldoCarteiras, totalRec, successRec, pendingRec, ticketMedio };
+    return { totalVendas, totalCobrado, totalCustoApi, lucro, totalDeposited, txCount, saldoCarteiras, totalRec, successRec, pendingRec, ticketMedio };
   }, [filteredRecargas, filteredTransactions, revendedores]);
 
   // Helper: data local YYYY-MM-DD (sem problemas de fuso UTC)
@@ -577,17 +579,17 @@ export default function AdminDashboard() {
 
   // Chart: Vendas & Lucro por dia
   const vendasLucroPorDia = useMemo(() => {
-    const map: Record<string, { vendas: number; custo: number }> = {};
+    const map: Record<string, { cobrado: number; custoApi: number }> = {};
     filteredRecargas.forEach(r => {
       const day = toLocalDateKey(r.created_at);
-      if (!map[day]) map[day] = { vendas: 0, custo: 0 };
-      map[day].vendas += r.valor;
-      map[day].custo += r.custo;
+      if (!map[day]) map[day] = { cobrado: 0, custoApi: 0 };
+      map[day].cobrado += r.custo;
+      map[day].custoApi += Number((r as any).custo_api) || 0;
     });
     return Object.entries(map).sort().map(([day, v]) => ({
       day: new Date(day + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", timeZone: "America/Sao_Paulo" }),
-      vendas: v.vendas,
-      lucro: v.vendas - v.custo,
+      vendas: v.cobrado,
+      lucro: v.cobrado - v.custoApi,
     }));
   }, [filteredRecargas]);
 
@@ -1066,19 +1068,19 @@ export default function AdminDashboard() {
                 <span className="text-xs font-semibold text-success">Lucro Bruto</span>
                 <div className="flex justify-between mt-3 pt-3 border-t border-border">
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Total Vendas</p>
-                    <p className="text-sm font-bold text-foreground">{fmt(analytics.totalVendas)}</p>
+                    <p className="text-[10px] text-muted-foreground">Cobrado Revend.</p>
+                    <p className="text-sm font-bold text-foreground">{fmt(analytics.totalCobrado)}</p>
                   </div>
                   {role === "admin" && (
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">Custo Provider</p>
-                    <p className="text-sm font-bold text-destructive">- {fmt(analytics.totalCusto)}</p>
+                    <p className="text-[10px] text-muted-foreground">Custo API</p>
+                    <p className="text-sm font-bold text-destructive">- {fmt(analytics.totalCustoApi)}</p>
                   </div>
                   )}
                   {role === "revendedor" && (
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground">Meu Custo</p>
-                    <p className="text-sm font-bold text-destructive">- {fmt(analytics.totalVendas - analytics.lucro)}</p>
+                    <p className="text-sm font-bold text-destructive">- {fmt(analytics.totalCobrado)}</p>
                   </div>
                   )}
                 </div>
