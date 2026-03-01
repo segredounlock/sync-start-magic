@@ -880,9 +880,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               <CreditCard className="h-4 w-4" />
               <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</span>
             </button>
-            <div className="w-9 h-9 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-xs">
-              {userInitial}
-            </div>
+            <AvatarDisplay size="w-9 h-9" textSize="text-xs" />
           </div>
         </header>
 
