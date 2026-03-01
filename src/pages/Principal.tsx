@@ -1867,11 +1867,13 @@ export default function Principal() {
                                       {activeOp.valores.sort((a: number, b: number) => a - b).map((valor: number) => {
                                         const rule = revDetailPricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
                                         const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
-                                        const localTipo = rule?.tipo_regra || "fixo";
-                                        const localValor = rule?.regra_valor ?? 0;
-                                        const localCusto = rule?.custo ?? 0;
-                                        const precoFinal = rule ? (localTipo === "fixo" ? localValor : valor * (1 + localValor / 100)) : 0;
+                                        const localTipo = rule?.tipo_regra || globalRule?.tipo_regra || "fixo";
+                                        const localValor = rule?.regra_valor ?? globalRule?.regra_valor ?? 0;
+                                        const localCusto = rule?.custo ?? globalRule?.custo ?? 0;
                                         const globalPreco = globalRule ? (globalRule.tipo_regra === "fixo" ? globalRule.regra_valor : valor * (1 + globalRule.regra_valor / 100)) : 0;
+                                        const activePreco = localTipo === "fixo" ? localValor : valor * (1 + localValor / 100);
+                                        const apiCost = globalRule?.custo ?? 0;
+                                        const lucro = activePreco - apiCost;
                                         const hasCustom = !!rule;
 
                                         return (
@@ -1882,29 +1884,31 @@ export default function Principal() {
                                                 <p className="text-lg font-bold text-foreground">{fmt(valor)}</p>
                                               </div>
                                               <div className="text-right">
-                                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{hasCustom ? "Personalizado" : "Global"}</p>
-                                                <p className={`text-lg font-bold ${hasCustom ? "text-success" : "text-muted-foreground"}`}>
-                                                  {hasCustom ? fmt(precoFinal) : (globalPreco > 0 ? fmt(globalPreco) : "—")}
-                                                </p>
+                                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Global</p>
+                                                <p className="text-lg font-bold text-success">{globalPreco > 0 ? fmt(globalPreco) : "—"}</p>
                                               </div>
+                                            </div>
+                                            <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-1.5 text-xs">
+                                              <span className="text-muted-foreground">Custo: <span className="font-mono font-semibold text-foreground">{fmt(apiCost)}</span></span>
+                                              <span className={`font-semibold ${lucro > 0 ? "text-success" : lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>Lucro: <span className="font-mono">{fmt(lucro)}</span></span>
                                             </div>
                                             <div className="grid grid-cols-[auto_1fr_auto] gap-1.5 items-end">
                                               <div>
                                                 <label className="text-[9px] text-muted-foreground mb-0.5 block">Tipo</label>
                                                 <select value={localTipo} onChange={e => {
                                                   if (!selectedRev) return;
-                                                  saveResellerPricingRule(selectedRev.id, { operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: e.target.value as "fixo" | "margem", regra_valor: localValor });
-                                                  fetchRevDetail(selectedRev);
+                                                  saveResellerPricingRule(selectedRev.id, { operadora_id: activeOpId, valor_recarga: valor, custo: apiCost, tipo_regra: e.target.value as "fixo" | "margem", regra_valor: localValor });
+                                                  setTimeout(() => fetchRevDetail(selectedRev), 500);
                                                 }} className="h-8 rounded-lg bg-muted/70 border border-border px-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-                                                  <option value="margem">%</option><option value="fixo">R$</option>
+                                                  <option value="fixo">Fixo (R$)</option><option value="margem">Margem (%)</option>
                                                 </select>
                                               </div>
                                               <div>
                                                 <label className="text-[9px] text-muted-foreground mb-0.5 block">Valor</label>
-                                                <input type="number" defaultValue={localValor} key={`detail-${selectedRev?.id}-${activeOpId}-${valor}-${rule?.regra_valor}`}
+                                                <input type="number" defaultValue={localValor} key={`detail-${selectedRev?.id}-${activeOpId}-${valor}-${rule?.regra_valor}-${globalRule?.regra_valor}`}
                                                   onBlur={e => {
                                                     if (!selectedRev) return;
-                                                    saveResellerPricingRule(selectedRev.id, { operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: localTipo, regra_valor: parseFloat(e.target.value) || 0 });
+                                                    saveResellerPricingRule(selectedRev.id, { operadora_id: activeOpId, valor_recarga: valor, custo: apiCost, tipo_regra: localTipo, regra_valor: parseFloat(e.target.value) || 0 });
                                                     setTimeout(() => fetchRevDetail(selectedRev), 500);
                                                   }}
                                                   className="h-8 w-full rounded-lg bg-muted/70 border border-border px-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
