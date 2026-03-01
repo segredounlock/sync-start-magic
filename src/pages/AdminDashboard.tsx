@@ -715,7 +715,7 @@ export default function AdminDashboard() {
   const [resellerPricingSaving, setResellerPricingSaving] = useState<Record<string, boolean>>({});
 
   // Pricing sub-tab state (admin)
-  const [pricingSubTab, setPricingSubTab] = useState<"global" | "revendedor" | "usuario">("global");
+  const [pricingSubTab, setPricingSubTab] = useState<"global" | "revendedor">("global");
   const [pricingTargetUserId, setPricingTargetUserId] = useState<string>("");
   const [targetUserPricingRules, setTargetUserPricingRules] = useState<PricingRule[]>([]);
   const [targetUserPricingSelectedOp, setTargetUserPricingSelectedOp] = useState<string>("");
@@ -2667,12 +2667,11 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            {/* Sub-tabs: Global | Por Revendedor | Por Usuário */}
+            {/* Sub-tabs: Global | Por Revendedor */}
             <div className="flex rounded-xl overflow-hidden border border-border">
               {[
                 { key: "global" as const, label: "Global", icon: Globe },
                 { key: "revendedor" as const, label: "Por Revendedor", icon: Users },
-                { key: "usuario" as const, label: "Por Usuário", icon: Users },
               ].map(st => (
                 <button
                   key={st.key}
@@ -2762,10 +2761,9 @@ export default function AdminDashboard() {
               </>
             )}
 
-            {/* === POR REVENDEDOR / POR USUÁRIO pricing === */}
-            {(pricingSubTab === "revendedor" || pricingSubTab === "usuario") && (() => {
-              const isRevendedor = pricingSubTab === "revendedor";
-              const filteredUsers = revendedores.filter(r => isRevendedor ? r.role === "revendedor" : r.role === "cliente");
+            {/* === POR REVENDEDOR pricing === */}
+            {pricingSubTab === "revendedor" && (() => {
+              const filteredUsers = revendedores.filter(r => r.role === "revendedor");
               const selectedUserId = pricingTargetUserId;
               const selectedUser = filteredUsers.find(u => u.id === selectedUserId);
 
@@ -2773,7 +2771,7 @@ export default function AdminDashboard() {
                 <>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                      Selecione o {isRevendedor ? "Revendedor" : "Usuário"}
+                      Selecione o Revendedor
                     </label>
                     <select
                       value={selectedUserId}
@@ -2795,7 +2793,7 @@ export default function AdminDashboard() {
                   {!selectedUserId ? (
                     <div className="glass-card rounded-xl p-8 text-center border-2 border-dashed border-border">
                       <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground">Selecione um {isRevendedor ? "revendedor" : "usuário"} para gerenciar seus preços personalizados.</p>
+                      <p className="text-muted-foreground">Selecione um revendedor para gerenciar seus preços personalizados.</p>
                     </div>
                   ) : operadorasLoading ? (
                     <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
