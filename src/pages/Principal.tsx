@@ -21,7 +21,7 @@ import {
   Wallet, Menu, X, Shield, Eye, Phone, Mail, Calendar, ChevronRight,
   ArrowLeft, UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
-  ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive,
+  ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -206,6 +206,9 @@ export default function Principal() {
   const [revGatewayConfig, setRevGatewayConfig] = useState<Record<string, string>>({});
   const [revGatewayLoading, setRevGatewayLoading] = useState(false);
   const [revPricingRules, setRevPricingRules] = useState<{ operadora_id: string; valor_recarga: number; regra_valor: number }[]>([]);
+  const [revDetailPricingRules, setRevDetailPricingRules] = useState<PricingRule[]>([]);
+  const [revDetailPricingOp, setRevDetailPricingOp] = useState<string>("");
+  const [revDetailPricingOpen, setRevDetailPricingOpen] = useState(false);
 
   // All recargas for counting
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
@@ -610,11 +613,12 @@ export default function Principal() {
       const [{ data: recData }, { data: transData }, { data: rpRules }] = await Promise.all([
         supabase.from("recargas").select("*").eq("user_id", rev.id).order("created_at", { ascending: false }).limit(100),
         supabase.from("transactions").select("amount, created_at, status, type").eq("user_id", rev.id).order("created_at", { ascending: false }).limit(100),
-        supabase.from("reseller_pricing_rules").select("operadora_id, valor_recarga, regra_valor").eq("user_id", rev.id),
+        supabase.from("reseller_pricing_rules").select("*").eq("user_id", rev.id),
       ]);
       setRevRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo) })));
       setRevTransactions((transData || []).map(t => ({ ...t, amount: Number(t.amount) })));
       setRevPricingRules((rpRules || []).map(r => ({ operadora_id: r.operadora_id, valor_recarga: Number(r.valor_recarga), regra_valor: Number(r.regra_valor) })));
+      setRevDetailPricingRules((rpRules || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
     } catch (err) { console.error(err); }
     setRevLoading(false);
   }, []);
@@ -1818,6 +1822,113 @@ export default function Principal() {
                         </div>
                       </div>
                     )}
+                  </motion.div>
+
+                  {/* Preços Personalizados */}
+                  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => { setRevDetailPricingOpen(!revDetailPricingOpen); if (!revDetailPricingOpen && pricingOps.length === 0) fetchPricingData(); }}
+                      className="w-full p-5 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                    >
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-warning" /> Preços Personalizados
+                        {revDetailPricingRules.length > 0 && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/15 text-warning">{revDetailPricingRules.length} regra(s)</span>
+                        )}
+                      </h4>
+                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${revDetailPricingOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    <AnimatePresence>
+                      {revDetailPricingOpen && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                          <div className="px-5 pb-5 space-y-4">
+                            {pricingOps.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-4">Carregando operadoras...</p>
+                            ) : (
+                              <>
+                                <div className="flex gap-2 flex-wrap">
+                                  {pricingOps.map(op => (
+                                    <button key={op.id} onClick={() => setRevDetailPricingOp(op.id)}
+                                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                                        (revDetailPricingOp || pricingOps[0]?.id) === op.id
+                                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                                          : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                                      }`}>
+                                      <Package className="h-3.5 w-3.5" />{op.nome}
+                                    </button>
+                                  ))}
+                                </div>
+                                {(() => {
+                                  const activeOpId = revDetailPricingOp || pricingOps[0]?.id;
+                                  const activeOp = pricingOps.find(o => o.id === activeOpId);
+                                  if (!activeOp) return null;
+                                  return (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                      {activeOp.valores.sort((a: number, b: number) => a - b).map((valor: number) => {
+                                        const rule = revDetailPricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                                        const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                                        const localTipo = rule?.tipo_regra || "fixo";
+                                        const localValor = rule?.regra_valor ?? 0;
+                                        const localCusto = rule?.custo ?? 0;
+                                        const precoFinal = rule ? (localTipo === "fixo" ? localValor : valor * (1 + localValor / 100)) : 0;
+                                        const globalPreco = globalRule ? (globalRule.tipo_regra === "fixo" ? globalRule.regra_valor : valor * (1 + globalRule.regra_valor / 100)) : 0;
+                                        const hasCustom = !!rule;
+
+                                        return (
+                                          <div key={valor} className={`rounded-xl p-3 space-y-2 border ${hasCustom ? "border-success/50 bg-success/5" : "border-border/50 bg-muted/20"}`}>
+                                            <div className="flex items-center justify-between">
+                                              <div>
+                                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recarga</p>
+                                                <p className="text-lg font-bold text-foreground">{fmt(valor)}</p>
+                                              </div>
+                                              <div className="text-right">
+                                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{hasCustom ? "Personalizado" : "Global"}</p>
+                                                <p className={`text-lg font-bold ${hasCustom ? "text-success" : "text-muted-foreground"}`}>
+                                                  {hasCustom ? fmt(precoFinal) : (globalPreco > 0 ? fmt(globalPreco) : "—")}
+                                                </p>
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-[auto_1fr_auto] gap-1.5 items-end">
+                                              <div>
+                                                <label className="text-[9px] text-muted-foreground mb-0.5 block">Tipo</label>
+                                                <select value={localTipo} onChange={e => {
+                                                  if (!selectedRev) return;
+                                                  saveResellerPricingRule(selectedRev.id, { operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: e.target.value as "fixo" | "margem", regra_valor: localValor });
+                                                  fetchRevDetail(selectedRev);
+                                                }} className="h-8 rounded-lg bg-muted/70 border border-border px-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                                                  <option value="margem">%</option><option value="fixo">R$</option>
+                                                </select>
+                                              </div>
+                                              <div>
+                                                <label className="text-[9px] text-muted-foreground mb-0.5 block">Valor</label>
+                                                <input type="number" defaultValue={localValor} key={`detail-${selectedRev?.id}-${activeOpId}-${valor}-${rule?.regra_valor}`}
+                                                  onBlur={e => {
+                                                    if (!selectedRev) return;
+                                                    saveResellerPricingRule(selectedRev.id, { operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: localTipo, regra_valor: parseFloat(e.target.value) || 0 });
+                                                    setTimeout(() => fetchRevDetail(selectedRev), 500);
+                                                  }}
+                                                  className="h-8 w-full rounded-lg bg-muted/70 border border-border px-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
+                                              </div>
+                                              <button onClick={() => {
+                                                if (!selectedRev) return;
+                                                resetResellerPricingRule(selectedRev.id, activeOpId, valor);
+                                                setTimeout(() => fetchRevDetail(selectedRev), 500);
+                                              }} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors" title="Resetar (usar global)">
+                                                <RefreshCw className="h-3.5 w-3.5" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })()}
+                              </>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
 
                   {/* Últimas Recargas */}
