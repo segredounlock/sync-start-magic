@@ -78,13 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    // Redirect immediately to avoid blank screen
-    window.location.href = "/";
     try {
       await supabase.auth.signOut();
     } catch (e) {
       console.error("Logout error:", e);
     }
+    setSession(null);
+    setRole(null);
+    window.location.href = "/";
   };
 
   return (
