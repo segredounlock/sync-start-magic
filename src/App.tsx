@@ -3,6 +3,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
+import { PageSkeleton } from "@/components/Skeleton";
 import Auth from "@/pages/Auth";
 import RecargaPublica from "@/pages/RecargaPublica";
 import TelegramMiniApp from "@/pages/TelegramMiniApp";
@@ -13,12 +14,6 @@ import ClientePortal from "@/pages/ClientePortal";
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
 const Principal = lazy(() => import("@/pages/Principal"));
-
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-  </div>
-);
 
 function App() {
   return (
@@ -34,7 +29,7 @@ function App() {
             path="/admin"
             element={
               <ProtectedRoute allowedRoles={["admin", "revendedor"]}>
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<PageSkeleton />}>
                   <AdminDashboard />
                 </Suspense>
               </ProtectedRoute>
@@ -44,7 +39,7 @@ function App() {
             path="/principal"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<PageSkeleton />}>
                   <Principal />
                 </Suspense>
               </ProtectedRoute>
@@ -54,7 +49,7 @@ function App() {
             path="/painel"
             element={
               <ProtectedRoute allowedRoles={["revendedor", "admin"]}>
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<PageSkeleton />}>
                   <RevendedorPainel />
                 </Suspense>
               </ProtectedRoute>
