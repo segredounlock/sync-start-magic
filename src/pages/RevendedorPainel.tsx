@@ -7,6 +7,7 @@ import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { PromoBanner } from "@/components/PromoBanner";
+import { PopupBanner } from "@/components/PopupBanner";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
 import { playSuccessSound } from "@/lib/sounds";
@@ -134,8 +135,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // Profile slug for store link
   const [profileSlug, setProfileSlug] = useState("");
 
-  // Banner config from system_config
-  const [bannerConfig, setBannerConfig] = useState<{ enabled: boolean; title: string; subtitle: string; link: string }>({ enabled: false, title: "", subtitle: "", link: "" });
+  // Banner config from banners table
+  const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string }[]>([]);
+  const [dismissedBanners, setDismissedBanners] = useState<Set<number>>(new Set());
 
 
   // Call edge function helper
@@ -340,10 +342,16 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   useEffect(() => { fetchData(); fetchCatalog(); }, [fetchData, fetchCatalog]);
   useEffect(() => {
-    supabase.from("system_config").select("key, value").in("key", ["bannerEnabled", "bannerTitle", "bannerSubtitle", "bannerLink"]).then(({ data }) => {
-      const map: Record<string, string> = {};
-      data?.forEach(r => { map[r.key] = r.value || ""; });
-      setBannerConfig({ enabled: map.bannerEnabled === "true", title: map.bannerTitle || "", subtitle: map.bannerSubtitle || "", link: map.bannerLink || "" });
+    supabase.from("banners").select("*").order("position").then(({ data }) => {
+      setBannersList((data || []).map(b => ({
+        id: b.id,
+        position: b.position,
+        type: b.type,
+        enabled: b.enabled,
+        title: b.title,
+        subtitle: b.subtitle,
+        link: b.link,
+      })));
     });
   }, []);
   useEffect(() => { if (tab === "extrato" || tab === "addSaldo") fetchTransactions(); }, [tab, fetchTransactions]);
@@ -906,14 +914,29 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             ))}
           </div>
 
-          {/* Banner Promocional */}
-          <PromoBanner
-            title={bannerConfig.title || undefined}
-            subtitle={bannerConfig.subtitle || undefined}
-            visible={bannerConfig.enabled}
-            link={bannerConfig.link || undefined}
-            onClose={() => setBannerConfig(prev => ({ ...prev, enabled: false }))}
-          />
+          {/* Banners Promocionais */}
+          {bannersList.filter(b => b.enabled && b.type !== "popup" && !dismissedBanners.has(b.position)).map(b => (
+            <PromoBanner
+              key={b.id}
+              title={b.title || undefined}
+              subtitle={b.subtitle || undefined}
+              visible={true}
+              link={b.link || undefined}
+              onClose={() => setDismissedBanners(prev => new Set([...prev, b.position]))}
+            />
+          ))}
+
+          {/* Popup Banners */}
+          {bannersList.filter(b => b.enabled && b.type === "popup" && !dismissedBanners.has(b.position)).map(b => (
+            <PopupBanner
+              key={b.id}
+              title={b.title || undefined}
+              subtitle={b.subtitle || undefined}
+              visible={true}
+              link={b.link || undefined}
+              onClose={() => setDismissedBanners(prev => new Set([...prev, b.position]))}
+            />
+          ))}
 
           {/* ===== TAB: RECARGA ===== */}
           {tab === "recarga" && (

@@ -7,6 +7,7 @@ import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { PromoBanner } from "@/components/PromoBanner";
+import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
 import RealtimeDashboard from "@/components/RealtimeDashboard";
@@ -2741,80 +2742,7 @@ export default function Principal() {
                   </div>
                 </div>
 
-                <div className="glass-card rounded-xl p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-foreground flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-warning" /> 📢 Banner Promocional
-                    </h4>
-                    <button
-                      onClick={async () => {
-                        const newVal = globalConfig.bannerEnabled === "true" ? "false" : "true";
-                        setGlobalConfig(prev => ({ ...prev, bannerEnabled: newVal }));
-                        try {
-                          await supabase.from("system_config").upsert({ key: "bannerEnabled", value: newVal, updated_at: new Date().toISOString() }, { onConflict: "key" });
-                          toast.success(newVal === "true" ? "Banner ativado!" : "Banner desativado!");
-                        } catch {
-                          toast.error("Erro ao alterar banner");
-                          setGlobalConfig(prev => ({ ...prev, bannerEnabled: globalConfig.bannerEnabled }));
-                        }
-                      }}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                        globalConfig.bannerEnabled === "true"
-                          ? "bg-success/15 text-success"
-                          : "bg-muted/60 text-muted-foreground"
-                      }`}
-                    >
-                      {globalConfig.bannerEnabled === "true" ? (
-                        <><ToggleRight className="h-4 w-4" /> Ativo</>
-                      ) : (
-                        <><ToggleLeft className="h-4 w-4" /> Inativo</>
-                      )}
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Título do Banner</label>
-                    <input type="text" value={globalConfig.bannerTitle || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, bannerTitle: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="🚀 Multifuncional Online! Sincronize sua conta 🔗" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Subtítulo do Banner</label>
-                    <input type="text" value={globalConfig.bannerSubtitle || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, bannerSubtitle: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="📱 Use seu e-mail social e tenha tudo na palma da mão! ⚡" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">🔗 Link do Banner (Telegram)</label>
-                    <div className="flex gap-2">
-                      <input type="text" value={globalConfig.bannerLink || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, bannerLink: e.target.value }))}
-                        className="flex-1 px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                        placeholder="https://t.me/SeuBotAqui" />
-                      {botStatus.botUsername && (
-                        <button
-                          type="button"
-                          onClick={() => setGlobalConfig(prev => ({ ...prev, bannerLink: `https://t.me/${botStatus.botUsername}` }))}
-                          className="px-3 py-2 rounded-md bg-primary/15 text-primary text-xs font-semibold hover:bg-primary/25 transition-colors whitespace-nowrap"
-                        >
-                          Usar @{botStatus.botUsername}
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Ao clicar no banner, o usuário será redirecionado para este link</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Pré-visualização</label>
-                    <PromoBanner
-                      title={globalConfig.bannerTitle || undefined}
-                      subtitle={globalConfig.bannerSubtitle || undefined}
-                      link={globalConfig.bannerLink || undefined}
-                      visible={true}
-                    />
-                  </div>
-                </div>
+                <BannersManager botUsername={botStatus.botUsername} />
                 </>
               )}
             </motion.div>
