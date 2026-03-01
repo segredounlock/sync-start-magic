@@ -1161,8 +1161,9 @@ export default function TelegramMiniApp() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="rounded-xl p-3.5 flex items-center justify-between"
+                        className="rounded-xl p-3.5 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
                         style={{ ...st.secondaryBg, border: st.borderSub }}
+                        onClick={() => { if (r.status === "completed") { setViewingReceipt(r); setSection("historico"); } }}
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={st.bg}>
