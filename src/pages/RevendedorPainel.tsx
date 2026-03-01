@@ -382,13 +382,16 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     setDetectedOperatorName(null);
 
     const detect = async () => {
+      let matched: CatalogCarrier | null = null;
+      
+      // Step 1: Try to detect operator
       try {
         const queryResp = await callApi("query-operator", { phoneNumber: digits });
-        if (queryResp?.success && queryResp.data) {
+        if (queryResp?.success && queryResp.data && !queryResp.data.error) {
           const operatorName = queryResp.data.carrier?.name || queryResp.data.operator || queryResp.data.operadora || queryResp.data.name || "";
           if (operatorName) {
             const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-            const matched = catalog.find(c => normalize(c.name).includes(normalize(operatorName)) || normalize(operatorName).includes(normalize(c.name)));
+            matched = catalog.find(c => normalize(c.name).includes(normalize(operatorName)) || normalize(operatorName).includes(normalize(c.name))) || null;
             if (matched) {
               setSelectedCarrier(matched);
               setDetectedOperatorName(matched.name);
@@ -397,33 +400,33 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               setDetectedOperatorName(operatorName);
               toast.warning(`Operadora "${operatorName}" detectada, mas não encontrada no catálogo.`);
             }
-
-            // Auto check-phone always (even if operator not in catalog) for cooldown/blacklist
-            setCheckingPhone(true);
-            try {
-              const checkPayload: Record<string, string> = { phoneNumber: digits };
-              if (matched) checkPayload.carrierId = matched.carrierId;
-              const resp = await callApi("check-phone", checkPayload);
-              if (resp?.success && resp.data) {
-                const checkResult = {
-                  ...resp.data,
-                  message: resp.data.status === "COOLDOWN"
-                    ? formatCooldownMessage(resp.data.message)
-                    : (resp.data.message || "Número disponível para recarga."),
-                };
-                setPhoneCheckResult(checkResult);
-                if (checkResult.status === "CLEAR") toast.success("✅ Número disponível!");
-                else if (checkResult.status === "COOLDOWN") toast.warning(checkResult.message);
-                else if (checkResult.status === "BLACKLISTED") toast.error(checkResult.message);
-              }
-            } catch { /* ignore check-phone error */ }
-            setCheckingPhone(false);
           }
         }
       } catch {
-        // silent fail - user can select manually
+        // silent fail - operator detection optional
       }
       setDetectingOperator(false);
+
+      // Step 2: Always run check-phone for cooldown/blacklist (even if operator not detected)
+      setCheckingPhone(true);
+      try {
+        const checkPayload: Record<string, string> = { phoneNumber: digits };
+        if (matched) checkPayload.carrierId = matched.carrierId;
+        const resp = await callApi("check-phone", checkPayload);
+        if (resp?.success && resp.data) {
+          const checkResult = {
+            ...resp.data,
+            message: resp.data.status === "COOLDOWN"
+              ? formatCooldownMessage(resp.data.message)
+              : (resp.data.message || "Número disponível para recarga."),
+          };
+          setPhoneCheckResult(checkResult);
+          if (checkResult.status === "CLEAR") toast.success("✅ Número disponível!");
+          else if (checkResult.status === "COOLDOWN") toast.warning(checkResult.message);
+          else if (checkResult.status === "BLACKLISTED") toast.error(checkResult.message);
+        }
+      } catch { /* ignore check-phone error */ }
+      setCheckingPhone(false);
     };
     detect();
   }, [telefone, selectedCarrier, catalog, callApi]);
