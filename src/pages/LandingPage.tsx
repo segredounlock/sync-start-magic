@@ -185,49 +185,106 @@ export default function LandingPage() {
 
           {/* Right: Visual element */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative flex items-center justify-center"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative hidden lg:flex items-center justify-center"
           >
-            {/* Pulsing rings */}
-            <motion.div
-              className="absolute w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] rounded-full border border-primary/10"
-              animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.05, 0.3] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="absolute w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] rounded-full border border-primary/5"
-              animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.2, 0.1] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            />
+            {/* Mock Dashboard */}
+            <div className="w-full max-w-[440px] glass rounded-3xl p-5 border border-border/50 relative overflow-hidden">
+              {/* Glow behind */}
+              <div className="absolute -top-20 -right-20 w-60 h-60 bg-[radial-gradient(ellipse,hsl(var(--primary)/0.15),transparent_70%)] pointer-events-none" />
 
-            {/* Floating stat cards */}
-            <div className="relative w-[300px] h-[340px] sm:w-[380px] sm:h-[400px]">
-              {[
-                { value: "99.9%", label: "Uptime", icon: Activity, x: 0, y: 0 },
-                { value: "<3s", label: "Velocidade", icon: Zap, x: 140, y: 80 },
-                { value: "24/7", label: "Online", icon: Globe, x: 20, y: 180 },
-                { value: "100%", label: "Digital", icon: Sparkles, x: 160, y: 260 },
-              ].map((s, i) => (
-                <motion.div
-                  key={s.label}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.15 }}
-                  className="absolute glass-card rounded-2xl p-4 w-[160px] sm:w-[180px] group hover:border-primary/30 transition-all duration-300"
-                  style={{ left: s.x, top: s.y }}
-                >
+              {/* Top bar */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Dashboard</p>
+                  <p className="font-display text-sm font-bold text-foreground">Visão Geral</p>
+                </div>
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary/40" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/20" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/20" />
+                </div>
+              </div>
+
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {[
+                  { value: "99.9%", label: "Uptime", icon: Activity },
+                  { value: "<3s", label: "Velocidade", icon: Zap },
+                  { value: "24/7", label: "Online", icon: Globe },
+                  { value: "100%", label: "Digital", icon: Sparkles },
+                ].map((s, i) => (
                   <motion.div
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
+                    key={s.label}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 + i * 0.1 }}
+                    className="glass-card rounded-xl p-3.5 group hover:border-primary/30 transition-all"
                   >
-                    <s.icon className="h-4 w-4 text-primary mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
-                    <p className="text-2xl font-bold text-primary font-display">{s.value}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-[0.15em]">{s.label}</p>
+                    <s.icon className="h-3.5 w-3.5 text-primary mb-1.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    <p className="text-xl font-bold text-primary font-display">{s.value}</p>
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-[0.15em]">{s.label}</p>
                   </motion.div>
-                </motion.div>
-              ))}
+                ))}
+              </div>
+
+              {/* Fake chart */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.3 }}
+                className="glass-card rounded-xl p-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Recargas Hoje</p>
+                  <p className="text-xs font-bold text-primary">+23%</p>
+                </div>
+                <div className="flex items-end gap-1.5 h-16">
+                  {[35, 55, 40, 70, 50, 85, 65, 90, 75, 95, 60, 80].map((h, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${h}%` }}
+                      transition={{ delay: 1.4 + i * 0.05, duration: 0.4, ease: "easeOut" }}
+                      className="flex-1 rounded-sm bg-primary/30 hover:bg-primary/60 transition-colors"
+                    />
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Fake recent activity */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.6 }}
+                className="mt-3 space-y-2"
+              >
+                {[
+                  { phone: "(11) 9****-1234", op: "Vivo", val: "R$ 20", time: "agora" },
+                  { phone: "(21) 9****-5678", op: "Claro", val: "R$ 15", time: "2min" },
+                  { phone: "(31) 9****-9012", op: "Tim", val: "R$ 30", time: "5min" },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.7 + i * 0.1 }}
+                    className="flex items-center justify-between py-2 px-3 rounded-lg glass text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="h-3 w-3 text-primary" />
+                      <span className="text-foreground font-medium">{item.phone}</span>
+                      <span className="text-muted-foreground">{item.op}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-primary">{item.val}</span>
+                      <span className="text-muted-foreground/60">{item.time}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
             </div>
           </motion.div>
         </div>
