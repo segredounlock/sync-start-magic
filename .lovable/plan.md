@@ -1,40 +1,26 @@
 
 
-## Plano: Telegram Login Widget na página de autenticação
+## Plano: Criar tabelas e bucket para o sistema de Broadcast
 
-### Visão Geral
+As tabelas necessárias (`telegram_users`, `notifications`, `broadcast_progress`, `bot_settings`) e o storage bucket (`broadcast-images`) **não foram criados** — só o código frontend/edge functions existe.
 
-Adicionar o botão "Entrar com Telegram" na página `/login`, permitindo login rápido via Telegram Login Widget. O widget envia dados do usuário Telegram para uma edge function que valida, cria/vincula a conta no Supabase Auth e retorna uma sessão.
+### O que será feito
 
-### Alterações
+Uma única migração SQL criando:
 
-**1. Nova Edge Function `supabase/functions/telegram-login/index.ts`**
-- Recebe os dados do Telegram Login Widget (id, first_name, username, auth_date, hash)
-- Valida o hash usando HMAC-SHA256 com o bot token (obtido de `system_config.telegramBotToken`)
-- Verifica se já existe um perfil com esse `telegram_id` na tabela `profiles`
-  - Se sim: faz login via `signInWithPassword` ou gera um custom token
-  - Se não: cria uma conta no Supabase Auth e vincula o `telegram_id` ao perfil
-- Retorna o `access_token` e `refresh_token` para o frontend estabelecer a sessão
+1. **`telegram_users`** — usuários do Telegram (chat_id, username, first_name, blocked, created_at)
+2. **`notifications`** — mensagens de broadcast (title, message, image_url, buttons, status, sent/failed counts)
+3. **`broadcast_progress`** — progresso em tempo real (sent_count, failed_count, speed, batches, status)
+4. **`bot_settings`** — configurações do bot (key/value)
+5. **Storage bucket `broadcast-images`** — público, para upload de imagens de broadcast
+6. **RLS policies** — habilitadas com acesso para usuários autenticados
+7. **Realtime** habilitado para `broadcast_progress` (necessário para o componente de progresso)
 
-**2. Atualizar `src/pages/Auth.tsx`**
-- Adicionar botão "Entrar com Telegram" abaixo do formulário
-- Carregar o script do Telegram Login Widget (`https://telegram.org/js/telegram-widget.js`)
-- Ao receber callback do widget, chamar a edge function `telegram-login`
-- Com a sessão retornada, usar `supabase.auth.setSession()` para autenticar o usuário
+### Detalhes técnicos
 
-**3. Atualizar `supabase/config.toml`**
-- Adicionar entrada `[functions.telegram-login]` com `verify_jwt = false`
-
-### Detalhes Técnicos
-
-O Telegram Login Widget funciona assim:
-1. O script do Telegram renderiza um botão no DOM
-2. O usuário clica e autoriza via popup do Telegram
-3. O Telegram retorna dados assinados (id, first_name, username, hash, auth_date)
-4. O backend valida o hash: `HMAC_SHA256(SHA256(bot_token), data_check_string)`
-5. Se válido, o backend cria/busca o usuário e gera tokens de sessão
-
-O bot token já está armazenado em `system_config` (chave `telegramBotToken`). A tabela `profiles` já possui campos `telegram_id` e `telegram_username`.
-
-Para criar sessões no Supabase Auth sem senha, a edge function usará `supabase.auth.admin.createUser()` com `email_confirm: true` e depois `supabase.auth.admin.generateLink()` ou criará o usuário com uma senha aleatória e fará login programaticamente.
+- Todas as tabelas usam `uuid` com `gen_random_uuid()` como PK
+- `telegram_users.chat_id` é `bigint unique` (IDs do Telegram)
+- `broadcast_progress` referencia `notifications` via FK
+- Timestamps com `now()` como default
+- Bucket público para que as imagens sejam acessíveis pela API do Telegram
 
