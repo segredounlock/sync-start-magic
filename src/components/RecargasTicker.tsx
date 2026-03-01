@@ -9,6 +9,8 @@ interface TickerRecarga {
   valor: number;
   status: string;
   created_at: string;
+  user_id: string;
+  userName?: string;
 }
 
 export default function RecargasTicker() {
@@ -17,15 +19,24 @@ export default function RecargasTicker() {
   const fetchRecargas = useCallback(async () => {
     const { data } = await supabase
       .from("recargas")
-      .select("id, telefone, operadora, valor, status, created_at")
+      .select("id, telefone, operadora, valor, status, created_at, user_id")
       .order("created_at", { ascending: false })
       .limit(30);
-    setRecargas(data || []);
+    if (!data || data.length === 0) { setRecargas([]); return; }
+
+    // Fetch user names
+    const userIds = [...new Set(data.map(r => r.user_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, nome")
+      .in("id", userIds);
+    const nameMap = new Map((profiles || []).map(p => [p.id, p.nome || "Usuário"]));
+
+    setRecargas(data.map(r => ({ ...r, userName: nameMap.get(r.user_id) || "Usuário" })));
   }, []);
 
   useEffect(() => { fetchRecargas(); }, [fetchRecargas]);
 
-  // Global realtime — no user filter
   useEffect(() => {
     const ch = supabase
       .channel("ticker-global")
@@ -73,6 +84,7 @@ export default function RecargasTicker() {
 
   const items = recargas.map((r) => (
     <span key={r.id} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
+      <span className="text-xs font-semibold text-primary">{r.userName} recarregou</span>
       {statusIcon(r.status)}
       <span className={`font-semibold text-xs ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
       <span className="text-xs text-muted-foreground font-mono">{r.telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")}</span>
@@ -81,7 +93,6 @@ export default function RecargasTicker() {
     </span>
   ));
 
-  // Only animate if enough items to fill the screen (roughly >5)
   const shouldAnimate = recargas.length >= 5;
 
   return (
