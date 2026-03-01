@@ -15,9 +15,8 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera,
-  BarChart3,
 } from "lucide-react";
-import RealtimeDashboard from "@/components/RealtimeDashboard";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
@@ -56,7 +55,7 @@ interface Transaction {
   module: string | null;
 }
 
-type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "dashboard";
+type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -615,7 +614,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   type MenuItem = { key: PainelTab; label: string; icon: typeof Send; active?: boolean; dashed?: boolean };
   const menuItems: MenuItem[] = [
     { key: "recarga", label: "Nova Recarga", icon: Send, active: true },
-    { key: "dashboard", label: "Dashboard Live", icon: BarChart3 },
     { key: "addSaldo", label: "Adicionar Saldo", icon: CreditCard, dashed: true },
     { key: "historico", label: "Histórico de Pedidos", icon: History },
     { key: "extrato", label: "Extrato de Depósitos", icon: Landmark },
@@ -624,7 +622,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   ];
 
   const tabTitle: Record<PainelTab, string> = {
-    recarga: "Nova Recarga", dashboard: "Dashboard Live", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
+    recarga: "Nova Recarga", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
     extrato: "Extrato de Depósitos", contatos: "Minha Conta", status: "Status do Sistema",
   };
 
@@ -1291,11 +1289,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </>
           )}
 
-          {/* ===== TAB: DASHBOARD ===== */}
-          {tab === "dashboard" && user && (
-            <RealtimeDashboard userId={user.id} fmt={fmt} />
-          )}
-
           {/* ===== TAB: ADICIONAR SALDO ===== */}
           {tab === "addSaldo" && <AddSaldoSection saldo={saldo} fmt={fmt} fmtDate={fmtDate} transactions={transactions} userEmail={user?.email} userName={userLabel} onDeposited={fetchData} fetchTransactions={fetchTransactions} resellerId={resellerId} saldoTipo={(role === "admin" || role === "revendedor") && !isClientMode ? "pessoal" : "revenda"} />}
 
@@ -1733,7 +1726,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       <MobileBottomNav
         items={[
           { key: "recarga", label: "Recarga", icon: Send, color: "text-primary", animation: "bounce" },
-          { key: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-accent", animation: "float" },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse", highlighted: true },
           { key: "contatos", label: "Conta", icon: User, color: "text-accent", animation: "float" },

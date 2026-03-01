@@ -6,6 +6,7 @@ import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { PromoBanner } from "@/components/PromoBanner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
+import RealtimeDashboard from "@/components/RealtimeDashboard";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -1324,6 +1325,10 @@ export default function Principal() {
                   </div>
                 </div>
               </div>
+              {/* Realtime Dashboard */}
+              {user && (
+                <RealtimeDashboard userId={user.id} fmt={fmt} />
+              )}
             </motion.div>
           )}
 
