@@ -17,7 +17,7 @@ import {
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 interface Recarga {
@@ -89,6 +89,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [trackingStatus, setTrackingStatus] = useState<{ loading: boolean; data: any | null; open: boolean }>({ loading: false, data: null, open: false });
   const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
   const [checkingPhone, setCheckingPhone] = useState(false);
+  const [detectingOperator, setDetectingOperator] = useState(false);
+  const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
+  const lastDetectedPhoneRef = useRef<string>("");
 
   // API Catalog
   const [catalog, setCatalog] = useState<CatalogCarrier[]>([]);
@@ -368,6 +371,41 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     };
     detectClipboard();
   }, [tab, telefone]);
+
+  // Auto-detect operator when phone reaches 11 digits
+  useEffect(() => {
+    const digits = telefone.replace(/\D/g, "");
+    if (digits.length !== 11 || selectedCarrier || digits === lastDetectedPhoneRef.current) return;
+    
+    lastDetectedPhoneRef.current = digits;
+    setDetectingOperator(true);
+    setDetectedOperatorName(null);
+
+    const detect = async () => {
+      try {
+        const queryResp = await callApi("query-operator", { phoneNumber: digits });
+        if (queryResp?.success && queryResp.data) {
+          const operatorName = queryResp.data.carrier?.name || queryResp.data.operator || queryResp.data.operadora || queryResp.data.name || "";
+          if (operatorName) {
+            const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            const matched = catalog.find(c => normalize(c.name).includes(normalize(operatorName)) || normalize(operatorName).includes(normalize(c.name)));
+            if (matched) {
+              setSelectedCarrier(matched);
+              setDetectedOperatorName(matched.name);
+              toast.success(`✅ Operadora detectada: ${matched.name}`);
+            } else {
+              setDetectedOperatorName(operatorName);
+              toast.warning(`Operadora "${operatorName}" detectada, mas não encontrada no catálogo.`);
+            }
+          }
+        }
+      } catch {
+        // silent fail - user can select manually
+      }
+      setDetectingOperator(false);
+    };
+    detect();
+  }, [telefone, selectedCarrier, catalog, callApi]);
 
   const formatPhoneDisplay = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 11);
@@ -1118,9 +1156,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           <input type="tel" value={telefone}
                             onChange={(e) => {
                               const raw = e.target.value;
+                              const prevDigits = telefone.replace(/\D/g, "");
                               // If user is deleting, just use raw value
                               if (raw.length < telefone.length) {
                                 setTelefone(raw);
+                                // Reset detection if phone changed significantly
+                                const newDigits = raw.replace(/\D/g, "");
+                                if (newDigits.length < 11) {
+                                  setSelectedCarrier(null);
+                                  setDetectedOperatorName(null);
+                                  lastDetectedPhoneRef.current = "";
+                                }
                               } else {
                                 // Extract digits and re-format
                                 const digits = raw.replace(/\D/g, "").slice(0, 11);
@@ -1161,7 +1207,19 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
                       {/* Operadora */}
                       <div>
-                        <label className="block text-sm font-semibold text-foreground mb-1.5">Operadora</label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-sm font-semibold text-foreground">Operadora</label>
+                          {detectingOperator && (
+                            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                              <Loader2 className="h-3 w-3 animate-spin" /> Detectando...
+                            </motion.span>
+                          )}
+                          {!detectingOperator && detectedOperatorName && selectedCarrier && (
+                            <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-1 text-xs text-success font-medium">
+                              <CheckCircle2 className="h-3 w-3" /> Detectada automaticamente
+                            </motion.span>
+                          )}
+                        </div>
                         <select
                           value={selectedCarrier?.carrierId || ""}
                           onChange={(e) => {
