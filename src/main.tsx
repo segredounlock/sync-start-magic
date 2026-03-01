@@ -14,7 +14,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <App />
         <Toaster
-          position="bottom-right"
+          position="top-center"
+          style={{ top: '45%' }}
           toastOptions={{
             className: "!bg-card !text-card-foreground !border !border-border !shadow-lg !rounded-xl !text-sm !font-sans",
             style: {
