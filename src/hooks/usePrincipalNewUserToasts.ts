@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { playWebSignupSound, playTelegramSignupSound } from "@/lib/sounds";
 
 function formatWebUserLabel(row: { nome?: string | null; email?: string | null }) {
   return row.nome?.trim() || row.email?.trim() || "Usuário";
@@ -41,6 +42,7 @@ export function usePrincipalNewUserToasts() {
           const eventKey = `web:${row.id}`;
           if (!markAsSeen(eventKey)) return;
 
+          playWebSignupSound();
           toast.success(`🆕 Novo cadastro Web: ${formatWebUserLabel(row)}`);
         }
       )
@@ -61,6 +63,7 @@ export function usePrincipalNewUserToasts() {
           const eventKey = `telegram-insert:${row.telegram_id ?? row.id}`;
           if (!markAsSeen(eventKey)) return;
 
+          playTelegramSignupSound();
           toast.info(`🤖 Novo cadastro Telegram: ${formatTelegramUserLabel(row)}`);
         }
       )
@@ -82,6 +85,7 @@ export function usePrincipalNewUserToasts() {
           const eventKey = `telegram-update:${row.telegram_id ?? row.id}`;
           if (!markAsSeen(eventKey)) return;
 
+          playTelegramSignupSound();
           toast.info(`🤖 Novo cadastro Telegram: ${formatTelegramUserLabel(row)}`);
         }
       )
