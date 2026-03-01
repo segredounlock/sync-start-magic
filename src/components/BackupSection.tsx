@@ -4,10 +4,11 @@ import {
   Download, Upload, Database, Loader2, CheckCircle2, AlertTriangle,
   Github, RefreshCw, FolderSync, ArrowDownToLine, ArrowUpFromLine,
   FileArchive, Shield, Clock, HardDrive, ChevronDown, ChevronRight, X,
-  Eye, EyeOff, Save,
+  Eye, EyeOff, Save, Code2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import JSZip from "jszip";
 
 const TABLES = [
   "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
@@ -20,7 +21,10 @@ type TabKey = "dados" | "github";
 export default function BackupSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("dados");
   const [includeDb, setIncludeDb] = useState(true);
+  const [includeSource, setIncludeSource] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportStage, setExportStage] = useState("");
   const [importing, setImporting] = useState(false);
   const [restoreResult, setRestoreResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,32 +98,7 @@ export default function BackupSection() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessão expirada");
-      const allPaths = [
-        "src/App.tsx","src/main.tsx","src/index.css","src/vite-env.d.ts",
-        "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ClientePortal.tsx",
-        "src/pages/LandingPage.tsx","src/pages/NotFound.tsx","src/pages/Principal.tsx",
-        "src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/TelegramMiniApp.tsx",
-        "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
-        "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
-        "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
-        "src/components/MobileBottomNav.tsx","src/components/PinProtection.tsx",
-        "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
-        "src/components/RealtimeDashboard.tsx","src/components/RealtimeNotifications.tsx",
-        "src/components/Skeleton.tsx","src/components/ThemeToggle.tsx",
-        "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts","src/hooks/useTheme.tsx",
-        "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
-        "src/integrations/supabase/client.ts","src/integrations/supabase/types.ts",
-        "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts","postcss.config.js","index.html","package.json","README.md",
-        "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
-        "supabase/functions/admin-toggle-role/index.ts",
-        "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
-        "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
-        "supabase/functions/cleanup-stuck-broadcasts/index.ts",
-        "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
-        "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
-        "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
-        "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
-      ];
+      const allPaths = SOURCE_PATHS;
       const files: { path: string; content: string }[] = [];
       for (let i = 0; i < allPaths.length; i++) {
         setSyncStage(`Coletando ${i + 1}/${allPaths.length}...`);
@@ -168,26 +147,111 @@ export default function BackupSection() {
     setSyncing(false);
   };
 
+  const SOURCE_PATHS = [
+    "src/App.tsx","src/main.tsx","src/index.css","src/vite-env.d.ts",
+    "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ClientePortal.tsx",
+    "src/pages/LandingPage.tsx","src/pages/NotFound.tsx","src/pages/Principal.tsx",
+    "src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/TelegramMiniApp.tsx",
+    "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
+    "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
+    "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
+    "src/components/MobileBottomNav.tsx","src/components/PinProtection.tsx",
+    "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
+    "src/components/RealtimeDashboard.tsx","src/components/RealtimeNotifications.tsx",
+    "src/components/Skeleton.tsx","src/components/ThemeToggle.tsx",
+    "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts","src/hooks/useTheme.tsx",
+    "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
+    "src/integrations/supabase/client.ts","src/integrations/supabase/types.ts",
+    "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts","postcss.config.js","index.html","package.json","README.md",
+    "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
+    "supabase/functions/admin-toggle-role/index.ts",
+    "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
+    "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
+    "supabase/functions/cleanup-stuck-broadcasts/index.ts",
+    "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
+    "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
+    "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
+    "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
+  ];
+
   const handleExport = async () => {
-    setExporting(true);
+    if (!includeDb && !includeSource) { toast.error("Selecione pelo menos uma opção"); return; }
+    setExporting(true); setExportProgress(0); setExportStage("Iniciando...");
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessão expirada");
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-        body: JSON.stringify({ includeDatabase: includeDb }),
-      });
-      if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
-      const blob = await resp.blob();
+
+      const zip = new JSZip();
+      let totalSteps = 0;
+      let currentStep = 0;
+      if (includeDb) totalSteps += 1; // DB export = 1 step (edge function handles it)
+      if (includeSource) totalSteps += SOURCE_PATHS.length;
+
+      // 1. Database export via edge function
+      if (includeDb) {
+        setExportStage("Exportando banco de dados...");
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: JSON.stringify({ includeDatabase: true }),
+        });
+        if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
+        // The edge function returns a ZIP with database/ folder — extract and re-add to our ZIP
+        const dbZipData = await resp.arrayBuffer();
+        const dbZip = await JSZip.loadAsync(dbZipData);
+        for (const [path, file] of Object.entries(dbZip.files)) {
+          if (!file.dir) {
+            const content = await file.async("uint8array");
+            zip.file(path, content);
+          }
+        }
+        currentStep++;
+        setExportProgress(Math.round((currentStep / totalSteps) * 100));
+      }
+
+      // 2. Source code via fetch
+      if (includeSource) {
+        const sourceFolder = zip.folder("source");
+        let fetched = 0;
+        for (const filePath of SOURCE_PATHS) {
+          setExportStage(`Coletando ${fetched + 1}/${SOURCE_PATHS.length}: ${filePath.split("/").pop()}`);
+          try {
+            const r = await fetch(new URL(`/${filePath}`, window.location.origin).href);
+            if (r.ok) {
+              const text = await r.text();
+              if (text && text.length > 10) {
+                sourceFolder!.file(filePath, text);
+              }
+            }
+          } catch { /* skip */ }
+          fetched++;
+          currentStep++;
+          setExportProgress(Math.round((currentStep / totalSteps) * 100));
+        }
+      }
+
+      // Update backup-info
+      zip.file("backup-info.json", JSON.stringify({
+        version: "2.0",
+        created_at: new Date().toISOString(),
+        include_database: includeDb,
+        include_source: includeSource,
+        source_files: includeSource ? SOURCE_PATHS.length : 0,
+        tables: includeDb ? TABLES : [],
+      }, null, 2));
+
+      setExportStage("Gerando ZIP...");
+      const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `backup-recargas-${new Date().toISOString().slice(0, 10)}.zip`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Backup exportado com sucesso!");
-    } catch (err: any) { toast.error(`Erro: ${err.message}`); }
+      setExportProgress(100);
+      setExportStage("Concluído!");
+      toast.success(`Backup exportado! ${includeDb ? "BD + " : ""}${includeSource ? "Código" : ""}`);
+    } catch (err: any) { toast.error(`Erro: ${err.message}`); setExportStage(""); }
     setExporting(false);
   };
 
@@ -259,7 +323,7 @@ export default function BackupSection() {
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center mb-3 shadow-lg shadow-amber-500/5">
                   {exporting ? <Loader2 className="h-4 w-4 animate-spin text-amber-400" /> : <ArrowDownToLine className="h-4 w-4 text-amber-400" />}
                 </div>
-                <p className="text-sm font-semibold text-foreground">{exporting ? "Gerando..." : "Exportar"}</p>
+              <p className="text-sm font-semibold text-foreground">{exporting ? "Gerando..." : "Exportar"}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">Baixar backup .zip</p>
               </button>
 
@@ -275,6 +339,21 @@ export default function BackupSection() {
             </div>
 
             <input ref={fileInputRef} type="file" accept=".zip" onChange={handleImport} className="hidden" />
+
+            {/* Export progress */}
+            <AnimatePresence>
+              {exporting && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  className="rounded-2xl backdrop-blur-xl bg-primary/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 space-y-3 overflow-hidden">
+                  <p className="text-sm font-semibold text-foreground">{exportStage}</p>
+                  <div className="w-full h-2.5 bg-white/[0.06] rounded-full overflow-hidden">
+                    <motion.div className="h-full bg-gradient-to-r from-primary to-amber-400 rounded-full"
+                      initial={{ width: 0 }} animate={{ width: `${exportProgress}%` }} transition={{ duration: 0.3 }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground text-right font-mono">{exportProgress}%</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Tables info */}
             <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-4">
@@ -302,6 +381,22 @@ export default function BackupSection() {
               <div>
                 <p className="text-sm font-medium text-foreground">Incluir banco de dados</p>
                 <p className="text-[11px] text-muted-foreground">Usuários, saldos, recargas, configs</p>
+              </div>
+            </button>
+
+            {/* Include Source toggle */}
+            <button onClick={() => setIncludeSource(!includeSource)}
+              className="flex items-center gap-3 w-full p-3.5 rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-all text-left">
+              <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                includeSource ? "bg-primary border-primary" : "border-muted-foreground/40"
+              }`}>
+                {includeSource && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Code2 className="h-3.5 w-3.5" /> Incluir código-fonte
+                </p>
+                <p className="text-[11px] text-muted-foreground">Páginas, componentes, hooks, edge functions</p>
               </div>
             </button>
 
