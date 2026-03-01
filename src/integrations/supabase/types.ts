@@ -445,6 +445,30 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_sessions: {
+        Row: {
+          chat_id: string
+          created_at: string
+          data: Json | null
+          step: string
+          updated_at: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          data?: Json | null
+          step?: string
+          updated_at?: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          data?: Json | null
+          step?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       telegram_users: {
         Row: {
           block_reason: string | null
