@@ -1410,20 +1410,20 @@ export default function Principal() {
           {/* ===== LISTA ===== */}
           {view === "lista" && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   { icon: Users, label: "Total Usuários", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10" },
                   { icon: UserCheck, label: "Ativos", value: String(activeCount), color: "text-success", bgColor: "bg-success/10" },
                   { icon: UserX, label: "Inativos", value: String(inactiveCount), color: "text-destructive", bgColor: "bg-destructive/10" },
                   { icon: Wallet, label: "Saldo Total", value: fmt(totalSaldo), color: "text-warning", bgColor: "bg-warning/10", highlight: true },
                 ].map((c, i) => (
-                  <div key={c.label} className={`glass-card rounded-xl p-5 flex items-center gap-4 ${c.highlight ? "border-primary/20 ring-1 ring-primary/10" : ""}`}>
-                    <div className={`w-12 h-12 rounded-xl ${c.bgColor} flex items-center justify-center shrink-0`}>
-                      <c.icon className={`h-6 w-6 ${c.color}`} />
+                  <div key={c.label} className={`glass-card rounded-xl p-3 flex items-center gap-3 ${c.highlight ? "border-primary/20 ring-1 ring-primary/10" : ""}`}>
+                    <div className={`w-9 h-9 rounded-lg ${c.bgColor} flex items-center justify-center shrink-0`}>
+                      <c.icon className={`h-4 w-4 ${c.color}`} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{c.label}</p>
-                      <p className={`text-2xl font-bold text-foreground mt-0.5 ${c.highlight ? "text-success" : ""}`}>{c.value}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{c.label}</p>
+                      <p className={`text-lg font-bold text-foreground ${c.highlight ? "text-success" : ""}`}>{c.value}</p>
                     </div>
                   </div>
                 ))}
