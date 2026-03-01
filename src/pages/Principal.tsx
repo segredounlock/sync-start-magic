@@ -1327,7 +1327,7 @@ export default function Principal() {
               </div>
               {/* Realtime Dashboard */}
               {user && (
-                <RealtimeDashboard userId={user.id} fmt={fmt} />
+                <RealtimeDashboard fmt={fmt} />
               )}
             </motion.div>
           )}
