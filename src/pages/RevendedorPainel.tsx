@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { PromoBanner } from "@/components/PromoBanner";
@@ -812,7 +813,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
             <div className="glass-card rounded-lg p-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Seu saldo</p>
-              <p className="text-2xl font-bold text-success mt-0.5">{loading ? <SkeletonValue width="w-24" className="h-7" /> : fmt(saldo)}</p>
+              <p className="text-2xl font-bold text-success mt-0.5">{loading ? <SkeletonValue width="w-24" className="h-7" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</p>
             </div>
           </div>
 
@@ -875,7 +876,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <button onClick={() => selectTab("addSaldo")}
               className="h-9 px-4 rounded-xl bg-success text-success-foreground flex items-center gap-1.5 text-sm font-bold shadow-[0_0_16px_hsl(var(--success)/0.35)] hover:shadow-[0_0_24px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all">
               <CreditCard className="h-4 w-4" />
-              <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : fmt(saldo)}</span>
+              <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</span>
             </button>
             <div className="w-9 h-9 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-xs">
               {userInitial}
@@ -887,16 +888,18 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { icon: Wallet, label: "Saldo", value: loading ? null : fmt(saldo), color: "text-success", anim: "bounce" as const },
-              { icon: Smartphone, label: "Recargas Hoje", value: String(recargasHoje), color: "text-primary", anim: "float" as const },
-              { icon: Clock, label: "Total", value: String(recargas.length), color: "text-accent", anim: "pulse" as const },
+              { icon: Wallet, label: "Saldo", rawValue: saldo, isCurrency: true, color: "text-success", anim: "bounce" as const },
+              { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", anim: "float" as const },
+              { icon: Clock, label: "Total", rawValue: recargas.length, isCurrency: false, color: "text-accent", anim: "pulse" as const },
             ].map((c, i) => (
               <motion.div key={c.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="glass-card rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <AnimatedIcon icon={c.icon} className={`h-4 w-4 ${c.color}`} animation={c.anim} delay={i * 0.12} />
                   <span className="text-xs text-muted-foreground">{c.label}</span>
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-foreground truncate">{c.value === null ? <SkeletonValue width="w-16" className="h-6" /> : c.value}</p>
+                <p className="text-xl md:text-2xl font-bold text-foreground truncate">
+                  {loading ? <SkeletonValue width="w-16" className="h-6" /> : c.isCurrency ? <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" /> : <AnimatedInt value={c.rawValue} />}
+                </p>
               </motion.div>
             ))}
           </div>
