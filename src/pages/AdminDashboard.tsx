@@ -1195,7 +1195,7 @@ export default function AdminDashboard() {
                   <AnimatedIcon icon={Smartphone} className="h-5 w-5 text-primary" animation="float" />
                   <span className="font-semibold text-foreground">Volume de Recargas</span>
                   {analytics.pendingRec > 0 && (
-                    <span className="ml-auto text-xs bg-destructive/15 text-destructive px-2 py-0.5 rounded-full font-medium">● {analytics.pendingRec} Pendentes</span>
+                    <span className="ml-auto text-xs bg-destructive/15 text-destructive px-2 py-0.5 rounded-full font-medium">● {analytics.pendingRec} Processando</span>
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -1208,7 +1208,7 @@ export default function AdminDashboard() {
                     <p className="text-lg font-bold text-success"><AnimatedInt value={analytics.successRec} /></p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-destructive/10">
-                    <p className="text-[10px] text-destructive">Pendentes</p>
+                    <p className="text-[10px] text-destructive">Processando</p>
                     <p className="text-lg font-bold text-destructive"><AnimatedInt value={analytics.pendingRec} /></p>
                   </div>
                 </div>
@@ -1379,7 +1379,7 @@ export default function AdminDashboard() {
                 const initials = (r.user_nome || r.user_email || "?").slice(0, 2).toUpperCase();
                 const avatarColors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                 const colorIdx = (r.user_id || "").charCodeAt(0) % avatarColors.length;
-                const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Pendente" : r.status === "falha" ? "Falha" : r.status;
+                const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
                 const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                 return (
                   <div key={r.id} className="glass-card rounded-xl p-4">
@@ -1466,7 +1466,7 @@ export default function AdminDashboard() {
                             (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
                             r.status === "pending" ? "bg-warning/15 text-warning" :
                             "bg-destructive/15 text-destructive"
-                          }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Pendente" : r.status === "falha" ? "Falha" : r.status}</span>
+                          }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}</span>
                         </td>
                       </tr>
                     );
