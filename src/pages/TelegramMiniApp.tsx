@@ -1147,24 +1147,31 @@ export default function TelegramMiniApp() {
                     <h3 className="font-bold text-sm" style={st.text}>Últimas Recargas</h3>
                     <button onClick={() => setSection("historico")} className="text-xs" style={st.link}>Ver todas</button>
                   </div>
-                  {recargas.slice(0, 3).map((r) => (
-                    <div key={r.id} className="rounded-xl p-3 flex items-center justify-between" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                  {recargas.slice(0, 5).map((r, i) => (
+                    <motion.div
+                      key={r.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="rounded-xl p-3.5 flex items-center justify-between"
+                      style={{ ...st.secondaryBg, border: st.borderSub }}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={st.bg}>
-                          <Smartphone className="w-4 h-4" style={st.hint} />
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={st.bg}>
+                          <Smartphone className="w-5 h-5" style={st.link} />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm" style={st.text}>{r.operadora || "—"}</p>
+                          <p className="font-bold text-sm" style={st.text}>{r.operadora || "—"}</p>
                           <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
-                        <p className="text-[10px]" style={{ color: r.status === "completed" ? "var(--tg-link)" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
+                        <p className="font-bold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
+                        <p className="text-[11px] font-medium" style={{ color: r.status === "completed" ? "var(--tg-link)" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
                           {r.status === "completed" ? "Comprovante" : r.status === "pending" ? "Processando" : "Falha"}
                         </p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
