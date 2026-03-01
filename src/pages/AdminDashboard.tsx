@@ -538,6 +538,45 @@ export default function AdminDashboard() {
     } catch (err: any) { toast.error(err.message || "Erro"); }
   };
 
+  // Target user pricing (admin managing pricing for a specific reseller or client)
+  const fetchTargetUserPricingRules = useCallback(async (userId: string) => {
+    if (!userId) { setTargetUserPricingRules([]); return; }
+    try {
+      const { data } = await supabase.from("reseller_pricing_rules").select("*").eq("user_id", userId);
+      setTargetUserPricingRules((data || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
+    } catch (err) { console.error(err); }
+  }, []);
+
+  const saveTargetUserPricingRule = async (userId: string, rule: PricingRule) => {
+    const key = `t-${rule.operadora_id}-${rule.valor_recarga}`;
+    setTargetUserPricingSaving(prev => ({ ...prev, [key]: true }));
+    try {
+      const { error } = await supabase.from("reseller_pricing_rules").upsert({
+        user_id: userId,
+        operadora_id: rule.operadora_id,
+        valor_recarga: rule.valor_recarga,
+        custo: rule.custo,
+        tipo_regra: rule.tipo_regra,
+        regra_valor: rule.regra_valor,
+        updated_at: new Date().toISOString(),
+      } as any, { onConflict: "user_id,operadora_id,valor_recarga" } as any);
+      if (error) throw error;
+      toast.success(`Preço para R$ ${rule.valor_recarga.toFixed(2)} salvo!`);
+      fetchTargetUserPricingRules(userId);
+    } catch (err: any) { toast.error(err.message || "Erro ao salvar"); }
+    setTargetUserPricingSaving(prev => ({ ...prev, [key]: false }));
+  };
+
+  const resetTargetUserPricingRule = async (userId: string, operadora_id: string, valor_recarga: number) => {
+    const existing = targetUserPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
+    if (!existing?.id) return;
+    try {
+      await supabase.from("reseller_pricing_rules").delete().eq("id", existing.id);
+      toast.success("Preço removido (usará preço global)");
+      fetchTargetUserPricingRules(userId);
+    } catch (err: any) { toast.error(err.message || "Erro"); }
+  };
+
   // Background payment monitor
   const handleBgPaymentConfirmed = useCallback(() => { fetchData(); }, [fetchData]);
   useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed);
@@ -672,6 +711,12 @@ export default function AdminDashboard() {
   const [resellerPricingSelectedOp, setResellerPricingSelectedOp] = useState<string>("");
   const [resellerPricingSaving, setResellerPricingSaving] = useState<Record<string, boolean>>({});
 
+  // Pricing sub-tab state (admin)
+  const [pricingSubTab, setPricingSubTab] = useState<"global" | "revendedor" | "usuario">("global");
+  const [pricingTargetUserId, setPricingTargetUserId] = useState<string>("");
+  const [targetUserPricingRules, setTargetUserPricingRules] = useState<PricingRule[]>([]);
+  const [targetUserPricingSelectedOp, setTargetUserPricingSelectedOp] = useState<string>("");
+  const [targetUserPricingSaving, setTargetUserPricingSaving] = useState<Record<string, boolean>>({});
 
 
 
@@ -2589,131 +2634,222 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-display text-2xl font-bold text-foreground">Precificação</h2>
-                <p className="text-sm text-muted-foreground">Defina regras de preço específicas por produto.</p>
+                <p className="text-sm text-muted-foreground">Regras de preço globais e por revendedor.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => { fetchOperadoras(); fetchPricingRules(); }} className="p-2 rounded-lg border border-border hover:bg-muted/50 text-muted-foreground transition-colors">
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-                <button onClick={() => { setEditOperadora(null); setShowOperadoraModal(true); }} className="p-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
+              <button onClick={() => { fetchOperadoras(); fetchPricingRules(); if (pricingTargetUserId) fetchTargetUserPricingRules(pricingTargetUserId); }} className="p-2 rounded-lg border border-border hover:bg-muted/50 text-muted-foreground transition-colors">
+                <RefreshCw className="h-4 w-4" />
+              </button>
             </div>
 
-            {operadorasLoading ? (
-              <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
-            ) : operadoras.filter(o => o.ativo).length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center">
-                <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Nenhuma operadora ativa cadastrada.</p>
-              </div>
-            ) : (
+            {/* Sub-tabs: Global | Por Revendedor | Por Usuário */}
+            <div className="flex rounded-xl overflow-hidden border border-border">
+              {[
+                { key: "global" as const, label: "Global", icon: Globe },
+                { key: "revendedor" as const, label: "Por Revendedor", icon: Users },
+                { key: "usuario" as const, label: "Por Usuário", icon: Users },
+              ].map(st => (
+                <button
+                  key={st.key}
+                  onClick={() => { setPricingSubTab(st.key); setTargetUserPricingSelectedOp(""); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all ${
+                    pricingSubTab === st.key
+                      ? "bg-success text-success-foreground"
+                      : "bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <st.icon className="h-4 w-4" />
+                  {st.label}
+                </button>
+              ))}
+            </div>
+
+            {/* === GLOBAL pricing === */}
+            {pricingSubTab === "global" && (
               <>
-                {/* Operadora tabs */}
-                <div className="flex gap-2 flex-wrap">
-                  {operadoras.filter(o => o.ativo).map(op => (
-                    <button
-                      key={op.id}
-                      onClick={() => setPricingSelectedOp(op.id)}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        (pricingSelectedOp || operadoras.filter(o => o.ativo)[0]?.id) === op.id
-                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                          : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                      }`}
-                    >
-                      <Package className="h-4 w-4" />
-                      {op.nome}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Value cards */}
-                {(() => {
-                  const activeOpId = pricingSelectedOp || operadoras.filter(o => o.ativo)[0]?.id;
-                  const activeOp = operadoras.find(o => o.id === activeOpId);
-                  if (!activeOp) return null;
-
-                  return (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {activeOp.valores.sort((a, b) => a - b).map(valor => {
-                        const rule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
-                        const localKey = `${activeOpId}-${valor}`;
-                        const localTipo = rule?.tipo_regra || "fixo";
-                        const localValor = rule?.regra_valor ?? 0;
-                        const localCusto = rule?.custo ?? 0;
-
-                        const precoFinal = localTipo === "fixo" ? localValor : valor * (1 + localValor / 100);
-                        const lucro = precoFinal - localCusto;
-
-                        return (
-                          <div key={valor} className="glass-card rounded-xl p-4 space-y-3 border border-border/50">
-                            {/* Header */}
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recarga</p>
-                                <p className="text-xl font-bold text-foreground">{fmt(valor)}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Preço Final</p>
-                                <p className={`text-xl font-bold ${precoFinal > 0 ? "text-success" : "text-muted-foreground"}`}>
-                                  {precoFinal > 0 ? fmt(precoFinal) : "—"}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Custo & Lucro bar */}
-                            <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
-                              <span className="text-muted-foreground">Custo: {fmt(localCusto)}</span>
-                              <span className={`font-medium ${lucro > 0 ? "text-success" : lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                                Lucro: {fmt(lucro)}
-                              </span>
-                            </div>
-
-                            {/* Rule inputs */}
-                            <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-end">
-                              <div>
-                                <label className="text-[10px] text-muted-foreground mb-1 block">Tipo de Regra</label>
-                                <select
-                                  value={localTipo}
-                                  onChange={e => {
-                                    const newTipo = e.target.value as "fixo" | "margem";
-                                    savePricingRule({ operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: newTipo, regra_valor: localValor });
-                                  }}
-                                  className="h-9 rounded-lg bg-muted/70 border border-border px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                                >
-                                  <option value="margem">Margem (%)</option>
-                                  <option value="fixo">Fixo (R$)</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="text-[10px] text-muted-foreground mb-1 block">Valor</label>
-                                <input
-                                  type="number"
-                                  defaultValue={localValor}
-                                  onBlur={e => {
-                                    const v = parseFloat(e.target.value) || 0;
-                                    savePricingRule({ operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: localTipo, regra_valor: v });
-                                  }}
-                                  className="h-9 w-full rounded-lg bg-muted/70 border border-border px-3 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                                />
-                              </div>
-                              <button
-                                onClick={() => resetPricingRule(activeOpId, valor)}
-                                className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors"
-                                title="Resetar regra"
-                              >
-                                <RefreshCw className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                {operadorasLoading ? (
+                  <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                ) : operadoras.filter(o => o.ativo).length === 0 ? (
+                  <div className="glass-card rounded-xl p-8 text-center">
+                    <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">Nenhuma operadora ativa cadastrada.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2 flex-wrap">
+                      {operadoras.filter(o => o.ativo).map(op => (
+                        <button key={op.id} onClick={() => setPricingSelectedOp(op.id)}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                            (pricingSelectedOp || operadoras.filter(o => o.ativo)[0]?.id) === op.id
+                              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                              : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                          }`}>
+                          <Package className="h-4 w-4" />{op.nome}
+                        </button>
+                      ))}
                     </div>
-                  );
-                })()}
+                    {(() => {
+                      const activeOpId = pricingSelectedOp || operadoras.filter(o => o.ativo)[0]?.id;
+                      const activeOp = operadoras.find(o => o.id === activeOpId);
+                      if (!activeOp) return null;
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {activeOp.valores.sort((a, b) => a - b).map(valor => {
+                            const rule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                            const localTipo = rule?.tipo_regra || "fixo";
+                            const localValor = rule?.regra_valor ?? 0;
+                            const localCusto = rule?.custo ?? 0;
+                            const precoFinal = localTipo === "fixo" ? localValor : valor * (1 + localValor / 100);
+                            const lucro = precoFinal - localCusto;
+                            return (
+                              <div key={valor} className="glass-card rounded-xl p-4 space-y-3 border border-border/50">
+                                <div className="flex items-center justify-between">
+                                  <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recarga</p><p className="text-xl font-bold text-foreground">{fmt(valor)}</p></div>
+                                  <div className="text-right"><p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Preço Final</p><p className={`text-xl font-bold ${precoFinal > 0 ? "text-success" : "text-muted-foreground"}`}>{precoFinal > 0 ? fmt(precoFinal) : "—"}</p></div>
+                                </div>
+                                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                                  <span className="text-muted-foreground">Custo: {fmt(localCusto)}</span>
+                                  <span className={`font-medium ${lucro > 0 ? "text-success" : lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>Lucro: {fmt(lucro)}</span>
+                                </div>
+                                <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-end">
+                                  <div>
+                                    <label className="text-[10px] text-muted-foreground mb-1 block">Tipo de Regra</label>
+                                    <select value={localTipo} onChange={e => { savePricingRule({ operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: e.target.value as "fixo" | "margem", regra_valor: localValor }); }} className="h-9 rounded-lg bg-muted/70 border border-border px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                                      <option value="margem">Margem (%)</option><option value="fixo">Fixo (R$)</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-muted-foreground mb-1 block">Valor</label>
+                                    <input type="number" defaultValue={localValor} onBlur={e => { savePricingRule({ operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: localTipo, regra_valor: parseFloat(e.target.value) || 0 }); }} className="h-9 w-full rounded-lg bg-muted/70 border border-border px-3 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                                  </div>
+                                  <button onClick={() => resetPricingRule(activeOpId, valor)} className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors" title="Resetar regra">
+                                    <RefreshCw className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </>
+                )}
               </>
             )}
+
+            {/* === POR REVENDEDOR / POR USUÁRIO pricing === */}
+            {(pricingSubTab === "revendedor" || pricingSubTab === "usuario") && (() => {
+              const isRevendedor = pricingSubTab === "revendedor";
+              const filteredUsers = revendedores.filter(r => isRevendedor ? r.role === "revendedor" : r.role === "cliente");
+              const selectedUserId = pricingTargetUserId;
+              const selectedUser = filteredUsers.find(u => u.id === selectedUserId);
+
+              return (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-2">
+                      Selecione o {isRevendedor ? "Revendedor" : "Usuário"}
+                    </label>
+                    <select
+                      value={selectedUserId}
+                      onChange={e => {
+                        setPricingTargetUserId(e.target.value);
+                        setTargetUserPricingSelectedOp("");
+                        if (e.target.value) fetchTargetUserPricingRules(e.target.value);
+                        else setTargetUserPricingRules([]);
+                      }}
+                      className="w-full h-11 rounded-xl bg-muted/70 border border-border px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Selecione...</option>
+                      {filteredUsers.map(u => (
+                        <option key={u.id} value={u.id}>{u.nome || u.email || u.id}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {!selectedUserId ? (
+                    <div className="glass-card rounded-xl p-8 text-center border-2 border-dashed border-border">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground">Selecione um {isRevendedor ? "revendedor" : "usuário"} para gerenciar seus preços personalizados.</p>
+                    </div>
+                  ) : operadorasLoading ? (
+                    <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                  ) : operadoras.filter(o => o.ativo).length === 0 ? (
+                    <div className="glass-card rounded-xl p-8 text-center">
+                      <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground">Nenhuma operadora ativa cadastrada.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2 flex-wrap">
+                        {operadoras.filter(o => o.ativo).map(op => (
+                          <button key={op.id} onClick={() => setTargetUserPricingSelectedOp(op.id)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                              (targetUserPricingSelectedOp || operadoras.filter(o => o.ativo)[0]?.id) === op.id
+                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                                : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                            }`}>
+                            <Package className="h-4 w-4" />{op.nome}
+                          </button>
+                        ))}
+                      </div>
+                      {(() => {
+                        const activeOpId = targetUserPricingSelectedOp || operadoras.filter(o => o.ativo)[0]?.id;
+                        const activeOp = operadoras.find(o => o.id === activeOpId);
+                        if (!activeOp) return null;
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {activeOp.valores.sort((a, b) => a - b).map(valor => {
+                              const rule = targetUserPricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                              const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                              const localTipo = rule?.tipo_regra || "fixo";
+                              const localValor = rule?.regra_valor ?? 0;
+                              const localCusto = rule?.custo ?? 0;
+                              const precoFinal = rule ? (localTipo === "fixo" ? localValor : valor * (1 + localValor / 100)) : 0;
+                              const globalPreco = globalRule ? (globalRule.tipo_regra === "fixo" ? globalRule.regra_valor : valor * (1 + globalRule.regra_valor / 100)) : 0;
+                              const lucro = precoFinal - localCusto;
+                              const hasCustom = !!rule;
+
+                              return (
+                                <div key={valor} className={`glass-card rounded-xl p-4 space-y-3 border ${hasCustom ? "border-success/50" : "border-border/50"}`}>
+                                  <div className="flex items-center justify-between">
+                                    <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recarga</p><p className="text-xl font-bold text-foreground">{fmt(valor)}</p></div>
+                                    <div className="text-right">
+                                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{hasCustom ? "Preço Personalizado" : "Preço Global"}</p>
+                                      <p className={`text-xl font-bold ${hasCustom ? "text-success" : "text-muted-foreground"}`}>{hasCustom ? fmt(precoFinal) : (globalPreco > 0 ? fmt(globalPreco) : "—")}</p>
+                                    </div>
+                                  </div>
+                                  {hasCustom && (
+                                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                                      <span className="text-muted-foreground">Custo: {fmt(localCusto)}</span>
+                                      <span className={`font-medium ${lucro > 0 ? "text-success" : lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>Lucro: {fmt(lucro)}</span>
+                                    </div>
+                                  )}
+                                  <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-end">
+                                    <div>
+                                      <label className="text-[10px] text-muted-foreground mb-1 block">Tipo</label>
+                                      <select value={localTipo} onChange={e => { saveTargetUserPricingRule(selectedUserId, { operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: e.target.value as "fixo" | "margem", regra_valor: localValor }); }} className="h-9 rounded-lg bg-muted/70 border border-border px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                                        <option value="margem">Margem (%)</option><option value="fixo">Fixo (R$)</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] text-muted-foreground mb-1 block">Valor</label>
+                                      <input type="number" defaultValue={localValor} key={`${selectedUserId}-${activeOpId}-${valor}-${rule?.regra_valor}`} onBlur={e => { saveTargetUserPricingRule(selectedUserId, { operadora_id: activeOpId, valor_recarga: valor, custo: localCusto, tipo_regra: localTipo, regra_valor: parseFloat(e.target.value) || 0 }); }} className="h-9 w-full rounded-lg bg-muted/70 border border-border px-3 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                                    </div>
+                                    <button onClick={() => resetTargetUserPricingRule(selectedUserId, activeOpId, valor)} className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors" title="Resetar (usar global)">
+                                      <RefreshCw className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </motion.div>
         )}
 
