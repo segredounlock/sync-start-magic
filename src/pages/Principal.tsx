@@ -633,6 +633,14 @@ export default function Principal() {
     return () => { supabase.removeChannel(channel); };
   }, [fetchData]);
 
+  // Sincroniza selectedRev com a lista atualizada
+  useEffect(() => {
+    if (selectedRev) {
+      const updated = revendedores.find(r => r.id === selectedRev.id);
+      if (updated) setSelectedRev(updated);
+    }
+  }, [revendedores]);
+
   // Fetch provider (API) balance
   const fetchProviderBalance = useCallback(async () => {
     // Ensure we have a valid session before calling edge function
