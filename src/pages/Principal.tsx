@@ -1888,8 +1888,13 @@ export default function Principal() {
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-foreground mb-1">API Key</label>
-                      <input type="text" value={apiConfig.apiKey || ""} onChange={e => setApiConfig(prev => ({ ...prev, apiKey: e.target.value }))}
-                        className="w-full px-3 py-2.5 rounded-md border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="re_xxxxxxxxxxxxxxxx" />
+                      <div className="relative">
+                        <input type={showApiKey ? "text" : "password"} value={apiConfig.apiKey || ""} onChange={e => setApiConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                          className="w-full px-3 py-2.5 pr-10 rounded-md border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="re_xxxxxxxxxxxxxxxx" />
+                        <button type="button" onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
+                          {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -1919,8 +1924,13 @@ export default function Principal() {
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-foreground mb-1">API Key de Consulta</label>
-                      <input type="text" value={apiConfig.consultaOperadoraKey || ""} onChange={e => setApiConfig(prev => ({ ...prev, consultaOperadoraKey: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-md border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="pk_xxxxxxxxxxxxxxxx" />
+                      <div className="relative">
+                        <input type={showApiKey ? "text" : "password"} value={apiConfig.consultaOperadoraKey || ""} onChange={e => setApiConfig(prev => ({ ...prev, consultaOperadoraKey: e.target.value }))}
+                          className="w-full px-3 py-2.5 pr-10 rounded-md border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="pk_xxxxxxxxxxxxxxxx" />
+                        <button type="button" onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
+                          {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                     <TestConsultaButton url={apiConfig.consultaOperadoraURL || ""} apiKey={apiConfig.consultaOperadoraKey || ""} />
                   </div>
