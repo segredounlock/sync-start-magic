@@ -13,7 +13,12 @@ interface TickerRecarga {
   userName?: string;
 }
 
-export default function RecargasTicker() {
+interface RecargasTickerProps {
+  avatarUrl?: string | null;
+  userInitial?: string;
+}
+
+export default function RecargasTicker({ avatarUrl, userInitial = "U" }: RecargasTickerProps) {
   const [recargas, setRecargas] = useState<TickerRecarga[]>([]);
 
   const fetchRecargas = useCallback(async () => {
@@ -74,13 +79,20 @@ export default function RecargasTicker() {
             <Smartphone className="h-3.5 w-3.5 text-primary" />
             <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
           </div>
-          <div className="flex-1 px-3">
-            <span className="text-xs text-muted-foreground">Aguardando recargas em tempo real...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+           <div className="flex-1 px-3">
+             <span className="text-xs text-muted-foreground">Aguardando recargas em tempo real...</span>
+           </div>
+           {avatarUrl ? (
+             <img src={avatarUrl} alt="Avatar" className="w-7 h-7 rounded-full object-cover shrink-0 mr-2 border-2 border-success shadow-[0_0_8px_hsl(var(--success)/0.4)]" />
+           ) : (
+             <div className="w-7 h-7 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-[10px] shrink-0 mr-2">
+               {userInitial}
+             </div>
+           )}
+         </div>
+       </div>
+     );
+   }
 
   const items = recargas.map((r) => (
     <span key={r.id} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
@@ -108,6 +120,13 @@ export default function RecargasTicker() {
             {shouldAnimate && items}
           </div>
         </div>
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="Avatar" className="w-7 h-7 rounded-full object-cover shrink-0 mr-2 border-2 border-success shadow-[0_0_8px_hsl(var(--success)/0.4)]" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-[10px] shrink-0 mr-2">
+            {userInitial}
+          </div>
+        )}
       </div>
     </div>
   );
