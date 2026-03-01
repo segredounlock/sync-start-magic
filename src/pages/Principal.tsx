@@ -2,6 +2,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { PinProtection } from "@/components/PinProtection";
 import { SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import BackupSection from "@/components/BackupSection";
+import { BroadcastForm } from "@/components/BroadcastForm";
+import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { PromoBanner } from "@/components/PromoBanner";
@@ -20,7 +22,7 @@ import {
   ArrowLeft, UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive,
-  Download, Upload, Database, CheckSquare, Square, Server, Send,
+  Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -55,7 +57,7 @@ interface RecargaHistorico {
   created_at: string;
 }
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast";
 
 interface PricingRule {
   id?: string;
@@ -189,7 +191,14 @@ export default function Principal() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
 
-  // Detalhe do revendedor
+  // Broadcast state
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastUserCount, setBroadcastUserCount] = useState(0);
+  const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+
   const [selectedRev, setSelectedRev] = useState<Revendedor | null>(null);
   const [revRecargas, setRevRecargas] = useState<RecargaHistorico[]>([]);
   const [revTransactions, setRevTransactions] = useState<{ amount: number; created_at: string; status: string; type: string }[]>([]);
@@ -997,6 +1006,34 @@ export default function Principal() {
     return map[module] || module || "Não configurada";
   };
 
+  // Broadcast functions
+  const fetchBroadcastHistory = useCallback(async () => {
+    const { data } = await (supabase.from('notifications' as any) as any)
+      .select('id, title, message, sent_count, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (data) {
+      const ids = data.map((n: any) => n.id);
+      const { data: progresses } = await (supabase.from('broadcast_progress' as any) as any)
+        .select('notification_id, status')
+        .in('notification_id', ids)
+        .order('created_at', { ascending: false });
+      const statusMap: Record<string, string> = {};
+      progresses?.forEach((p: any) => { if (!statusMap[p.notification_id]) statusMap[p.notification_id] = p.status; });
+      setBroadcastHistory(data.map((n: any) => ({ ...n, status: statusMap[n.id] || 'pending' })));
+    }
+  }, []);
+
+  const fetchBroadcastUserCount = useCallback(async () => {
+    const { count } = await (supabase.from('telegram_users' as any) as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('is_blocked', false)
+      .eq('is_registered', true);
+    setBroadcastUserCount(count || 0);
+  }, []);
+
+  useEffect(() => { if (view === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [view, fetchBroadcastHistory, fetchBroadcastUserCount]);
+
   const menuItems: { key: string; icon: any; label: string; color: string; link?: string }[] = [
     { key: "dashboard", icon: BarChart3, label: "Dashboard", color: "text-primary" },
     { key: "lista", icon: Users, label: "Usuários", color: "text-accent" },
@@ -1006,6 +1043,7 @@ export default function Principal() {
     { key: "pagamentos", icon: CreditCard, label: "Pagamentos", color: "text-destructive" },
     { key: "depositos", icon: Landmark, label: "Depósitos", color: "text-success" },
     { key: "bot", icon: Bot, label: "Bot Telegram", color: "text-[hsl(200,80%,55%)]" },
+    { key: "broadcast", icon: Megaphone, label: "Broadcast", color: "text-warning" },
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
@@ -1133,6 +1171,7 @@ export default function Principal() {
               {view === "depositos" && "Configure limites e taxas de depósitos."}
               {view === "bot" && "Configure o bot do Telegram."}
               {view === "geral" && "Configurações gerais do sistema."}
+              {view === "broadcast" && "Envie mensagens em massa para usuários do Telegram."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
@@ -2978,6 +3017,126 @@ export default function Principal() {
                     </>
                   )}
                 </>
+              )}
+            </motion.div>
+          )}
+
+          {/* ===== BROADCAST ===== */}
+          {view === "broadcast" && (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-foreground">Notificações</h2>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                    <Users className="w-4 h-4" /> {broadcastUserCount} usuários ativos para receber
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowBroadcastModal(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity glow-primary text-sm"
+                >
+                  <Send className="w-4 h-4" /> Nova Notificação
+                </button>
+              </div>
+
+              {broadcastProgressId && (
+                <BroadcastProgress
+                  progressId={broadcastProgressId}
+                  notificationTitle={broadcastTitle}
+                  onComplete={() => { toast.success('Broadcast concluído!'); fetchBroadcastHistory(); }}
+                  onResume={async (pid) => {
+                    const { error } = await supabase.functions.invoke('send-broadcast', { body: { resume_progress_id: pid } });
+                    if (error) toast.error('Erro ao retomar: ' + error.message);
+                    else toast.success('Broadcast retomado!');
+                  }}
+                />
+              )}
+
+              <div>
+                <h3 className="text-lg font-bold text-foreground mb-4">Histórico de Notificações</h3>
+                {broadcastHistory.length === 0 ? (
+                  <div className="glass-card rounded-2xl p-8 text-center">
+                    <Megaphone className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
+                    <p className="text-muted-foreground">Nenhum broadcast realizado.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {broadcastHistory.map((h: any) => (
+                      <div key={h.id} className="glass-card rounded-2xl p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <Megaphone className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-foreground">{h.title}</h4>
+                              {h.message && <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">{h.message}</p>}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                            <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(h.created_at).toLocaleDateString('pt-BR')}, {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </span>
+                            <button
+                              onClick={async () => {
+                                setBroadcastSending(true);
+                                setBroadcastTitle(h.title);
+                                try {
+                                  const { data: result, error } = await supabase.functions.invoke('send-broadcast', { body: { notification_id: h.id, include_unregistered: false } });
+                                  if (error) throw error;
+                                  if (result?.progress_id) { setBroadcastProgressId(result.progress_id); toast.success(`Reenviando para ${result.total || 0} usuários!`); }
+                                } catch (err: any) { toast.error('Erro: ' + (err.message || 'Erro desconhecido')); }
+                                finally { setBroadcastSending(false); }
+                              }}
+                              disabled={broadcastSending}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+                            >
+                              <RefreshCw className="w-3 h-3" /> Reenviar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {showBroadcastModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !broadcastSending && setShowBroadcastModal(false)} />
+                  <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto glass-modal rounded-2xl p-6 z-10">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-warning" /> Enviar Broadcast VIP
+                      </h3>
+                      <button onClick={() => !broadcastSending && setShowBroadcastModal(false)} className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <BroadcastForm
+                      userCount={broadcastUserCount}
+                      sending={broadcastSending}
+                      onClose={() => setShowBroadcastModal(false)}
+                      onSubmit={async (data) => {
+                        setBroadcastSending(true);
+                        setBroadcastTitle(data.title);
+                        try {
+                          const { data: notif, error: notifError } = await (supabase.from('notifications' as any) as any)
+                            .insert({ title: data.title, message: data.message, image_url: data.image_url, buttons: data.buttons, message_effect_id: data.message_effect_id })
+                            .select().single();
+                          if (notifError) throw notifError;
+                          const { data: result, error } = await supabase.functions.invoke('send-broadcast', { body: { notification_id: notif.id, include_unregistered: false } });
+                          if (error) throw error;
+                          if (result?.progress_id) { setBroadcastProgressId(result.progress_id); toast.success(`Broadcast iniciado para ${result.total || 0} usuários!`); }
+                          setShowBroadcastModal(false);
+                          fetchBroadcastHistory();
+                        } catch (err: any) { toast.error('Erro ao iniciar broadcast: ' + (err.message || 'Erro desconhecido')); }
+                        finally { setBroadcastSending(false); }
+                      }}
+                    />
+                  </div>
+                </div>
               )}
             </motion.div>
           )}
