@@ -1,0 +1,306 @@
+import { useEffect, useState, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { playSuccessSound } from "@/lib/sounds";
+import {
+  Smartphone, Clock, CheckCircle2, XCircle, AlertTriangle,
+  TrendingUp, Activity, Zap, RefreshCw,
+} from "lucide-react";
+
+interface Recarga {
+  id: string;
+  telefone: string;
+  operadora: string | null;
+  valor: number;
+  custo: number;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+}
+
+interface DashboardStats {
+  total: number;
+  completed: number;
+  pending: number;
+  failed: number;
+  totalValue: number;
+  totalCost: number;
+}
+
+interface Props {
+  userId: string;
+  fmt: (v: number) => string;
+}
+
+export default function RealtimeDashboard({ userId, fmt }: Props) {
+  const [recargas, setRecargas] = useState<Recarga[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [liveIndicator, setLiveIndicator] = useState(false);
+  const audioRef = useRef(false);
+
+  const fetchRecargas = useCallback(async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const { data } = await supabase
+      .from("recargas")
+      .select("id, telefone, operadora, valor, custo, status, created_at, completed_at")
+      .eq("user_id", userId)
+      .gte("created_at", today)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setRecargas(data || []);
+    setLoading(false);
+  }, [userId]);
+
+  useEffect(() => {
+    fetchRecargas();
+  }, [fetchRecargas]);
+
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel(`dashboard-recargas-${userId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "recargas",
+        filter: `user_id=eq.${userId}`,
+      }, (payload) => {
+        const row = payload.new as any;
+        setRecargas(prev => [row, ...prev].slice(0, 100));
+        blinkLive();
+      })
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "recargas",
+        filter: `user_id=eq.${userId}`,
+      }, (payload) => {
+        const row = payload.new as any;
+        setRecargas(prev => prev.map(r => r.id === row.id ? { ...r, ...row } : r));
+        blinkLive();
+        if (row.status === "completed" || row.status === "concluida") {
+          toast.success(`✅ Recarga ${row.operadora || ""} R$ ${Number(row.valor).toFixed(2)} concluída!`);
+          playSuccessSound();
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  const blinkLive = () => {
+    setLiveIndicator(true);
+    setTimeout(() => setLiveIndicator(false), 1500);
+  };
+
+  const stats: DashboardStats = {
+    total: recargas.length,
+    completed: recargas.filter(r => r.status === "completed" || r.status === "concluida").length,
+    pending: recargas.filter(r => r.status === "pending").length,
+    failed: recargas.filter(r => r.status === "falha").length,
+    totalValue: recargas.reduce((sum, r) => sum + Number(r.valor), 0),
+    totalCost: recargas.reduce((sum, r) => sum + Number(r.custo), 0),
+  };
+
+  const fmtTime = (d: string) => {
+    try {
+      return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    } catch { return ""; }
+  };
+
+  const getProcessingTime = (r: Recarga) => {
+    if (!r.completed_at) return null;
+    const ms = new Date(r.completed_at).getTime() - new Date(r.created_at).getTime();
+    if (ms <= 0) return null;
+    const secs = Math.round(ms / 1000);
+    return secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`;
+  };
+
+  const statusIcon = (status: string) => {
+    if (status === "completed" || status === "concluida") return <CheckCircle2 className="h-4 w-4 text-success" />;
+    if (status === "pending") return <Clock className="h-4 w-4 text-warning animate-pulse" />;
+    if (status === "falha") return <XCircle className="h-4 w-4 text-destructive" />;
+    return <AlertTriangle className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  const statusLabel = (status: string) => {
+    if (status === "completed" || status === "concluida") return "Concluída";
+    if (status === "pending") return "Pendente";
+    if (status === "falha") return "Falha";
+    return status;
+  };
+
+  const statusClass = (status: string) => {
+    if (status === "completed" || status === "concluida") return "bg-success/15 text-success";
+    if (status === "pending") return "bg-warning/15 text-warning";
+    if (status === "falha") return "bg-destructive/15 text-destructive";
+    return "bg-muted/50 text-muted-foreground";
+  };
+
+  const opColor = (op: string | null) => {
+    if (!op) return "text-muted-foreground";
+    const n = op.toLowerCase();
+    if (n.includes("claro")) return "text-red-400";
+    if (n.includes("tim")) return "text-blue-400";
+    if (n.includes("vivo")) return "text-purple-400";
+    if (n.includes("oi")) return "text-yellow-400";
+    return "text-primary";
+  };
+
+  // Group by operator for mini breakdown
+  const opBreakdown = recargas.reduce((acc, r) => {
+    const key = r.operadora || "Outros";
+    if (!acc[key]) acc[key] = { count: 0, value: 0, completed: 0 };
+    acc[key].count++;
+    acc[key].value += Number(r.valor);
+    if (r.status === "completed" || r.status === "concluida") acc[key].completed++;
+    return acc;
+  }, {} as Record<string, { count: number; value: number; completed: number }>);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Dashboard em Tempo Real
+          </h2>
+          <p className="text-xs text-muted-foreground">Recargas de hoje • Atualização automática</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+            liveIndicator ? "bg-success/20 text-success scale-105" : "bg-success/10 text-success/70"
+          }`}>
+            <span className={`w-2 h-2 rounded-full bg-success ${liveIndicator ? "animate-ping" : "animate-pulse"}`} />
+            LIVE
+          </div>
+          <button onClick={fetchRecargas} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors" title="Atualizar">
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { icon: Zap, label: "Total Hoje", value: String(stats.total), color: "text-primary", bg: "bg-primary/10" },
+          { icon: CheckCircle2, label: "Concluídas", value: String(stats.completed), color: "text-success", bg: "bg-success/10" },
+          { icon: Clock, label: "Pendentes", value: String(stats.pending), color: "text-warning", bg: "bg-warning/10" },
+          { icon: XCircle, label: "Falhas", value: String(stats.failed), color: "text-destructive", bg: "bg-destructive/10" },
+        ].map((c, i) => (
+          <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+            className="glass-card rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-8 h-8 rounded-lg ${c.bg} flex items-center justify-center`}>
+                <c.icon className={`h-4 w-4 ${c.color}`} />
+              </div>
+              <span className="text-xs text-muted-foreground">{c.label}</span>
+            </div>
+            <p className="text-2xl font-black text-foreground">{c.value}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Financial summary */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="glass-card rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="h-4 w-4 text-success" />
+            <span className="text-xs text-muted-foreground">Valor Total</span>
+          </div>
+          <p className="text-xl font-bold text-success">{fmt(stats.totalValue)}</p>
+        </div>
+        <div className="glass-card rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span className="text-xs text-muted-foreground">Lucro Estimado</span>
+          </div>
+          <p className="text-xl font-bold text-primary">{fmt(stats.totalValue - stats.totalCost)}</p>
+        </div>
+      </div>
+
+      {/* Operator breakdown */}
+      {Object.keys(opBreakdown).length > 0 && (
+        <div className="glass-card rounded-xl p-4">
+          <h3 className="text-sm font-bold text-foreground mb-3">Por Operadora</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {Object.entries(opBreakdown).sort((a, b) => b[1].count - a[1].count).map(([op, data]) => (
+              <div key={op} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                <Smartphone className={`h-5 w-5 ${opColor(op)} shrink-0`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`font-bold text-sm ${opColor(op)}`}>{op}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {data.count} recargas • {data.completed} concluídas
+                  </p>
+                </div>
+                <p className="font-bold text-sm text-foreground shrink-0">{fmt(data.value)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Live Feed */}
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">Feed em Tempo Real</h3>
+          <span className="text-[10px] text-muted-foreground">{recargas.length} recargas hoje</span>
+        </div>
+        <div className="max-h-[400px] overflow-y-auto">
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Carregando...</p>
+            </div>
+          ) : recargas.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <Smartphone className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Nenhuma recarga hoje</p>
+              <p className="text-[10px] mt-1">Novas recargas aparecerão aqui automaticamente</p>
+            </div>
+          ) : (
+            <AnimatePresence initial={false}>
+              {recargas.map((r, i) => {
+                const procTime = getProcessingTime(r);
+                return (
+                  <motion.div
+                    key={r.id}
+                    initial={{ opacity: 0, x: -20, height: 0 }}
+                    animate={{ opacity: 1, x: 0, height: "auto" }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="px-4 py-3 border-b border-border/50 hover:bg-muted/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {statusIcon(r.status)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold text-sm ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
+                          <span className="text-xs text-muted-foreground font-mono">{r.telefone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
+                          {procTime && (
+                            <span className="text-[10px] text-success font-medium">⚡ {procTime}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-bold text-sm text-foreground">{fmt(r.valor)}</p>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusClass(r.status)}`}>
+                          {statusLabel(r.status)}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
