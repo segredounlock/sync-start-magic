@@ -3087,7 +3087,7 @@ function SaldoModal({ rev, onClose, onUpdated }: { rev: Revendedor; onClose: () 
   const [valor, setValor] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSaldo = async (action: "add" | "set") => {
+  const handleSaldo = async (action: "add" | "set" | "remove") => {
     const v = parseFloat(valor.replace(",", "."));
     if (isNaN(v) || v < 0) { toast.error("Valor inválido"); return; }
     setLoading(true);
@@ -3100,6 +3100,16 @@ function SaldoModal({ rev, onClose, onUpdated }: { rev: Revendedor; onClose: () 
         toast.success(`R$ ${v.toFixed(2)} adicionado ao saldo`);
         supabase.functions.invoke("telegram-notify", {
           body: { type: "saldo_added", user_id: rev.id, data: { valor: v, novo_saldo: newVal } },
+        }).catch(() => {});
+      } else if (action === "remove") {
+        const { data: current } = await supabase.from("saldos").select("valor").eq("user_id", rev.id).eq("tipo", "revenda").single();
+        const currentVal = Number(current?.valor) || 0;
+        const newVal = Math.max(0, currentVal - v);
+        const { error } = await supabase.from("saldos").update({ valor: newVal }).eq("user_id", rev.id).eq("tipo", "revenda");
+        if (error) throw error;
+        toast.success(`R$ ${v.toFixed(2)} removido do saldo`);
+        supabase.functions.invoke("telegram-notify", {
+          body: { type: "saldo_removed", user_id: rev.id, data: { valor: v, novo_saldo: newVal } },
         }).catch(() => {});
       } else {
         const { error } = await supabase.from("saldos").update({ valor: v }).eq("user_id", rev.id).eq("tipo", "revenda");
@@ -3128,6 +3138,7 @@ function SaldoModal({ rev, onClose, onUpdated }: { rev: Revendedor; onClose: () 
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={onClose} className="flex-1 py-2 rounded-md border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
+          <button onClick={() => handleSaldo("remove")} disabled={loading} className="flex-1 py-2 rounded-md bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50">− Remover</button>
           <button onClick={() => handleSaldo("add")} disabled={loading} className="flex-1 py-2 rounded-md bg-success text-success-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50">+ Adicionar</button>
           <button onClick={() => handleSaldo("set")} disabled={loading} className="flex-1 py-2 rounded-md bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50">Definir</button>
         </div>
