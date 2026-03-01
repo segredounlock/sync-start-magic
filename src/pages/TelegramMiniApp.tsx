@@ -1380,11 +1380,13 @@ export default function TelegramMiniApp() {
               <div className="rounded-2xl p-5 flex items-center gap-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
                 {/* Avatar with upload */}
                 <label className="relative cursor-pointer group shrink-0">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-xl font-bold text-white">{initials}</div>
-                  )}
+                  <div className="w-[72px] h-[72px] rounded-full p-[3px] rgb-border flex items-center justify-center">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-orange-500 flex items-center justify-center text-xl font-bold text-white">{initials}</div>
+                    )}
+                  </div>
                   <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: "var(--tg-btn)" }}>
                     {uploadingAvatar ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Camera className="w-3.5 h-3.5 text-white" />}
