@@ -68,17 +68,17 @@ serve(async (req) => {
       created_by: user.email,
       include_database: includeDatabase,
       tables: includeDatabase ? [
-        "profiles", "user_roles", "saldos", "operadoras", "pricing_rules",
-        "reseller_pricing_rules", "reseller_config", "recargas", "transactions",
-        "system_config", "telegram_sessions"
+        "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
+        "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
+        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas"
       ] : [],
     }, null, 2));
 
     if (includeDatabase) {
       const tables = [
-        "profiles", "user_roles", "saldos", "operadoras", "pricing_rules",
-        "reseller_pricing_rules", "reseller_config", "recargas", "transactions",
-        "system_config", "telegram_sessions"
+        "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
+        "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
+        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas"
       ];
 
       const dbFolder = zip.folder("database");
