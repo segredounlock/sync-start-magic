@@ -1,4 +1,4 @@
-project_id = "rqhrvfahnoovysfgdwwu"
+project_id = "xtkqyjruyuydlbvwduuy"
 
 [functions.telegram-bot]
 verify_jwt = false
@@ -43,4 +43,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.cleanup-stuck-broadcasts]
+verify_jwt = false
+
+[functions.admin-delete-user]
 verify_jwt = false
