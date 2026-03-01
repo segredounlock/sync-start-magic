@@ -261,7 +261,7 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-[340px] max-h-[420px] rounded-xl border border-border bg-background shadow-xl z-50 overflow-hidden flex flex-col"
+            className="fixed right-2 left-2 top-14 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[340px] max-h-[70vh] sm:max-h-[420px] rounded-xl border border-border bg-background shadow-xl z-50 overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
