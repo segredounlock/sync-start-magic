@@ -1608,7 +1608,9 @@ export default function AdminDashboard() {
                   const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                   const recCount = userRecs.length;
                   const recHoje = userRecs.filter(rc => rc.created_at?.slice(0, 10) === todayStr).length;
-                  const totalVendido = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida").reduce((s, rc) => s + (Number(rc.valor) || 0), 0);
+                  const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
+                  const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
+                  const totalLucro = completedRecs.reduce((s, rc) => s + ((Number(rc.custo) || 0) - (Number((rc as any).custo_api) || 0)), 0);
                   const ultimaRec = userRecs[0];
                   return (
                     <div key={r.id} className="glass-card rounded-xl p-4">
@@ -1642,6 +1644,10 @@ export default function AdminDashboard() {
                         <div className="text-right">
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Hoje</p>
                           <p className="text-sm font-bold text-primary"><AnimatedInt value={recHoje} /></p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Lucro</p>
+                          <p className="text-sm font-bold font-mono text-success"><AnimatedCounter value={totalLucro} prefix="R$&nbsp;" /></p>
                         </div>
                       </div>
                       {ultimaRec && (
@@ -1677,6 +1683,7 @@ export default function AdminDashboard() {
                     <th className="text-center px-4 py-3 font-medium text-muted-foreground">Recargas</th>
                     <th className="text-center px-4 py-3 font-medium text-muted-foreground">Hoje</th>
                     <th className="text-center px-4 py-3 font-medium text-muted-foreground">Total Vendido</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Lucro</th>
                     <th className="text-center px-4 py-3 font-medium text-muted-foreground">Última Recarga</th>
                     <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
                     <th className="text-center px-4 py-3 font-medium text-muted-foreground">Ações</th>
@@ -1684,14 +1691,14 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={8} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
+                    <tr><td colSpan={9} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                   ) : (() => {
                     const filtered = revendedores.filter(r => {
                       if (!userSearch.trim()) return true;
                       const q = userSearch.toLowerCase();
                       return (r.nome || "").toLowerCase().includes(q) || (r.email || "").toLowerCase().includes(q);
                     });
-                    if (filtered.length === 0) return <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</td></tr>;
+                    if (filtered.length === 0) return <tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</td></tr>;
                     const todayStr = new Date().toISOString().slice(0, 10);
                     return filtered.map(r => {
                       const initials = (r.nome || r.email || "?").slice(0, 1).toUpperCase();
@@ -1700,7 +1707,9 @@ export default function AdminDashboard() {
                       const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                       const recCount = userRecs.length;
                       const recHoje = userRecs.filter(rc => rc.created_at?.slice(0, 10) === todayStr).length;
-                      const totalVendido = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida").reduce((s, rc) => s + (Number(rc.valor) || 0), 0);
+                      const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
+                      const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
+                      const totalLucro = completedRecs.reduce((s, rc) => s + ((Number(rc.custo) || 0) - (Number((rc as any).custo_api) || 0)), 0);
                       const ultimaRec = userRecs[0];
                       return (
                         <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
@@ -1719,6 +1728,7 @@ export default function AdminDashboard() {
                           <td className="px-4 py-3 text-center text-foreground"><AnimatedInt value={recCount} /></td>
                           <td className="px-4 py-3 text-center font-medium text-primary"><AnimatedInt value={recHoje} /></td>
                           <td className="px-4 py-3 text-center font-mono font-medium text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" /></td>
+                          <td className="px-4 py-3 text-center font-mono font-medium text-success"><AnimatedCounter value={totalLucro} prefix="R$&nbsp;" /></td>
                           <td className="px-4 py-3 text-center">
                             {ultimaRec ? (
                               <div className="text-xs">
