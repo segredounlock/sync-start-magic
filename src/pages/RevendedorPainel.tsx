@@ -76,6 +76,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [saldo, setSaldo] = useState(0);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
   const [tab, setTab] = useState<PainelTab>("recarga");
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileNome, setProfileNome] = useState("");
@@ -194,7 +195,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const fetchData = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
+    if (!initialLoadDone.current) setLoading(true);
     try {
       const [{ data: saldoData }, { data: recargasData }, { data: profile }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
@@ -215,6 +216,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       console.error(err);
     }
     setLoading(false);
+    initialLoadDone.current = true;
   }, [user]);
 
   const fetchTransactions = useCallback(async () => {
