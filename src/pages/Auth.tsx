@@ -59,7 +59,7 @@ export default function Auth() {
 
     const script = document.createElement("script");
     script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.setAttribute("data-telegram-login", "RecargasBrasilBot");
+    script.setAttribute("data-telegram-login", "Bypasa12_bot");
     script.setAttribute("data-size", "large");
     script.setAttribute("data-radius", "8");
     script.setAttribute("data-onauth", "onTelegramAuth(user)");
