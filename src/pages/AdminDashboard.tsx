@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
   const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
-  const [configSubTab, setConfigSubTab] = useState<"geral" | "recargas" | "pagamentos" | "depositos">("geral");
+  const [configSubTab, setConfigSubTab] = useState<"geral" | "pagamentos" | "depositos">("geral");
   const [period, setPeriod] = useState<Period>("7dias");
   const [userSearch, setUserSearch] = useState("");
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -2378,7 +2378,6 @@ export default function AdminDashboard() {
               <div className="flex gap-1 border-b border-border min-w-max">
                 {([
                   { key: "geral" as const, icon: Settings, label: "Geral" },
-                  { key: "recargas" as const, icon: Smartphone, label: "Recargas" },
                   { key: "pagamentos" as const, icon: CreditCard, label: "Pagamentos" },
                   { key: "depositos" as const, icon: Landmark, label: "Depósitos" },
                 ]).map(st => (
@@ -2418,14 +2417,6 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                {/* Recargas */}
-                {configSubTab === "recargas" && (
-                  <div className="space-y-6">
-                    <div className="glass-card rounded-xl p-6 text-center text-muted-foreground">
-                      <p className="text-sm">As configurações de Provedor de Recarga e Consulta de Operadora foram movidas para o <strong className="text-foreground">Painel Principal</strong>.</p>
-                    </div>
-                  </div>
-                )}
 
                 {/* Pagamentos - Gateway Individual */}
                 {configSubTab === "pagamentos" && (
