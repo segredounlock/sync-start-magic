@@ -698,7 +698,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   return (
     <div className="min-h-screen md:flex pb-8">
-      <RecargasTicker userId={user?.id} />
+      <RecargasTicker />
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
         <>
