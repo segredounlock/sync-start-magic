@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Send, Image, Plus, Trash2, Link, Upload, X, Sparkles } from 'lucide-react';
+import { Loader2, Send, Image, Plus, Trash2, Link, Upload, X, Sparkles, Tag, Zap, Bell, Megaphone, TrendingUp } from 'lucide-react';
 
 interface BroadcastButton {
   text: string;
@@ -20,6 +20,7 @@ interface BroadcastFormProps {
   userCount: number;
   sending: boolean;
   onSubmit: (data: BroadcastFormData) => void;
+  onClose?: () => void;
 }
 
 const MESSAGE_EFFECTS = [
@@ -30,7 +31,16 @@ const MESSAGE_EFFECTS = [
   { id: '5159385139981059251', label: 'Fogo', emoji: '🔥' },
 ];
 
-export function BroadcastForm({ userCount, sending, onSubmit }: BroadcastFormProps) {
+const TEMPLATES = [
+  { key: 'promo', label: 'Promoção', emoji: '🏷️', color: 'bg-green-600/80', title: '🎉 Promoção Especial!', message: 'Aproveite 20% de desconto em todos os planos! Use o cupom PROMO20. Válido até domingo!' },
+  { key: 'novidade', label: 'Novidade', emoji: '✨', color: 'bg-purple-600/80', title: '✨ Novidade!', message: 'Temos novidades incríveis para você! Confira as últimas atualizações.' },
+  { key: 'aviso', label: 'Aviso', emoji: '🔔', color: 'bg-yellow-600/80', title: '⚠️ Aviso Importante', message: 'Atenção! Informamos que haverá uma manutenção programada.' },
+  { key: 'comunicado', label: 'Comunicado', emoji: '📢', color: 'bg-blue-600/80', title: '📢 Comunicado Oficial', message: 'Comunicamos a todos os nossos clientes sobre as seguintes mudanças.' },
+];
+
+const BATCH_SIZE = 25;
+
+export function BroadcastForm({ userCount, sending, onSubmit, onClose }: BroadcastFormProps) {
   const [formData, setFormData] = useState<BroadcastFormData>({
     title: '', message: '', image_url: null, buttons: [], message_effect_id: null,
   });
@@ -48,6 +58,10 @@ export function BroadcastForm({ userCount, sending, onSubmit }: BroadcastFormPro
 
   const handleRemoveButton = (index: number) => {
     setFormData({ ...formData, buttons: formData.buttons.filter((_, i) => i !== index) });
+  };
+
+  const handleTemplate = (tpl: typeof TEMPLATES[0]) => {
+    setFormData({ ...formData, title: tpl.title, message: tpl.message });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,178 +96,241 @@ export function BroadcastForm({ userCount, sending, onSubmit }: BroadcastFormPro
       buttons: enableButtons ? validButtons : [],
       message_effect_id: selectedEffect !== 'none' ? selectedEffect : null,
     });
-    setFormData({ title: '', message: '', image_url: null, buttons: [], message_effect_id: null });
-    setEnableImage(false);
-    setEnableButtons(false);
-    setSelectedEffect('none');
   };
 
+  const totalBatches = Math.ceil(userCount / BATCH_SIZE);
+  const estimatedSeconds = Math.ceil((userCount / BATCH_SIZE) * 1.1);
+  const speedPerSecond = BATCH_SIZE;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Title */}
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-foreground">Título da Notificação</label>
-        <input
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="🎉 Promoção Especial!"
-          required
-          className="w-full px-3 py-2.5 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-
-      {/* Message */}
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-foreground">Mensagem</label>
-        <textarea
-          value={formData.message}
-          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-          placeholder="Sua mensagem aqui... (suporta HTML: <b>, <i>, <a>)"
-          rows={4}
-          required
-          className="w-full px-3 py-2.5 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-        />
-      </div>
-
-      {/* Feature toggles */}
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => setEnableImage(!enableImage)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-            enableImage ? 'bg-primary/20 text-primary border border-primary/30' : 'glass text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Image className="w-4 h-4" /> Imagem
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setEnableButtons(!enableButtons);
-            if (!enableButtons && formData.buttons.length === 0) handleAddButton();
-          }}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-            enableButtons ? 'bg-primary/20 text-primary border border-primary/30' : 'glass text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Link className="w-4 h-4" /> Botões
-        </button>
-      </div>
-
-      {/* Message Effects */}
-      <div className="space-y-1.5">
-        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <Sparkles className="w-4 h-4" /> Efeito Visual
+    <div className="space-y-5">
+      {/* Templates */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Tag className="w-4 h-4" /> Templates Prontos
         </label>
-        <div className="flex flex-wrap gap-2">
-          {MESSAGE_EFFECTS.map((effect) => (
+        <div className="grid grid-cols-2 gap-2">
+          {TEMPLATES.map((tpl) => (
             <button
-              key={effect.id}
+              key={tpl.key}
               type="button"
-              onClick={() => setSelectedEffect(effect.id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
-                selectedEffect === effect.id
-                  ? 'border-primary ring-2 ring-primary/30 bg-primary/10'
-                  : 'border-border/50 glass hover:border-border'
-              }`}
+              onClick={() => handleTemplate(tpl)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-all hover:opacity-80 ${tpl.color}`}
             >
-              <span>{effect.emoji}</span>
-              <span className="text-xs">{effect.label}</span>
+              <span>{tpl.emoji}</span> {tpl.label}
             </button>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground text-center">Ou crie uma mensagem personalizada abaixo</p>
       </div>
 
-      {/* Image upload */}
-      {enableImage && (
-        <div className="space-y-2 p-3 rounded-lg glass border border-border/50">
-          {formData.image_url ? (
-            <div className="relative inline-block">
-              <img src={formData.image_url} alt="Preview" className="max-h-32 rounded-lg" />
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, image_url: null })}
-                className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImage}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg glass text-sm hover:bg-muted/50 transition-colors disabled:opacity-50"
-              >
-                {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                {uploadingImage ? 'Enviando...' : 'Escolher Imagem'}
-              </button>
-              <span className="text-xs text-muted-foreground">Máx. 5MB</span>
-            </div>
-          )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Title */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-foreground">Título da Notificação</label>
+          <input
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="🎉 Promoção Especial!"
+            required
+            className="w-full px-3 py-2.5 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
         </div>
-      )}
 
-      {/* Buttons */}
-      {enableButtons && (
-        <div className="space-y-3 p-3 rounded-lg glass border border-border/50">
-          {formData.buttons.map((button, index) => (
-            <div key={index} className="flex gap-2 items-start">
-              <div className="flex-1 space-y-2">
-                <input
-                  value={button.text}
-                  onChange={(e) => {
-                    const nb = [...formData.buttons];
-                    nb[index].text = e.target.value;
-                    setFormData({ ...formData, buttons: nb });
-                  }}
-                  placeholder="Texto do botão"
-                  className="w-full px-3 py-2 rounded-lg glass-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                <input
-                  value={button.url}
-                  onChange={(e) => {
-                    const nb = [...formData.buttons];
-                    nb[index].url = e.target.value;
-                    setFormData({ ...formData, buttons: nb });
-                  }}
-                  placeholder="https://exemplo.com"
-                  type="url"
-                  className="w-full px-3 py-2 rounded-lg glass-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
+        {/* Message */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-foreground">Mensagem</label>
+          <textarea
+            value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            placeholder="Aproveite 20% de desconto em todos os planos! Use o cupom PROMO20. Válido até domingo!"
+            rows={4}
+            required
+            className="w-full px-3 py-2.5 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+          />
+        </div>
+
+        {/* Feature toggles */}
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => setEnableImage(!enableImage)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+              enableImage ? 'bg-primary/20 text-primary border border-primary/30' : 'glass text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Image className="w-4 h-4" /> Imagem
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEnableButtons(!enableButtons);
+              if (!enableButtons && formData.buttons.length === 0) handleAddButton();
+            }}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+              enableButtons ? 'bg-primary/20 text-primary border border-primary/30' : 'glass text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Link className="w-4 h-4" /> Botões
+          </button>
+        </div>
+
+        {/* Message Effects */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Sparkles className="w-4 h-4" /> Efeito Visual da Mensagem
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {MESSAGE_EFFECTS.map((effect) => (
+              <button
+                key={effect.id}
+                type="button"
+                onClick={() => setSelectedEffect(effect.id)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
+                  selectedEffect === effect.id
+                    ? 'border-primary ring-2 ring-primary/30 bg-primary/10'
+                    : 'border-border/50 glass hover:border-border'
+                }`}
+              >
+                <span>{effect.emoji}</span>
+                <span className="text-xs">{effect.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Image upload */}
+        {enableImage && (
+          <div className="space-y-2 p-3 rounded-lg glass border border-border/50">
+            {formData.image_url ? (
+              <div className="relative inline-block">
+                <img src={formData.image_url} alt="Preview" className="max-h-32 rounded-lg" />
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, image_url: null })}
+                  className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full"
+                >
+                  <X className="w-3 h-3" />
+                </button>
               </div>
-              <button type="button" onClick={() => handleRemoveButton(index)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-          {formData.buttons.length < 2 && (
-            <button type="button" onClick={handleAddButton} className="w-full flex items-center justify-center gap-2 py-2 rounded-lg glass text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Plus className="w-4 h-4" /> Adicionar Botão
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Info */}
-      <div className="text-xs text-muted-foreground text-center">
-        Será enviado para <span className="font-bold text-foreground">{userCount}</span> usuários
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={sending}
-        className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 glow-primary"
-      >
-        {sending ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
-        ) : (
-          <><Send className="w-4 h-4" /> Enviar Broadcast</>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg glass text-sm hover:bg-muted/50 transition-colors disabled:opacity-50"
+                >
+                  {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {uploadingImage ? 'Enviando...' : 'Escolher Imagem'}
+                </button>
+                <span className="text-xs text-muted-foreground">Máx. 5MB</span>
+              </div>
+            )}
+          </div>
         )}
-      </button>
-    </form>
+
+        {/* Buttons */}
+        {enableButtons && (
+          <div className="space-y-3 p-3 rounded-lg glass border border-border/50">
+            {formData.buttons.map((button, index) => (
+              <div key={index} className="flex gap-2 items-start">
+                <div className="flex-1 space-y-2">
+                  <input
+                    value={button.text}
+                    onChange={(e) => {
+                      const nb = [...formData.buttons];
+                      nb[index].text = e.target.value;
+                      setFormData({ ...formData, buttons: nb });
+                    }}
+                    placeholder="Texto do botão"
+                    className="w-full px-3 py-2 rounded-lg glass-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <input
+                    value={button.url}
+                    onChange={(e) => {
+                      const nb = [...formData.buttons];
+                      nb[index].url = e.target.value;
+                      setFormData({ ...formData, buttons: nb });
+                    }}
+                    placeholder="https://exemplo.com"
+                    type="url"
+                    className="w-full px-3 py-2 rounded-lg glass-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <button type="button" onClick={() => handleRemoveButton(index)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {formData.buttons.length < 2 && (
+              <button type="button" onClick={handleAddButton} className="w-full flex items-center justify-center gap-2 py-2 rounded-lg glass text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Plus className="w-4 h-4" /> Adicionar Botão
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Preview */}
+        {(formData.title || formData.message) && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground">Prévia no Telegram:</label>
+            <div className="p-4 rounded-xl bg-[#1a2332] border border-border/30">
+              {formData.image_url && enableImage && (
+                <img src={formData.image_url} alt="" className="w-full max-h-40 object-cover rounded-lg mb-3" />
+              )}
+              <p className="text-sm font-bold text-white">📢 {formData.title || 'Título'}</p>
+              <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap">{formData.message || 'Sua mensagem aqui...'}</p>
+              {enableButtons && formData.buttons.filter(b => b.text).length > 0 && (
+                <div className="mt-3 flex gap-2">
+                  {formData.buttons.filter(b => b.text).map((b, i) => (
+                    <span key={i} className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-medium">{b.text}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Estimates */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <TrendingUp className="w-4 h-4" /> Estimativa de envio
+          </label>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Destinatários:</span>
+              <span className="font-bold text-primary">{userCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Velocidade:</span>
+              <span className="font-bold text-foreground">~{speedPerSecond} msg/s</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Tempo estimado:</span>
+              <span className="font-bold text-foreground">~{estimatedSeconds}s</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Batches:</span>
+              <span className="font-bold text-foreground">{totalBatches}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={sending || !formData.title || !formData.message}
+          className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 glow-primary text-sm"
+        >
+          {sending ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
+          ) : (
+            <><Send className="w-4 h-4" /> Enviar para {userCount} usuários</>
+          )}
+        </button>
+      </form>
+    </div>
   );
 }

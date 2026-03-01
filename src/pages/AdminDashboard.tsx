@@ -95,6 +95,7 @@ export default function AdminDashboard() {
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
 
   // All recargas for analytics
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
@@ -787,7 +788,7 @@ export default function AdminDashboard() {
 
   const fetchBroadcastHistory = useCallback(async () => {
     const { data } = await (supabase.from('notifications' as any) as any)
-      .select('id, title, sent_count, created_at')
+      .select('id, title, message, sent_count, created_at')
       .order('created_at', { ascending: false })
       .limit(20);
     if (data) {
@@ -3185,105 +3186,161 @@ export default function AdminDashboard() {
         {/* ===== BROADCAST ===== */}
         {tab === "broadcast" && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Form */}
-              <div className="glass-card rounded-2xl p-5">
-                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Megaphone className="w-5 h-5 text-warning" /> Nova Mensagem
-                </h3>
-                <BroadcastForm
-                  userCount={broadcastUserCount}
-                  sending={broadcastSending}
-                  onSubmit={async (data) => {
-                    setBroadcastSending(true);
-                    setBroadcastTitle(data.title);
-                    try {
-                      // Create notification record
-                      const { data: notif, error: notifError } = await (supabase.from('notifications' as any) as any)
-                        .insert({
-                          title: data.title,
-                          message: data.message,
-                          image_url: data.image_url,
-                          buttons: data.buttons,
-                          message_effect_id: data.message_effect_id,
-                          created_by: user?.id,
-                        })
-                        .select()
-                        .single();
-
-                      if (notifError) throw notifError;
-
-                      // Start broadcast
-                      const { data: result, error } = await supabase.functions.invoke('send-broadcast', {
-                        body: { notification_id: notif.id, include_unregistered: false },
-                      });
-
-                      if (error) throw error;
-                      if (result?.progress_id) {
-                        setBroadcastProgressId(result.progress_id);
-                        toast.success(`Broadcast iniciado para ${result.total || 0} usuários!`);
-                      }
-                    } catch (err: any) {
-                      toast.error('Erro ao iniciar broadcast: ' + (err.message || 'Erro desconhecido'));
-                    } finally {
-                      setBroadcastSending(false);
-                    }
-                  }}
-                />
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-extrabold text-foreground">Notificações</h2>
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                  <Users className="w-4 h-4" /> {broadcastUserCount} usuários ativos para receber
+                </p>
               </div>
-
-              {/* Progress / History */}
-              <div className="space-y-4">
-                {broadcastProgressId && (
-                  <BroadcastProgress
-                    progressId={broadcastProgressId}
-                    notificationTitle={broadcastTitle}
-                    onComplete={() => {
-                      toast.success('Broadcast concluído!');
-                      // Refresh history
-                      fetchBroadcastHistory();
-                    }}
-                    onResume={async (pid) => {
-                      const { error } = await supabase.functions.invoke('send-broadcast', {
-                        body: { resume_progress_id: pid },
-                      });
-                      if (error) toast.error('Erro ao retomar: ' + error.message);
-                      else toast.success('Broadcast retomado!');
-                    }}
-                  />
-                )}
-
-                {/* History */}
-                <div className="glass-card rounded-2xl p-5">
-                  <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                    <History className="w-5 h-5" /> Histórico
-                  </h3>
-                  {broadcastHistory.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum broadcast realizado.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                      {broadcastHistory.map((h: any) => (
-                        <div key={h.id} className="flex items-center justify-between p-3 rounded-lg glass text-sm">
-                          <div>
-                            <p className="font-medium text-foreground">{h.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(h.created_at).toLocaleDateString('pt-BR')} • {h.sent_count} enviados
-                            </p>
-                          </div>
-                          <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            h.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                            h.status === 'failed' ? 'bg-red-500/20 text-red-400' :
-                            'bg-yellow-500/20 text-yellow-400'
-                          }`}>
-                            {h.status}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowBroadcastModal(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity glow-primary text-sm"
+                >
+                  <Send className="w-4 h-4" /> Nova Notificação
+                </button>
               </div>
             </div>
+
+            {/* Active progress */}
+            {broadcastProgressId && (
+              <BroadcastProgress
+                progressId={broadcastProgressId}
+                notificationTitle={broadcastTitle}
+                onComplete={() => {
+                  toast.success('Broadcast concluído!');
+                  fetchBroadcastHistory();
+                }}
+                onResume={async (pid) => {
+                  const { error } = await supabase.functions.invoke('send-broadcast', {
+                    body: { resume_progress_id: pid },
+                  });
+                  if (error) toast.error('Erro ao retomar: ' + error.message);
+                  else toast.success('Broadcast retomado!');
+                }}
+              />
+            )}
+
+            {/* History */}
+            <div>
+              <h3 className="text-lg font-bold text-foreground mb-4">Histórico de Notificações</h3>
+              {broadcastHistory.length === 0 ? (
+                <div className="glass-card rounded-2xl p-8 text-center">
+                  <Megaphone className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
+                  <p className="text-muted-foreground">Nenhum broadcast realizado.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Clique em "Nova Notificação" para enviar sua primeira mensagem.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {broadcastHistory.map((h: any) => (
+                    <div key={h.id} className="glass-card rounded-2xl p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Megaphone className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-foreground">{h.title}</h4>
+                            {h.message && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">{h.message}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(h.created_at).toLocaleDateString('pt-BR')}, {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          </span>
+                          <button
+                            onClick={async () => {
+                              setBroadcastSending(true);
+                              setBroadcastTitle(h.title);
+                              try {
+                                const { data: result, error } = await supabase.functions.invoke('send-broadcast', {
+                                  body: { notification_id: h.id, include_unregistered: false },
+                                });
+                                if (error) throw error;
+                                if (result?.progress_id) {
+                                  setBroadcastProgressId(result.progress_id);
+                                  toast.success(`Reenviando para ${result.total || 0} usuários!`);
+                                }
+                              } catch (err: any) {
+                                toast.error('Erro: ' + (err.message || 'Erro desconhecido'));
+                              } finally {
+                                setBroadcastSending(false);
+                              }
+                            }}
+                            disabled={broadcastSending}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+                          >
+                            <RefreshCw className="w-3 h-3" /> Reenviar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Broadcast Modal */}
+            {showBroadcastModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !broadcastSending && setShowBroadcastModal(false)} />
+                <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto glass-modal rounded-2xl p-6 z-10">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-warning" /> Enviar Broadcast VIP
+                    </h3>
+                    <button
+                      onClick={() => !broadcastSending && setShowBroadcastModal(false)}
+                      className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <BroadcastForm
+                    userCount={broadcastUserCount}
+                    sending={broadcastSending}
+                    onClose={() => setShowBroadcastModal(false)}
+                    onSubmit={async (data) => {
+                      setBroadcastSending(true);
+                      setBroadcastTitle(data.title);
+                      try {
+                        const { data: notif, error: notifError } = await (supabase.from('notifications' as any) as any)
+                          .insert({
+                            title: data.title,
+                            message: data.message,
+                            image_url: data.image_url,
+                            buttons: data.buttons,
+                            message_effect_id: data.message_effect_id,
+                          })
+                          .select()
+                          .single();
+                        if (notifError) throw notifError;
+
+                        const { data: result, error } = await supabase.functions.invoke('send-broadcast', {
+                          body: { notification_id: notif.id, include_unregistered: false },
+                        });
+                        if (error) throw error;
+                        if (result?.progress_id) {
+                          setBroadcastProgressId(result.progress_id);
+                          toast.success(`Broadcast iniciado para ${result.total || 0} usuários!`);
+                        }
+                        setShowBroadcastModal(false);
+                        fetchBroadcastHistory();
+                      } catch (err: any) {
+                        toast.error('Erro ao iniciar broadcast: ' + (err.message || 'Erro desconhecido'));
+                      } finally {
+                        setBroadcastSending(false);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 
