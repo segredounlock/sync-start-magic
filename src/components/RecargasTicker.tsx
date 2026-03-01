@@ -11,50 +11,28 @@ interface TickerRecarga {
   created_at: string;
 }
 
-interface Props {
-  userId?: string;
-}
-
-export default function RecargasTicker({ userId }: Props) {
+export default function RecargasTicker() {
   const [recargas, setRecargas] = useState<TickerRecarga[]>([]);
 
-  const fetch = useCallback(async () => {
-    let q = supabase
+  const fetchRecargas = useCallback(async () => {
+    const { data } = await supabase
       .from("recargas")
       .select("id, telefone, operadora, valor, status, created_at")
       .order("created_at", { ascending: false })
-      .limit(20);
-    if (userId) q = q.eq("user_id", userId);
-    const { data } = await q;
+      .limit(30);
     setRecargas(data || []);
-  }, [userId]);
+  }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { fetchRecargas(); }, [fetchRecargas]);
 
+  // Global realtime — no user filter
   useEffect(() => {
-    if (!userId) return;
     const ch = supabase
-      .channel(`ticker-${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "recargas", filter: `user_id=eq.${userId}` }, () => fetch())
+      .channel("ticker-global")
+      .on("postgres_changes", { event: "*", schema: "public", table: "recargas" }, () => fetchRecargas())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [userId, fetch]);
-
-  if (recargas.length === 0) {
-    return (
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-t border-border">
-        <div className="flex items-center h-8">
-          <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full">
-            <Smartphone className="h-3.5 w-3.5 text-primary" />
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
-          </div>
-          <div className="flex-1 px-3">
-            <span className="text-xs text-muted-foreground">Nenhuma recarga ainda — novas recargas aparecerão aqui em tempo real</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [fetchRecargas]);
 
   const statusIcon = (s: string) => {
     if (s === "completed" || s === "concluida") return <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />;
@@ -76,6 +54,22 @@ export default function RecargasTicker({ userId }: Props) {
   const fmtTime = (d: string) => {
     try { return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
   };
+
+  if (recargas.length === 0) {
+    return (
+      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-t border-border">
+        <div className="flex items-center h-8">
+          <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full">
+            <Smartphone className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
+          </div>
+          <div className="flex-1 px-3">
+            <span className="text-xs text-muted-foreground">Aguardando recargas em tempo real...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const items = recargas.map((r) => (
     <span key={r.id} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
