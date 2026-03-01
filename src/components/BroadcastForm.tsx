@@ -25,10 +25,10 @@ interface BroadcastFormProps {
 
 const MESSAGE_EFFECTS = [
   { id: 'none', label: 'Sem efeito', emoji: '❌' },
-  { id: '5104841245755180586', label: 'Confete', emoji: '🎉' },
-  { id: '5107584321108051014', label: 'Corações', emoji: '❤️' },
-  { id: '5104858069142078462', label: 'Joinha', emoji: '👍' },
-  { id: '5159385139981059251', label: 'Fogo', emoji: '🔥' },
+  { id: '5046509860389126442', label: 'Confete', emoji: '🎉' },
+  { id: '5159385139981059251', label: 'Corações', emoji: '❤️' },
+  { id: '5107584321108051014', label: 'Joinha', emoji: '👍' },
+  { id: '5104841245755180586', label: 'Fogo', emoji: '🔥' },
 ];
 
 const TEMPLATES = [
