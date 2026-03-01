@@ -175,7 +175,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-400 to-primary bg-[length:200%_100%] animate-gradient-x opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
               <button
-                onClick={() => navigate("/recarga")}
+                onClick={() => navigate("/login")}
                 className="px-8 py-4 rounded-2xl glass text-foreground font-semibold text-base hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2"
               >
                 <Smartphone className="h-5 w-5" /> Fazer Recarga
