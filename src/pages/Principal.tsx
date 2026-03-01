@@ -41,7 +41,7 @@ interface Revendedor {
   telegram_username: string | null;
   whatsapp_number: string | null;
   isRevendedor: boolean;
-  role: "admin" | "revendedor" | "cliente" | "sem_role";
+  role: "admin" | "revendedor" | "cliente" | "usuario" | "sem_role";
   avatar_url: string | null;
 }
 
@@ -185,7 +185,7 @@ export default function Principal() {
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"todos" | "admin" | "revendedor" | "cliente" | "sem_role">("todos");
+  const [roleFilter, setRoleFilter] = useState<"todos" | "admin" | "revendedor" | "cliente" | "usuario" | "sem_role">("todos");
   const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState<PrincipalView>("dashboard");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -1441,6 +1441,7 @@ export default function Principal() {
                   { key: "todos", label: "Todos", count: revendedores.length },
                   { key: "admin", label: "Admin", count: revendedores.filter(r => r.role === "admin").length },
                   { key: "revendedor", label: "Revendedor", count: revendedores.filter(r => r.role === "revendedor").length },
+                  { key: "usuario", label: "Usuário", count: revendedores.filter(r => r.role === "usuario").length },
                   { key: "cliente", label: "Cliente", count: revendedores.filter(r => r.role === "cliente").length },
                   { key: "sem_role", label: "Sem função", count: revendedores.filter(r => r.role === "sem_role").length },
                 ] as const).filter(f => f.key === "todos" || f.count > 0).map(f => (
@@ -1502,6 +1503,7 @@ export default function Principal() {
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
                               r.role === "admin" ? "bg-[hsl(280,70%,60%)]/15 text-[hsl(280,70%,60%)]" :
                               r.role === "revendedor" ? "bg-primary/15 text-primary" :
+                              r.role === "usuario" ? "bg-[hsl(200,70%,50%)]/15 text-[hsl(200,70%,50%)]" :
                               r.role === "cliente" ? "bg-accent/15 text-accent" :
                               "bg-muted text-muted-foreground"
                             }`}>
@@ -1620,6 +1622,7 @@ export default function Principal() {
                               <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
                                 r.role === "admin" ? "bg-[hsl(280,70%,60%)]/15 text-[hsl(280,70%,60%)]" :
                                 r.role === "revendedor" ? "bg-primary/15 text-primary" :
+                                r.role === "usuario" ? "bg-[hsl(200,70%,50%)]/15 text-[hsl(200,70%,50%)]" :
                                 r.role === "cliente" ? "bg-accent/15 text-accent" :
                                 "bg-muted text-muted-foreground"
                               }`}>
@@ -3326,6 +3329,7 @@ function CreateRevendedorModal({ onClose, onCreated }: { onClose: () => void; on
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"revendedor" | "usuario" | "admin">("revendedor");
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -3334,15 +3338,15 @@ function CreateRevendedorModal({ onClose, onCreated }: { onClose: () => void; on
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("admin-create-user", {
-        body: { email: email.trim(), password, nome: nome.trim() },
+        body: { email: email.trim(), password, nome: nome.trim(), role: selectedRole },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success("Revendedor criado com sucesso!");
+      toast.success("Usuário criado com sucesso!");
       onCreated();
       onClose();
     } catch (err: any) {
-      toast.error(err.message || "Erro ao criar revendedor");
+      toast.error(err.message || "Erro ao criar usuário");
     }
     setLoading(false);
   };
@@ -3350,11 +3354,11 @@ function CreateRevendedorModal({ onClose, onCreated }: { onClose: () => void; on
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="glass-modal rounded-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-        <h2 className="font-display text-lg font-semibold text-foreground mb-4">Novo Revendedor</h2>
+        <h2 className="font-display text-lg font-semibold text-foreground mb-4">Novo Usuário</h2>
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Nome</label>
-            <input type="text" value={nome} onChange={e => setNome(e.target.value)} className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Nome do revendedor" />
+            <input type="text" value={nome} onChange={e => setNome(e.target.value)} className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Nome do usuário" />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">E-mail *</label>
@@ -3363,6 +3367,14 @@ function CreateRevendedorModal({ onClose, onCreated }: { onClose: () => void; on
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Senha *</label>
             <input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Mínimo 6 caracteres" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">Cargo</label>
+            <select value={selectedRole} onChange={e => setSelectedRole(e.target.value as any)} className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+              <option value="revendedor">Revendedor</option>
+              <option value="usuario">Usuário</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-md border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
