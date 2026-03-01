@@ -1582,7 +1582,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     </p>
                     <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
                     <span className="inline-block mt-1 px-2.5 py-0.5 rounded-md bg-primary/15 text-primary text-xs font-semibold capitalize">
-                      {role || "Revendedor"}
+                      {role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário"}
                     </span>
                   </div>
                 </div>
