@@ -596,14 +596,20 @@ export default function Principal() {
       const saldoMap: Record<string, number> = {};
       saldos?.forEach(s => { saldoMap[s.user_id] = Number(s.valor); });
 
-      const list: Revendedor[] = (profiles || []).map(p => ({
-        id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
-        saldo: saldoMap[p.id] ?? 0, telefone: p.whatsapp_number || null,
-        telegram_username: p.telegram_username, whatsapp_number: p.whatsapp_number,
-        isRevendedor: roleMap[p.id] === "revendedor",
-        role: (roleMap[p.id] as Revendedor["role"]) || "sem_role",
-        avatar_url: p.avatar_url || null,
-      }));
+      const list: Revendedor[] = (profiles || []).map(p => {
+        const raw = String(roleMap[p.id] || "").toLowerCase();
+        const resolvedRole: Revendedor["role"] =
+          raw === "user" ? "usuario" :
+          (["admin", "revendedor", "cliente", "usuario"].includes(raw) ? raw as Revendedor["role"] : "sem_role");
+        return {
+          id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
+          saldo: saldoMap[p.id] ?? 0, telefone: p.whatsapp_number || null,
+          telegram_username: p.telegram_username, whatsapp_number: p.whatsapp_number,
+          isRevendedor: roleMap[p.id] === "revendedor",
+          role: resolvedRole,
+          avatar_url: p.avatar_url || null,
+        };
+      });
 
       setRevendedores(list);
       setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), custo_api: Number(r.custo_api || 0) })));
@@ -1508,7 +1514,7 @@ export default function Principal() {
                               r.role === "cliente" ? "bg-accent/15 text-accent" :
                               "bg-muted text-muted-foreground"
                             }`}>
-                              {r.role === "sem_role" ? "Sem função" : r.role}
+                              {r.role === "sem_role" ? "Sem função" : r.role === "usuario" ? "Usuário" : r.role}
                             </span>
                             <span className={`px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${r.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                               {r.active ? "Ativo" : "Inativo"}
@@ -1627,7 +1633,7 @@ export default function Principal() {
                                 r.role === "cliente" ? "bg-accent/15 text-accent" :
                                 "bg-muted text-muted-foreground"
                               }`}>
-                                {r.role === "sem_role" ? "Sem função" : r.role}
+                                {r.role === "sem_role" ? "Sem função" : r.role === "usuario" ? "Usuário" : r.role}
                               </span>
                             </td>
                             <td className="px-3 py-3 text-right">
