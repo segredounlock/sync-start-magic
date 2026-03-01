@@ -1,24 +1,37 @@
 
 
-## Correção: Saldo não atualiza em tempo real na tela de detalhe do revendedor
+## Análise dos Nomes Atuais
 
-### Problema
-Quando o admin altera o saldo de um revendedor (via modal "Gerenciar Saldo"), o `fetchData()` atualiza a lista `revendedores`, mas o `selectedRev` (estado separado) continua com o valor antigo. O saldo só aparece correto após recarregar a página.
+Olhando o dashboard na imagem, os cards atuais são:
 
-### Solução
-Adicionar um `useEffect` em `Principal.tsx` que sincroniza o `selectedRev` sempre que a lista `revendedores` muda. Se o revendedor selecionado existir na lista atualizada, atualiza o estado com os dados novos (incluindo saldo).
+| Atual | Problema |
+|-------|----------|
+| **Cobrado Hoje** | "Cobrado" aparece 3x, confuso |
+| **Cobrado Mês** | Igual ao de cima, só muda o período |
+| **Cobrado Total** | Mesma palavra de novo |
+| **Lucro Total** | OK, mas sem contexto de período |
+| **Recargas Hoje** | Claro ✓ |
+| **Saldo Total** | Claro ✓ |
+| **Saldo Provedor** | Claro ✓ |
 
-```typescript
-useEffect(() => {
-  if (selectedRev) {
-    const updated = revendedores.find(r => r.id === selectedRev.id);
-    if (updated) setSelectedRev(updated);
-  }
-}, [revendedores]);
-```
+## Proposta de Renomeação
 
-Isso resolve tanto a atualização após ação no modal quanto via realtime (que já chama `fetchData()`).
+| Atual | Novo Nome | Motivo |
+|-------|-----------|--------|
+| Cobrado Hoje | **Vendas Hoje** | Indica que é o que foi vendido/cobrado dos revendedores no dia |
+| Cobrado Mês | **Vendas do Mês** | Consistente com "Vendas Hoje" |
+| Cobrado Total | **Faturamento Total** | Diferencia do "Vendas" e indica o acumulado geral |
+| Lucro Total | **Lucro Acumulado** | Indica que é o lucro de todo o período |
+| Recargas Hoje | Sem mudança | Já está claro |
+| Saldo Total | Sem mudança | Já está claro |
+| Saldo Provedor | Sem mudança | Já está claro |
 
-### Arquivo afetado
-- `src/pages/Principal.tsx` — adicionar ~5 linhas após o `useEffect` de realtime
+## Também no Dashboard em Tempo Real
+
+O card "Cobrado Total" do `RealtimeDashboard.tsx` será renomeado para **"Vendas Hoje"** (já que mostra só o dia).
+
+## Alterações
+
+- **`src/pages/Principal.tsx`**: Renomear labels dos 4 cards de métricas
+- **`src/components/RealtimeDashboard.tsx`**: Renomear "Cobrado Total" para "Vendas Hoje"
 
