@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Download, Upload, Database, Loader2, CheckCircle2, AlertTriangle,
   Github, RefreshCw, FolderSync, ArrowDownToLine, ArrowUpFromLine,
   FileArchive, Shield, Clock, HardDrive, ChevronDown, ChevronRight, X,
+  Eye, EyeOff, Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,6 +35,39 @@ export default function BackupSection() {
   const [syncStage, setSyncStage] = useState("");
   const [syncLog, setSyncLog] = useState<{ path: string; status: "ok" | "error" | "pending"; error?: string }[]>([]);
   const syncLogRef = useRef<HTMLDivElement>(null);
+
+  // GitHub PAT
+  const [githubPat, setGithubPat] = useState("");
+  const [showPat, setShowPat] = useState(false);
+  const [savingPat, setSavingPat] = useState(false);
+  const [patLoaded, setPatLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadPat = async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "githubPat")
+        .maybeSingle();
+      if (data?.value) setGithubPat(data.value);
+      setPatLoaded(true);
+    };
+    loadPat();
+  }, []);
+
+  const saveGithubPat = async () => {
+    setSavingPat(true);
+    try {
+      const { error } = await supabase
+        .from("system_config")
+        .upsert({ key: "githubPat", value: githubPat }, { onConflict: "key" });
+      if (error) throw error;
+      toast.success("GitHub PAT salvo!");
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    }
+    setSavingPat(false);
+  };
 
   const loadRepos = async () => {
     setLoadingRepos(true);
@@ -308,6 +342,31 @@ export default function BackupSection() {
 
         {activeTab === "github" && (
           <motion.div key="github" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="space-y-4">
+            {/* GitHub PAT Config */}
+            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 space-y-2">
+              <label className="block text-xs font-semibold text-foreground uppercase tracking-wider">GitHub PAT (Personal Access Token)</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type={showPat ? "text" : "password"}
+                    value={githubPat}
+                    onChange={e => setGithubPat(e.target.value)}
+                    placeholder="ghp_..."
+                    className="w-full px-3 py-2 pr-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  />
+                  <button type="button" onClick={() => setShowPat(!showPat)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPat ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+                <button onClick={saveGithubPat} disabled={savingPat}
+                  className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5">
+                  {savingPat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  Salvar
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Gere em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" className="underline hover:text-foreground">github.com/settings/tokens</a> com escopo <code className="bg-white/[0.06] px-1 rounded">repo</code></p>
+            </div>
+
             {/* Load repos */}
             <button onClick={loadRepos} disabled={loadingRepos}
               className="w-full py-3 rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] hover:bg-white/[0.07] text-foreground font-medium text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2">
