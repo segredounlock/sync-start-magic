@@ -16,13 +16,25 @@ export default function Auth() {
   const [nome, setNome] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Wait for role to be fetched before redirecting
-  if (!loading && user && role) {
-    const destination =
-      role === "admin" ? "/principal" :
-      role === "revendedor" ? "/painel" :
-      "/admin";
-    return <Navigate to={destination} replace />;
+  // Redirect logged-in users to their panel
+  if (!loading && user) {
+    if (role) {
+      const destination =
+        role === "admin" ? "/principal" :
+        role === "revendedor" ? "/painel" :
+        "/painel";
+      return <Navigate to={destination} replace />;
+    }
+    // If role hasn't loaded yet, show loading
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
