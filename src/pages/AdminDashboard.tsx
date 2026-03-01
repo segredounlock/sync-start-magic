@@ -2395,33 +2395,9 @@ export default function AdminDashboard() {
                         className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Recargas Brasil" />
                     </div>
 
-                    {/* Secrets gerenciados pelo banco */}
-                    <div className="border-t border-border pt-4 space-y-4">
-                      <h4 className="font-semibold text-foreground flex items-center gap-2 text-sm"><Key className="h-4 w-4 text-primary" /> Tokens & API Keys (salvos no banco)</h4>
-                      <p className="text-xs text-muted-foreground">Esses valores ficam no banco de dados e são incluídos nos backups. As funções do servidor priorizam esses valores sobre variáveis de ambiente.</p>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-1">Telegram Bot Token (Master)</label>
-                        <div className="relative">
-                          <input type={showApiKey ? "text" : "password"} value={configData.telegramBotToken || ""} onChange={e => setConfigData(prev => ({ ...prev, telegramBotToken: e.target.value }))}
-                            className="w-full px-3 py-2 pr-10 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono" placeholder="123456789:ABC-DEF_ghi..." />
-                          <button type="button" onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
-                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-1">GitHub PAT (Personal Access Token)</label>
-                        <div className="relative">
-                          <input type={showVpSecret ? "text" : "password"} value={configData.githubPat || ""} onChange={e => setConfigData(prev => ({ ...prev, githubPat: e.target.value }))}
-                            className="w-full px-3 py-2 pr-10 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono" placeholder="ghp_..." />
-                          <button type="button" onClick={() => setShowVpSecret(!showVpSecret)} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
-                            {showVpSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">Usado para sincronizar código com o GitHub.</p>
-                      </div>
+                    {/* Info: tokens moved to Principal */}
+                    <div className="border-t border-border pt-4">
+                      <p className="text-xs text-muted-foreground">Os tokens (Telegram Bot Token, GitHub PAT) são gerenciados no <strong className="text-foreground">Painel Principal</strong> nas seções Bot Telegram e Backup.</p>
                     </div>
                   </div>
                 )}
