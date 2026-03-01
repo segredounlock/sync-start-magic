@@ -15,6 +15,7 @@ interface Recarga {
   operadora: string | null;
   valor: number;
   custo: number;
+  custo_api: number;
   status: string;
   created_at: string;
   completed_at: string | null;
@@ -44,7 +45,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
     const today = new Date().toISOString().split("T")[0];
     let query = supabase
       .from("recargas")
-      .select("id, telefone, operadora, valor, custo, status, created_at, completed_at")
+      .select("id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at")
       .gte("created_at", today)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -103,8 +104,8 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
     completed: recargas.filter(r => r.status === "completed" || r.status === "concluida").length,
     pending: recargas.filter(r => r.status === "pending").length,
     failed: recargas.filter(r => r.status === "falha").length,
-    totalValue: recargas.reduce((sum, r) => sum + Number(r.valor), 0),
-    totalCost: recargas.reduce((sum, r) => sum + Number(r.custo), 0),
+    totalValue: recargas.reduce((sum, r) => sum + Number(r.custo), 0),
+    totalCost: recargas.reduce((sum, r) => sum + Number(r.custo_api), 0),
   };
 
   const fmtTime = (d: string) => {
@@ -212,7 +213,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
         <div className="glass-card rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4 text-success" />
-            <span className="text-xs text-muted-foreground">Valor Total</span>
+            <span className="text-xs text-muted-foreground">Cobrado Total</span>
           </div>
           <AnimatedCounter value={stats.totalValue} prefix="R$&nbsp;" className="text-xl font-bold text-success" />
         </div>
