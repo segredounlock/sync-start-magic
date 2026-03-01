@@ -869,20 +869,22 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
       {/* Main */}
       <div className="flex-1 min-w-0">
-        <header className="glass-header px-4 md:px-6 py-4 sticky top-0 z-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="font-display text-xl font-bold text-foreground">{tabTitle[tab]}</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => selectTab("addSaldo")}
-              className="h-9 px-4 rounded-xl bg-success text-success-foreground flex items-center gap-1.5 text-sm font-bold shadow-[0_0_16px_hsl(var(--success)/0.35)] hover:shadow-[0_0_24px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all">
-              <CreditCard className="h-4 w-4" />
-              <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</span>
-            </button>
-            <AvatarDisplay size="w-9 h-9" textSize="text-xs" />
-          </div>
-        </header>
-        <RecargasTicker />
+        <div className="sticky top-0 z-20">
+          <header className="glass-header px-4 md:px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="font-display text-xl font-bold text-foreground">{tabTitle[tab]}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => selectTab("addSaldo")}
+                className="h-9 px-4 rounded-xl bg-success text-success-foreground flex items-center gap-1.5 text-sm font-bold shadow-[0_0_16px_hsl(var(--success)/0.35)] hover:shadow-[0_0_24px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all">
+                <CreditCard className="h-4 w-4" />
+                <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</span>
+              </button>
+              <AvatarDisplay size="w-9 h-9" textSize="text-xs" />
+            </div>
+          </header>
+          <RecargasTicker />
+        </div>
 
         <main className="max-w-5xl mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-5">
           {/* Stats */}
