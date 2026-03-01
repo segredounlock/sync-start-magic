@@ -122,102 +122,113 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* ===== HERO: Fullscreen Immersive ===== */}
-      <section className="relative min-h-screen flex items-center justify-center z-10">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {/* Pulsing ring */}
-          <motion.div
-            className="w-[500px] h-[500px] sm:w-[700px] sm:h-[700px] rounded-full border border-primary/10"
-            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <motion.div
-            className="w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] rounded-full border border-primary/5"
-            animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.3, 0.1] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </div>
-
-        <div className="relative text-center px-6 max-w-5xl mx-auto">
-          {/* Floating label */}
-          <motion.p
-            initial={{ opacity: 0, letterSpacing: "0.5em" }}
-            animate={{ opacity: 1, letterSpacing: "0.25em" }}
-            transition={{ delay: 0.3, duration: 1.2, ease: "easeOut" }}
-            className="text-[10px] sm:text-xs font-bold text-primary/60 uppercase tracking-[0.25em] mb-10"
-          >
-            ✦ Plataforma #1 de Recargas ✦
-          </motion.p>
-
-          {/* Headline */}
-          <motion.h2
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="font-display text-[3rem] sm:text-[4.5rem] lg:text-[6.5rem] font-bold text-foreground leading-[0.9] tracking-tighter"
-          >
-            Recargas
-            <br />
-            <TypedText words={["sem limites", "instantâneas", "seguras", "inteligentes"]} />
-          </motion.h2>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mt-8 leading-relaxed"
-          >
-            Sistema completo para quem vende recargas.
-            <br className="hidden sm:block" />
-            Rápido, seguro e sem complicação.
-          </motion.p>
-
-          {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10"
-          >
-            <button
-              onClick={() => navigate("/login")}
-              className="group relative px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200 glow-primary"
+      {/* ===== HERO: Split Layout ===== */}
+      <section className="relative min-h-screen flex items-center z-10 pt-24 pb-16">
+        <div className="max-w-6xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+          {/* Left: Content */}
+          <div className="text-left">
+            <motion.p
+              initial={{ opacity: 0, letterSpacing: "0.5em" }}
+              animate={{ opacity: 1, letterSpacing: "0.25em" }}
+              transition={{ delay: 0.3, duration: 1.2, ease: "easeOut" }}
+              className="text-[10px] sm:text-xs font-bold text-primary/60 uppercase tracking-[0.25em] mb-6"
             >
-              <span className="relative z-10 flex items-center gap-2">
-                Começar Agora
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-400 to-primary bg-[length:200%_100%] animate-gradient-x opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-            <button
-              onClick={() => navigate("/recarga")}
-              className="px-8 py-4 rounded-2xl glass text-foreground font-semibold text-base hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2"
-            >
-              <Smartphone className="h-5 w-5" /> Fazer Recarga
-            </button>
-          </motion.div>
+              ✦ Plataforma #1 de Recargas ✦
+            </motion.p>
 
-          {/* Scroll hint */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="mt-20"
-          >
+            <motion.h2
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="font-display text-[2.5rem] sm:text-[3.5rem] lg:text-[4.5rem] font-bold text-foreground leading-[0.95] tracking-tighter"
+            >
+              Recargas
+              <br />
+              <TypedText words={["sem limites", "instantâneas", "seguras", "inteligentes"]} />
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-base sm:text-lg text-muted-foreground max-w-md mt-6 leading-relaxed"
+            >
+              Sistema completo para quem vende recargas.
+              <br className="hidden sm:block" />
+              Rápido, seguro e sem complicação.
+            </motion.p>
+
             <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-              className="w-6 h-10 rounded-full border-2 border-muted-foreground/20 mx-auto flex justify-center pt-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="flex flex-col sm:flex-row items-start gap-4 mt-8"
             >
-              <motion.div
-                animate={{ opacity: [1, 0], y: [0, 12] }}
-                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                className="w-1.5 h-1.5 rounded-full bg-primary"
-              />
+              <button
+                onClick={() => navigate("/login")}
+                className="group relative px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200 glow-primary"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Começar Agora
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-400 to-primary bg-[length:200%_100%] animate-gradient-x opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+              <button
+                onClick={() => navigate("/recarga")}
+                className="px-8 py-4 rounded-2xl glass text-foreground font-semibold text-base hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2"
+              >
+                <Smartphone className="h-5 w-5" /> Fazer Recarga
+              </button>
             </motion.div>
+          </div>
+
+          {/* Right: Visual element */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative flex items-center justify-center"
+          >
+            {/* Pulsing rings */}
+            <motion.div
+              className="absolute w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] rounded-full border border-primary/10"
+              animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.05, 0.3] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="absolute w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] rounded-full border border-primary/5"
+              animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.2, 0.1] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+
+            {/* Floating stat cards */}
+            <div className="relative w-[300px] h-[340px] sm:w-[380px] sm:h-[400px]">
+              {[
+                { value: "99.9%", label: "Uptime", icon: Activity, x: 0, y: 0 },
+                { value: "<3s", label: "Velocidade", icon: Zap, x: 140, y: 80 },
+                { value: "24/7", label: "Online", icon: Globe, x: 20, y: 180 },
+                { value: "100%", label: "Digital", icon: Sparkles, x: 160, y: 260 },
+              ].map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + i * 0.15 }}
+                  className="absolute glass-card rounded-2xl p-4 w-[160px] sm:w-[180px] group hover:border-primary/30 transition-all duration-300"
+                  style={{ left: s.x, top: s.y }}
+                >
+                  <motion.div
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
+                  >
+                    <s.icon className="h-4 w-4 text-primary mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    <p className="text-2xl font-bold text-primary font-display">{s.value}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-[0.15em]">{s.label}</p>
+                  </motion.div>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </section>
