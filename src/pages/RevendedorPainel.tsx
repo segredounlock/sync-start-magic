@@ -8,6 +8,7 @@ import { PromoBanner } from "@/components/PromoBanner";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
 import { playSuccessSound } from "@/lib/sounds";
+import { SkeletonValue, SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Wallet, Smartphone, History, Send, Clock, MessageCircle,
@@ -644,7 +645,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <AvatarDisplay />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{user?.email}</p>
-                  <p className="text-xs text-success font-medium">{loading ? "..." : fmt(saldo)}</p>
+                  <p className="text-xs text-success font-medium">{loading ? <SkeletonValue width="w-14" className="h-3" /> : fmt(saldo)}</p>
                 </div>
               </div>
             </div>
@@ -725,7 +726,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
             <div className="glass-card rounded-lg p-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Seu saldo</p>
-              <p className="text-2xl font-bold text-success mt-0.5">{loading ? "..." : fmt(saldo)}</p>
+              <p className="text-2xl font-bold text-success mt-0.5">{loading ? <SkeletonValue width="w-24" className="h-7" /> : fmt(saldo)}</p>
             </div>
           </div>
 
@@ -783,7 +784,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <button onClick={() => selectTab("addSaldo")}
               className="h-9 px-4 rounded-xl bg-success text-success-foreground flex items-center gap-1.5 text-sm font-bold shadow-[0_0_16px_hsl(var(--success)/0.35)] hover:shadow-[0_0_24px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all">
               <CreditCard className="h-4 w-4" />
-              <span>{loading ? "..." : fmt(saldo)}</span>
+              <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : fmt(saldo)}</span>
             </button>
             <div className="w-9 h-9 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-xs">
               {userInitial}
@@ -795,7 +796,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { icon: Wallet, label: "Saldo", value: loading ? "..." : fmt(saldo), color: "text-success", anim: "bounce" as const },
+              { icon: Wallet, label: "Saldo", value: loading ? null : fmt(saldo), color: "text-success", anim: "bounce" as const },
               { icon: Smartphone, label: "Recargas Hoje", value: String(recargasHoje), color: "text-primary", anim: "float" as const },
               { icon: Clock, label: "Total", value: String(recargas.length), color: "text-accent", anim: "pulse" as const },
             ].map((c, i) => (
@@ -804,7 +805,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   <AnimatedIcon icon={c.icon} className={`h-4 w-4 ${c.color}`} animation={c.anim} delay={i * 0.12} />
                   <span className="text-xs text-muted-foreground">{c.label}</span>
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-foreground truncate">{c.value}</p>
+                <p className="text-xl md:text-2xl font-bold text-foreground truncate">{c.value === null ? <SkeletonValue width="w-16" className="h-6" /> : c.value}</p>
               </motion.div>
             ))}
           </div>
@@ -971,7 +972,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             </button>
                           </div>
                           {catalogLoading ? (
-                            <p className="text-center py-8 text-muted-foreground">Carregando catálogo...</p>
+                            <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
                           ) : (
                             <div className="space-y-5">
                               {catalog.map((carrier) => {
@@ -1337,7 +1338,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               {/* Mobile cards */}
               <div className="md:hidden space-y-3">
                 {transLoading ? (
-                  <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                  <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
                 ) : transactions.length === 0 ? (
                   <p className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</p>
                 ) : transactions.map((t, i) => {
@@ -1378,7 +1379,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   </thead>
                   <tbody>
                     {transLoading ? (
-                      <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>
+                      <tr><td colSpan={5} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                     ) : transactions.length === 0 ? (
                       <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</td></tr>
                     ) : transactions.map((t, i) => (

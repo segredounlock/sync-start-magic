@@ -18,6 +18,12 @@
   animation: rgb-border 6s linear infinite;
 }
 
+/* Shimmer skeleton effect */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 @layer base {
   :root {
     /* White Premium Glass Theme */

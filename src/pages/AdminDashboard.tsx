@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { SkeletonRow, SkeletonCard, SkeletonValue } from "@/components/Skeleton";
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
@@ -1218,7 +1219,7 @@ export default function AdminDashboard() {
             {/* Mobile: Card Layout */}
             <div className="md:hidden space-y-3">
               {recargasLoading ? (
-                <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : filteredRecargasHistorico.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</p>
               ) : filteredRecargasHistorico.map(r => {
@@ -1278,7 +1279,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {recargasLoading ? (
-                    <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>
+                    <tr><td colSpan={5} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                   ) : filteredRecargasHistorico.length === 0 ? (
                     <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
                   ) : filteredRecargasHistorico.map(r => {
@@ -1333,7 +1334,7 @@ export default function AdminDashboard() {
             </div>
             <div className="grid gap-3">
               {operadorasLoading ? (
-                <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : operadoras.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">Nenhuma operadora cadastrada</p>
               ) : operadoras.map(op => (
@@ -1503,7 +1504,7 @@ export default function AdminDashboard() {
             {/* Mobile: User Cards */}
             <div className="md:hidden space-y-3">
               {loading ? (
-                <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : (() => {
                 const filtered = revendedores.filter(r => {
                   if (!userSearch.trim()) return true;
@@ -1595,7 +1596,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>
+                    <tr><td colSpan={8} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                   ) : (() => {
                     const filtered = revendedores.filter(r => {
                       if (!userSearch.trim()) return true;
@@ -1754,7 +1755,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {clientsLoading ? (
-                  <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                  <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
                 ) : (() => {
                   const filtered = clientsList.filter(c =>
                     (c.nome || "").toLowerCase().includes(clientSearch.toLowerCase()) ||
@@ -1912,7 +1913,7 @@ export default function AdminDashboard() {
             {/* Mobile: Card Layout */}
             <div className="md:hidden space-y-3">
               {depositLoading ? (
-                <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : depositTransactions.filter(t =>
                 (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                 (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
@@ -1979,7 +1980,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {depositLoading ? (
-                    <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>
+                    <tr><td colSpan={6} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                   ) : depositTransactions.filter(t =>
                     (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
@@ -2164,7 +2165,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 {gwLoading ? (
-                  <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /><p className="text-muted-foreground mt-2 text-sm">Carregando...</p></div>
+                  <div className="text-center py-8"><div className="space-y-3">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div></div>
                 ) : (
                   <div className="space-y-5">
                     <div>
@@ -2339,7 +2340,7 @@ export default function AdminDashboard() {
             </div>
 
             {configLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Carregando configurações...</div>
+              <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
             ) : (
               <>
                 {/* Geral */}
@@ -2406,7 +2407,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       {gwLoading ? (
-                        <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /><p className="text-muted-foreground mt-2 text-sm">Carregando...</p></div>
+                        <div className="text-center py-8"><div className="space-y-3">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div></div>
                       ) : (
                         <div className="space-y-4">
                           <div>
@@ -2535,7 +2536,7 @@ export default function AdminDashboard() {
             </div>
 
             {operadorasLoading ? (
-              <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+              <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
             ) : operadoras.filter(o => o.ativo).length === 0 ? (
               <div className="glass-card rounded-xl p-8 text-center">
                 <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
@@ -2664,7 +2665,7 @@ export default function AdminDashboard() {
             </div>
 
             {operadorasLoading ? (
-              <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+              <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
             ) : operadoras.filter(o => o.ativo).length === 0 ? (
               <div className="glass-card rounded-xl p-8 text-center">
                 <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />

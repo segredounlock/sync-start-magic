@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import BackupSection from "@/components/BackupSection";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { PromoBanner } from "@/components/PromoBanner";
@@ -1169,7 +1170,7 @@ export default function Principal() {
                   </div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Saldo Provedor</p>
                   {providerBalance.loading ? (
-                    <p className="text-xl md:text-2xl font-bold text-muted-foreground mt-0.5">Carregando...</p>
+                    <div className="mt-1"><SkeletonCard /></div>
                   ) : providerBalance.error ? (
                     <p className="text-xl md:text-2xl font-bold text-destructive mt-0.5">Erro</p>
                   ) : providerBalance.value !== null ? (
@@ -1373,7 +1374,7 @@ export default function Principal() {
               {/* Mobile: User Cards */}
               <div className="md:hidden space-y-3">
                 {loading ? (
-                  <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                  <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
                 ) : filtered.length === 0 ? (
                   <div className="text-center py-8">
                     <Users className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
@@ -1489,7 +1490,7 @@ export default function Principal() {
                   </thead>
                   <tbody className="divide-y divide-border/30">
                     {loading ? (
-                      <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">Carregando...</td></tr>
+                      <tr><td colSpan={9} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                     ) : filtered.length === 0 ? (
                       <tr><td colSpan={9} className="text-center py-10">
                         <Users className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
@@ -1682,7 +1683,7 @@ export default function Principal() {
 
               {/* Rev KPIs */}
               {revLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Carregando dados...</div>
+                <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : revAnalytics && (
                 <>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1715,7 +1716,7 @@ export default function Principal() {
                       )}
                     </div>
                     {revGatewayLoading ? (
-                      <p className="text-muted-foreground text-sm">Carregando...</p>
+                      <div className="space-y-2">{[1,2].map(i => <SkeletonRow key={i} />)}</div>
                     ) : Object.keys(revGatewayConfig).length === 0 ? (
                       <div className="rounded-lg bg-muted/50 p-4 text-center">
                         <p className="text-sm text-muted-foreground">Nenhuma gateway individual configurada.</p>
@@ -1872,7 +1873,7 @@ export default function Principal() {
           {view === "config-api" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               {configLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Carregando configurações...</div>
+                <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
                   <div className="glass-card rounded-xl p-6 space-y-4">
@@ -1939,7 +1940,7 @@ export default function Principal() {
           {view === "pagamentos" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               {globalConfigLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
                   <div className="glass-card rounded-xl p-6 space-y-4">
@@ -2266,7 +2267,7 @@ export default function Principal() {
           {view === "depositos" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               {globalConfigLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
                   <div className="glass-card rounded-xl p-6 space-y-4">
@@ -2330,7 +2331,7 @@ export default function Principal() {
           {view === "bot" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               {globalConfigLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
                   {/* Status */}
@@ -2547,7 +2548,7 @@ export default function Principal() {
           {view === "geral" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               {globalConfigLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
                 <div className="glass-card rounded-xl p-6 space-y-4">
@@ -2700,7 +2701,7 @@ export default function Principal() {
 
               {/* Table */}
               {reportLoading ? (
-                <p className="text-center py-8 text-muted-foreground">Carregando relatório...</p>
+                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : reportData.length === 0 ? (
                 <div className="glass-card rounded-xl p-8 text-center">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
@@ -2792,7 +2793,7 @@ export default function Principal() {
               </div>
 
               {pricingLoading ? (
-                <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : pricingOps.length === 0 ? (
                 <div className="glass-card rounded-xl p-8 text-center">
                   <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
