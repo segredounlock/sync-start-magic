@@ -557,7 +557,7 @@ export default function Principal() {
     try {
       const [roles, profiles, saldos, recData] = await Promise.all([
         fetchAllRows("user_roles", { select: "user_id, role" }),
-        fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telefone, telegram_username, whatsapp_number, avatar_url" }),
+        fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url" }),
         fetchAllRows("saldos", { select: "user_id, valor", filters: (q: any) => q.eq("tipo", "revenda") }),
         fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
       ]);
@@ -575,7 +575,7 @@ export default function Principal() {
 
       const list: Revendedor[] = (profiles || []).map(p => ({
         id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
-        saldo: saldoMap[p.id] ?? 0, telefone: p.telefone,
+        saldo: saldoMap[p.id] ?? 0, telefone: p.whatsapp_number || null,
         telegram_username: p.telegram_username, whatsapp_number: p.whatsapp_number,
         isRevendedor: roleMap[p.id] === "revendedor",
         role: (roleMap[p.id] as Revendedor["role"]) || "sem_role",
