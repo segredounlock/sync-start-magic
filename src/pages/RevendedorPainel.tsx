@@ -808,6 +808,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <a href="/admin" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
                   <Shield className="h-4 w-4" /> <span>Painel Admin</span>
                 </a>
+                {role === "admin" && (
+                  <a href="/principal" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-primary hover:text-foreground hover:bg-muted/40 transition-colors">
+                    <Landmark className="h-4 w-4" /> <span>Painel Principal</span>
+                  </a>
+                )}
               </div>
             )}
           </nav>
