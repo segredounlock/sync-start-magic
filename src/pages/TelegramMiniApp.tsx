@@ -159,7 +159,7 @@ export default function TelegramMiniApp() {
   const [selectedValor, setSelectedValor] = useState<ValorItem | null>(null);
   const [phone, setPhone] = useState("");
   const [clipboardPhone, setClipboardPhone] = useState<string | null>(null);
-  const [recargaStep, setRecargaStep] = useState<"op" | "valor" | "phone" | "confirm">("phone");
+  const [recargaStep, setRecargaStep] = useState<"op" | "valor" | "phone" | "confirm" | "check">("phone");
   const [recargaLoading, setRecargaLoading] = useState(false);
   const [recargaResult, setRecargaResult] = useState<{ success: boolean; message: string; details?: { valor: number; telefone: string; operadora: string; novoSaldo: number; pedidoId: string | null; hora: string } } | null>(null);
   const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
@@ -990,7 +990,7 @@ export default function TelegramMiniApp() {
                           <p className="text-sm">Carregando operadoras...</p>
                         </div>
                       ) : operadoras.map((op) => (
-                        <button key={op.id} onClick={() => { setSelectedOp(op); setPhoneCheckResult(null); handleCheckPhone(op.carrierId); setRecargaStep("valor"); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                        <button key={op.id} onClick={() => { setSelectedOp(op); setPhoneCheckResult(null); handleCheckPhone(op.carrierId); setRecargaStep("check"); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
                           className="w-full rounded-xl p-4 text-left transition flex items-center justify-between"
                           style={{ ...st.secondaryBg, border: st.borderSub }}>
                           <div className="flex items-center gap-3">
@@ -1006,35 +1006,82 @@ export default function TelegramMiniApp() {
                     </div>
                   )}
 
-                  {recargaStep === "valor" && selectedOp && (
-                    <div className="space-y-3">
-                      <button onClick={() => setRecargaStep("op")} className="flex items-center gap-1 text-sm" style={st.hint}>
+                  {/* Check step - blacklist/cooldown verification */}
+                  {recargaStep === "check" && selectedOp && (
+                    <div className="space-y-4">
+                      <button onClick={() => { setRecargaStep("op"); setPhoneCheckResult(null); }} className="flex items-center gap-1 text-sm" style={st.hint}>
                         <ArrowLeft className="w-4 h-4" /> Voltar
                       </button>
-                      <h2 className="text-lg font-bold" style={st.text}>{selectedOp.nome} — Valor</h2>
-                      
-                      {/* Blacklist/Cooldown check result */}
-                      <AnimatePresence>
+                      <div className="text-center">
+                        <motion.div
+                          className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
+                          style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)" }}
+                          animate={checkingPhone ? { rotate: [0, 360] } : {}}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Shield className="w-7 h-7" style={st.link} />
+                        </motion.div>
+                        <h2 className="text-lg font-bold" style={st.text}>Verificação de Número</h2>
+                        <p className="text-sm mt-1" style={st.hint}>{selectedOp.nome} • {phone}</p>
+                      </div>
+
+                      <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
                         {checkingPhone && (
-                          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-xl p-3 flex items-center gap-3" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                            <Loader2 className="w-4 h-4 animate-spin" style={st.link} />
-                            <p className="text-sm" style={st.hint}>Verificando blacklist/cooldown...</p>
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3 py-4">
+                            <Loader2 className="w-8 h-8 animate-spin" style={st.link} />
+                            <p className="text-sm font-medium" style={st.hint}>Verificando blacklist e cooldown...</p>
                           </motion.div>
                         )}
                         {!checkingPhone && phoneCheckResult && (
-                          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                            className="rounded-xl p-3 flex items-center gap-3"
-                            style={{
-                              backgroundColor: phoneCheckResult.status === "CLEAR" ? "rgba(34,197,94,0.1)" : phoneCheckResult.status === "COOLDOWN" ? "rgba(234,179,8,0.1)" : "rgba(239,68,68,0.1)",
-                              border: `1px solid ${phoneCheckResult.status === "CLEAR" ? "rgba(34,197,94,0.3)" : phoneCheckResult.status === "COOLDOWN" ? "rgba(234,179,8,0.3)" : "rgba(239,68,68,0.3)"}`,
+                          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-3 py-2">
+                            {phoneCheckResult.status === "CLEAR" ? (
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
+                                <CheckCircle2 className="w-12 h-12" style={{ color: "#22c55e" }} />
+                              </motion.div>
+                            ) : phoneCheckResult.status === "COOLDOWN" ? (
+                              <motion.div animate={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
+                                <AlertTriangle className="w-12 h-12" style={{ color: "#eab308" }} />
+                              </motion.div>
+                            ) : (
+                              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.5 }}>
+                                <XCircle className="w-12 h-12" style={{ color: "#ef4444" }} />
+                              </motion.div>
+                            )}
+                            <p className="text-sm font-semibold text-center" style={{
+                              color: phoneCheckResult.status === "CLEAR" ? "#22c55e" : phoneCheckResult.status === "COOLDOWN" ? "#eab308" : "#ef4444"
                             }}>
-                            {phoneCheckResult.status === "CLEAR" ? <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#22c55e" }} /> : phoneCheckResult.status === "COOLDOWN" ? <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: "#eab308" }} /> : <XCircle className="w-4 h-4 shrink-0" style={{ color: "#ef4444" }} />}
-                            <p className="text-xs flex-1" style={{ color: phoneCheckResult.status === "CLEAR" ? "#22c55e" : phoneCheckResult.status === "COOLDOWN" ? "#eab308" : "#ef4444" }}>
-                              {phoneCheckResult.message}
+                              {phoneCheckResult.status === "CLEAR" ? "Número Disponível" : phoneCheckResult.status === "COOLDOWN" ? "Cooldown Ativo" : "Número Bloqueado"}
                             </p>
+                            <p className="text-xs text-center" style={st.hint}>{phoneCheckResult.message}</p>
                           </motion.div>
                         )}
-                      </AnimatePresence>
+                      </div>
+
+                      {!checkingPhone && phoneCheckResult && (
+                        <div className="flex gap-2">
+                          {phoneCheckResult.status !== "BLACKLISTED" && (
+                            <button onClick={() => setRecargaStep("valor")}
+                              className="flex-1 rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2"
+                              style={{ backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" }}>
+                              Continuar <ChevronRight className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button onClick={() => { setRecargaStep("op"); setPhoneCheckResult(null); }}
+                            className="flex-1 rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2"
+                            style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
+                            Trocar Operadora
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {recargaStep === "valor" && selectedOp && (
+                    <div className="space-y-3">
+                      <button onClick={() => setRecargaStep("check")} className="flex items-center gap-1 text-sm" style={st.hint}>
+                        <ArrowLeft className="w-4 h-4" /> Voltar
+                      </button>
+                      <h2 className="text-lg font-bold" style={st.text}>{selectedOp.nome} — Valor</h2>
 
                       <div className="grid grid-cols-2 gap-3">
                         {selectedOp.valores.sort((a, b) => a.cost - b.cost).map((v) => {
