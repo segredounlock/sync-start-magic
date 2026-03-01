@@ -141,16 +141,15 @@ export default function LandingPage() {
         </div>
 
         <div className="relative text-center px-6 max-w-5xl mx-auto">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, type: "spring" }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs font-bold text-primary tracking-[0.15em] uppercase mb-10"
+          {/* Floating label */}
+          <motion.p
+            initial={{ opacity: 0, letterSpacing: "0.5em" }}
+            animate={{ opacity: 1, letterSpacing: "0.25em" }}
+            transition={{ delay: 0.3, duration: 1.2, ease: "easeOut" }}
+            className="text-[10px] sm:text-xs font-bold text-primary/60 uppercase tracking-[0.25em] mb-10"
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            Plataforma #1 de Recargas
-          </motion.div>
+            ✦ Plataforma #1 de Recargas ✦
+          </motion.p>
 
           {/* Headline */}
           <motion.h2
