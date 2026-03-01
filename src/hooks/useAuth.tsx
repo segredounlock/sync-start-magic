@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "admin" | "revendedor" | "cliente" | null;
+type RoleState = AppRole | "loading";
 
 interface AuthContextType {
   session: Session | null;
@@ -25,35 +26,50 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole>(null);
+  const [roleLoaded, setRoleLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchRole = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-    setRole((data?.role as AppRole) ?? null);
+    try {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+      setRole((data?.role as AppRole) ?? null);
+    } finally {
+      setRoleLoaded(true);
+    }
   };
 
   useEffect(() => {
+    let initialSessionHandled = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         if (session?.user) {
-          // Use setTimeout to avoid Supabase client deadlock
-          setTimeout(() => fetchRole(session.user.id), 0);
+          if (!initialSessionHandled) {
+            // Skip - will be handled by getSession below
+            return;
+          }
+          setRoleLoaded(false);
+          await fetchRole(session.user.id);
         } else {
           setRole(null);
+          setRoleLoaded(true);
         }
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      initialSessionHandled = true;
       setSession(session);
       if (session?.user) {
-        fetchRole(session.user.id);
+        await fetchRole(session.user.id);
+      } else {
+        setRoleLoaded(true);
       }
       setLoading(false);
     });
