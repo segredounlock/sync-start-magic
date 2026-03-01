@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
 
         console.log(`recharge: carrierId=${carrierId} resolvedCarrierId=${resolvedCarrierId} operadoraId=${operadoraId} valueId=${valueId}`);
 
-        // Get API catalog cost using resolved carrierId
+        // Get API catalog cost and recharge face value using resolved carrierId
         let apiCost = 0;
         let catalogValue = 0;
         if (catalogResp?.success && catalogResp.data) {
@@ -287,8 +287,19 @@ Deno.serve(async (req) => {
             if (carrier.carrierId === resolvedCarrierId) {
               const valueObj = carrier.values?.find((v: any) => v.valueId === valueId);
               if (valueObj) {
-                apiCost = valueObj.cost;
-                catalogValue = valueObj.value || valueObj.cost;
+                apiCost = Number(valueObj.cost) || 0;
+                catalogValue =
+                  (Number(valueObj?.value) > 0 ? Number(valueObj.value) : 0) ||
+                  (Number(valueObj?.faceValue) > 0 ? Number(valueObj.faceValue) : 0) ||
+                  (Number(valueObj?.amount) > 0 ? Number(valueObj.amount) : 0) ||
+                  (Number(valueObj?.rechargeValue) > 0 ? Number(valueObj.rechargeValue) : 0) ||
+                  (() => {
+                    const label = String(valueObj?.label || "").replace(/,/g, ".");
+                    const nums = label.match(/\d+(?:\.\d{1,2})?/g);
+                    if (!nums?.length) return Number(valueObj?.cost) || 0;
+                    const parsed = Number(nums[nums.length - 1]);
+                    return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(valueObj?.cost) || 0;
+                  })();
               }
               break;
             }
