@@ -18,23 +18,10 @@ export default function Auth() {
 
   // Redirect logged-in users to their panel
   if (!loading && user) {
-    if (role) {
-      const destination =
-        role === "admin" ? "/principal" :
-        role === "revendedor" ? "/painel" :
-        "/painel";
-      return <Navigate to={destination} replace />;
-    }
-    // If role hasn't loaded yet, show loading
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full"
-        />
-      </div>
-    );
+    const destination =
+      role === "admin" ? "/principal" :
+      "/painel"; // All other users (revendedor, cliente, no role) go to /painel
+    return <Navigate to={destination} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

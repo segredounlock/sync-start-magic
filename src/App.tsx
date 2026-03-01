@@ -48,7 +48,7 @@ function App() {
           <Route
             path="/painel"
             element={
-              <ProtectedRoute allowedRoles={["revendedor", "admin"]}>
+              <ProtectedRoute>
                 <Suspense fallback={<PageSkeleton />}>
                   <RevendedorPainel />
                 </Suspense>
