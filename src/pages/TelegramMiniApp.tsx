@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import AnimatedCheck from "@/components/AnimatedCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { createPixDeposit, type PixResult } from "@/lib/payment";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1396,6 +1397,44 @@ export default function TelegramMiniApp() {
                   <p className="text-xs mt-1" style={st.hint}>Toque na foto para alterar</p>
                 </div>
               </div>
+
+              {/* Telegram Vinculado */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="rounded-2xl p-4 flex items-center gap-3 overflow-hidden relative"
+                style={{ ...st.secondaryBg, border: "1px solid rgba(34,197,94,0.3)" }}
+              >
+                <motion.div
+                  className="absolute inset-0 opacity-10"
+                  style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.3) 0%, transparent 60%)" }}
+                  animate={{ opacity: [0.05, 0.15, 0.05] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: "rgba(34,197,94,0.15)" }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.28-.02-.12.03-2.02 1.28-5.69 3.77-.54.37-1.03.55-1.47.54-.48-.01-1.4-.27-2.09-.49-.84-.27-1.51-.42-1.45-.88.03-.24.37-.49 1.02-.74 4-1.73 6.67-2.88 8.02-3.44 3.82-1.6 4.62-1.87 5.13-1.88.11 0 .37.03.54.17.14.12.18.28.2.47-.01.06.01.24 0 .41z" fill="rgb(34,197,94)"/>
+                  </svg>
+                </motion.div>
+                <div className="flex-1 relative z-10">
+                  <p className="font-semibold text-sm" style={{ color: "rgb(34,197,94)" }}>Telegram Vinculado</p>
+                  <p className="text-xs" style={st.hint}>Conta conectada com sucesso</p>
+                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+                >
+                  <AnimatedCheck size={22} className="text-success" />
+                </motion.div>
+              </motion.div>
+
               <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
                 <p className="text-[11px] uppercase tracking-wider mb-1" style={st.hint}>Saldo de Revenda</p>
                 <p className="text-2xl font-bold" style={st.green}>{formatCurrency(saldo)}</p>
