@@ -17,7 +17,7 @@ export default function Auth() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!loading && user && role) {
-    return <Navigate to={role === "admin" ? "/admin" : "/painel"} replace />;
+    return <Navigate to={role === "admin" ? "/principal" : "/painel"} replace />;
   }
   if (!loading && user && !role) {
     return <Navigate to="/painel" replace />;
