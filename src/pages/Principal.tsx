@@ -2764,7 +2764,7 @@ export default function Principal() {
                         <tr className="border-b border-border bg-muted/30">
                           <th className="text-left px-4 py-3 font-medium text-muted-foreground">Revendedor</th>
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Recargas</th>
-                          <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
+                          <th className="text-right px-4 py-3 font-medium text-muted-foreground">Recarga</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Custo</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Vendas</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Lucro</th>
