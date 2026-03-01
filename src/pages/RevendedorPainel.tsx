@@ -393,29 +393,31 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               setSelectedCarrier(matched);
               setDetectedOperatorName(matched.name);
               toast.success(`✅ Operadora detectada: ${matched.name}`);
-              
-              // Auto check-phone after detecting operator
-              setCheckingPhone(true);
-              try {
-                const resp = await callApi("check-phone", { phoneNumber: digits, carrierId: matched.carrierId });
-                if (resp?.success && resp.data) {
-                  const checkResult = {
-                    ...resp.data,
-                    message: resp.data.status === "COOLDOWN"
-                      ? formatCooldownMessage(resp.data.message)
-                      : (resp.data.message || "Número disponível para recarga."),
-                  };
-                  setPhoneCheckResult(checkResult);
-                  if (checkResult.status === "CLEAR") toast.success("✅ Número disponível!");
-                  else if (checkResult.status === "COOLDOWN") toast.warning(checkResult.message);
-                  else if (checkResult.status === "BLACKLISTED") toast.error(checkResult.message);
-                }
-              } catch { /* ignore check-phone error */ }
-              setCheckingPhone(false);
             } else {
               setDetectedOperatorName(operatorName);
               toast.warning(`Operadora "${operatorName}" detectada, mas não encontrada no catálogo.`);
             }
+
+            // Auto check-phone always (even if operator not in catalog) for cooldown/blacklist
+            setCheckingPhone(true);
+            try {
+              const checkPayload: Record<string, string> = { phoneNumber: digits };
+              if (matched) checkPayload.carrierId = matched.carrierId;
+              const resp = await callApi("check-phone", checkPayload);
+              if (resp?.success && resp.data) {
+                const checkResult = {
+                  ...resp.data,
+                  message: resp.data.status === "COOLDOWN"
+                    ? formatCooldownMessage(resp.data.message)
+                    : (resp.data.message || "Número disponível para recarga."),
+                };
+                setPhoneCheckResult(checkResult);
+                if (checkResult.status === "CLEAR") toast.success("✅ Número disponível!");
+                else if (checkResult.status === "COOLDOWN") toast.warning(checkResult.message);
+                else if (checkResult.status === "BLACKLISTED") toast.error(checkResult.message);
+              }
+            } catch { /* ignore check-phone error */ }
+            setCheckingPhone(false);
           }
         }
       } catch {
