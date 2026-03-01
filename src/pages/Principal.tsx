@@ -441,7 +441,9 @@ export default function Principal() {
   const fetchResellerPricingRules = useCallback(async (userId: string) => {
     try {
       const { data } = await supabase.from("reseller_pricing_rules").select("*").eq("user_id", userId);
-      setResellerPricingRules((data || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
+      const mapped = (data || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" }));
+      setResellerPricingRules(mapped);
+      setRevDetailPricingRules(mapped);
     } catch (err) { console.error(err); }
   }, []);
 
@@ -1886,12 +1888,10 @@ export default function Principal() {
                                             onSave={(data) => {
                                               if (!selectedRev) return;
                                               saveResellerPricingRule(selectedRev.id, { operadora_id: activeOpId, valor_recarga: valor, custo: data.custo, tipo_regra: data.tipo_regra, regra_valor: data.regra_valor });
-                                              setTimeout(() => fetchRevDetail(selectedRev), 500);
                                             }}
                                             onReset={() => {
                                               if (!selectedRev) return;
                                               resetResellerPricingRule(selectedRev.id, activeOpId, valor);
-                                              setTimeout(() => fetchRevDetail(selectedRev), 500);
                                             }}
                                           />
                                         );
