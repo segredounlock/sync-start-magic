@@ -20,7 +20,7 @@ export default function Auth() {
     return <Navigate to={role === "admin" ? "/principal" : "/painel"} replace />;
   }
   if (!loading && user && !role) {
-    return <Navigate to="/painel" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
