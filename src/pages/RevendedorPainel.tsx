@@ -698,7 +698,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   return (
     <div className="min-h-screen md:flex pb-8">
-      <RecargasTicker avatarUrl={avatarUrl} userInitial={userInitial} />
+      <RecargasTicker />
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
         <>
@@ -880,19 +880,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               <CreditCard className="h-4 w-4" />
               <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</span>
             </button>
+            <AvatarDisplay size="w-9 h-9" textSize="text-xs" />
           </div>
         </header>
 
         <main className="max-w-5xl mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-5">
-          {/* Avatar do usuário */}
-          <div className="flex items-center gap-3">
-            <AvatarDisplay size="w-12 h-12" textSize="text-lg" />
-            <div>
-              <p className="text-sm font-semibold text-foreground">{profileNome || user?.email}</p>
-              <p className="text-xs text-muted-foreground">{role === "admin" ? "Administrador" : "Revendedor"}</p>
-            </div>
-          </div>
-
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {[
