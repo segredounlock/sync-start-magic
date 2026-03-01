@@ -21,20 +21,23 @@ export function PromoBanner({
 
   if (!visible || dismissed) return null;
 
+  const handleBannerClick = () => {
+    if (link) {
+      window.open(link, "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
-    <div className="fixed bottom-20 right-4 z-50" style={{ maxWidth: "340px" }}>
+    <div className="w-full mb-4">
       <AnimatePresence>
         {!dismissed && (
-          <motion.a
-            href={link || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            initial={{ opacity: 0, y: 40, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.8 }}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="block relative overflow-hidden rounded-2xl border border-primary/20 shadow-xl backdrop-blur-sm bg-background/95 cursor-pointer no-underline"
-            onClick={(e) => { if (!link) e.preventDefault(); }}
+            className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-lg backdrop-blur-sm bg-background/95 cursor-pointer"
+            onClick={handleBannerClick}
           >
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-accent/10 to-primary/15 animate-gradient-x" />
@@ -44,7 +47,7 @@ export function PromoBanner({
             <motion.div
               animate={{ y: [0, -8, 0], x: [0, 4, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-3 right-16 opacity-30"
+              className="absolute top-3 right-20 opacity-30"
             >
               <Send className="h-5 w-5 text-primary" />
             </motion.div>
@@ -64,32 +67,32 @@ export function PromoBanner({
             </motion.div>
 
             {/* Content */}
-            <div className="relative px-4 py-4 flex items-start gap-3">
+            <div className="relative px-5 py-4 flex items-center gap-4">
               {/* Telegram Icon */}
               <motion.div
                 animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="shrink-0 w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center mt-0.5"
+                className="shrink-0 w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center"
               >
-                <Send className="h-5 w-5 text-primary" />
+                <Send className="h-6 w-6 text-primary" />
               </motion.div>
 
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-foreground leading-tight">
+                <h3 className="text-sm md:text-base font-bold text-foreground leading-tight">
                   {title}
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
                   {subtitle}
                 </p>
               </div>
 
               {/* Close */}
               <button
-                onClick={(e) => { e.stopPropagation(); setDismissed(true); onClose?.(); }}
-                className="shrink-0 p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDismissed(true); onClose?.(); }}
+                className="shrink-0 p-2 rounded-xl hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -98,9 +101,9 @@ export function PromoBanner({
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-              className="h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent origin-left"
+              className="h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent origin-left"
             />
-          </motion.a>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
