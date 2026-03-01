@@ -9,7 +9,8 @@ import {
   Smartphone, Plus, Clock, Landmark, User,
   ChevronRight, RefreshCw, Copy, Check,
   ArrowLeft, Shield, LogOut, Camera, Loader2,
-  Share2, FileText, MapPin, Hash, Wallet, Phone, Zap
+  Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
+  AlertTriangle, CheckCircle2, XCircle
 } from "lucide-react";
 
 declare global {
@@ -161,6 +162,8 @@ export default function TelegramMiniApp() {
   const [recargaStep, setRecargaStep] = useState<"op" | "valor" | "phone" | "confirm">("phone");
   const [recargaLoading, setRecargaLoading] = useState(false);
   const [recargaResult, setRecargaResult] = useState<{ success: boolean; message: string; details?: { valor: number; telefone: string; operadora: string; novoSaldo: number; pedidoId: string | null; hora: string } } | null>(null);
+  const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
+  const [checkingPhone, setCheckingPhone] = useState(false);
 
   // Histórico & Extrato
   const [recargas, setRecargas] = useState<Recarga[]>([]);
@@ -511,7 +514,48 @@ export default function TelegramMiniApp() {
     setRecargaLoading(false);
   };
 
-  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); };
+  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); };
+
+  const formatCooldownMsg = (msg?: string) => {
+    if (!msg) return "";
+    const isoMatch = msg.match(/(\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
+    if (isoMatch) {
+      const d = new Date(isoMatch[1]);
+      const formatted = d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      if (msg.toLowerCase().includes("cooldown")) {
+        return `⏳ Cooldown ativo! Nova recarga permitida após ${formatted}.`;
+      }
+      return msg.replace(isoMatch[1], formatted);
+    }
+    return msg;
+  };
+
+  const handleCheckPhone = async (carrierId?: string) => {
+    const normalizedPhone = phone.replace(/\D/g, "");
+    if (normalizedPhone.length < 10) return;
+    const cId = carrierId || selectedOp?.carrierId;
+    if (!cId) return;
+    setCheckingPhone(true);
+    setPhoneCheckResult(null);
+    try {
+      const { data: resp } = await supabase.functions.invoke("recarga-express", {
+        body: { action: "check-phone", phoneNumber: normalizedPhone, carrierId: cId },
+      });
+      if (resp?.success && resp.data) {
+        const result = {
+          status: resp.data.status,
+          message: resp.data.status === "COOLDOWN"
+            ? formatCooldownMsg(resp.data.message)
+            : (resp.data.message || "Número disponível para recarga."),
+        };
+        setPhoneCheckResult(result);
+        tgWebApp?.HapticFeedback?.impactOccurred(result.status === "CLEAR" ? "light" : "heavy");
+      }
+    } catch (err: any) {
+      setPhoneCheckResult({ status: "ERROR", message: err.message || "Erro ao verificar" });
+    }
+    setCheckingPhone(false);
+  };
 
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount.replace(",", "."));
@@ -946,7 +990,7 @@ export default function TelegramMiniApp() {
                           <p className="text-sm">Carregando operadoras...</p>
                         </div>
                       ) : operadoras.map((op) => (
-                        <button key={op.id} onClick={() => { setSelectedOp(op); setRecargaStep("valor"); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                        <button key={op.id} onClick={() => { setSelectedOp(op); setPhoneCheckResult(null); handleCheckPhone(op.carrierId); setRecargaStep("valor"); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
                           className="w-full rounded-xl p-4 text-left transition flex items-center justify-between"
                           style={{ ...st.secondaryBg, border: st.borderSub }}>
                           <div className="flex items-center gap-3">
@@ -968,6 +1012,30 @@ export default function TelegramMiniApp() {
                         <ArrowLeft className="w-4 h-4" /> Voltar
                       </button>
                       <h2 className="text-lg font-bold" style={st.text}>{selectedOp.nome} — Valor</h2>
+                      
+                      {/* Blacklist/Cooldown check result */}
+                      <AnimatePresence>
+                        {checkingPhone && (
+                          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-xl p-3 flex items-center gap-3" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                            <Loader2 className="w-4 h-4 animate-spin" style={st.link} />
+                            <p className="text-sm" style={st.hint}>Verificando blacklist/cooldown...</p>
+                          </motion.div>
+                        )}
+                        {!checkingPhone && phoneCheckResult && (
+                          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                            className="rounded-xl p-3 flex items-center gap-3"
+                            style={{
+                              backgroundColor: phoneCheckResult.status === "CLEAR" ? "rgba(34,197,94,0.1)" : phoneCheckResult.status === "COOLDOWN" ? "rgba(234,179,8,0.1)" : "rgba(239,68,68,0.1)",
+                              border: `1px solid ${phoneCheckResult.status === "CLEAR" ? "rgba(34,197,94,0.3)" : phoneCheckResult.status === "COOLDOWN" ? "rgba(234,179,8,0.3)" : "rgba(239,68,68,0.3)"}`,
+                            }}>
+                            {phoneCheckResult.status === "CLEAR" ? <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#22c55e" }} /> : phoneCheckResult.status === "COOLDOWN" ? <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: "#eab308" }} /> : <XCircle className="w-4 h-4 shrink-0" style={{ color: "#ef4444" }} />}
+                            <p className="text-xs flex-1" style={{ color: phoneCheckResult.status === "CLEAR" ? "#22c55e" : phoneCheckResult.status === "COOLDOWN" ? "#eab308" : "#ef4444" }}>
+                              {phoneCheckResult.message}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
                       <div className="grid grid-cols-2 gap-3">
                         {selectedOp.valores.sort((a, b) => a.cost - b.cost).map((v) => {
                           const faceValue = v.value || v.cost;
