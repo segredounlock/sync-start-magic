@@ -692,7 +692,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     }).catch(() => {});
   }
 
-  const webAppUrl = "https://recarg17asbrasil.lovable.app/miniapp";
+  const webAppUrl = "https://recargasbrasill.com/miniapp";
   const menuKb = (extra?: any[][]) => [
     ...(extra || []),
     [
@@ -1206,7 +1206,7 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 // ===== MAIN MENU =====
 
 async function sendMainMenu(token: string, chatId: number, user: any) {
-  const webAppUrl = "https://recarg17asbrasil.lovable.app/miniapp";
+  const webAppUrl = "https://recargasbrasill.com/miniapp";
   await sendMessageWithKeyboard(token, chatId,
     `👋 Olá, <b>${user.nome || user.email}</b>!\n\nEscolha uma opção:`,
     [[
