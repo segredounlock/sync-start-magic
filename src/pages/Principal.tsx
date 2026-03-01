@@ -9,10 +9,9 @@ import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { PromoBanner } from "@/components/PromoBanner";
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { RealtimeNotifications } from "@/components/RealtimeNotifications";
+import { NotificationBell } from "@/components/NotificationBell";
 import RealtimeDashboard from "@/components/RealtimeDashboard";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
-import { usePrincipalNewUserToasts } from "@/hooks/usePrincipalNewUserToasts";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -185,7 +184,7 @@ export default function Principal() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  usePrincipalNewUserToasts();
+  // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -1210,10 +1209,9 @@ export default function Principal() {
                 {globalConfigSaving ? "Salvando..." : "Salvar"}
               </button>
             )}
-            <RealtimeNotifications
+            <NotificationBell
               listenTo={["deposit", "recarga", "new_user"]}
               revendedores={revendedores.map(r => ({ id: r.id, nome: r.nome, email: r.email }))}
-              showFilter={true}
             />
           </div>
         </header>

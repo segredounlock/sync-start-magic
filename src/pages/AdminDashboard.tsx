@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { usePrincipalNewUserToasts } from "@/hooks/usePrincipalNewUserToasts";
+// (removed duplicate toast hook)
 import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { SkeletonRow, SkeletonCard, SkeletonValue } from "@/components/Skeleton";
@@ -7,7 +7,7 @@ import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
-import { RealtimeNotifications } from "@/components/RealtimeNotifications";
+import { NotificationBell } from "@/components/NotificationBell";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
@@ -76,7 +76,7 @@ type Period = "hoje" | "7dias" | "mes" | "total";
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
-  usePrincipalNewUserToasts();
+  // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
@@ -1074,7 +1074,7 @@ export default function AdminDashboard() {
               <RefreshCw className={`h-4 w-4 ${recargasLoading ? "animate-spin" : ""}`} />
             </button>
           )}
-          <RealtimeNotifications listenTo={["deposit", "new_user"]} />
+          <NotificationBell listenTo={["deposit", "new_user"]} />
         </header>
 
         <main className="max-w-6xl mx-auto p-4 md:p-6 pb-24 md:pb-6">
