@@ -468,12 +468,16 @@ export default function Principal() {
   };
 
   const resetResellerPricingRule = async (userId: string, operadora_id: string, valor_recarga: number) => {
-    const existing = resellerPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
+    const existing = resellerPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga)
+      || revDetailPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
     if (!existing?.id) return;
     try {
       await supabase.from("reseller_pricing_rules").delete().eq("id", existing.id);
+      // Update local state immediately to avoid page jump
+      const filter = (rules: PricingRule[]) => rules.filter(r => r.id !== existing.id);
+      setResellerPricingRules(prev => filter(prev));
+      setRevDetailPricingRules(prev => filter(prev));
       toast.success("Preço removido (usará preço global)");
-      fetchResellerPricingRules(userId);
     } catch (err: any) { toast.error(err.message || "Erro"); }
   };
 
