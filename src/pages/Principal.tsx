@@ -1030,8 +1030,8 @@ export default function Principal() {
       <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[250px] z-30 border-r border-border glass-header">
         <div className="h-full flex flex-col">
           <div className="px-5 py-5 border-b border-border">
-            <h1 className="font-display text-xl font-bold text-foreground">
-              Recargas <span className="text-primary glow-text">Brasil</span>
+            <h1 className="font-display text-xl font-bold shimmer-letters">
+              Recargas <span className="brasil-word">Brasil</span>
             </h1>
             <p className="text-[10px] uppercase tracking-widest text-white font-medium mt-1">Principal</p>
           </div>
