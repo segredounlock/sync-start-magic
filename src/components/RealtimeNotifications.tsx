@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, X, DollarSign, Smartphone, Filter, UserPlus, Bot } from "lucide-react";
+import { Bell, X, DollarSign, Smartphone, Filter, UserPlus, Bot, CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ export interface Notification {
   user_email?: string;
   status: string;
   created_at: string;
+  is_read?: boolean;
 }
 
 interface Props {
@@ -22,13 +23,59 @@ interface Props {
   showFilter?: boolean;
 }
 
+async function persistNotification(n: Omit<Notification, "is_read">) {
+  await supabase.from("admin_notifications" as any).insert({
+    id: n.id,
+    type: n.type,
+    message: n.message,
+    amount: n.amount,
+    user_id: n.user_id,
+    user_nome: n.user_nome || null,
+    user_email: n.user_email || null,
+    status: n.status,
+    created_at: n.created_at,
+  } as any);
+}
+
 export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Props) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [filterUserId, setFilterUserId] = useState<string>("all");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const profileCache = useRef<Record<string, { nome: string | null; email: string | null }>>({});
   const panelRef = useRef<HTMLDivElement>(null);
+  const knownIds = useRef<Set<string>>(new Set());
+
+  // Load persisted notifications on mount
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("admin_notifications" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50) as any;
+
+      if (data && Array.isArray(data)) {
+        const mapped: Notification[] = data.map((r: any) => ({
+          id: r.id,
+          type: r.type,
+          message: r.message,
+          amount: Number(r.amount),
+          user_id: r.user_id || "",
+          user_nome: r.user_nome || undefined,
+          user_email: r.user_email || undefined,
+          status: r.status,
+          created_at: r.created_at,
+          is_read: r.is_read,
+        }));
+        setNotifications(mapped);
+        setUnreadCount(mapped.filter(n => !n.is_read).length);
+        mapped.forEach(n => knownIds.current.add(n.id));
+      }
+      setLoading(false);
+    })();
+  }, []);
 
   // Close panel on outside click
   useEffect(() => {
@@ -41,10 +88,8 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // Fetch profile info for a user_id
   const getProfile = async (userId: string) => {
     if (profileCache.current[userId]) return profileCache.current[userId];
-    // Check revendedores prop first
     const rev = revendedores?.find(r => r.id === userId);
     if (rev) {
       profileCache.current[userId] = { nome: rev.nome, email: rev.email };
@@ -56,19 +101,45 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
     return result;
   };
 
+  const addNotification = useCallback((notif: Notification) => {
+    if (knownIds.current.has(notif.id)) return;
+    knownIds.current.add(notif.id);
+    setNotifications(prev => [notif, ...prev].slice(0, 100));
+    setUnreadCount(prev => prev + 1);
+    persistNotification(notif);
+  }, []);
+
+  // Mark all as read
+  const markAllRead = useCallback(async () => {
+    setUnreadCount(0);
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    await supabase
+      .from("admin_notifications" as any)
+      .update({ is_read: true } as any)
+      .eq("is_read", false);
+  }, []);
+
+  // Clear all
+  const clearAll = useCallback(async () => {
+    const ids = notifications.map(n => n.id);
+    setNotifications([]);
+    setUnreadCount(0);
+    knownIds.current.clear();
+    if (ids.length > 0) {
+      await supabase.from("admin_notifications" as any).delete().in("id", ids);
+    }
+  }, [notifications]);
+
   useEffect(() => {
     const channels: ReturnType<typeof supabase.channel>[] = [];
 
     if (listenTo.includes("deposit")) {
       const ch = supabase.channel("notif-deposits")
         .on("postgres_changes", {
-          event: "UPDATE",
-          schema: "public",
-          table: "transactions",
+          event: "UPDATE", schema: "public", table: "transactions",
         }, async (payload) => {
           const newRow = payload.new as any;
           const oldRow = payload.old as any;
-          // Only notify when status changes to completed
           if (newRow.status === "completed" && oldRow?.status !== "completed") {
             const profile = await getProfile(newRow.user_id);
             const notif: Notification = {
@@ -82,8 +153,7 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
               status: newRow.status,
               created_at: newRow.updated_at || new Date().toISOString(),
             };
-            setNotifications(prev => [notif, ...prev].slice(0, 50));
-            setUnreadCount(prev => prev + 1);
+            addNotification(notif);
             toast.success(`💰 Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
           }
         })
@@ -94,9 +164,7 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
     if (listenTo.includes("recarga")) {
       const ch = supabase.channel("notif-recargas")
         .on("postgres_changes", {
-          event: "INSERT",
-          schema: "public",
-          table: "recargas",
+          event: "INSERT", schema: "public", table: "recargas",
         }, async (payload) => {
           const newRow = payload.new as any;
           const profile = await getProfile(newRow.user_id);
@@ -111,14 +179,11 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
             status: newRow.status,
             created_at: newRow.created_at || new Date().toISOString(),
           };
-          setNotifications(prev => [notif, ...prev].slice(0, 50));
-          setUnreadCount(prev => prev + 1);
+          addNotification(notif);
           toast.info(`📱 Nova recarga: ${newRow.operadora || ""} R$ ${Number(newRow.valor).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
         })
         .on("postgres_changes", {
-          event: "UPDATE",
-          schema: "public",
-          table: "recargas",
+          event: "UPDATE", schema: "public", table: "recargas",
         }, async (payload) => {
           const newRow = payload.new as any;
           const oldRow = payload.old as any;
@@ -136,8 +201,7 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
               status: newRow.status,
               created_at: newRow.updated_at || new Date().toISOString(),
             };
-            setNotifications(prev => [notif, ...prev].slice(0, 50));
-            setUnreadCount(prev => prev + 1);
+            addNotification(notif);
           }
         })
         .subscribe();
@@ -145,17 +209,14 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
     }
 
     if (listenTo.includes("new_user")) {
-      // Web signups (profiles INSERT)
       const chWeb = supabase.channel("notif-new-web-users")
         .on("postgres_changes", {
-          event: "INSERT",
-          schema: "public",
-          table: "profiles",
+          event: "INSERT", schema: "public", table: "profiles",
         }, (payload) => {
           const row = payload.new as any;
           if (!row?.id) return;
           const label = row.nome?.trim() || row.email?.trim() || "Usuário";
-          const notif: Notification = {
+          addNotification({
             id: `web-${row.id}`,
             type: "new_user_web",
             message: `Novo cadastro Web: ${label}`,
@@ -165,24 +226,19 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
             user_email: row.email || undefined,
             status: "new",
             created_at: row.created_at || new Date().toISOString(),
-          };
-          setNotifications(prev => [notif, ...prev].slice(0, 50));
-          setUnreadCount(prev => prev + 1);
+          });
         })
         .subscribe();
       channels.push(chWeb);
 
-      // Telegram signups
       const chTg = supabase.channel("notif-new-telegram-users")
         .on("postgres_changes", {
-          event: "INSERT",
-          schema: "public",
-          table: "telegram_users",
+          event: "INSERT", schema: "public", table: "telegram_users",
         }, (payload) => {
           const row = payload.new as any;
           if (!row?.is_registered) return;
           const label = row.username?.trim() ? `@${row.username.trim()}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
-          const notif: Notification = {
+          addNotification({
             id: `tg-${row.id}`,
             type: "new_user_telegram",
             message: `Novo cadastro Telegram: ${label}`,
@@ -191,20 +247,16 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
             user_nome: label,
             status: "new",
             created_at: row.created_at || new Date().toISOString(),
-          };
-          setNotifications(prev => [notif, ...prev].slice(0, 50));
-          setUnreadCount(prev => prev + 1);
+          });
         })
         .on("postgres_changes", {
-          event: "UPDATE",
-          schema: "public",
-          table: "telegram_users",
+          event: "UPDATE", schema: "public", table: "telegram_users",
         }, (payload) => {
           const row = payload.new as any;
           const oldRow = payload.old as any;
           if (!row?.is_registered || oldRow?.is_registered === row.is_registered) return;
           const label = row.username?.trim() ? `@${row.username.trim()}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
-          const notif: Notification = {
+          addNotification({
             id: `tg-upd-${row.id}`,
             type: "new_user_telegram",
             message: `Novo cadastro Telegram: ${label}`,
@@ -213,9 +265,7 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
             user_nome: label,
             status: "new",
             created_at: row.updated_at || new Date().toISOString(),
-          };
-          setNotifications(prev => [notif, ...prev].slice(0, 50));
-          setUnreadCount(prev => prev + 1);
+          });
         })
         .subscribe();
       channels.push(chTg);
@@ -224,7 +274,7 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
     return () => {
       channels.forEach(ch => supabase.removeChannel(ch));
     };
-  }, [listenTo]);
+  }, [listenTo, addNotification]);
 
   const filtered = filterUserId === "all"
     ? notifications
@@ -238,7 +288,7 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
   return (
     <div className="relative" ref={panelRef}>
       <button
-        onClick={() => { setOpen(!open); if (!open) setUnreadCount(0); }}
+        onClick={() => { setOpen(!open); if (!open) markAllRead(); }}
         className="relative p-2 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
         title="Notificações"
       >
@@ -268,12 +318,21 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
               <h3 className="text-sm font-bold text-foreground">Notificações</h3>
               <div className="flex items-center gap-1">
                 {notifications.length > 0 && (
-                  <button
-                    onClick={() => setNotifications([])}
-                    className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition-colors"
-                  >
-                    Limpar
-                  </button>
+                  <>
+                    <button
+                      onClick={markAllRead}
+                      className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition-colors flex items-center gap-1"
+                      title="Marcar todas como lidas"
+                    >
+                      <CheckCheck className="h-3 w-3" /> Lidas
+                    </button>
+                    <button
+                      onClick={clearAll}
+                      className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition-colors"
+                    >
+                      Limpar
+                    </button>
+                  </>
                 )}
                 <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-muted text-muted-foreground">
                   <X className="h-3.5 w-3.5" />
@@ -302,7 +361,11 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
 
             {/* List */}
             <div className="flex-1 overflow-y-auto">
-              {filtered.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-10 text-muted-foreground">
+                  <p className="text-xs">Carregando...</p>
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                   <Bell className="h-8 w-8 mb-2 opacity-30" />
                   <p className="text-xs">Nenhuma notificação ainda</p>
@@ -315,16 +378,16 @@ export function RealtimeNotifications({ listenTo, revendedores, showFilter }: Pr
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="px-4 py-3 border-b border-border/50 hover:bg-muted/30 transition-colors"
+                    className={`px-4 py-3 border-b border-border/50 hover:bg-muted/30 transition-colors ${!n.is_read ? "bg-primary/5" : ""}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        n.type === "deposit" ? "bg-success/15 text-success" 
+                        n.type === "deposit" ? "bg-success/15 text-success"
                         : n.type === "new_user_web" ? "bg-emerald-500/15 text-emerald-500"
                         : n.type === "new_user_telegram" ? "bg-blue-500/15 text-blue-500"
                         : "bg-primary/15 text-primary"
                       }`}>
-                        {n.type === "deposit" ? <DollarSign className="h-4 w-4" /> 
+                        {n.type === "deposit" ? <DollarSign className="h-4 w-4" />
                         : n.type === "new_user_web" ? <UserPlus className="h-4 w-4" />
                         : n.type === "new_user_telegram" ? <Bot className="h-4 w-4" />
                         : <Smartphone className="h-4 w-4" />}

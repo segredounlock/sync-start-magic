@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          status: string
+          type: string
+          user_email: string | null
+          user_id: string | null
+          user_nome: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          status?: string
+          type?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_nome?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          status?: string
+          type?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_nome?: string | null
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           created_at: string
