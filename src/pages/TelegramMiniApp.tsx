@@ -388,12 +388,13 @@ export default function TelegramMiniApp() {
   };
 
   useEffect(() => {
+    if (!userId) return;
     if (section === "recarga") { loadOperadoras(); loadRecargas(); }
     if (section === "historico") loadRecargas();
     if (section === "extrato") loadTransactions();
     if (section === "recarga" || section === "deposito") refreshSaldo();
     if (section === "conta") loadAvatar();
-  }, [section]);
+  }, [section, userId]);
 
   // Realtime subscriptions
   useEffect(() => {
