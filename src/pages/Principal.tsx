@@ -49,6 +49,7 @@ interface RecargaHistorico {
   operadora: string | null;
   valor: number;
   custo: number;
+  custo_api: number;
   status: string;
   created_at: string;
 }
@@ -561,7 +562,7 @@ export default function Principal() {
         fetchAllRows("user_roles", { select: "user_id, role" }),
         fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url" }),
         fetchAllRows("saldos", { select: "user_id, valor", filters: (q: any) => q.eq("tipo", "revenda") }),
-        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
+        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
       ]);
 
       setAllUsers((profiles || []).map(p => ({ id: p.id, active: p.active, created_at: p.created_at })));
@@ -585,7 +586,7 @@ export default function Principal() {
       }));
 
       setRevendedores(list);
-      setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo) })));
+      setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), custo_api: Number(r.custo_api || 0) })));
     } catch (err) {
       console.error(err);
       toast.error("Erro ao carregar dados");
@@ -894,16 +895,18 @@ export default function Principal() {
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayRecs = allRecargas.filter(r => r.created_at?.slice(0, 10) === todayStr);
     const completedToday = todayRecs.filter(r => r.status === "completed" || r.status === "concluida");
-    const receitaHoje = completedToday.reduce((s, r) => s + r.valor, 0);
-    const custoHoje = completedToday.reduce((s, r) => s + r.custo, 0);
-    const lucroHoje = receitaHoje - custoHoje;
+    const cobradoHoje = completedToday.reduce((s, r) => s + r.custo, 0);
+    const custoApiHoje = completedToday.reduce((s, r) => s + r.custo_api, 0);
+    const lucroHoje = cobradoHoje - custoApiHoje;
+    const receitaHoje = cobradoHoje;
 
     const now = new Date();
     const mesStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const mesRecs = allRecargas.filter(r => r.created_at >= mesStart && (r.status === "completed" || r.status === "concluida"));
-    const receitaMes = mesRecs.reduce((s, r) => s + r.valor, 0);
-    const custoMes = mesRecs.reduce((s, r) => s + r.custo, 0);
-    const lucroMes = receitaMes - custoMes;
+    const cobradoMes = mesRecs.reduce((s, r) => s + r.custo, 0);
+    const custoApiMes = mesRecs.reduce((s, r) => s + r.custo_api, 0);
+    const lucroMes = cobradoMes - custoApiMes;
+    const receitaMes = cobradoMes;
 
     // Top 5 resellers by volume today
     const revVolumeMap: Record<string, { nome: string; count: number; total: number }> = {};
@@ -927,9 +930,11 @@ export default function Principal() {
 
     // Total global (all time)
     const allCompleted = allRecargas.filter(r => r.status === "completed" || r.status === "concluida");
-    const receitaTotal = allCompleted.reduce((s, r) => s + r.valor, 0);
-    const custoTotal = allCompleted.reduce((s, r) => s + r.custo, 0);
-    const lucroTotal = receitaTotal - custoTotal;
+    const cobradoTotal = allCompleted.reduce((s, r) => s + r.custo, 0);
+    const custoApiTotal = allCompleted.reduce((s, r) => s + r.custo_api, 0);
+    const lucroTotal = cobradoTotal - custoApiTotal;
+    const receitaTotal = cobradoTotal;
+    const custoTotal = custoApiTotal;
 
     return {
       recargasHoje: todayRecs.length,
@@ -1142,11 +1147,11 @@ export default function Principal() {
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {[
                   { icon: Smartphone, label: "Recargas Hoje", value: String(dashboardMetrics.recargasHoje), sub: `${dashboardMetrics.completedHoje} concluídas`, color: "text-primary", bgColor: "bg-primary/10" },
-                  { icon: TrendingUp, label: "Receita Hoje", value: fmt(dashboardMetrics.receitaHoje), sub: `Custo: ${fmt(dashboardMetrics.receitaHoje - dashboardMetrics.lucroHoje)} • Lucro: ${fmt(dashboardMetrics.lucroHoje)}`, color: "text-success", bgColor: "bg-success/10" },
+                  { icon: TrendingUp, label: "Cobrado Hoje", value: fmt(dashboardMetrics.receitaHoje), sub: `Custo API: ${fmt(dashboardMetrics.receitaHoje - dashboardMetrics.lucroHoje)} • Lucro: ${fmt(dashboardMetrics.lucroHoje)}`, color: "text-success", bgColor: "bg-success/10" },
                   { icon: Wallet, label: "Saldo Total", value: fmt(totalSaldo), sub: `${activeCount} revendedores ativos`, color: "text-warning", bgColor: "bg-warning/10" },
-                  { icon: DollarSign, label: "Receita Mês", value: fmt(dashboardMetrics.receitaMes), sub: `Custo: ${fmt(dashboardMetrics.receitaMes - dashboardMetrics.lucroMes)} • Lucro: ${fmt(dashboardMetrics.lucroMes)}`, color: "text-accent", bgColor: "bg-accent/10" },
-                  { icon: BarChart3, label: "Lucro Total", value: fmt(dashboardMetrics.lucroTotal), sub: `${dashboardMetrics.totalRecargas} recargas • Custo: ${fmt(dashboardMetrics.custoTotal)}`, color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Activity, label: "Receita Total", value: fmt(dashboardMetrics.receitaTotal), sub: `Custo: ${fmt(dashboardMetrics.custoTotal)} • Lucro: ${fmt(dashboardMetrics.lucroTotal)}`, color: "text-primary", bgColor: "bg-primary/10" },
+                  { icon: DollarSign, label: "Cobrado Mês", value: fmt(dashboardMetrics.receitaMes), sub: `Custo API: ${fmt(dashboardMetrics.receitaMes - dashboardMetrics.lucroMes)} • Lucro: ${fmt(dashboardMetrics.lucroMes)}`, color: "text-accent", bgColor: "bg-accent/10" },
+                  { icon: BarChart3, label: "Lucro Total", value: fmt(dashboardMetrics.lucroTotal), sub: `${dashboardMetrics.totalRecargas} recargas • Custo API: ${fmt(dashboardMetrics.custoTotal)}`, color: "text-success", bgColor: "bg-success/10" },
+                  { icon: Activity, label: "Cobrado Total", value: fmt(dashboardMetrics.receitaTotal), sub: `Custo API: ${fmt(dashboardMetrics.custoTotal)} • Lucro: ${fmt(dashboardMetrics.lucroTotal)}`, color: "text-primary", bgColor: "bg-primary/10" },
                 ].map((c) => (
                   <div key={c.label} className="glass-card rounded-2xl p-4 md:p-5">
                     <div className="flex items-start justify-between mb-3">
