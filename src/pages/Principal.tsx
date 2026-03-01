@@ -622,6 +622,17 @@ export default function Principal() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Realtime: atualiza usuários automaticamente
+  useEffect(() => {
+    const channel = supabase.channel('principal-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'saldos' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchData]);
+
   // Fetch provider (API) balance
   const fetchProviderBalance = useCallback(async () => {
     // Ensure we have a valid session before calling edge function
