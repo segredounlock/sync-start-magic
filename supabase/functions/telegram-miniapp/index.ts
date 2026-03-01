@@ -169,12 +169,27 @@ serve(async (req) => {
             id: carrier.carrierId,
             nome: carrier.name,
             carrierId: carrier.carrierId,
-            valores: (carrier.values || []).map((v: any) => ({
-              valueId: v.valueId,
-              cost: v.cost,
-              value: v.value || v.cost,
-              label: v.label || `R$ ${v.cost}`,
-            })),
+              valores: (carrier.values || []).map((v: any) => {
+                const resolvedValue =
+                  (Number(v?.value) > 0 ? Number(v.value) : 0) ||
+                  (Number(v?.faceValue) > 0 ? Number(v.faceValue) : 0) ||
+                  (Number(v?.amount) > 0 ? Number(v.amount) : 0) ||
+                  (Number(v?.rechargeValue) > 0 ? Number(v.rechargeValue) : 0) ||
+                  (() => {
+                    const label = String(v?.label || "").replace(/,/g, ".");
+                    const nums = label.match(/\d+(?:\.\d{1,2})?/g);
+                    if (!nums?.length) return Number(v?.cost) || 0;
+                    const parsed = Number(nums[nums.length - 1]);
+                    return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(v?.cost) || 0;
+                  })();
+
+                return {
+                  valueId: v.valueId,
+                  cost: Number(v.cost || 0),
+                  value: resolvedValue,
+                  label: v.label || `R$ ${resolvedValue || v.cost}`,
+                };
+              }),
           }));
 
           return new Response(JSON.stringify({ operadoras }), {

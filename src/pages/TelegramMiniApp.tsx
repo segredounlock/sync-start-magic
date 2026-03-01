@@ -496,11 +496,21 @@ export default function TelegramMiniApp() {
       const orderData = result.data || {};
       const now = new Date();
       const hora = now.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const receiptValue =
+        (Number(selectedValor.value) > 0 ? Number(selectedValor.value) : 0) ||
+        (() => {
+          const label = String(selectedValor.label || "").replace(/,/g, ".");
+          const nums = label.match(/\d+(?:\.\d{1,2})?/g);
+          if (!nums?.length) return Number(selectedValor.cost) || 0;
+          const parsed = Number(nums[nums.length - 1]);
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(selectedValor.cost) || 0;
+        })();
+
       setRecargaResult({
         success: true,
         message: `Recarga realizada com sucesso!`,
         details: {
-          valor: selectedValor.cost,
+          valor: receiptValue,
           telefone: formatPhone(phone),
           operadora: selectedOp.nome || selectedOp.carrierId,
           novoSaldo: orderData.localBalance ?? saldo,
