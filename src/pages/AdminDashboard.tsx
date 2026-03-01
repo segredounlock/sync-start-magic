@@ -1074,7 +1074,7 @@ export default function AdminDashboard() {
               <RefreshCw className={`h-4 w-4 ${recargasLoading ? "animate-spin" : ""}`} />
             </button>
           )}
-          <RealtimeNotifications listenTo={["deposit"]} />
+          <RealtimeNotifications listenTo={["deposit", "new_user"]} />
         </header>
 
         <main className="max-w-6xl mx-auto p-4 md:p-6 pb-24 md:pb-6">
