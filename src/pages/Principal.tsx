@@ -3,6 +3,7 @@ import { PinProtection } from "@/components/PinProtection";
 import { SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import BackupSection from "@/components/BackupSection";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { PromoBanner } from "@/components/PromoBanner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
@@ -1165,12 +1166,12 @@ export default function Principal() {
               {/* KPI Row */}
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {[
-                  { icon: Smartphone, label: "Recargas Hoje", value: String(dashboardMetrics.recargasHoje), sub: `${dashboardMetrics.completedHoje} concluídas`, color: "text-primary", bgColor: "bg-primary/10" },
-                  { icon: TrendingUp, label: "Cobrado Hoje", value: fmt(dashboardMetrics.receitaHoje), sub: `Custo API: ${fmt(dashboardMetrics.receitaHoje - dashboardMetrics.lucroHoje)} • Lucro: ${fmt(dashboardMetrics.lucroHoje)}`, color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Wallet, label: "Saldo Total", value: fmt(totalSaldo), sub: `${activeCount} revendedores ativos`, color: "text-warning", bgColor: "bg-warning/10" },
-                  { icon: DollarSign, label: "Cobrado Mês", value: fmt(dashboardMetrics.receitaMes), sub: `Custo API: ${fmt(dashboardMetrics.receitaMes - dashboardMetrics.lucroMes)} • Lucro: ${fmt(dashboardMetrics.lucroMes)}`, color: "text-accent", bgColor: "bg-accent/10" },
-                  { icon: BarChart3, label: "Lucro Total", value: fmt(dashboardMetrics.lucroTotal), sub: `${dashboardMetrics.totalRecargas} recargas • Custo API: ${fmt(dashboardMetrics.custoTotal)}`, color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Activity, label: "Cobrado Total", value: fmt(dashboardMetrics.receitaTotal), sub: `Custo API: ${fmt(dashboardMetrics.custoTotal)} • Lucro: ${fmt(dashboardMetrics.lucroTotal)}`, color: "text-primary", bgColor: "bg-primary/10" },
+                  { icon: Smartphone, label: "Recargas Hoje", rawValue: dashboardMetrics.recargasHoje, isInt: true, sub: `${dashboardMetrics.completedHoje} concluídas`, color: "text-primary", bgColor: "bg-primary/10" },
+                  { icon: TrendingUp, label: "Cobrado Hoje", rawValue: dashboardMetrics.receitaHoje, isInt: false, sub: `Custo API: ${fmt(dashboardMetrics.receitaHoje - dashboardMetrics.lucroHoje)} • Lucro: ${fmt(dashboardMetrics.lucroHoje)}`, color: "text-success", bgColor: "bg-success/10" },
+                  { icon: Wallet, label: "Saldo Total", rawValue: totalSaldo, isInt: false, sub: `${activeCount} revendedores ativos`, color: "text-warning", bgColor: "bg-warning/10" },
+                  { icon: DollarSign, label: "Cobrado Mês", rawValue: dashboardMetrics.receitaMes, isInt: false, sub: `Custo API: ${fmt(dashboardMetrics.receitaMes - dashboardMetrics.lucroMes)} • Lucro: ${fmt(dashboardMetrics.lucroMes)}`, color: "text-accent", bgColor: "bg-accent/10" },
+                  { icon: BarChart3, label: "Lucro Total", rawValue: dashboardMetrics.lucroTotal, isInt: false, sub: `${dashboardMetrics.totalRecargas} recargas • Custo API: ${fmt(dashboardMetrics.custoTotal)}`, color: "text-success", bgColor: "bg-success/10" },
+                  { icon: Activity, label: "Cobrado Total", rawValue: dashboardMetrics.receitaTotal, isInt: false, sub: `Custo API: ${fmt(dashboardMetrics.custoTotal)} • Lucro: ${fmt(dashboardMetrics.lucroTotal)}`, color: "text-primary", bgColor: "bg-primary/10" },
                 ].map((c) => (
                   <div key={c.label} className="glass-card rounded-2xl p-4 md:p-5">
                     <div className="flex items-start justify-between mb-3">
@@ -1179,7 +1180,13 @@ export default function Principal() {
                       </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{c.label}</p>
-                    <p className={`text-xl md:text-2xl font-bold ${c.color} mt-0.5`}>{c.value}</p>
+                    <p className={`text-xl md:text-2xl font-bold ${c.color} mt-0.5`}>
+                      {c.isInt ? (
+                        <AnimatedInt value={c.rawValue} />
+                      ) : (
+                        <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" />
+                      )}
+                    </p>
                     <p className="text-[10px] text-muted-foreground mt-1">{c.sub}</p>
                   </div>
                 ))}
@@ -1201,7 +1208,7 @@ export default function Principal() {
                     <p className="text-xl md:text-2xl font-bold text-destructive mt-0.5">Erro</p>
                   ) : providerBalance.value !== null ? (
                     <p className={`text-xl md:text-2xl font-bold mt-0.5 ${providerBalance.value < 50 ? "text-destructive" : "text-[hsl(280,70%,60%)]"}`}>
-                      {fmt(providerBalance.value)}
+                      <AnimatedCounter value={providerBalance.value} prefix="R$&nbsp;" />
                     </p>
                   ) : (
                     <p className="text-xl md:text-2xl font-bold text-muted-foreground mt-0.5">—</p>
