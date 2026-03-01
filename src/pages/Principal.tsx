@@ -1479,9 +1479,9 @@ export default function Principal() {
                     const recCount = userRecs.length;
                     const recHoje = userRecs.filter(rc => rc.created_at?.slice(0, 10) === todayStr).length;
                     const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
-                    const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.valor) || 0), 0);
-                    const totalCusto = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
-                    const lucro = totalVendido - totalCusto;
+                    const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
+                    const totalCustoApi = completedRecs.reduce((s, rc) => s + (Number(rc.custo_api) || 0), 0);
+                    const lucro = totalVendido - totalCustoApi;
                     const ultimaRec = userRecs[0];
                     return (
                       <div key={r.id} className="glass-card rounded-xl p-4 active:scale-[0.98] transition-transform" onClick={() => openRevDetail(r)}>
@@ -1533,7 +1533,7 @@ export default function Principal() {
                           </div>
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Custo</p>
-                            <p className="text-sm font-bold font-mono text-warning">{fmt(totalCusto)}</p>
+                            <p className="text-sm font-bold font-mono text-warning">{fmt(totalCustoApi)}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Lucro</p>
@@ -1596,9 +1596,9 @@ export default function Principal() {
                         const recCount = userRecs.length;
                         const recHoje = userRecs.filter(rc => rc.created_at?.slice(0, 10) === todayStr).length;
                         const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
-                        const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.valor) || 0), 0);
-                        const totalCustoDesk = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
-                        const lucroDesk = totalVendido - totalCustoDesk;
+                        const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
+                        const totalCustoApiDesk = completedRecs.reduce((s, rc) => s + (Number(rc.custo_api) || 0), 0);
+                        const lucroDesk = totalVendido - totalCustoApiDesk;
                         const ultimaRec = userRecs[0];
                         const saldoBaixo = r.saldo > 0 && r.saldo < 50;
                         return (
