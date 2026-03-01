@@ -38,6 +38,7 @@ interface Revendedor {
   created_at: string;
   saldo: number;
   role: string;
+  avatar_url: string | null;
 }
 
 interface RecargaHistorico {
@@ -326,6 +327,7 @@ export default function AdminDashboard() {
           id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
           saldo: saldoMap[p.id] ?? 0,
           role: "cliente",
+          avatar_url: p.avatar_url || null,
         }));
         setRevendedores(list);
 
@@ -366,6 +368,7 @@ export default function AdminDashboard() {
           id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
           saldo: saldoMap[p.id] ?? 0,
           role: roleMap[p.id] || "user",
+          avatar_url: (p as any).avatar_url || null,
         }));
         setRevendedores(list);
 
@@ -1719,20 +1722,19 @@ export default function AdminDashboard() {
               })()}
             </div>
 
-            {/* Desktop: Users Table */}
             <div className="hidden md:block glass-card rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Revendedor</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Saldo</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Recargas</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Hoje</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Total Vendido</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Lucro</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Última Recarga</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Ações</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Usuário</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Tipo</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Saldo</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Recargas</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Hoje</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Total Vendido</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Lucro</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Status</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1756,45 +1758,69 @@ export default function AdminDashboard() {
                       const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
                       const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
                       const totalLucro = completedRecs.reduce((s, rc) => s + ((Number(rc.custo) || 0) - (Number((rc as any).custo_api) || 0)), 0);
-                      const ultimaRec = userRecs[0];
+                      const saldoBaixo = r.saldo > 0 && r.saldo < 10;
+                      const roleBadge = r.role === "admin"
+                        ? { label: "ADMIN", cls: "bg-warning/20 text-warning" }
+                        : r.role === "revendedor"
+                        ? { label: "REVENDEDOR", cls: "bg-success/20 text-success" }
+                        : r.role === "cliente"
+                        ? { label: "CLIENTE", cls: "bg-primary/20 text-primary" }
+                        : { label: "SEM FUNÇÃO", cls: "bg-muted text-muted-foreground" };
                       return (
                         <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                              <div className={`flex-shrink-0 w-9 h-9 rounded-full ${colors[colorIdx]} flex items-center justify-center text-sm font-bold text-primary-foreground`}>
-                                {initials}
-                              </div>
+                              {r.avatar_url ? (
+                                <img src={r.avatar_url} alt="" className="flex-shrink-0 w-9 h-9 rounded-full object-cover" />
+                              ) : (
+                                <div className={`flex-shrink-0 w-9 h-9 rounded-full ${colors[colorIdx]} flex items-center justify-center text-sm font-bold text-primary-foreground`}>
+                                  {initials}
+                                </div>
+                              )}
                               <div className="min-w-0">
                                 <p className="font-semibold text-foreground truncate">{r.nome || "—"}</p>
-                                <p className="text-xs text-muted-foreground truncate">{r.email || "—"}</p>
+                                <p className="text-xs text-muted-foreground truncate max-w-[180px]">{r.email || "—"}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center font-mono font-medium text-foreground"><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" /></td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${roleBadge.cls}`}>
+                              {roleBadge.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`font-mono font-medium ${saldoBaixo ? "text-warning" : "text-foreground"}`}>
+                              <AnimatedCounter value={r.saldo} prefix="R$&nbsp;" />
+                            </span>
+                            {saldoBaixo && <p className="text-[10px] text-warning italic">Saldo baixo</p>}
+                          </td>
                           <td className="px-4 py-3 text-center text-foreground"><AnimatedInt value={recCount} /></td>
-                          <td className="px-4 py-3 text-center font-medium text-primary"><AnimatedInt value={recHoje} /></td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`font-medium ${recHoje > 0 ? "bg-primary/15 text-primary px-2 py-0.5 rounded-md" : "text-foreground"}`}>
+                              <AnimatedInt value={recHoje} />
+                            </span>
+                          </td>
                           <td className="px-4 py-3 text-center font-mono font-medium text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" /></td>
                           <td className="px-4 py-3 text-center font-mono font-medium text-success"><AnimatedCounter value={totalLucro} prefix="R$&nbsp;" /></td>
                           <td className="px-4 py-3 text-center">
-                            {ultimaRec ? (
-                              <div className="text-xs">
-                                <p className="text-foreground">{ultimaRec.operadora || "—"} • {fmt(ultimaRec.valor)}</p>
-                                <p className="text-muted-foreground">{fmtDate(ultimaRec.created_at)}</p>
-                              </div>
-                            ) : <span className="text-muted-foreground text-xs">—</span>}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${r.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${r.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-success" : "bg-destructive"}`} />
                               {r.active ? "Ativo" : "Inativo"}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-1.5">
                               <button onClick={(e) => { e.stopPropagation(); setEditSaldoUser(r); setEditSaldoValue(String(r.saldo)); }}
-                                className="px-2.5 py-1 rounded text-xs font-medium bg-success/15 text-success hover:bg-success/25 transition-colors">Saldo</button>
+                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-success/15 text-success hover:bg-success/25 transition-colors flex items-center gap-1">
+                                <DollarSign className="h-3.5 w-3.5" /> Saldo
+                              </button>
                               <button onClick={(e) => { e.stopPropagation(); navigate("/principal"); }}
-                                className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Ver detalhes">
                                 <Eye className="h-4 w-4" />
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); }}
+                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Histórico">
+                                <History className="h-4 w-4" />
                               </button>
                             </div>
                           </td>
