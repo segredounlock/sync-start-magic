@@ -5,6 +5,7 @@ import { SkeletonRow, SkeletonCard, SkeletonValue } from "@/components/Skeleton"
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
@@ -1053,7 +1054,7 @@ export default function AdminDashboard() {
                   Adicionar Saldo
                 </button>
               </div>
-              <p className="text-3xl font-bold text-foreground">{fmt(meuSaldo)}</p>
+              <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={meuSaldo} prefix="R$&nbsp;" /></p>
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                 <span className="text-xs text-muted-foreground">Mantenha recarregado para operar</span>
                 <button onClick={fetchData} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground">
@@ -1074,23 +1075,23 @@ export default function AdminDashboard() {
                   </div>
                   <span className="text-sm text-muted-foreground">Lucro do Período</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{fmt(analytics.lucro)}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" /></p>
                 <span className="text-xs font-semibold text-success">Lucro Bruto</span>
                 <div className="flex justify-between mt-3 pt-3 border-t border-border">
                   <div>
                     <p className="text-[10px] text-muted-foreground">Vendas Revend.</p>
-                    <p className="text-sm font-bold text-foreground">{fmt(analytics.totalCobrado)}</p>
+                    <p className="text-sm font-bold text-foreground"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   {role === "admin" && (
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground">Custo API</p>
-                    <p className="text-sm font-bold text-destructive">- {fmt(analytics.totalCustoApi)}</p>
+                    <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCustoApi} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
                   {role === "revendedor" && (
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground">Meu Custo</p>
-                    <p className="text-sm font-bold text-destructive">- {fmt(analytics.totalCobrado)}</p>
+                    <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
                 </div>
@@ -1105,7 +1106,7 @@ export default function AdminDashboard() {
                   <span className="text-sm text-muted-foreground">Depósitos Recebidos</span>
                   <span className="ml-auto text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">{analytics.txCount} txs</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{fmt(analytics.totalDeposited)}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
               </motion.div>
 
               {/* Saldo dos Revendedores */}
@@ -1116,7 +1117,7 @@ export default function AdminDashboard() {
                   </div>
                   <span className="text-sm text-muted-foreground">Saldo dos Revendedores</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{fmt(analytics.saldoCarteiras)}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
                 <span className="text-xs text-success">Dinheiro a devolver</span>
               </motion.div>
             </div>
@@ -1135,15 +1136,15 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-center p-2 rounded-lg bg-muted/50">
                     <p className="text-[10px] text-muted-foreground">Total</p>
-                    <p className="text-lg font-bold text-foreground">{analytics.totalRec}</p>
+                    <p className="text-lg font-bold text-foreground"><AnimatedInt value={analytics.totalRec} /></p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-success/10">
                     <p className="text-[10px] text-success">Sucesso</p>
-                    <p className="text-lg font-bold text-success">{analytics.successRec}</p>
+                    <p className="text-lg font-bold text-success"><AnimatedInt value={analytics.successRec} /></p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-destructive/10">
                     <p className="text-[10px] text-destructive">Pendentes</p>
-                    <p className="text-lg font-bold text-destructive">{analytics.pendingRec}</p>
+                    <p className="text-lg font-bold text-destructive"><AnimatedInt value={analytics.pendingRec} /></p>
                   </div>
                 </div>
               </motion.div>
@@ -1161,20 +1162,20 @@ export default function AdminDashboard() {
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-foreground">{allProfiles.length || revendedores.length}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedInt value={allProfiles.length || revendedores.length} /></p>
                 <span className="text-xs text-muted-foreground">Site + Bot Telegram</span>
                 <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
                   <div className="text-center p-1.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] text-muted-foreground">Total</p>
-                    <p className="text-sm font-bold text-foreground">{allProfiles.length || revendedores.length}</p>
+                    <p className="text-sm font-bold text-foreground"><AnimatedInt value={allProfiles.length || revendedores.length} /></p>
                   </div>
                   <div className="text-center p-1.5 rounded-lg bg-success/10">
                     <p className="text-[10px] text-success flex items-center justify-center gap-0.5"><Bot className="h-3 w-3" /> Bot</p>
-                    <p className="text-sm font-bold text-success">{allProfiles.filter(p => !!p.telegram_id).length}</p>
+                    <p className="text-sm font-bold text-success"><AnimatedInt value={allProfiles.filter(p => !!p.telegram_id).length} /></p>
                   </div>
                   <div className="text-center p-1.5 rounded-lg bg-primary/10">
                     <p className="text-[10px] text-primary flex items-center justify-center gap-0.5"><Globe className="h-3 w-3" /> Site</p>
-                    <p className="text-sm font-bold text-primary">{allProfiles.filter(p => !p.telegram_id).length || revendedores.length}</p>
+                    <p className="text-sm font-bold text-primary"><AnimatedInt value={allProfiles.filter(p => !p.telegram_id).length || revendedores.length} /></p>
                   </div>
                 </div>
               </motion.div>
@@ -1187,7 +1188,7 @@ export default function AdminDashboard() {
                   </div>
                   <span className="text-sm text-muted-foreground">Valor Médio por Recarga</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{fmt(analytics.ticketMedio)}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.ticketMedio} prefix="R$&nbsp;" /></p>
               </motion.div>
             </div>
 
@@ -1572,19 +1573,19 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="glass-card rounded-xl p-4">
                 <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold text-foreground">{revendedores.length}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedInt value={revendedores.length} /></p>
               </div>
               <div className="glass-card rounded-xl p-4">
                 <p className="text-xs text-muted-foreground">Ativos</p>
-                <p className="text-2xl font-bold text-success">{revendedores.filter(r => r.active).length}</p>
+                <p className="text-2xl font-bold text-success"><AnimatedInt value={revendedores.filter(r => r.active).length} /></p>
               </div>
               <div className="glass-card rounded-xl p-4">
                 <p className="text-xs text-muted-foreground">Inativos</p>
-                <p className="text-2xl font-bold text-destructive">{revendedores.filter(r => !r.active).length}</p>
+                <p className="text-2xl font-bold text-destructive"><AnimatedInt value={revendedores.filter(r => !r.active).length} /></p>
               </div>
               <div className="glass-card rounded-xl p-4">
                 <p className="text-xs text-muted-foreground">Saldo Total</p>
-                <p className="text-2xl font-bold text-warning">{fmt(revendedores.reduce((s, r) => s + r.saldo, 0))}</p>
+                <p className="text-2xl font-bold text-warning"><AnimatedCounter value={revendedores.reduce((s, r) => s + r.saldo, 0)} prefix="R$&nbsp;" /></p>
               </div>
             </div>
 
@@ -1963,15 +1964,15 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <div className="glass-card rounded-xl p-5">
                 <p className="text-xs text-muted-foreground">Depósitos Recebidos</p>
-                <p className="text-2xl font-bold text-foreground">{fmt(analytics.totalDeposited)}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
               </div>
               <div className="glass-card rounded-xl p-5">
                 <p className="text-xs text-muted-foreground">Transações</p>
-                <p className="text-2xl font-bold text-foreground">{analytics.txCount}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedInt value={analytics.txCount} /></p>
               </div>
               <div className="glass-card rounded-xl p-5">
                 <p className="text-xs text-muted-foreground">Saldo em Carteiras</p>
-                <p className="text-2xl font-bold text-warning">{fmt(analytics.saldoCarteiras)}</p>
+                <p className="text-2xl font-bold text-warning"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
               </div>
             </div>
             <div className="glass-card rounded-xl p-5 mb-4">
