@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 
-type LoginPhase = "form" | "card-exit" | "logo-exit" | "done";
+type LoginPhase = "form" | "success" | "card-exit" | "logo-exit" | "done";
 
 export default function Auth() {
   const { user, role, loading } = useAuth();
@@ -19,9 +19,10 @@ export default function Auth() {
   const [submitting, setSubmitting] = useState(false);
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
+  const animatingRef = useRef(false);
 
-  // Redirect logged-in users (only when no animation is running)
-  if (!loading && user && phase === "form") {
+  // Redirect logged-in users ONLY when no animation is running
+  if (!loading && user && phase === "form" && !animatingRef.current) {
     const dest = role === "admin" ? "/principal" : "/painel";
     return <Navigate to={dest} replace />;
   }
@@ -34,11 +35,12 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    animatingRef.current = true;
+
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("Login realizado!");
 
         // Determine destination before animation
         const { data: roleData } = await supabase
@@ -46,11 +48,8 @@ export default function Auth() {
           .select("role")
           .eq("user_id", (await supabase.auth.getUser()).data.user?.id || "")
           .maybeSingle();
-        
-        setDestination(roleData?.role === "admin" ? "/principal" : "/painel");
 
-        // Start exit animation sequence
-        setPhase("card-exit");
+        setDestination(roleData?.role === "admin" ? "/principal" : "/painel");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -58,14 +57,22 @@ export default function Auth() {
           options: { data: { nome }, emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Conta criada com sucesso!");
-        
         setDestination("/painel");
-        setPhase("card-exit");
       }
+
+      // Show success message briefly, then start animations
+      toast.success(isLogin ? "Login realizado!" : "Conta criada com sucesso!");
+      setPhase("success");
+
+      // Wait a moment to show success state, then animate card out
+      setTimeout(() => {
+        setPhase("card-exit");
+      }, 800);
+
     } catch (err: any) {
       toast.error(err.message || "Erro na autenticação");
       setSubmitting(false);
+      animatingRef.current = false;
     }
   };
 
@@ -97,7 +104,7 @@ export default function Auth() {
             }
           }}
         >
-          {(phase === "form" || phase === "card-exit") && (
+          {(phase as string) !== "logo-exit" && (phase as string) !== "done" && (
             <motion.div
               key="logo"
               className="text-center mb-8"
@@ -105,8 +112,8 @@ export default function Auth() {
               exit={{
                 opacity: 0,
                 scale: 0,
-                rotate: 360,
-                transition: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+                rotate: 720,
+                transition: { duration: 0.8, ease: [0.4, 0, 0.2, 1] },
               }}
             >
               <h1 className="font-display text-3xl font-bold shimmer-letters">
@@ -121,26 +128,71 @@ export default function Auth() {
         <AnimatePresence
           onExitComplete={() => {
             if (phase === "card-exit") {
-              setPhase("logo-exit");
+              // After card disappears, start logo exit
+              setTimeout(() => setPhase("logo-exit"), 200);
             }
           }}
         >
-          {phase === "form" && (
+          {(phase === "form" || phase === "success") && (
             <motion.div
               key="card"
               initial={{ opacity: 1, scale: 1, y: 0 }}
               exit={{
                 opacity: 0,
-                scale: 0.3,
-                y: 50,
-                transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+                scale: 0.2,
+                y: 80,
+                transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] },
               }}
-              className="glass-modal rounded-xl p-6"
+              className="glass-modal rounded-xl p-6 relative"
             >
+              {/* Success overlay */}
+              <AnimatePresence>
+                {phase === "success" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 rounded-xl bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-10"
+                  >
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", damping: 10, stiffness: 200 }}
+                      className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4"
+                    >
+                      <motion.svg
+                        className="h-8 w-8 text-primary"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <motion.path
+                          d="M5 13l4 4L19 7"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.4, delay: 0.2 }}
+                        />
+                      </motion.svg>
+                    </motion.div>
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-lg font-bold text-foreground"
+                    >
+                      Bem-vindo!
+                    </motion.p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="flex mb-6 rounded-lg overflow-hidden glass">
                 <button
                   type="button"
                   onClick={() => setIsLogin(true)}
+                  disabled={submitting}
                   className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                     isLogin ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
@@ -150,6 +202,7 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => setIsLogin(false)}
+                  disabled={submitting}
                   className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                     !isLogin ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
