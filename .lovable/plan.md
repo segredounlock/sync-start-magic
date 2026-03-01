@@ -1,17 +1,20 @@
 
 
-## Plano: Corrigir flash do banner promocional
+## Problema
 
-### Problema
+O texto do título e subtítulo nos banners usa `flex flex-wrap` com emojis em `<span>` separados, o que causa quebras de linha indesejadas — cada emoji e texto vira um item flex separado, quebrando em linhas diferentes.
 
-O estado inicial do `bannerConfig` em `RevendedorPainel.tsx` define `enabled: true` por padrão. Quando a página carrega, o banner aparece imediatamente. Logo depois, o `useEffect` busca a configuração real do banco e, se o banner estiver desativado, atualiza para `enabled: false` — causando o efeito de "aparece e some".
+## Solução
 
-### Correção
+Simplificar o layout do texto removendo o `flex` e colocando os emojis inline diretamente no texto, sem spans separados. Isso mantém tudo na mesma linha naturalmente.
 
-**Arquivo: `src/pages/RevendedorPainel.tsx`**
+### Mudanças em `src/components/PromoBanner.tsx`:
 
-1. Alterar o estado inicial de `bannerConfig.enabled` de `true` para `false` (linha 138)
-2. Assim o banner só aparece **depois** que o banco confirmar que está ativado — eliminando o flash
+- **Título (h3)**: Remover `flex items-center gap-1.5 flex-wrap` e renderizar como texto simples: `🤖 {title} 🚀`
+- **Subtítulo (p)**: Remover `flex items-center gap-1 flex-wrap` e renderizar como texto simples: `📱 {subtitle} ⚡💬`
+- Ambos passam a ser texto corrido normal, sem quebras forçadas
 
-Mudança de 1 linha: `{ enabled: true, ...}` → `{ enabled: false, ...}`
+### Mudanças em `src/components/PopupBanner.tsx`:
+
+- Verificar se o mesmo problema existe no popup e corrigir se necessário (o popup atual já usa texto simples, sem flex nos textos)
 
