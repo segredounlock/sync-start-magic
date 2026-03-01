@@ -569,6 +569,12 @@ export default function AdminDashboard() {
     return { totalVendas, totalCusto, lucro, totalDeposited, txCount, saldoCarteiras, totalRec, successRec, pendingRec, ticketMedio };
   }, [filteredRecargas, filteredTransactions, revendedores]);
 
+  // Helper: data local YYYY-MM-DD (sem problemas de fuso UTC)
+  const toLocalDateKey = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
   // Chart: Vendas & Lucro por dia
   const vendasLucroPorDia = useMemo(() => {
     const map: Record<string, { vendas: number; custo: number }> = {};
@@ -587,11 +593,7 @@ export default function AdminDashboard() {
 
   const displayVendasLucro = vendasLucroPorDia;
 
-  // Helper: data local YYYY-MM-DD (sem problemas de fuso UTC)
-  const toLocalDateKey = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
+
 
   // Chart: Novos usuários por dia (preenche todos os dias do período)
   const novosPorDia = useMemo(() => {
