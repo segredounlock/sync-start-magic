@@ -573,13 +573,13 @@ export default function AdminDashboard() {
   const vendasLucroPorDia = useMemo(() => {
     const map: Record<string, { vendas: number; custo: number }> = {};
     filteredRecargas.forEach(r => {
-      const day = r.created_at.split("T")[0];
+      const day = toLocalDateKey(r.created_at);
       if (!map[day]) map[day] = { vendas: 0, custo: 0 };
       map[day].vendas += r.valor;
       map[day].custo += r.custo;
     });
     return Object.entries(map).sort().map(([day, v]) => ({
-      day: new Date(day).toLocaleDateString("pt-BR", { weekday: "short" }),
+      day: new Date(day + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", timeZone: "America/Sao_Paulo" }),
       vendas: v.vendas,
       lucro: v.vendas - v.custo,
     }));
@@ -587,11 +587,17 @@ export default function AdminDashboard() {
 
   const displayVendasLucro = vendasLucroPorDia;
 
+  // Helper: data local YYYY-MM-DD (sem problemas de fuso UTC)
+  const toLocalDateKey = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
   // Chart: Novos usuários por dia (preenche todos os dias do período)
   const novosPorDia = useMemo(() => {
     const map: Record<string, number> = {};
     revendedores.filter(r => r.created_at >= periodStart).forEach(r => {
-      const day = r.created_at.split("T")[0];
+      const day = toLocalDateKey(r.created_at);
       map[day] = (map[day] || 0) + 1;
     });
     // Preencher todos os dias do período
@@ -599,10 +605,10 @@ export default function AdminDashboard() {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     const days: { day: string; count: number }[] = [];
-    for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
-      const key = d.toISOString().split("T")[0];
+    for (let d = new Date(start.getFullYear(), start.getMonth(), start.getDate()); d <= today; d.setDate(d.getDate() + 1)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       days.push({
-        day: new Date(d.getFullYear(), d.getMonth(), d.getDate()).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+        day: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" }),
         count: map[key] || 0,
       });
     }
@@ -627,11 +633,11 @@ export default function AdminDashboard() {
   const depositosPorDia = useMemo(() => {
     const map: Record<string, number> = {};
     filteredTransactions.filter(t => (t.type === "deposit" || t.type === "deposito") && (t.status === "completed" || t.status === "confirmado")).forEach(t => {
-      const day = t.created_at.split("T")[0];
+      const day = toLocalDateKey(t.created_at);
       map[day] = (map[day] || 0) + t.amount;
     });
     return Object.entries(map).sort().map(([day, total]) => ({
-      day: new Date(day).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      day: new Date(day + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" }),
       total,
     }));
   }, [filteredTransactions]);
@@ -679,7 +685,7 @@ export default function AdminDashboard() {
   );
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
 
   // Gateway config fetch/save
   const fetchGatewayConfig = useCallback(async () => {
