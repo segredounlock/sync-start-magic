@@ -1171,11 +1171,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
                         {/* Check cooldown/blacklist hint - appears after selecting operator */}
                         {selectedCarrier && telefone.replace(/\D/g, "").length >= 10 && !phoneCheckResult && (
-                          <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 flex items-center gap-2">
-                            <p className="text-xs text-muted-foreground flex-1">⚠️ Verifique se o número está com blacklist ou cooldown ativo antes de recarregar.</p>
+                          <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} className="mt-3 p-3 rounded-xl bg-warning/10 border border-warning/25 flex items-center gap-3">
+                            <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+                            <p className="text-sm text-warning font-medium flex-1">Verifique se o número está com blacklist ou cooldown ativo antes de recarregar.</p>
                             <button type="button" onClick={handleCheckPhone} disabled={checkingPhone}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-primary hover:bg-primary/10 border border-primary/20 transition-all shrink-0">
-                              {checkingPhone ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Verificar"}
+                              className="px-4 py-2 rounded-lg text-sm font-bold bg-warning/20 text-warning hover:bg-warning/30 border border-warning/30 transition-all shrink-0">
+                              {checkingPhone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar"}
                             </button>
                           </motion.div>
                         )}
