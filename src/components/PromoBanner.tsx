@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send } from "lucide-react";
+import { X, Send, MessageCircle, Zap, Smartphone } from "lucide-react";
 import { useState } from "react";
 
 interface PromoBannerProps {
@@ -11,8 +11,8 @@ interface PromoBannerProps {
 }
 
 export function PromoBanner({ 
-  title = "🤖 Nosso Bot do Telegram está online! Acesse agora 🚀",
-  subtitle = "📱 Consulte saldo, faça recargas e receba notificações direto no Telegram! ⚡💬",
+  title = "Bot do Telegram online!",
+  subtitle = "Consulte saldo, faça recargas e receba notificações direto no Telegram!",
   visible = true,
   link,
   onClose
@@ -27,42 +27,97 @@ export function PromoBanner({
     }
   };
 
+  const floatingEmojis = ["🤖", "⚡", "📱", "🚀", "💬"];
+
   return (
     <div className="w-full mb-4">
       <AnimatePresence>
         {!dismissed && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-4 cursor-pointer"
+            initial={{ opacity: 0, y: -16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="relative overflow-hidden rounded-2xl border border-primary/25 shadow-lg cursor-pointer group"
             onClick={handleBannerClick}
           >
-            <div className="flex items-center gap-3">
-              {/* Icon */}
-              <div className="shrink-0 w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-background to-accent/10" />
+
+            {/* Floating emojis in background */}
+            {floatingEmojis.map((emoji, i) => (
+              <motion.span
+                key={i}
+                className="absolute text-lg select-none pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity"
+                style={{
+                  top: `${12 + (i * 18) % 70}%`,
+                  left: `${10 + (i * 22) % 80}%`,
+                }}
+                animate={{
+                  y: [0, -8, 0],
+                  rotate: [0, i % 2 === 0 ? 10 : -10, 0],
+                }}
+                transition={{
+                  duration: 2.5 + i * 0.4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.3,
+                }}
+              >
+                {emoji}
+              </motion.span>
+            ))}
+
+            {/* Content */}
+            <div className="relative px-4 py-3.5 flex items-center gap-3">
+              {/* Animated Telegram icon */}
+              <motion.div
+                animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="shrink-0 w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center"
+              >
                 <Send className="h-5 w-5 text-primary" />
-              </div>
+              </motion.div>
 
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-foreground leading-tight">
-                  {title}
+                <h3 className="text-sm font-bold text-foreground leading-tight flex items-center gap-1.5 flex-wrap">
+                  <span>🤖</span>
+                  <span>{title}</span>
+                  <span>🚀</span>
                 </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {subtitle}
+                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
+                  <span>📱</span>
+                  <span>{subtitle}</span>
+                  <span>⚡💬</span>
                 </p>
               </div>
 
-              {/* Close */}
-              <button
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDismissed(true); onClose?.(); }}
-                className="shrink-0 p-1 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              {/* Animated side icons + close */}
+              <div className="shrink-0 flex items-center gap-1.5">
+                <motion.div
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-primary/50 hidden sm:block"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </motion.div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDismissed(true); onClose?.(); }}
+                  className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
+
+            {/* Animated bottom bar */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+              className="h-[2px] bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30 origin-left"
+            />
           </motion.div>
         )}
       </AnimatePresence>
