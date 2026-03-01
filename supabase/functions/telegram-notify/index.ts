@@ -71,7 +71,8 @@ Deno.serve(async (req) => {
         "",
         `📞 Telefone: <code>${data.telefone}</code>`,
         data.operadora ? `📡 Operadora: ${data.operadora}` : "",
-        `💰 Valor: <b>${fmt(data.valor)}</b>`,
+        `📱 Recarga: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
+        `💰 Cobrado: <b>${fmt(data.custo || data.valor)}</b>`,
         "",
         `💳 Novo saldo: <b>${fmt(data.novo_saldo)}</b>`,
       ].filter(Boolean).join("\n");
