@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
+import { BroadcastForm } from "@/components/BroadcastForm";
+import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { SkeletonRow, SkeletonCard, SkeletonValue } from "@/components/Skeleton";
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -15,6 +17,7 @@ import {
   Save, Eye, EyeOff, Globe, Key, Bot, Zap, Menu, X,
   Wifi, WifiOff, Hash, AtSign, Trash2, AlertTriangle, CheckCircle2, ChevronDown, Link2, RotateCcw,
   Settings2, Store, Upload, Palette, Image, Copy, Loader2, QrCode, ExternalLink, Clock,
+  Megaphone, Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -72,7 +75,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo">("visao");
+  const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
   const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
   const [configSubTab, setConfigSubTab] = useState<"geral" | "recargas" | "pagamentos" | "depositos">("geral");
   const [period, setPeriod] = useState<Period>("7dias");
@@ -84,6 +87,13 @@ export default function AdminDashboard() {
   const [editSaldoValue, setEditSaldoValue] = useState("");
   const [savingSaldo, setSavingSaldo] = useState(false);
   const [confirmRoleRemove, setConfirmRoleRemove] = useState<Revendedor | null>(null);
+
+  // Broadcast state
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastUserCount, setBroadcastUserCount] = useState(0);
+  const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
 
   // All recargas for analytics
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
@@ -729,6 +739,36 @@ export default function AdminDashboard() {
     setStoreSaving(false);
   };
 
+  const fetchBroadcastHistory = useCallback(async () => {
+    const { data } = await (supabase.from('notifications' as any) as any)
+      .select('id, title, sent_count, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (data) {
+      // Get progress status for each
+      const ids = data.map((n: any) => n.id);
+      const { data: progresses } = await (supabase.from('broadcast_progress' as any) as any)
+        .select('notification_id, status')
+        .in('notification_id', ids)
+        .order('created_at', { ascending: false });
+      
+      const statusMap: Record<string, string> = {};
+      progresses?.forEach((p: any) => { if (!statusMap[p.notification_id]) statusMap[p.notification_id] = p.status; });
+      
+      setBroadcastHistory(data.map((n: any) => ({ ...n, status: statusMap[n.id] || 'pending' })));
+    }
+  }, []);
+
+  const fetchBroadcastUserCount = useCallback(async () => {
+    const { count } = await (supabase.from('telegram_users' as any) as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('is_blocked', false)
+      .eq('is_registered', true);
+    setBroadcastUserCount(count || 0);
+  }, []);
+
+  useEffect(() => { if (tab === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [tab, fetchBroadcastHistory, fetchBroadcastUserCount]);
+
   useEffect(() => { if (tab === "gateway") fetchGatewayConfig(); }, [tab, fetchGatewayConfig]);
   useEffect(() => { if (tab === "loja") fetchStoreConfig(); }, [tab, fetchStoreConfig]);
   useEffect(() => { if (tab === "usuarios" && userSubTab === "clientes") fetchClients(); }, [tab, userSubTab, fetchClients]);
@@ -746,6 +786,7 @@ export default function AdminDashboard() {
     { key: "precificacao", icon: Tag, label: "Precificação", color: "text-warning", adminOnly: true },
     { key: "meusprecos", icon: DollarSign, label: "Meus Preços", color: "text-success" },
     { key: "bot", icon: Bot, label: "Bot", color: "text-accent" },
+    { key: "broadcast", icon: Megaphone, label: "Broadcast", color: "text-warning", adminOnly: true },
     { key: "configuracoes", icon: Settings, label: "Configurações", color: "text-muted-foreground", adminOnly: true },
   ];
   const menuItems = role === "revendedor" ? allMenuItems.filter(m => !m.adminOnly) : allMenuItems;
@@ -913,6 +954,7 @@ export default function AdminDashboard() {
               {tab === "gateway" && "Configure sua gateway de pagamento."}
               {tab === "loja" && "Personalize a aparência da sua loja."}
               {tab === "meusprecos" && "Defina seus próprios preços para sua loja."}
+              {tab === "broadcast" && "Envie mensagens em massa para seus usuários do Telegram."}
               
             </p>
           </div>
@@ -3109,6 +3151,111 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* ===== BROADCAST ===== */}
+        {tab === "broadcast" && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Form */}
+              <div className="glass-card rounded-2xl p-5">
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-warning" /> Nova Mensagem
+                </h3>
+                <BroadcastForm
+                  userCount={broadcastUserCount}
+                  sending={broadcastSending}
+                  onSubmit={async (data) => {
+                    setBroadcastSending(true);
+                    setBroadcastTitle(data.title);
+                    try {
+                      // Create notification record
+                      const { data: notif, error: notifError } = await (supabase.from('notifications' as any) as any)
+                        .insert({
+                          title: data.title,
+                          message: data.message,
+                          image_url: data.image_url,
+                          buttons: data.buttons,
+                          message_effect_id: data.message_effect_id,
+                          created_by: user?.id,
+                        })
+                        .select()
+                        .single();
+
+                      if (notifError) throw notifError;
+
+                      // Start broadcast
+                      const { data: result, error } = await supabase.functions.invoke('send-broadcast', {
+                        body: { notification_id: notif.id, include_unregistered: false },
+                      });
+
+                      if (error) throw error;
+                      if (result?.progress_id) {
+                        setBroadcastProgressId(result.progress_id);
+                        toast.success(`Broadcast iniciado para ${result.total || 0} usuários!`);
+                      }
+                    } catch (err: any) {
+                      toast.error('Erro ao iniciar broadcast: ' + (err.message || 'Erro desconhecido'));
+                    } finally {
+                      setBroadcastSending(false);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Progress / History */}
+              <div className="space-y-4">
+                {broadcastProgressId && (
+                  <BroadcastProgress
+                    progressId={broadcastProgressId}
+                    notificationTitle={broadcastTitle}
+                    onComplete={() => {
+                      toast.success('Broadcast concluído!');
+                      // Refresh history
+                      fetchBroadcastHistory();
+                    }}
+                    onResume={async (pid) => {
+                      const { error } = await supabase.functions.invoke('send-broadcast', {
+                        body: { resume_progress_id: pid },
+                      });
+                      if (error) toast.error('Erro ao retomar: ' + error.message);
+                      else toast.success('Broadcast retomado!');
+                    }}
+                  />
+                )}
+
+                {/* History */}
+                <div className="glass-card rounded-2xl p-5">
+                  <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                    <History className="w-5 h-5" /> Histórico
+                  </h3>
+                  {broadcastHistory.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum broadcast realizado.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                      {broadcastHistory.map((h: any) => (
+                        <div key={h.id} className="flex items-center justify-between p-3 rounded-lg glass text-sm">
+                          <div>
+                            <p className="font-medium text-foreground">{h.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(h.created_at).toLocaleDateString('pt-BR')} • {h.sent_count} enviados
+                            </p>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            h.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                            h.status === 'failed' ? 'bg-red-500/20 text-red-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {h.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
       </main>
       </div>
 
@@ -3127,6 +3274,7 @@ export default function AdminDashboard() {
           { key: "precificacao", label: "Precificação", icon: Tag, color: "text-warning", animation: "pulse" },
           { key: "meusprecos", label: "Meus Preços", icon: DollarSign, color: "text-success", animation: "float" },
           { key: "bot", label: "Bot", icon: Bot, color: "text-accent", animation: "wiggle" },
+          { key: "broadcast", label: "Broadcast", icon: Megaphone, color: "text-warning", animation: "pulse" },
           { key: "configuracoes", label: "Config", icon: Settings, color: "text-muted-foreground", animation: "spin" },
         ]}
         activeKey={tab}
