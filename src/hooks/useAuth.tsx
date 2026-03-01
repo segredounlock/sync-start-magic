@@ -50,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         if (session?.user) {
           if (!initialSessionHandled) {
-            // Skip - will be handled by getSession below
             return;
           }
           setRoleLoaded(false);
@@ -76,6 +75,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Realtime subscription for role changes
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const channel = supabase
+      .channel('user-role-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_roles', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            setRole(null);
+          } else {
+            const newRole = (payload.new as any)?.role as AppRole;
+            setRole(newRole ?? null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [session?.user?.id]);
 
   const signOut = async () => {
     try {
