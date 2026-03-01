@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { PinProtection } from "@/components/PinProtection";
 import { SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import BackupSection from "@/components/BackupSection";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
@@ -1875,7 +1876,7 @@ export default function Principal() {
               {configLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <>
+                <PinProtection configKey="adminPinApi">
                   <div className="glass-card rounded-xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg flex items-center gap-2">
                       <Smartphone className="h-5 w-5 text-primary" /> Provedor de Recarga
@@ -1931,7 +1932,7 @@ export default function Principal() {
                       {configSaving ? "Salvando..." : "Salvar Configurações"}
                     </button>
                   </div>
-                </>
+                </PinProtection>
               )}
             </motion.div>
           )}
@@ -1942,7 +1943,7 @@ export default function Principal() {
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <>
+                <PinProtection configKey="adminPinPagamentos">
                   <div className="glass-card rounded-xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg">Gateway Principal</h4>
                     <div>
@@ -2205,9 +2206,9 @@ export default function Principal() {
                             </div>
                             <p className="text-xs text-muted-foreground">Configure esta URL no painel do PixGo (Depix) para confirmação automática de pagamentos.</p>
                             <div className="flex items-center gap-2">
-                              <input type="text" readOnly value={`https://inbunrrkphfhftrlvfjj.supabase.co/functions/v1/pix-webhook?gateway=pixgo`}
+                              <input type="text" readOnly value={`https://xtkqyjruyuydlbvwduuy.supabase.co/functions/v1/pix-webhook?gateway=pixgo`}
                                 className="flex-1 px-3 py-2 rounded-md border border-input bg-muted/50 text-foreground text-xs font-mono focus:outline-none" />
-                              <button onClick={() => { navigator.clipboard.writeText(`https://inbunrrkphfhftrlvfjj.supabase.co/functions/v1/pix-webhook?gateway=pixgo`); toast.success("URL copiada!"); }}
+                              <button onClick={() => { navigator.clipboard.writeText(`https://xtkqyjruyuydlbvwduuy.supabase.co/functions/v1/pix-webhook?gateway=pixgo`); toast.success("URL copiada!"); }}
                                 className="p-2 rounded-md border border-border hover:bg-muted transition-colors text-muted-foreground shrink-0">
                                 <Copy className="h-4 w-4" />
                               </button>
@@ -2258,7 +2259,7 @@ export default function Principal() {
                       )}
                     </div>
                   )}
-                </>
+                </PinProtection>
               )}
             </motion.div>
           )}
