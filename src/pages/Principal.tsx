@@ -18,7 +18,7 @@ import {
   ArrowLeft, UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive,
-  Download, Upload, Database, CheckSquare, Square, Server,
+  Download, Upload, Database, CheckSquare, Square, Server, Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -1634,7 +1634,7 @@ export default function Principal() {
                       </div>
                       {selectedRev.telegram_username && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Activity className="h-4 w-4 shrink-0" /> Telegram: @{selectedRev.telegram_username}
+                          <Send className="h-4 w-4 shrink-0" /> Telegram: @{selectedRev.telegram_username}
                         </div>
                       )}
                       {selectedRev.whatsapp_number && (
