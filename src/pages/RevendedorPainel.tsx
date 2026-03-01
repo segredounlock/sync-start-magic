@@ -1119,7 +1119,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         transition={{ type: "spring", stiffness: 200, damping: 15 }}
                         className="w-20 h-20 rounded-full bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4 ring-2 ring-primary/20 ring-offset-2 ring-offset-background"
                       >
-                        <Smartphone className="h-9 w-9" />
+                        <motion.div
+                          animate={{ y: [0, -4, 0], scale: [1, 1.08, 1] }}
+                          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                        >
+                          <Smartphone className="h-9 w-9" />
+                        </motion.div>
                       </motion.div>
                       <h3 className="font-display text-2xl md:text-3xl font-bold text-foreground">Qual o número?</h3>
                       <p className="text-muted-foreground mt-1">Digite o DDD + Número do celular</p>
