@@ -577,7 +577,7 @@ export default function AdminDashboard() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  // Chart: Vendas & Lucro por dia
+  // Chart: Vendas & Lucro por dia (preenche todos os dias do período)
   const vendasLucroPorDia = useMemo(() => {
     const map: Record<string, { cobrado: number; custoApi: number }> = {};
     filteredRecargas.forEach(r => {
@@ -586,12 +586,22 @@ export default function AdminDashboard() {
       map[day].cobrado += r.custo;
       map[day].custoApi += Number((r as any).custo_api) || 0;
     });
-    return Object.entries(map).sort().map(([day, v]) => ({
-      day: new Date(day + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", timeZone: "America/Sao_Paulo" }),
-      vendas: v.cobrado,
-      lucro: v.cobrado - v.custoApi,
-    }));
-  }, [filteredRecargas]);
+    // Preencher todos os dias do período
+    const start = new Date(periodStart);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const days: { day: string; vendas: number; lucro: number }[] = [];
+    for (let d = new Date(start.getFullYear(), start.getMonth(), start.getDate()); d <= today; d.setDate(d.getDate() + 1)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const v = map[key] || { cobrado: 0, custoApi: 0 };
+      days.push({
+        day: d.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "America/Sao_Paulo" }),
+        vendas: v.cobrado,
+        lucro: v.cobrado - v.custoApi,
+      });
+    }
+    return days;
+  }, [filteredRecargas, periodStart]);
 
   const displayVendasLucro = vendasLucroPorDia;
 
