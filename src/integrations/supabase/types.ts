@@ -14,27 +14,161 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
+      broadcast_progress: {
+        Row: {
+          blocked_count: number
+          completed_at: string | null
+          created_at: string
+          current_batch: number
+          error_message: string | null
+          estimated_completion: string | null
+          failed_count: number
+          id: string
+          notification_id: string
+          sent_count: number
+          speed_per_second: number
+          started_at: string | null
+          status: string
+          total_batches: number
+          total_users: number
+          updated_at: string
+        }
+        Insert: {
+          blocked_count?: number
+          completed_at?: string | null
+          created_at?: string
+          current_batch?: number
+          error_message?: string | null
+          estimated_completion?: string | null
+          failed_count?: number
+          id?: string
+          notification_id: string
+          sent_count?: number
+          speed_per_second?: number
+          started_at?: string | null
+          status?: string
+          total_batches?: number
+          total_users?: number
+          updated_at?: string
+        }
+        Update: {
+          blocked_count?: number
+          completed_at?: string | null
+          created_at?: string
+          current_batch?: number
+          error_message?: string | null
+          estimated_completion?: string | null
+          failed_count?: number
+          id?: string
+          notification_id?: string
+          sent_count?: number
+          speed_per_second?: number
+          started_at?: string | null
+          status?: string
+          total_batches?: number
+          total_users?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_progress_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          buttons: Json | null
+          created_at: string
+          failed_count: number
+          id: string
+          image_url: string | null
+          message: string
+          message_effect_id: string | null
+          sent_count: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          buttons?: Json | null
+          created_at?: string
+          failed_count?: number
+          id?: string
+          image_url?: string | null
+          message: string
+          message_effect_id?: string | null
+          sent_count?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          buttons?: Json | null
+          created_at?: string
+          failed_count?: number
+          id?: string
+          image_url?: string | null
+          message?: string
+          message_effect_id?: string | null
+          sent_count?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       operadoras: {
         Row: {
           ativo: boolean
           created_at: string
           id: string
           nome: string
-          valores: number[]
+          updated_at: string
+          valores: Json
         }
         Insert: {
           ativo?: boolean
           created_at?: string
           id?: string
           nome: string
-          valores?: number[]
+          updated_at?: string
+          valores?: Json
         }
         Update: {
           ativo?: boolean
           created_at?: string
           id?: string
           nome?: string
-          valores?: number[]
+          updated_at?: string
+          valores?: Json
         }
         Relationships: []
       }
@@ -93,9 +227,8 @@ export type Database = {
           store_name: string | null
           store_primary_color: string | null
           store_secondary_color: string | null
-          telefone: string | null
           telegram_bot_token: string | null
-          telegram_id: string | null
+          telegram_id: number | null
           telegram_username: string | null
           updated_at: string
           whatsapp_number: string | null
@@ -113,9 +246,8 @@ export type Database = {
           store_name?: string | null
           store_primary_color?: string | null
           store_secondary_color?: string | null
-          telefone?: string | null
           telegram_bot_token?: string | null
-          telegram_id?: string | null
+          telegram_id?: number | null
           telegram_username?: string | null
           updated_at?: string
           whatsapp_number?: string | null
@@ -133,9 +265,8 @@ export type Database = {
           store_name?: string | null
           store_primary_color?: string | null
           store_secondary_color?: string | null
-          telefone?: string | null
           telegram_bot_token?: string | null
-          telegram_id?: string | null
+          telegram_id?: number | null
           telegram_username?: string | null
           updated_at?: string
           whatsapp_number?: string | null
@@ -175,7 +306,7 @@ export type Database = {
           telefone: string
           updated_at?: string
           user_id: string
-          valor: number
+          valor?: number
         }
         Update: {
           completed_at?: string | null
@@ -194,6 +325,7 @@ export type Database = {
       }
       reseller_config: {
         Row: {
+          created_at: string
           id: string
           key: string
           updated_at: string
@@ -201,6 +333,7 @@ export type Database = {
           value: string | null
         }
         Insert: {
+          created_at?: string
           id?: string
           key: string
           updated_at?: string
@@ -208,6 +341,7 @@ export type Database = {
           value?: string | null
         }
         Update: {
+          created_at?: string
           id?: string
           key?: string
           updated_at?: string
@@ -262,6 +396,7 @@ export type Database = {
       }
       saldos: {
         Row: {
+          created_at: string
           id: string
           tipo: string
           updated_at: string
@@ -269,6 +404,7 @@ export type Database = {
           valor: number
         }
         Insert: {
+          created_at?: string
           id?: string
           tipo?: string
           updated_at?: string
@@ -276,6 +412,7 @@ export type Database = {
           valor?: number
         }
         Update: {
+          created_at?: string
           id?: string
           tipo?: string
           updated_at?: string
@@ -286,40 +423,61 @@ export type Database = {
       }
       system_config: {
         Row: {
+          created_at: string
+          id: string
           key: string
           updated_at: string
           value: string | null
         }
         Insert: {
+          created_at?: string
+          id?: string
           key: string
           updated_at?: string
           value?: string | null
         }
         Update: {
+          created_at?: string
+          id?: string
           key?: string
           updated_at?: string
           value?: string | null
         }
         Relationships: []
       }
-      telegram_sessions: {
+      telegram_users: {
         Row: {
-          chat_id: string
-          data: Json | null
-          step: string
+          block_reason: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          is_blocked: boolean
+          is_registered: boolean
+          telegram_id: number
           updated_at: string
+          username: string | null
         }
         Insert: {
-          chat_id: string
-          data?: Json | null
-          step?: string
+          block_reason?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          is_blocked?: boolean
+          is_registered?: boolean
+          telegram_id: number
           updated_at?: string
+          username?: string | null
         }
         Update: {
-          chat_id?: string
-          data?: Json | null
-          step?: string
+          block_reason?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          is_blocked?: boolean
+          is_registered?: boolean
+          telegram_id?: number
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -332,21 +490,19 @@ export type Database = {
           module: string | null
           payment_id: string | null
           status: string
-          telegram_notified: boolean
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          amount: number
+          amount?: number
           created_at?: string
           id?: string
           metadata?: Json | null
           module?: string | null
           payment_id?: string | null
           status?: string
-          telegram_notified?: boolean
-          type: string
+          type?: string
           updated_at?: string
           user_id: string
         }
@@ -358,7 +514,6 @@ export type Database = {
           module?: string | null
           payment_id?: string | null
           status?: string
-          telegram_notified?: boolean
           type?: string
           updated_at?: string
           user_id?: string
@@ -367,18 +522,21 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          created_at: string
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: string
           user_id?: string
         }
         Relationships: []
@@ -388,16 +546,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "revendedor" | "cliente"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -524,8 +676,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "revendedor", "cliente"],
-    },
+    Enums: {},
   },
 } as const

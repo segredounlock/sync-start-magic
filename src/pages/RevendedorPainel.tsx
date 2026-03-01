@@ -155,7 +155,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         const localCatalog: CatalogCarrier[] = ops.map((op) => {
           const opGlobalRules = (globalRules || []).filter((r) => r.operadora_id === op.id);
           const opResellerRules = (resellerRules || []).filter((r: any) => r.operadora_id === op.id);
-          const values: CatalogValue[] = op.valores.map((v: number) => {
+          const valores = (op.valores as unknown as number[]) || [];
+          const values: CatalogValue[] = valores.map((v: number) => {
             // Reseller rules first, then global rules, then face value
             const resellerRule = opResellerRules.find((r: any) => r.valor_recarga === v);
             const globalRule = opGlobalRules.find((r) => r.valor_recarga === v);
