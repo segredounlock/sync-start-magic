@@ -81,15 +81,11 @@ export function PromoBanner({
 
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-foreground leading-tight flex items-center gap-1.5 flex-wrap">
-                  <span>🤖</span>
-                  <span>{title}</span>
-                  <span>🚀</span>
+                <h3 className="text-sm font-bold text-foreground leading-tight">
+                  🤖 {title} 🚀
                 </h3>
-                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
-                  <span>📱</span>
-                  <span>{subtitle}</span>
-                  <span>⚡💬</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  📱 {subtitle} ⚡💬
                 </p>
               </div>
 
