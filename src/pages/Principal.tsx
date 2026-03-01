@@ -203,7 +203,7 @@ export default function Principal() {
   const [allUsers, setAllUsers] = useState<{ id: string; active: boolean; created_at: string }[]>([]);
 
   // Report state
-  const [reportData, setReportData] = useState<{ user_id: string; nome: string | null; email: string | null; totalRecargas: number; totalVendas: number; totalCusto: number; lucro: number }[]>([]);
+  const [reportData, setReportData] = useState<{ user_id: string; nome: string | null; email: string | null; totalRecargas: number; totalValor: number; totalVendas: number; totalCusto: number; lucro: number }[]>([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("mes");
 
@@ -822,10 +822,11 @@ export default function Principal() {
         resellerPriceMap[r.user_id][`${r.operadora_id}-${r.valor_recarga}`] = { preco, custo: Number(r.custo) };
       });
 
-      const userMap: Record<string, { totalRecargas: number; totalVendas: number; totalCusto: number }> = {};
+      const userMap: Record<string, { totalRecargas: number; totalValor: number; totalVendas: number; totalCusto: number }> = {};
       (recData || []).forEach((r: any) => {
-        if (!userMap[r.user_id]) userMap[r.user_id] = { totalRecargas: 0, totalVendas: 0, totalCusto: 0 };
+        if (!userMap[r.user_id]) userMap[r.user_id] = { totalRecargas: 0, totalValor: 0, totalVendas: 0, totalCusto: 0 };
         userMap[r.user_id].totalRecargas++;
+        userMap[r.user_id].totalValor += Number(r.valor);
 
         const opId = r.operadora ? opNameToId[r.operadora] : null;
         const key = opId ? `${opId}-${r.valor}` : null;
@@ -2706,9 +2707,10 @@ export default function Principal() {
 
               {/* Summary cards */}
               {reportData.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {[
                     { label: "Revendedores", value: reportData.length, icon: Users, color: "text-primary" },
+                    { label: "Total Valor", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
                     { label: "Total Vendas", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
                     { label: "Total Custo", value: fmt(reportData.reduce((s, r) => s + r.totalCusto, 0)), icon: Wallet, color: "text-warning" },
                     { label: "Lucro Total", value: fmt(reportData.reduce((s, r) => s + r.lucro, 0)), icon: DollarSign, color: "text-success" },
@@ -2762,6 +2764,7 @@ export default function Principal() {
                         <tr className="border-b border-border bg-muted/30">
                           <th className="text-left px-4 py-3 font-medium text-muted-foreground">Revendedor</th>
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Recargas</th>
+                          <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Vendas</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Custo</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Lucro</th>
@@ -2779,6 +2782,7 @@ export default function Principal() {
                                 <p className="text-xs text-muted-foreground">{r.email}</p>
                               </td>
                               <td className="px-4 py-3 text-center font-mono text-foreground">{r.totalRecargas}</td>
+                              <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalValor)}</td>
                               <td className="px-4 py-3 text-right font-mono text-foreground">{fmt(r.totalVendas)}</td>
                               <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalCusto)}</td>
                               <td className={`px-4 py-3 text-right font-mono font-bold ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
@@ -2795,6 +2799,7 @@ export default function Principal() {
                         <tr className="bg-muted/40 font-bold">
                           <td className="px-4 py-3 text-foreground">Total</td>
                           <td className="px-4 py-3 text-center font-mono text-foreground">{reportData.reduce((s, r) => s + r.totalRecargas, 0)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(reportData.reduce((s, r) => s + r.totalValor, 0))}</td>
                           <td className="px-4 py-3 text-right font-mono text-foreground">{fmt(reportData.reduce((s, r) => s + r.totalVendas, 0))}</td>
                           <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(reportData.reduce((s, r) => s + r.totalCusto, 0))}</td>
                           <td className="px-4 py-3 text-right font-mono text-success">{fmt(reportData.reduce((s, r) => s + r.lucro, 0))}</td>
