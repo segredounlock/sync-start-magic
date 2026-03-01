@@ -156,7 +156,16 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
           const old = payload.old as any;
           if (r.status !== old?.status) {
             const profile = await getProfile(r.user_id);
-            const label = r.status === "completed" || r.status === "concluida" ? "✅ Concluída" : r.status === "falha" ? "❌ Falhou" : r.status;
+            const statusMap: Record<string, string> = {
+              completed: "✅ Concluída",
+              concluida: "✅ Concluída",
+              falha: "❌ Falhou",
+              pending: "⏳ Pendente",
+              pendente: "⏳ Pendente",
+              processing: "⚙️ Processando",
+              cancelled: "🚫 Cancelada",
+            };
+            const label = statusMap[r.status] || r.status;
             addNotification({
               id: `${r.id}-upd`,
               type: "recarga",
