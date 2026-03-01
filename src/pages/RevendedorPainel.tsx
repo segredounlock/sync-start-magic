@@ -372,64 +372,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     detectClipboard();
   }, [tab, telefone]);
 
-  // Auto-detect operator when phone reaches 11 digits
-  useEffect(() => {
-    const digits = telefone.replace(/\D/g, "");
-    if (digits.length !== 11 || selectedCarrier || digits === lastDetectedPhoneRef.current) return;
-    
-    lastDetectedPhoneRef.current = digits;
-    setDetectingOperator(true);
-    setDetectedOperatorName(null);
-
-    const detect = async () => {
-      let matched: CatalogCarrier | null = null;
-      
-      // Step 1: Try to detect operator
-      try {
-        const queryResp = await callApi("query-operator", { phoneNumber: digits });
-        if (queryResp?.success && queryResp.data && !queryResp.data.error) {
-          const operatorName = queryResp.data.carrier?.name || queryResp.data.operator || queryResp.data.operadora || queryResp.data.name || "";
-          if (operatorName) {
-            const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-            matched = catalog.find(c => normalize(c.name).includes(normalize(operatorName)) || normalize(operatorName).includes(normalize(c.name))) || null;
-            if (matched) {
-              setSelectedCarrier(matched);
-              setDetectedOperatorName(matched.name);
-              toast.success(`✅ Operadora detectada: ${matched.name}`);
-            } else {
-              setDetectedOperatorName(operatorName);
-              toast.warning(`Operadora "${operatorName}" detectada, mas não encontrada no catálogo.`);
-            }
-          }
-        }
-      } catch {
-        // silent fail - operator detection optional
-      }
-      setDetectingOperator(false);
-
-      // Step 2: Always run check-phone for cooldown/blacklist (even if operator not detected)
-      setCheckingPhone(true);
-      try {
-        const checkPayload: Record<string, string> = { phoneNumber: digits };
-        if (matched) checkPayload.carrierId = matched.carrierId;
-        const resp = await callApi("check-phone", checkPayload);
-        if (resp?.success && resp.data) {
-          const checkResult = {
-            ...resp.data,
-            message: resp.data.status === "COOLDOWN"
-              ? formatCooldownMessage(resp.data.message)
-              : (resp.data.message || "Número disponível para recarga."),
-          };
-          setPhoneCheckResult(checkResult);
-          if (checkResult.status === "CLEAR") toast.success("✅ Número disponível!");
-          else if (checkResult.status === "COOLDOWN") toast.warning(checkResult.message);
-          else if (checkResult.status === "BLACKLISTED") toast.error(checkResult.message);
-        }
-      } catch { /* ignore check-phone error */ }
-      setCheckingPhone(false);
-    };
-    detect();
-  }, [telefone, selectedCarrier, catalog, callApi]);
+   // Auto-detect removed — user selects operator manually, then clicks "Verificar"
 
   const formatPhoneDisplay = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 11);
@@ -1207,43 +1150,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             required maxLength={16}
                             className="flex-1 min-w-0 px-5 py-4 rounded-xl glass-input text-foreground placeholder:text-muted-foreground/60 text-xl tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-primary/40 font-mono transition-all"
                             placeholder="(00) 00000-0000" />
-                          <button type="button" onClick={handleCheckPhone} disabled={checkingPhone || !telefone.trim()}
-                            className="w-full sm:w-auto px-5 py-3 rounded-xl glass-card text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40 transition-all shrink-0 border border-primary/20">
-                            {checkingPhone ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Verificar"}
-                          </button>
                         </div>
-                        {phoneCheckResult && (
-                          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
-                            className={`mt-3 p-3 rounded-xl text-sm font-medium flex items-start gap-2 ${
-                              phoneCheckResult.status === "CLEAR" ? "bg-success/10 text-success border border-success/20" :
-                              phoneCheckResult.status === "COOLDOWN" ? "bg-warning/10 text-warning border border-warning/20" :
-                              "bg-destructive/10 text-destructive border border-destructive/20"
-                            }`}>
-                            <span className="mt-0.5 shrink-0">
-                            {phoneCheckResult.status === "CLEAR" ? <CheckCircle2 className="h-4 w-4" /> :
-                             phoneCheckResult.status === "COOLDOWN" ? <Clock className="h-4 w-4" /> :
-                             <AlertTriangle className="h-4 w-4" />}
-                            </span>
-                            <span className="whitespace-pre-line">{phoneCheckResult.message}</span>
-                          </motion.div>
-                        )}
                       </div>
 
                       {/* Operadora */}
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-sm font-semibold text-foreground">Operadora</label>
-                          {detectingOperator && (
-                            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5 text-xs text-primary font-medium">
-                              <Loader2 className="h-3 w-3 animate-spin" /> Detectando...
-                            </motion.span>
-                          )}
-                          {!detectingOperator && detectedOperatorName && selectedCarrier && (
-                            <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-1 text-xs text-success font-medium">
-                              <CheckCircle2 className="h-3 w-3" /> Detectada automaticamente
-                            </motion.span>
-                          )}
-                        </div>
+                        <label className="block text-sm font-semibold text-foreground mb-1.5">Operadora</label>
                         <select
                           value={selectedCarrier?.carrierId || ""}
                           onChange={(e) => {
@@ -1256,6 +1168,34 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           <option value="">Selecione...</option>
                           {catalog.map((c) => <option key={c.carrierId} value={c.carrierId}>{c.name}</option>)}
                         </select>
+
+                        {/* Check cooldown/blacklist hint - appears after selecting operator */}
+                        {selectedCarrier && telefone.replace(/\D/g, "").length >= 10 && !phoneCheckResult && (
+                          <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground flex-1">⚠️ Verifique se o número está com blacklist ou cooldown ativo antes de recarregar.</p>
+                            <button type="button" onClick={handleCheckPhone} disabled={checkingPhone}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-primary hover:bg-primary/10 border border-primary/20 transition-all shrink-0">
+                              {checkingPhone ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Verificar"}
+                            </button>
+                          </motion.div>
+                        )}
+
+                        {/* Check result display */}
+                        {phoneCheckResult && (
+                          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                            className={`mt-2 p-3 rounded-xl text-sm font-medium flex items-start gap-2 ${
+                              phoneCheckResult.status === "CLEAR" ? "bg-success/10 text-success border border-success/20" :
+                              phoneCheckResult.status === "COOLDOWN" ? "bg-warning/10 text-warning border border-warning/20" :
+                              "bg-destructive/10 text-destructive border border-destructive/20"
+                            }`}>
+                            <span className="mt-0.5 shrink-0">
+                            {phoneCheckResult.status === "CLEAR" ? <CheckCircle2 className="h-4 w-4" /> :
+                             phoneCheckResult.status === "COOLDOWN" ? <Clock className="h-4 w-4" /> :
+                             <AlertTriangle className="h-4 w-4" />}
+                            </span>
+                            <span className="whitespace-pre-line">{phoneCheckResult.message}</span>
+                          </motion.div>
+                        )}
                       </div>
 
                       {/* Extra field (ex: CPF) */}
