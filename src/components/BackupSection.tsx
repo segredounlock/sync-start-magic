@@ -10,9 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const TABLES = [
-  "profiles", "user_roles", "saldos", "operadoras", "pricing_rules",
-  "reseller_pricing_rules", "reseller_config", "recargas", "transactions",
-  "system_config", "telegram_sessions",
+  "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
+  "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
+  "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
 ];
 
 type TabKey = "dados" | "github";
@@ -100,21 +100,25 @@ export default function BackupSection() {
         "src/pages/LandingPage.tsx","src/pages/NotFound.tsx","src/pages/Principal.tsx",
         "src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/TelegramMiniApp.tsx",
         "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
-        "src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx","src/components/MobileBottomNav.tsx",
-        "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx","src/components/RealtimeNotifications.tsx",
-        "src/components/ThemeToggle.tsx",
+        "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
+        "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
+        "src/components/MobileBottomNav.tsx","src/components/PinProtection.tsx",
+        "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
+        "src/components/RealtimeDashboard.tsx","src/components/RealtimeNotifications.tsx",
+        "src/components/Skeleton.tsx","src/components/ThemeToggle.tsx",
         "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts","src/hooks/useTheme.tsx",
-        "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts",
+        "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
         "src/integrations/supabase/client.ts","src/integrations/supabase/types.ts",
         "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts","postcss.config.js","index.html","package.json","README.md",
         "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
         "supabase/functions/admin-toggle-role/index.ts",
         "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
         "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
+        "supabase/functions/cleanup-stuck-broadcasts/index.ts",
         "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
-        "supabase/functions/recarga-express/index.ts","supabase/functions/telegram-bot/index.ts",
-        "supabase/functions/telegram-miniapp/index.ts","supabase/functions/telegram-notify/index.ts",
-        "supabase/functions/telegram-setup/index.ts",
+        "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
+        "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
+        "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
       ];
       const files: { path: string; content: string }[] = [];
       for (let i = 0; i < allPaths.length; i++) {
