@@ -69,19 +69,32 @@ serve(async (req) => {
     }
 
     const backupInfo = JSON.parse(await infoFile.async("string"));
-    const results: { table: string; status: string; count: number; error?: string }[] = [];
+    const results: { table: string; status: string; count: number; skipped?: number; error?: string }[] = [];
+
+    // Get existing auth user IDs to filter FK-dependent rows
+    const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+    const validUserIds = new Set((authUsers?.users || []).map(u => u.id));
+
+    // Tables that have user_id referencing auth.users
+    const userFkTables = new Set(["profiles", "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config", "transactions"]);
+    // profiles.id references auth.users.id (not user_id)
+    const profileIdTable = "profiles";
 
     // Restore order matters due to foreign keys
     const restoreOrder = [
       "operadoras",
       "system_config",
+      "bot_settings",
+      "notifications",
+      "broadcast_progress",
+      "telegram_users",
+      "telegram_sessions",
       "profiles",
       "user_roles",
       "saldos",
       "pricing_rules",
       "reseller_pricing_rules",
       "reseller_config",
-      "telegram_sessions",
       "transactions",
       "recargas",
     ];
@@ -95,21 +108,37 @@ serve(async (req) => {
 
       try {
         const content = JSON.parse(await file.async("string"));
-        const rows = content.rows || [];
+        let rows = content.rows || [];
 
         if (rows.length === 0) {
           results.push({ table, status: "empty", count: 0 });
           continue;
         }
 
+        const originalCount = rows.length;
+
+        // Filter out rows with user_ids that don't exist in auth.users
+        if (table === profileIdTable) {
+          rows = rows.filter((row: any) => validUserIds.has(row.id));
+        } else if (userFkTables.has(table)) {
+          rows = rows.filter((row: any) => validUserIds.has(row.user_id));
+        }
+
+        const skipped = originalCount - rows.length;
+
+        if (rows.length === 0) {
+          results.push({ table, status: "skipped_fk", count: 0, skipped, error: `Todos os ${skipped} registros referenciavam usuários inexistentes` });
+          continue;
+        }
+
         // For system_config, use key as conflict target
-        if (table === "system_config") {
+        if (table === "system_config" || table === "bot_settings") {
           for (const row of rows) {
             await supabaseAdmin
-              .from("system_config")
+              .from(table)
               .upsert(row, { onConflict: "key" });
           }
-          results.push({ table, status: "restored", count: rows.length });
+          results.push({ table, status: "restored", count: rows.length, skipped });
           continue;
         }
 
@@ -120,41 +149,59 @@ serve(async (req) => {
               .from("telegram_sessions")
               .upsert(row, { onConflict: "chat_id" });
           }
-          results.push({ table, status: "restored", count: rows.length });
+          results.push({ table, status: "restored", count: rows.length, skipped });
+          continue;
+        }
+
+        // For saldos, unique on (user_id, tipo)
+        if (table === "saldos") {
+          let successCount = 0;
+          for (const row of rows) {
+            const { error } = await supabaseAdmin
+              .from("saldos")
+              .upsert(row, { onConflict: "user_id,tipo" });
+            if (!error) successCount++;
+          }
+          results.push({ table, status: "restored", count: successCount, skipped });
           continue;
         }
 
         // For all other tables, upsert in batches by id
         const batchSize = 100;
+        let totalRestored = 0;
+        let lastError: string | undefined;
+
         for (let i = 0; i < rows.length; i += batchSize) {
           const batch = rows.slice(i, i + batchSize);
-
-          // Determine conflict column
-          let onConflict = "id";
-          if (table === "saldos") {
-            // saldos has unique on (user_id, tipo)
-            for (const row of batch) {
-              await supabaseAdmin
-                .from("saldos")
-                .upsert(row, { onConflict: "user_id,tipo" });
-            }
-            continue;
-          }
-
           const { error } = await supabaseAdmin
             .from(table)
-            .upsert(batch, { onConflict });
+            .upsert(batch, { onConflict: "id" });
 
           if (error) {
             console.error(`Error restoring ${table} batch:`, error.message);
-            results.push({ table, status: "error", count: rows.length, error: error.message });
-            break;
+            // Try row by row on error
+            for (const row of batch) {
+              const { error: rowError } = await supabaseAdmin
+                .from(table)
+                .upsert(row, { onConflict: "id" });
+              if (!rowError) {
+                totalRestored++;
+              } else {
+                lastError = rowError.message;
+              }
+            }
+          } else {
+            totalRestored += batch.length;
           }
         }
 
-        if (!results.find(r => r.table === table)) {
-          results.push({ table, status: "restored", count: rows.length });
-        }
+        results.push({ 
+          table, 
+          status: totalRestored > 0 ? "restored" : "error", 
+          count: totalRestored, 
+          skipped,
+          error: lastError && totalRestored < rows.length ? `${rows.length - totalRestored} registros falharam: ${lastError}` : undefined
+        });
       } catch (err: any) {
         console.error(`Error restoring ${table}:`, err.message);
         results.push({ table, status: "error", count: 0, error: err.message });
