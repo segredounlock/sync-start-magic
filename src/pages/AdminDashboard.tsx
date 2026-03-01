@@ -587,17 +587,26 @@ export default function AdminDashboard() {
 
   const displayVendasLucro = vendasLucroPorDia;
 
-  // Chart: Novos usuários por dia
+  // Chart: Novos usuários por dia (preenche todos os dias do período)
   const novosPorDia = useMemo(() => {
     const map: Record<string, number> = {};
     revendedores.filter(r => r.created_at >= periodStart).forEach(r => {
       const day = r.created_at.split("T")[0];
       map[day] = (map[day] || 0) + 1;
     });
-    return Object.entries(map).sort().map(([day, count]) => ({
-      day: new Date(day).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-      count,
-    }));
+    // Preencher todos os dias do período
+    const start = new Date(periodStart);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const days: { day: string; count: number }[] = [];
+    for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().split("T")[0];
+      days.push({
+        day: new Date(d.getFullYear(), d.getMonth(), d.getDate()).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+        count: map[key] || 0,
+      });
+    }
+    return days;
   }, [revendedores, periodStart]);
 
   const displayNovosPorDia = novosPorDia;
