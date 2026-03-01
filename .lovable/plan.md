@@ -1,37 +1,21 @@
 
 
-## Análise dos Nomes Atuais
+## Sugestões de Melhoria nos Nomes - Admin Dashboard
 
-Olhando o dashboard na imagem, os cards atuais são:
+Analisando os 6 cards da seção "Performance Financeira & Operacional":
 
-| Atual | Problema |
-|-------|----------|
-| **Cobrado Hoje** | "Cobrado" aparece 3x, confuso |
-| **Cobrado Mês** | Igual ao de cima, só muda o período |
-| **Cobrado Total** | Mesma palavra de novo |
-| **Lucro Total** | OK, mas sem contexto de período |
-| **Recargas Hoje** | Claro ✓ |
-| **Saldo Total** | Claro ✓ |
-| **Saldo Provedor** | Claro ✓ |
-
-## Proposta de Renomeação
-
-| Atual | Novo Nome | Motivo |
-|-------|-----------|--------|
-| Cobrado Hoje | **Vendas Hoje** | Indica que é o que foi vendido/cobrado dos revendedores no dia |
-| Cobrado Mês | **Vendas do Mês** | Consistente com "Vendas Hoje" |
-| Cobrado Total | **Faturamento Total** | Diferencia do "Vendas" e indica o acumulado geral |
-| Lucro Total | **Lucro Acumulado** | Indica que é o lucro de todo o período |
-| Recargas Hoje | Sem mudança | Já está claro |
-| Saldo Total | Sem mudança | Já está claro |
-| Saldo Provedor | Sem mudança | Já está claro |
-
-## Também no Dashboard em Tempo Real
-
-O card "Cobrado Total" do `RealtimeDashboard.tsx` será renomeado para **"Vendas Hoje"** (já que mostra só o dia).
+| Atual | Sugestão | Motivo |
+|-------|----------|--------|
+| **Resultado Financeiro** | **Lucro do Período** | "Resultado" é vago; "Lucro do Período" já diz exatamente o que é |
+| **Cobrado Revend.** (sub-label) | **Vendas Revend.** | Mantém consistência com as renomeações já feitas no dashboard principal |
+| **Total Depositado** | **Depósitos Recebidos** | "Recebidos" deixa claro que é dinheiro que entrou |
+| **Saldo em Carteiras** | **Saldo dos Revendedores** | Mais direto — diz de quem é o saldo |
+| **Passivo do Sistema** (sub-label) | **Dinheiro a devolver** | "Passivo" é termo contábil; nem todo mundo entende |
+| **Volume de Recargas** | Sem mudança | Já está claro |
+| **Usuários Únicos** | **Revendedores Cadastrados** | Mais específico ao contexto do sistema |
+| **Ticket Médio** | **Valor Médio por Recarga** | Explica melhor o que o número representa |
 
 ## Alterações
 
-- **`src/pages/Principal.tsx`**: Renomear labels dos 4 cards de métricas
-- **`src/components/RealtimeDashboard.tsx`**: Renomear "Cobrado Total" para "Vendas Hoje"
+- **`src/pages/AdminDashboard.tsx`**: Renomear os labels dos 6 cards e sub-labels conforme tabela acima
 
