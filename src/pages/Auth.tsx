@@ -16,8 +16,21 @@ export default function Auth() {
   const [nome, setNome] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  if (!loading && user && role) {
-    return <Navigate to={role === "admin" ? "/principal" : role === "revendedor" ? "/painel" : "/admin"} replace />;
+  if (!loading && user) {
+    return (
+      <Navigate
+        to={
+          role === "admin"
+            ? "/principal"
+            : role === "revendedor"
+              ? "/painel"
+              : role === "cliente"
+                ? "/"
+                : "/admin"
+        }
+        replace
+      />
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
