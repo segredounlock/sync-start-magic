@@ -1629,19 +1629,19 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-3 border-t border-border">
                         <div>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Saldo</p>
-                          <p className="text-sm font-bold font-mono text-foreground">{fmt(r.saldo)}</p>
+                          <p className="text-sm font-bold font-mono text-foreground"><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" /></p>
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Vendido</p>
-                          <p className="text-sm font-bold font-mono text-success">{fmt(totalVendido)}</p>
+                          <p className="text-sm font-bold font-mono text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" /></p>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Recargas</p>
-                          <p className="text-sm font-bold text-foreground">{recCount}</p>
+                          <p className="text-sm font-bold text-foreground"><AnimatedInt value={recCount} /></p>
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Hoje</p>
-                          <p className="text-sm font-bold text-primary">{recHoje}</p>
+                          <p className="text-sm font-bold text-primary"><AnimatedInt value={recHoje} /></p>
                         </div>
                       </div>
                       {ultimaRec && (
@@ -1715,10 +1715,10 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center font-mono font-medium text-foreground">{fmt(r.saldo)}</td>
-                          <td className="px-4 py-3 text-center text-foreground">{recCount}</td>
-                          <td className="px-4 py-3 text-center font-medium text-primary">{recHoje}</td>
-                          <td className="px-4 py-3 text-center font-mono font-medium text-success">{fmt(totalVendido)}</td>
+                          <td className="px-4 py-3 text-center font-mono font-medium text-foreground"><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" /></td>
+                          <td className="px-4 py-3 text-center text-foreground"><AnimatedInt value={recCount} /></td>
+                          <td className="px-4 py-3 text-center font-medium text-primary"><AnimatedInt value={recHoje} /></td>
+                          <td className="px-4 py-3 text-center font-mono font-medium text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" /></td>
                           <td className="px-4 py-3 text-center">
                             {ultimaRec ? (
                               <div className="text-xs">
