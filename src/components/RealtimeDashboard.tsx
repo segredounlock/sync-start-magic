@@ -7,6 +7,7 @@ import {
   Smartphone, Clock, CheckCircle2, XCircle, AlertTriangle,
   TrendingUp, Activity, Zap, RefreshCw,
 } from "lucide-react";
+import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 
 interface Recarga {
   id: string;
@@ -201,7 +202,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
               </div>
               <span className="text-xs text-muted-foreground">{c.label}</span>
             </div>
-            <p className="text-2xl font-black text-foreground">{c.value}</p>
+            <AnimatedInt value={Number(c.value)} className="text-2xl font-black text-foreground" />
           </motion.div>
         ))}
       </div>
@@ -213,14 +214,14 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
             <TrendingUp className="h-4 w-4 text-success" />
             <span className="text-xs text-muted-foreground">Valor Total</span>
           </div>
-          <p className="text-xl font-bold text-success">{fmt(stats.totalValue)}</p>
+          <AnimatedCounter value={stats.totalValue} prefix="R$&nbsp;" className="text-xl font-bold text-success" />
         </div>
         <div className="glass-card rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4 text-primary" />
             <span className="text-xs text-muted-foreground">Lucro Estimado</span>
           </div>
-          <p className="text-xl font-bold text-primary">{fmt(stats.totalValue - stats.totalCost)}</p>
+          <AnimatedCounter value={stats.totalValue - stats.totalCost} prefix="R$&nbsp;" className="text-xl font-bold text-primary" />
         </div>
       </div>
 
