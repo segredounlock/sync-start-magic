@@ -1,38 +1,21 @@
 
 
-## Plano: Migrar GITHUB_PAT e TELEGRAM_BOT_TOKEN para system_config
+## Plano: Remover referências ao Lovable
 
-### Situacao Atual
+Encontrei referências apenas no `index.html` — as URLs das imagens de preview (og:image e twitter:image) contêm "lovable.app" no path.
 
-| Secret | system_config | Edge Functions |
-|--------|--------------|----------------|
-| `TELEGRAM_BOT_TOKEN` | Ja existe como `telegramBotToken` | `telegram-bot` e `telegram-notify` ja leem do DB. `telegram-setup` ainda usa so env. |
-| `GITHUB_PAT` | Nao existe | `github-sync` usa so env |
+### Alteração
 
-### Alteracoes
+**`index.html`** — Substituir as URLs de og:image e twitter:image por uma imagem hospedada no seu próprio domínio ou remover as tags temporariamente até ter uma imagem própria hospedada em `recargasbrasill.com`.
 
-**1. Inserir `githubPat` na tabela system_config**
-- Inserir registro com key `githubPat` e valor vazio (o admin preenchera pelo painel)
+Opções:
+1. Gerar um screenshot/banner e hospedar no domínio próprio
+2. Remover as meta tags de imagem por enquanto (perde preview em redes sociais)
+3. Manter a URL do R2 (CDN) que já não expõe "lovable" de forma visível ao usuário final — o "lovable.app" aparece apenas no nome do arquivo interno do CDN
 
-**2. Atualizar `github-sync/index.ts`**
-- Adicionar consulta a `system_config` com key `githubPat` antes de usar `Deno.env.get("GITHUB_PAT")`
-- Fallback: DB primeiro, env depois
+Além disso, você deve desativar o badge "Edit in Lovable" nas configurações do projeto: **Settings → Hide 'Lovable' Badge**.
 
-**3. Atualizar `telegram-setup/index.ts`**
-- Adicionar consulta a `system_config` com key `telegramBotToken` antes de usar env
-- Prioridade: token do body (payload) > DB > env
+### Detalhes Técnicos
 
-**4. Adicionar campos no painel Admin para gerenciar esses secrets**
-- Na pagina `AdminDashboard.tsx`, adicionar inputs para `githubPat` e `telegramBotToken` na secao de configuracoes, salvando direto em `system_config`
-
-### Detalhes Tecnicos
-
-- As Edge Functions continuarao com fallback para `Deno.env.get()` caso o valor nao exista no DB, garantindo retrocompatibilidade
-- Os secrets no Cloud podem ser removidos futuramente quando os valores estiverem persistidos no DB
-- `telegram-bot` e `telegram-notify` ja estao corretos, nenhuma alteracao necessaria
-
-### Arquivos Modificados
-- `supabase/functions/github-sync/index.ts`
-- `supabase/functions/telegram-setup/index.ts`  
-- `src/pages/AdminDashboard.tsx` (adicionar campos de config)
+As URLs atuais usam o CDN `pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev` com um nome de arquivo que contém `lovable.app`. A solução mais limpa é substituir por uma imagem própria hospedada no seu domínio. Posso gerar uma imagem de preview e atualizar as meta tags.
 
