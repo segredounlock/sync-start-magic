@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Clock, XCircle, Smartphone } from "lucide-react";
 
@@ -15,24 +15,43 @@ interface TickerRecarga {
 
 export default function RecargasTicker() {
   const [recargas, setRecargas] = useState<TickerRecarga[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const nameCache = useRef<Map<string, string>>(new Map());
 
   const fetchRecargas = useCallback(async () => {
-    const { data } = await supabase
-      .from("recargas")
-      .select("id, telefone, operadora, valor, status, created_at, user_id")
-      .order("created_at", { ascending: false })
-      .limit(30);
-    if (!data || data.length === 0) { setRecargas([]); return; }
+    try {
+      const { data } = await supabase
+        .from("recargas")
+        .select("id, telefone, operadora, valor, status, created_at, user_id")
+        .order("created_at", { ascending: false })
+        .limit(30);
 
-    // Fetch user names
-    const userIds = [...new Set(data.map(r => r.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, nome")
-      .in("id", userIds);
-    const nameMap = new Map((profiles || []).map(p => [p.id, p.nome || "Usuário"]));
+      if (!data || data.length === 0) {
+        setRecargas([]);
+        setInitialLoading(false);
+        return;
+      }
 
-    setRecargas(data.map(r => ({ ...r, userName: nameMap.get(r.user_id) || "Usuário" })));
+      // Only fetch names we don't have cached yet
+      const userIds = [...new Set(data.map(r => r.user_id))];
+      const uncachedIds = userIds.filter(id => !nameCache.current.has(id));
+
+      if (uncachedIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, nome")
+          .in("id", uncachedIds);
+        (profiles || []).forEach(p => nameCache.current.set(p.id, p.nome || "Usuário"));
+      }
+
+      setRecargas(data.map(r => ({
+        ...r,
+        userName: nameCache.current.get(r.user_id) || "Usuário",
+      })));
+    } catch {
+      // silent
+    }
+    setInitialLoading(false);
   }, []);
 
   useEffect(() => { fetchRecargas(); }, [fetchRecargas]);
@@ -65,6 +84,25 @@ export default function RecargasTicker() {
   const fmtTime = (d: string) => {
     try { return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
   };
+
+  // Loading skeleton
+  if (initialLoading) {
+    return (
+      <div className="bg-card backdrop-blur-md border-b border-border">
+        <div className="flex items-center h-8">
+          <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full">
+            <Smartphone className="h-3.5 w-3.5 text-primary animate-pulse" />
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
+          </div>
+          <div className="flex-1 px-3 flex items-center gap-2">
+            <div className="h-3 w-20 bg-muted rounded animate-pulse" />
+            <div className="h-3 w-16 bg-muted rounded animate-pulse hidden sm:block" />
+            <div className="h-3 w-24 bg-muted rounded animate-pulse hidden sm:block" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (recargas.length === 0) {
     return (
