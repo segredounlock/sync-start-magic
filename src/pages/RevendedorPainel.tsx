@@ -776,7 +776,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <div className="glass-card rounded-lg p-3 flex items-center gap-3 rgb-border">
               <AvatarDisplay />
               <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground truncate uppercase flex items-center gap-1.5">
+                <p className="text-sm font-bold text-foreground truncate uppercase flex items-center gap-1.5 shimmer-letters">
                   {userLabel}
                   {role === "admin" && (
                     <svg className="h-4 w-4 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor" style={{ animationName: 'spin-wobble' }}>
