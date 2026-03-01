@@ -2710,7 +2710,7 @@ export default function Principal() {
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {[
                     { label: "Revendedores", value: reportData.length, icon: Users, color: "text-primary" },
-                    { label: "Total Valor", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
+                    { label: "Total Recarga", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
                     { label: "Total Custo", value: fmt(reportData.reduce((s, r) => s + r.totalCusto, 0)), icon: Wallet, color: "text-warning" },
                     { label: "Total Vendas", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
                     { label: "Lucro Total", value: fmt(reportData.reduce((s, r) => s + r.lucro, 0)), icon: DollarSign, color: "text-success" },
