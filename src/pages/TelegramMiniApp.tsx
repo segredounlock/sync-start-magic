@@ -1141,38 +1141,46 @@ export default function TelegramMiniApp() {
                 </>
               )}
 
-              {recargaStep === "phone" && recargas.length > 0 && (
+              {recargaStep === "phone" && (
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-sm" style={st.text}>Últimas Recargas</h3>
-                    <button onClick={() => setSection("historico")} className="text-xs" style={st.link}>Ver todas</button>
+                    {recargas.length > 0 && (
+                      <button onClick={() => setSection("historico")} className="text-xs" style={st.link}>Ver todas</button>
+                    )}
                   </div>
-                  {recargas.slice(0, 5).map((r, i) => (
-                    <motion.div
-                      key={r.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="rounded-xl p-3.5 flex items-center justify-between"
-                      style={{ ...st.secondaryBg, border: st.borderSub }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={st.bg}>
-                          <Smartphone className="w-5 h-5" style={st.link} />
+                  {recargas.length === 0 ? (
+                    <div className="rounded-xl p-4 text-center" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                      <p className="text-sm" style={st.hint}>Nenhuma recarga realizada ainda</p>
+                    </div>
+                  ) : (
+                    recargas.slice(0, 5).map((r, i) => (
+                      <motion.div
+                        key={r.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="rounded-xl p-3.5 flex items-center justify-between"
+                        style={{ ...st.secondaryBg, border: st.borderSub }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={st.bg}>
+                            <Smartphone className="w-5 h-5" style={st.link} />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm" style={st.text}>{r.operadora || "—"}</p>
+                            <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-sm" style={st.text}>{r.operadora || "—"}</p>
-                          <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
+                        <div className="text-right">
+                          <p className="font-bold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
+                          <p className="text-[11px] font-medium" style={{ color: r.status === "completed" ? "var(--tg-link)" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
+                            {r.status === "completed" ? "Comprovante" : r.status === "pending" ? "Processando" : "Falha"}
+                          </p>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
-                        <p className="text-[11px] font-medium" style={{ color: r.status === "completed" ? "var(--tg-link)" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
-                          {r.status === "completed" ? "Comprovante" : r.status === "pending" ? "Processando" : "Falha"}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    ))
+                  )}
                 </div>
               )}
             </motion.div>
