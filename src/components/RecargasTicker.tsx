@@ -1,0 +1,92 @@
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle2, Clock, XCircle, Smartphone } from "lucide-react";
+
+interface TickerRecarga {
+  id: string;
+  telefone: string;
+  operadora: string | null;
+  valor: number;
+  status: string;
+  created_at: string;
+}
+
+interface Props {
+  userId?: string;
+}
+
+export default function RecargasTicker({ userId }: Props) {
+  const [recargas, setRecargas] = useState<TickerRecarga[]>([]);
+
+  const fetch = useCallback(async () => {
+    let q = supabase
+      .from("recargas")
+      .select("id, telefone, operadora, valor, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (userId) q = q.eq("user_id", userId);
+    const { data } = await q;
+    setRecargas(data || []);
+  }, [userId]);
+
+  useEffect(() => { fetch(); }, [fetch]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel(`ticker-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "recargas", filter: `user_id=eq.${userId}` }, () => fetch())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId, fetch]);
+
+  if (recargas.length === 0) return null;
+
+  const statusIcon = (s: string) => {
+    if (s === "completed" || s === "concluida") return <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />;
+    if (s === "pending") return <Clock className="h-3.5 w-3.5 text-warning shrink-0 animate-pulse" />;
+    if (s === "falha") return <XCircle className="h-3.5 w-3.5 text-destructive shrink-0" />;
+    return null;
+  };
+
+  const opColor = (op: string | null) => {
+    if (!op) return "text-muted-foreground";
+    const n = op.toLowerCase();
+    if (n.includes("claro")) return "text-red-400";
+    if (n.includes("tim")) return "text-blue-400";
+    if (n.includes("vivo")) return "text-purple-400";
+    if (n.includes("oi")) return "text-yellow-400";
+    return "text-primary";
+  };
+
+  const fmtTime = (d: string) => {
+    try { return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
+  };
+
+  const items = recargas.map((r) => (
+    <span key={r.id} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
+      {statusIcon(r.status)}
+      <span className={`font-semibold text-xs ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
+      <span className="text-xs text-muted-foreground font-mono">{r.telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
+      <span className="text-xs font-bold text-foreground">R$ {Number(r.valor).toFixed(2)}</span>
+      <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
+    </span>
+  ));
+
+  return (
+    <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-t border-border overflow-hidden">
+      <div className="flex items-center h-8">
+        <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full">
+          <Smartphone className="h-3.5 w-3.5 text-primary" />
+          <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
+        </div>
+        <div className="overflow-hidden flex-1">
+          <div className="ticker-scroll flex items-center">
+            {items}
+            {items}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

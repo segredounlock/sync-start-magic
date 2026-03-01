@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
@@ -696,7 +697,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   );
 
   return (
-    <div className="min-h-screen md:flex">
+    <div className="min-h-screen md:flex pb-8">
+      <RecargasTicker userId={user?.id} />
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
         <>
