@@ -2711,8 +2711,8 @@ export default function Principal() {
                   {[
                     { label: "Revendedores", value: reportData.length, icon: Users, color: "text-primary" },
                     { label: "Total Valor", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
-                    { label: "Total Vendas", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
                     { label: "Total Custo", value: fmt(reportData.reduce((s, r) => s + r.totalCusto, 0)), icon: Wallet, color: "text-warning" },
+                    { label: "Total Vendas", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
                     { label: "Lucro Total", value: fmt(reportData.reduce((s, r) => s + r.lucro, 0)), icon: DollarSign, color: "text-success" },
                   ].map((card, i) => (
                     <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -2765,8 +2765,8 @@ export default function Principal() {
                           <th className="text-left px-4 py-3 font-medium text-muted-foreground">Revendedor</th>
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Recargas</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
-                          <th className="text-right px-4 py-3 font-medium text-muted-foreground">Vendas</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Custo</th>
+                          <th className="text-right px-4 py-3 font-medium text-muted-foreground">Vendas</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Lucro</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Margem</th>
                         </tr>
@@ -2783,8 +2783,8 @@ export default function Principal() {
                               </td>
                               <td className="px-4 py-3 text-center font-mono text-foreground">{r.totalRecargas}</td>
                               <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalValor)}</td>
-                              <td className="px-4 py-3 text-right font-mono text-foreground">{fmt(r.totalVendas)}</td>
                               <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalCusto)}</td>
+                              <td className="px-4 py-3 text-right font-mono text-foreground">{fmt(r.totalVendas)}</td>
                               <td className={`px-4 py-3 text-right font-mono font-bold ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                                 {fmt(r.lucro)}
                               </td>
@@ -2800,8 +2800,8 @@ export default function Principal() {
                           <td className="px-4 py-3 text-foreground">Total</td>
                           <td className="px-4 py-3 text-center font-mono text-foreground">{reportData.reduce((s, r) => s + r.totalRecargas, 0)}</td>
                           <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(reportData.reduce((s, r) => s + r.totalValor, 0))}</td>
-                          <td className="px-4 py-3 text-right font-mono text-foreground">{fmt(reportData.reduce((s, r) => s + r.totalVendas, 0))}</td>
                           <td className="px-4 py-3 text-right font-mono text-muted-foreground">{fmt(reportData.reduce((s, r) => s + r.totalCusto, 0))}</td>
+                          <td className="px-4 py-3 text-right font-mono text-foreground">{fmt(reportData.reduce((s, r) => s + r.totalVendas, 0))}</td>
                           <td className="px-4 py-3 text-right font-mono text-success">{fmt(reportData.reduce((s, r) => s + r.lucro, 0))}</td>
                           <td className="px-4 py-3 text-right font-mono text-success">
                             {(() => { const tv = reportData.reduce((s, r) => s + r.totalVendas, 0); const tl = reportData.reduce((s, r) => s + r.lucro, 0); return tv > 0 ? `${((tl / tv) * 100).toFixed(1)}%` : "—"; })()}
