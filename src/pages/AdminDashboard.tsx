@@ -364,12 +364,26 @@ export default function AdminDashboard() {
         allSaldos?.forEach(s => { saldoMap[s.user_id] = Number(s.valor); });
 
         if (user?.id) setMeuSaldo(saldoMap[user.id] ?? 0);
-        const list: Revendedor[] = (allProfilesData || []).map(p => ({
-          id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
-          saldo: saldoMap[p.id] ?? 0,
-          role: roleMap[p.id] || "user",
-          avatar_url: (p as any).avatar_url || null,
-        }));
+        const list: Revendedor[] = (allProfilesData || []).map(p => {
+          const normalizedRole = String(roleMap[p.id] || "").toLowerCase();
+          const resolvedRole =
+            normalizedRole === "user"
+              ? "usuario"
+              : ["admin", "revendedor", "cliente", "usuario"].includes(normalizedRole)
+                ? normalizedRole
+                : "sem_role";
+
+          return {
+            id: p.id,
+            nome: p.nome,
+            email: p.email,
+            active: p.active,
+            created_at: p.created_at,
+            saldo: saldoMap[p.id] ?? 0,
+            role: resolvedRole,
+            avatar_url: (p as any).avatar_url || null,
+          };
+        });
         setRevendedores(list);
 
         const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
@@ -1765,6 +1779,8 @@ export default function AdminDashboard() {
                         ? { label: "REVENDEDOR", cls: "bg-success/20 text-success" }
                         : r.role === "cliente"
                         ? { label: "CLIENTE", cls: "bg-primary/20 text-primary" }
+                        : r.role === "usuario"
+                        ? { label: "USUÁRIO", cls: "bg-accent/20 text-accent" }
                         : { label: "SEM FUNÇÃO", cls: "bg-muted text-muted-foreground" };
                       return (
                         <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
