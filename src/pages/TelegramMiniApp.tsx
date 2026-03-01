@@ -1438,7 +1438,20 @@ export default function TelegramMiniApp() {
               </motion.div>
 
               <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                <p className="text-[11px] uppercase tracking-wider mb-1" style={st.hint}>Saldo de Revenda</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <motion.svg
+                    width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ color: "rgb(34,197,94)" }}
+                    animate={{ rotateY: [0, 180, 360], scale: [1, 1.15, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+                  </motion.svg>
+                  <p className="text-[11px] uppercase tracking-wider" style={st.hint}>Saldo de Revenda</p>
+                </div>
                 <p className="text-2xl font-bold" style={st.green}>{formatCurrency(saldo)}</p>
               </div>
               <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm transition"
