@@ -26,7 +26,11 @@ const STATUS_LABEL: Record<string, { icon: string; cls: string }> = {
   completed: { icon: "✓", cls: "bg-success/15 text-success" },
   concluida: { icon: "✓", cls: "bg-success/15 text-success" },
   paid: { icon: "✓", cls: "bg-success/15 text-success" },
+  pending: { icon: "⏳", cls: "bg-warning/15 text-warning" },
+  pendente: { icon: "⏳", cls: "bg-warning/15 text-warning" },
+  processing: { icon: "⚙️", cls: "bg-primary/15 text-primary" },
   falha: { icon: "✗", cls: "bg-destructive/15 text-destructive" },
+  cancelled: { icon: "🚫", cls: "bg-destructive/15 text-destructive" },
   new: { icon: "●", cls: "bg-primary/15 text-primary" },
 };
 
