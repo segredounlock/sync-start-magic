@@ -2084,8 +2084,8 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
           <motion.div key={t.id} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
             className="px-5 py-3 border-b border-border last:border-0 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${t.status === "completed" ? "bg-success/15" : "bg-warning/15"}`}>
-                {t.status === "completed" ? <AnimatedCheck size={18} className="text-success" /> : <Loader2 className="h-4 w-4 text-warning animate-spin" />}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${t.status === "completed" ? "bg-success/15" : t.status === "expired" ? "bg-destructive/15" : "bg-warning/15"}`}>
+                {t.status === "completed" ? <AnimatedCheck size={18} className="text-success" /> : t.status === "expired" ? <span className="text-destructive text-sm">✕</span> : <Loader2 className="h-4 w-4 text-warning animate-spin" />}
               </div>
               <div>
                 <p className="font-medium text-foreground text-sm">Depósito PIX</p>
@@ -2093,9 +2093,9 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
               </div>
             </div>
             <div className="text-right">
-              <p className={`font-bold ${t.status === "completed" ? "text-success" : "text-warning"}`}>+{fmt(t.amount)}</p>
-              <span className={`text-[10px] font-semibold uppercase tracking-wide ${t.status === "completed" ? "text-success" : "text-warning"}`}>
-                {t.status === "completed" ? "✓ Confirmado" : "⏳ Pendente"}
+              <p className={`font-bold ${t.status === "completed" ? "text-success" : t.status === "expired" ? "text-destructive" : "text-warning"}`}>+{fmt(t.amount)}</p>
+              <span className={`text-[10px] font-semibold uppercase tracking-wide ${t.status === "completed" ? "text-success" : t.status === "expired" ? "text-destructive" : "text-warning"}`}>
+                {t.status === "completed" ? "✓ Confirmado" : t.status === "expired" ? "✕ Expirado" : "⏳ Pendente"}
               </span>
             </div>
           </motion.div>
