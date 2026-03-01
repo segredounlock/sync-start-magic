@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Bot } from "lucide-react";
+import { X, Send, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 interface PromoBannerProps {
@@ -32,76 +32,66 @@ export function PromoBanner({
       <AnimatePresence>
         {!dismissed && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-lg backdrop-blur-sm bg-background/95 cursor-pointer"
+            className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-xl cursor-pointer group"
             onClick={handleBannerClick}
           >
-            {/* Animated gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-accent/10 to-primary/15 animate-gradient-x" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.15),transparent_60%)]" />
+            {/* Multi-layer gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/15" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-gradient-x" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.12),transparent_70%)]" />
             
-            {/* Floating Telegram-themed particles */}
-            <motion.div
-              animate={{ y: [0, -8, 0], x: [0, 4, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-3 right-20 opacity-30"
-            >
-              <Send className="h-5 w-5 text-primary" />
-            </motion.div>
-            <motion.div
-              animate={{ y: [0, 6, 0], x: [0, -3, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute bottom-3 left-8 opacity-20"
-            >
-              <MessageCircle className="h-4 w-4 text-accent" />
-            </motion.div>
-            <motion.div
-              animate={{ y: [0, -5, 0], rotate: [0, 10, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-              className="absolute top-4 left-[30%] opacity-20"
-            >
-              <Bot className="h-4 w-4 text-primary" />
-            </motion.div>
+            {/* Subtle shimmer effect on hover */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
             {/* Content */}
             <div className="relative px-5 py-4 flex items-center gap-4">
-              {/* Telegram Icon */}
+              {/* Icon */}
               <motion.div
-                animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="shrink-0 w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center"
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                className="shrink-0 w-12 h-12 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center shadow-sm"
               >
-                <Send className="h-6 w-6 text-primary" />
+                <Send className="h-5 w-5 text-primary" />
               </motion.div>
 
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm md:text-base font-bold text-foreground leading-tight">
+                <h3 className="text-sm md:text-base font-bold text-foreground leading-tight flex items-center gap-1.5">
                   {title}
                 </h3>
-                <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5 leading-relaxed">
                   {subtitle}
                 </p>
               </div>
 
-              {/* Close */}
-              <button
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDismissed(true); onClose?.(); }}
-                className="shrink-0 p-2 rounded-xl hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              {/* CTA arrow + Close */}
+              <div className="shrink-0 flex items-center gap-1">
+                <motion.div
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-primary/60 hidden sm:block"
+                >
+                  <Send className="h-4 w-4" />
+                </motion.div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDismissed(true); onClose?.(); }}
+                  className="p-1.5 rounded-xl hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Animated bottom bar */}
+            {/* Bottom accent line */}
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-              className="h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent origin-left"
+              transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+              className="h-0.5 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40 origin-left"
             />
           </motion.div>
         )}

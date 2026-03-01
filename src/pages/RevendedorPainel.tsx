@@ -343,7 +343,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     supabase.from("system_config").select("key, value").in("key", ["bannerEnabled", "bannerTitle", "bannerSubtitle", "bannerLink"]).then(({ data }) => {
       const map: Record<string, string> = {};
       data?.forEach(r => { map[r.key] = r.value || ""; });
-      setBannerConfig({ enabled: map.bannerEnabled !== "false", title: map.bannerTitle || "", subtitle: map.bannerSubtitle || "", link: map.bannerLink || "" });
+      setBannerConfig({ enabled: map.bannerEnabled === "true", title: map.bannerTitle || "", subtitle: map.bannerSubtitle || "", link: map.bannerLink || "" });
     });
   }, []);
   useEffect(() => { if (tab === "extrato" || tab === "addSaldo") fetchTransactions(); }, [tab, fetchTransactions]);

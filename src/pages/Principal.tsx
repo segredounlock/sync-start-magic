@@ -2747,14 +2747,24 @@ export default function Principal() {
                       <Zap className="h-4 w-4 text-warning" /> 📢 Banner Promocional
                     </h4>
                     <button
-                      onClick={() => setGlobalConfig(prev => ({ ...prev, bannerEnabled: prev.bannerEnabled === "false" ? "true" : "false" }))}
+                      onClick={async () => {
+                        const newVal = globalConfig.bannerEnabled === "true" ? "false" : "true";
+                        setGlobalConfig(prev => ({ ...prev, bannerEnabled: newVal }));
+                        try {
+                          await supabase.from("system_config").upsert({ key: "bannerEnabled", value: newVal, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                          toast.success(newVal === "true" ? "Banner ativado!" : "Banner desativado!");
+                        } catch {
+                          toast.error("Erro ao alterar banner");
+                          setGlobalConfig(prev => ({ ...prev, bannerEnabled: globalConfig.bannerEnabled }));
+                        }
+                      }}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                        globalConfig.bannerEnabled !== "false"
+                        globalConfig.bannerEnabled === "true"
                           ? "bg-success/15 text-success"
                           : "bg-muted/60 text-muted-foreground"
                       }`}
                     >
-                      {globalConfig.bannerEnabled !== "false" ? (
+                      {globalConfig.bannerEnabled === "true" ? (
                         <><ToggleRight className="h-4 w-4" /> Ativo</>
                       ) : (
                         <><ToggleLeft className="h-4 w-4" /> Inativo</>
