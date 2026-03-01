@@ -29,7 +29,7 @@ interface DashboardStats {
 }
 
 interface Props {
-  userId: string;
+  userId?: string;
   fmt: (v: number) => string;
 }
 
@@ -41,13 +41,14 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
 
   const fetchRecargas = useCallback(async () => {
     const today = new Date().toISOString().split("T")[0];
-    const { data } = await supabase
+    let query = supabase
       .from("recargas")
       .select("id, telefone, operadora, valor, custo, status, created_at, completed_at")
-      .eq("user_id", userId)
       .gte("created_at", today)
       .order("created_at", { ascending: false })
       .limit(100);
+    if (userId) query = query.eq("user_id", userId);
+    const { data } = await query;
     setRecargas(data || []);
     setLoading(false);
   }, [userId]);
@@ -58,24 +59,26 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
 
   // Realtime subscription
   useEffect(() => {
+    const channelConfig: any = {
+      event: "INSERT" as const,
+      schema: "public",
+      table: "recargas",
+      ...(userId ? { filter: `user_id=eq.${userId}` } : {}),
+    };
+    const updateConfig: any = {
+      event: "UPDATE" as const,
+      schema: "public",
+      table: "recargas",
+      ...(userId ? { filter: `user_id=eq.${userId}` } : {}),
+    };
     const channel = supabase
-      .channel(`dashboard-recargas-${userId}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "recargas",
-        filter: `user_id=eq.${userId}`,
-      }, (payload) => {
+      .channel(`dashboard-recargas-${userId || "all"}`)
+      .on("postgres_changes", channelConfig, (payload: any) => {
         const row = payload.new as any;
         setRecargas(prev => [row, ...prev].slice(0, 100));
         blinkLive();
       })
-      .on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "recargas",
-        filter: `user_id=eq.${userId}`,
-      }, (payload) => {
+      .on("postgres_changes", updateConfig, (payload: any) => {
         const row = payload.new as any;
         setRecargas(prev => prev.map(r => r.id === row.id ? { ...r, ...row } : r));
         blinkLive();
