@@ -212,6 +212,10 @@ Deno.serve(async (req) => {
           throw new Error("carrierId, phoneNumber e valueId são obrigatórios");
         }
 
+        // Helper functions
+        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
         // Determine user role
         const { data: roleData } = await adminClient
           .from("user_roles")
@@ -241,13 +245,46 @@ Deno.serve(async (req) => {
 
         const userBalance = Number(saldoData?.valor) || 0;
 
-        // Get API catalog cost (base cost for the API call)
+        // Get API catalog
         const catalogResp = await proxyGet(apiKey, "/catalog");
+
+        // Resolve carrierId: if UUID (from local DB), convert to API carrierId
+        let resolvedCarrierId = carrierId;
+        let operadoraId: string = carrierId; // local DB operadora UUID
+        
+        if (isUuid(carrierId)) {
+          // carrierId is a local UUID - resolve to API carrierId via name matching
+          operadoraId = carrierId;
+          try {
+            const { data: opData } = await adminClient.from("operadoras").select("nome").eq("id", carrierId).single();
+            if (opData?.nome && catalogResp?.success && catalogResp.data) {
+              const matched = catalogResp.data.find((c: any) => normalize(c.name) === normalize(opData.nome));
+              if (matched) resolvedCarrierId = matched.carrierId;
+            }
+          } catch { /* fallback to original */ }
+        } else {
+          // carrierId is already an API carrierId - find local operadora UUID
+          const { data: allOps } = await adminClient.from("operadoras").select("id, nome").eq("ativo", true);
+          if (allOps && allOps.length > 0) {
+            let carrierName = carrierId;
+            if (catalogResp?.success && catalogResp.data) {
+              const matchedCarrier = catalogResp.data.find((c: any) => c.carrierId === carrierId);
+              if (matchedCarrier?.name) carrierName = matchedCarrier.name;
+            }
+            const normalizedTarget = normalize(carrierName);
+            const matched = allOps.find((op: any) => normalize(op.nome) === normalizedTarget);
+            if (matched) operadoraId = matched.id;
+          }
+        }
+
+        console.log(`recharge: carrierId=${carrierId} resolvedCarrierId=${resolvedCarrierId} operadoraId=${operadoraId} valueId=${valueId}`);
+
+        // Get API catalog cost using resolved carrierId
         let apiCost = 0;
         let catalogValue = 0;
         if (catalogResp?.success && catalogResp.data) {
           for (const carrier of catalogResp.data) {
-            if (carrier.carrierId === carrierId) {
+            if (carrier.carrierId === resolvedCarrierId) {
               const valueObj = carrier.values?.find((v: any) => v.valueId === valueId);
               if (valueObj) {
                 apiCost = valueObj.cost;
@@ -262,29 +299,6 @@ Deno.serve(async (req) => {
 
         // Determine the actual cost to charge the user based on their role's pricing rules
         let chargedCost = apiCost; // default to API cost
-
-        // Try to find operadora_id from carrierId - use name normalization like telegram-bot
-        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-        const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-        
-        let operadoraId: string = carrierId;
-        if (isUuid(carrierId)) {
-          operadoraId = carrierId;
-        } else {
-          // Find by matching carrier name from catalog against operadoras table
-          const { data: allOps } = await adminClient.from("operadoras").select("id, nome").eq("ativo", true);
-          if (allOps && allOps.length > 0) {
-            // Try to get carrier name from catalog
-            let carrierName = carrierId;
-            if (catalogResp?.success && catalogResp.data) {
-              const matchedCarrier = catalogResp.data.find((c: any) => c.carrierId === carrierId);
-              if (matchedCarrier?.name) carrierName = matchedCarrier.name;
-            }
-            const normalizedTarget = normalize(carrierName);
-            const matched = allOps.find((op: any) => normalize(op.nome) === normalizedTarget);
-            if (matched) operadoraId = matched.id;
-          }
-        }
 
         if (userRole === "admin") {
           // Admin uses pricing_rules (global)
@@ -361,7 +375,7 @@ Deno.serve(async (req) => {
 
         // Create recharge via API
         const rechargeBody: Record<string, unknown> = {
-          carrierId,
+          carrierId: resolvedCarrierId,
           phoneNumber,
           valueId,
         };
