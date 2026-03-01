@@ -134,11 +134,44 @@ export default function TelegramMiniApp() {
     document.documentElement.style.height = "100%";
     document.body.style.height = "100%";
     document.body.style.overflow = "hidden";
-    
+
+    // Prevent zoom: update viewport meta tag
+    let viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+    if (!viewportMeta) {
+      viewportMeta = document.createElement("meta");
+      viewportMeta.name = "viewport";
+      document.head.appendChild(viewportMeta);
+    }
+    const originalViewport = viewportMeta.content;
+    viewportMeta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
+
+    // Prevent pinch-to-zoom and double-tap zoom
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault();
+    };
+    let lastTouchEnd = 0;
+    const preventDoubleTap = (e: TouchEvent) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) e.preventDefault();
+      lastTouchEnd = now;
+    };
+    document.addEventListener("touchstart", preventZoom, { passive: false });
+    document.addEventListener("touchend", preventDoubleTap, { passive: false });
+
+    // Prevent gesture zoom (Safari)
+    const preventGesture = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", preventGesture);
+    document.addEventListener("gesturechange", preventGesture);
+
     return () => {
       document.documentElement.style.height = "";
       document.body.style.height = "";
       document.body.style.overflow = "";
+      if (viewportMeta) viewportMeta.content = originalViewport;
+      document.removeEventListener("touchstart", preventZoom);
+      document.removeEventListener("touchend", preventDoubleTap);
+      document.removeEventListener("gesturestart", preventGesture);
+      document.removeEventListener("gesturechange", preventGesture);
     };
   }, []);
 
