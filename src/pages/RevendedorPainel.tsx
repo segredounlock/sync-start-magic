@@ -544,7 +544,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         phoneNumber: normalizedPhone,
         valueId: selectedValue.valueId,
         extraData: extraData.trim() || undefined,
-        saldo_tipo: (role === "admin" || role === "revendedor") && !isClientMode ? "pessoal" : "revenda",
+        saldo_tipo: "revenda",
       });
 
       if (resp?.success) {
