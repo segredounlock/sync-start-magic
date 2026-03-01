@@ -1876,7 +1876,7 @@ export default function Principal() {
               {configLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <PinProtection configKey="adminPinApi">
+                <PinProtection configKey="adminPin">
                   <div className="glass-card rounded-xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg flex items-center gap-2">
                       <Smartphone className="h-5 w-5 text-primary" /> Provedor de Recarga
@@ -1943,7 +1943,7 @@ export default function Principal() {
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <PinProtection configKey="adminPinPagamentos">
+                <PinProtection configKey="adminPin">
                   <div className="glass-card rounded-xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg">Gateway Principal</h4>
                     <div>
@@ -2270,7 +2270,7 @@ export default function Principal() {
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <>
+                <PinProtection configKey="adminPin">
                   <div className="glass-card rounded-xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg">Limites e Regras</h4>
                     <div className="grid grid-cols-2 gap-4">
@@ -2323,7 +2323,7 @@ export default function Principal() {
                       Esta taxa é descontada do valor creditado ao cliente.
                     </p>
                   </div>
-                </>
+                </PinProtection>
               )}
             </motion.div>
           )}
@@ -2334,7 +2334,7 @@ export default function Principal() {
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <>
+                <PinProtection configKey="adminPin">
                   {/* Status */}
                   <div className="glass-card rounded-xl p-5 space-y-4 border border-border/50">
                     {/* Header */}
@@ -2540,7 +2540,7 @@ export default function Principal() {
                       </div>
                     </div>
                   </div>
-                </>
+                </PinProtection>
               )}
             </motion.div>
           )}
@@ -2551,7 +2551,7 @@ export default function Principal() {
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <>
+                <PinProtection configKey="adminPin">
                 <div className="glass-card rounded-xl p-6 space-y-4">
                   <h4 className="font-semibold text-foreground flex items-center gap-2"><Globe className="h-4 w-4 text-primary" /> Configurações Gerais</h4>
                   <div>
@@ -2625,7 +2625,7 @@ export default function Principal() {
                     />
                   </div>
                 </div>
-                </>
+                </PinProtection>
               )}
             </motion.div>
           )}
