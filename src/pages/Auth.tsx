@@ -116,10 +116,9 @@ export default function Auth() {
                 transition: { duration: 0.8, ease: [0.4, 0, 0.2, 1] },
               }}
             >
-              <h1 className="font-display text-3xl font-bold shimmer-letters">
+            <h1 className="font-display text-3xl font-bold shimmer-letters">
                 Recargas <span className="brasil-word">Brasil</span>
               </h1>
-              <p className="text-muted-foreground mt-2">Sistema de recargas para revendedores</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -145,6 +144,7 @@ export default function Auth() {
               }}
               className="glass-modal rounded-xl p-6 relative"
             >
+              <p className="text-muted-foreground text-center text-sm mb-4 -mt-1">Sistema de recargas para revendedores</p>
               {/* Success overlay */}
               <AnimatePresence>
                 {phase === "success" && (
