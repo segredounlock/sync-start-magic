@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,58 +15,6 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [telegramLoading, setTelegramLoading] = useState(false);
-  const telegramRef = useRef<HTMLDivElement>(null);
-
-  const handleTelegramAuth = useCallback(async (telegramUser: any) => {
-    setTelegramLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("telegram-login", {
-        body: telegramUser,
-      });
-      if (error) throw new Error(data?.error || error.message);
-      if (data?.access_token && data?.refresh_token) {
-        await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        toast.success("Login via Telegram realizado!");
-      } else {
-        throw new Error(data?.error || "Resposta inválida");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Erro no login via Telegram");
-    } finally {
-      setTelegramLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Expose callback globally for Telegram widget
-    (window as any).onTelegramAuth = (user: any) => handleTelegramAuth(user);
-
-    return () => {
-      delete (window as any).onTelegramAuth;
-    };
-  }, [handleTelegramAuth]);
-
-  useEffect(() => {
-    if (loading || user) return;
-    // Load Telegram widget script
-    const container = telegramRef.current;
-    if (!container) return;
-    container.innerHTML = "";
-
-    const script = document.createElement("script");
-    script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.setAttribute("data-telegram-login", "Bypasa12_bot");
-    script.setAttribute("data-size", "large");
-    script.setAttribute("data-radius", "8");
-    script.setAttribute("data-onauth", "onTelegramAuth(user)");
-    script.setAttribute("data-request-access", "write");
-    script.async = true;
-    container.appendChild(script);
-  }, [loading, user]);
 
   if (!loading && user && role) {
     return <Navigate to={role === "admin" ? "/admin" : "/painel"} replace />;
@@ -203,20 +151,6 @@ export default function Auth() {
               {submitting ? "Aguarde..." : isLogin ? "Entrar" : "Criar conta"}
             </button>
           </form>
-
-          {/* Telegram Login */}
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <p className="text-center text-sm text-muted-foreground mb-3">ou entre com</p>
-            <div ref={telegramRef} className="flex justify-center min-h-[40px] items-center">
-              {telegramLoading && (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                  className="h-6 w-6 border-3 border-primary border-t-transparent rounded-full"
-                />
-              )}
-            </div>
-          </div>
         </div>
       </motion.div>
     </div>
