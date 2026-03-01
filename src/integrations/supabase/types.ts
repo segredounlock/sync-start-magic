@@ -227,6 +227,7 @@ export type Database = {
           store_name: string | null
           store_primary_color: string | null
           store_secondary_color: string | null
+          telefone: string | null
           telegram_bot_token: string | null
           telegram_id: number | null
           telegram_username: string | null
@@ -246,6 +247,7 @@ export type Database = {
           store_name?: string | null
           store_primary_color?: string | null
           store_secondary_color?: string | null
+          telefone?: string | null
           telegram_bot_token?: string | null
           telegram_id?: number | null
           telegram_username?: string | null
@@ -265,6 +267,7 @@ export type Database = {
           store_name?: string | null
           store_primary_color?: string | null
           store_secondary_color?: string | null
+          telefone?: string | null
           telegram_bot_token?: string | null
           telegram_id?: number | null
           telegram_username?: string | null
@@ -514,6 +517,7 @@ export type Database = {
           module: string | null
           payment_id: string | null
           status: string
+          telegram_notified: boolean | null
           type: string
           updated_at: string
           user_id: string
@@ -526,6 +530,7 @@ export type Database = {
           module?: string | null
           payment_id?: string | null
           status?: string
+          telegram_notified?: boolean | null
           type?: string
           updated_at?: string
           user_id: string
@@ -538,6 +543,7 @@ export type Database = {
           module?: string | null
           payment_id?: string | null
           status?: string
+          telegram_notified?: boolean | null
           type?: string
           updated_at?: string
           user_id?: string
