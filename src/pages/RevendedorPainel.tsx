@@ -14,6 +14,7 @@ import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor
 import { playSuccessSound } from "@/lib/sounds";
 import { FloatingPoll } from "@/components/FloatingPoll";
 import { SkeletonValue, SkeletonRow, SkeletonCard } from "@/components/Skeleton";
+import { ImageCropper } from "@/components/ImageCropper";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Wallet, Smartphone, History, Send, Clock, MessageCircle,
@@ -84,6 +85,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [profileNome, setProfileNome] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   // Recarga form
   const [telefone, setTelefone] = useState("");
@@ -690,15 +692,26 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       toast.error("Arquivo muito grande. Máximo 2MB.");
       return;
     }
+    e.target.value = "";
+    // GIF goes directly, other formats open cropper
+    if (file.type === "image/gif") {
+      await uploadAvatarFile(file);
+    } else {
+      setCropFile(file);
+    }
+  };
+
+  const uploadAvatarFile = async (fileOrBlob: File | Blob) => {
+    if (!user) return;
     setUploadingAvatar(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = fileOrBlob instanceof File ? (fileOrBlob.name.split(".").pop() || "jpg") : "jpg";
       const path = `${user.id}/avatar.${ext}`;
       const { data: existingFiles } = await supabase.storage.from("avatars").list(user.id);
       if (existingFiles?.length) {
         await supabase.storage.from("avatars").remove(existingFiles.map(f => `${user.id}/${f.name}`));
       }
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, fileOrBlob, { upsert: true });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
       const publicUrl = urlData.publicUrl + "?t=" + Date.now();
@@ -710,7 +723,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       toast.error("Erro ao enviar foto: " + (err.message || "tente novamente"));
     }
     setUploadingAvatar(false);
-    e.target.value = "";
   };
 
   const [avatarError, setAvatarError] = useState(false);
@@ -1875,6 +1887,18 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
       {/* Floating Poll */}
       <FloatingPoll />
+
+      {/* Image Cropper Modal */}
+      {cropFile && (
+        <ImageCropper
+          file={cropFile}
+          onCrop={async (blob) => {
+            setCropFile(null);
+            await uploadAvatarFile(blob);
+          }}
+          onCancel={() => setCropFile(null)}
+        />
+      )}
 
       {/* Mobile Bottom Nav */}
       <MobileBottomNav
