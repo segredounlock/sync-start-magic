@@ -39,7 +39,7 @@ export interface ChatMessage {
   created_at: string;
   reactions?: ChatReaction[];
   reply_to?: ChatMessage | null;
-  sender?: { nome: string | null; avatar_url: string | null };
+  sender?: { nome: string | null; avatar_url: string | null; isAdmin?: boolean };
 }
 
 export interface ChatReaction {
@@ -189,18 +189,30 @@ export function useChatMessages(conversationId: string | null) {
     // Fetch sender profiles
     const senderIds = [...new Set((data || []).map((m: any) => m.sender_id))];
     let senders: any[] = [];
+    let adminIds = new Set<string>();
     if (senderIds.length > 0) {
       const { data: s } = await supabase
         .from("profiles")
         .select("id, nome, avatar_url")
         .in("id", senderIds);
       senders = s || [];
+
+      // Fetch admin roles
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("user_id", senderIds)
+        .eq("role", "admin");
+      (roles || []).forEach((r: any) => adminIds.add(r.user_id));
     }
 
     const msgs = (data || []).map((m: any) => ({
       ...m,
       reactions: reactions.filter((r: any) => r.message_id === m.id),
-      sender: senders.find((s: any) => s.id === m.sender_id) || { nome: null, avatar_url: null },
+      sender: {
+        ...(senders.find((s: any) => s.id === m.sender_id) || { nome: null, avatar_url: null }),
+        isAdmin: adminIds.has(m.sender_id),
+      },
     }));
 
     // Attach reply_to
