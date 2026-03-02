@@ -1014,14 +1014,19 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     className="glass-modal rounded-2xl p-8 text-center"
                   >
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
-                      className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${recargaResult.success ? "bg-success/15" : "bg-destructive/15"}`}>
+                      className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${recargaResult.success ? "bg-warning/15" : "bg-destructive/15"}`}>
                       {recargaResult.success
-                        ? <CheckCircle2 className="h-10 w-10 text-success" />
+                        ? <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                          >
+                            <Loader2 className="h-10 w-10 text-warning" />
+                          </motion.div>
                         : <XCircle className="h-10 w-10 text-destructive" />
                       }
                     </motion.div>
-                    <h3 className={`font-display text-xl font-bold mb-2 ${recargaResult.success ? "text-success" : "text-destructive"}`}>
-                      {recargaResult.success ? "Pedido Enviado!" : "Erro na Recarga"}
+                    <h3 className={`font-display text-xl font-bold mb-2 ${recargaResult.success ? "text-warning" : "text-destructive"}`}>
+                      {recargaResult.success ? "⏳ Processando Pedido..." : "Erro na Recarga"}
                     </h3>
                     <p className="text-muted-foreground mb-6">{recargaResult.message}</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
