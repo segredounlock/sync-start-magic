@@ -255,10 +255,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             {/* Dropdown trigger (desktop) */}
             <button
               onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
-              className={`absolute top-1.5 right-1.5 p-1 rounded-md transition-all opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 active:opacity-100 ${
+              className={`absolute top-1.5 right-1.5 p-1 rounded-md transition-all opacity-70 sm:opacity-0 sm:group-hover:opacity-100 ${
                 showDropdown ? "!opacity-100" : ""
               } ${
-                isOwn ? "hover:bg-white/10 text-white/60 hover:text-white active:bg-white/10" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground active:bg-muted"
+                isOwn ? "hover:bg-white/10 text-white/60 hover:text-white" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground"
               }`}
             >
               <ChevronDown className="h-3.5 w-3.5" />
