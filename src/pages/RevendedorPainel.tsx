@@ -1111,7 +1111,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           {trackingStatus.localRecarga ? (
                             <>
                               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                                <span className="text-xs text-muted-foreground">Valor (facial)</span>
+                                <span className="text-xs text-muted-foreground">Valor da Recarga</span>
                                 <span className="text-xs font-bold text-foreground">{fmt(trackingStatus.localRecarga.valor)}</span>
                               </div>
                               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
@@ -1653,7 +1653,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <span className="text-sm font-semibold text-foreground">{r.operadora || "—"}</span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
-                            <span className="text-sm text-muted-foreground">Valor (facial)</span>
+                            <span className="text-sm text-muted-foreground">Valor da Recarga</span>
                             <span className="text-sm font-mono font-bold text-foreground">{fmt(r.valor)}</span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
