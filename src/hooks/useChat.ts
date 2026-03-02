@@ -56,11 +56,11 @@ export function useConversations() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
   const fetchConversations = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     try {
-      // Fetch all conversations (group + direct where user is participant)
       const { data, error } = await supabase
         .from("chat_conversations")
         .select("*")
@@ -68,7 +68,6 @@ export function useConversations() {
 
       if (error) throw error;
 
-      // For direct conversations, fetch other user profiles
       const directConvos = (data || []).filter((c: any) => c.type === 'direct');
       const otherIds = directConvos.map((c: any) =>
         c.participant_1 === user.id ? c.participant_2 : c.participant_1
@@ -104,7 +103,6 @@ export function useConversations() {
         conv.unread_count = count || 0;
       }
 
-      // Sort: general chat first, then by last_message_at
       convos.sort((a: any, b: any) => {
         if (a.id === GENERAL_CHAT_ID) return -1;
         if (b.id === GENERAL_CHAT_ID) return 1;
@@ -113,23 +111,21 @@ export function useConversations() {
 
       setConversations(convos);
     } finally {
-      setLoading(false);
+      if (!initialLoadDone.current) {
+        setLoading(false);
+        initialLoadDone.current = true;
+      }
     }
   }, [user]);
 
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+  useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
-  // Realtime
+  // Realtime - only listen to conversation changes, not all messages
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel("chat-conversations-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_conversations" }, () => {
-        fetchConversations();
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => {
         fetchConversations();
       })
       .subscribe();
@@ -138,7 +134,6 @@ export function useConversations() {
 
   const startConversation = useCallback(async (otherUserId: string) => {
     if (!user) return null;
-    // Check existing
     const ids = [user.id, otherUserId].sort();
     const { data: existing } = await supabase
       .from("chat_conversations")
@@ -167,10 +162,12 @@ export function useChatMessages(conversationId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const initialLoadDone = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset on conversation change
   useEffect(() => {
     initialLoadDone.current = false;
+    setMessages([]);
     setLoading(true);
   }, [conversationId]);
 
@@ -185,7 +182,6 @@ export function useChatMessages(conversationId: string | null) {
 
     if (error) { setLoading(false); return; }
 
-    // Fetch reactions
     const msgIds = (data || []).map((m: any) => m.id);
     let reactions: any[] = [];
     if (msgIds.length > 0) {
@@ -196,7 +192,6 @@ export function useChatMessages(conversationId: string | null) {
       reactions = r || [];
     }
 
-    // Fetch sender profiles
     const senderIds = [...new Set((data || []).map((m: any) => m.sender_id))];
     let senders: any[] = [];
     let adminIds = new Set<string>();
@@ -207,7 +202,6 @@ export function useChatMessages(conversationId: string | null) {
         .in("id", senderIds);
       senders = s || [];
 
-      // Fetch admin roles
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id")
@@ -225,7 +219,6 @@ export function useChatMessages(conversationId: string | null) {
       },
     }));
 
-    // Attach reply_to
     for (const msg of msgs) {
       if (msg.reply_to_id) {
         msg.reply_to = msgs.find((m: any) => m.id === msg.reply_to_id) || null;
@@ -252,9 +245,15 @@ export function useChatMessages(conversationId: string | null) {
     }
   }, [conversationId, user]);
 
+  // Debounced fetch to avoid rapid re-fetches from realtime
+  const debouncedFetch = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchMessages(), 300);
+  }, [fetchMessages]);
+
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
-  // Realtime messages
+  // Realtime messages - STRICT filter by conversation_id
   useEffect(() => {
     if (!conversationId) return;
     const channel = supabase
@@ -262,13 +261,33 @@ export function useChatMessages(conversationId: string | null) {
       .on("postgres_changes", {
         event: "*", schema: "public", table: "chat_messages",
         filter: `conversation_id=eq.${conversationId}`,
-      }, () => { fetchMessages(); })
+      }, () => { debouncedFetch(); })
+      .subscribe();
+
+    // Separate channel for reactions - poll on message changes only
+    const reactionsChannel = supabase
+      .channel(`chat-reactions-${conversationId}`)
       .on("postgres_changes", {
         event: "*", schema: "public", table: "chat_reactions",
-      }, () => { fetchMessages(); })
+      }, (payload: any) => {
+        // Only refetch if the reaction is for a message in this conversation
+        const messageId = payload.new?.message_id || payload.old?.message_id;
+        if (messageId) {
+          // Check if message belongs to current conversation
+          const belongsToConversation = messages.some(m => m.id === messageId);
+          if (belongsToConversation) {
+            debouncedFetch();
+          }
+        }
+      })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [conversationId, fetchMessages]);
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(reactionsChannel);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [conversationId, debouncedFetch, messages]);
 
   const sendMessage = useCallback(async (content: string, type = "text", audioUrl?: string, imageUrl?: string, replyToId?: string) => {
     if (!conversationId || !user) return;
@@ -285,7 +304,6 @@ export function useChatMessages(conversationId: string | null) {
     });
     if (error) throw error;
 
-    // Get sender name for preview
     let senderName = "Você";
     const { data: profile } = await supabase
       .from("profiles")
@@ -297,7 +315,6 @@ export function useChatMessages(conversationId: string | null) {
     const msgPreview = type === "text" ? content : type === "audio" ? "🎤 Áudio" : "📷 Imagem";
     const previewText = `${senderName}: ${msgPreview}`;
 
-    // Update conversation last message
     await supabase.from("chat_conversations").update({
       last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
       last_message_at: new Date().toISOString(),
