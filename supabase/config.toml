@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.efi-setup]
 verify_jwt = false
+
+[functions.vapid-setup]
+verify_jwt = false
+
+[functions.send-push]
+verify_jwt = false
