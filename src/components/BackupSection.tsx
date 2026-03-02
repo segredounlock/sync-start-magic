@@ -53,6 +53,14 @@ export default function BackupSection() {
   const [currentVersion, setCurrentVersion] = useState<string | null>(null);
   const updateFileInputRef = useRef<HTMLInputElement>(null);
 
+  // Confirmation modal
+  const [pendingUpdateFile, setPendingUpdateFile] = useState<File | null>(null);
+  const [pendingManifest, setPendingManifest] = useState<any>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Update history
+  const [updateHistory, setUpdateHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   // GitHub PAT
   const [githubPat, setGithubPat] = useState("");
   const [showPat, setShowPat] = useState(false);
@@ -72,7 +80,7 @@ export default function BackupSection() {
     loadPat();
   }, []);
 
-  // Load current system version
+  // Load current system version + update history
   useEffect(() => {
     const loadVersion = async () => {
       const { data } = await supabase
@@ -82,7 +90,16 @@ export default function BackupSection() {
         .maybeSingle();
       setCurrentVersion(data?.value || "1.0.0");
     };
+    const loadHistory = async () => {
+      const { data } = await supabase
+        .from("update_history")
+        .select("*")
+        .order("applied_at", { ascending: false })
+        .limit(20);
+      if (data) setUpdateHistory(data);
+    };
     loadVersion();
+    loadHistory();
   }, []);
 
   const saveGithubPat = async () => {
@@ -402,10 +419,43 @@ export default function BackupSection() {
     setUpdateExporting(false);
   };
 
+  // Step 1: Read manifest and show confirmation
   const handleUpdateImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.endsWith(".zip")) { toast.error("Selecione um arquivo .zip"); return; }
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const manifestFile = zip.file("update-manifest.json");
+      if (!manifestFile) throw new Error("Pacote inválido: falta update-manifest.json");
+      const manifest = JSON.parse(await manifestFile.async("string"));
+
+      // Count DB files
+      let dbTableCount = 0;
+      for (const [path] of Object.entries(zip.files)) {
+        if (path.startsWith("database/") && path.endsWith(".json")) dbTableCount++;
+      }
+      manifest._dbTableCount = dbTableCount;
+
+      setPendingUpdateFile(file);
+      setPendingManifest(manifest);
+      setShowConfirmation(true);
+    } catch (err: any) {
+      toast.error(`Erro ao ler pacote: ${err.message}`);
+    }
+    if (updateFileInputRef.current) updateFileInputRef.current.value = "";
+  };
+
+  // Step 2: User confirms → apply update
+  const confirmAndApplyUpdate = async () => {
+    if (!pendingUpdateFile || !pendingManifest) return;
+    setShowConfirmation(false);
+    const file = pendingUpdateFile;
+    const manifest = pendingManifest;
+    setPendingUpdateFile(null);
+    setPendingManifest(null);
 
     setUpdateImporting(true); setUpdateResult(null); setUpdateImportProgress(0); setUpdateImportStage("Lendo pacote...");
     try {
@@ -415,25 +465,17 @@ export default function BackupSection() {
       const arrayBuffer = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(arrayBuffer);
 
-      // Read manifest
-      const manifestFile = zip.file("update-manifest.json");
-      if (!manifestFile) throw new Error("Pacote inválido: falta update-manifest.json");
-      const manifest = JSON.parse(await manifestFile.async("string"));
-
-      setUpdateImportStage(`Pacote v${manifest.version} de ${new Date(manifest.created_at).toLocaleDateString("pt-BR")}. Restaurando banco...`);
+      setUpdateImportStage(`Pacote v${manifest.version}. Restaurando banco...`);
       setUpdateImportProgress(20);
 
-      // Re-create the database ZIP for backup-restore
       const dbZip = new JSZip();
       const backupInfoFile = zip.file("backup-info.json");
-      if (backupInfoFile) {
-        dbZip.file("backup-info.json", await backupInfoFile.async("uint8array"));
-      }
-      // Copy database folder
+      if (backupInfoFile) dbZip.file("backup-info.json", await backupInfoFile.async("uint8array"));
+
       let hasDbFiles = false;
-      for (const [path, file] of Object.entries(zip.files)) {
-        if (path.startsWith("database/") && !file.dir) {
-          dbZip.file(path, await file.async("uint8array"));
+      for (const [path, zipFile] of Object.entries(zip.files)) {
+        if (path.startsWith("database/") && !zipFile.dir) {
+          dbZip.file(path, await zipFile.async("uint8array"));
           hasDbFiles = true;
         }
       }
@@ -456,15 +498,45 @@ export default function BackupSection() {
       }
 
       // Update system version
+      const previousVersion = currentVersion || "1.0.0";
       const newVersion = incrementVersion(manifest.version);
       setUpdateImportStage("Atualizando versão do sistema...");
       await supabase.from("system_config").upsert({ key: "system_version", value: newVersion }, { onConflict: "key" });
       setCurrentVersion(newVersion);
 
+      // Save to update_history
+      const results = restoreResults?.results || [];
+      const tablesRestored = results.filter((r: any) => r.status === "restored").length;
+      const tablesSkipped = results.filter((r: any) => r.status === "skipped" || r.status === "empty" || r.status === "skipped_fk").length;
+      const tablesFailed = results.filter((r: any) => r.status === "error").length;
+      const totalRecords = results.filter((r: any) => r.status === "restored").reduce((sum: number, r: any) => sum + (r.count || 0), 0);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("update_history").insert({
+        version: newVersion,
+        previous_version: previousVersion,
+        backup_date: manifest.created_at,
+        backup_by: restoreResults?.backup_by || manifest.created_by || null,
+        results: results,
+        tables_restored: tablesRestored,
+        tables_skipped: tablesSkipped,
+        tables_failed: tablesFailed,
+        total_records: totalRecords,
+        applied_by: user?.id || null,
+      });
+
+      // Reload history
+      const { data: historyData } = await supabase
+        .from("update_history")
+        .select("*")
+        .order("applied_at", { ascending: false })
+        .limit(20);
+      if (historyData) setUpdateHistory(historyData);
+
       setUpdateImportProgress(100);
       setUpdateImportStage("Atualização concluída!");
       setUpdateResult({
-        from_version: manifest.version,
+        from_version: previousVersion,
         to_version: newVersion,
         manifest,
         restore: restoreResults,
@@ -472,7 +544,12 @@ export default function BackupSection() {
       toast.success(`Sistema atualizado para v${newVersion}!`);
     } catch (err: any) { toast.error(`Erro: ${err.message}`); setUpdateImportStage(`Erro: ${err.message}`); }
     setUpdateImporting(false);
-    if (updateFileInputRef.current) updateFileInputRef.current.value = "";
+  };
+
+  const cancelUpdate = () => {
+    setShowConfirmation(false);
+    setPendingUpdateFile(null);
+    setPendingManifest(null);
   };
 
   const incrementVersion = (v: string): string => {
@@ -856,6 +933,56 @@ export default function BackupSection() {
               )}
             </AnimatePresence>
 
+            {/* Update History */}
+            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 space-y-3">
+              <button onClick={() => setShowHistory(!showHistory)} className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Histórico de Atualizações</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground font-mono">{updateHistory.length} registros</span>
+                  {showHistory ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                </div>
+              </button>
+              <AnimatePresence>
+                {showHistory && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                    {updateHistory.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground py-2">Nenhuma atualização aplicada ainda.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {updateHistory.map((h: any) => (
+                          <div key={h.id} className="rounded-xl bg-white/[0.03] p-3 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-foreground font-mono">
+                                {h.previous_version ? `v${h.previous_version} → ` : ""}v{h.version}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {new Date(h.applied_at).toLocaleString("pt-BR")}
+                              </span>
+                            </div>
+                            <div className="flex gap-3 text-[10px]">
+                              <span className="text-emerald-400">✓ {h.tables_restored} restauradas</span>
+                              {h.tables_skipped > 0 && <span className="text-muted-foreground">⊘ {h.tables_skipped} puladas</span>}
+                              {h.tables_failed > 0 && <span className="text-red-400">✗ {h.tables_failed} erros</span>}
+                              <span className="text-blue-400">{h.total_records} registros</span>
+                            </div>
+                            {h.backup_date && (
+                              <p className="text-[10px] text-muted-foreground">
+                                Pacote de {new Date(h.backup_date).toLocaleDateString("pt-BR")}
+                                {h.backup_by ? ` por ${h.backup_by}` : ""}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* How it works */}
             <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] p-4 space-y-2">
               <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Como funciona</p>
@@ -863,8 +990,74 @@ export default function BackupSection() {
                 <p>📦 <b className="text-foreground">Gerar Pacote</b> — Exporta banco de dados + código-fonte como um ZIP versionado</p>
                 <p>🔄 <b className="text-foreground">Aplicar Atualização</b> — Importa o ZIP e restaura os dados via upsert inteligente (sem apagar dados existentes)</p>
                 <p>🔢 <b className="text-foreground">Versão</b> — Incrementada automaticamente a cada atualização aplicada</p>
+                <p>📋 <b className="text-foreground">Histórico</b> — Cada atualização é registrada com versão, data e resultado</p>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmation && pendingManifest && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={cancelUpdate}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-2xl bg-card border border-border p-6 space-y-4 shadow-2xl"
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 flex items-center justify-center">
+                  <AlertTriangle className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Confirmar Atualização</h3>
+                  <p className="text-xs text-muted-foreground">Revise os detalhes antes de aplicar</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Versão do pacote:</span>
+                  <span className="font-mono font-semibold text-foreground">v{pendingManifest.version}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Data de criação:</span>
+                  <span className="text-foreground">{new Date(pendingManifest.created_at).toLocaleString("pt-BR")}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Tabelas no pacote:</span>
+                  <span className="text-foreground">{pendingManifest._dbTableCount || pendingManifest.tables?.length || 0}</span>
+                </div>
+                {pendingManifest.source_files && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Arquivos fonte:</span>
+                    <span className="text-foreground">{pendingManifest.source_files}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Versão atual:</span>
+                  <span className="font-mono text-foreground">{currentVersion || "1.0.0"}</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                <p className="text-xs text-amber-300">
+                  ⚠️ Esta ação vai restaurar os dados do banco via upsert (sem apagar dados existentes). Certifique-se de que o pacote é confiável.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={cancelUpdate}
+                  className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={confirmAndApplyUpdate}
+                  className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                  <PackageCheck className="h-4 w-4" /> Aplicar
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
