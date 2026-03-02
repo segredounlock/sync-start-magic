@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info } from "lucide-react";
+import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, BadgeCheck } from "lucide-react";
 import { MessageInfoModal } from "./MessageInfoModal";
 
 interface MessageBubbleProps {
@@ -145,14 +145,17 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
         )}
 
         <div className={`max-w-[70%] ${isOwn ? "order-1" : ""}`}>
-          {/* Sender name + admin badge */}
-          <div className={`flex items-center gap-1.5 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
-            <span className={`text-[11px] font-semibold ${isOwn ? "text-primary" : "text-primary"}`}>{senderName}</span>
+          {/* Sender name + verified badge */}
+          <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wide ${isOwn ? "text-primary" : "text-primary"}`}>{senderName}</span>
             {isAdmin && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary/20 border border-primary/30 text-[9px] font-bold text-primary">
-                <Star className="h-2.5 w-2.5 text-primary fill-primary" />
-                Admin
-              </span>
+              <motion.div
+                animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                className="inline-flex"
+              >
+                <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
+              </motion.div>
             )}
           </div>
 
