@@ -276,6 +276,7 @@ export default function Principal() {
   const [pixGoTesting, setPixGoTesting] = useState(false);
   const [pixGoStatus, setPixGoStatus] = useState<"idle" | "ok" | "error">("idle");
   const [providerBalance, setProviderBalance] = useState<{ value: number | null; loading: boolean; error: boolean }>({ value: null, loading: false, error: false });
+  const [lowBalancePage, setLowBalancePage] = useState(1);
 
   // Pricing rules state
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
@@ -1397,13 +1398,20 @@ export default function Principal() {
               </div>
 
               {/* Alerts Row */}
-              {dashboardMetrics.lowBalanceRevs.length > 0 && (
+              {dashboardMetrics.lowBalanceRevs.length > 0 && (() => {
+                const PAGE_SIZE_LOW = 10;
+                const totalPages = Math.ceil(dashboardMetrics.lowBalanceRevs.length / PAGE_SIZE_LOW);
+                const paginated = dashboardMetrics.lowBalanceRevs.slice(
+                  (lowBalancePage - 1) * PAGE_SIZE_LOW,
+                  lowBalancePage * PAGE_SIZE_LOW
+                );
+                return (
                 <div className="glass-card rounded-xl p-4 md:p-5 border-warning/30">
                   <h3 className="text-sm font-semibold text-warning mb-3 flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4" /> Saldo Baixo ({dashboardMetrics.lowBalanceRevs.length})
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {dashboardMetrics.lowBalanceRevs.map(r => (
+                    {paginated.map(r => (
                       <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-warning/20 bg-warning/5 p-3 cursor-pointer hover:bg-warning/10 transition-colors"
                         onClick={() => setShowSaldoModal(r)}>
                         <div className="min-w-0">
@@ -1413,8 +1421,22 @@ export default function Principal() {
                       </div>
                     ))}
                   </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-3">
+                      <button onClick={() => setLowBalancePage(p => Math.max(1, p - 1))} disabled={lowBalancePage === 1}
+                        className="px-3 py-1 text-xs rounded-md bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">
+                        ← Anterior
+                      </button>
+                      <span className="text-xs text-muted-foreground">{lowBalancePage} / {totalPages}</span>
+                      <button onClick={() => setLowBalancePage(p => Math.min(totalPages, p + 1))} disabled={lowBalancePage === totalPages}
+                        className="px-3 py-1 text-xs rounded-md bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">
+                        Próximo →
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+                );
+              })()}
 
               {/* System Status */}
               <div className="glass-card rounded-xl p-4 md:p-5">
