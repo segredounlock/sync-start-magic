@@ -434,6 +434,10 @@ serve(async (req) => {
             await handlePasswordStep(supabase, BOT_TOKEN, chatId, chatIdStr, telegramId, text, session, userMsgId);
             return;
           }
+          if (session.step === "awaiting_new_password") {
+            await handleNewPasswordStep(supabase, BOT_TOKEN, chatId, chatIdStr, telegramId, text, session, userMsgId);
+            return;
+          }
         }
 
         if (!linkedUser) {
@@ -538,8 +542,12 @@ async function handleEmailStep(supabase: any, token: string, chatId: number, cha
       msg_ids: [...prevMsgIds, ...(botMsgId ? [botMsgId] : [])],
     });
   } else {
-    deleteMessagesBatch(token, chatId, allMsgIds);
-    await createAccountAndLink(supabase, token, chatId, chatIdStr, telegramId, emailClean, session.data?.telegram_username || "");
+    deleteMessageFire(token, chatId, userMsgId);
+    const botMsgId = await sendMessage(token, chatId, `🔐 Escolha uma <b>senha</b> para sua nova conta:`);
+    await setSession(supabase, chatIdStr, "awaiting_new_password", {
+      telegram_id: telegramId, telegram_username: session.data?.telegram_username, email: emailClean,
+      msg_ids: [...prevMsgIds, ...(botMsgId ? [botMsgId] : [])],
+    });
   }
 }
 
@@ -589,8 +597,34 @@ async function handlePasswordStep(supabase: any, token: string, chatId: number, 
   );
 }
 
-async function createAccountAndLink(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, email: string, telegramUsername: string = "") {
-  const password = generatePassword();
+async function handleNewPasswordStep(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, password: string, session: any, userMsgId: number) {
+  const prevMsgIds: number[] = session.data?.msg_ids || [];
+  const email = session.data?.email;
+  const telegramUsername = session.data?.telegram_username || "";
+
+  deleteMessageFire(token, chatId, userMsgId);
+
+  if (!email) {
+    deleteMessagesBatch(token, chatId, prevMsgIds);
+    clearSession(supabase, chatIdStr);
+    await sendMessage(token, chatId, "❌ Sessão expirada. Use /start para recomeçar.");
+    return;
+  }
+
+  if (password.length < 6) {
+    const botMsgId = await sendMessage(token, chatId, "❌ A senha deve ter pelo menos <b>6 caracteres</b>. Tente novamente:");
+    await setSession(supabase, chatIdStr, "awaiting_new_password", {
+      ...session.data,
+      msg_ids: [...prevMsgIds, ...(botMsgId ? [botMsgId] : [])],
+    });
+    return;
+  }
+
+  deleteMessagesBatch(token, chatId, prevMsgIds);
+  await createAccountAndLink(supabase, token, chatId, chatIdStr, telegramId, email, password, telegramUsername);
+}
+
+async function createAccountAndLink(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, email: string, password: string, telegramUsername: string = "") {
 
   const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
     email,
@@ -617,7 +651,7 @@ async function createAccountAndLink(supabase: any, token: string, chatId: number
   clearSession(supabase, chatIdStr);
 
   await sendMessageWithKeyboard(token, chatId,
-    `✅ <b>Conta criada e vinculada!</b>\n\n📧 E-mail: <code>${email}</code>\n🔐 Senha: <code>${password}</code>\n\n⚠️ <b>Guarde sua senha!</b> Use para acessar o painel web.`,
+    `✅ <b>Conta criada e vinculada!</b>\n\n📧 E-mail: <code>${email}</code>\n\n🔐 Use sua senha para acessar o painel web.`,
     [[
       { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
       { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
