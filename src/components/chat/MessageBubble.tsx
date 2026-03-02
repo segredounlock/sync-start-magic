@@ -308,18 +308,26 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             {/* Text content */}
             {message.type === "text" && (
               isEditing ? (
-                <div className="flex flex-col gap-1.5 pr-4">
+                <div className="flex flex-col gap-2 pr-4">
                   <textarea
                     ref={editInputRef}
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); } if (e.key === "Escape") handleCancelEdit(); }}
-                    className="text-sm bg-transparent border border-primary-foreground/30 rounded-lg px-2 py-1 resize-none outline-none focus:border-primary-foreground/60 min-h-[40px]"
+                    className={`text-sm rounded-xl px-3 py-2 resize-none outline-none min-h-[48px] transition-all ${
+                      isOwn
+                        ? "bg-background/20 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/40 focus:border-primary-foreground/50 focus:ring-1 focus:ring-primary-foreground/20"
+                        : "bg-muted/60 border border-border text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                    }`}
                     rows={2}
                   />
-                  <div className="flex gap-1.5 justify-end">
-                    <button onClick={handleCancelEdit} className="text-[10px] px-2 py-0.5 rounded bg-destructive/20 text-destructive hover:bg-destructive/30">Cancelar</button>
-                    <button onClick={handleSaveEdit} className="text-[10px] px-2 py-0.5 rounded bg-success/20 text-success hover:bg-success/30">Salvar</button>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={handleCancelEdit} className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-destructive/20 text-destructive hover:bg-destructive/30 border border-destructive/20 transition-colors">
+                      Cancelar
+                    </button>
+                    <button onClick={handleSaveEdit} className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-success/20 text-success hover:bg-success/30 border border-success/20 transition-colors">
+                      ✓ Salvar
+                    </button>
                   </div>
                 </div>
               ) : (
