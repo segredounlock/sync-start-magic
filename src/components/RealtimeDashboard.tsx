@@ -133,7 +133,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
 
   const statusLabel = (status: string) => {
     if (status === "completed" || status === "concluida") return "Concluída";
-    if (status === "pending") return "Pendente";
+    if (status === "pending") return "Processando";
     if (status === "falha") return "Falha";
     return status;
   };
