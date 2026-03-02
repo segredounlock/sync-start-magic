@@ -166,8 +166,8 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
               completed: "✅ Concluída",
               concluida: "✅ Concluída",
               falha: "❌ Falhou",
-              pending: "⏳ Pendente",
-              pendente: "⏳ Pendente",
+              pending: "⏳ Processando",
+              pendente: "⏳ Processando",
               processing: "⚙️ Processando",
               cancelled: "🚫 Cancelada",
             };
