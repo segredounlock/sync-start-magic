@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
 
-type LoginPhase = "form" | "success" | "card-exit" | "logo-exit" | "done" | "forgot";
+type LoginPhase = "form" | "forgot" | "splash" | "done";
 
 function translateAuthError(msg: string): string {
   const map: Record<string, string> = {
@@ -41,7 +42,6 @@ export default function Auth() {
   const [submitting, setSubmitting] = useState(false);
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
-  const animatingRef = useRef(false);
 
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
@@ -73,13 +73,26 @@ export default function Auth() {
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
 
-  if (!loading && user && phase === "form" && !animatingRef.current) {
+  // Splash → done after 1.5s
+  useEffect(() => {
+    if (phase === "splash") {
+      const timer = setTimeout(() => setPhase("done"), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase]);
+
+  // Redirect if already logged in
+  if (!loading && user && phase === "form") {
     const dest = role === "admin" ? "/principal" : "/painel";
     return <Navigate to={dest} replace />;
   }
 
   if (phase === "done") {
     return <Navigate to={destination} replace />;
+  }
+
+  if (phase === "splash") {
+    return <SplashScreen />;
   }
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -107,7 +120,6 @@ export default function Auth() {
       return;
     }
     setSubmitting(true);
-    animatingRef.current = true;
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -130,7 +142,6 @@ export default function Auth() {
           await supabase.auth.signOut();
           toast.error("Sua conta ainda não foi aprovada. Contate o administrador.");
           setSubmitting(false);
-          animatingRef.current = false;
           return;
         }
         setDestination(roleData.role === "admin" ? "/principal" : "/painel");
@@ -144,26 +155,16 @@ export default function Auth() {
         setDestination("/painel");
       }
       toast.success(isLogin ? "Login realizado!" : "Conta criada com sucesso!");
-      setPhase("success");
-      setTimeout(() => setPhase("card-exit"), 800);
+      setPhase("splash");
     } catch (err: any) {
       const msg = translateAuthError(err.message);
       toast.error(msg);
       setSubmitting(false);
-      animatingRef.current = false;
     }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full"
-        />
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   return (
@@ -177,76 +178,34 @@ export default function Auth() {
 
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <AnimatePresence
-          onExitComplete={() => {
-            if (phase === "logo-exit") setPhase("done");
-          }}
-        >
-          {(phase as string) !== "logo-exit" && (phase as string) !== "done" && (
-            <motion.div
-              key="logo"
-              className="text-center mb-10"
-              initial={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 0, rotate: 720, transition: { duration: 0.8, ease: [0.4, 0, 0.2, 1] } }}
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl border border-border/50 ring-1 ring-primary/20 mx-auto mb-4"
-              >
-                <img src={logo} alt="Recargas Brasil" className="w-full h-full object-cover" />
-              </motion.div>
-              <h1 className="font-display text-2xl font-bold shimmer-letters">
-                Recargas <span className="brasil-word">Brasil</span>
-              </h1>
-              <p className="text-muted-foreground text-xs mt-2 tracking-wide uppercase">
-                Sistema de recargas para revendedores
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="text-center mb-10">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl border border-border/50 ring-1 ring-primary/20 mx-auto mb-4"
+          >
+            <img src={logo} alt="Recargas Brasil" className="w-full h-full object-cover" />
+          </motion.div>
+          <h1 className="font-display text-2xl font-bold shimmer-letters">
+            Recargas <span className="brasil-word">Brasil</span>
+          </h1>
+          <p className="text-muted-foreground text-xs mt-2 tracking-wide uppercase">
+            Sistema de recargas para revendedores
+          </p>
+        </div>
 
         {/* Form Card */}
-        <AnimatePresence
-          onExitComplete={() => {
-            if (phase === "card-exit") setTimeout(() => setPhase("logo-exit"), 200);
-          }}
-        >
-          {(phase === "form" || phase === "success") && (
+        <AnimatePresence>
+          {phase === "form" && (
             <motion.div
               key="card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.2, y: 80, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } }}
+              exit={{ opacity: 0, y: -20, transition: { duration: 0.3 } }}
               transition={{ duration: 0.4 }}
               className="rounded-2xl border border-border bg-card p-6 relative shadow-lg"
             >
-              {/* Success overlay */}
-              <AnimatePresence>
-                {phase === "success" && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="absolute inset-0 rounded-2xl bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center z-10"
-                  >
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", damping: 10, stiffness: 200 }}
-                      className="w-16 h-16 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center mb-4"
-                    >
-                      <motion.svg className="h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <motion.path d="M5 13l4 4L19 7" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4, delay: 0.2 }} />
-                      </motion.svg>
-                    </motion.div>
-                    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-lg font-bold text-foreground">
-                      Bem-vindo!
-                    </motion.p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               {/* Tabs */}
               <div className="flex mb-6 rounded-xl overflow-hidden bg-muted/50 p-1">
                 <button
