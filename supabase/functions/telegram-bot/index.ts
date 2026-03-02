@@ -24,6 +24,30 @@ function getSupabase() {
 const tokenCache: Map<string, { token: string; time: number }> = new Map();
 const TOKEN_CACHE_TTL = 120_000; // 2 minutes
 
+// Migration config cache
+let migrationCache: { enabled: boolean; url: string; time: number } | null = null;
+const MIGRATION_CACHE_TTL = 300_000; // 5 minutes
+
+async function getMigrationConfig(supabase: any): Promise<{ enabled: boolean; url: string }> {
+  if (migrationCache && (Date.now() - migrationCache.time) < MIGRATION_CACHE_TTL) {
+    return { enabled: migrationCache.enabled, url: migrationCache.url };
+  }
+  const { data } = await supabase
+    .from("system_config")
+    .select("key, value")
+    .in("key", ["migration_message_enabled", "migration_old_site_url"]);
+  
+  const map: Record<string, string> = {};
+  for (const row of (data || [])) map[row.key] = row.value || "";
+  
+  const result = {
+    enabled: map["migration_message_enabled"] === "true",
+    url: map["migration_old_site_url"] || "https://recargasbrasill.com",
+  };
+  migrationCache = { ...result, time: Date.now() };
+  return result;
+}
+
 async function resolveBotToken(supabase: any, botId?: string): Promise<string> {
   const cacheKey = botId || "__default__";
   const cached = tokenCache.get(cacheKey);
@@ -376,12 +400,24 @@ serve(async (req) => {
               console.error("[PENDING] Background send failed:", e)
             );
           } else {
-            await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
-            const botMsgId = await sendMessage(BOT_TOKEN, chatId,
-              `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
-            );
-            if (botMsgId) {
-              await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
+            // Check migration config
+            const migration = await getMigrationConfig(supabase);
+            if (migration.enabled) {
+              await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+                `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\n⚠️ <b>Aviso de Migração</b>\n\nEstamos migrando para um novo sistema! Se você possui créditos no site antigo, pode acessá-lo para utilizá-los.\n\nCaso contrário, prossiga para vincular sua conta ao novo bot.`,
+                [
+                  [{ text: "🔄 Usar créditos do site antigo", callback_data: "migration_old_site" }],
+                  [{ text: "▶️ Continuar para o bot", callback_data: "migration_continue" }],
+                ]
+              );
+            } else {
+              await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
+              const botMsgId = await sendMessage(BOT_TOKEN, chatId,
+                `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
+              );
+              if (botMsgId) {
+                await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
+              }
             }
           }
           return;
@@ -726,6 +762,32 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
     ],
   ];
+
+  // === Migration callbacks ===
+  if (data === "migration_continue") {
+    const chatIdStr = String(chatId);
+    const telegramUsername = callback.from.username || "";
+    await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
+    const botMsgId = await sendMessage(token, chatId,
+      `👋 Ótimo! Vamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
+    );
+    if (botMsgId) {
+      await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
+    }
+    return;
+  }
+
+  if (data === "migration_old_site") {
+    const migration = await getMigrationConfig(supabase);
+    await sendMessageWithKeyboard(token, chatId,
+      `🔄 <b>Site Antigo</b>\n\nAcesse o link abaixo para utilizar seus créditos restantes:\n\n🌐 ${migration.url}\n\nQuando terminar, volte aqui e clique em "Continuar" para vincular sua conta ao novo sistema.`,
+      [
+        [{ text: "🌐 Acessar Site Antigo", url: migration.url }],
+        [{ text: "▶️ Continuar para o bot", callback_data: "migration_continue" }],
+      ]
+    );
+    return;
+  }
 
   if (data === "menu_main") {
     const user = await findUserByTelegram(supabase, telegramId);
