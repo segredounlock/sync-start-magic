@@ -1199,17 +1199,24 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const orderData = rechargeResult.data || {};
       const externalId = orderData._id || orderData.id || orderData.orderId || null;
       const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
+      const valorFacial = Number(orderData.value || orderData.valor || cost);
+      const custoApi = Number(orderData.cost || 0);
 
-      await supabase.from("recargas").insert({
+      const { error: insertError } = await supabase.from("recargas").insert({
         user_id: userId,
         telefone,
         operadora: orderData.carrier?.name || carrierId,
-        valor: cost,
+        valor: valorFacial,
         custo: cost,
+        custo_api: custoApi,
         status: isCompleted ? "completed" : "pending",
         external_id: externalId,
         completed_at: isCompleted ? new Date().toISOString() : null,
       });
+
+      if (insertError) {
+        console.error("Telegram recarga insert error:", JSON.stringify(insertError));
+      }
 
       const operadoraNome = orderData.carrier?.name || carrierId;
       const horario = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
