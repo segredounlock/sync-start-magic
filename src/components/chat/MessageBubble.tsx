@@ -26,6 +26,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
   const dropdownRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
+  const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
   const x = useMotionValue(0);
   const replyIconOpacity = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -20] : [20, SWIPE_THRESHOLD], [1, 0]);
   const replyIconScale = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -10] : [10, SWIPE_THRESHOLD], [1, 0.3]);
@@ -181,19 +182,32 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                 : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
             }`}
             onPointerDown={(e) => {
-              if (e.pointerType === "touch") startLongPress();
+              if (e.pointerType !== "touch") return;
+              e.stopPropagation();
+              touchStartPoint.current = { x: e.clientX, y: e.clientY };
+              startLongPress();
             }}
             onPointerUp={(e) => {
-              if (e.pointerType === "touch") {
-                cancelLongPress();
-                if (isOwn && !longPressTriggered.current) {
-                  setShowMessageInfo(true);
-                }
+              if (e.pointerType !== "touch") return;
+              e.stopPropagation();
+              const wasLongPress = longPressTriggered.current;
+              cancelLongPress();
+              touchStartPoint.current = null;
+              if (isOwn && !wasLongPress) {
+                setShowMessageInfo(true);
               }
             }}
-            onPointerCancel={() => cancelLongPress()}
+            onPointerCancel={() => {
+              cancelLongPress();
+              touchStartPoint.current = null;
+            }}
             onPointerMove={(e) => {
-              if (e.pointerType === "touch") cancelLongPress();
+              if (e.pointerType !== "touch" || !touchStartPoint.current) return;
+              const dx = Math.abs(e.clientX - touchStartPoint.current.x);
+              const dy = Math.abs(e.clientY - touchStartPoint.current.y);
+              if (dx > 12 || dy > 12) {
+                cancelLongPress();
+              }
             }}
             onContextMenu={(e) => { e.preventDefault(); setShowLongPressMenu(true); }}
           >
