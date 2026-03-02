@@ -39,13 +39,15 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
   const handleSend = async () => {
     if (!text.trim() || sending) return;
     setSending(true);
+    const currentText = text.trim();
+    setText("");
+    setReplyTo(null);
+    setShowEmoji(false);
     try {
-      await sendMessage(text.trim(), "text", undefined, undefined, replyTo?.id);
-      setText("");
-      setReplyTo(null);
-      setShowEmoji(false);
+      await sendMessage(currentText, "text", undefined, undefined, replyTo?.id);
     } catch (err) {
       console.error(err);
+      setText(currentText); // restore on error
     }
     setSending(false);
     inputRef.current?.focus();
