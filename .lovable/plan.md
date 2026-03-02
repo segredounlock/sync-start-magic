@@ -1,26 +1,23 @@
 
 
-## Problema Identificado
+## Plano: Simplificar animação pós-login — usar apenas Splash Screen
 
-O item **"Chat"** existe no menu lateral desktop (`menuItems`, linha 656), mas **não foi adicionado** à lista de itens do `MobileBottomNav` (linhas 1812-1819). Por isso, no mobile, não há como acessar o chat.
+### O que muda
 
-## Plano de Correção
+Remover toda a sequência complexa de fases (`success` → `card-exit` → `logo-exit` → `done`) e substituir por uma transição simples:
 
-### 1. Adicionar "Chat" ao `MobileBottomNav`
+1. Login bem-sucedido → exibir o **SplashScreen** (que já existe com logo + dots animados + "Carregando...")
+2. Após ~1.5s no splash → redirecionar para o destino
 
-No arquivo `src/pages/RevendedorPainel.tsx`, adicionar o item do Chat na lista de itens passada ao `MobileBottomNav` (após "Status", linha 1818):
+### Alterações em `src/pages/Auth.tsx`
 
-```
-{ key: "chat", label: "Chat", icon: MessageCircle, color: "text-primary", animation: "float" }
-```
+- **Simplificar `LoginPhase`** para apenas `"form" | "forgot" | "splash" | "done"`
+- **No `handleSubmit`**: após login com sucesso, setar `phase = "splash"` em vez de `"success"`
+- **Adicionar timer**: após 1.5s na fase `"splash"`, setar `phase = "done"` que faz o `Navigate`
+- **Remover**: todo o bloco de `AnimatePresence` do logo com rotação 720°, o overlay de success com checkmark, e as transições `card-exit`/`logo-exit`
+- **Na fase `"splash"`**: renderizar o componente `<SplashScreen />` já existente (tela cheia com logo, dots e "Carregando...")
 
-Isso fará com que o Chat apareça no menu **"Mais"** (bottom sheet) no mobile, já que o `mainCount` é 4 e os itens extras vão para o menu expandido.
+### Resultado
 
-### 2. Verificar visibilidade no desktop
-
-O menu lateral desktop já inclui o Chat. Nenhuma alteração necessária.
-
----
-
-**Resultado**: O botão "Chat" aparecerá no menu "Mais" (⋯) da barra inferior no mobile, e ao tocar nele, abrirá a tela de chat normalmente.
+Login → card desaparece suavemente → tela de splash com logo centralizado e animação de pontos → redirecionamento. Mais limpo e moderno.
 
