@@ -14,28 +14,12 @@ interface TickerRecarga {
 }
 
 async function fetchAllRecargas(): Promise<TickerRecarga[]> {
-  const all: any[] = [];
-  let offset = 0;
-  const batchSize = 1000;
-  let hasMore = true;
-
-  while (hasMore) {
-    const { data } = await supabase
-      .from("recargas")
-      .select("id, telefone, operadora, valor, status, created_at, user_id")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + batchSize - 1);
-
-    if (data && data.length > 0) {
-      all.push(...data);
-      offset += batchSize;
-      hasMore = data.length === batchSize;
-    } else {
-      hasMore = false;
-    }
+  const { data, error } = await supabase.rpc("get_ticker_recargas");
+  if (error) {
+    console.error("Ticker fetch error:", error.message);
+    return [];
   }
-
-  return all;
+  return (data || []) as TickerRecarga[];
 }
 
 export default function RecargasTicker() {
