@@ -192,6 +192,7 @@ export default function Principal() {
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
+  const dataLoaded = useRef(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"todos" | "admin" | "revendedor" | "cliente" | "usuario" | "sem_role">("todos");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -227,11 +228,13 @@ export default function Principal() {
   // Report state
   const [reportData, setReportData] = useState<{ user_id: string; nome: string | null; email: string | null; totalRecargas: number; totalValor: number; totalVendas: number; totalCusto: number; lucro: number }[]>([]);
   const [reportLoading, setReportLoading] = useState(false);
+  const reportLoaded = useRef(false);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("mes");
 
   // Config API states
   const [apiConfig, setApiConfig] = useState<Record<string, string>>({});
   const [configLoading, setConfigLoading] = useState(false);
+  const configLoaded = useRef(false);
   const [configSaving, setConfigSaving] = useState(false);
 
   // Global config states (Pagamentos, Depósitos, Bot, Geral)
@@ -280,6 +283,7 @@ export default function Principal() {
   const [pricingSelectedOp, setPricingSelectedOp] = useState<string>("");
   const [pricingSaving, setPricingSaving] = useState<Record<string, boolean>>({});
   const [pricingLoading, setPricingLoading] = useState(false);
+  const pricingLoaded = useRef(false);
   const [pricingTab, setPricingTab] = useState<"global" | "revendedor">("global");
 
   // Reseller pricing state
@@ -291,7 +295,7 @@ export default function Principal() {
   const configKeys = ["apiBaseURL", "apiKey", "margemLucro", "alertaSaldoBaixo", "consultaOperadoraURL", "consultaOperadoraKey"];
 
   const fetchApiConfig = useCallback(async () => {
-    setConfigLoading(true);
+    if (!configLoaded.current) setConfigLoading(true);
     try {
       const { data, error } = await supabase.from("system_config").select("key, value").in("key", configKeys);
       if (error) throw error;
@@ -302,6 +306,7 @@ export default function Principal() {
       console.error(err);
       toast.error("Erro ao carregar configurações");
     }
+    configLoaded.current = true;
     setConfigLoading(false);
   }, []);
 
@@ -354,7 +359,7 @@ export default function Principal() {
   };
 
   const fetchPricingData = useCallback(async () => {
-    setPricingLoading(true);
+    if (!pricingLoaded.current) setPricingLoading(true);
     try {
       // 1. Fetch catalog from API to sync operadoras
       const { data: catData, error: catError } = await supabase.functions.invoke("recarga-express", {
@@ -418,6 +423,7 @@ export default function Principal() {
       setPricingOps((ops || []).map((o: any) => ({ ...o, valores: o.valores || [] })));
       setPricingRules((rules || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
     } catch (err) { console.error(err); toast.error("Erro ao carregar precificação"); }
+    pricingLoaded.current = true;
     setPricingLoading(false);
   }, []);
 
@@ -587,7 +593,7 @@ export default function Principal() {
   }, [botStatus.botId, fetchTelegramJson, globalConfig.telegramBotToken]);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    if (!dataLoaded.current) setLoading(true);
     try {
       const [roles, profiles, saldos, recData] = await Promise.all([
         fetchAllRows("user_roles", { select: "user_id, role" }),
@@ -629,6 +635,7 @@ export default function Principal() {
       console.error(err);
       toast.error("Erro ao carregar dados");
     }
+    dataLoaded.current = true;
     setLoading(false);
   }, []);
 
@@ -818,7 +825,7 @@ export default function Principal() {
   }, [reportPeriod]);
 
   const fetchReport = useCallback(async () => {
-    setReportLoading(true);
+    if (!reportLoaded.current) setReportLoading(true);
     try {
       // Fetch recargas in batches to avoid 1000 row limit
       let allRecData: any[] = [];
@@ -893,6 +900,7 @@ export default function Principal() {
 
       setReportData(report);
     } catch (err) { console.error(err); }
+    reportLoaded.current = true;
     setReportLoading(false);
   }, [reportPeriodStart]);
 

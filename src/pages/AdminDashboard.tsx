@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
@@ -80,6 +80,7 @@ export default function AdminDashboard() {
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
+  const dataLoaded = useRef(false);
   const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
   const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
   const [configSubTab, setConfigSubTab] = useState<"geral" | "pagamentos" | "depositos">("geral");
@@ -109,17 +110,20 @@ export default function AdminDashboard() {
   // Historico state
   const [recargas, setRecargas] = useState<RecargaHistorico[]>([]);
   const [recargasLoading, setRecargasLoading] = useState(false);
+  const recargasLoaded = useRef(false);
   const [recargaSearch, setRecargaSearch] = useState("");
 
   // Operadoras state
   const [operadoras, setOperadoras] = useState<Operadora[]>([]);
   const [operadorasLoading, setOperadorasLoading] = useState(false);
+  const operadorasLoaded = useRef(false);
   const [showOperadoraModal, setShowOperadoraModal] = useState(false);
   const [editOperadora, setEditOperadora] = useState<Operadora | null>(null);
 
   // Config state
   const [configData, setConfigData] = useState<Record<string, string>>({});
   const [configLoading, setConfigLoading] = useState(false);
+  const configLoaded = useRef(false);
   const [configSaving, setConfigSaving] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [showMpKeyTest, setShowMpKeyTest] = useState(false);
@@ -134,6 +138,7 @@ export default function AdminDashboard() {
   const [gwModule, setGwModule] = useState("");
   const [gwFields, setGwFields] = useState<Record<string, string>>({});
   const [gwLoading, setGwLoading] = useState(false);
+  const gwLoaded = useRef(false);
   const [gwSaving, setGwSaving] = useState(false);
   const [gwShowSecrets, setGwShowSecrets] = useState<Record<string, boolean>>({});
 
@@ -203,6 +208,7 @@ export default function AdminDashboard() {
   // Depositos state
   const [depositTransactions, setDepositTransactions] = useState<{ id: string; amount: number; created_at: string; status: string; type: string; module: string | null; user_id: string; payment_id?: string | null; metadata?: any; user_nome?: string; user_email?: string }[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
+  const depositLoaded = useRef(false);
   const [depositSearch, setDepositSearch] = useState("");
   const [selectedDeposit, setSelectedDeposit] = useState<typeof depositTransactions[0] | null>(null);
   const [meuSaldo, setMeuSaldo] = useState(0);
@@ -211,6 +217,7 @@ export default function AdminDashboard() {
   // Client management state
   const [clientsList, setClientsList] = useState<{ id: string; nome: string | null; email: string | null; created_at: string; saldo: number }[]>([]);
   const [clientsLoading, setClientsLoading] = useState(false);
+  const clientsLoaded = useRef(false);
   const [clientSearch, setClientSearch] = useState("");
   const [creditClientModal, setCreditClientModal] = useState<{ id: string; nome: string | null; email: string | null; saldo: number } | null>(null);
   const [creditAmount, setCreditAmount] = useState("");
@@ -221,7 +228,7 @@ export default function AdminDashboard() {
 
   const fetchClients = useCallback(async () => {
     if (!user?.id) return;
-    setClientsLoading(true);
+    if (!clientsLoaded.current) setClientsLoading(true);
     try {
       // Get profiles where reseller_id = current user
       const { data: profiles } = await supabase
@@ -230,7 +237,7 @@ export default function AdminDashboard() {
         .eq("reseller_id" as any, user.id)
         .order("created_at", { ascending: false });
       
-      if (!profiles?.length) { setClientsList([]); setClientsLoading(false); return; }
+      if (!profiles?.length) { setClientsList([]); clientsLoaded.current = true; setClientsLoading(false); return; }
       
       const clientIds = profiles.map(p => p.id);
       const { data: saldos } = await supabase.from("saldos").select("user_id, valor").in("user_id", clientIds).eq("tipo", "revenda");
@@ -245,6 +252,7 @@ export default function AdminDashboard() {
         saldo: saldoMap[p.id] ?? 0,
       })));
     } catch (err) { console.error(err); }
+    clientsLoaded.current = true;
     setClientsLoading(false);
   }, [user]);
 
@@ -306,7 +314,7 @@ export default function AdminDashboard() {
   }, [period]);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    if (!dataLoaded.current) setLoading(true);
     try {
       if (role === "revendedor") {
         // Revendedor: only fetch their own clients (profiles with reseller_id = user.id)
@@ -402,34 +410,37 @@ export default function AdminDashboard() {
       console.error(err);
       toast.error("Erro ao carregar dados");
     }
+    dataLoaded.current = true;
     setLoading(false);
   }, [role, user?.id]);
 
   const fetchRecargas = useCallback(async () => {
-    setRecargasLoading(true);
+    if (!recargasLoaded.current) setRecargasLoading(true);
     try {
       const { data: allRec } = await supabase.from("recargas").select("*").order("created_at", { ascending: false }).limit(200);
-      if (!allRec?.length) { setRecargas([]); setRecargasLoading(false); return; }
+      if (!allRec?.length) { setRecargas([]); recargasLoaded.current = true; setRecargasLoading(false); return; }
       const userIds = [...new Set(allRec.map(r => r.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("id, nome, email").in("id", userIds);
       const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
       profiles?.forEach(p => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
       setRecargas(allRec.map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), user_nome: profileMap[r.user_id]?.nome || null, user_email: profileMap[r.user_id]?.email || null })));
     } catch (err) { console.error(err); }
+    recargasLoaded.current = true;
     setRecargasLoading(false);
   }, []);
 
   const fetchOperadoras = useCallback(async () => {
-    setOperadorasLoading(true);
+    if (!operadorasLoaded.current) setOperadorasLoading(true);
     try {
       const { data } = await supabase.from("operadoras").select("*").order("nome");
       setOperadoras((data || []).map(o => ({ ...o, valores: (o.valores as unknown as number[]) || [] })));
     } catch (err) { console.error(err); }
+    operadorasLoaded.current = true;
     setOperadorasLoading(false);
   }, []);
 
   const fetchConfig = useCallback(async () => {
-    setConfigLoading(true);
+    if (!configLoaded.current) setConfigLoading(true);
     try {
       const { data } = await supabase.from("system_config").select("key, value");
       const map: Record<string, string> = {};
@@ -444,6 +455,7 @@ export default function AdminDashboard() {
 
       setConfigData(map);
     } catch (err) { console.error(err); }
+    configLoaded.current = true;
     setConfigLoading(false);
   }, [role, user]);
 
@@ -470,16 +482,17 @@ export default function AdminDashboard() {
   };
 
   const fetchDeposits = useCallback(async () => {
-    setDepositLoading(true);
+    if (!depositLoaded.current) setDepositLoading(true);
     try {
       const { data: txs } = await supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(500);
-      if (!txs?.length) { setDepositTransactions([]); setDepositLoading(false); return; }
+      if (!txs?.length) { setDepositTransactions([]); depositLoaded.current = true; setDepositLoading(false); return; }
       const userIds = [...new Set(txs.map(t => t.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("id, nome, email").in("id", userIds);
       const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
       profiles?.forEach(p => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
       setDepositTransactions(txs.map(t => ({ ...t, amount: Number(t.amount), user_nome: profileMap[t.user_id]?.nome || undefined, user_email: profileMap[t.user_id]?.email || undefined })));
     } catch (err) { console.error(err); }
+    depositLoaded.current = true;
     setDepositLoading(false);
   }, []);
 
@@ -771,7 +784,7 @@ export default function AdminDashboard() {
   // Gateway config fetch/save
   const fetchGatewayConfig = useCallback(async () => {
     if (!user) return;
-    setGwLoading(true);
+    if (!gwLoaded.current) setGwLoading(true);
     try {
       const { data } = await supabase.from("reseller_config").select("key, value").eq("user_id", user.id);
       const cfg: Record<string, string> = {};
@@ -779,6 +792,7 @@ export default function AdminDashboard() {
       setGwModule(cfg.paymentModule || "");
       setGwFields(cfg);
     } catch (err) { console.error(err); }
+    gwLoaded.current = true;
     setGwLoading(false);
   }, [user]);
 
