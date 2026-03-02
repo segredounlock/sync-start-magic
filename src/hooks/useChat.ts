@@ -272,9 +272,21 @@ export function useChatMessages(conversationId: string | null) {
     });
     if (error) throw error;
 
+    // Get sender name for preview
+    let senderName = "Você";
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("nome")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.nome) senderName = profile.nome;
+
+    const msgPreview = type === "text" ? content : type === "audio" ? "🎤 Áudio" : "📷 Imagem";
+    const previewText = `${senderName}: ${msgPreview}`;
+
     // Update conversation last message
     await supabase.from("chat_conversations").update({
-      last_message_text: type === "text" ? content : type === "audio" ? "🎤 Áudio" : "📷 Imagem",
+      last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
       last_message_at: new Date().toISOString(),
     }).eq("id", conversationId);
   }, [conversationId, user]);
