@@ -46,7 +46,7 @@ export function MessageInfoModal({ message, open, onClose }: MessageInfoModalPro
       const userIds = readData.map(r => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, nome, avatar_url")
+        .select("id, nome, avatar_url, verification_badge")
         .in("id", userIds);
 
       const receipts: ReadReceipt[] = readData.map(r => ({

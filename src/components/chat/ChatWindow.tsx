@@ -64,7 +64,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       
       const { data } = await supabase
         .from("profiles")
-        .select("id, nome, avatar_url")
+        .select("id, nome, avatar_url, verification_badge")
         .in("id", senderIds);
       
       if (data) {
