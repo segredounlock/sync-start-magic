@@ -300,7 +300,7 @@ select option {
 }
 .ticker-scroll {
   display: inline-flex;
-  animation: ticker-scroll 40s linear infinite;
+  animation: ticker-scroll 22s linear infinite;
 }
 .ticker-scroll:hover {
   animation-play-state: paused;
