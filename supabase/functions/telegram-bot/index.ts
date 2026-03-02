@@ -1056,10 +1056,12 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     const valueId = parts[1];
     const cost = parseFloat(parts[2]);
 
-    // Get carrier name from catalog
+    // Get carrier name and API cost from catalog
     const catalog = await fetchCatalog(supabase);
     const carrier = catalog.find((c: any) => c.carrierId === carrierId);
     const carrierName = carrier?.name || carrierId;
+    const valueObj = carrier?.values?.find((v: any) => v.valueId === valueId);
+    const apiCost = Number(valueObj?.cost || 0);
 
     const user = await findUserByTelegram(supabase, telegramId);
     if (!user) return;
@@ -1070,6 +1072,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       value_id: valueId,
       operadora_nome: carrierName,
       valor: cost,
+      api_cost: apiCost,
       bot_msg_id: msgId,
     });
 
@@ -1159,7 +1162,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       await editMessageWithKeyboard(token, chatId, msgId, "❌ Sessão expirada. Tente novamente.", [[{ text: "📖 Menu", callback_data: "menu_main" }]]);
       return;
     }
-    const { telefone, carrier_id: carrierId, value_id: valueId, valor: cost, user_id: userId } = confirmSession.data || {};
+    const { telefone, carrier_id: carrierId, value_id: valueId, valor: cost, user_id: userId, api_cost: apiCostFromSession } = confirmSession.data || {};
     clearSession(supabase, String(chatId));
 
     await editMessageWithKeyboard(token, chatId, msgId,
@@ -1200,7 +1203,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const externalId = orderData._id || orderData.id || orderData.orderId || null;
       const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
       const valorFacial = Number(orderData.value || orderData.valor || cost);
-      const custoApi = Number(orderData.cost || 0);
+      const custoApi = Number(apiCostFromSession || orderData.cost || 0);
 
       const { error: insertError } = await supabase.from("recargas").insert({
         user_id: userId,
