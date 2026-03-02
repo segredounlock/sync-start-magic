@@ -10,6 +10,23 @@ import { Shield, ArrowLeft, Mail, Lock, User } from "lucide-react";
 
 type LoginPhase = "form" | "success" | "card-exit" | "logo-exit" | "done" | "forgot";
 
+function translateAuthError(msg: string): string {
+  const map: Record<string, string> = {
+    "Invalid login credentials": "E-mail ou senha incorretos",
+    "Email not confirmed": "E-mail ainda não confirmado. Verifique sua caixa de entrada.",
+    "User already registered": "Este e-mail já está cadastrado",
+    "Password should be at least 6 characters": "A senha deve ter no mínimo 6 caracteres",
+    "Signup requires a valid password": "Informe uma senha válida",
+    "User not found": "Usuário não encontrado",
+    "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos.",
+    "For security purposes, you can only request this once every 60 seconds": "Por segurança, aguarde 60 segundos antes de tentar novamente.",
+  };
+  for (const [en, pt] of Object.entries(map)) {
+    if (msg.includes(en)) return pt;
+  }
+  return msg || "Erro na autenticação";
+}
+
 const MAX_ATTEMPTS = 5;
 const COOLDOWN_MS = 60_000;
 
@@ -76,7 +93,7 @@ export default function Auth() {
       setForgotSent(true);
       toast.success("E-mail de recuperação enviado!");
     } catch (err: any) {
-      toast.error(err.message || "Erro ao enviar e-mail");
+      toast.error(translateAuthError(err.message));
     } finally {
       setForgotSubmitting(false);
     }
@@ -129,7 +146,8 @@ export default function Auth() {
       setPhase("success");
       setTimeout(() => setPhase("card-exit"), 800);
     } catch (err: any) {
-      toast.error(err.message || "Erro na autenticação");
+      const msg = translateAuthError(err.message);
+      toast.error(msg);
       setSubmitting(false);
       animatingRef.current = false;
     }
