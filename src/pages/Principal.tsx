@@ -217,6 +217,8 @@ export default function Principal() {
   const [revDetailPricingRules, setRevDetailPricingRules] = useState<PricingRule[]>([]);
   const [revDetailPricingOp, setRevDetailPricingOp] = useState<string>("");
   const [revDetailPricingOpen, setRevDetailPricingOpen] = useState(false);
+  const [revRecSearch, setRevRecSearch] = useState("");
+  const [reportSearch, setReportSearch] = useState("");
 
   // All recargas for counting
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
@@ -711,6 +713,7 @@ export default function Principal() {
     fetchRevDetail(rev);
     fetchRevGateway(rev.id);
     setMenuOpen(false);
+    setRevRecSearch("");
   };
 
   const revAnalytics = useMemo(() => {
@@ -2001,13 +2004,22 @@ export default function Principal() {
                     <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                       <History className="h-4 w-4 text-muted-foreground" /> Últimas Recargas
                     </h4>
-                    {revRecargas.length === 0 ? (
+                    <div className="relative mb-3">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <input type="text" value={revRecSearch} onChange={e => setRevRecSearch(e.target.value)} placeholder="Buscar por telefone, operadora..." className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground" />
+                    </div>
+                    {(() => {
+                      const q = revRecSearch.toLowerCase();
+                      const filteredRecs = revRecargas.filter(r =>
+                        !q || r.telefone.includes(q) || (r.operadora || "").toLowerCase().includes(q) || r.status.toLowerCase().includes(q)
+                      );
+                      return filteredRecs.length === 0 ? (
                       <p className="text-center py-6 text-muted-foreground text-sm">Nenhuma recarga encontrada</p>
                     ) : (
                       <>
                         {/* Mobile cards */}
                         <div className="md:hidden space-y-2">
-                          {revRecargas.slice(0, 25).map(r => {
+                          {filteredRecs.slice(0, 25).map(r => {
                             const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
                             const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                             return (
@@ -2040,7 +2052,7 @@ export default function Principal() {
                               </tr>
                             </thead>
                             <tbody>
-                              {revRecargas.slice(0, 25).map(r => (
+                              {filteredRecs.slice(0, 25).map(r => (
                                 <tr key={r.id} className="border-b border-border last:border-0">
                                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
@@ -2058,7 +2070,8 @@ export default function Principal() {
                           </table>
                         </div>
                       </>
-                    )}
+                    );
+                    })()}
                   </div>
 
                   {/* Últimos Depósitos */}
@@ -2951,6 +2964,13 @@ export default function Principal() {
                 </div>
               ) : (
                 <div className="glass-card rounded-xl overflow-hidden">
+                  {/* Search */}
+                  <div className="p-4 border-b border-border">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <input type="text" value={reportSearch} onChange={e => setReportSearch(e.target.value)} placeholder="Buscar revendedor..." className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground" />
+                    </div>
+                  </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
@@ -2965,7 +2985,11 @@ export default function Principal() {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.map((r, i) => {
+                        {reportData.filter(r => {
+                          if (!reportSearch) return true;
+                          const q = reportSearch.toLowerCase();
+                          return (r.nome || "").toLowerCase().includes(q) || (r.email || "").toLowerCase().includes(q);
+                        }).map((r, i) => {
                           const margem = r.totalVendas > 0 ? ((r.lucro / r.totalVendas) * 100) : 0;
                           return (
                             <motion.tr key={r.user_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
@@ -3451,7 +3475,6 @@ function EfiSetupButton({ config, onKeyCreated }: { config: Record<string, strin
     </div>
   );
 }
-
 
 function CreateRevendedorModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [email, setEmail] = useState("");
