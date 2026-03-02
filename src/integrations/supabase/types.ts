@@ -240,7 +240,10 @@ export type Database = {
           image_url: string | null
           is_deleted: boolean
           is_delivered: boolean
+          is_pinned: boolean
           is_read: boolean
+          pinned_at: string | null
+          pinned_by: string | null
           read_at: string | null
           reply_to_id: string | null
           sender_id: string
@@ -257,7 +260,10 @@ export type Database = {
           image_url?: string | null
           is_deleted?: boolean
           is_delivered?: boolean
+          is_pinned?: boolean
           is_read?: boolean
+          pinned_at?: string | null
+          pinned_by?: string | null
           read_at?: string | null
           reply_to_id?: string | null
           sender_id: string
@@ -274,7 +280,10 @@ export type Database = {
           image_url?: string | null
           is_deleted?: boolean
           is_delivered?: boolean
+          is_pinned?: boolean
           is_read?: boolean
+          pinned_at?: string | null
+          pinned_by?: string | null
           read_at?: string | null
           reply_to_id?: string | null
           sender_id?: string

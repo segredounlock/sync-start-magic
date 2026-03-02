@@ -36,6 +36,9 @@ export interface ChatMessage {
   delivered_at: string | null;
   reply_to_id: string | null;
   is_deleted: boolean;
+  is_pinned: boolean;
+  pinned_at: string | null;
+  pinned_by: string | null;
   created_at: string;
   reactions?: ChatReaction[];
   reply_to?: ChatMessage | null;
@@ -308,5 +311,17 @@ export function useChatMessages(conversationId: string | null) {
     await supabase.from("chat_messages").update({ is_deleted: true, content: null }).eq("id", messageId).eq("sender_id", user.id);
   }, [user]);
 
-  return { messages, loading, sendMessage, toggleReaction, deleteMessage, fetchMessages };
+  const pinMessage = useCallback(async (messageId: string) => {
+    if (!user || !conversationId) return;
+    const msg = messages.find(m => m.id === messageId);
+    if (!msg) return;
+    const newPinned = !msg.is_pinned;
+    await supabase.from("chat_messages").update({
+      is_pinned: newPinned,
+      pinned_at: newPinned ? new Date().toISOString() : null,
+      pinned_by: newPinned ? user.id : null,
+    }).eq("id", messageId);
+  }, [user, conversationId, messages]);
+
+  return { messages, loading, sendMessage, toggleReaction, deleteMessage, pinMessage, fetchMessages };
 }

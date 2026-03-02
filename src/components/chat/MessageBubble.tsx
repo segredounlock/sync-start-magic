@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/hooks/useChat";
-import { motion } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, SmilePlus, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, CheckCheck, Reply, Trash2, SmilePlus, Star, ChevronDown, Copy, Pin, PinOff } from "lucide-react";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -10,13 +10,28 @@ interface MessageBubbleProps {
   onReply: () => void;
   onReact: (emoji: string) => void;
   onDelete: () => void;
+  onPin?: () => void;
 }
 
 const QUICK_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
-export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete }: MessageBubbleProps) {
-  const [showActions, setShowActions] = useState(false);
+export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete, onPin }: MessageBubbleProps) {
+  const [showDropdown, setShowDropdown] = useState(false);
   const [showQuickEmoji, setShowQuickEmoji] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showDropdown) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showDropdown]);
 
   if (message.is_deleted) {
     return (
@@ -38,14 +53,20 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
   const groupedReactions: Record<string, number> = {};
   reactions.forEach(r => { groupedReactions[r.emoji] = (groupedReactions[r.emoji] || 0) + 1; });
 
+  const handleCopy = () => {
+    if (message.content) {
+      navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+    setShowDropdown(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 5, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-2 group relative`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => { setShowActions(false); setShowQuickEmoji(false); }}
-      onTouchStart={() => setShowActions(true)}
     >
       {/* Avatar for messages from others */}
       {!isOwn && (
@@ -77,6 +98,14 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
           </div>
         )}
 
+        {/* Pinned indicator */}
+        {message.is_pinned && (
+          <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
+            <Pin className="h-2.5 w-2.5 text-warning rotate-45" />
+            <span className="text-[9px] text-warning font-medium">Fixada</span>
+          </div>
+        )}
+
         {/* Reply preview */}
         {message.reply_to && (
           <div className={`mb-1 px-3 py-1.5 rounded-xl ${isOwn ? "bg-primary/5 border-l-2 border-primary/40" : "bg-muted/40 border-l-2 border-muted-foreground/30"}`}>
@@ -90,6 +119,75 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
             ? "bg-primary text-primary-foreground rounded-br-md"
             : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
         }`}>
+          {/* Dropdown trigger (chevron) */}
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className={`absolute top-1 ${isOwn ? "left-1" : "right-1"} p-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity ${
+              isOwn ? "hover:bg-primary-foreground/10" : "hover:bg-muted"
+            }`}
+          >
+            <ChevronDown className={`h-3.5 w-3.5 ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`} />
+          </button>
+
+          {/* Dropdown menu */}
+          <AnimatePresence>
+            {showDropdown && (
+              <motion.div
+                ref={dropdownRef}
+                initial={{ opacity: 0, scale: 0.9, y: -5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -5 }}
+                transition={{ duration: 0.15 }}
+                className={`absolute z-30 top-7 ${isOwn ? "left-0" : "right-0"} bg-popover border border-border rounded-xl shadow-xl min-w-[150px] overflow-hidden`}
+              >
+                <button
+                  onClick={() => { onReply(); setShowDropdown(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors"
+                >
+                  <Reply className="h-4 w-4 text-primary" />
+                  Responder
+                </button>
+                {message.type === "text" && message.content && (
+                  <button
+                    onClick={handleCopy}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors"
+                  >
+                    <Copy className="h-4 w-4 text-muted-foreground" />
+                    {copied ? "Copiado!" : "Copiar"}
+                  </button>
+                )}
+                {onPin && (
+                  <button
+                    onClick={() => { onPin(); setShowDropdown(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors"
+                  >
+                    {message.is_pinned ? (
+                      <><PinOff className="h-4 w-4 text-warning" /> Desafixar</>
+                    ) : (
+                      <><Pin className="h-4 w-4 text-warning" /> Fixar</>
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={() => { setShowQuickEmoji(true); setShowDropdown(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors"
+                >
+                  <SmilePlus className="h-4 w-4 text-muted-foreground" />
+                  Reagir
+                </button>
+                {isOwn && (
+                  <button
+                    onClick={() => { onDelete(); setShowDropdown(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Apagar
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Text content */}
           {message.type === "text" && (
             <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
@@ -134,41 +232,24 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
           </div>
         )}
 
-        {/* Quick actions */}
-        {showActions && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`absolute top-0 ${isOwn ? "left-0 -translate-x-full" : "right-0 translate-x-full"} flex items-center gap-0.5 px-1 z-10`}
-          >
-            <button onClick={onReply} className="p-1.5 rounded-lg bg-card border border-border shadow-sm hover:bg-muted/50 transition-colors" title="Responder">
-              <Reply className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-            <button onClick={() => setShowQuickEmoji(!showQuickEmoji)} className="p-1.5 rounded-lg bg-card border border-border shadow-sm hover:bg-muted/50 transition-colors" title="Reagir">
-              <SmilePlus className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-            {isOwn && (
-              <button onClick={onDelete} className="p-1.5 rounded-lg bg-card border border-border shadow-sm hover:bg-destructive/10 transition-colors" title="Apagar">
-                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-              </button>
-            )}
-          </motion.div>
-        )}
-
         {/* Quick emoji picker */}
-        {showQuickEmoji && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`absolute -top-8 ${isOwn ? "right-0" : "left-0"} flex gap-0.5 bg-card border border-border rounded-full px-2 py-1 shadow-lg z-20`}
-          >
-            {QUICK_EMOJIS.map(e => (
-              <button key={e} onClick={() => { onReact(e); setShowQuickEmoji(false); }} className="text-sm hover:scale-125 transition-transform p-0.5">
-                {e}
-              </button>
-            ))}
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {showQuickEmoji && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className={`absolute -top-8 ${isOwn ? "right-0" : "left-10"} flex gap-0.5 bg-card border border-border rounded-full px-2 py-1 shadow-lg z-20`}
+            >
+              {QUICK_EMOJIS.map(e => (
+                <button key={e} onClick={() => { onReact(e); setShowQuickEmoji(false); }} className="text-sm hover:scale-125 transition-transform p-0.5">
+                  {e}
+                </button>
+              ))}
+              <button onClick={() => setShowQuickEmoji(false)} className="text-xs text-muted-foreground ml-1 hover:text-foreground">✕</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Avatar for own messages */}
