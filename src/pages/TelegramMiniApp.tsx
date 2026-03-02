@@ -290,6 +290,7 @@ export default function TelegramMiniApp() {
             const sess = { userId: data.user_id, userName: data.nome || "", userEmail: "", saldo: Number(data.saldo || 0) };
             applySession(sess);
             saveSession(sess);
+            if (data.avatar_url) setAvatarUrl(data.avatar_url);
             if (!cancelled) setLoading(false);
             return;
           }
@@ -307,6 +308,7 @@ export default function TelegramMiniApp() {
             const sess = { userId: data.user_id, userName: data.nome || "", userEmail: session.user.email || "", saldo: Number(data.saldo || 0) };
             applySession(sess);
             saveSession(sess);
+            if (data.avatar_url) setAvatarUrl(data.avatar_url);
             if (!cancelled) setLoading(false);
             return;
           } else {
@@ -389,7 +391,10 @@ export default function TelegramMiniApp() {
   const loadAvatar = useCallback(async () => {
     if (!userId) return;
     try {
-      const { data } = await supabase.from("profiles").select("avatar_url").eq("id", userId).maybeSingle();
+      // Use edge function (service role) to bypass RLS
+      const { data } = await supabase.functions.invoke("telegram-miniapp", {
+        body: { action: "lookup_by_user_id", user_id: userId },
+      });
       if (data?.avatar_url) setAvatarUrl(data.avatar_url);
     } catch {}
   }, [userId]);
