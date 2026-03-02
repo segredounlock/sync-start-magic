@@ -153,21 +153,23 @@ export default function BackupSection() {
     // Core
     "src/App.tsx","src/main.tsx","src/index.css","src/vite-env.d.ts",
     // Pages
-    "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ClientePortal.tsx",
-    "src/pages/LandingPage.tsx","src/pages/NotFound.tsx","src/pages/Principal.tsx",
-    "src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/TelegramMiniApp.tsx",
-    "src/pages/ResetPassword.tsx",
+    "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ChatApp.tsx",
+    "src/pages/ClientePortal.tsx","src/pages/LandingPage.tsx","src/pages/NotFound.tsx",
+    "src/pages/Principal.tsx","src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx",
+    "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx",
     // Components
     "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
     "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
     "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
     "src/components/BannersManager.tsx","src/components/FloatingPoll.tsx",
-    "src/components/MobileBottomNav.tsx","src/components/NotificationBell.tsx",
-    "src/components/PinProtection.tsx","src/components/PollManager.tsx",
-    "src/components/PopupBanner.tsx","src/components/PromoBanner.tsx",
-    "src/components/ProtectedRoute.tsx","src/components/RealtimeDashboard.tsx",
+    "src/components/ImageCropper.tsx","src/components/MobileBottomNav.tsx",
+    "src/components/NotificationBell.tsx","src/components/PinProtection.tsx",
+    "src/components/PollManager.tsx","src/components/PopupBanner.tsx",
+    "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
+    "src/components/RealtimeDashboard.tsx","src/components/RecargaReceipt.tsx",
     "src/components/RecargasTicker.tsx","src/components/Skeleton.tsx",
     "src/components/SplashScreen.tsx","src/components/ThemeToggle.tsx",
+    "src/components/VerificationBadge.tsx",
     // Chat components
     "src/components/chat/ChatPage.tsx","src/components/chat/ChatWindow.tsx",
     "src/components/chat/ConversationList.tsx","src/components/chat/MessageBubble.tsx",
@@ -176,7 +178,8 @@ export default function BackupSection() {
     "src/components/ChatRoomManager.tsx",
     // Hooks
     "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
-    "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/useTheme.tsx",
+    "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/usePresence.ts",
+    "src/hooks/useTheme.tsx",
     // Libs
     "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
     // Integrations
