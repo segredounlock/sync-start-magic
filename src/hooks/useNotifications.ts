@@ -121,7 +121,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
               is_read: false,
             });
             try { playSuccessSound(); } catch {}
-            toast.success(`💰 Depósito: R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
+            toast.success(`💰 Depósito: R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`, { id: `deposit-${newRow.id}` });
           }
         })
         .subscribe();
@@ -153,7 +153,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             created_at: r.created_at || new Date().toISOString(),
             is_read: false,
           });
-          toast.info(`📱 Recarga: ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
+          toast.info(`📱 Recarga: ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}` });
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "recargas",
