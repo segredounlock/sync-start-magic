@@ -1,64 +1,39 @@
 
 
-## Investigacao: `custo_api` vindo como R$ 0,00 no telegram-bot
+## Correção retroativa das 5 recargas com custo_api = 0
 
-### Causa raiz
+### Problema duplo identificado
+1. **`custo_api`** salvo como 0 (já corrigido para futuras recargas)
+2. **`valor`** salvo como o preço do revendedor em vez do valor facial real
 
-O problema está na linha 1203 do `telegram-bot/index.ts`:
+### Correções via SQL
 
-```typescript
-const custoApi = Number(orderData.cost || 0);
+Atualizar os 5 registros com os valores corretos:
+
+```sql
+-- Claro R$35 (preço final 15.60, custo API 12.00)
+UPDATE recargas SET custo_api = 12.00, valor = 35 WHERE id = 'd10ec4ab-70ce-4e20-8735-2bbd76fb2fbb';
+
+-- TIM R$40 (preço final 17.00, custo API 14.00)
+UPDATE recargas SET custo_api = 14.00, valor = 40 WHERE id = 'eefe74f2-8fc5-49b2-a2ba-feb7c9b5c14f';
+
+-- TIM R$20 (preço final 9.30, custo API 8.00)
+UPDATE recargas SET custo_api = 8.00, valor = 20 WHERE id = '7c84bc9c-87a1-4be8-bf14-cd4d6f515cc7';
+
+-- TIM R$20 (preço final 9.30, custo API 8.00)
+UPDATE recargas SET custo_api = 8.00, valor = 20 WHERE id = '76201471-def4-4746-9e96-36e3091fb345';
+
+-- Claro R$40 (preço final 16.50, custo API 14.00)
+UPDATE recargas SET custo_api = 14.00, valor = 40 WHERE id = '8d9628f2-58f0-451e-8166-abaa0ca0afdd';
 ```
 
-O campo `cost` **não existe** na resposta da API de recarga (`/recharges`). O `cost` (custo da API) é uma propriedade do **catálogo**, não do pedido. A resposta do pedido contém `status`, `carrier`, `_id`, etc., mas não `cost`.
+### Bug adicional no telegram-bot: campo `valor`
 
-No `recarga-express`, isso funciona porque o `apiCost` é extraído do catálogo **antes** de fazer a recarga (via `valueObj.cost`). O telegram-bot não faz isso.
+O `valorFacial` na linha ~1203 do telegram-bot usa `orderData.value || orderData.valor || cost`. Como a API não retorna `value`/`valor`, cai no fallback `cost` (preço do revendedor). Precisa buscar o valor facial do catálogo na sessão, da mesma forma que fizemos com `api_cost`.
 
-### Solução
+**Correção**: salvar o valor facial real do catálogo na sessão (handler `rec_val_`) e usá-lo na inserção.
 
-Salvar o `custo_api` (v.cost do catálogo) na sessão do Telegram, junto com o custo do usuário, e usá-lo na hora de gravar a recarga.
-
-**Arquivo:** `supabase/functions/telegram-bot/index.ts`
-
-1. **Na seleção do valor (linha ~1037-1042):** Ao montar os botões, já temos `v.cost` (custo API). Salvar esse valor na sessão junto com `userCost`. Alterar o `callback_data` ou a sessão para incluir o custo API.
-
-2. **Na etapa `rec_val_` (linha ~1052-1074):** Buscar o `v.cost` real do catálogo (que já é carregado ali na linha 1060-1062) e salvar na sessão como `custo_api`.
-
-3. **Na confirmação `rconfirm_yes` (linha ~1162):** Ler `custo_api` da sessão e usar na inserção em vez de `orderData.cost`.
-
-### Mudancas concretas
-
-**Passo 1** — No handler `rec_val_` (~linha 1060-1073), após buscar o catálogo, extrair o custo API real:
-
-```typescript
-const carrier = catalog.find((c: any) => c.carrierId === carrierId);
-const carrierName = carrier?.name || carrierId;
-// Extrair custo API do catálogo
-const valueObj = carrier?.values?.find((v: any) => v.valueId === valueId);
-const apiCost = Number(valueObj?.cost || 0);
-```
-
-E adicionar `api_cost: apiCost` na sessão salva.
-
-**Passo 2** — Na confirmação `rconfirm_yes` (~linha 1162), ler da sessão:
-
-```typescript
-const { telefone, carrier_id: carrierId, value_id: valueId, valor: cost, user_id: userId, api_cost: apiCostFromSession } = confirmSession.data || {};
-```
-
-**Passo 3** — Na inserção (~linha 1203), usar o valor da sessão:
-
-```typescript
-const custoApi = Number(apiCostFromSession || orderData.cost || 0);
-```
-
-Tambem corrigir o `valorFacial` para buscar do catálogo se `orderData.value` não existir.
-
-### Resumo tecnico
-
-| O que | Antes | Depois |
-|---|---|---|
-| `custo_api` | `orderData.cost` (sempre 0) | Vem da sessão, extraído do catálogo |
-| Arquivos alterados | 1 | `telegram-bot/index.ts` |
-| Risco | Nenhum — apenas adiciona dado à sessão existente |
+### Arquivos
+- Migração SQL para corrigir os 5 registros
+- `supabase/functions/telegram-bot/index.ts` — salvar `valor_facial` na sessão e usar na inserção
 
