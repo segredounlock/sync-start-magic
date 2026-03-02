@@ -13,7 +13,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import RealtimeDashboard from "@/components/RealtimeDashboard";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { PollManager } from "@/components/PollManager";
-import { ChatPage } from "@/components/chat/ChatPage";
+
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -60,7 +60,7 @@ interface RecargaHistorico {
   created_at: string;
 }
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "chat";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes";
 
 interface PricingRule {
   id?: string;
@@ -1071,7 +1071,7 @@ export default function Principal() {
     { key: "bot", icon: Bot, label: "Bot Telegram", color: "text-[hsl(200,80%,55%)]" },
     { key: "broadcast", icon: Megaphone, label: "Broadcast", color: "text-warning" },
     { key: "enquetes", icon: BarChart3, label: "Enquetes", color: "text-accent" },
-    { key: "chat", icon: Send, label: "Chat", color: "text-[hsl(200,80%,55%)]" },
+    
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
@@ -1201,7 +1201,7 @@ export default function Principal() {
               {view === "geral" && "Configurações gerais do sistema."}
               {view === "broadcast" && "Envie mensagens em massa para usuários do Telegram."}
               {view === "enquetes" && "Crie enquetes e acompanhe a votação em tempo real."}
-              {view === "chat" && "Converse com os usuários do sistema."}
+              
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
@@ -3204,11 +3204,6 @@ export default function Principal() {
           {/* ===== ENQUETES ===== */}
           {view === "enquetes" && <PollManager />}
 
-          {/* ===== CHAT ===== */}
-          {view === "chat" && (
-            <ChatPage onBack={() => setView("dashboard")} />
-          )}
-
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
         </main>
@@ -3239,6 +3234,7 @@ export default function Principal() {
         userRole="Administrador Master"
         onSignOut={signOut}
         panelLinks={[
+          { label: "Bate-papo", path: "/chat", icon: Send, color: "text-[hsl(200,80%,55%)]" },
           { label: "Painel Admin", path: "/admin", icon: BarChart3, color: "text-primary" },
           { label: "Painel Cliente", path: "/painel", icon: Landmark, color: "text-success" },
         ]}
