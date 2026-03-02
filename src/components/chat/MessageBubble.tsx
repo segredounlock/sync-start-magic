@@ -119,11 +119,11 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
             ? "bg-primary text-primary-foreground rounded-br-md"
             : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
         }`}>
-          {/* Dropdown trigger (chevron) */}
+          {/* Dropdown trigger (chevron) - always visible */}
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className={`absolute top-1 ${isOwn ? "left-1" : "right-1"} p-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity ${
-              isOwn ? "hover:bg-primary-foreground/10" : "hover:bg-muted"
+            className={`absolute top-1 ${isOwn ? "left-1" : "right-1"} p-0.5 rounded-md transition-opacity ${
+              isOwn ? "hover:bg-primary-foreground/10 text-primary-foreground/40 hover:text-primary-foreground/70" : "hover:bg-muted text-muted-foreground/40 hover:text-muted-foreground/70"
             }`}
           >
             <ChevronDown className={`h-3.5 w-3.5 ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`} />
