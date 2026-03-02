@@ -280,8 +280,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           >
             {/* Dropdown trigger (desktop) */}
             <button
-              onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
-              className={`absolute top-1.5 right-1.5 p-0.5 rounded-md transition-colors hidden sm:block ${
+              onPointerDown={(e) => { e.stopPropagation(); }}
+              onPointerUp={(e) => { e.stopPropagation(); }}
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); setShowDropdown(!showDropdown); }}
+              className={`absolute top-1.5 right-1.5 z-10 p-1 rounded-md transition-colors hidden sm:block ${
                 showDropdown ? "!block" : ""
               } ${
                 isOwn ? "hover:bg-white/10 text-white/60 hover:text-white" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground"
