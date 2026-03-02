@@ -134,6 +134,9 @@ serve(async (req) => {
       "banners",
       "polls",
       "poll_votes",
+      "chat_conversations",
+      "chat_messages",
+      "chat_reactions",
     ];
 
     for (const table of restoreOrder) {

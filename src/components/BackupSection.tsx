@@ -14,6 +14,8 @@ const TABLES = [
   "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
   "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
   "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
+  "admin_notifications", "banners", "polls", "poll_votes",
+  "chat_conversations", "chat_messages", "chat_reactions",
 ];
 
 type TabKey = "dados" | "github";
@@ -148,21 +150,40 @@ export default function BackupSection() {
   };
 
   const SOURCE_PATHS = [
+    // Core
     "src/App.tsx","src/main.tsx","src/index.css","src/vite-env.d.ts",
+    // Pages
     "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ClientePortal.tsx",
     "src/pages/LandingPage.tsx","src/pages/NotFound.tsx","src/pages/Principal.tsx",
     "src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/TelegramMiniApp.tsx",
+    "src/pages/ResetPassword.tsx",
+    // Components
     "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
     "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
     "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
-    "src/components/MobileBottomNav.tsx","src/components/PinProtection.tsx",
-    "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
-    "src/components/RealtimeDashboard.tsx","src/components/RealtimeNotifications.tsx",
-    "src/components/Skeleton.tsx","src/components/ThemeToggle.tsx",
-    "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts","src/hooks/useTheme.tsx",
+    "src/components/BannersManager.tsx","src/components/FloatingPoll.tsx",
+    "src/components/MobileBottomNav.tsx","src/components/NotificationBell.tsx",
+    "src/components/PinProtection.tsx","src/components/PollManager.tsx",
+    "src/components/PopupBanner.tsx","src/components/PromoBanner.tsx",
+    "src/components/ProtectedRoute.tsx","src/components/RealtimeDashboard.tsx",
+    "src/components/RecargasTicker.tsx","src/components/Skeleton.tsx",
+    "src/components/SplashScreen.tsx","src/components/ThemeToggle.tsx",
+    // Chat components
+    "src/components/chat/ChatPage.tsx","src/components/chat/ChatWindow.tsx",
+    "src/components/chat/ConversationList.tsx","src/components/chat/MessageBubble.tsx",
+    "src/components/chat/EmojiPicker.tsx","src/components/chat/AudioRecorder.tsx",
+    "src/components/chat/NewChatModal.tsx",
+    // Hooks
+    "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
+    "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/useTheme.tsx",
+    // Libs
     "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
+    // Integrations
     "src/integrations/supabase/client.ts","src/integrations/supabase/types.ts",
-    "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts","postcss.config.js","index.html","package.json","README.md",
+    // Config
+    "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts",
+    "postcss.config.js","index.html","package.json","README.md",
+    // Edge Functions
     "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
     "supabase/functions/admin-toggle-role/index.ts",
     "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
@@ -172,6 +193,8 @@ export default function BackupSection() {
     "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
     "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
     "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
+    // Supabase config
+    "supabase/config.toml",
   ];
 
   const handleExport = async () => {
