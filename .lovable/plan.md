@@ -1,33 +1,61 @@
 
 
-## Problema
+## Plano: Sistema de Atualização Inteligente + Correção de Build
 
-O administrador **já consegue** editar mensagens de outros usuários a qualquer momento. Porém, ao editar suas **próprias mensagens**, existe um limite de 10 minutos — o mesmo que usuários normais.
+### Problema Atual
+1. **Erro de build**: O componente `RecargaReceipt.tsx` importa `html2canvas` que não está instalado, quebrando o build.
+2. **Pedido do usuário**: Criar um sistema de "atualização" que permita exportar o estado atual do sistema como um pacote de atualização, e depois importá-lo em outra instância (ou na mesma após migração), atualizando tudo sem quebrar.
 
-O comportamento correto é: **admin pode editar qualquer mensagem (própria ou de terceiros) sem limite de tempo**.
+---
 
-## Plano
+### Correção Imediata: Build Error
 
-**Arquivo:** `src/components/chat/MessageBubble.tsx` (linhas 101-105)
+**Arquivo**: `src/components/RecargaReceipt.tsx`
+- Remover a importação dinâmica de `html2canvas` (não instalado)
+- O botão "Download" vai usar o fallback de compartilhar/copiar texto que já existe
 
-Ajustar a lógica de `canEdit` para que, quando o usuário for admin, não haja restrição de tempo nem para mensagens próprias:
+---
 
-```tsx
-// Atual:
-const canEditOwn = isOwn && message.type === "text" && !message.is_deleted && onEdit &&
-  (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000;
-const canEditAdmin = isCurrentUserAdmin && !isOwn && message.type === "text" && !message.is_deleted && onEdit;
-const canEdit = canEditOwn || canEditAdmin;
+### Sistema de Atualização
 
-// Novo:
-const isTextEditable = message.type === "text" && !message.is_deleted && !!onEdit;
-const canEditOwn = isOwn && isTextEditable &&
-  (isCurrentUserAdmin || (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000);
-const canEditAdmin = isCurrentUserAdmin && !isOwn && isTextEditable;
-const canEdit = canEditOwn || canEditAdmin;
-```
+O conceito é transformar o sistema de backup existente em um **sistema de atualização versionado** com as seguintes capacidades:
 
-Isso permite que o admin edite suas próprias mensagens a qualquer momento, enquanto usuários normais continuam com o limite de 10 minutos.
+#### 1. Nova aba "Atualização" no BackupSection
+- Adicionar uma terceira aba ao lado de "Dados" e "GitHub" chamada **"Atualização"**
+- Interface com dois botões: **"Gerar Pacote de Atualização"** e **"Aplicar Atualização"**
 
-Nenhuma alteração no backend (`useChat.ts`) é necessária — ele já suporta edição sem limite para admins.
+#### 2. Gerar Pacote de Atualização (Exportar)
+- Exporta um ZIP contendo:
+  - `update-manifest.json` com versão, data, lista de tabelas e arquivos, checksums
+  - `database/` com dados de todas as 23 tabelas (via edge function existente)
+  - `source/` com todo o código-fonte (lista SOURCE_PATHS existente)
+- O manifesto inclui a versão do sistema para comparação na hora de aplicar
+
+#### 3. Aplicar Atualização (Importar)
+- Upload de um ZIP de atualização
+- Lê o `update-manifest.json` e compara com a versão atual
+- **Restaura banco de dados** via edge function `backup-restore` existente (já faz upsert inteligente sem apagar dados)
+- Mostra um resumo do que foi atualizado (tabelas, quantidade de registros)
+- Exibe status de cada tabela: restaurada, ignorada, erro
+
+#### 4. Controle de Versão no Banco
+- Armazenar a versão atual do sistema na tabela `system_config` com a chave `system_version`
+- A cada atualização aplicada, a versão é incrementada automaticamente
+
+---
+
+### Arquivos a Modificar
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/RecargaReceipt.tsx` | Remover import `html2canvas` |
+| `src/components/BackupSection.tsx` | Adicionar aba "Atualização" com exportação/importação inteligente |
+
+### Detalhes Técnicos
+
+- Reutiliza a edge function `backup-export` para exportar dados do banco
+- Reutiliza a edge function `backup-restore` para restaurar dados (já faz upsert sem quebrar FK)
+- O pacote de atualização é o mesmo ZIP do backup mas com um manifesto de versão adicional
+- A restauração de código-fonte não é automática (o código roda no Lovable), mas os dados do banco são restaurados diretamente
+- A versão do sistema é salva em `system_config` para rastreamento
 
