@@ -231,7 +231,7 @@ export function useChatMessages(conversationId: string | null) {
       initialLoadDone.current = true;
     }
 
-    // Mark unread messages as read
+    // Mark unread messages as read + insert read receipts
     if (user) {
       const unreadIds = (data || [])
         .filter((m: any) => m.sender_id !== user.id && !m.is_read)
@@ -241,11 +241,20 @@ export function useChatMessages(conversationId: string | null) {
           .from("chat_messages")
           .update({ is_read: true, read_at: new Date().toISOString() })
           .in("id", unreadIds);
+
+        // Insert read receipts for each message
+        const readReceipts = unreadIds.map((msgId: string) => ({
+          message_id: msgId,
+          user_id: user.id,
+          read_at: new Date().toISOString(),
+        }));
+        await supabase
+          .from("chat_message_reads")
+          .upsert(readReceipts, { onConflict: "message_id,user_id" });
       }
     }
   }, [conversationId, user]);
 
-  // Debounced fetch to avoid rapid re-fetches from realtime
   const debouncedFetch = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchMessages(), 300);
