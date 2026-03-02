@@ -98,10 +98,11 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const senderName = message.sender?.nome || "Usuário";
   const isAdmin = message.sender?.isAdmin === true;
 
-  // Check if message can be edited (own within 10 min, or admin any time)
-  const canEditOwn = isOwn && message.type === "text" && !message.is_deleted && onEdit &&
-    (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000;
-  const canEditAdmin = isCurrentUserAdmin && !isOwn && message.type === "text" && !message.is_deleted && onEdit;
+  // Check if message can be edited (own within 10 min, or admin any time for any message)
+  const isTextEditable = message.type === "text" && !message.is_deleted && !!onEdit;
+  const canEditOwn = isOwn && isTextEditable &&
+    (isCurrentUserAdmin || (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000);
+  const canEditAdmin = isCurrentUserAdmin && !isOwn && isTextEditable;
   const canEdit = canEditOwn || canEditAdmin;
 
   // Admin can delete any message
