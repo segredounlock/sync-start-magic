@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
-import { X, Search } from "lucide-react";
+import { X, Search, BadgeCheck } from "lucide-react";
 
 interface NewChatModalProps {
   onClose: () => void;
@@ -14,10 +14,27 @@ interface UserItem {
   nome: string | null;
   email: string | null;
   avatar_url: string | null;
+  role?: string;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  revendedor: "Revendedor",
+  cliente: "Cliente",
+  user: "Usuário",
+  usuario: "Usuário",
+};
+
+const ROLE_STYLES: Record<string, string> = {
+  admin: "bg-primary/15 text-primary",
+  revendedor: "bg-warning/15 text-warning",
+  cliente: "bg-success/15 text-success",
+  user: "bg-accent/20 text-accent-foreground",
+  usuario: "bg-accent/20 text-accent-foreground",
+};
+
 export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -32,7 +49,19 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
       }
 
       const { data } = await query.limit(50);
-      setUsers(data || []);
+      if (!data || data.length === 0) { setUsers([]); setLoading(false); return; }
+
+      // Fetch roles for these users
+      const userIds = data.map(u => u.id);
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", userIds);
+
+      const roleMap: Record<string, string> = {};
+      (roles || []).forEach(r => { roleMap[r.user_id] = r.role; });
+
+      setUsers(data.map(u => ({ ...u, role: roleMap[u.id] || "usuario" })));
       setLoading(false);
     };
     fetchUsers();
@@ -90,6 +119,10 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
             users.map(u => {
               const name = u.nome || u.email?.split("@")[0] || "Usuário";
               const initial = (name[0] || "U").toUpperCase();
+              const isAdmin = u.role === "admin";
+              const roleKey = u.role || "usuario";
+              const roleLabel = ROLE_LABELS[roleKey] || "Usuário";
+              const roleStyle = ROLE_STYLES[roleKey] || ROLE_STYLES.usuario;
               return (
                 <button
                   key={u.id}
@@ -97,15 +130,28 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left"
                 >
                   {u.avatar_url ? (
-                    <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-border" />
+                    <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-border" referrerPolicy="no-referrer" crossOrigin="anonymous" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                       {initial}
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{name}</p>
-                    <p className="text-xs text-muted-foreground">{u.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+                      {isAdmin && (
+                        <motion.div
+                          animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
+                          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                          className="inline-flex flex-shrink-0"
+                        >
+                          <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
+                        </motion.div>
+                      )}
+                    </div>
+                    <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${roleStyle}`}>
+                      {roleLabel}
+                    </span>
                   </div>
                 </button>
               );
