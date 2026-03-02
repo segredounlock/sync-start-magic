@@ -110,7 +110,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
   };
 
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-2 relative overflow-hidden`}>
+    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-2 relative overflow-visible`}>
       {/* Swipe reply indicator */}
       <motion.div
         className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "left-3" : "right-3"} flex items-center justify-center`}
