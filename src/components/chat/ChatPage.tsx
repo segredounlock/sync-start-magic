@@ -69,6 +69,7 @@ export function ChatPage({ onBack }: ChatPageProps) {
                 otherUser={activeConversation?.other_user}
                 isGroup={isGroupChat}
                 groupName={activeConversation?.name || undefined}
+                groupIcon={activeConversation?.icon}
                 onBack={() => setActiveConversationId(null)}
               />
             </motion.div>
@@ -135,6 +136,7 @@ export function ChatPage({ onBack }: ChatPageProps) {
             otherUser={activeConversation?.other_user}
             isGroup={isGroupChat}
             groupName={activeConversation?.name || undefined}
+            groupIcon={activeConversation?.icon}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
