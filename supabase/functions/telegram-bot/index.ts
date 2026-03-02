@@ -1062,6 +1062,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     const carrierName = carrier?.name || carrierId;
     const valueObj = carrier?.values?.find((v: any) => v.valueId === valueId);
     const apiCost = Number(valueObj?.cost || 0);
+    const valorFacial = Number(valueObj?.maxValue || valueObj?.minValue || 0);
 
     const user = await findUserByTelegram(supabase, telegramId);
     if (!user) return;
@@ -1073,6 +1074,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       operadora_nome: carrierName,
       valor: cost,
       api_cost: apiCost,
+      valor_facial: valorFacial,
       bot_msg_id: msgId,
     });
 
@@ -1162,7 +1164,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       await editMessageWithKeyboard(token, chatId, msgId, "❌ Sessão expirada. Tente novamente.", [[{ text: "📖 Menu", callback_data: "menu_main" }]]);
       return;
     }
-    const { telefone, carrier_id: carrierId, value_id: valueId, valor: cost, user_id: userId, api_cost: apiCostFromSession } = confirmSession.data || {};
+    const { telefone, carrier_id: carrierId, value_id: valueId, valor: cost, user_id: userId, api_cost: apiCostFromSession, valor_facial: valorFacialFromSession } = confirmSession.data || {};
     clearSession(supabase, String(chatId));
 
     await editMessageWithKeyboard(token, chatId, msgId,
@@ -1202,7 +1204,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const orderData = rechargeResult.data || {};
       const externalId = orderData._id || orderData.id || orderData.orderId || null;
       const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
-      const valorFacial = Number(orderData.value || orderData.valor || cost);
+      const valorFacial = Number(valorFacialFromSession || orderData.value || orderData.valor || cost);
       const custoApi = Number(apiCostFromSession || orderData.cost || 0);
 
       const { error: insertError } = await supabase.from("recargas").insert({
