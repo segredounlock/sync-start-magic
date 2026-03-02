@@ -1162,11 +1162,14 @@ export default function Principal() {
           </nav>
 
           <div className="p-3 border-t border-border space-y-1">
+            <button onClick={() => navigate("/chat")} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <Send className="h-4 w-4 text-[hsl(200,80%,55%)]" /> <span>Bate-papo</span>
+            </button>
             <button onClick={() => navigate("/admin")} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
               <BarChart3 className="h-4 w-4 text-primary" /> <span>Painel Admin</span>
             </button>
             <button onClick={() => navigate("/painel")} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
-              <Landmark className="h-4 w-4 text-success" /> <span>Painel Cliente</span>
+              <Landmark className="h-4 w-4 text-primary" /> <span>Painel Cliente</span>
             </button>
           </div>
 
