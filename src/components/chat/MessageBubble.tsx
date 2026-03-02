@@ -143,16 +143,13 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
 
         <div className={`max-w-[70%] ${isOwn ? "order-1" : ""}`}>
           {/* Sender name + admin badge */}
-          <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
-            <span className={`text-[11px] font-semibold ${isOwn ? "text-primary-foreground/70" : "text-primary"}`}>{senderName}</span>
+          <div className={`flex items-center gap-1.5 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
+            <span className={`text-[11px] font-semibold ${isOwn ? "text-primary" : "text-primary"}`}>{senderName}</span>
             {isAdmin && (
-              <motion.div
-                animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                title="Administrador verificado"
-              >
-                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-              </motion.div>
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary/20 border border-primary/30 text-[9px] font-bold text-primary">
+                <Star className="h-2.5 w-2.5 text-primary fill-primary" />
+                Admin
+              </span>
             )}
           </div>
 
