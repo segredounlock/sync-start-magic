@@ -45,6 +45,13 @@ export function usePresenceTracker() {
     const channel = getSharedChannel();
     channelRef.current = channel;
 
+    // Update last_seen_at immediately on entering chat
+    supabase
+      .from("profiles")
+      .update({ last_seen_at: new Date().toISOString() } as any)
+      .eq("id", user.id)
+      .then(() => {});
+
     // Only subscribe if not already subscribed
     if (channel.state !== "joined" && channel.state !== "joining") {
       channel
