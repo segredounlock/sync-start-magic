@@ -140,7 +140,7 @@ export function FloatingPoll() {
         initial={{ opacity: 0, y: 80, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 80, scale: 0.9 }}
-        className="fixed bottom-20 right-4 z-50 w-[calc(100%-2rem)] max-w-xs"
+        className="fixed bottom-20 right-4 z-30 w-[calc(100%-2rem)] max-w-xs"
       >
         {minimized ? (
           <button
