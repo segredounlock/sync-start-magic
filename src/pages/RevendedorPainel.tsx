@@ -1021,7 +1021,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                 : "bg-muted text-muted-foreground"
                             }`}>
                               {trackingStatus.data.status === "feita" || trackingStatus.data.status === "completed" ? "✅ Concluída"
-                                : trackingStatus.data.status === "pendente" || trackingStatus.data.status === "pending" ? "⏳ Pendente"
+                                : trackingStatus.data.status === "pendente" || trackingStatus.data.status === "pending" ? "⏳ Processando"
                                 : trackingStatus.data.status === "falha" ? "❌ Falhou"
                                 : trackingStatus.data.status}
                             </span>

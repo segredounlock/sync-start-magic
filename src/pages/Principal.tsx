@@ -2002,7 +2002,7 @@ export default function Principal() {
                       <div className="md:hidden space-y-2">
                         {revTransactions.slice(0, 20).map((t, i) => {
                           const isDeposit = t.type === "deposit" || t.type === "deposito";
-                          const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Pendente" : t.status;
+                          const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
                           const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                           return (
                             <div key={i} className="rounded-lg border border-border p-3">
@@ -2039,7 +2039,7 @@ export default function Principal() {
                                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                     (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" :
                                     t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                                  }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Pendente" : t.status}</span>
+                                  }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status}</span>
                                 </td>
                               </tr>
                             ))}

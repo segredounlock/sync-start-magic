@@ -1539,7 +1539,7 @@ export default function TelegramMiniApp() {
                       <div>
                         <p className="font-semibold text-sm" style={st.green}>+{formatCurrency(t.amount)}</p>
                         <p className="text-[10px]" style={{ color: (t.status === "approved" || t.status === "completed") ? "#4ade80" : isPending ? "#facc15" : "var(--tg-destructive)" }}>
-                          {(t.status === "approved" || t.status === "completed") ? "✅ Confirmado" : isPending ? "⏳ Pendente" : "❌ Falha"}
+                          {(t.status === "approved" || t.status === "completed") ? "✅ Confirmado" : isPending ? "⏳ Processando" : "❌ Falha"}
                         </p>
                       </div>
                       {hasQr && <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />}
