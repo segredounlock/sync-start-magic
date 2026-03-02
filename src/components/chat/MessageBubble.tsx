@@ -217,7 +217,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           )}
 
           <div
-            className={`relative px-3 py-2 rounded-2xl select-none overflow-hidden ${
+            className={`group relative px-3 py-2 rounded-2xl select-none overflow-visible ${
               isOwn
                 ? "bg-[hsl(152,40%,22%)] text-white rounded-br-md"
                 : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
@@ -254,9 +254,11 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           >
             {/* Dropdown trigger (desktop) */}
             <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className={`absolute top-1.5 right-1.5 p-0.5 rounded-md transition-colors hidden sm:block ${
-                isOwn ? "hover:bg-white/10 text-white/60 hover:text-white" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground"
+              onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
+              className={`absolute top-1.5 right-1.5 p-1 rounded-md transition-all opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 active:opacity-100 ${
+                showDropdown ? "!opacity-100" : ""
+              } ${
+                isOwn ? "hover:bg-white/10 text-white/60 hover:text-white active:bg-white/10" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground active:bg-muted"
               }`}
             >
               <ChevronDown className="h-3.5 w-3.5" />
