@@ -1301,6 +1301,8 @@ async function sendMainMenu(token: string, chatId: number, user: any) {
     ], [
       { text: "👤 Minha Conta", callback_data: "menu_conta" },
       { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
+    ], [
+      { text: "🔓 Unlocked", web_app: { url: "https://unlocked.poeki.dev/" } },
     ]]
   );
 }
