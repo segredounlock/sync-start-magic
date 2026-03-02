@@ -2851,7 +2851,7 @@ export default function Principal() {
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {[
                     { label: "Revendedores", value: reportData.length, icon: Users, color: "text-primary" },
-                    { label: "Total Recarga (Valor Facial)", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
+                    { label: "Total Recarga (Valor da Recarga)", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
                     { label: "Custo da Operadora (API)", value: fmt(reportData.reduce((s, r) => s + r.totalCusto, 0)), icon: Wallet, color: "text-warning" },
                     { label: "Total Cobrado (Vendas)", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
                     { label: "Lucro do Período", value: fmt(reportData.reduce((s, r) => s + r.lucro, 0)), icon: DollarSign, color: "text-success" },
