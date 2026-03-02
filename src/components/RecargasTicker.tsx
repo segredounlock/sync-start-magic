@@ -13,18 +13,44 @@ interface TickerRecarga {
   userName?: string;
 }
 
+async function fetchAllRecargas(): Promise<TickerRecarga[]> {
+  const all: any[] = [];
+  let offset = 0;
+  const batchSize = 1000;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data } = await supabase
+      .from("recargas")
+      .select("id, telefone, operadora, valor, status, created_at, user_id")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + batchSize - 1);
+
+    if (data && data.length > 0) {
+      all.push(...data);
+      offset += batchSize;
+      hasMore = data.length === batchSize;
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return all;
+}
+
 export default function RecargasTicker() {
   const [recargas, setRecargas] = useState<TickerRecarga[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const nameCache = useRef<Map<string, string>>(new Map());
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<number | null>(null);
+  const offsetRef = useRef(0);
+  const isPaused = useRef(false);
+  const speedPx = 1.2; // pixels per frame
 
   const fetchRecargas = useCallback(async () => {
     try {
-      const { data } = await supabase
-        .from("recargas")
-        .select("id, telefone, operadora, valor, status, created_at, user_id")
-        .order("created_at", { ascending: false })
-        .limit(100);
+      const data = await fetchAllRecargas();
 
       if (!data || data.length === 0) {
         setRecargas([]);
@@ -32,15 +58,16 @@ export default function RecargasTicker() {
         return;
       }
 
-      // Only fetch names we don't have cached yet
       const userIds = [...new Set(data.map(r => r.user_id))];
       const uncachedIds = userIds.filter(id => !nameCache.current.has(id));
 
-      if (uncachedIds.length > 0) {
+      // Fetch in batches of 50 to avoid too-large IN queries
+      for (let i = 0; i < uncachedIds.length; i += 50) {
+        const batch = uncachedIds.slice(i, i + 50);
         const { data: profiles } = await supabase
           .from("profiles")
           .select("id, nome")
-          .in("id", uncachedIds);
+          .in("id", batch);
         (profiles || []).forEach(p => nameCache.current.set(p.id, p.nome || "Usuário"));
       }
 
@@ -64,6 +91,29 @@ export default function RecargasTicker() {
     return () => { supabase.removeChannel(ch); };
   }, [fetchRecargas]);
 
+  // JS-based smooth infinite scroll
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || recargas.length < 3) return;
+
+    const animate = () => {
+      if (!isPaused.current && el) {
+        offsetRef.current += speedPx;
+        const halfWidth = el.scrollWidth / 2;
+        if (offsetRef.current >= halfWidth) {
+          offsetRef.current -= halfWidth;
+        }
+        el.style.transform = `translateX(-${offsetRef.current}px)`;
+      }
+      animRef.current = requestAnimationFrame(animate);
+    };
+
+    animRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
+  }, [recargas]);
+
   const statusIcon = (s: string) => {
     if (s === "completed" || s === "concluida") return <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />;
     if (s === "pending") return <Clock className="h-3.5 w-3.5 text-warning shrink-0 animate-pulse" />;
@@ -85,7 +135,6 @@ export default function RecargasTicker() {
     try { return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
   };
 
-  // Loading skeleton
   if (initialLoading) {
     return (
       <div className="bg-card backdrop-blur-md border-b border-border">
@@ -120,8 +169,8 @@ export default function RecargasTicker() {
     );
   }
 
-  const items = recargas.map((r) => (
-    <span key={r.id} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
+  const renderItem = (r: TickerRecarga, suffix = "") => (
+    <span key={r.id + suffix} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
       <span className="text-xs font-semibold text-primary">{r.userName} recarregou</span>
       {statusIcon(r.status)}
       <span className={`font-semibold text-xs ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
@@ -129,21 +178,25 @@ export default function RecargasTicker() {
       <span className="text-xs font-bold text-foreground">R$ {Number(r.valor).toFixed(2)}</span>
       <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
     </span>
-  ));
-
-  const shouldAnimate = recargas.length >= 5;
+  );
 
   return (
-    <div className="bg-card backdrop-blur-md border-b border-border overflow-hidden">
+    <div
+      className="bg-card backdrop-blur-md border-b border-border overflow-hidden"
+      onMouseEnter={() => { isPaused.current = true; }}
+      onMouseLeave={() => { isPaused.current = false; }}
+      onTouchStart={() => { isPaused.current = true; }}
+      onTouchEnd={() => { isPaused.current = false; }}
+    >
       <div className="flex items-center h-8">
-        <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full">
+        <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full z-10">
           <Smartphone className="h-3.5 w-3.5 text-primary" />
           <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
         </div>
         <div className="overflow-hidden flex-1">
-          <div className={`flex items-center ${shouldAnimate ? "ticker-scroll" : ""}`}>
-            {items}
-            {shouldAnimate && items}
+          <div ref={scrollRef} className="flex items-center will-change-transform" style={{ width: "max-content" }}>
+            {recargas.map(r => renderItem(r))}
+            {recargas.map(r => renderItem(r, "-dup"))}
           </div>
         </div>
       </div>
