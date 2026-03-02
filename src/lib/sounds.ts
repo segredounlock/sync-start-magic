@@ -1,9 +1,11 @@
 /**
- * Global AudioContext singleton – unlocked on first user gesture.
- * This ensures notification sounds work on mobile browsers.
+ * Global audio manager for notification sounds.
+ * Works around mobile autoplay restrictions by unlocking on first user gesture.
  */
 let _ctx: AudioContext | null = null;
 let _unlocked = false;
+let _listenersAttached = false;
+const _pendingPlays: Array<() => void> = [];
 
 function getAudioContext(): AudioContext {
   if (!_ctx) {
@@ -12,61 +14,139 @@ function getAudioContext(): AudioContext {
   return _ctx;
 }
 
-/** Call once on any user gesture (click/touch) to unlock audio on mobile */
-export function unlockAudio() {
-  if (_unlocked) return;
-  try {
-    const ctx = getAudioContext();
-    if (ctx.state === "suspended") {
-      ctx.resume();
+function flushPending() {
+  if (!_unlocked) return;
+  const pending = [..._pendingPlays];
+  _pendingPlays.length = 0;
+  pending.forEach((fn) => {
+    try {
+      fn();
+    } catch {
+      // ignore individual failures
     }
-    // Create a silent buffer to fully unlock iOS Safari
-    const buf = ctx.createBuffer(1, 1, 22050);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.connect(ctx.destination);
-    src.start(0);
+  });
+}
+
+function detachUnlockListeners() {
+  if (!_listenersAttached || typeof window === "undefined") return;
+  window.removeEventListener("pointerdown", handleUnlockGesture, true);
+  window.removeEventListener("touchstart", handleUnlockGesture, true);
+  window.removeEventListener("click", handleUnlockGesture, true);
+  window.removeEventListener("keydown", handleUnlockGesture, true);
+  _listenersAttached = false;
+}
+
+function attachUnlockListeners() {
+  if (_listenersAttached || typeof window === "undefined") return;
+  window.addEventListener("pointerdown", handleUnlockGesture, true);
+  window.addEventListener("touchstart", handleUnlockGesture, true);
+  window.addEventListener("click", handleUnlockGesture, true);
+  window.addEventListener("keydown", handleUnlockGesture, true);
+  _listenersAttached = true;
+}
+
+function markUnlockedIfRunning(ctx: AudioContext) {
+  if (ctx.state === "running") {
     _unlocked = true;
-  } catch {
-    // ignore
+    detachUnlockListeners();
+    flushPending();
   }
 }
 
-// Auto-unlock on first user interaction
-if (typeof window !== "undefined") {
-  const unlock = () => {
-    unlockAudio();
-    window.removeEventListener("click", unlock, true);
-    window.removeEventListener("touchstart", unlock, true);
-    window.removeEventListener("keydown", unlock, true);
-  };
-  window.addEventListener("click", unlock, true);
-  window.addEventListener("touchstart", unlock, true);
-  window.addEventListener("keydown", unlock, true);
+function unlockWithSilentBuffer(ctx: AudioContext) {
+  const buf = ctx.createBuffer(1, 1, 22050);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  src.start(0);
+}
+
+function handleUnlockGesture() {
+  unlockAudio();
+}
+
+/**
+ * Try to unlock audio playback capability on mobile.
+ * Must be called during a user gesture or by unlock listeners.
+ */
+export function unlockAudio() {
+  if (_unlocked) return;
+
+  try {
+    const ctx = getAudioContext();
+
+    // Some browsers need resume first; no await to keep this sync-friendly in gesture handlers.
+    if (ctx.state === "suspended") {
+      ctx.resume().then(() => {
+        try {
+          markUnlockedIfRunning(ctx);
+        } catch {
+          // ignore
+        }
+      }).catch(() => {
+        // ignore
+      });
+    }
+
+    // iOS/Safari unlock trick
+    unlockWithSilentBuffer(ctx);
+    markUnlockedIfRunning(ctx);
+
+    // Fallback unlock path using HTMLAudio element (helps on some mobile browsers)
+    try {
+      const el = new Audio();
+      el.muted = true;
+      el.play().then(() => {
+        el.pause();
+      }).catch(() => {
+        // ignore
+      });
+    } catch {
+      // ignore
+    }
+
+    // Keep listeners if still not unlocked yet.
+    if (!_unlocked) attachUnlockListeners();
+  } catch {
+    attachUnlockListeners();
+  }
 }
 
 function playNotes(
   notes: Array<{ freq: number; type: OscillatorType; delay: number; duration: number; gain: number }>
 ) {
-  try {
-    const ctx = getAudioContext();
-    if (ctx.state === "suspended") ctx.resume();
+  const playNow = () => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
 
-    notes.forEach(({ freq, type, delay, duration, gain: vol }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + duration);
-    });
-  } catch {
-    // Silently fail if audio not supported
+      notes.forEach(({ freq, type, delay, duration, gain: vol }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + duration);
+      });
+    } catch {
+      // Silently fail if audio not supported
+    }
+  };
+
+  // If not unlocked yet, queue once and ensure gesture listeners are active.
+  if (!_unlocked) {
+    _pendingPlays.push(playNow);
+    attachUnlockListeners();
+    return;
   }
+
+  playNow();
 }
 
 /**
@@ -99,4 +179,9 @@ export function playTelegramSignupSound() {
     { freq: 196.0, type: "triangle", delay: 0, duration: 0.3, gain: 0.12 },
     { freq: 261.63, type: "square", delay: 0.15, duration: 0.3, gain: 0.12 },
   ]);
+}
+
+// Keep unlock listeners ready globally as soon as module loads.
+if (typeof window !== "undefined") {
+  attachUnlockListeners();
 }
