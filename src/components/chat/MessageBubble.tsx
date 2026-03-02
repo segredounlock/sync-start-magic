@@ -288,9 +288,11 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                       {message.is_pinned ? <><PinOff className="h-4 w-4 text-warning" /> Desafixar</> : <><Pin className="h-4 w-4 text-warning" /> Fixar</>}
                     </button>
                   )}
+                  {isOwn && (
                   <button onClick={() => { setShowMessageInfo(true); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
                     <Info className="h-4 w-4 text-muted-foreground" /> Dados
                   </button>
+                  )}
                   {canEdit && (
                     <button onClick={handleStartEdit} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
                       <Pencil className="h-4 w-4 text-warning" /> Editar
@@ -479,6 +481,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                   </button>
                 )}
 
+                {isOwn && (
                 <button
                   onClick={() => { setShowMessageInfo(true); setShowLongPressMenu(false); }}
                   className="w-full flex items-center justify-between px-5 py-3.5 text-foreground active:bg-muted/60 transition-colors"
@@ -486,6 +489,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                   <span className="text-[15px]">Dados da mensagem</span>
                   <Info className="h-5 w-5 text-muted-foreground" />
                 </button>
+                )}
               </div>
 
               {/* Cancel */}
