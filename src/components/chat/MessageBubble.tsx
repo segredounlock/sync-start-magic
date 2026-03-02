@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X } from "lucide-react";
+import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info } from "lucide-react";
+import { MessageInfoModal } from "./MessageInfoModal";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -20,6 +21,7 @@ const SWIPE_THRESHOLD = 60;
 export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete, onPin, onScrollToMessage }: MessageBubbleProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLongPressMenu, setShowLongPressMenu] = useState(false);
+  const [showMessageInfo, setShowMessageInfo] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -217,6 +219,9 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                       {message.is_pinned ? <><PinOff className="h-4 w-4 text-warning" /> Desafixar</> : <><Pin className="h-4 w-4 text-warning" /> Fixar</>}
                     </button>
                   )}
+                  <button onClick={() => { setShowMessageInfo(true); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
+                    <Info className="h-4 w-4 text-muted-foreground" /> Dados
+                  </button>
                   {isOwn && (
                     <button onClick={() => { onDelete(); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
                       <Trash2 className="h-4 w-4" /> Apagar
@@ -363,6 +368,14 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                     <Trash2 className="h-5 w-5" />
                   </button>
                 )}
+
+                <button
+                  onClick={() => { setShowMessageInfo(true); setShowLongPressMenu(false); }}
+                  className="w-full flex items-center justify-between px-5 py-3.5 text-foreground active:bg-muted/60 transition-colors"
+                >
+                  <span className="text-[15px]">Dados da mensagem</span>
+                  <Info className="h-5 w-5 text-muted-foreground" />
+                </button>
               </div>
 
               {/* Cancel */}
@@ -378,6 +391,13 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
           </>
         )}
       </AnimatePresence>
+
+      {/* Message Info Modal */}
+      <MessageInfoModal
+        message={message}
+        open={showMessageInfo}
+        onClose={() => setShowMessageInfo(false)}
+      />
     </div>
   );
 }
