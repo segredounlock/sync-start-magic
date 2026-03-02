@@ -1592,14 +1592,18 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <div className="flex items-center gap-4">
                   <label className="relative cursor-pointer group">
                     {avatarUrl && !avatarError ? (
-                      <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" crossOrigin="anonymous" onError={() => setAvatarError(true)} />
+                      <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover shrink-0 ring-2 ring-primary/30" referrerPolicy="no-referrer" crossOrigin="anonymous" onError={() => setAvatarError(true)} />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-2xl shrink-0">
+                      <div className="w-16 h-16 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-2xl shrink-0 ring-2 ring-warning/40">
                         {userInitial}
                       </div>
                     )}
-                    <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {uploadingAvatar ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                    </div>
+                    {/* Badge de câmera sempre visível */}
+                    <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1 shadow-lg border-2 border-background">
+                      <Camera className="h-3 w-3" />
                     </div>
                     <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
                   </label>
@@ -1619,7 +1623,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     </span>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground">Clique na foto para alterar • JPG, PNG, WebP ou GIF até 2MB</p>
+                <p className="text-[11px] text-muted-foreground">📷 Toque no avatar para adicionar sua foto • JPG, PNG, WebP ou GIF até 2MB</p>
               </div>
                 <div className="glass-card rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-1">
