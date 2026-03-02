@@ -697,9 +697,21 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     e.target.value = "";
   };
 
+  const [avatarError, setAvatarError] = useState(false);
+
+  // Reset error when URL changes
+  useEffect(() => { setAvatarError(false); }, [avatarUrl]);
+
   const AvatarDisplay = ({ size = "w-10 h-10", textSize = "text-sm" }: { size?: string; textSize?: string }) => (
-    avatarUrl ? (
-      <img src={avatarUrl} alt="Avatar" className={`${size} rounded-full object-cover shrink-0`} />
+    avatarUrl && !avatarError ? (
+      <img 
+        src={avatarUrl} 
+        alt="Avatar" 
+        className={`${size} rounded-full object-cover shrink-0`} 
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        onError={() => setAvatarError(true)}
+      />
     ) : (
       <div className={`${size} rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold ${textSize} shrink-0`}>
         {userInitial}
@@ -1560,8 +1572,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               <div className="glass-card rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-4">
                   <label className="relative cursor-pointer group">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover shrink-0" />
+                    {avatarUrl && !avatarError ? (
+                      <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" crossOrigin="anonymous" onError={() => setAvatarError(true)} />
                     ) : (
                       <div className="w-16 h-16 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-2xl shrink-0">
                         {userInitial}
