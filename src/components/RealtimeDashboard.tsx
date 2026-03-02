@@ -215,14 +215,14 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
         <div className="glass-card rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4 text-success" />
-            <span className="text-xs text-muted-foreground">Vendas Hoje</span>
+            <span className="text-xs text-muted-foreground">Vendas Hoje (Cobrado)</span>
           </div>
           <AnimatedCounter value={stats.totalValue} prefix="R$&nbsp;" className="text-xl font-bold text-success" />
         </div>
         <div className="glass-card rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4 text-primary" />
-            <span className="text-xs text-muted-foreground">Lucro Estimado</span>
+            <span className="text-xs text-muted-foreground">Lucro Estimado (Cobrado - Custo API)</span>
           </div>
           <AnimatedCounter value={stats.totalValue - stats.totalCost} prefix="R$&nbsp;" className="text-xl font-bold text-primary" />
         </div>
