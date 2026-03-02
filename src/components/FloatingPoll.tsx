@@ -184,7 +184,7 @@ export function FloatingPoll() {
                 <button onClick={() => setMinimized(true)} className="p-1 rounded-md hover:bg-muted/50 text-muted-foreground">
                   <ChevronUp className="h-3.5 w-3.5 rotate-180" />
                 </button>
-                <button onClick={() => setDismissed(true)} className="p-1 rounded-md hover:bg-muted/50 text-muted-foreground">
+                <button onClick={() => setDismissed(true)} className="p-1 rounded-md hover:bg-destructive/15 text-destructive">
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
