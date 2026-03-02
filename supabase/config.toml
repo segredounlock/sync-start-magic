@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.bootstrap-admin]
 verify_jwt = false
+
+[functions.efi-setup]
+verify_jwt = false
