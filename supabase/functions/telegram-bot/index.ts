@@ -1152,14 +1152,15 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     return;
   }
 
-  if (data.startsWith("rconfirm_")) {
-    // Format: rconfirm_{telefone}_{carrierId}_{valueId}_{cost}_{userId}
-    const parts = data.replace("rconfirm_", "").split("_");
-    const telefone = parts[0];
-    const carrierId = parts[1];
-    const valueId = parts[2];
-    const cost = parseFloat(parts[3]);
-    const userId = parts[4];
+  if (data === "rconfirm_yes") {
+    // Read confirmation data from session
+    const confirmSession = await getSession(supabase, String(chatId));
+    if (!confirmSession || confirmSession.step !== "awaiting_recarga_confirm") {
+      await editMessageWithKeyboard(token, chatId, msgId, "❌ Sessão expirada. Tente novamente.", [[{ text: "📖 Menu", callback_data: "menu_main" }]]);
+      return;
+    }
+    const { telefone, carrier_id: carrierId, value_id: valueId, valor: cost, user_id: userId } = confirmSession.data || {};
+    clearSession(supabase, String(chatId));
 
     await editMessageWithKeyboard(token, chatId, msgId,
       "⏳ <b>Processando recarga...</b>\n\nAguarde um momento.",
@@ -1306,7 +1307,15 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
     return;
   }
 
-  clearSession(supabase, chatIdStr);
+  // Save confirmation data in session so we can use a short callback_data
+  await setSession(supabase, chatIdStr, "awaiting_recarga_confirm", {
+    user_id: user.id,
+    carrier_id,
+    value_id,
+    operadora_nome,
+    valor,
+    telefone,
+  });
   if (bot_msg_id) deleteMessageFire(token, chatId, bot_msg_id);
 
   const formattedPhone = telefone.length === 11
@@ -1316,7 +1325,7 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
   await sendMessageWithKeyboard(token, chatId,
     `📱 <b>Confirmar Recarga</b>\n\n📡 Operadora: <b>${operadora_nome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor: <b>R$ ${Number(valor).toFixed(2).replace(".", ",")}</b>\n💳 Saldo atual: R$ ${saldoAtual.toFixed(2).replace(".", ",")}`,
     [[
-      { text: "✅ Confirmar", callback_data: `rconfirm_${telefone}_${carrier_id}_${value_id}_${valor}_${user.id}` },
+      { text: "✅ Confirmar", callback_data: "rconfirm_yes" },
       { text: "❌ Cancelar", callback_data: "cancel" },
     ]]
   );
