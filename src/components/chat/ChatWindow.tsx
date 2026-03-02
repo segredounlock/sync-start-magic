@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatMessages, ChatMessage } from "@/hooks/useChat";
-import { useUserPresence } from "@/hooks/usePresence";
+import { useUserPresence, useGroupPresence } from "@/hooks/usePresence";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, BadgeCheck, ChevronDown } from "lucide-react";
 
 function formatLastSeen(dateStr: string): string {
   const date = new Date(dateStr);
@@ -33,6 +33,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
   const { user, role } = useAuth();
   const isUserAdmin = role === "admin";
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
+  const { onlineUsers, onlineCount } = useGroupPresence();
   const { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage } = useChatMessages(conversationId);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -40,8 +41,52 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [sending, setSending] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
+  const [members, setMembers] = useState<{ id: string; nome: string | null; avatar_url: string | null; role?: string }[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch group members (unique senders who have posted in this conversation)
+  useEffect(() => {
+    if (!isGroup) return;
+    const fetchMembers = async () => {
+      // Get unique sender IDs from messages
+      const senderIds = [...new Set(messages.map(m => m.sender_id))];
+      // Also add online users who may not have sent a message yet
+      onlineUsers.forEach(uid => { if (!senderIds.includes(uid)) senderIds.push(uid); });
+      if (senderIds.length === 0) return;
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, nome, avatar_url")
+        .in("id", senderIds);
+      
+      if (data) {
+        // Fetch roles
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .in("user_id", senderIds);
+        
+        const roleMap = new Map<string, string>();
+        roles?.forEach(r => { if (r.role === "admin") roleMap.set(r.user_id, r.role); });
+        
+        const sorted = data.map(p => ({ ...p, role: roleMap.get(p.id) }))
+          .sort((a, b) => {
+            // Admins first, then online, then alphabetical
+            const aAdmin = a.role === "admin" ? 0 : 1;
+            const bAdmin = b.role === "admin" ? 0 : 1;
+            if (aAdmin !== bAdmin) return aAdmin - bAdmin;
+            const aOnline = onlineUsers.includes(a.id) ? 0 : 1;
+            const bOnline = onlineUsers.includes(b.id) ? 0 : 1;
+            if (aOnline !== bOnline) return aOnline - bOnline;
+            return (a.nome || "").localeCompare(b.nome || "");
+          });
+        setMembers(sorted);
+      }
+    };
+    fetchMembers();
+  }, [isGroup, messages.length, onlineUsers.length]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
@@ -100,15 +145,28 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/80 backdrop-blur-sm">
+      <div
+        className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/80 backdrop-blur-sm cursor-pointer"
+        onClick={() => isGroup && setShowMembers(!showMembers)}
+      >
         {onBack && (
-          <button onClick={onBack} className="p-2 rounded-xl hover:bg-muted/50 transition-colors -ml-2">
+          <button onClick={(e) => { e.stopPropagation(); onBack(); }} className="p-2 rounded-xl hover:bg-muted/50 transition-colors -ml-2">
             <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </button>
         )}
         {isGroup ? (
-          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center relative">
             <Users className="h-5 w-5 text-primary" />
+            {onlineCount > 0 && (
+              <motion.div
+                key={onlineCount}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-success border-2 border-card flex items-center justify-center"
+              >
+                <span className="text-[8px] font-bold text-white px-0.5">{onlineCount}</span>
+              </motion.div>
+            )}
           </div>
         ) : otherUser?.avatar_url ? (
           <img src={otherUser.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
@@ -117,7 +175,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
             {initial}
           </div>
         )}
-        <div>
+        <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground flex items-center gap-1">
             {name}
             {otherUser?.role === 'admin' && (
@@ -131,7 +189,21 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
             )}
           </h3>
           <span className="text-[10px] text-muted-foreground">
-            {isGroup ? "Grupo público" : isOnline ? (
+            {isGroup ? (
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                <motion.span
+                  key={onlineCount}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-success font-medium"
+                >
+                  {onlineCount} online
+                </motion.span>
+                <span className="text-muted-foreground/60">·</span>
+                <span>{members.length} membros</span>
+              </span>
+            ) : isOnline ? (
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 <span className="text-success font-medium">Online</span>
@@ -143,7 +215,59 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
             )}
           </span>
         </div>
+        {isGroup && (
+          <motion.div animate={{ rotate: showMembers ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </motion.div>
+        )}
       </div>
+
+      {/* Members panel */}
+      <AnimatePresence>
+        {showMembers && isGroup && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="border-b border-border bg-muted/20 overflow-hidden"
+          >
+            <div className="px-4 py-2 max-h-48 overflow-y-auto space-y-1">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Membros ({members.length})
+              </p>
+              {members.map(m => {
+                const memberOnline = onlineUsers.includes(m.id);
+                const memberInitial = (m.nome?.[0] || "U").toUpperCase();
+                return (
+                  <div key={m.id} className="flex items-center gap-2.5 py-1.5 rounded-lg">
+                    <div className="relative flex-shrink-0">
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-border" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
+                          {memberInitial}
+                        </div>
+                      )}
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${memberOnline ? "bg-success" : "bg-muted-foreground/40"}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-medium text-foreground truncate flex items-center gap-1">
+                        {m.nome || "Usuário"}
+                        {m.id === user?.id && <span className="text-[9px] text-muted-foreground">(você)</span>}
+                        {m.role === "admin" && <BadgeCheck className="h-3 w-3 text-success fill-success/30 flex-shrink-0" />}
+                      </span>
+                    </div>
+                    <span className={`text-[9px] font-medium ${memberOnline ? "text-success" : "text-muted-foreground/50"}`}>
+                      {memberOnline ? "online" : "offline"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Pinned message banner */}
       {(() => {
