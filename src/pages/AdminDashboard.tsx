@@ -1112,7 +1112,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <Wallet className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Meu Saldo</span>
+                  <span className="text-sm text-muted-foreground">Meu Saldo Disponível</span>
                 </div>
                 <button onClick={() => setTab("addSaldo")}
                   className="h-8 px-3 rounded-lg bg-success text-success-foreground flex items-center gap-1.5 text-xs font-bold shadow-[0_0_12px_hsl(var(--success)/0.3)] hover:shadow-[0_0_20px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all">
@@ -1139,24 +1139,24 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center">
                     <AnimatedIcon icon={TrendingUp} className="h-4 w-4 text-success" animation="bounce" delay={0.05} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Lucro do Período</span>
+                  <span className="text-sm text-muted-foreground">Lucro do Período (Cobrado - Custo API)</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" /></p>
-                <span className="text-xs font-semibold text-success">Lucro Bruto</span>
+                <span className="text-xs font-semibold text-success">Vendas - Custo da Operadora</span>
                 <div className="flex justify-between mt-3 pt-3 border-t border-border">
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Vendas Revend.</p>
+                    <p className="text-[10px] text-muted-foreground">Cobrado do Revendedor</p>
                     <p className="text-sm font-bold text-foreground"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   {role === "admin" && (
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">Custo API</p>
+                    <p className="text-[10px] text-muted-foreground">Custo da Operadora (API)</p>
                     <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCustoApi} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
                   {role === "revendedor" && (
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">Meu Custo</p>
+                    <p className="text-[10px] text-muted-foreground">Meu Custo (Cobrado pelo Sistema)</p>
                     <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
@@ -1169,7 +1169,7 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
                     <AnimatedIcon icon={CreditCard} className="h-4 w-4 text-primary" animation="pulse" delay={0.1} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Depósitos Recebidos</span>
+                  <span className="text-sm text-muted-foreground">Total de Depósitos Recebidos</span>
                   <span className="ml-auto text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">{analytics.txCount} txs</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
@@ -1181,10 +1181,10 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center">
                     <AnimatedIcon icon={Wallet} className="h-4 w-4 text-warning" animation="wiggle" delay={0.15} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Saldo dos Revendedores</span>
+                  <span className="text-sm text-muted-foreground">Saldo dos Revendedores (Passivo)</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
-                <span className="text-xs text-success">Dinheiro a devolver</span>
+                <span className="text-xs text-success">Crédito disponível nas carteiras</span>
               </motion.div>
             </div>
 
