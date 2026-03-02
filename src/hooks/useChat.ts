@@ -55,7 +55,7 @@ export function useConversations() {
   const [loading, setLoading] = useState(true);
 
   const fetchConversations = useCallback(async () => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     try {
       // Fetch all conversations (group + direct where user is participant)
       const { data, error } = await supabase
