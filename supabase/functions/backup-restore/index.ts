@@ -136,6 +136,7 @@ serve(async (req) => {
       "poll_votes",
       "chat_conversations",
       "chat_messages",
+      "chat_message_reads",
       "chat_reactions",
     ];
 
