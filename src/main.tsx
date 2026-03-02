@@ -15,6 +15,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <App />
         <Toaster
           position="top-center"
+          style={{ top: '55%' }}
           toastOptions={{
             className: "!rounded-2xl !shadow-2xl !border-0 !px-5 !py-4 !text-sm !font-semibold !backdrop-blur-xl !min-w-[320px]",
             style: {
