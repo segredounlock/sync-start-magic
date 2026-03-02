@@ -158,16 +158,25 @@ export function MobileBottomNav({
                 {moreItems.map((item) => {
                   const isActive = activeKey === item.key;
                   return (
-                    <button
+                    <motion.button
                       key={item.key}
                       onClick={() => handleSelect(item.key)}
                       className={`flex flex-col items-center justify-center gap-2 py-4 rounded-xl transition-colors ${
                         isActive ? "bg-primary/10 text-primary" : "bg-muted/30 text-foreground"
                       }`}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.05 * moreItems.indexOf(item), type: "spring", stiffness: 300, damping: 20 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <item.icon className={`h-5 w-5 ${item.color || "text-primary"}`} />
+                      <motion.div
+                        animate={{ y: [0, -3, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.1 * moreItems.indexOf(item) }}
+                      >
+                        <item.icon className={`h-5 w-5 ${item.color || "text-primary"}`} />
+                      </motion.div>
                       <span className="text-[11px] font-semibold">{item.label}</span>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
