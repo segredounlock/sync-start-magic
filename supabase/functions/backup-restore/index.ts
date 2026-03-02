@@ -130,6 +130,8 @@ serve(async (req) => {
       "reseller_config",
       "transactions",
       "recargas",
+      "admin_notifications",
+      "banners",
     ];
 
     for (const table of restoreOrder) {

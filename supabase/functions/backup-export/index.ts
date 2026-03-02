@@ -70,7 +70,8 @@ serve(async (req) => {
       tables: includeDatabase ? [
         "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
         "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
-        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas"
+        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
+        "admin_notifications", "banners"
       ] : [],
     }, null, 2));
 
@@ -78,7 +79,8 @@ serve(async (req) => {
       const tables = [
         "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
         "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
-        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas"
+        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
+        "admin_notifications", "banners"
       ];
 
       const dbFolder = zip.folder("database");
