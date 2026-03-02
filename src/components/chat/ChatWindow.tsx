@@ -191,7 +191,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         {isGroup ? (
           <div className="relative group/avatar">
             {currentGroupIcon && currentGroupIcon.startsWith("http") ? (
-              <img src={currentGroupIcon} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+              <img src={currentGroupIcon} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" />
             ) : (
               <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
                 <Users className="h-5 w-5 text-primary" />
@@ -222,7 +222,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             )}
           </div>
         ) : otherUser?.avatar_url ? (
-          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
+          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
             {initial}
@@ -292,7 +292,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
                   <div key={m.id} className="flex items-center gap-2.5 py-1.5 rounded-lg">
                     <div className="relative flex-shrink-0">
                       {m.avatar_url ? (
-                        <img src={m.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-border" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                        <img src={m.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
                       ) : (
                         <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
                           {memberInitial}
