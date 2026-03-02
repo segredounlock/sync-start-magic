@@ -247,6 +247,77 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_index?: number
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          active: boolean
+          allow_multiple: boolean
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          options: Json
+          question: string
+          total_votes: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          allow_multiple?: boolean
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          options?: Json
+          question: string
+          total_votes?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          allow_multiple?: boolean
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          options?: Json
+          question?: string
+          total_votes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pricing_rules: {
         Row: {
           created_at: string

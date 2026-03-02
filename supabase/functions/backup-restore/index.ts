@@ -132,6 +132,8 @@ serve(async (req) => {
       "recargas",
       "admin_notifications",
       "banners",
+      "polls",
+      "poll_votes",
     ];
 
     for (const table of restoreOrder) {
