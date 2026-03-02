@@ -575,6 +575,7 @@ export type Database = {
           telegram_id: number | null
           telegram_username: string | null
           updated_at: string
+          verification_badge: string | null
           whatsapp_number: string | null
         }
         Insert: {
@@ -596,6 +597,7 @@ export type Database = {
           telegram_id?: number | null
           telegram_username?: string | null
           updated_at?: string
+          verification_badge?: string | null
           whatsapp_number?: string | null
         }
         Update: {
@@ -617,6 +619,7 @@ export type Database = {
           telegram_id?: number | null
           telegram_username?: string | null
           updated_at?: string
+          verification_badge?: string | null
           whatsapp_number?: string | null
         }
         Relationships: [

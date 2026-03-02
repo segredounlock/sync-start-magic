@@ -14,6 +14,7 @@ import RealtimeDashboard from "@/components/RealtimeDashboard";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { PollManager } from "@/components/PollManager";
 import { ChatRoomManager } from "@/components/ChatRoomManager";
+import { VerificationBadge, BADGE_CONFIG, BadgeType } from "@/components/VerificationBadge";
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -47,6 +48,7 @@ interface Revendedor {
   isRevendedor: boolean;
   role: "admin" | "revendedor" | "cliente" | "usuario" | "sem_role";
   avatar_url: string | null;
+  verification_badge: string | null;
 }
 
 interface RecargaHistorico {
@@ -585,7 +587,7 @@ export default function Principal() {
     try {
       const [roles, profiles, saldos, recData] = await Promise.all([
         fetchAllRows("user_roles", { select: "user_id, role" }),
-        fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url" }),
+        fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url, verification_badge" }),
         fetchAllRows("saldos", { select: "user_id, valor", filters: (q: any) => q.eq("tipo", "revenda") }),
         fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
       ]);
@@ -613,6 +615,7 @@ export default function Principal() {
           isRevendedor: roleMap[p.id] === "revendedor",
           role: resolvedRole,
           avatar_url: p.avatar_url || null,
+          verification_badge: (p as any).verification_badge || null,
         };
       });
 
@@ -1525,7 +1528,7 @@ export default function Principal() {
                               </div>
                             )}
                             <div className="min-w-0">
-                              <p className="font-semibold text-foreground text-sm truncate">{r.nome || "Sem nome"}</p>
+                              <p className="font-semibold text-foreground text-sm truncate flex items-center gap-1">{r.nome || "Sem nome"} <VerificationBadge badge={r.verification_badge as BadgeType} size="xs" /></p>
                               <p className="text-xs text-muted-foreground truncate">{r.email || "—"}</p>
                             </div>
                           </div>
@@ -1643,7 +1646,7 @@ export default function Principal() {
                                   </div>
                                 )}
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-foreground leading-tight text-sm">{r.nome || "Sem nome"}</p>
+                                  <p className="font-semibold text-foreground leading-tight text-sm flex items-center gap-1">{r.nome || "Sem nome"} <VerificationBadge badge={r.verification_badge as BadgeType} size="xs" /></p>
                                   <p className="text-xs text-muted-foreground truncate max-w-[160px]">{r.email || "—"}</p>
                                 </div>
                               </div>
@@ -1732,8 +1735,9 @@ export default function Principal() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
+                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-display text-lg sm:text-2xl font-bold text-foreground truncate">{selectedRev.nome || "Sem nome"}</h3>
+                      <VerificationBadge badge={selectedRev.verification_badge as BadgeType} size="md" />
                       <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${selectedRev.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                         {selectedRev.active ? "Ativo" : "Inativo"}
                       </span>
@@ -1798,6 +1802,42 @@ export default function Principal() {
                     >
                       <Trash2 className="h-4 w-4 inline mr-1" /> Deletar
                     </button>
+                </div>
+
+                {/* Badge de Verificação */}
+                <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <span className="text-xs text-muted-foreground font-medium block mb-2">Selo de Verificação</span>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={async () => {
+                        await supabase.from("profiles").update({ verification_badge: null }).eq("id", selectedRev.id);
+                        setSelectedRev({ ...selectedRev, verification_badge: null });
+                        setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: null } : r));
+                        toast.success("Selo removido");
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!selectedRev.verification_badge ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                    >
+                      Nenhum
+                    </button>
+                    {Object.entries(BADGE_CONFIG).map(([key, cfg]) => {
+                      const Icon = cfg.icon;
+                      return (
+                        <button
+                          key={key}
+                          onClick={async () => {
+                            await supabase.from("profiles").update({ verification_badge: key }).eq("id", selectedRev.id);
+                            setSelectedRev({ ...selectedRev, verification_badge: key });
+                            setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: key } : r));
+                            toast.success(`Selo "${cfg.label}" atribuído!`);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${selectedRev.verification_badge === key ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                        >
+                          <Icon className={`h-3.5 w-3.5 ${cfg.color} ${cfg.fill}`} />
+                          {cfg.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </motion.div>
 

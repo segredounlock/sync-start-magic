@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, BadgeCheck, Pencil } from "lucide-react";
+import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, Pencil } from "lucide-react";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { MessageInfoModal } from "./MessageInfoModal";
 
 interface MessageBubbleProps {
@@ -189,15 +190,11 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           {/* Sender name + verified badge */}
           <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
             <span className={`text-[11px] font-bold uppercase tracking-wide ${isOwn ? "text-primary" : "text-primary"}`}>{senderName}</span>
-            {isAdmin && (
-              <motion.div
-                animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
-                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                className="inline-flex"
-              >
-                <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
-              </motion.div>
-            )}
+            {message.sender?.verification_badge ? (
+              <VerificationBadge badge={message.sender.verification_badge as BadgeType} size="sm" />
+            ) : isAdmin ? (
+              <VerificationBadge badge="verificado" size="sm" />
+            ) : null}
           </div>
 
           {/* Pinned indicator */}
