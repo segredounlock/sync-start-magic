@@ -189,7 +189,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
             <button
               onClick={() => setShowDropdown(!showDropdown)}
               className={`absolute top-1.5 right-1.5 p-0.5 rounded-md transition-colors hidden sm:block ${
-                isOwn ? "hover:bg-primary-foreground/10 text-primary-foreground/40 hover:text-primary-foreground/70" : "hover:bg-muted text-muted-foreground/40 hover:text-muted-foreground/70"
+                isOwn ? "hover:bg-primary-foreground/10 text-primary-foreground/70 hover:text-primary-foreground" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground"
               }`}
             >
               <ChevronDown className="h-3.5 w-3.5" />
