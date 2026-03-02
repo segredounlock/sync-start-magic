@@ -13,6 +13,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import RealtimeDashboard from "@/components/RealtimeDashboard";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { PollManager } from "@/components/PollManager";
+import { ChatPage } from "@/components/chat/ChatPage";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -59,7 +60,7 @@ interface RecargaHistorico {
   created_at: string;
 }
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "chat";
 
 interface PricingRule {
   id?: string;
@@ -1070,6 +1071,7 @@ export default function Principal() {
     { key: "bot", icon: Bot, label: "Bot Telegram", color: "text-[hsl(200,80%,55%)]" },
     { key: "broadcast", icon: Megaphone, label: "Broadcast", color: "text-warning" },
     { key: "enquetes", icon: BarChart3, label: "Enquetes", color: "text-accent" },
+    { key: "chat", icon: Send, label: "Chat", color: "text-[hsl(200,80%,55%)]" },
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
@@ -1199,6 +1201,7 @@ export default function Principal() {
               {view === "geral" && "Configurações gerais do sistema."}
               {view === "broadcast" && "Envie mensagens em massa para usuários do Telegram."}
               {view === "enquetes" && "Crie enquetes e acompanhe a votação em tempo real."}
+              {view === "chat" && "Converse com os usuários do sistema."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
@@ -2755,6 +2758,16 @@ export default function Principal() {
                     <input type="text" value={globalConfig.siteTitle || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteTitle: e.target.value }))}
                       className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Recargas Brasil" />
                   </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground">Chat entre Usuários</label>
+                      <p className="text-xs text-muted-foreground">Ativar/desativar o chat no painel dos revendedores</p>
+                    </div>
+                    <button onClick={() => setGlobalConfig(prev => ({ ...prev, chat_enabled: prev.chat_enabled === "true" ? "false" : "true" }))}
+                      className={`w-12 h-7 rounded-full transition-colors relative ${globalConfig.chat_enabled !== "false" ? "bg-primary" : "bg-muted"}`}>
+                      <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${globalConfig.chat_enabled !== "false" ? "left-6" : "left-1"}`} />
+                    </button>
+                  </div>
                 </div>
 
                 <BannersManager botUsername={botStatus.botUsername} />
@@ -3190,6 +3203,11 @@ export default function Principal() {
 
           {/* ===== ENQUETES ===== */}
           {view === "enquetes" && <PollManager />}
+
+          {/* ===== CHAT ===== */}
+          {view === "chat" && (
+            <ChatPage onBack={() => setView("dashboard")} />
+          )}
 
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
