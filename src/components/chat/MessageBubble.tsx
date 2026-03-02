@@ -60,7 +60,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
         </div>
       )}
 
-      <div className={`max-w-[75%] ${isOwn ? "order-1" : ""}`}>
+      <div className={`max-w-[70%] ${isOwn ? "order-1" : ""}`}>
         {/* Sender name + admin badge */}
         {!isOwn && (
           <div className="flex items-center gap-1 ml-1 mb-0.5">
@@ -170,6 +170,19 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
           </motion.div>
         )}
       </div>
+
+      {/* Avatar for own messages */}
+      {isOwn && (
+        <div className="flex-shrink-0 ml-2 mt-auto">
+          {message.sender?.avatar_url ? (
+            <img src={message.sender.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-primary/30" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[11px]">
+              {(senderName[0] || "U").toUpperCase()}
+            </div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }
