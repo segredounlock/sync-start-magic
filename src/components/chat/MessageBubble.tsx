@@ -181,7 +181,13 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                 : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
             }`}
             onTouchStart={startLongPress}
-            onTouchEnd={cancelLongPress}
+            onTouchEnd={(e) => {
+              cancelLongPress();
+              // On mobile, if it was a simple tap (not long press) on own message, open info modal
+              if (isOwn && !longPressTriggered.current) {
+                setShowMessageInfo(true);
+              }
+            }}
             onTouchMove={cancelLongPress}
             onContextMenu={(e) => { e.preventDefault(); setShowLongPressMenu(true); }}
           >
