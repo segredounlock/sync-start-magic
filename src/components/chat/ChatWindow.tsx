@@ -333,7 +333,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             <Pin className="h-3.5 w-3.5 text-warning rotate-45 flex-shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold text-warning">Mensagem fixada</p>
-              <p className="text-xs text-foreground/80 truncate">{lastPinned.content || (lastPinned.type === "audio" ? "🎤 Áudio" : "📷 Imagem")}</p>
+              <p className="text-xs text-foreground/80 line-clamp-2">{lastPinned.content || (lastPinned.type === "audio" ? "🎤 Áudio" : "📷 Imagem")}</p>
             </div>
           </motion.div>
         );
