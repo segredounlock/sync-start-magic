@@ -1521,7 +1521,7 @@ export default function Principal() {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3 min-w-0">
                             {r.avatar_url ? (
-                              <img src={r.avatar_url} alt="" className={`w-10 h-10 rounded-full object-cover shrink-0 ring-2 ${r.active ? "ring-success/30" : "ring-destructive/30"}`} />
+                              <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className={`w-10 h-10 rounded-full object-cover shrink-0 ring-2 ${r.active ? "ring-success/30" : "ring-destructive/30"}`} />
                             ) : (
                               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${r.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                                 {initial}
@@ -1639,7 +1639,7 @@ export default function Principal() {
                             <td className="px-3 lg:px-5 py-3">
                               <div className="flex items-center gap-3">
                                 {r.avatar_url ? (
-                                  <img src={r.avatar_url} alt="" className={`w-10 h-10 rounded-full object-cover shrink-0 ring-2 ${r.active ? "ring-success/30" : "ring-destructive/30"}`} />
+                                  <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className={`w-10 h-10 rounded-full object-cover shrink-0 ring-2 ${r.active ? "ring-success/30" : "ring-destructive/30"}`} />
                                 ) : (
                                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ring-2 ${r.active ? "bg-success/15 text-success ring-success/30" : "bg-destructive/15 text-destructive ring-destructive/30"}`}>
                                     {initial}
@@ -1728,7 +1728,7 @@ export default function Principal() {
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-4 sm:p-6">
                 <div className="flex items-start gap-4">
                   {selectedRev.avatar_url ? (
-                    <img src={selectedRev.avatar_url} alt="" className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover shrink-0 ring-2 ${selectedRev.active ? "ring-success/30" : "ring-destructive/30"}`} />
+                    <img src={selectedRev.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover shrink-0 ring-2 ${selectedRev.active ? "ring-success/30" : "ring-destructive/30"}`} />
                   ) : (
                     <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-bold text-xl sm:text-2xl shrink-0 ${selectedRev.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                       {((selectedRev.nome || selectedRev.email || "R")[0]).toUpperCase()}
