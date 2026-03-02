@@ -172,18 +172,36 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
               cancelled: "🚫 Cancelada",
             };
             const label = statusMap[r.status] || r.status;
-            addNotification({
-              id: `${r.id}-upd`,
-              type: "recarga",
-              message: `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
-              amount: Number(r.valor),
-              user_id: r.user_id,
-              user_nome: profile.nome || undefined,
-              user_email: profile.email || undefined,
-              status: r.status,
-              created_at: r.updated_at || new Date().toISOString(),
-              is_read: false,
-            });
+            const updatedMsg = `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`;
+            const updatedAt = r.updated_at || new Date().toISOString();
+
+            // Update the existing INSERT notification in-place instead of creating a duplicate
+            const originalId = r.id;
+            if (knownIds.current.has(originalId)) {
+              setNotifications(prev => prev.map(n =>
+                n.id === originalId
+                  ? { ...n, message: updatedMsg, status: r.status, created_at: updatedAt }
+                  : n
+              ));
+              // Also update in the database
+              supabase.from("admin_notifications" as any)
+                .update({ message: updatedMsg, status: r.status, created_at: updatedAt } as any)
+                .eq("id", originalId)
+                .then(() => {});
+            } else {
+              addNotification({
+                id: originalId,
+                type: "recarga",
+                message: updatedMsg,
+                amount: Number(r.valor),
+                user_id: r.user_id,
+                user_nome: profile.nome || undefined,
+                user_email: profile.email || undefined,
+                status: r.status,
+                created_at: updatedAt,
+                is_read: false,
+              });
+            }
           }
         })
         .subscribe();
