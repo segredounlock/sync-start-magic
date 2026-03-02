@@ -862,6 +862,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_ticker_recargas: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          operadora: string
+          status: string
+          telefone: string
+          user_id: string
+          valor: number
+        }[]
+      }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
     }
     Enums: {
