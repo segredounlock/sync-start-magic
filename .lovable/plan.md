@@ -1,61 +1,42 @@
 
 
-## Plano: Sistema de Atualização Inteligente + Correção de Build
+## Plano: Mensagem de Migração no Bot do Telegram
 
-### Problema Atual
-1. **Erro de build**: O componente `RecargaReceipt.tsx` importa `html2canvas` que não está instalado, quebrando o build.
-2. **Pedido do usuário**: Criar um sistema de "atualização" que permita exportar o estado atual do sistema como um pacote de atualização, e depois importá-lo em outra instância (ou na mesma após migração), atualizando tudo sem quebrar.
+### Conceito
+Quando um usuário **não vinculado** inicia o bot (`/start`), antes de ir direto para o cadastro, o bot exibe uma mensagem informativa sobre a migração do sistema antigo para o novo, com dois botões inline:
 
----
+1. **"🔄 Usar créditos do site antigo"** — abre o link do site antigo para o usuário consumir seus créditos restantes
+2. **"▶️ Continuar para o bot"** — prossegue normalmente para o fluxo de vinculação de conta
 
-### Correção Imediata: Build Error
+Para usuários **já vinculados**, o bot funciona normalmente sem essa mensagem (eles já migraram).
 
-**Arquivo**: `src/components/RecargaReceipt.tsx`
-- Remover a importação dinâmica de `html2canvas` (não instalado)
-- O botão "Download" vai usar o fallback de compartilhar/copiar texto que já existe
+### Configuração Dinâmica
+O link do site antigo e a mensagem de migração serão configuráveis via `system_config` (chaves `migration_old_site_url` e `migration_message_enabled`), permitindo desativar a mensagem quando a migração terminar, sem precisar alterar código.
 
----
-
-### Sistema de Atualização
-
-O conceito é transformar o sistema de backup existente em um **sistema de atualização versionado** com as seguintes capacidades:
-
-#### 1. Nova aba "Atualização" no BackupSection
-- Adicionar uma terceira aba ao lado de "Dados" e "GitHub" chamada **"Atualização"**
-- Interface com dois botões: **"Gerar Pacote de Atualização"** e **"Aplicar Atualização"**
-
-#### 2. Gerar Pacote de Atualização (Exportar)
-- Exporta um ZIP contendo:
-  - `update-manifest.json` com versão, data, lista de tabelas e arquivos, checksums
-  - `database/` com dados de todas as 23 tabelas (via edge function existente)
-  - `source/` com todo o código-fonte (lista SOURCE_PATHS existente)
-- O manifesto inclui a versão do sistema para comparação na hora de aplicar
-
-#### 3. Aplicar Atualização (Importar)
-- Upload de um ZIP de atualização
-- Lê o `update-manifest.json` e compara com a versão atual
-- **Restaura banco de dados** via edge function `backup-restore` existente (já faz upsert inteligente sem apagar dados)
-- Mostra um resumo do que foi atualizado (tabelas, quantidade de registros)
-- Exibe status de cada tabela: restaurada, ignorada, erro
-
-#### 4. Controle de Versão no Banco
-- Armazenar a versão atual do sistema na tabela `system_config` com a chave `system_version`
-- A cada atualização aplicada, a versão é incrementada automaticamente
-
----
-
-### Arquivos a Modificar
+### Arquivo a Modificar
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/RecargaReceipt.tsx` | Remover import `html2canvas` |
-| `src/components/BackupSection.tsx` | Adicionar aba "Atualização" com exportação/importação inteligente |
+| `supabase/functions/telegram-bot/index.ts` | Alterar o fluxo do `/start` para usuários não vinculados |
+
+### Mudança no Fluxo (linhas ~371-388)
+
+Quando `!linkedUser` no `/start`:
+
+1. Buscar `migration_message_enabled` e `migration_old_site_url` em `system_config`
+2. Se migração ativa, enviar mensagem com dois botões inline:
+   - `callback_data: "migration_old_site"` → envia link do site antigo
+   - `callback_data: "migration_continue"` → inicia o fluxo normal de vinculação
+3. Se migração desativada, segue fluxo normal direto
+
+### Novo Callback Handler
+
+Adicionar no `handleCallback`:
+- `migration_continue` → inicia o fluxo `awaiting_email` normalmente
+- `migration_old_site` → envia mensagem com o link do site antigo + botão para voltar
 
 ### Detalhes Técnicos
-
-- Reutiliza a edge function `backup-export` para exportar dados do banco
-- Reutiliza a edge function `backup-restore` para restaurar dados (já faz upsert sem quebrar FK)
-- O pacote de atualização é o mesmo ZIP do backup mas com um manifesto de versão adicional
-- A restauração de código-fonte não é automática (o código roda no Lovable), mas os dados do banco são restaurados diretamente
-- A versão do sistema é salva em `system_config` para rastreamento
+- Duas novas chaves em `system_config`: `migration_message_enabled` (valor `"true"/"false"`) e `migration_old_site_url` (URL do site antigo)
+- Cache do estado de migração no bot para evitar query repetida a cada `/start`
+- Nenhuma tabela nova necessária — usa `system_config` existente
 
