@@ -32,7 +32,7 @@ serve(async (req) => {
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("id, nome, email")
+        .select("id, nome, email, avatar_url")
         .eq("telegram_id", String(telegram_id))
         .maybeSingle();
 
@@ -56,6 +56,7 @@ serve(async (req) => {
         user_id: profile.id,
         nome: profile.nome || profile.email || "",
         saldo: Number(saldoData?.valor || 0),
+        avatar_url: profile.avatar_url || null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -72,7 +73,7 @@ serve(async (req) => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, nome, email")
+        .select("id, nome, email, avatar_url")
         .eq("id", user_id)
         .maybeSingle();
 
@@ -94,6 +95,7 @@ serve(async (req) => {
         user_id: profile.id,
         nome: profile.nome || profile.email || "",
         saldo: Number(saldoData?.valor || 0),
+        avatar_url: profile.avatar_url || null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
