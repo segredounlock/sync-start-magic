@@ -267,11 +267,19 @@ Deno.serve(async (req) => {
             const pixMsgId = updatedMeta.telegram_pix_msg_id;
             const pixChatId = updatedMeta.telegram_chat_id || chatIdTg;
             if (pixMsgId) {
-              fetch(`https://api.telegram.org/bot${botToken}/deleteMessage`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chat_id: Number(pixChatId), message_id: Number(pixMsgId) }),
-              }).catch(() => {});
+              try {
+                const delResp = await fetch(`https://api.telegram.org/bot${botToken}/deleteMessage`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ chat_id: Number(pixChatId), message_id: Number(pixMsgId) }),
+                });
+                const delResult = await delResp.json();
+                console.log(`Delete PIX msg ${pixMsgId} in chat ${pixChatId}:`, delResult?.ok ? "OK" : delResult?.description);
+              } catch (delErr) {
+                console.warn("Failed to delete PIX message:", delErr);
+              }
+            } else {
+              console.log("No telegram_pix_msg_id found in metadata, skipping delete");
             }
 
             const nome = profile.nome || "Usuário";
