@@ -1411,7 +1411,13 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
                       <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
-                      {role === "admin" && <span className="text-[10px] text-muted-foreground">Custo: {fmt(r.custo)}</span>}
+                      {role === "admin" && (
+                        <span className="text-[10px] text-muted-foreground">
+                          Custo: {fmt(r.custo)}
+                          {" "}
+                          <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
@@ -1459,7 +1465,12 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <p className="font-mono font-bold text-foreground">{fmt(r.valor)}</p>
-                          {role === "admin" && <p className="text-xs text-muted-foreground">Custo: {fmt(r.custo)}</p>}
+                          {role === "admin" && (
+                            <p className="text-xs text-muted-foreground">
+                              Custo: {fmt(r.custo)}{" "}
+                              <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
