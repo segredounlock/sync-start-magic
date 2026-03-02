@@ -1229,7 +1229,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
         ? `(${telefone.slice(0,2)}) ${telefone.slice(2,7)}-${telefone.slice(7)}`
         : `(${telefone.slice(0,2)}) ${telefone.slice(2,6)}-${telefone.slice(6)}`;
 
-      let msgSucesso = `✅ <b>Recarga realizada!</b>\n\n📡 Operadora: <b>${operadoraNome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor: <b>R$ ${cost.toFixed(2).replace(".", ",")}</b>\n💳 Novo saldo: <b>R$ ${Number(newBalance).toFixed(2).replace(".", ",")}</b>\n🕐 Horário: ${horario}`;
+      let msgSucesso = `✅ <b>Recarga realizada!</b>\n\n📡 Operadora: <b>${operadoraNome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor da Recarga: <b>R$ ${valorFacial.toFixed(2).replace(".", ",")}</b>\n💵 Custo: <b>R$ ${cost.toFixed(2).replace(".", ",")}</b>\n💳 Novo saldo: <b>R$ ${Number(newBalance).toFixed(2).replace(".", ",")}</b>\n🕐 Horário: ${horario}`;
       if (externalId) msgSucesso += `\n🔖 Pedido: <code>${externalId}</code>`;
 
       await editMessageWithKeyboard(token, chatId, msgId,
@@ -1303,7 +1303,7 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
     return;
   }
 
-  const { carrier_id, value_id, operadora_nome, valor, bot_msg_id } = session.data || {};
+  const { carrier_id, value_id, operadora_nome, valor, bot_msg_id, api_cost, valor_facial } = session.data || {};
 
   // Check balance
   const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").single();
@@ -1327,6 +1327,8 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
     operadora_nome,
     valor,
     telefone,
+    api_cost,
+    valor_facial,
   });
   if (bot_msg_id) deleteMessageFire(token, chatId, bot_msg_id);
 
@@ -1334,8 +1336,9 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
     ? `(${telefone.slice(0,2)}) ${telefone.slice(2,7)}-${telefone.slice(7)}`
     : `(${telefone.slice(0,2)}) ${telefone.slice(2,6)}-${telefone.slice(6)}`;
 
+  const vfDisplay = valor_facial ? Number(valor_facial) : Number(valor);
   await sendMessageWithKeyboard(token, chatId,
-    `📱 <b>Confirmar Recarga</b>\n\n📡 Operadora: <b>${operadora_nome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor: <b>R$ ${Number(valor).toFixed(2).replace(".", ",")}</b>\n💳 Saldo atual: R$ ${saldoAtual.toFixed(2).replace(".", ",")}`,
+    `📱 <b>Confirmar Recarga</b>\n\n📡 Operadora: <b>${operadora_nome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor da Recarga: <b>R$ ${vfDisplay.toFixed(2).replace(".", ",")}</b>\n💵 Custo: <b>R$ ${Number(valor).toFixed(2).replace(".", ",")}</b>\n💳 Saldo atual: R$ ${saldoAtual.toFixed(2).replace(".", ",")}`,
     [[
       { text: "✅ Confirmar", callback_data: "rconfirm_yes" },
       { text: "❌ Cancelar", callback_data: "cancel" },
