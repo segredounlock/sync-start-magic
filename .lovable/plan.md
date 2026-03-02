@@ -1,40 +1,26 @@
 
 
-## Plano: Renomear métricas do Dashboard para maior clareza
+## Problema Identificado
 
-### O que será alterado
+O item **"Chat"** existe no menu lateral desktop (`menuItems`, linha 656), mas **não foi adicionado** à lista de itens do `MobileBottomNav` (linhas 1812-1819). Por isso, no mobile, não há como acessar o chat.
 
-Os 6 cards do Dashboard principal e os cards do detalhe do revendedor terão seus nomes e subtítulos reescritos para que qualquer pessoa entenda imediatamente o que cada número representa, sem precisar de explicação.
+## Plano de Correção
 
-### Mudanças propostas
+### 1. Adicionar "Chat" ao `MobileBottomNav`
 
-**Dashboard Principal (6 cards):**
+No arquivo `src/pages/RevendedorPainel.tsx`, adicionar o item do Chat na lista de itens passada ao `MobileBottomNav` (após "Status", linha 1818):
 
-| Atual | Novo Nome | Subtítulo Atual → Novo |
-|-------|-----------|----------------------|
-| Recargas Hoje | Recargas Hoje | "X concluídas" → "X concluídas de Y solicitadas" |
-| Vendas Hoje | Vendas Hoje (Cobrado) | "Custo API: X • Lucro: X" → "Valor cobrado dos revendedores hoje" |
-| Saldo Total | Saldo dos Revendedores | "X revendedores ativos" → sem alteração |
-| Vendas do Mês | Vendas do Mês (Cobrado) | "Custo API: X • Lucro: X" → "Cobrado dos revendedores neste mês" |
-| Lucro Acumulado | Lucro Total (Histórico) | "X recargas • Custo API: X" → "Vendas - Custo API de todas as recargas" |
-| Faturamento Total | Faturamento Total (Cobrado) | "Custo API: X • Lucro: X" → "Total cobrado de todos os tempos" |
+```
+{ key: "chat", label: "Chat", icon: MessageCircle, color: "text-primary", animation: "float" }
+```
 
-**Detalhe do Revendedor (7 cards):**
+Isso fará com que o Chat apareça no menu **"Mais"** (bottom sheet) no mobile, já que o `mainCount` é 4 e os itens extras vão para o menu expandido.
 
-| Atual | Novo Nome |
-|-------|-----------|
-| Saldo Atual | Saldo Disponível |
-| Total Vendas | Cobrado pelo Sistema |
-| Custo Total | Custo da Operadora (API) |
-| Seu Lucro (Admin) | Seu Lucro (Cobrado - Custo API) |
-| Lucro do Revenda | Lucro do Revendedor (Preço Final - Cobrado) |
-| Total Depositado | Total de Depósitos |
+### 2. Verificar visibilidade no desktop
 
-### Arquivo editado
+O menu lateral desktop já inclui o Chat. Nenhuma alteração necessária.
 
-- `src/pages/Principal.tsx` — apenas alteração de strings nos labels e subtítulos dos cards
+---
 
-### Detalhes técnicos
-
-Todas as mudanças são cosméticas (strings de texto). Nenhuma lógica de cálculo será alterada. Os valores continuam sendo calculados da mesma forma, apenas os rótulos ficam mais descritivos para facilitar a leitura.
+**Resultado**: O botão "Chat" aparecerá no menu "Mais" (⋯) da barra inferior no mobile, e ao tocar nele, abrirá a tela de chat normalmente.
 
