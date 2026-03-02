@@ -92,6 +92,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [selectedValue, setSelectedValue] = useState<CatalogValue | null>(null);
   const [extraData, setExtraData] = useState("");
   const [sending, setSending] = useState(false);
+  const [pendingWarning, setPendingWarning] = useState<{ phone: string; count: number } | null>(null);
   const [recargaResult, setRecargaResult] = useState<{ success: boolean; message: string; externalId?: string } | null>(null);
   const [trackingStatus, setTrackingStatus] = useState<{ loading: boolean; data: any | null; open: boolean }>({ loading: false, data: null, open: false });
   const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
@@ -532,7 +533,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     setCheckingPhone(false);
   };
 
-  const handleRecarga = async (e: React.FormEvent) => {
+  const handleRecarga = async (e: React.FormEvent, skipPendingCheck = false) => {
     e.preventDefault();
     if (!telefone.trim() || !selectedCarrier || !selectedValue) {
       toast.error("Preencha todos os campos");
@@ -547,6 +548,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     if (selectedValue.cost > saldo) {
       toast.error("Saldo insuficiente");
       return;
+    }
+
+    // Check for pending recargas on same number
+    if (!skipPendingCheck) {
+      const normalizedPhone = telefone.replace(/\D/g, "");
+      const { count } = await supabase
+        .from("recargas")
+        .select("id", { count: "exact", head: true })
+        .eq("telefone", normalizedPhone)
+        .eq("status", "pending");
+      if (count && count > 0) {
+        setPendingWarning({ phone: telefone, count });
+        return;
+      }
     }
 
     setSending(true);
@@ -1339,6 +1354,52 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           : <><Send className="h-5 w-5" /> Enviar Recarga →</>}
                       </motion.button>
                     </form>
+
+                    {/* Pending recharge warning modal */}
+                    <AnimatePresence>
+                      {pendingWarning && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+                          onClick={() => setPendingWarning(null)}
+                        >
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-2xl p-6 text-center"
+                          >
+                            <div className="w-14 h-14 rounded-full bg-warning/15 border border-warning/30 flex items-center justify-center mx-auto mb-4">
+                              <AlertTriangle className="h-7 w-7 text-warning" />
+                            </div>
+                            <h3 className="text-lg font-bold text-foreground mb-2">Recarga em Processamento</h3>
+                            <p className="text-sm text-muted-foreground mb-5">
+                              Já existe <strong className="text-foreground">{pendingWarning.count} recarga{pendingWarning.count > 1 ? "s" : ""}</strong> em processamento para o número <strong className="text-foreground">{pendingWarning.phone}</strong>. Deseja continuar mesmo assim?
+                            </p>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => setPendingWarning(null)}
+                                className="flex-1 py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setPendingWarning(null);
+                                  handleRecarga({ preventDefault: () => {} } as React.FormEvent, true);
+                                }}
+                                className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all"
+                              >
+                                Continuar
+                              </button>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
 
                   {/* Últimas Recargas */}
