@@ -736,7 +736,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               <h2 className="font-display text-lg font-bold text-foreground">Menu</h2>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
-                <button onClick={() => setMenuOpen(false)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                <button onClick={() => setMenuOpen(false)} className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-colors">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -1008,7 +1008,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         <h3 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
                           <Activity className="h-5 w-5 text-primary" /> Acompanhamento
                         </h3>
-                        <button onClick={() => setTrackingStatus(prev => ({ ...prev, open: false }))} className="p-1 rounded-md hover:bg-muted text-muted-foreground">
+                        <button onClick={() => setTrackingStatus(prev => ({ ...prev, open: false }))} className="p-1 rounded-md hover:bg-destructive/15 text-destructive">
                           <X className="h-5 w-5" />
                         </button>
                       </div>
@@ -1100,7 +1100,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         >
                           <div className="flex items-center justify-between mb-4 border-b border-border pb-3">
                             <h3 className="font-display text-lg font-bold text-foreground">Valores e Operadoras Disponíveis</h3>
-                            <button onClick={() => setShowValoresModal(false)} className="p-1 rounded-md hover:bg-muted text-muted-foreground">
+                            <button onClick={() => setShowValoresModal(false)} className="p-1 rounded-md hover:bg-destructive/15 text-destructive">
                               <X className="h-5 w-5" />
                             </button>
                           </div>

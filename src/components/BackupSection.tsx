@@ -409,7 +409,7 @@ export default function BackupSection() {
                     <p className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4" /> Restaurado com sucesso
                     </p>
-                    <button onClick={() => setRestoreResult(null)} className="text-muted-foreground hover:text-foreground">
+                    <button onClick={() => setRestoreResult(null)} className="text-destructive hover:text-destructive/80">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -533,7 +533,7 @@ export default function BackupSection() {
                     <p className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4" /> Sincronizado
                     </p>
-                    <button onClick={() => setSyncResult(null)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+                    <button onClick={() => setSyncResult(null)} className="text-destructive hover:text-destructive/80"><X className="h-4 w-4" /></button>
                   </div>
                   <p className="text-xs text-muted-foreground">{syncResult.repo} · branch: {syncResult.branch}</p>
                   <div className="flex gap-3 text-xs">

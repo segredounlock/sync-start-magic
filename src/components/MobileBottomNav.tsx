@@ -135,7 +135,7 @@ export function MobileBottomNav({
                   <ThemeToggle />
                   <button
                     onClick={() => setMoreOpen(false)}
-                    className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground"
+                    className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
