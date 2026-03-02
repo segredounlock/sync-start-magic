@@ -92,7 +92,7 @@ export function PopupBanner({
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>

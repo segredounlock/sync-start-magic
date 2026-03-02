@@ -164,7 +164,7 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
                   )}
                   <button
                     onClick={() => setOpen(false)}
-                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-destructive/15 text-destructive transition-colors"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

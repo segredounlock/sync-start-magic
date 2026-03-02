@@ -100,7 +100,7 @@ export function PromoBanner({
                 </motion.div>
                 <button
                   onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDismissed(true); onClose?.(); }}
-                  className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-1 rounded-lg hover:bg-destructive/15 text-destructive transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>

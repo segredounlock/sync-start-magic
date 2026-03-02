@@ -920,7 +920,7 @@ export default function AdminDashboard() {
               <h2 className="font-display text-lg font-bold text-foreground">Menu</h2>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
-                <button onClick={() => setMenuOpen(false)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                <button onClick={() => setMenuOpen(false)} className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-colors">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -2318,7 +2318,7 @@ export default function AdminDashboard() {
                                 <p className="text-xs text-muted-foreground">{t.user_nome || t.user_email}</p>
                               </div>
                             </div>
-                            <button onClick={() => setSelectedDeposit(null)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+                            <button onClick={() => setSelectedDeposit(null)} className="p-1.5 rounded-lg hover:bg-destructive/15 transition-colors text-destructive"><X className="h-5 w-5" /></button>
                           </div>
                           <div className="text-center mb-5">
                             <p className="text-3xl font-bold font-mono text-success">+{fmt(t.amount)}</p>
@@ -3344,7 +3344,7 @@ export default function AdminDashboard() {
                   <h3 className="font-display text-lg font-bold text-foreground">Histórico de Recargas</h3>
                   <p className="text-sm text-muted-foreground">{clientHistoryModal.nome || clientHistoryModal.email}</p>
                 </div>
-                <button onClick={() => setClientHistoryModal(null)} className="p-1 rounded-md hover:bg-muted text-muted-foreground">
+                <button onClick={() => setClientHistoryModal(null)} className="p-1 rounded-md hover:bg-destructive/15 text-destructive">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -3495,7 +3495,7 @@ export default function AdminDashboard() {
                     </h3>
                     <button
                       onClick={() => !broadcastSending && setShowBroadcastModal(false)}
-                      className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-destructive/15 text-destructive transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
