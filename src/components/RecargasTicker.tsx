@@ -24,7 +24,7 @@ export default function RecargasTicker() {
         .from("recargas")
         .select("id, telefone, operadora, valor, status, created_at, user_id")
         .order("created_at", { ascending: false })
-        .limit(30);
+        .limit(100);
 
       if (!data || data.length === 0) {
         setRecargas([]);
