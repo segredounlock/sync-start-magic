@@ -74,23 +74,34 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
 
     // Simulate progress while uploading
     const progressInterval = setInterval(() => {
-      setUploadProgress(p => Math.min(p + 8, 90));
-    }, 150);
+      setUploadProgress(p => {
+        if (p >= 90) return 90;
+        return p + 5;
+      });
+    }, 200);
 
     try {
       const fileName = `${user.id}/${Date.now()}.webm`;
       const { error } = await supabase.storage.from("chat-audio").upload(fileName, audioBlob, { contentType: "audio/webm" });
-      if (error) throw error;
-
+      
       clearInterval(progressInterval);
+      
+      if (error) {
+        console.error("Audio upload error:", error);
+        setUploading(false);
+        setUploadProgress(0);
+        return;
+      }
+
       setUploadProgress(100);
 
       const { data: urlData } = supabase.storage.from("chat-audio").getPublicUrl(fileName);
 
-      // Brief delay to show 100%
-      setTimeout(() => onSend(urlData.publicUrl), 200);
+      // Brief delay to show 100% then send
+      await new Promise(resolve => setTimeout(resolve, 300));
+      onSend(urlData.publicUrl);
     } catch (err) {
-      console.error(err);
+      console.error("Audio upload exception:", err);
       clearInterval(progressInterval);
       setUploading(false);
       setUploadProgress(0);
