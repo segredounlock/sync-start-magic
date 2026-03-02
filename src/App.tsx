@@ -3,7 +3,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
-import { PageSkeleton } from "@/components/Skeleton";
+import { SplashScreen } from "@/components/SplashScreen";
 import Auth from "@/pages/Auth";
 import RecargaPublica from "@/pages/RecargaPublica";
 import TelegramMiniApp from "@/pages/TelegramMiniApp";
@@ -31,7 +31,7 @@ function App() {
             path="/admin"
             element={
               <ProtectedRoute allowedRoles={["admin", "revendedor"]}>
-                <Suspense fallback={<PageSkeleton />}>
+                <Suspense fallback={<SplashScreen />}>
                   <AdminDashboard />
                 </Suspense>
               </ProtectedRoute>
@@ -41,7 +41,7 @@ function App() {
             path="/principal"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
-                <Suspense fallback={<PageSkeleton />}>
+                <Suspense fallback={<SplashScreen />}>
                   <Principal />
                 </Suspense>
               </ProtectedRoute>
@@ -51,7 +51,7 @@ function App() {
             path="/painel"
             element={
               <ProtectedRoute>
-                <Suspense fallback={<PageSkeleton />}>
+                <Suspense fallback={<SplashScreen />}>
                   <RevendedorPainel />
                 </Suspense>
               </ProtectedRoute>
