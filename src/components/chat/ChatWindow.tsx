@@ -7,7 +7,7 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, BadgeCheck } from "lucide-react";
 
 function formatLastSeen(dateStr: string): string {
   const date = new Date(dateStr);
@@ -23,7 +23,7 @@ function formatLastSeen(dateStr: string): string {
 
 interface ChatWindowProps {
   conversationId: string;
-  otherUser?: { id: string; nome: string | null; email: string | null; avatar_url: string | null };
+  otherUser?: { id: string; nome: string | null; email: string | null; avatar_url: string | null; role?: string };
   isGroup?: boolean;
   groupName?: string;
   onBack?: () => void;
@@ -118,7 +118,18 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
           </div>
         )}
         <div>
-          <h3 className="font-semibold text-sm text-foreground">{name}</h3>
+          <h3 className="font-semibold text-sm text-foreground flex items-center gap-1">
+            {name}
+            {otherUser?.role === 'admin' && (
+              <motion.div
+                animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                className="inline-flex flex-shrink-0"
+              >
+                <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
+              </motion.div>
+            )}
+          </h3>
           <span className="text-[10px] text-muted-foreground">
             {isGroup ? "Grupo público" : isOnline ? (
               <span className="flex items-center gap-1">
