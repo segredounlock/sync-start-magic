@@ -284,8 +284,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             {/* Dropdown trigger (desktop) */}
             <button
               ref={dropdownBtnRef}
+              onPointerDownCapture={(e) => { e.stopPropagation(); }}
               onPointerDown={(e) => { e.stopPropagation(); }}
               onPointerUp={(e) => { e.stopPropagation(); }}
+              onMouseDown={(e) => { e.stopPropagation(); }}
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
