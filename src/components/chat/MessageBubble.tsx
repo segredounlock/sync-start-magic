@@ -122,11 +122,11 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
           {/* Dropdown trigger (chevron) - always visible */}
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className={`absolute top-1 ${isOwn ? "left-1" : "right-1"} p-0.5 rounded-md transition-opacity ${
+            className={`absolute top-1.5 ${isOwn ? "right-1.5" : "right-1.5"} p-0.5 rounded-md transition-colors ${
               isOwn ? "hover:bg-primary-foreground/10 text-primary-foreground/40 hover:text-primary-foreground/70" : "hover:bg-muted text-muted-foreground/40 hover:text-muted-foreground/70"
             }`}
           >
-            <ChevronDown className={`h-3.5 w-3.5 ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`} />
+            <ChevronDown className="h-3.5 w-3.5" />
           </button>
 
           {/* Dropdown menu */}
@@ -138,7 +138,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: -5 }}
                 transition={{ duration: 0.15 }}
-                className={`absolute z-30 top-7 ${isOwn ? "left-0" : "right-0"} bg-popover border border-border rounded-xl shadow-xl min-w-[150px] overflow-hidden`}
+                className={`absolute z-30 ${isOwn ? "right-0" : "left-0"} top-full mt-1 bg-popover border border-border rounded-xl shadow-xl min-w-[150px] overflow-hidden`}
               >
                 <button
                   onClick={() => { onReply(); setShowDropdown(false); }}
