@@ -166,6 +166,13 @@ export function useChatMessages(conversationId: string | null) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
+
+  // Reset on conversation change
+  useEffect(() => {
+    initialLoadDone.current = false;
+    setLoading(true);
+  }, [conversationId]);
 
   const fetchMessages = useCallback(async () => {
     if (!conversationId) { setMessages([]); setLoading(false); return; }
@@ -226,7 +233,10 @@ export function useChatMessages(conversationId: string | null) {
     }
 
     setMessages(msgs);
-    setLoading(false);
+    if (!initialLoadDone.current) {
+      setLoading(false);
+      initialLoadDone.current = true;
+    }
 
     // Mark unread messages as read
     if (user) {
