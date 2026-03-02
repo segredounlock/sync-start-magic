@@ -15,21 +15,21 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <App />
         <Toaster
           position="top-center"
-          style={{ top: '45%' }}
           toastOptions={{
-            className: "!bg-card !text-card-foreground !border !border-border !shadow-lg !rounded-xl !text-sm !font-sans",
+            className: "!rounded-2xl !shadow-2xl !border-0 !px-5 !py-4 !text-sm !font-semibold !backdrop-blur-xl !min-w-[320px]",
             style: {
               fontFamily: "var(--font-sans, Inter, system-ui, sans-serif)",
             },
             classNames: {
-              success: "!border-success/30 !text-success [&>svg]:!text-success",
-              error: "!border-destructive/30 !text-destructive [&>svg]:!text-destructive",
-              info: "!border-primary/30 !text-primary [&>svg]:!text-primary",
-              warning: "!border-warning/30 !text-warning [&>svg]:!text-warning",
+              success: "!bg-gradient-to-r !from-emerald-500/95 !to-green-600/95 !text-white [&>svg]:!text-white [&_[data-close-button]]:!text-white/70 [&_[data-content]_[data-description]]:!text-white/80",
+              error: "!bg-gradient-to-r !from-red-500/95 !to-rose-600/95 !text-white [&>svg]:!text-white [&_[data-close-button]]:!text-white/70 [&_[data-content]_[data-description]]:!text-white/80",
+              info: "!bg-gradient-to-r !from-blue-500/95 !to-indigo-600/95 !text-white [&>svg]:!text-white [&_[data-close-button]]:!text-white/70 [&_[data-content]_[data-description]]:!text-white/80",
+              warning: "!bg-gradient-to-r !from-amber-500/95 !to-orange-500/95 !text-white [&>svg]:!text-white [&_[data-close-button]]:!text-white/70 [&_[data-content]_[data-description]]:!text-white/80",
+              toast: "!bg-gradient-to-r !from-slate-800/95 !to-slate-900/95 !text-white [&>svg]:!text-white [&_[data-close-button]]:!text-white/70 [&_[data-content]_[data-description]]:!text-white/80",
             },
           }}
-          gap={8}
-          visibleToasts={4}
+          gap={10}
+          visibleToasts={3}
           closeButton
           richColors={false}
           expand={false}
