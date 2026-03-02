@@ -180,15 +180,21 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                 ? "bg-primary text-primary-foreground rounded-br-md"
                 : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
             }`}
-            onTouchStart={startLongPress}
-            onTouchEnd={(e) => {
-              cancelLongPress();
-              // On mobile, if it was a simple tap (not long press) on own message, open info modal
-              if (isOwn && !longPressTriggered.current) {
-                setShowMessageInfo(true);
+            onPointerDown={(e) => {
+              if (e.pointerType === "touch") startLongPress();
+            }}
+            onPointerUp={(e) => {
+              if (e.pointerType === "touch") {
+                cancelLongPress();
+                if (isOwn && !longPressTriggered.current) {
+                  setShowMessageInfo(true);
+                }
               }
             }}
-            onTouchMove={cancelLongPress}
+            onPointerCancel={() => cancelLongPress()}
+            onPointerMove={(e) => {
+              if (e.pointerType === "touch") cancelLongPress();
+            }}
             onContextMenu={(e) => { e.preventDefault(); setShowLongPressMenu(true); }}
           >
             {/* Dropdown trigger (desktop) */}
