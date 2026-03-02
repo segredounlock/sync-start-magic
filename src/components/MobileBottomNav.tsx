@@ -62,21 +62,32 @@ export function MobileBottomNav({
           {mainItems.map((item) => {
             const isActive = activeKey === item.key;
             return (
-              <button
+              <motion.button
                 key={item.key}
                 onClick={() => handleSelect(item.key)}
                 className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
                   isActive ? "" : "opacity-50"
                 }`}
+                whileTap={{ scale: 0.9 }}
               >
-                <item.icon className={`h-5 w-5 ${item.color || "text-primary"}`} />
+                <motion.div
+                  animate={isActive ? { y: [0, -2, 0] } : {}}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <item.icon className={`h-5 w-5 ${item.color || "text-primary"}`} />
+                </motion.div>
                 <span className={`text-[10px] font-semibold ${item.color || "text-primary"}`}>
                   {item.label}
                 </span>
                 {isActive && (
-                  <div className="w-1 h-1 rounded-full bg-primary mt-0.5" />
+                  <motion.div
+                    className="w-1 h-1 rounded-full bg-primary mt-0.5"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    layoutId="nav-dot"
+                  />
                 )}
-              </button>
+              </motion.button>
             );
           })}
 
