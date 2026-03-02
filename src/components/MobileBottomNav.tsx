@@ -71,7 +71,7 @@ export function MobileBottomNav({
                 whileTap={{ scale: 0.9 }}
               >
                 <motion.div
-                  animate={isActive ? { y: [0, -2, 0] } : {}}
+                  animate={{ y: [0, -2, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <item.icon className={`h-5 w-5 ${item.color || "text-primary"}`} />
