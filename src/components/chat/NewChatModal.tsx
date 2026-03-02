@@ -132,7 +132,7 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left"
                 >
                   {u.avatar_url ? (
-                    <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-border" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                    <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                       {initial}

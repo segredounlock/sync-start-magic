@@ -177,7 +177,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         {!isOwn && (
           <div className="flex-shrink-0 mr-2 mt-auto">
             {message.sender?.avatar_url ? (
-              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className="w-8 h-8 rounded-full object-cover border-2 border-border" />
+              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border-2 border-border" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[11px]">
                 {(senderName[0] || "U").toUpperCase()}
@@ -380,7 +380,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         {isOwn && (
           <div className="flex-shrink-0 ml-2 mt-auto">
             {message.sender?.avatar_url ? (
-              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className="w-8 h-8 rounded-full object-cover border-2 border-primary/30" />
+              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border-2 border-primary/30" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[11px]">
                 {(senderName[0] || "U").toUpperCase()}

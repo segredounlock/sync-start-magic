@@ -153,7 +153,7 @@ export function MessageInfoModal({ message, open, onClose }: MessageInfoModalPro
                   {reads.map(r => (
                     <div key={r.user_id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors">
                       {r.profile?.avatar_url ? (
-                        <img src={r.profile.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className="w-9 h-9 rounded-full object-cover border-2 border-border" />
+                        <img src={r.profile.avatar_url} alt="" referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover border-2 border-border" />
                       ) : (
                         <div className="w-9 h-9 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
                           {(r.profile?.nome?.[0] || "U").toUpperCase()}

@@ -70,7 +70,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
                 <Users className={`h-5 w-5 ${isGeneral ? "text-primary" : "text-accent"}`} />
               </div>
             ) : conv.other_user?.avatar_url ? (
-              <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+              <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
             ) : (
               <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 {initial}
