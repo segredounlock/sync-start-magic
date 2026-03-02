@@ -36,10 +36,11 @@ export default function Auth() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
+  const [password, setPassword] = useState(() => localStorage.getItem("rememberedPass") || "");
   const [nome, setNome] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
 
@@ -133,6 +134,16 @@ export default function Auth() {
           throw error;
         }
         setFailedAttempts(0);
+        // Save or clear remembered credentials
+        if (rememberMe) {
+          localStorage.setItem("rememberMe", "true");
+          localStorage.setItem("rememberedEmail", email);
+          localStorage.setItem("rememberedPass", password);
+        } else {
+          localStorage.removeItem("rememberMe");
+          localStorage.removeItem("rememberedEmail");
+          localStorage.removeItem("rememberedPass");
+        }
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
@@ -283,13 +294,24 @@ export default function Auth() {
                 </div>
 
                 {isLogin && (
-                  <button
-                    type="button"
-                    onClick={() => { setPhase("forgot"); setForgotEmail(email); setForgotSent(false); }}
-                    className="text-xs text-primary hover:underline font-medium"
-                  >
-                    Esqueci minha senha
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 rounded border-border bg-muted/50 text-primary focus:ring-primary/30 accent-primary"
+                      />
+                      <span className="text-xs text-muted-foreground">Lembrar-me</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => { setPhase("forgot"); setForgotEmail(email); setForgotSent(false); }}
+                      className="text-xs text-primary hover:underline font-medium"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
                 )}
 
                 {isLocked && (
