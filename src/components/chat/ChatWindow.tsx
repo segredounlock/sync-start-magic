@@ -133,7 +133,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
       })()}
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.02) 0%, transparent 70%)" }}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-1" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.02) 0%, transparent 70%)" }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
