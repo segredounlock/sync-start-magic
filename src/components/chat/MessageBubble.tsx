@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, SmilePlus, Star, ChevronDown, Copy, Pin, PinOff } from "lucide-react";
+import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X } from "lucide-react";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -14,14 +14,16 @@ interface MessageBubbleProps {
   onScrollToMessage?: (id: string) => void;
 }
 
-const QUICK_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
+const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 60;
 
 export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete, onPin, onScrollToMessage }: MessageBubbleProps) {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showQuickEmoji, setShowQuickEmoji] = useState(false);
+  const [showLongPressMenu, setShowLongPressMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
   const x = useMotionValue(0);
   const replyIconOpacity = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -20] : [20, SWIPE_THRESHOLD], [1, 0]);
   const replyIconScale = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -10] : [10, SWIPE_THRESHOLD], [1, 0.3]);
@@ -37,14 +39,37 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
     return () => document.removeEventListener("mousedown", handler);
   }, [showDropdown]);
 
+  // Close long press menu on outside click
+  useEffect(() => {
+    if (!showLongPressMenu) return;
+    const handler = () => setShowLongPressMenu(false);
+    // Delay to avoid immediate close
+    const t = setTimeout(() => document.addEventListener("click", handler), 50);
+    return () => { clearTimeout(t); document.removeEventListener("click", handler); };
+  }, [showLongPressMenu]);
+
   const handleDragEnd = (_: any, info: PanInfo) => {
-    const threshold = SWIPE_THRESHOLD;
-    if (isOwn && info.offset.x < -threshold) {
-      onReply();
-    } else if (!isOwn && info.offset.x > threshold) {
-      onReply();
-    }
+    if (isOwn && info.offset.x < -SWIPE_THRESHOLD) onReply();
+    else if (!isOwn && info.offset.x > SWIPE_THRESHOLD) onReply();
   };
+
+  // Long press handlers
+  const startLongPress = useCallback(() => {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setShowLongPressMenu(true);
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 500);
+  }, []);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
 
   if (message.is_deleted) {
     return (
@@ -73,6 +98,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
       setTimeout(() => setCopied(false), 1500);
     }
     setShowDropdown(false);
+    setShowLongPressMenu(false);
   };
 
   const handleReplyClick = () => {
@@ -151,22 +177,28 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
             </div>
           )}
 
-          <div className={`relative px-3 py-2 rounded-2xl ${
-            isOwn
-              ? "bg-primary text-primary-foreground rounded-br-md"
-              : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
-          }`}>
-            {/* Dropdown trigger */}
+          <div
+            className={`relative px-3 py-2 rounded-2xl select-none ${
+              isOwn
+                ? "bg-primary text-primary-foreground rounded-br-md"
+                : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
+            }`}
+            onTouchStart={startLongPress}
+            onTouchEnd={cancelLongPress}
+            onTouchMove={cancelLongPress}
+            onContextMenu={(e) => { e.preventDefault(); setShowLongPressMenu(true); }}
+          >
+            {/* Dropdown trigger (desktop) */}
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className={`absolute top-1.5 right-1.5 p-0.5 rounded-md transition-colors ${
+              className={`absolute top-1.5 right-1.5 p-0.5 rounded-md transition-colors hidden sm:block ${
                 isOwn ? "hover:bg-primary-foreground/10 text-primary-foreground/40 hover:text-primary-foreground/70" : "hover:bg-muted text-muted-foreground/40 hover:text-muted-foreground/70"
               }`}
             >
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
 
-            {/* Dropdown menu */}
+            {/* Desktop dropdown menu */}
             <AnimatePresence>
               {showDropdown && (
                 <motion.div
@@ -190,9 +222,6 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                       {message.is_pinned ? <><PinOff className="h-4 w-4 text-warning" /> Desafixar</> : <><Pin className="h-4 w-4 text-warning" /> Fixar</>}
                     </button>
                   )}
-                  <button onClick={() => { setShowQuickEmoji(true); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
-                    <SmilePlus className="h-4 w-4 text-muted-foreground" /> Reagir
-                  </button>
                   {isOwn && (
                     <button onClick={() => { onDelete(); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
                       <Trash2 className="h-4 w-4" /> Apagar
@@ -245,25 +274,6 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
               ))}
             </div>
           )}
-
-          {/* Quick emoji picker */}
-          <AnimatePresence>
-            {showQuickEmoji && (
-              <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                className={`absolute -top-8 ${isOwn ? "right-0" : "left-10"} flex gap-0.5 bg-card border border-border rounded-full px-2 py-1 shadow-lg z-20`}
-              >
-                {QUICK_EMOJIS.map(e => (
-                  <button key={e} onClick={() => { onReact(e); setShowQuickEmoji(false); }} className="text-sm hover:scale-125 transition-transform p-0.5">
-                    {e}
-                  </button>
-                ))}
-                <button onClick={() => setShowQuickEmoji(false)} className="text-xs text-muted-foreground ml-1 hover:text-foreground">✕</button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         {/* Avatar for own messages */}
@@ -279,6 +289,100 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
           </div>
         )}
       </motion.div>
+
+      {/* Mobile long-press bottom sheet */}
+      <AnimatePresence>
+        {showLongPressMenu && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowLongPressMenu(false)}
+            />
+            {/* Bottom sheet */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border rounded-t-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Handle bar */}
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+
+              {/* Quick emoji row */}
+              <div className="flex items-center justify-center gap-2 px-4 py-3 border-b border-border/50">
+                {QUICK_EMOJIS.map(e => (
+                  <button
+                    key={e}
+                    onClick={() => { onReact(e); setShowLongPressMenu(false); }}
+                    className="text-2xl hover:scale-125 active:scale-95 transition-transform p-1"
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div className="py-1">
+                <button
+                  onClick={() => { onReply(); setShowLongPressMenu(false); }}
+                  className="w-full flex items-center justify-between px-5 py-3.5 text-foreground active:bg-muted/60 transition-colors"
+                >
+                  <span className="text-[15px]">Responder</span>
+                  <Reply className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                {message.type === "text" && message.content && (
+                  <button
+                    onClick={handleCopy}
+                    className="w-full flex items-center justify-between px-5 py-3.5 text-foreground active:bg-muted/60 transition-colors"
+                  >
+                    <span className="text-[15px]">{copied ? "Copiado!" : "Copiar"}</span>
+                    <Copy className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                )}
+
+                {onPin && (
+                  <button
+                    onClick={() => { onPin(); setShowLongPressMenu(false); }}
+                    className="w-full flex items-center justify-between px-5 py-3.5 text-foreground active:bg-muted/60 transition-colors"
+                  >
+                    <span className="text-[15px]">{message.is_pinned ? "Desafixar" : "Fixar"}</span>
+                    {message.is_pinned ? <PinOff className="h-5 w-5 text-warning" /> : <Pin className="h-5 w-5 text-warning" />}
+                  </button>
+                )}
+
+                {isOwn && (
+                  <button
+                    onClick={() => { onDelete(); setShowLongPressMenu(false); }}
+                    className="w-full flex items-center justify-between px-5 py-3.5 text-destructive active:bg-destructive/10 transition-colors"
+                  >
+                    <span className="text-[15px]">Apagar</span>
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Cancel */}
+              <div className="px-4 pb-6 pt-1">
+                <button
+                  onClick={() => setShowLongPressMenu(false)}
+                  className="w-full py-3 rounded-xl bg-muted/60 text-muted-foreground text-[15px] font-medium active:bg-muted transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
