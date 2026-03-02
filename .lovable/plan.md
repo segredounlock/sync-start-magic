@@ -1,41 +1,40 @@
 
 
-## Problema Identificado
+## Plano: Renomear métricas do Dashboard para maior clareza
 
-As notificações **não estão sendo salvas** no banco de dados porque o campo `id` da tabela `admin_notifications` é do tipo `uuid`, mas o código gera IDs com prefixos como `"web-abc123..."`, `"tg-upd-xyz..."` que não são UUIDs válidos. Isso causa erro silencioso em cada inserção.
+### O que será alterado
 
-Erros no banco:
-```
-invalid input syntax for type uuid: "web-9734f477-96f1-4704-9986-778ec8052108"
-invalid input syntax for type uuid: "tg-upd-011740fa-8260-4c05-b46d-a8356d0bd17e"
-```
+Os 6 cards do Dashboard principal e os cards do detalhe do revendedor terão seus nomes e subtítulos reescritos para que qualquer pessoa entenda imediatamente o que cada número representa, sem precisar de explicação.
 
-## Plano de Correção
+### Mudanças propostas
 
-### 1. Migration: Alterar coluna `id` de `uuid` para `text`
+**Dashboard Principal (6 cards):**
 
-Isso permite IDs com prefixos (`web-`, `tg-`, `tg-upd-`, UUIDs puros de transactions/recargas). Recriar as policies RLS após a alteração.
+| Atual | Novo Nome | Subtítulo Atual → Novo |
+|-------|-----------|----------------------|
+| Recargas Hoje | Recargas Hoje | "X concluídas" → "X concluídas de Y solicitadas" |
+| Vendas Hoje | Vendas Hoje (Cobrado) | "Custo API: X • Lucro: X" → "Valor cobrado dos revendedores hoje" |
+| Saldo Total | Saldo dos Revendedores | "X revendedores ativos" → sem alteração |
+| Vendas do Mês | Vendas do Mês (Cobrado) | "Custo API: X • Lucro: X" → "Cobrado dos revendedores neste mês" |
+| Lucro Acumulado | Lucro Total (Histórico) | "X recargas • Custo API: X" → "Vendas - Custo API de todas as recargas" |
+| Faturamento Total | Faturamento Total (Cobrado) | "Custo API: X • Lucro: X" → "Total cobrado de todos os tempos" |
 
-### 2. Atualizar `RealtimeNotifications.tsx`
+**Detalhe do Revendedor (7 cards):**
 
-Remover o cast `as any` agora desnecessário e garantir que o tipo `id` seja tratado como `text` nas operações de insert, update e delete.
+| Atual | Novo Nome |
+|-------|-----------|
+| Saldo Atual | Saldo Disponível |
+| Total Vendas | Cobrado pelo Sistema |
+| Custo Total | Custo da Operadora (API) |
+| Seu Lucro (Admin) | Seu Lucro (Cobrado - Custo API) |
+| Lucro do Revenda | Lucro do Revendedor (Preço Final - Cobrado) |
+| Total Depositado | Total de Depósitos |
 
-### 3. Atualizar `types.ts`
+### Arquivo editado
 
-O arquivo é auto-gerado, então apenas a migration resolverá a tipagem automaticamente.
+- `src/pages/Principal.tsx` — apenas alteração de strings nos labels e subtítulos dos cards
 
----
+### Detalhes técnicos
 
-**Detalhes técnicos da migration:**
-
-```sql
-ALTER TABLE admin_notifications 
-  ALTER COLUMN id SET DATA TYPE text 
-  USING id::text;
-
-ALTER TABLE admin_notifications 
-  ALTER COLUMN id SET DEFAULT gen_random_uuid()::text;
-```
-
-Isso preserva o default automático para IDs que não forem fornecidos, mas aceita qualquer string como ID.
+Todas as mudanças são cosméticas (strings de texto). Nenhuma lógica de cálculo será alterada. Os valores continuam sendo calculados da mesma forma, apenas os rótulos ficam mais descritivos para facilitar a leitura.
 
