@@ -1809,6 +1809,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         mainCount={4}
         userLabel={user?.email || userLabel}
         userRole={role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário"}
+        userAvatarUrl={avatarUrl}
         onSignOut={signOut}
         panelLinks={[
           ...(!isClientMode && (role === "admin" || role === "revendedor") ? [{ label: "Painel Admin", path: "/admin", icon: Shield, color: "text-primary" }] : []),

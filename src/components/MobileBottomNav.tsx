@@ -28,6 +28,7 @@ interface MobileBottomNavProps {
   mainCount?: number;
   userLabel?: string;
   userRole?: string;
+  userAvatarUrl?: string | null;
   onSignOut?: () => void;
   panelLinks?: PanelLink[];
 }
@@ -39,6 +40,7 @@ export function MobileBottomNav({
   mainCount = 4,
   userLabel,
   userRole,
+  userAvatarUrl,
   onSignOut,
   panelLinks,
 }: MobileBottomNavProps) {
@@ -143,7 +145,10 @@ export function MobileBottomNav({
               {userLabel && (
                 <div className="mx-4 mb-3 p-3 rounded-xl bg-muted/40">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary">
+                    {userAvatarUrl ? (
+                      <img src={userAvatarUrl} alt="Avatar" className="w-9 h-9 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).style.removeProperty('display'); }} />
+                    ) : null}
+                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary" style={userAvatarUrl ? { display: 'none' } : {}}>
                       {(userLabel[0] || "U").toUpperCase()}
                     </div>
                     <div className="min-w-0">
