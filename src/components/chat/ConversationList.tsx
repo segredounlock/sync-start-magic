@@ -1,6 +1,6 @@
 import { ChatConversation, GENERAL_CHAT_ID } from "@/hooks/useChat";
 import { motion } from "framer-motion";
-import { Users } from "lucide-react";
+import { Users, BadgeCheck } from "lucide-react";
 
 interface ConversationListProps {
   conversations: ChatConversation[];
@@ -53,6 +53,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
         const name = isGroup ? (conv.name || "Grupo") : (conv.other_user?.nome || conv.other_user?.email?.split("@")[0] || "Usuário");
         const initial = isGroup ? "G" : (name[0] || "U").toUpperCase();
         const isActive = activeId === conv.id;
+        const isAdmin = conv.other_user?.role === 'admin';
 
         return (
           <motion.button
@@ -76,8 +77,19 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className={`font-semibold text-sm truncate ${isGeneral ? "text-primary" : "text-foreground"}`}>
-                  {name}
+                <span className="flex items-center gap-1 min-w-0">
+                  <span className={`font-semibold text-sm truncate ${isGeneral ? "text-primary" : "text-foreground"}`}>
+                    {name}
+                  </span>
+                  {isAdmin && (
+                    <motion.div
+                      animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
+                      transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                      className="inline-flex flex-shrink-0"
+                    >
+                      <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
+                    </motion.div>
+                  )}
                 </span>
                 <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">{fmtTime(conv.last_message_at)}</span>
               </div>
