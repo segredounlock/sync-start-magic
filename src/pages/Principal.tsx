@@ -1468,6 +1468,18 @@ export default function Principal() {
                 ))}
               </div>
 
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Buscar por nome ou e-mail..."
+                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                />
+              </div>
+
               {/* Role Filter */}
               <div className="flex items-center gap-2 flex-wrap">
                 {([
