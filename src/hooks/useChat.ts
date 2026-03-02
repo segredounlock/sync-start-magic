@@ -18,6 +18,7 @@ export interface ChatConversation {
     nome: string | null;
     email: string | null;
     avatar_url: string | null;
+    role?: string;
   };
   unread_count?: number;
 }
@@ -78,12 +79,14 @@ export function useConversations() {
       const uniqueIds = [...new Set(otherIds)];
 
       let profiles: any[] = [];
+      let roleMap: Record<string, string> = {};
       if (uniqueIds.length > 0) {
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("id, nome, email, avatar_url")
-          .in("id", uniqueIds);
+        const [{ data: p }, { data: roles }] = await Promise.all([
+          supabase.from("profiles").select("id, nome, email, avatar_url").in("id", uniqueIds),
+          supabase.from("user_roles").select("user_id, role").in("user_id", uniqueIds),
+        ]);
         profiles = p || [];
+        (roles || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
       }
 
       const convos = (data || []).map((c: any) => {
@@ -92,7 +95,8 @@ export function useConversations() {
         }
         const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
         const profile = profiles.find((p: any) => p.id === otherId);
-        return { ...c, other_user: profile || { id: otherId, nome: null, email: null, avatar_url: null }, unread_count: 0 };
+        const role = roleMap[otherId] || "usuario";
+        return { ...c, other_user: profile ? { ...profile, role } : { id: otherId, nome: null, email: null, avatar_url: null, role }, unread_count: 0 };
       });
 
       // Fetch unread counts
