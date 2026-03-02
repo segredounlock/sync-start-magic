@@ -992,13 +992,13 @@ export default function AdminDashboard() {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[250px] z-30 border-r border-border glass-header">
+      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[260px] z-30 border-r border-border bg-card">
         <div className="h-full flex flex-col">
           <div className="px-5 py-5 border-b border-border">
             <h1 className="font-display text-xl font-bold shimmer-letters">
               Recargas <span className="brasil-word">Brasil</span>
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-white font-medium mt-1">Admin</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary font-semibold mt-1.5">Admin</p>
           </div>
 
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">

@@ -810,13 +810,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[290px] z-30 border-r border-border glass-header">
+      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[280px] z-30 border-r border-border bg-card">
         <div className="h-full flex flex-col">
           <div className="px-5 py-4 border-b border-border">
-            <h1 className="font-display text-2xl font-bold shimmer-letters">
+            <h1 className="font-display text-xl font-bold shimmer-letters">
               Recargas <span className="brasil-word">Brasil</span>
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-white font-medium mt-1">Revendedor</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary font-semibold mt-1.5">Revendedor</p>
           </div>
 
           <div className="p-4 space-y-3 border-b border-border">
@@ -916,13 +916,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", anim: "float" as const },
               { icon: Clock, label: "Total", rawValue: recargas.length, isCurrency: false, color: "text-accent", anim: "pulse" as const },
             ].map((c, i) => (
-              <motion.div key={c.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="glass-card rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <AnimatedIcon icon={c.icon} className={`h-4 w-4 ${c.color}`} animation={c.anim} delay={i * 0.12} />
-                  <span className="text-xs text-muted-foreground">{c.label}</span>
+              <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="kpi-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-9 h-9 rounded-xl ${c.color === "text-primary" ? "bg-primary/10" : "bg-accent/10"} flex items-center justify-center`}>
+                    <AnimatedIcon icon={c.icon} className={`h-4 w-4 ${c.color}`} animation={c.anim} delay={i * 0.12} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{c.label}</span>
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-foreground truncate">
-                  {loading ? <SkeletonValue width="w-16" className="h-6" /> : c.isCurrency ? <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" /> : <AnimatedInt value={c.rawValue} />}
+                <p className={`text-2xl md:text-3xl font-bold ${c.color} truncate`}>
+                  {loading ? <SkeletonValue width="w-16" className="h-7" /> : c.isCurrency ? <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" /> : <AnimatedInt value={c.rawValue} />}
                 </p>
               </motion.div>
             ))}
