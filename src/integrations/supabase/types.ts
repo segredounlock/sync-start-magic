@@ -901,6 +901,54 @@ export type Database = {
         }
         Relationships: []
       }
+      update_history: {
+        Row: {
+          applied_at: string
+          applied_by: string | null
+          backup_by: string | null
+          backup_date: string | null
+          created_at: string
+          id: string
+          previous_version: string | null
+          results: Json
+          tables_failed: number
+          tables_restored: number
+          tables_skipped: number
+          total_records: number
+          version: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by?: string | null
+          backup_by?: string | null
+          backup_date?: string | null
+          created_at?: string
+          id?: string
+          previous_version?: string | null
+          results?: Json
+          tables_failed?: number
+          tables_restored?: number
+          tables_skipped?: number
+          total_records?: number
+          version: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string | null
+          backup_by?: string | null
+          backup_date?: string | null
+          created_at?: string
+          id?: string
+          previous_version?: string | null
+          results?: Json
+          tables_failed?: number
+          tables_restored?: number
+          tables_skipped?: number
+          total_records?: number
+          version?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
