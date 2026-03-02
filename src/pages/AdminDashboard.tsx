@@ -1415,8 +1415,12 @@ export default function AdminDashboard() {
                       {role === "admin" && (
                         <span className="text-[10px] text-muted-foreground">
                           Custo: {fmt(r.custo)}
-                          {" "}
-                          <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
+                          {(r.status === "completed" || r.status === "concluida") && (
+                            <>
+                              {" "}
+                              <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
+                            </>
+                          )}
                         </span>
                       )}
                     </div>
@@ -1468,8 +1472,13 @@ export default function AdminDashboard() {
                           <p className="font-mono font-bold text-foreground">{fmt(r.valor)}</p>
                           {role === "admin" && (
                             <p className="text-xs text-muted-foreground">
-                              Custo: {fmt(r.custo)}{" "}
-                              <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
+                              Custo: {fmt(r.custo)}
+                              {(r.status === "completed" || r.status === "concluida") && (
+                                <>
+                                  {" "}
+                                  <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
+                                </>
+                              )}
                             </p>
                           )}
                         </td>
