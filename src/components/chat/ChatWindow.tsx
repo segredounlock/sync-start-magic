@@ -222,7 +222,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             )}
           </div>
         ) : otherUser?.avatar_url ? (
-          <img src={otherUser.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
+          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
             {initial}
