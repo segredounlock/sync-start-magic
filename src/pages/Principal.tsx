@@ -2241,7 +2241,7 @@ export default function Principal() {
                   {/* Efi Pay */}
                   {globalConfig.paymentModule === "efipay" && (
                     <div className="glass-card rounded-xl p-6 space-y-4">
-                      <h4 className="font-semibold text-primary text-lg">Configuração Efi Pay</h4>
+                      <h4 className="font-semibold text-primary text-lg">🏦 Configuração Efi Pay</h4>
                       <div>
                         <label className="block text-sm font-bold text-foreground mb-1">Client ID</label>
                         <input type="text" value={globalConfig.efiPayClientId || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, efiPayClientId: e.target.value }))}
@@ -2262,13 +2262,54 @@ export default function Principal() {
                           className="rounded border-input" />
                         Modo Sandbox (Testes)
                       </label>
+
+                      {/* Upload Certificado .p12 */}
+                      <div className="glass-card rounded-lg p-4 space-y-3 border border-primary/20">
+                        <h5 className="font-bold text-foreground text-sm flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary" /> Certificado mTLS (.p12)
+                        </h5>
+                        <p className="text-xs text-muted-foreground">
+                          Necessário para produção. Em sandbox, a autenticação funciona sem certificado.
+                        </p>
+                        {globalConfig.efiPayCertBase64 ? (
+                          <div className="flex items-center gap-2 text-sm text-success">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span className="font-medium">Certificado configurado.</span>
+                            <button onClick={() => setGlobalConfig(prev => ({ ...prev, efiPayCertBase64: "" }))}
+                              className="ml-auto text-xs text-destructive hover:underline">Remover</button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md border border-dashed border-primary/40 hover:bg-primary/5 transition-colors">
+                            <Upload className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-foreground">Selecionar arquivo .p12</span>
+                            <input type="file" accept=".p12,.pem,.pfx" className="hidden" onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  const base64 = (reader.result as string).split(",")[1] || reader.result as string;
+                                  setGlobalConfig(prev => ({ ...prev, efiPayCertBase64: base64 }));
+                                  toast.success("Certificado carregado! Clique em Salvar para confirmar.");
+                                };
+                                reader.readAsDataURL(file);
+                              } catch {
+                                toast.error("Erro ao ler certificado");
+                              }
+                            }} />
+                          </label>
+                        )}
+                      </div>
+
+                      {/* Automação PIX */}
                       <div className="glass-card rounded-lg p-4 space-y-3">
                         <h5 className="font-bold text-foreground text-sm">Automação PIX</h5>
                         <div>
-                          <label className="block text-xs text-muted-foreground mb-1">Chave PIX Sincronizada</label>
+                          <label className="block text-xs text-muted-foreground mb-1">Chave PIX (EVP)</label>
                           <input type="text" value={globalConfig.efiPayPixKey || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, efiPayPixKey: e.target.value }))}
-                            className="w-full px-3 py-2.5 rounded-md border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="f1b10157-b043-4ee3-adf6-ea5d2c5a49ea" />
+                            className="w-full px-3 py-2.5 rounded-md border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Chave EVP ou sua chave PIX" />
                         </div>
+                        <EfiSetupButton config={globalConfig} onKeyCreated={(key) => setGlobalConfig(prev => ({ ...prev, efiPayPixKey: key }))} />
                       </div>
                     </div>
                   )}
@@ -3290,6 +3331,68 @@ function PricingCard({ valor, savedTipo, savedValor, savedCusto, onSave, onReset
           <RotateCcw className="h-4 w-4" />
         </button>
       </div>
+    </div>
+  );
+}
+
+function EfiSetupButton({ config, onKeyCreated }: { config: Record<string, string>; onKeyCreated: (key: string) => void }) {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; message: string; details?: string[] } | null>(null);
+
+  const handleSetup = async () => {
+    setRunning(true);
+    setResult(null);
+    const details: string[] = [];
+    let allOk = true;
+    try {
+      const { data, error } = await supabase.functions.invoke("efi-setup", {
+        body: { action: "setup" },
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error || "Erro desconhecido");
+
+      const d = data.data || {};
+
+      if (d.authenticated) details.push("✅ Autenticação OK");
+      else { details.push("❌ Falha na autenticação"); allOk = false; }
+
+      if (d.created_key) {
+        details.push(`✅ Chave EVP criada: ${d.created_key}`);
+        onKeyCreated(d.created_key);
+      } else if (d.keys?.length > 0) {
+        details.push(`✅ ${d.keys.length} chave(s) EVP encontrada(s)`);
+        if (!config.efiPayPixKey && d.keys[0]) onKeyCreated(d.keys[0]);
+      } else if (d.keys_error) {
+        details.push(`⚠️ Erro ao listar chaves: ${d.keys_error}`);
+      }
+
+      if (d.webhook_registered) {
+        details.push(`✅ Webhook registrado: ${d.webhook_url}`);
+      } else if (d.webhook_error) {
+        details.push(`⚠️ Webhook: ${d.webhook_error}`);
+        allOk = false;
+      }
+
+      setResult({ ok: allOk, message: allOk ? "✅ Configuração concluída!" : "⚠️ Concluído com avisos", details });
+    } catch (err: any) {
+      setResult({ ok: false, message: `❌ Falha: ${err.message}`, details });
+    }
+    setRunning(false);
+  };
+
+  return (
+    <div className="space-y-2">
+      <button onClick={handleSetup} disabled={running}
+        className="w-full py-2.5 rounded-lg border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+        {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+        {running ? "Configurando..." : "Gerar Chave e Configurar Webhook"}
+      </button>
+      {result && (
+        <div className={`rounded-lg p-3 text-sm space-y-1 ${result.ok ? "bg-success/10 text-success border border-success/20" : "bg-destructive/10 text-destructive border border-destructive/20"}`}>
+          <p className="font-medium">{result.message}</p>
+          {result.details?.map((d, i) => <p key={i} className="text-xs opacity-90">{d}</p>)}
+        </div>
+      )}
     </div>
   );
 }

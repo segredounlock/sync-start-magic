@@ -185,11 +185,12 @@ async function createEfiPay(
   if (!clientId || !clientSecret) throw new Error("Credenciais Efi Pay não configuradas");
 
   const isSandbox = config.efiPaySandbox === "true";
+  // Sandbox: pix-h.api.efipay.com.br | Produção: pix.api.efipay.com.br
   const baseUrl = isSandbox
     ? "https://pix-h.api.efipay.com.br"
     : "https://pix.api.efipay.com.br";
 
-  // OAuth2 token (sem mTLS - funciona para operações básicas em sandbox)
+  // OAuth2 token
   const credentials = btoa(`${clientId}:${clientSecret}`);
   const authResp = await fetch(`${baseUrl}/oauth/token`, {
     method: "POST",
@@ -202,27 +203,31 @@ async function createEfiPay(
 
   const authData = await authResp.json();
   if (!authResp.ok || !authData.access_token) {
-    console.error("EfiPay auth error:", authData);
+    console.error("EfiPay auth error:", JSON.stringify(authData));
+    const detail = authData?.error_description || authData?.mensagem || authData?.error || "";
     throw new Error(
-      "Falha na autenticação Efi Pay. Nota: em produção requer certificado mTLS (.p12)."
+      `Falha na autenticação Efi Pay: ${detail || "verifique Client ID/Secret"}. ${
+        !isSandbox ? "Em produção requer certificado mTLS (.p12)." : ""
+      }`
     );
   }
 
-  // Create cobv (cobrança com vencimento)
-  const txid = meta.reference.replace(/[^a-zA-Z0-9]/g, "").substring(0, 35);
-  const valueCents = amount.toFixed(2);
+  // txid must be 26-35 alphanumeric chars
+  const rawTxid = meta.reference.replace(/[^a-zA-Z0-9]/g, "");
+  const txid = rawTxid.length >= 26 ? rawTxid.substring(0, 35) : rawTxid.padEnd(26, "0");
 
   const pixKey = config.efiPayPixKey || "";
-  if (!pixKey) throw new Error("Chave PIX do Efi Pay não configurada");
+  if (!pixKey) throw new Error("Chave PIX do Efi Pay não configurada. Configure na aba Automação PIX.");
 
-  const cobBody = {
+  const cobBody: Record<string, unknown> = {
     calendario: { expiracao: 3600 },
-    devedor: { nome: "Cliente", cpf: "00000000000" },
-    valor: { original: valueCents },
+    valor: { original: amount.toFixed(2) },
     chave: pixKey,
     solicitacaoPagador: `Depósito R$ ${amount.toFixed(2)}`,
     infoAdicionais: [{ nome: "ref", valor: meta.reference }],
   };
+
+  console.log(`EfiPay creating cob: txid=${txid}, amount=${amount}, sandbox=${isSandbox}`);
 
   const cobResp = await fetch(`${baseUrl}/v2/cob/${txid}`, {
     method: "PUT",
@@ -235,8 +240,9 @@ async function createEfiPay(
 
   const cobData = await cobResp.json();
   if (!cobResp.ok) {
-    console.error("EfiPay cob error:", cobData);
-    throw new Error(cobData.mensagem || `EfiPay error ${cobResp.status}`);
+    console.error("EfiPay cob error:", JSON.stringify(cobData));
+    const errMsg = cobData?.mensagem || cobData?.erros?.[0]?.mensagem || cobData?.message || "";
+    throw new Error(`Efi Pay erro ao criar cobrança: ${errMsg || `HTTP ${cobResp.status}`}`);
   }
 
   // Get QR code
@@ -245,13 +251,17 @@ async function createEfiPay(
   let qrCodeBase64 = null;
 
   if (locId) {
-    const qrResp = await fetch(`${baseUrl}/v2/loc/${locId}/qrcode`, {
-      headers: { Authorization: `Bearer ${authData.access_token}` },
-    });
-    if (qrResp.ok) {
-      const qrData = await qrResp.json();
-      qrCode = qrData.qrcode || qrCode;
-      qrCodeBase64 = qrData.imagemQrcode || null;
+    try {
+      const qrResp = await fetch(`${baseUrl}/v2/loc/${locId}/qrcode`, {
+        headers: { Authorization: `Bearer ${authData.access_token}` },
+      });
+      if (qrResp.ok) {
+        const qrData = await qrResp.json();
+        qrCode = qrData.qrcode || qrCode;
+        qrCodeBase64 = qrData.imagemQrcode || null;
+      }
+    } catch (qrErr) {
+      console.warn("EfiPay QR code fetch failed (non-critical):", qrErr);
     }
   }
 
