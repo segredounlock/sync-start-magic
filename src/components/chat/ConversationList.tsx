@@ -1,5 +1,6 @@
-import { ChatConversation } from "@/hooks/useChat";
+import { ChatConversation, GENERAL_CHAT_ID } from "@/hooks/useChat";
 import { motion } from "framer-motion";
+import { Users } from "lucide-react";
 
 interface ConversationListProps {
   conversations: ChatConversation[];
@@ -47,8 +48,10 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
   return (
     <div className="flex-1 overflow-y-auto">
       {conversations.map((conv, i) => {
-        const name = conv.other_user?.nome || conv.other_user?.email?.split("@")[0] || "Usuário";
-        const initial = (name[0] || "U").toUpperCase();
+        const isGroup = conv.type === 'group';
+        const isGeneral = conv.id === GENERAL_CHAT_ID;
+        const name = isGroup ? (conv.name || "Grupo") : (conv.other_user?.nome || conv.other_user?.email?.split("@")[0] || "Usuário");
+        const initial = isGroup ? "G" : (name[0] || "U").toUpperCase();
         const isActive = activeId === conv.id;
 
         return (
@@ -60,7 +63,11 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
             onClick={() => onSelect(conv.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left hover:bg-muted/50 ${isActive ? "bg-primary/10 border-r-2 border-primary" : ""}`}
           >
-            {conv.other_user?.avatar_url ? (
+            {isGroup ? (
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${isGeneral ? "bg-primary/15 border-primary/30" : "bg-accent/15 border-accent/30"}`}>
+                <Users className={`h-5 w-5 ${isGeneral ? "text-primary" : "text-accent"}`} />
+              </div>
+            ) : conv.other_user?.avatar_url ? (
               <img src={conv.other_user.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
             ) : (
               <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
@@ -69,7 +76,9 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-sm text-foreground truncate">{name}</span>
+                <span className={`font-semibold text-sm truncate ${isGeneral ? "text-primary" : "text-foreground"}`}>
+                  {name}
+                </span>
                 <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">{fmtTime(conv.last_message_at)}</span>
               </div>
               <div className="flex items-center justify-between mt-0.5">

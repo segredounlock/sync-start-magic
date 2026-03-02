@@ -2,10 +2,14 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+export const GENERAL_CHAT_ID = "00000000-0000-0000-0000-000000000001";
+
 export interface ChatConversation {
   id: string;
   participant_1: string;
-  participant_2: string;
+  participant_2: string | null;
+  type: string;
+  name: string | null;
   last_message_text: string | null;
   last_message_at: string;
   created_at: string;
@@ -53,18 +57,19 @@ export function useConversations() {
   const fetchConversations = useCallback(async () => {
     if (!user) return;
     try {
+      // Fetch all conversations (group + direct where user is participant)
       const { data, error } = await supabase
         .from("chat_conversations")
         .select("*")
-        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
         .order("last_message_at", { ascending: false });
 
       if (error) throw error;
 
-      // Fetch other user profiles
-      const otherIds = (data || []).map((c: any) =>
+      // For direct conversations, fetch other user profiles
+      const directConvos = (data || []).filter((c: any) => c.type === 'direct');
+      const otherIds = directConvos.map((c: any) =>
         c.participant_1 === user.id ? c.participant_2 : c.participant_1
-      );
+      ).filter(Boolean);
       const uniqueIds = [...new Set(otherIds)];
 
       let profiles: any[] = [];
@@ -76,8 +81,10 @@ export function useConversations() {
         profiles = p || [];
       }
 
-      // Get unread counts
       const convos = (data || []).map((c: any) => {
+        if (c.type === 'group') {
+          return { ...c, other_user: undefined, unread_count: 0 };
+        }
         const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
         const profile = profiles.find((p: any) => p.id === otherId);
         return { ...c, other_user: profile || { id: otherId, nome: null, email: null, avatar_url: null }, unread_count: 0 };
@@ -93,6 +100,13 @@ export function useConversations() {
           .eq("is_read", false);
         conv.unread_count = count || 0;
       }
+
+      // Sort: general chat first, then by last_message_at
+      convos.sort((a: any, b: any) => {
+        if (a.id === GENERAL_CHAT_ID) return -1;
+        if (b.id === GENERAL_CHAT_ID) return 1;
+        return new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime();
+      });
 
       setConversations(convos);
     } finally {
@@ -133,7 +147,7 @@ export function useConversations() {
 
     const { data, error } = await supabase
       .from("chat_conversations")
-      .insert({ participant_1: ids[0], participant_2: ids[1] })
+      .insert({ participant_1: ids[0], participant_2: ids[1], type: 'direct' })
       .select()
       .single();
 

@@ -6,6 +6,7 @@ import { Check, CheckCheck, Reply, Trash2, SmilePlus } from "lucide-react";
 interface MessageBubbleProps {
   message: ChatMessage;
   isOwn: boolean;
+  isGroup?: boolean;
   onReply: () => void;
   onReact: (emoji: string) => void;
   onDelete: () => void;
@@ -13,7 +14,7 @@ interface MessageBubbleProps {
 
 const QUICK_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
-export function MessageBubble({ message, isOwn, onReply, onReact, onDelete }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [showQuickEmoji, setShowQuickEmoji] = useState(false);
 
@@ -28,6 +29,7 @@ export function MessageBubble({ message, isOwn, onReply, onReact, onDelete }: Me
   }
 
   const time = new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const senderName = message.sender?.nome || "Usuário";
 
   const reactions = message.reactions || [];
   const groupedReactions: Record<string, number> = {};
@@ -42,7 +44,25 @@ export function MessageBubble({ message, isOwn, onReply, onReact, onDelete }: Me
       onMouseLeave={() => { setShowActions(false); setShowQuickEmoji(false); }}
       onTouchStart={() => setShowActions(true)}
     >
+      {/* Avatar for group messages from others */}
+      {isGroup && !isOwn && (
+        <div className="flex-shrink-0 mr-2 mt-auto">
+          {message.sender?.avatar_url ? (
+            <img src={message.sender.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-border" />
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
+              {(senderName[0] || "U").toUpperCase()}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className={`max-w-[75%] ${isOwn ? "order-1" : ""}`}>
+        {/* Sender name for group chats */}
+        {isGroup && !isOwn && (
+          <p className="text-[10px] font-semibold text-primary ml-1 mb-0.5">{senderName}</p>
+        )}
+
         {/* Reply preview */}
         {message.reply_to && (
           <div className={`mb-1 px-3 py-1.5 rounded-xl ${isOwn ? "bg-primary/5 border-l-2 border-primary/40" : "bg-muted/40 border-l-2 border-muted-foreground/30"}`}>
@@ -76,7 +96,7 @@ export function MessageBubble({ message, isOwn, onReply, onReact, onDelete }: Me
           {/* Time & status */}
           <div className={`flex items-center gap-1 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
             <span className={`text-[9px] ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{time}</span>
-            {isOwn && (
+            {isOwn && !isGroup && (
               message.is_read ? (
                 <CheckCheck className="h-3 w-3 text-[hsl(200,80%,55%)]" />
               ) : message.is_delivered ? (

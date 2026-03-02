@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useConversations } from "@/hooks/useChat";
+import { useConversations, GENERAL_CHAT_ID } from "@/hooks/useChat";
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationList } from "./ConversationList";
 import { ChatWindow } from "./ChatWindow";
@@ -15,7 +15,7 @@ interface ChatPageProps {
 export function ChatPage({ onBack }: ChatPageProps) {
   const { user } = useAuth();
   const { conversations, loading, startConversation } = useConversations();
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(GENERAL_CHAT_ID);
   const [showNewChat, setShowNewChat] = useState(false);
   const [chatEnabled, setChatEnabled] = useState(true);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
@@ -33,6 +33,7 @@ export function ChatPage({ onBack }: ChatPageProps) {
   }, []);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
+  const isGroupChat = activeConversation?.type === 'group';
 
   const handleStartChat = async (userId: string) => {
     try {
@@ -66,6 +67,8 @@ export function ChatPage({ onBack }: ChatPageProps) {
               <ChatWindow
                 conversationId={activeConversationId}
                 otherUser={activeConversation?.other_user}
+                isGroup={isGroupChat}
+                groupName={activeConversation?.name || undefined}
                 onBack={() => setActiveConversationId(null)}
               />
             </motion.div>
@@ -130,6 +133,8 @@ export function ChatPage({ onBack }: ChatPageProps) {
           <ChatWindow
             conversationId={activeConversationId}
             otherUser={activeConversation?.other_user}
+            isGroup={isGroupChat}
+            groupName={activeConversation?.name || undefined}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-4">

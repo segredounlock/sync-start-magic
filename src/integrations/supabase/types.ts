@@ -184,8 +184,10 @@ export type Database = {
           id: string
           last_message_at: string | null
           last_message_text: string | null
+          name: string | null
           participant_1: string
-          participant_2: string
+          participant_2: string | null
+          type: string
           updated_at: string
         }
         Insert: {
@@ -193,8 +195,10 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           last_message_text?: string | null
+          name?: string | null
           participant_1: string
-          participant_2: string
+          participant_2?: string | null
+          type?: string
           updated_at?: string
         }
         Update: {
@@ -202,8 +206,10 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           last_message_text?: string | null
+          name?: string | null
           participant_1?: string
-          participant_2?: string
+          participant_2?: string | null
+          type?: string
           updated_at?: string
         }
         Relationships: []
