@@ -18,7 +18,7 @@ interface ChatWindowProps {
 
 export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBack }: ChatWindowProps) {
   const { user } = useAuth();
-  const { messages, loading, sendMessage, toggleReaction, deleteMessage, pinMessage } = useChatMessages(conversationId);
+  const { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage } = useChatMessages(conversationId);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
@@ -156,6 +156,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
                     onReply={() => { setReplyTo(msg); inputRef.current?.focus(); }}
                     onReact={(emoji) => toggleReaction(msg.id, emoji)}
                     onDelete={() => deleteMessage(msg.id)}
+                    onEdit={(newContent) => editMessage(msg.id, newContent)}
                     onPin={() => pinMessage(msg.id)}
                     onScrollToMessage={scrollToMessage}
                   />
