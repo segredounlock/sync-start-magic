@@ -6,7 +6,7 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin } from "lucide-react";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -18,7 +18,7 @@ interface ChatWindowProps {
 
 export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBack }: ChatWindowProps) {
   const { user } = useAuth();
-  const { messages, loading, sendMessage, toggleReaction, deleteMessage } = useChatMessages(conversationId);
+  const { messages, loading, sendMessage, toggleReaction, deleteMessage, pinMessage } = useChatMessages(conversationId);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
@@ -100,6 +100,30 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
         </div>
       </div>
 
+      {/* Pinned message banner */}
+      {(() => {
+        const pinned = messages.filter(m => m.is_pinned && !m.is_deleted);
+        if (pinned.length === 0) return null;
+        const lastPinned = pinned[pinned.length - 1];
+        return (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            className="px-4 py-2 border-b border-warning/30 bg-warning/5 flex items-center gap-2 cursor-pointer hover:bg-warning/10 transition-colors"
+            onClick={() => {
+              const el = document.getElementById(`msg-${lastPinned.id}`);
+              el?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+          >
+            <Pin className="h-3.5 w-3.5 text-warning rotate-45 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold text-warning">Mensagem fixada</p>
+              <p className="text-xs text-foreground/80 truncate">{lastPinned.content || (lastPinned.type === "audio" ? "🎤 Áudio" : "📷 Imagem")}</p>
+            </div>
+          </motion.div>
+        );
+      })()}
+
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.02) 0%, transparent 70%)" }}>
         {loading ? (
@@ -113,15 +137,17 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
                 <span className="text-[10px] bg-muted/60 text-muted-foreground px-3 py-1 rounded-full font-medium">{group.date}</span>
               </div>
               {group.msgs.map(msg => (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  isOwn={msg.sender_id === user?.id}
-                  isGroup={isGroup}
-                  onReply={() => { setReplyTo(msg); inputRef.current?.focus(); }}
-                  onReact={(emoji) => toggleReaction(msg.id, emoji)}
-                  onDelete={() => deleteMessage(msg.id)}
-                />
+                <div key={msg.id} id={`msg-${msg.id}`}>
+                  <MessageBubble
+                    message={msg}
+                    isOwn={msg.sender_id === user?.id}
+                    isGroup={isGroup}
+                    onReply={() => { setReplyTo(msg); inputRef.current?.focus(); }}
+                    onReact={(emoji) => toggleReaction(msg.id, emoji)}
+                    onDelete={() => deleteMessage(msg.id)}
+                    onPin={() => pinMessage(msg.id)}
+                  />
+                </div>
               ))}
             </div>
           ))
