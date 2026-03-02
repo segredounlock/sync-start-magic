@@ -1232,12 +1232,12 @@ export default function Principal() {
               {/* KPI Row */}
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {[
-                  { icon: Smartphone, label: "Recargas Hoje", rawValue: dashboardMetrics.recargasHoje, isInt: true, sub: `${dashboardMetrics.completedHoje} concluídas`, color: "text-primary", bgColor: "bg-primary/10" },
-  { icon: TrendingUp, label: "Vendas Hoje", rawValue: dashboardMetrics.receitaHoje, isInt: false, sub: `Custo API: ${fmt(dashboardMetrics.receitaHoje - dashboardMetrics.lucroHoje)} • Lucro: ${fmt(dashboardMetrics.lucroHoje)}`, color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Wallet, label: "Saldo Total", rawValue: totalSaldo, isInt: false, sub: `${activeCount} revendedores ativos`, color: "text-warning", bgColor: "bg-warning/10" },
-                  { icon: DollarSign, label: "Vendas do Mês", rawValue: dashboardMetrics.receitaMes, isInt: false, sub: `Custo API: ${fmt(dashboardMetrics.receitaMes - dashboardMetrics.lucroMes)} • Lucro: ${fmt(dashboardMetrics.lucroMes)}`, color: "text-accent", bgColor: "bg-accent/10" },
-                  { icon: BarChart3, label: "Lucro Acumulado", rawValue: dashboardMetrics.lucroTotal, isInt: false, sub: `${dashboardMetrics.totalRecargas} recargas • Custo API: ${fmt(dashboardMetrics.custoTotal)}`, color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Activity, label: "Faturamento Total", rawValue: dashboardMetrics.receitaTotal, isInt: false, sub: `Custo API: ${fmt(dashboardMetrics.custoTotal)} • Lucro: ${fmt(dashboardMetrics.lucroTotal)}`, color: "text-primary", bgColor: "bg-primary/10" },
+                  { icon: Smartphone, label: "Recargas Hoje", rawValue: dashboardMetrics.recargasHoje, isInt: true, sub: `${dashboardMetrics.completedHoje} concluídas de ${dashboardMetrics.recargasHoje} solicitadas`, color: "text-primary", bgColor: "bg-primary/10" },
+                  { icon: TrendingUp, label: "Vendas Hoje (Cobrado)", rawValue: dashboardMetrics.receitaHoje, isInt: false, sub: "Valor cobrado dos revendedores hoje", color: "text-success", bgColor: "bg-success/10" },
+                  { icon: Wallet, label: "Saldo dos Revendedores", rawValue: totalSaldo, isInt: false, sub: `${activeCount} revendedores ativos`, color: "text-warning", bgColor: "bg-warning/10" },
+                  { icon: DollarSign, label: "Vendas do Mês (Cobrado)", rawValue: dashboardMetrics.receitaMes, isInt: false, sub: "Cobrado dos revendedores neste mês", color: "text-accent", bgColor: "bg-accent/10" },
+                  { icon: BarChart3, label: "Lucro Total (Histórico)", rawValue: dashboardMetrics.lucroTotal, isInt: false, sub: "Vendas - Custo API de todas as recargas", color: "text-success", bgColor: "bg-success/10" },
+                  { icon: Activity, label: "Faturamento Total (Cobrado)", rawValue: dashboardMetrics.receitaTotal, isInt: false, sub: "Total cobrado de todos os tempos", color: "text-primary", bgColor: "bg-primary/10" },
                 ].map((c) => (
                   <div key={c.label} className="glass-card rounded-2xl p-4 md:p-5">
                     <div className="flex items-start justify-between mb-3">
@@ -1794,13 +1794,13 @@ export default function Principal() {
                 <>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {[
-                      { label: "Saldo Atual", value: fmt(selectedRev.saldo), color: "text-success" },
-                      { label: "Total Vendas", value: fmt(revAnalytics.totalVendas), color: "text-primary" },
+                      { label: "Saldo Disponível", value: fmt(selectedRev.saldo), color: "text-success" },
+                      { label: "Cobrado pelo Sistema", value: fmt(revAnalytics.totalVendas), color: "text-primary" },
                       { label: "Recargas", value: `${revAnalytics.totalRec} (${revAnalytics.successRec} ✓)`, color: "text-foreground" },
-                      { label: "Total Depositado", value: fmt(revAnalytics.totalDeposited), color: "text-warning" },
-                      { label: "Custo Total", value: fmt(revAnalytics.totalCusto), color: "text-muted-foreground" },
-                      { label: "Seu Lucro (Admin)", value: fmt(revAnalytics.lucro), color: revAnalytics.lucro > 0 ? "text-success" : "text-destructive" },
-                      { label: "Lucro do Revenda", value: fmt(revAnalytics.lucroRevenda), color: revAnalytics.lucroRevenda > 0 ? "text-accent" : "text-muted-foreground" },
+                      { label: "Total de Depósitos", value: fmt(revAnalytics.totalDeposited), color: "text-warning" },
+                      { label: "Custo da Operadora (API)", value: fmt(revAnalytics.totalCusto), color: "text-muted-foreground" },
+                      { label: "Seu Lucro (Cobrado - Custo API)", value: fmt(revAnalytics.lucro), color: revAnalytics.lucro > 0 ? "text-success" : "text-destructive" },
+                      { label: "Lucro do Revendedor (Preço Final - Cobrado)", value: fmt(revAnalytics.lucroRevenda), color: revAnalytics.lucroRevenda > 0 ? "text-accent" : "text-muted-foreground" },
                     ].map((c, i) => (
                       <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card rounded-xl p-4">
                         <p className="text-xs text-muted-foreground mb-1">{c.label}</p>
@@ -2796,10 +2796,10 @@ export default function Principal() {
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {[
                     { label: "Revendedores", value: reportData.length, icon: Users, color: "text-primary" },
-                    { label: "Total Recarga", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
-                    { label: "Total Custo", value: fmt(reportData.reduce((s, r) => s + r.totalCusto, 0)), icon: Wallet, color: "text-warning" },
-                    { label: "Total Vendas", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
-                    { label: "Lucro Acumulado", value: fmt(reportData.reduce((s, r) => s + r.lucro, 0)), icon: DollarSign, color: "text-success" },
+                    { label: "Total Recarga (Valor Facial)", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
+                    { label: "Custo da Operadora (API)", value: fmt(reportData.reduce((s, r) => s + r.totalCusto, 0)), icon: Wallet, color: "text-warning" },
+                    { label: "Total Cobrado (Vendas)", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
+                    { label: "Lucro do Período", value: fmt(reportData.reduce((s, r) => s + r.lucro, 0)), icon: DollarSign, color: "text-success" },
                   ].map((card, i) => (
                     <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                       className="glass-card rounded-xl p-4">
