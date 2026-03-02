@@ -900,7 +900,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { icon: Wallet, label: "Saldo", rawValue: saldo, isCurrency: true, color: "text-success", anim: "bounce" as const },
               { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", anim: "float" as const },
               { icon: Clock, label: "Total", rawValue: recargas.length, isCurrency: false, color: "text-accent", anim: "pulse" as const },
             ].map((c, i) => (
@@ -1590,7 +1589,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 </div>
                 <p className="text-[11px] text-muted-foreground">Clique na foto para alterar • JPG, PNG, WebP ou GIF até 2MB</p>
               </div>
-
+                <div className="glass-card rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Saldo Atual</span>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{loading ? "..." : fmt(saldo)}</p>
+                </div>
               {/* Editar nome */}
               <div className="glass-card rounded-2xl p-5 space-y-3">
                 <div className="flex items-center gap-2">
