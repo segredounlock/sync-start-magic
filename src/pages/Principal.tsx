@@ -236,7 +236,8 @@ export default function Principal() {
 
   // Global config states (Pagamentos, Depósitos, Bot, Geral)
   const [globalConfig, setGlobalConfig] = useState<Record<string, string>>({});
-  const [globalConfigLoading, setGlobalConfigLoading] = useState(false);
+  const [globalConfigLoading, setGlobalConfigLoading] = useState(true);
+  const globalConfigLoaded = useRef(false);
   const [globalConfigSaving, setGlobalConfigSaving] = useState(false);
 
   // Bot status
@@ -305,7 +306,7 @@ export default function Principal() {
   }, []);
 
   const fetchGlobalConfig = useCallback(async () => {
-    setGlobalConfigLoading(true);
+    if (!globalConfigLoaded.current) setGlobalConfigLoading(true);
     try {
       // Load system_config (global settings)
       const { data, error } = await supabase.from("system_config").select("key, value");
@@ -320,6 +321,7 @@ export default function Principal() {
       console.error(err);
       toast.error("Erro ao carregar configurações");
     }
+    globalConfigLoaded.current = true;
     setGlobalConfigLoading(false);
   }, [user?.id]);
 
