@@ -2,9 +2,9 @@ import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Hook that registers a Web Push subscription for the current user.
- * Must be called inside an authenticated context.
- * Requires VAPID_PUBLIC_KEY env var.
+ * Hook that auto-generates VAPID keys (if needed) and registers
+ * a Web Push subscription for the current user.
+ * No manual secrets required — everything is stored in system_config.
  */
 export function usePushNotifications(userId: string | undefined) {
   const registeredRef = useRef(false);
@@ -14,23 +14,26 @@ export function usePushNotifications(userId: string | undefined) {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
     try {
-      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      if (!vapidPublicKey) {
-        console.warn("[Push] VITE_VAPID_PUBLIC_KEY not configured");
+      // 1. Ensure VAPID keys exist (auto-generate if needed)
+      const { data: setupData, error: setupErr } = await supabase.functions.invoke("vapid-setup");
+      if (setupErr || !setupData?.publicKey) {
+        console.warn("[Push] Failed to setup VAPID keys:", setupErr);
         return;
       }
 
-      // Request notification permission
+      const vapidPublicKey = setupData.publicKey;
+
+      // 2. Request notification permission
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         console.log("[Push] Notification permission denied");
         return;
       }
 
-      // Wait for service worker
+      // 3. Wait for service worker
       const registration = await navigator.serviceWorker.ready;
 
-      // Subscribe to push
+      // 4. Subscribe to push
       const subscription = await (registration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
@@ -39,7 +42,7 @@ export function usePushNotifications(userId: string | undefined) {
       const json = subscription.toJSON();
       if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
 
-      // Save to database
+      // 5. Save to database
       await (supabase.from("push_subscriptions" as any) as any).upsert({
         user_id: userId,
         endpoint: json.endpoint,
