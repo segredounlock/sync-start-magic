@@ -1589,13 +1589,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   </div>
                 </div>
                 <p className="text-[11px] text-muted-foreground">Clique na foto para alterar • JPG, PNG, WebP ou GIF até 2MB</p>
-                <div className="glass-card rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Wallet className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Saldo Atual</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{loading ? "..." : fmt(saldo)}</p>
-                </div>
               </div>
 
               {/* Editar nome */}
