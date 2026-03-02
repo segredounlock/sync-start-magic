@@ -761,6 +761,9 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       { text: "👤 Minha Conta", callback_data: "menu_conta" },
       { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
     ],
+    [
+      { text: "🔓 Unlocked", web_app: { url: "https://unlocked.poeki.dev/" } },
+    ],
   ];
 
   // === Migration callbacks ===
