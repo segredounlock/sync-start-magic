@@ -15,7 +15,7 @@ const TABLES = [
   "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
   "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
   "admin_notifications", "banners", "polls", "poll_votes",
-  "chat_conversations", "chat_messages", "chat_reactions",
+  "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
 ];
 
 type TabKey = "dados" | "github";
@@ -172,7 +172,8 @@ export default function BackupSection() {
     "src/components/chat/ChatPage.tsx","src/components/chat/ChatWindow.tsx",
     "src/components/chat/ConversationList.tsx","src/components/chat/MessageBubble.tsx",
     "src/components/chat/EmojiPicker.tsx","src/components/chat/AudioRecorder.tsx",
-    "src/components/chat/NewChatModal.tsx",
+    "src/components/chat/NewChatModal.tsx","src/components/chat/MessageInfoModal.tsx",
+    "src/components/ChatRoomManager.tsx",
     // Hooks
     "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
     "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/useTheme.tsx",
@@ -188,7 +189,7 @@ export default function BackupSection() {
     "supabase/functions/admin-toggle-role/index.ts",
     "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
     "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
-    "supabase/functions/cleanup-stuck-broadcasts/index.ts",
+    "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
     "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
     "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
     "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
