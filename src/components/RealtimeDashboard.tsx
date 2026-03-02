@@ -42,7 +42,9 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
   const audioRef = useRef(false);
 
   const fetchRecargas = useCallback(async () => {
-    const today = new Date().toISOString().split("T")[0];
+    // Use local date (Brazil UTC-3) instead of UTC to match user's "today"
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     let query = supabase
       .from("recargas")
       .select("id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at")
