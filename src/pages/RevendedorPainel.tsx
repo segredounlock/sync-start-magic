@@ -1970,16 +1970,23 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
               type="text"
               inputMode="decimal"
               value={depositAmount}
-              onChange={e => setDepositAmount(e.target.value.replace(/[^0-9,.]/g, ""))}
-              placeholder="Outro valor"
+              onChange={e => {
+                const raw = e.target.value.replace(/[^0-9,.]/g, "");
+                setDepositAmount(raw);
+              }}
+              placeholder="Outro valor (mín. R$ 10)"
+              min={10}
               className="w-full pl-10 pr-3 py-3 rounded-xl glass-input text-foreground font-bold text-lg focus:outline-none focus:ring-2 focus:ring-success/50 border border-border"
             />
+            {depositAmount && parseFloat(depositAmount.replace(",", ".")) > 0 && parseFloat(depositAmount.replace(",", ".")) < 10 && (
+              <p className="text-xs text-destructive mt-1">Valor mínimo: R$ 10,00</p>
+            )}
           </div>
 
           {/* Generate button - full width below */}
           <button
             onClick={() => handleGeneratePix()}
-            disabled={generating || !depositAmount}
+            disabled={generating || !depositAmount || parseFloat(depositAmount.replace(",", ".")) < 10}
             className="w-full py-3.5 rounded-xl bg-success text-success-foreground font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-all shadow-[0_0_16px_hsl(var(--success)/0.3)]">
             {generating ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}
             Gerar PIX
