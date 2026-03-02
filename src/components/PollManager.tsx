@@ -33,21 +33,39 @@ export function PollManager() {
 
   const fetchPolls = useCallback(async () => {
     setLoading(true);
-    // Admin can see all polls - use service role via direct query
     const { data, error } = await supabase
       .from("polls")
       .select("*")
       .order("created_at", { ascending: false });
     if (!error && data) {
-      setPolls(data.map(p => ({
-        id: p.id,
-        question: p.question,
-        options: (p.options as any) || [],
-        active: p.active,
-        total_votes: p.total_votes || 0,
-        created_at: p.created_at,
-        expires_at: p.expires_at,
-      })));
+      // Fetch all votes to count properly
+      const pollIds = data.map(p => p.id);
+      const { data: allVotes } = await supabase
+        .from("poll_votes")
+        .select("poll_id, option_index")
+        .in("poll_id", pollIds);
+
+      const votesMap: Record<string, Record<number, number>> = {};
+      (allVotes || []).forEach((v: any) => {
+        if (!votesMap[v.poll_id]) votesMap[v.poll_id] = {};
+        votesMap[v.poll_id][v.option_index] = (votesMap[v.poll_id][v.option_index] || 0) + 1;
+      });
+
+      setPolls(data.map(p => {
+        const baseOptions = (p.options as any as PollOption[]) || [];
+        const pollVotesMap = votesMap[p.id] || {};
+        const enrichedOptions = baseOptions.map((opt, i) => ({ ...opt, votes: pollVotesMap[i] || 0 }));
+        const totalReal = Object.values(pollVotesMap).reduce((s, v) => s + v, 0);
+        return {
+          id: p.id,
+          question: p.question,
+          options: enrichedOptions,
+          active: p.active,
+          total_votes: totalReal,
+          created_at: p.created_at,
+          expires_at: p.expires_at,
+        };
+      }));
     }
     setLoading(false);
   }, []);
