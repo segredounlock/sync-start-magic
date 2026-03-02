@@ -102,6 +102,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [detectingOperator, setDetectingOperator] = useState(false);
   const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
   const lastDetectedPhoneRef = useRef<string>("");
+  const [selectedRecarga, setSelectedRecarga] = useState<Recarga | null>(null);
 
   // API Catalog
   const [catalog, setCatalog] = useState<CatalogCarrier[]>([]);
@@ -1520,7 +1521,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                         return (
                           <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                            className="glass-card rounded-xl p-4">
+                            className="glass-card rounded-xl p-4 cursor-pointer hover:bg-muted/30 active:scale-[0.98] transition-all"
+                            onClick={() => setSelectedRecarga(r)}>
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
@@ -1558,7 +1560,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
                           ) : filtered.map((r, i) => (
                             <motion.tr key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                              className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                              className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+                              onClick={() => setSelectedRecarga(r)}>
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3 text-foreground">{r.operadora || "—"}</td>
@@ -1580,7 +1583,80 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </>
           )}
 
-          {/* ===== TAB: EXTRATO ===== */}
+          {/* Recarga Detail Modal */}
+          <AnimatePresence>
+            {selectedRecarga && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+                onClick={() => setSelectedRecarga(null)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+                >
+                  {(() => {
+                    const r = selectedRecarga;
+                    const isCompleted = r.status === "completed" || r.status === "concluida";
+                    const isPending = r.status === "pending";
+                    const statusLabel = isCompleted ? "Concluída" : isPending ? "Processando" : r.status === "falha" ? "Falha" : r.status;
+                    const statusClass = isCompleted ? "bg-success/15 text-success border-success/30" : isPending ? "bg-warning/15 text-warning border-warning/30" : "bg-destructive/15 text-destructive border-destructive/30";
+                    const statusIcon = isCompleted ? <CheckCircle2 className="h-8 w-8 text-success" /> : isPending ? <Clock className="h-8 w-8 text-warning" /> : <XCircle className="h-8 w-8 text-destructive" />;
+                    return (
+                      <>
+                        <div className="px-6 pt-6 pb-4 text-center">
+                          <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                            {statusIcon}
+                          </div>
+                          <h3 className="text-lg font-bold text-foreground mb-1">Detalhes do Pedido</h3>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${statusClass}`}>{statusLabel}</span>
+                        </div>
+                        <div className="px-6 pb-5 space-y-3">
+                          <div className="flex justify-between items-center py-2 border-b border-border">
+                            <span className="text-sm text-muted-foreground">Telefone</span>
+                            <span className="text-sm font-mono font-semibold text-foreground">{r.telefone}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 border-b border-border">
+                            <span className="text-sm text-muted-foreground">Operadora</span>
+                            <span className="text-sm font-semibold text-foreground">{r.operadora || "—"}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 border-b border-border">
+                            <span className="text-sm text-muted-foreground">Valor</span>
+                            <span className="text-sm font-mono font-bold text-foreground">{fmt(r.valor)}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 border-b border-border">
+                            <span className="text-sm text-muted-foreground">Custo</span>
+                            <span className="text-sm font-mono font-semibold text-foreground">{fmt(r.custo)}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 border-b border-border">
+                            <span className="text-sm text-muted-foreground">Data</span>
+                            <span className="text-sm text-foreground">{fmtDate(r.created_at)}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2">
+                            <span className="text-sm text-muted-foreground">ID</span>
+                            <span className="text-[10px] font-mono text-muted-foreground/70 max-w-[160px] truncate">{r.id}</span>
+                          </div>
+                        </div>
+                        <div className="px-6 pb-5">
+                          <button
+                            onClick={() => setSelectedRecarga(null)}
+                            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all"
+                          >
+                            Fechar
+                          </button>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {tab === "extrato" && (
             <>
               {/* Mobile cards */}
