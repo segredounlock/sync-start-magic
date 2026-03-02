@@ -33,8 +33,10 @@ interface Recarga {
   operadora: string | null;
   valor: number;
   custo: number;
+  custo_api: number;
   status: string;
   created_at: string;
+  external_id?: string | null;
 }
 
 interface CatalogValue {
@@ -96,7 +98,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [sending, setSending] = useState(false);
   const [pendingWarning, setPendingWarning] = useState<{ phone: string; count: number } | null>(null);
   const [recargaResult, setRecargaResult] = useState<{ success: boolean; message: string; externalId?: string } | null>(null);
-  const [trackingStatus, setTrackingStatus] = useState<{ loading: boolean; data: any | null; open: boolean }>({ loading: false, data: null, open: false });
+  const [trackingStatus, setTrackingStatus] = useState<{ loading: boolean; data: any | null; open: boolean; localRecarga?: Recarga | null }>({ loading: false, data: null, open: false, localRecarga: null });
   const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
   const [checkingPhone, setCheckingPhone] = useState(false);
   const [detectingOperator, setDetectingOperator] = useState(false);
@@ -643,19 +645,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const handleTrackRecharge = async (externalId: string) => {
-    setTrackingStatus({ loading: true, data: null, open: true });
+  const handleTrackRecharge = async (externalId: string, localRecarga?: Recarga) => {
+    const lr = localRecarga || trackingStatus.localRecarga || null;
+    setTrackingStatus({ loading: true, data: null, open: true, localRecarga: lr });
     try {
       const resp = await callApi("orders");
       if (resp?.success && resp.data) {
         const orders = Array.isArray(resp.data) ? resp.data : resp.data.data || [];
         const order = orders.find((o: any) => o._id === externalId);
-        setTrackingStatus({ loading: false, data: order || { _id: externalId, status: "Não encontrado" }, open: true });
+        setTrackingStatus({ loading: false, data: order || { _id: externalId, status: "Não encontrado" }, open: true, localRecarga: lr });
       } else {
-        setTrackingStatus({ loading: false, data: { _id: externalId, status: "Erro ao consultar" }, open: true });
+        setTrackingStatus({ loading: false, data: { _id: externalId, status: "Erro ao consultar" }, open: true, localRecarga: lr });
       }
     } catch {
-      setTrackingStatus({ loading: false, data: { _id: externalId, status: "Erro ao consultar" }, open: true });
+      setTrackingStatus({ loading: false, data: { _id: externalId, status: "Erro ao consultar" }, open: true, localRecarga: lr });
     }
   };
   const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -1029,7 +1032,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           <Eye className="h-4 w-4" /> Acompanhar Recarga
                         </button>
                       )}
-                      <button onClick={() => { setRecargaResult(null); setTrackingStatus({ loading: false, data: null, open: false }); }}
+                      <button onClick={() => { setRecargaResult(null); setTrackingStatus({ loading: false, data: null, open: false, localRecarga: null }); }}
                         className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
                         {recargaResult.success ? "Nova Recarga" : "Tentar Novamente"}
                       </button>
@@ -1098,12 +1101,30 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <span className="text-xs text-foreground">{trackingStatus.data.carrier.name}</span>
                             </div>
                           )}
-                          {trackingStatus.data.value && (
+                          {/* Show local recarga data with valor, custo and lucro */}
+                          {trackingStatus.localRecarga ? (
+                            <>
+                              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                                <span className="text-xs text-muted-foreground">Valor (facial)</span>
+                                <span className="text-xs font-bold text-foreground">{fmt(trackingStatus.localRecarga.valor)}</span>
+                              </div>
+                              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                                <span className="text-xs text-muted-foreground">Custo (debitado)</span>
+                                <span className="text-xs font-bold text-foreground">{fmt(trackingStatus.localRecarga.custo)}</span>
+                              </div>
+                              {(trackingStatus.localRecarga.status === "completed" || trackingStatus.localRecarga.status === "concluida") && trackingStatus.localRecarga.custo > 0 && (
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-success/10 border border-success/20">
+                                  <span className="text-xs text-success font-medium">Lucro</span>
+                                  <span className="text-xs font-bold text-success">+{fmt(trackingStatus.localRecarga.custo - trackingStatus.localRecarga.custo_api)}</span>
+                                </div>
+                              )}
+                            </>
+                          ) : trackingStatus.data.value ? (
                             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                               <span className="text-xs text-muted-foreground">Valor</span>
                               <span className="text-xs font-bold text-foreground">{fmt(Number(trackingStatus.data.value.cost || trackingStatus.data.value.value || 0))}</span>
                             </div>
-                          )}
+                          ) : null}
                           {trackingStatus.data.createdAt && (
                             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                               <span className="text-xs text-muted-foreground">Criado em</span>
@@ -1626,13 +1647,19 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <span className="text-sm font-semibold text-foreground">{r.operadora || "—"}</span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
-                            <span className="text-sm text-muted-foreground">Valor</span>
+                            <span className="text-sm text-muted-foreground">Valor (facial)</span>
                             <span className="text-sm font-mono font-bold text-foreground">{fmt(r.valor)}</span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
-                            <span className="text-sm text-muted-foreground">Custo</span>
+                            <span className="text-sm text-muted-foreground">Custo (debitado)</span>
                             <span className="text-sm font-mono font-semibold text-foreground">{fmt(r.custo)}</span>
                           </div>
+                          {isCompleted && r.custo > 0 && r.custo_api > 0 && (
+                            <div className="flex justify-between items-center py-2.5 px-3 rounded-lg bg-success/10 border border-success/20">
+                              <span className="text-sm text-success font-medium">Lucro</span>
+                              <span className="text-sm font-mono font-bold text-success">+{fmt(r.custo - r.custo_api)}</span>
+                            </div>
+                          )}
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Data</span>
                             <span className="text-sm text-foreground">{fmtDate(r.created_at)}</span>
@@ -1642,10 +1669,18 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <span className="text-[10px] font-mono text-muted-foreground/70 max-w-[160px] truncate">{r.id}</span>
                           </div>
                         </div>
-                        <div className="px-6 pb-5">
+                        <div className="px-6 pb-5 flex gap-3">
+                          {r.external_id && (
+                            <button
+                              onClick={() => { setSelectedRecarga(null); handleTrackRecharge(r.external_id!, r); }}
+                              className="flex-1 py-3 rounded-xl border border-primary text-primary font-semibold text-sm hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
+                            >
+                              <Activity className="h-4 w-4" /> Acompanhar
+                            </button>
+                          )}
                           <button
                             onClick={() => setSelectedRecarga(null)}
-                            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all"
+                            className={`${r.external_id ? 'flex-1' : 'w-full'} py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all`}
                           >
                             Fechar
                           </button>
