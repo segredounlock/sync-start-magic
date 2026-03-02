@@ -539,7 +539,7 @@ async function handleEmailStep(supabase: any, token: string, chatId: number, cha
     });
   } else {
     deleteMessagesBatch(token, chatId, allMsgIds);
-    await createAccountAndLink(supabase, token, chatId, chatIdStr, telegramId, emailClean);
+    await createAccountAndLink(supabase, token, chatId, chatIdStr, telegramId, emailClean, session.data?.telegram_username || "");
   }
 }
 
@@ -589,7 +589,7 @@ async function handlePasswordStep(supabase: any, token: string, chatId: number, 
   );
 }
 
-async function createAccountAndLink(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, email: string) {
+async function createAccountAndLink(supabase: any, token: string, chatId: number, chatIdStr: string, telegramId: string, email: string, telegramUsername: string = "") {
   const password = generatePassword();
 
   const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
@@ -611,7 +611,7 @@ async function createAccountAndLink(supabase: any, token: string, chatId: number
 
   // Wait for trigger to create profile
   await new Promise((r) => setTimeout(r, 800));
-  const tgUser = session.data?.telegram_username || "";
+  const tgUser = telegramUsername;
   await supabase.from("profiles").update({ telegram_id: telegramId, ...(tgUser ? { telegram_username: tgUser } : {}) }).eq("id", userId);
 
   clearSession(supabase, chatIdStr);
