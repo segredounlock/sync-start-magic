@@ -6,15 +6,17 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users } from "lucide-react";
 
 interface ChatWindowProps {
   conversationId: string;
   otherUser?: { id: string; nome: string | null; email: string | null; avatar_url: string | null };
+  isGroup?: boolean;
+  groupName?: string;
   onBack?: () => void;
 }
 
-export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProps) {
+export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBack }: ChatWindowProps) {
   const { user } = useAuth();
   const { messages, loading, sendMessage, toggleReaction, deleteMessage } = useChatMessages(conversationId);
   const [text, setText] = useState("");
@@ -31,8 +33,8 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
 
   useEffect(() => { scrollToBottom(); }, [messages.length, scrollToBottom]);
 
-  const name = otherUser?.nome || otherUser?.email?.split("@")[0] || "Usuário";
-  const initial = (name[0] || "U").toUpperCase();
+  const name = isGroup ? (groupName || "Grupo") : (otherUser?.nome || otherUser?.email?.split("@")[0] || "Usuário");
+  const initial = isGroup ? "" : (name[0] || "U").toUpperCase();
 
   const handleSend = async () => {
     if (!text.trim() || sending) return;
@@ -77,7 +79,11 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
             <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </button>
         )}
-        {otherUser?.avatar_url ? (
+        {isGroup ? (
+          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
+            <Users className="h-5 w-5 text-primary" />
+          </div>
+        ) : otherUser?.avatar_url ? (
           <img src={otherUser.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
@@ -86,7 +92,9 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
         )}
         <div>
           <h3 className="font-semibold text-sm text-foreground">{name}</h3>
-          <span className="text-[10px] text-muted-foreground">Online</span>
+          <span className="text-[10px] text-muted-foreground">
+            {isGroup ? "Grupo público" : "Online"}
+          </span>
         </div>
       </div>
 
@@ -107,6 +115,7 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
                   key={msg.id}
                   message={msg}
                   isOwn={msg.sender_id === user?.id}
+                  isGroup={isGroup}
                   onReply={() => { setReplyTo(msg); inputRef.current?.focus(); }}
                   onReact={(emoji) => toggleReaction(msg.id, emoji)}
                   onDelete={() => deleteMessage(msg.id)}
@@ -125,7 +134,9 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
             <div className="flex items-center gap-2 py-2">
               <Reply className="h-4 w-4 text-primary flex-shrink-0" />
               <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
-                <span className="text-xs font-semibold text-primary">{replyTo.sender_id === user?.id ? "Você" : name}</span>
+                <span className="text-xs font-semibold text-primary">
+                  {replyTo.sender_id === user?.id ? "Você" : (replyTo.sender?.nome || "Usuário")}
+                </span>
                 <p className="text-xs text-muted-foreground truncate">{replyTo.is_deleted ? "Mensagem apagada" : replyTo.content || (replyTo.type === "audio" ? "🎤 Áudio" : "📷 Imagem")}</p>
               </div>
               <button onClick={() => setReplyTo(null)} className="p-1 rounded-lg hover:bg-muted/50">
