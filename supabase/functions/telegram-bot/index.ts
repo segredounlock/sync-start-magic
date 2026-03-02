@@ -406,7 +406,7 @@ serve(async (req) => {
               await sendMessageWithKeyboard(BOT_TOKEN, chatId,
                 `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\n⚠️ <b>Aviso de Migração</b>\n\nEstamos migrando para um novo sistema! Se você possui créditos no site antigo, pode acessá-lo para utilizá-los.\n\nCaso contrário, prossiga para vincular sua conta ao novo bot.`,
                 [
-                  [{ text: "🔄 Usar créditos do site antigo", url: migration.url }],
+                  [{ text: "🔄 Usar créditos do site antigo", web_app: { url: migration.url } }],
                   [{ text: "▶️ Continuar para o bot", callback_data: "migration_continue" }],
                 ]
               );
