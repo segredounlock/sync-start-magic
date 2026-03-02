@@ -90,6 +90,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
         setUnreadCount(mapped.filter(n => !n.is_read).length);
         mapped.forEach(n => knownIds.current.add(n.id));
       }
+      setLoading(false);
     // Request system notification permission on mount
     requestNotifPermission();
     })();
