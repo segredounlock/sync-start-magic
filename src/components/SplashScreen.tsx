@@ -1,7 +1,24 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
 
+// Preload the image globally so it's cached across renders
+const preloadedImage = new Image();
+preloadedImage.src = logo;
+
 export function SplashScreen() {
+  const [imageReady, setImageReady] = useState(preloadedImage.complete);
+
+  useEffect(() => {
+    if (preloadedImage.complete) {
+      setImageReady(true);
+      return;
+    }
+    const onLoad = () => setImageReady(true);
+    preloadedImage.addEventListener("load", onLoad);
+    return () => preloadedImage.removeEventListener("load", onLoad);
+  }, []);
+
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[hsl(var(--background))]">
       {/* Ambient glow */}
@@ -11,16 +28,19 @@ export function SplashScreen() {
 
       {/* Logo */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={{ scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         className="relative z-10"
       >
         <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-2xl border border-border/50 ring-1 ring-primary/20">
+          {!imageReady && (
+            <div className="w-full h-full bg-muted/50 animate-pulse" />
+          )}
           <img
             src={logo}
             alt="Recargas Brasil"
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover transition-opacity duration-300 ${imageReady ? "opacity-100" : "opacity-0 absolute inset-0"}`}
           />
         </div>
       </motion.div>
