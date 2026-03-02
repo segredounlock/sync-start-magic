@@ -8,6 +8,7 @@ interface MessageBubbleProps {
   message: ChatMessage;
   isOwn: boolean;
   isGroup?: boolean;
+  isCurrentUserAdmin?: boolean;
   onReply: () => void;
   onReact: (emoji: string) => void;
   onDelete: () => void;
@@ -19,7 +20,7 @@ interface MessageBubbleProps {
 const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 60;
 
-export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete, onEdit, onPin, onScrollToMessage }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onReply, onReact, onDelete, onEdit, onPin, onScrollToMessage }: MessageBubbleProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLongPressMenu, setShowLongPressMenu] = useState(false);
   const [showMessageInfo, setShowMessageInfo] = useState(false);
@@ -79,10 +80,13 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
   }, []);
 
   if (message.is_deleted) {
+    const deletedByAdmin = message.deleted_by && message.deleted_by !== message.sender_id;
     return (
       <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1`}>
         <div className="px-3 py-2 rounded-2xl bg-muted/30 border border-border/50 max-w-[75%]">
-          <p className="text-xs text-muted-foreground italic">🚫 Mensagem apagada</p>
+          <p className="text-xs text-muted-foreground italic">
+            {deletedByAdmin ? "🛡️ Removido pelo Admin" : "🚫 Mensagem apagada"}
+          </p>
         </div>
       </div>
     );
@@ -94,11 +98,17 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
   const senderName = message.sender?.nome || "Usuário";
   const isAdmin = message.sender?.isAdmin === true;
 
-  // Check if message can be edited (own, text, within 10 min)
-  const canEdit = isOwn && message.type === "text" && !message.is_deleted && onEdit &&
+  // Check if message can be edited (own within 10 min, or admin any time)
+  const canEditOwn = isOwn && message.type === "text" && !message.is_deleted && onEdit &&
     (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000;
+  const canEditAdmin = isCurrentUserAdmin && !isOwn && message.type === "text" && !message.is_deleted && onEdit;
+  const canEdit = canEditOwn || canEditAdmin;
+
+  // Admin can delete any message
+  const canDelete = isOwn || isCurrentUserAdmin;
 
   const isEdited = message.created_at !== message.updated_at && !message.is_deleted;
+  const editedByAdmin = isEdited && message.edited_by && message.edited_by !== message.sender_id;
 
   const reactions = message.reactions || [];
   const groupedReactions: Record<string, number> = {};
@@ -286,7 +296,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                       <Pencil className="h-4 w-4 text-warning" /> Editar
                     </button>
                   )}
-                  {isOwn && (
+                  {canDelete && (
                     <button onClick={() => { onDelete(); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
                       <Trash2 className="h-4 w-4" /> Apagar
                     </button>
@@ -332,7 +342,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
             {/* Date, Time & status */}
             <div className={`flex items-center gap-1.5 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
               <span className={`text-[9px] ${isOwn ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>{date}</span>
-              {isEdited && <span className={`text-[8px] italic ${isOwn ? "text-primary-foreground/40" : "text-muted-foreground/60"}`}>editado</span>}
+              {isEdited && <span className={`text-[8px] italic ${isOwn ? "text-primary-foreground/40" : "text-muted-foreground/60"}`}>{editedByAdmin ? "editado pelo admin" : "editado"}</span>}
               <span className={`text-[9px] font-medium ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{time}</span>
               {isOwn && (
                 message.is_read ? (
@@ -451,7 +461,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                   </button>
                 )}
 
-                {isOwn && (
+                {canDelete && (
                   <button
                     onClick={() => { onDelete(); setShowLongPressMenu(false); }}
                     className="w-full flex items-center justify-between px-5 py-3.5 text-destructive active:bg-destructive/10 transition-colors"
