@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, SmilePlus } from "lucide-react";
+import { Check, CheckCheck, Reply, Trash2, SmilePlus, Star } from "lucide-react";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -28,8 +28,11 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
     );
   }
 
-  const time = new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const dateTime = new Date(message.created_at);
+  const time = dateTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const date = dateTime.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
   const senderName = message.sender?.nome || "Usuário";
+  const isAdmin = message.sender?.isAdmin === true;
 
   const reactions = message.reactions || [];
   const groupedReactions: Record<string, number> = {};
@@ -39,18 +42,18 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
     <motion.div
       initial={{ opacity: 0, y: 5, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1 group relative`}
+      className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-2 group relative`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => { setShowActions(false); setShowQuickEmoji(false); }}
       onTouchStart={() => setShowActions(true)}
     >
-      {/* Avatar for group messages from others */}
-      {isGroup && !isOwn && (
+      {/* Avatar for messages from others */}
+      {!isOwn && (
         <div className="flex-shrink-0 mr-2 mt-auto">
           {message.sender?.avatar_url ? (
-            <img src={message.sender.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-border" />
+            <img src={message.sender.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-border" />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
+            <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[11px]">
               {(senderName[0] || "U").toUpperCase()}
             </div>
           )}
@@ -58,9 +61,20 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
       )}
 
       <div className={`max-w-[75%] ${isOwn ? "order-1" : ""}`}>
-        {/* Sender name for group chats */}
-        {isGroup && !isOwn && (
-          <p className="text-[10px] font-semibold text-primary ml-1 mb-0.5">{senderName}</p>
+        {/* Sender name + admin badge */}
+        {!isOwn && (
+          <div className="flex items-center gap-1 ml-1 mb-0.5">
+            <span className="text-[11px] font-semibold text-primary">{senderName}</span>
+            {isAdmin && (
+              <motion.div
+                animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                title="Administrador verificado"
+              >
+                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+              </motion.div>
+            )}
+          </div>
         )}
 
         {/* Reply preview */}
@@ -93,10 +107,11 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
             <img src={message.image_url} alt="" className="max-w-[250px] rounded-xl" />
           )}
 
-          {/* Time & status */}
-          <div className={`flex items-center gap-1 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
-            <span className={`text-[9px] ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{time}</span>
-            {isOwn && !isGroup && (
+          {/* Date, Time & status */}
+          <div className={`flex items-center gap-1.5 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+            <span className={`text-[9px] ${isOwn ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>{date}</span>
+            <span className={`text-[9px] font-medium ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{time}</span>
+            {isOwn && (
               message.is_read ? (
                 <CheckCheck className="h-3 w-3 text-[hsl(200,80%,55%)]" />
               ) : message.is_delivered ? (
