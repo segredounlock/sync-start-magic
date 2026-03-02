@@ -24,12 +24,15 @@ const SWIPE_THRESHOLD = 60;
 export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onReply, onReact, onDelete, onEdit, onPin, onScrollToMessage }: MessageBubbleProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLongPressMenu, setShowLongPressMenu] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [showMessageInfo, setShowMessageInfo] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(message.content || "");
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
   const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
@@ -52,10 +55,21 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   useEffect(() => {
     if (!showLongPressMenu) return;
     const handler = () => setShowLongPressMenu(false);
-    // Delay to avoid immediate close
     const t = setTimeout(() => document.addEventListener("click", handler), 50);
     return () => { clearTimeout(t); document.removeEventListener("click", handler); };
   }, [showLongPressMenu]);
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!showContextMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setShowContextMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showContextMenu]);
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     if (isOwn && info.offset.x < -SWIPE_THRESHOLD) onReply();
@@ -124,6 +138,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
     }
     setShowDropdown(false);
     setShowLongPressMenu(false);
+    setShowContextMenu(false);
   };
 
   const handleStartEdit = () => {
@@ -131,6 +146,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
     setIsEditing(true);
     setShowDropdown(false);
     setShowLongPressMenu(false);
+    setShowContextMenu(false);
     setTimeout(() => editInputRef.current?.focus(), 100);
   };
 
@@ -250,7 +266,17 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                 cancelLongPress();
               }
             }}
-            onContextMenu={(e) => { e.preventDefault(); setShowLongPressMenu(true); }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              // Mobile: show bottom sheet; Desktop: show context menu at position
+              const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+              if (isTouchDevice && window.innerWidth < 640) {
+                setShowLongPressMenu(true);
+              } else {
+                setContextMenuPos({ x: e.clientX, y: e.clientY });
+                setShowContextMenu(true);
+              }
+            }}
           >
             {/* Dropdown trigger (desktop) */}
             <button
@@ -307,7 +333,53 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               )}
             </AnimatePresence>
 
-            {/* Text content */}
+            {/* Desktop right-click context menu */}
+            <AnimatePresence>
+              {showContextMenu && (
+                <motion.div
+                  ref={contextMenuRef}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.12 }}
+                  className="fixed z-50 bg-popover border border-border rounded-xl shadow-2xl min-w-[160px] overflow-hidden"
+                  style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+                >
+                  <button onClick={() => { onReply(); setShowContextMenu(false); }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
+                    <Reply className="h-4 w-4 text-primary" /> Responder
+                  </button>
+                  {message.type === "text" && message.content && (
+                    <button onClick={handleCopy} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
+                      <Copy className="h-4 w-4 text-muted-foreground" /> {copied ? "Copiado!" : "Copiar"}
+                    </button>
+                  )}
+                  {onPin && (
+                    <button onClick={() => { onPin(); setShowContextMenu(false); }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
+                      {message.is_pinned ? <><PinOff className="h-4 w-4 text-warning" /> Desafixar</> : <><Pin className="h-4 w-4 text-warning" /> Fixar</>}
+                    </button>
+                  )}
+                  {/* Quick emojis */}
+                  <div className="flex items-center justify-center gap-1 px-3 py-2 border-t border-border/50">
+                    {QUICK_EMOJIS.slice(0, 5).map(e => (
+                      <button key={e} onClick={() => { onReact(e); setShowContextMenu(false); }} className="text-lg hover:scale-125 active:scale-95 transition-transform p-0.5">
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                  {canEdit && (
+                    <button onClick={handleStartEdit} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors border-t border-border/50">
+                      <Pencil className="h-4 w-4 text-warning" /> Editar
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button onClick={() => { onDelete(); setShowContextMenu(false); }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
+                      <Trash2 className="h-4 w-4" /> Apagar
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {message.type === "text" && (
               isEditing ? (
                 <div className="flex flex-col gap-2 pr-4">
