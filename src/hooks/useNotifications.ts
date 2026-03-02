@@ -3,6 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { playSuccessSound, playWebSignupSound, playTelegramSignupSound } from "@/lib/sounds";
 
+// ── System notification (plays device sound without user interaction) ──
+let _notifPermission: NotificationPermission = typeof Notification !== "undefined" ? Notification.permission : "denied";
+
+function requestNotifPermission() {
+  if (typeof Notification === "undefined") return;
+  if (_notifPermission === "default") {
+    Notification.requestPermission().then((p) => { _notifPermission = p; }).catch(() => {});
+  }
+}
+
+function showSystemNotification(title: string, body: string) {
+  try {
+    if (typeof Notification === "undefined" || _notifPermission !== "granted") return;
+    if (document.visibilityState === "visible") {
+      // Page is visible — system notification with silent tag plays device sound
+      new Notification(title, { body, icon: "/favicon.png", tag: body });
+    }
+  } catch { /* ignore */ }
+}
+
 export interface AppNotification {
   id: string;
   type: "deposit" | "recarga" | "new_user_web" | "new_user_telegram";
@@ -70,7 +90,8 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
         setUnreadCount(mapped.filter(n => !n.is_read).length);
         mapped.forEach(n => knownIds.current.add(n.id));
       }
-      setLoading(false);
+    // Request system notification permission on mount
+    requestNotifPermission();
     })();
   }, []);
 
@@ -121,6 +142,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
               is_read: false,
             });
             try { playSuccessSound(); } catch {}
+            showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
             toast.success(`💰 Depósito: R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`, { id: `deposit-${newRow.id}` });
           }
         })
@@ -153,6 +175,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             created_at: r.created_at || new Date().toISOString(),
             is_read: false,
           });
+          showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
           toast.info(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}` });
         })
         .on("postgres_changes", {
@@ -229,6 +252,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             is_read: false,
           });
           try { playWebSignupSound(); } catch {}
+          showSystemNotification("🆕 Novo cadastro", label);
           toast.success(`🆕 Novo cadastro: ${label}`);
         })
         .on("postgres_changes", {
@@ -249,6 +273,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             is_read: false,
           });
           try { playTelegramSignupSound(); } catch {}
+          showSystemNotification("🤖 Novo Telegram", label);
           toast.info(`🤖 Novo Telegram: ${label}`);
         })
         .on("postgres_changes", {
@@ -270,6 +295,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             is_read: false,
           });
           try { playTelegramSignupSound(); } catch {}
+          showSystemNotification("🤖 Novo Telegram", label);
           toast.info(`🤖 Novo Telegram: ${label}`);
         })
         .subscribe();
