@@ -4,7 +4,7 @@ import {
   Download, Upload, Database, Loader2, CheckCircle2, AlertTriangle,
   Github, RefreshCw, FolderSync, ArrowDownToLine, ArrowUpFromLine,
   FileArchive, Shield, Clock, HardDrive, ChevronDown, ChevronRight, X,
-  Eye, EyeOff, Save, Code2,
+  Eye, EyeOff, Save, Code2, PackageCheck, UploadCloud, Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ const TABLES = [
   "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
 ];
 
-type TabKey = "dados" | "github";
+type TabKey = "dados" | "github" | "atualizacao";
 
 export default function BackupSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("dados");
@@ -42,6 +42,17 @@ export default function BackupSection() {
   const [syncLog, setSyncLog] = useState<{ path: string; status: "ok" | "error" | "pending"; error?: string }[]>([]);
   const syncLogRef = useRef<HTMLDivElement>(null);
 
+  // Update system
+  const [updateExporting, setUpdateExporting] = useState(false);
+  const [updateExportProgress, setUpdateExportProgress] = useState(0);
+  const [updateExportStage, setUpdateExportStage] = useState("");
+  const [updateImporting, setUpdateImporting] = useState(false);
+  const [updateImportProgress, setUpdateImportProgress] = useState(0);
+  const [updateImportStage, setUpdateImportStage] = useState("");
+  const [updateResult, setUpdateResult] = useState<any>(null);
+  const [currentVersion, setCurrentVersion] = useState<string | null>(null);
+  const updateFileInputRef = useRef<HTMLInputElement>(null);
+
   // GitHub PAT
   const [githubPat, setGithubPat] = useState("");
   const [showPat, setShowPat] = useState(false);
@@ -59,6 +70,19 @@ export default function BackupSection() {
       setPatLoaded(true);
     };
     loadPat();
+  }, []);
+
+  // Load current system version
+  useEffect(() => {
+    const loadVersion = async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "system_version")
+        .maybeSingle();
+      setCurrentVersion(data?.value || "1.0.0");
+    };
+    loadVersion();
   }, []);
 
   const saveGithubPat = async () => {
@@ -306,9 +330,161 @@ export default function BackupSection() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // === UPDATE SYSTEM HANDLERS ===
+  const handleUpdateExport = async () => {
+    setUpdateExporting(true); setUpdateExportProgress(0); setUpdateExportStage("Iniciando pacote de atualização...");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+
+      const zip = new JSZip();
+      const totalSteps = 1 + SOURCE_PATHS.length; // DB + source files
+      let currentStep = 0;
+
+      // 1. Database export
+      setUpdateExportStage("Exportando banco de dados...");
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        body: JSON.stringify({ includeDatabase: true }),
+      });
+      if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
+      const dbZipData = await resp.arrayBuffer();
+      const dbZip = await JSZip.loadAsync(dbZipData);
+      for (const [path, file] of Object.entries(dbZip.files)) {
+        if (!file.dir) {
+          const content = await file.async("uint8array");
+          zip.file(path, content);
+        }
+      }
+      currentStep++;
+      setUpdateExportProgress(Math.round((currentStep / totalSteps) * 100));
+
+      // 2. Source code
+      const sourceFolder = zip.folder("source");
+      let fetched = 0;
+      for (const filePath of SOURCE_PATHS) {
+        setUpdateExportStage(`Coletando ${fetched + 1}/${SOURCE_PATHS.length}: ${filePath.split("/").pop()}`);
+        try {
+          const r = await fetch(new URL(`/${filePath}`, window.location.origin).href);
+          if (r.ok) {
+            const text = await r.text();
+            if (text && text.length > 10) sourceFolder!.file(filePath, text);
+          }
+        } catch { /* skip */ }
+        fetched++;
+        currentStep++;
+        setUpdateExportProgress(Math.round((currentStep / totalSteps) * 100));
+      }
+
+      // 3. Generate update manifest
+      const version = currentVersion || "1.0.0";
+      zip.file("update-manifest.json", JSON.stringify({
+        version,
+        created_at: new Date().toISOString(),
+        tables: TABLES,
+        source_files: SOURCE_PATHS.length,
+        type: "full-update",
+      }, null, 2));
+
+      setUpdateExportStage("Gerando pacote ZIP...");
+      const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `atualizacao-v${version}-${new Date().toISOString().slice(0, 10)}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setUpdateExportProgress(100);
+      setUpdateExportStage("Pacote de atualização gerado!");
+      toast.success(`Pacote de atualização v${version} exportado!`);
+    } catch (err: any) { toast.error(`Erro: ${err.message}`); setUpdateExportStage(""); }
+    setUpdateExporting(false);
+  };
+
+  const handleUpdateImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".zip")) { toast.error("Selecione um arquivo .zip"); return; }
+
+    setUpdateImporting(true); setUpdateResult(null); setUpdateImportProgress(0); setUpdateImportStage("Lendo pacote...");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+
+      const arrayBuffer = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+
+      // Read manifest
+      const manifestFile = zip.file("update-manifest.json");
+      if (!manifestFile) throw new Error("Pacote inválido: falta update-manifest.json");
+      const manifest = JSON.parse(await manifestFile.async("string"));
+
+      setUpdateImportStage(`Pacote v${manifest.version} de ${new Date(manifest.created_at).toLocaleDateString("pt-BR")}. Restaurando banco...`);
+      setUpdateImportProgress(20);
+
+      // Re-create the database ZIP for backup-restore
+      const dbZip = new JSZip();
+      const backupInfoFile = zip.file("backup-info.json");
+      if (backupInfoFile) {
+        dbZip.file("backup-info.json", await backupInfoFile.async("uint8array"));
+      }
+      // Copy database folder
+      let hasDbFiles = false;
+      for (const [path, file] of Object.entries(zip.files)) {
+        if (path.startsWith("database/") && !file.dir) {
+          dbZip.file(path, await file.async("uint8array"));
+          hasDbFiles = true;
+        }
+      }
+
+      let restoreResults: any = null;
+      if (hasDbFiles) {
+        const dbBlob = await dbZip.generateAsync({ type: "arraybuffer" });
+        setUpdateImportStage("Enviando dados para restauração...");
+        setUpdateImportProgress(40);
+
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-restore`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: dbBlob,
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
+        restoreResults = result;
+        setUpdateImportProgress(80);
+      }
+
+      // Update system version
+      const newVersion = incrementVersion(manifest.version);
+      setUpdateImportStage("Atualizando versão do sistema...");
+      await supabase.from("system_config").upsert({ key: "system_version", value: newVersion }, { onConflict: "key" });
+      setCurrentVersion(newVersion);
+
+      setUpdateImportProgress(100);
+      setUpdateImportStage("Atualização concluída!");
+      setUpdateResult({
+        from_version: manifest.version,
+        to_version: newVersion,
+        manifest,
+        restore: restoreResults,
+      });
+      toast.success(`Sistema atualizado para v${newVersion}!`);
+    } catch (err: any) { toast.error(`Erro: ${err.message}`); setUpdateImportStage(`Erro: ${err.message}`); }
+    setUpdateImporting(false);
+    if (updateFileInputRef.current) updateFileInputRef.current.value = "";
+  };
+
+  const incrementVersion = (v: string): string => {
+    const parts = v.split(".").map(Number);
+    parts[2] = (parts[2] || 0) + 1;
+    return parts.join(".");
+  };
+
   const tabs: { key: TabKey; label: string; icon: any }[] = [
     { key: "dados", label: "Dados", icon: Database },
     { key: "github", label: "GitHub", icon: Github },
+    { key: "atualizacao", label: "Atualização", icon: PackageCheck },
   ];
 
   return (
@@ -572,6 +748,123 @@ export default function BackupSection() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </motion.div>
+        )}
+
+        {activeTab === "atualizacao" && (
+          <motion.div key="atualizacao" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="space-y-4">
+            {/* Version info */}
+            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-600/10 flex items-center justify-center shadow-lg shadow-blue-500/5">
+                <Info className="h-4 w-4 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Versão atual: <span className="font-mono text-primary">{currentVersion || "..."}</span></p>
+                <p className="text-[11px] text-muted-foreground">Gere um pacote para migrar ou aplicar uma atualização</p>
+              </div>
+            </div>
+
+            {/* Export / Import Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={handleUpdateExport} disabled={updateExporting}
+                className="relative group rounded-2xl p-4 backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] hover:bg-white/[0.07] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_0_20px_rgba(59,130,246,0.08)] transition-all text-left disabled:opacity-60">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center mb-3 shadow-lg shadow-blue-500/5">
+                  {updateExporting ? <Loader2 className="h-4 w-4 animate-spin text-blue-400" /> : <ArrowDownToLine className="h-4 w-4 text-blue-400" />}
+                </div>
+                <p className="text-sm font-semibold text-foreground">{updateExporting ? "Gerando..." : "Gerar Pacote"}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Exportar atualização</p>
+              </button>
+
+              <button onClick={() => updateFileInputRef.current?.click()} disabled={updateImporting}
+                className="relative group rounded-2xl p-4 backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] hover:bg-white/[0.07] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_0_20px_rgba(16,185,129,0.08)] transition-all text-left disabled:opacity-60">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center mb-3 shadow-lg shadow-emerald-500/5">
+                  {updateImporting ? <Loader2 className="h-4 w-4 animate-spin text-emerald-400" /> : <UploadCloud className="h-4 w-4 text-emerald-400" />}
+                </div>
+                <p className="text-sm font-semibold text-foreground">{updateImporting ? "Aplicando..." : "Aplicar Atualização"}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Importar pacote .zip</p>
+              </button>
+            </div>
+
+            <input ref={updateFileInputRef} type="file" accept=".zip" onChange={handleUpdateImport} className="hidden" />
+
+            {/* Export Progress */}
+            <AnimatePresence>
+              {updateExporting && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  className="rounded-2xl backdrop-blur-xl bg-blue-500/[0.06] shadow-[inset_0_1px_1px_rgba(59,130,246,0.1)] p-4 space-y-3 overflow-hidden">
+                  <p className="text-sm font-semibold text-foreground">{updateExportStage}</p>
+                  <div className="w-full h-2.5 bg-white/[0.06] rounded-full overflow-hidden">
+                    <motion.div className="h-full bg-gradient-to-r from-blue-500 to-indigo-400 rounded-full"
+                      initial={{ width: 0 }} animate={{ width: `${updateExportProgress}%` }} transition={{ duration: 0.3 }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground text-right font-mono">{updateExportProgress}%</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Import Progress */}
+            <AnimatePresence>
+              {updateImporting && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  className="rounded-2xl backdrop-blur-xl bg-emerald-500/[0.06] shadow-[inset_0_1px_1px_rgba(16,185,129,0.1)] p-4 space-y-3 overflow-hidden">
+                  <p className="text-sm font-semibold text-foreground">{updateImportStage}</p>
+                  <div className="w-full h-2.5 bg-white/[0.06] rounded-full overflow-hidden">
+                    <motion.div className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full"
+                      initial={{ width: 0 }} animate={{ width: `${updateImportProgress}%` }} transition={{ duration: 0.3 }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground text-right font-mono">{updateImportProgress}%</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Update Result */}
+            <AnimatePresence>
+              {updateResult && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  className="rounded-2xl backdrop-blur-xl bg-emerald-500/[0.06] shadow-[inset_0_1px_1px_rgba(52,211,153,0.1),0_0_20px_rgba(16,185,129,0.06)] p-4 space-y-3 overflow-hidden">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" /> Atualização Aplicada
+                    </p>
+                    <button onClick={() => setUpdateResult(null)} className="text-destructive hover:text-destructive/80">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    <span className="font-mono">v{updateResult.from_version} → v{updateResult.to_version}</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {updateResult.manifest?.created_at ? new Date(updateResult.manifest.created_at).toLocaleString("pt-BR") : "—"}</span>
+                  </div>
+                  {updateResult.restore?.results && (
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {updateResult.restore.results.map((r: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-xs py-1">
+                          <span className="text-foreground font-mono">{r.table}</span>
+                          <span className={`font-medium ${
+                            r.status === "restored" ? "text-emerald-400" :
+                            r.status === "skipped" ? "text-muted-foreground" :
+                            r.status === "error" ? "text-red-400" : "text-amber-400"
+                          }`}>
+                            {r.status === "restored" ? `${r.count} registros` :
+                             r.status === "skipped" ? "pulado" :
+                             r.status === "empty" ? "vazio" : r.error || "erro"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* How it works */}
+            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] p-4 space-y-2">
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Como funciona</p>
+              <div className="space-y-1.5 text-[11px] text-muted-foreground">
+                <p>📦 <b className="text-foreground">Gerar Pacote</b> — Exporta banco de dados + código-fonte como um ZIP versionado</p>
+                <p>🔄 <b className="text-foreground">Aplicar Atualização</b> — Importa o ZIP e restaura os dados via upsert inteligente (sem apagar dados existentes)</p>
+                <p>🔢 <b className="text-foreground">Versão</b> — Incrementada automaticamente a cada atualização aplicada</p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

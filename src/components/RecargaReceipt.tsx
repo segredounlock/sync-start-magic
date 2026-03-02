@@ -50,23 +50,8 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
   };
 
   const handleDownload = async () => {
-    if (!receiptRef.current) return;
-    try {
-      const { default: html2canvas } = await import("html2canvas" as any).catch(() => ({ default: null }));
-      if (!html2canvas) {
-        // Fallback: copy text
-        handleShare();
-        return;
-      }
-      const canvas = await html2canvas(receiptRef.current, { scale: 2, backgroundColor: null });
-      const link = document.createElement("a");
-      link.download = `comprovante-${r.id.slice(0, 8)}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-      toast.success("Comprovante salvo!");
-    } catch {
-      handleShare();
-    }
+    // No html2canvas available — use share/clipboard fallback
+    await handleShare();
   };
 
   if (!open) return null;
