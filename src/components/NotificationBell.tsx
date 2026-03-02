@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications, AppNotification } from "@/hooks/useNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NotificationBellProps {
   listenTo: ("deposit" | "recarga" | "new_user")[];
@@ -57,6 +59,9 @@ function fmtDate(d: string) {
 }
 
 export function NotificationBell({ listenTo, revendedores }: NotificationBellProps) {
+  const { user } = useAuth();
+  usePushNotifications(user?.id);
+  
   const { notifications, unreadCount, loading, markAllRead, clearAll } = useNotifications({
     listenTo,
     revendedores,
