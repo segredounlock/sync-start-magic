@@ -221,7 +221,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           <div
             className={`relative px-3 py-2 rounded-2xl select-none ${
               isOwn
-                ? "bg-primary text-primary-foreground rounded-br-md"
+                ? "bg-[hsl(152,40%,22%)] text-white rounded-br-md"
                 : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
             }`}
             onPointerDown={(e) => {
@@ -258,7 +258,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             <button
               onClick={() => setShowDropdown(!showDropdown)}
               className={`absolute top-1.5 right-1.5 p-0.5 rounded-md transition-colors hidden sm:block ${
-                isOwn ? "hover:bg-primary-foreground/10 text-primary-foreground/70 hover:text-primary-foreground" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground"
+                isOwn ? "hover:bg-white/10 text-white/60 hover:text-white" : "hover:bg-muted text-muted-foreground/60 hover:text-muted-foreground"
               }`}
             >
               <ChevronDown className="h-3.5 w-3.5" />
@@ -318,7 +318,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); } if (e.key === "Escape") handleCancelEdit(); }}
                     className={`text-sm rounded-xl px-3 py-2 resize-none outline-none min-h-[48px] transition-all ${
                       isOwn
-                        ? "bg-background/20 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/40 focus:border-primary-foreground/50 focus:ring-1 focus:ring-primary-foreground/20"
+                        ? "bg-black/20 border border-white/20 text-white placeholder:text-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/20"
                         : "bg-muted/60 border border-border text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                     }`}
                     rows={2}
@@ -350,17 +350,17 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             )}
 
             {/* Date, Time & status */}
-            <div className={`flex items-center gap-1.5 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
-              <span className={`text-[9px] ${isOwn ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>{date}</span>
-              {isEdited && <span className={`text-[8px] italic ${isOwn ? "text-primary-foreground/40" : "text-muted-foreground/60"}`}>{editedByAdmin ? "editado pelo admin" : "editado"}</span>}
-              <span className={`text-[9px] font-medium ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{time}</span>
+             <div className={`flex items-center gap-1.5 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+              <span className={`text-[9px] ${isOwn ? "text-white/50" : "text-muted-foreground/70"}`}>{date}</span>
+              {isEdited && <span className={`text-[8px] italic ${isOwn ? "text-white/40" : "text-muted-foreground/60"}`}>{editedByAdmin ? "editado pelo admin" : "editado"}</span>}
+              <span className={`text-[9px] font-medium ${isOwn ? "text-white/60" : "text-muted-foreground"}`}>{time}</span>
               {isOwn && (
                 message.is_read ? (
-                  <CheckCheck className="h-3 w-3 text-[hsl(200,80%,55%)]" />
+                  <CheckCheck className="h-3 w-3 text-[hsl(200,80%,65%)]" />
                 ) : message.is_delivered ? (
-                  <CheckCheck className="h-3 w-3 text-primary-foreground/50" />
+                  <CheckCheck className="h-3 w-3 text-white/50" />
                 ) : (
-                  <Check className="h-3 w-3 text-primary-foreground/50" />
+                  <Check className="h-3 w-3 text-white/50" />
                 )
               )}
             </div>
