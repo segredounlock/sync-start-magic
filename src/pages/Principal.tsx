@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import RealtimeDashboard from "@/components/RealtimeDashboard";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
+import { PollManager } from "@/components/PollManager";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -58,7 +59,7 @@ interface RecargaHistorico {
   created_at: string;
 }
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes";
 
 interface PricingRule {
   id?: string;
@@ -1068,6 +1069,7 @@ export default function Principal() {
     { key: "depositos", icon: Landmark, label: "Depósitos", color: "text-success" },
     { key: "bot", icon: Bot, label: "Bot Telegram", color: "text-[hsl(200,80%,55%)]" },
     { key: "broadcast", icon: Megaphone, label: "Broadcast", color: "text-warning" },
+    { key: "enquetes", icon: BarChart3, label: "Enquetes", color: "text-accent" },
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
@@ -1196,6 +1198,7 @@ export default function Principal() {
               {view === "bot" && "Configure o bot do Telegram."}
               {view === "geral" && "Configurações gerais do sistema."}
               {view === "broadcast" && "Envie mensagens em massa para usuários do Telegram."}
+              {view === "enquetes" && "Crie enquetes e acompanhe a votação em tempo real."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
@@ -3184,6 +3187,9 @@ export default function Principal() {
               )}
             </motion.div>
           )}
+
+          {/* ===== ENQUETES ===== */}
+          {view === "enquetes" && <PollManager />}
 
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}

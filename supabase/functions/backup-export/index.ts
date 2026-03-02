@@ -71,7 +71,7 @@ serve(async (req) => {
         "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
         "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
         "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
-        "admin_notifications", "banners"
+        "admin_notifications", "banners", "polls", "poll_votes"
       ] : [],
     }, null, 2));
 
@@ -80,7 +80,7 @@ serve(async (req) => {
         "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
         "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
         "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
-        "admin_notifications", "banners"
+        "admin_notifications", "banners", "polls", "poll_votes"
       ];
 
       const dbFolder = zip.folder("database");

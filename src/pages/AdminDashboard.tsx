@@ -10,6 +10,7 @@ import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
+import { FloatingPoll } from "@/components/FloatingPoll";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -3537,6 +3538,9 @@ export default function AdminDashboard() {
       </div>
 
       {showOperadoraModal && <OperadoraModal operadora={editOperadora} onClose={() => setShowOperadoraModal(false)} onSaved={fetchOperadoras} />}
+
+      {/* Floating Poll */}
+      <FloatingPoll />
 
       {/* Mobile Bottom Nav */}
       <MobileBottomNav

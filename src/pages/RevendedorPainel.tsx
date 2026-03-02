@@ -11,6 +11,7 @@ import { PopupBanner } from "@/components/PopupBanner";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
 import { playSuccessSound } from "@/lib/sounds";
+import { FloatingPoll } from "@/components/FloatingPoll";
 import { SkeletonValue, SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -1775,6 +1776,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           )}
         </main>
       </div>
+
+      {/* Floating Poll */}
+      <FloatingPoll />
 
       {/* Mobile Bottom Nav */}
       <MobileBottomNav
