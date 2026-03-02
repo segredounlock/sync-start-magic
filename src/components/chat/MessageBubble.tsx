@@ -157,8 +157,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "left-3" : "right-3"} flex items-center justify-center`}
         style={{ opacity: replyIconOpacity, scale: replyIconScale }}
       >
-        <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
-          <Reply className="h-4 w-4 text-primary" />
+        <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
+          <Reply className="h-3 w-3 text-primary" />
         </div>
       </motion.div>
 
