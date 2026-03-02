@@ -1,32 +1,22 @@
 
+## Correção da URL do botão "Usar Saldo Antigo"
 
-## Diagnóstico
+### Problema
+A URL `https://unlocked.poeki.dev/` está escrita diretamente no código em **2 locais** do arquivo `supabase/functions/telegram-bot/index.ts` (linhas 799 e 1339), ignorando a configuração do banco de dados que aponta para `https://recargasbrasill.com`.
 
-O bot fica pedindo e-mail repetidamente porque a função `createAccountAndLink` tem um bug na **linha 614**: ela referencia a variável `session` que **não existe** naquele escopo. O erro nos logs confirma:
+### Solução
+Substituir a URL hardcoded nos dois pontos pelo valor dinâmico vindo da função `getMigrationConfig()`, que já busca a URL correta da tabela `system_config`.
 
-```
-ReferenceError: session is not defined
-    at createAccountAndLink (telegram-bot/index.ts:691:18)
-```
+### Alterações
+**Arquivo:** `supabase/functions/telegram-bot/index.ts`
 
-### O que acontece:
-1. Usuário digita o e-mail
-2. O bot tenta criar a conta via `createAccountAndLink`
-3. A função crasheia na linha 614 ao tentar ler `session.data?.telegram_username`
-4. O `telegram_id` nunca é salvo no perfil
-5. O bot não reconhece o usuário como vinculado e pede e-mail de novo
+1. **Linha ~799** — No menu principal do bot, trocar:
+   - `web_app: { url: "https://unlocked.poeki.dev/" }` → usar a URL da config de migração
 
-## Correção
+2. **Linha ~1339** — No menu pós-vinculação, trocar:
+   - `web_app: { url: "https://unlocked.poeki.dev/" }` → usar a URL da config de migração
 
-Alterar a função `createAccountAndLink` para receber o `telegram_username` como parâmetro (já disponível no `session.data` do chamador) em vez de tentar acessar `session` diretamente.
+Em ambos os casos, chamar `getMigrationConfig()` para obter a URL configurada no banco (`https://recargasbrasill.com`) e usá-la dinamicamente.
 
-### Alterações:
-
-**Arquivo: `supabase/functions/telegram-bot/index.ts`**
-
-1. Mudar a assinatura de `createAccountAndLink` para incluir `telegramUsername: string`
-2. Na **linha 614**, trocar `session.data?.telegram_username` por `telegramUsername`
-3. No chamador (`handleEmailStep`, linha 542), passar `session.data?.telegram_username || ""` como argumento
-
-Isso resolve tanto o crash quanto o loop de pedir e-mail.
-
+### Deploy
+Re-deploy da Edge Function `telegram-bot`.
