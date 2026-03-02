@@ -39,6 +39,8 @@ export interface ChatMessage {
   is_pinned: boolean;
   pinned_at: string | null;
   pinned_by: string | null;
+  deleted_by: string | null;
+  edited_by: string | null;
   created_at: string;
   updated_at: string;
   reactions?: ChatReaction[];
@@ -343,22 +345,37 @@ export function useChatMessages(conversationId: string | null) {
     }
   }, [user, messages]);
 
-  const deleteMessage = useCallback(async (messageId: string) => {
+  const deleteMessage = useCallback(async (messageId: string, isAdmin = false) => {
     if (!user) return;
-    await supabase.from("chat_messages").update({ is_deleted: true, content: null }).eq("id", messageId).eq("sender_id", user.id);
+    if (isAdmin) {
+      await supabase.from("chat_messages").update({ is_deleted: true, content: null, deleted_by: user.id }).eq("id", messageId);
+    } else {
+      await supabase.from("chat_messages").update({ is_deleted: true, content: null, deleted_by: user.id }).eq("id", messageId).eq("sender_id", user.id);
+    }
   }, [user]);
 
-  const editMessage = useCallback(async (messageId: string, newContent: string) => {
+  const editMessage = useCallback(async (messageId: string, newContent: string, isAdmin = false) => {
     if (!user || !newContent.trim()) return;
     const msg = messages.find(m => m.id === messageId);
-    if (!msg || msg.sender_id !== user.id) return;
-    // 10-minute edit window
-    const diff = Date.now() - new Date(msg.created_at).getTime();
-    if (diff > 10 * 60 * 1000) return;
-    await supabase.from("chat_messages").update({
-      content: newContent.trim(),
-      updated_at: new Date().toISOString(),
-    }).eq("id", messageId).eq("sender_id", user.id);
+    if (!msg) return;
+
+    if (isAdmin) {
+      // Admin can edit any message, no time limit
+      await supabase.from("chat_messages").update({
+        content: newContent.trim(),
+        updated_at: new Date().toISOString(),
+        edited_by: user.id,
+      }).eq("id", messageId);
+    } else {
+      if (msg.sender_id !== user.id) return;
+      const diff = Date.now() - new Date(msg.created_at).getTime();
+      if (diff > 10 * 60 * 1000) return;
+      await supabase.from("chat_messages").update({
+        content: newContent.trim(),
+        updated_at: new Date().toISOString(),
+        edited_by: user.id,
+      }).eq("id", messageId).eq("sender_id", user.id);
+    }
   }, [user, messages]);
 
   const pinMessage = useCallback(async (messageId: string) => {
