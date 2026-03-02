@@ -562,6 +562,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          last_seen_at: string | null
           nome: string | null
           reseller_id: string | null
           slug: string | null
@@ -582,6 +583,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          last_seen_at?: string | null
           nome?: string | null
           reseller_id?: string | null
           slug?: string | null
@@ -602,6 +604,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_seen_at?: string | null
           nome?: string | null
           reseller_id?: string | null
           slug?: string | null

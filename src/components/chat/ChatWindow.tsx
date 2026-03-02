@@ -1,12 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatMessages, ChatMessage } from "@/hooks/useChat";
+import { useUserPresence } from "@/hooks/usePresence";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin } from "lucide-react";
+
+function formatLastSeen(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "agora";
+  if (diffMin < 60) return `há ${diffMin}min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `há ${diffH}h`;
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
 
 interface ChatWindowProps {
   conversationId: string;
@@ -19,6 +32,7 @@ interface ChatWindowProps {
 export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBack }: ChatWindowProps) {
   const { user, role } = useAuth();
   const isUserAdmin = role === "admin";
+  const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
   const { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage } = useChatMessages(conversationId);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -106,7 +120,16 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
         <div>
           <h3 className="font-semibold text-sm text-foreground">{name}</h3>
           <span className="text-[10px] text-muted-foreground">
-            {isGroup ? "Grupo público" : "Online"}
+            {isGroup ? "Grupo público" : isOnline ? (
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                <span className="text-success font-medium">Online</span>
+              </span>
+            ) : lastSeen ? (
+              `Visto por último ${formatLastSeen(lastSeen)}`
+            ) : (
+              "Offline"
+            )}
           </span>
         </div>
       </div>
