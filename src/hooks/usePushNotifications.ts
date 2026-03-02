@@ -30,10 +30,26 @@ export function usePushNotifications(userId: string | undefined) {
         return;
       }
 
-      // 3. Wait for service worker
-      const registration = await navigator.serviceWorker.ready;
+      // 3. Register dedicated push service worker
+      let registration: ServiceWorkerRegistration;
+      try {
+        registration = await navigator.serviceWorker.register("/sw-push.js");
+        await registration.update();
+        // Wait until active
+        if (!registration.active) {
+          await new Promise<void>((resolve) => {
+            const sw = registration.installing || registration.waiting;
+            if (!sw) { resolve(); return; }
+            sw.addEventListener("statechange", () => { if (sw.state === "activated") resolve(); });
+          });
+        }
+      } catch (e) {
+        console.error("[Push] SW registration failed:", e);
+        return;
+      }
 
       // 4. Subscribe to push
+      // 5. Subscribe to push
       const subscription = await (registration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
