@@ -77,6 +77,7 @@ interface RevendedorPainelProps {
 
 export default function RevendedorPainel({ resellerId, resellerBranding }: RevendedorPainelProps = {}) {
   const isClientMode = !!resellerId;
+  const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
   const [saldo, setSaldo] = useState(0);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
@@ -2017,12 +2018,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "recarga", label: "Recarga", icon: Send, color: "text-primary", animation: "bounce" },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse", highlighted: true },
+          { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
           { key: "contatos", label: "Conta", icon: User, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
         ] as NavItem[]}
         activeKey={tab}
         onSelect={(key) => {
+          if (key === "chat") { navigate("/chat"); return; }
           selectTab(key as PainelTab);
         }}
         mainCount={4}
@@ -2031,7 +2034,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         userAvatarUrl={avatarUrl}
         onSignOut={signOut}
         panelLinks={[
-          { label: "Bate-papo", path: "/chat", icon: MessageCircle, color: "text-primary" },
           ...(!isClientMode && (role === "admin" || role === "revendedor") ? [{ label: "Painel Admin", path: "/admin", icon: Shield, color: "text-primary" }] : []),
           ...(role === "admin" ? [{ label: "Principal", path: "/principal", icon: Landmark, color: "text-success" }] : []),
         ]}
