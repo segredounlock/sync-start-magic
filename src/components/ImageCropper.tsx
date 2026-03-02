@@ -39,7 +39,9 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
     }
     setImgSize({ w, h });
     setOffset({ x: 0, y: 0 });
-    setScale(1);
+    // Ensure minimum scale keeps image covering the crop area
+    const minScale = Math.max(CROP_SIZE / w, CROP_SIZE / h);
+    setScale(Math.max(1, minScale));
   }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -67,7 +69,8 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    setScale(s => Math.max(0.5, Math.min(3, s + delta)));
+    const minScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 0.5;
+    setScale(s => Math.max(minScale, Math.min(3, s + delta)));
   };
 
   const handleCrop = () => {
@@ -91,8 +94,9 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
     }, "image/jpeg", 0.9);
   };
 
-  const zoom = (delta: number) => setScale(s => Math.max(0.5, Math.min(3, s + delta)));
-  const reset = () => { setScale(1); setOffset({ x: 0, y: 0 }); };
+  const minScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 0.5;
+  const zoom = (delta: number) => setScale(s => Math.max(minScale, Math.min(3, s + delta)));
+  const reset = () => { setScale(Math.max(1, minScale)); setOffset({ x: 0, y: 0 }); };
 
   return (
     <AnimatePresence>
@@ -159,7 +163,7 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
               </button>
               <input
                 type="range"
-                min="0.5"
+                min={minScale}
                 max="3"
                 step="0.05"
                 value={scale}
