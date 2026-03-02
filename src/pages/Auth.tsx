@@ -81,8 +81,8 @@ export default function Auth() {
     }
   }, [phase]);
 
-  // Redirect if already logged in
-  if (!loading && user && phase === "form") {
+  // Redirect if already logged in (but not if we're mid-login)
+  if (!loading && user && phase === "form" && !submitting) {
     const dest = role === "admin" ? "/principal" : "/painel";
     return <Navigate to={dest} replace />;
   }
