@@ -724,11 +724,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
         <>
-          <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setMenuOpen(false)} />
-          <div className="fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-2xl bg-background shadow-[0_-8px_30px_rgba(0,0,0,0.4)] pb-[env(safe-area-inset-bottom)]">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-2xl bg-card/95 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)] border-t border-border/50">
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
             </div>
 
             {/* Header */}
@@ -743,7 +743,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
 
             {/* User Info */}
-            <div className="mx-4 mb-3 p-3 rounded-xl bg-muted/50 rgb-border">
+            <div className="mx-4 mb-3 p-3 rounded-xl glass-card rgb-border">
               <div className="flex items-center gap-3">
                 <AvatarDisplay />
                 <div className="min-w-0">
@@ -761,10 +761,10 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   <button
                     key={item.key}
                     onClick={() => selectTab(item.key)}
-                    className={`flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl active:scale-95 ${
+                    className={`flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl active:scale-95 transition-all ${
                       isActive
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted/40 text-foreground hover:bg-muted/60"
+                        ? "bg-primary/15 text-primary border border-primary/25 shadow-[0_0_12px_hsl(var(--primary)/0.1)]"
+                        : "bg-muted/30 text-foreground hover:bg-muted/50"
                     }`}
                   >
                     <item.icon className={`h-6 w-6 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
@@ -778,7 +778,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${user?.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl bg-muted/40 text-foreground hover:bg-muted/60 active:scale-95"
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl bg-muted/30 text-foreground hover:bg-muted/50 active:scale-95 transition-all"
                 >
                   <Store className="h-6 w-6 text-accent" />
                   <span className="text-[11px] font-semibold text-center leading-tight">Minha Loja</span>
@@ -788,7 +788,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               {!isClientMode && (role === "admin" || role === "revendedor") && (
                 <a
                   href="/admin"
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl bg-muted/40 text-foreground hover:bg-muted/60 active:scale-95"
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl bg-muted/30 text-foreground hover:bg-muted/50 active:scale-95 transition-all"
                 >
                   <Shield className="h-6 w-6 text-warning" />
                   <span className="text-[11px] font-semibold text-center leading-tight">Admin</span>
@@ -800,7 +800,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <div className="px-4 pb-5 pt-1">
               <button
                 onClick={signOut}
-                className="w-full py-3 rounded-xl bg-destructive/10 text-destructive text-sm font-semibold hover:bg-destructive/20 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-destructive/10 text-destructive text-sm font-semibold hover:bg-destructive/15 flex items-center justify-center gap-2 transition-all border border-destructive/15"
               >
                 <LogOut className="h-4 w-4" /> Sair
               </button>
@@ -810,17 +810,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[280px] z-30 border-r border-border bg-card">
-        <div className="h-full flex flex-col">
-          <div className="px-5 py-4 border-b border-border">
+      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[280px] z-30 border-r border-border bg-card/95 backdrop-blur-xl">
+        <div className="h-full flex flex-col relative">
+          {/* Subtle gradient glow */}
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+
+          <div className="px-5 py-5 border-b border-border relative">
             <h1 className="font-display text-xl font-bold shimmer-letters">
               Recargas <span className="brasil-word">Brasil</span>
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-primary font-semibold mt-1.5">Revendedor</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold mt-1.5">Revendedor</p>
           </div>
 
-          <div className="p-4 space-y-3 border-b border-border">
-            <div className="glass-card rounded-lg p-3 flex items-center gap-3 rgb-border">
+          <div className="p-4 space-y-3 border-b border-border relative">
+            <div className="glass-card rounded-xl p-3.5 flex items-center gap-3 rgb-border">
               <AvatarDisplay />
               <div className="min-w-0">
                 <p className="text-sm font-bold text-foreground truncate uppercase flex items-center gap-1.5 shimmer-letters">
@@ -835,13 +838,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
             </div>
-            <div className="glass-card rounded-lg p-3">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Seu saldo</p>
-              <p className="text-2xl font-bold text-success mt-0.5">{loading ? <SkeletonValue width="w-24" className="h-7" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</p>
+            <div className="glass-card rounded-xl p-3.5">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Seu saldo</p>
+              <p className="text-2xl font-bold text-success mt-1">{loading ? <SkeletonValue width="w-24" className="h-7" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</p>
             </div>
           </div>
 
-          <nav className="p-3 space-y-1 overflow-y-auto flex-1">
+          <nav className="p-3 space-y-1 overflow-y-auto flex-1 relative">
             {menuItems.map((item) => {
               const isActive = tab === item.key;
               return (
@@ -850,9 +853,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   onClick={() => selectTab(item.key)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
                     isActive
-                      ? "bg-primary/15 text-primary border border-primary/30"
+                      ? "nav-item-active"
                       : item.dashed
-                      ? "text-success border border-dashed border-success/40 hover:bg-success/10"
+                      ? "text-success border border-dashed border-success/30 hover:bg-success/10"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                   }`}
                 >
@@ -864,12 +867,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
             {!isClientMode && (role === "admin" || role === "revendedor") && (
               <div className="pt-3 mt-3 border-t border-border space-y-1">
-                <div className="px-2 text-[10px] tracking-widest text-muted-foreground uppercase">Administração</div>
-                <a href="/admin" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-primary hover:text-foreground hover:bg-muted/40 transition-colors">
+                <div className="px-2 text-[10px] tracking-widest text-muted-foreground/60 uppercase font-semibold">Administração</div>
+                <a href="/admin" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-primary/80 hover:text-primary hover:bg-primary/5 transition-colors">
                   <Shield className="h-4 w-4" /> <span>Painel Admin</span>
                 </a>
                 {role === "admin" && (
-                  <a href="/principal" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-primary hover:text-foreground hover:bg-muted/40 transition-colors">
+                  <a href="/principal" className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-primary/80 hover:text-primary hover:bg-primary/5 transition-colors">
                     <Landmark className="h-4 w-4" /> <span>Painel Principal</span>
                   </a>
                 )}
@@ -877,14 +880,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             )}
           </nav>
 
-          <div className="p-4 border-t border-border space-y-3">
+          <div className="p-4 border-t border-border space-y-3 relative">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Tema</span>
               <ThemeToggle />
             </div>
             <button onClick={signOut}
-              className="w-full py-2.5 rounded-lg border border-destructive/35 text-destructive text-sm font-medium hover:bg-destructive/10 transition-colors flex items-center justify-center gap-2">
-              <LogOut className="h-4 w-4" /> Sair
+              className="w-full py-2.5 rounded-lg border border-destructive/25 text-destructive text-sm font-medium hover:bg-destructive/10 transition-all flex items-center justify-center gap-2 group">
+              <LogOut className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" /> Sair
             </button>
           </div>
         </div>
@@ -893,7 +896,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       {/* Main */}
       <div className="flex-1 min-w-0">
         <div className="sticky top-0 z-20">
-          <header className="glass-header px-4 md:px-6 py-4 flex items-center justify-between">
+          <header className="glass-header px-4 md:px-6 py-4 flex items-center justify-between relative">
+            {/* Header gradient accent */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-center gap-3">
               <h2 className="font-display text-xl font-bold text-foreground">{tabTitle[tab]}</h2>
             </div>
@@ -913,13 +918,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", anim: "float" as const },
-              { icon: Clock, label: "Total", rawValue: recargas.length, isCurrency: false, color: "text-accent", anim: "pulse" as const },
+              { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", bgColor: "bg-primary/10", anim: "float" as const },
+              { icon: Clock, label: "Total", rawValue: recargas.length, isCurrency: false, color: "text-accent", bgColor: "bg-accent/10", anim: "pulse" as const },
             ].map((c, i) => (
-              <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="kpi-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-9 h-9 rounded-xl ${c.color === "text-primary" ? "bg-primary/10" : "bg-accent/10"} flex items-center justify-center`}>
-                    <AnimatedIcon icon={c.icon} className={`h-4 w-4 ${c.color}`} animation={c.anim} delay={i * 0.12} />
+              <motion.div key={c.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }} className="kpi-card">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className={`w-10 h-10 rounded-xl ${c.bgColor} flex items-center justify-center icon-container`}>
+                    <AnimatedIcon icon={c.icon} className={`h-5 w-5 ${c.color}`} animation={c.anim} delay={i * 0.12} />
                   </div>
                   <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{c.label}</span>
                 </div>
