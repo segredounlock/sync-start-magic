@@ -1332,7 +1332,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           <div className="text-right shrink-0">
                             <p className="font-bold text-foreground">{fmt(r.valor)}</p>
                             <span className={`text-xs font-medium ${(r.status === "completed" || r.status === "concluida") ? "text-success" : r.status === "pending" ? "text-warning" : r.status === "falha" ? "text-destructive" : "text-muted-foreground"}`}>
-                              {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Pendente" : r.status === "falha" ? "Falha" : r.status}
+                              {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}
                             </span>
                           </div>
                         </motion.div>
@@ -1384,7 +1384,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       >
                         <option value="all">Todos os status</option>
                         <option value="completed">Concluída</option>
-                        <option value="pending">Pendente</option>
+                        <option value="pending">Processando</option>
                         <option value="falha">Falha</option>
                       </select>
                       <select
@@ -1411,7 +1411,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       {filtered.length === 0 ? (
                         <p className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</p>
                       ) : filtered.map((r, i) => {
-                        const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Pendente" : r.status === "falha" ? "Falha" : r.status;
+                        const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
                         const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                         return (
                           <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
@@ -1461,7 +1461,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <td className="px-4 py-3 text-center">
                                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                   (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                                  {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Pendente" : r.status}
+                                  {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status}
                                 </span>
                               </td>
                             </motion.tr>
@@ -1486,7 +1486,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   <p className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</p>
                 ) : transactions.map((t, i) => {
                   const isDeposit = t.type === "deposit" || t.type === "deposito";
-                  const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Pendente" : t.status;
+                  const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
                   const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                   return (
                     <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
@@ -1537,7 +1537,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         <td className="px-4 py-3 text-center">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                             (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                            {(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Pendente" : t.status}
+                            {(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status}
                           </span>
                         </td>
                       </motion.tr>
