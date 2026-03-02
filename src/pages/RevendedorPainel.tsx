@@ -609,7 +609,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         const orderStatus = resp.data?.status;
         setRecargaResult({
           success: true,
-          message: `Recarga de ${fmt(selectedValue.value)} (${selectedCarrier.name}) realizada para ${telefone}! Novo saldo: ${fmt(newBalance)}`,
+          message: `Pedido de ${fmt(selectedValue.value)} (${selectedCarrier.name}) para ${telefone} enviado com sucesso! Novo saldo: ${fmt(newBalance)}`,
           externalId,
         });
         if (orderStatus === "feita" || orderStatus === "completed") {
@@ -1020,7 +1020,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       }
                     </motion.div>
                     <h3 className={`font-display text-xl font-bold mb-2 ${recargaResult.success ? "text-success" : "text-destructive"}`}>
-                      {recargaResult.success ? "Recarga Realizada!" : "Erro na Recarga"}
+                      {recargaResult.success ? "Pedido Enviado!" : "Erro na Recarga"}
                     </h3>
                     <p className="text-muted-foreground mb-6">{recargaResult.message}</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
