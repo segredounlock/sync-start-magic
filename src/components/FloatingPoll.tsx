@@ -36,11 +36,30 @@ export function FloatingPoll() {
 
     if (data && data.length > 0) {
       const p = data[0];
+      const baseOptions = (p.options as any as PollOption[]) || [];
+
+      // Count real votes from poll_votes table
+      const { data: voteCounts } = await supabase
+        .from("poll_votes")
+        .select("option_index")
+        .eq("poll_id", p.id);
+
+      const counts: Record<number, number> = {};
+      (voteCounts || []).forEach((v: any) => {
+        counts[v.option_index] = (counts[v.option_index] || 0) + 1;
+      });
+      const totalReal = voteCounts?.length || 0;
+
+      const enrichedOptions = baseOptions.map((opt, i) => ({
+        ...opt,
+        votes: counts[i] || 0,
+      }));
+
       setPoll({
         id: p.id,
         question: p.question,
-        options: (p.options as any) || [],
-        total_votes: p.total_votes || 0,
+        options: enrichedOptions,
+        total_votes: totalReal,
         expires_at: p.expires_at,
       });
       setDismissed(false);
