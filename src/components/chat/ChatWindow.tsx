@@ -76,7 +76,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
   // Group messages by date
   const groupedMessages: { date: string; msgs: ChatMessage[] }[] = [];
   messages.forEach(msg => {
-    const date = new Date(msg.created_at).toLocaleDateString("pt-BR");
+    const date = new Date(msg.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
     const last = groupedMessages[groupedMessages.length - 1];
     if (last && last.date === date) { last.msgs.push(msg); }
     else { groupedMessages.push({ date, msgs: [msg] }); }
