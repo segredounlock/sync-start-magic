@@ -1816,6 +1816,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "contatos", label: "Conta", icon: User, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
+          { key: "chat", label: "Chat", icon: MessageCircle, color: "text-primary", animation: "float" },
         ] as NavItem[]}
         activeKey={tab}
         onSelect={(key) => {
