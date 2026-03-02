@@ -180,8 +180,13 @@ export type Database = {
       }
       chat_conversations: {
         Row: {
+          category: string | null
           created_at: string
+          description: string | null
+          icon: string | null
           id: string
+          is_blocked: boolean | null
+          is_private: boolean | null
           last_message_at: string | null
           last_message_text: string | null
           name: string | null
@@ -191,8 +196,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
+          description?: string | null
+          icon?: string | null
           id?: string
+          is_blocked?: boolean | null
+          is_private?: boolean | null
           last_message_at?: string | null
           last_message_text?: string | null
           name?: string | null
@@ -202,8 +212,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
+          description?: string | null
+          icon?: string | null
           id?: string
+          is_blocked?: boolean | null
+          is_private?: boolean | null
           last_message_at?: string | null
           last_message_text?: string | null
           name?: string | null
