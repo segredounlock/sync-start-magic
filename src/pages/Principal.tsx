@@ -26,7 +26,7 @@ import {
   ArrowLeft, UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
-  Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone,
+  Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -1161,10 +1161,17 @@ export default function Principal() {
             })}
           </nav>
 
-          <div className="p-3 border-t border-border space-y-1">
-            <button onClick={() => navigate("/chat")} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
-              <Send className="h-4 w-4 text-[hsl(200,80%,55%)]" /> <span>Bate-papo</span>
+          <div className="p-3 border-t border-border">
+            <button onClick={() => navigate("/chat")}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all group shadow-[0_0_12px_hsl(var(--primary)/0.08)]">
+              <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
+                <MessageCircle className="h-5 w-5 text-primary" />
+              </motion.div>
+              <span>Bate-papo</span>
+              <ChevronRight className="h-4 w-4 ml-auto opacity-50 group-hover:opacity-100 transition-opacity" />
             </button>
+          </div>
+          <div className="p-3 pt-0 space-y-1">
             <button onClick={() => navigate("/admin")} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
               <BarChart3 className="h-4 w-4 text-primary" /> <span>Painel Admin</span>
             </button>
