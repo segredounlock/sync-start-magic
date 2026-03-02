@@ -327,7 +327,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            className="px-4 py-2 border-b border-warning/30 bg-warning/5 flex items-center gap-2 cursor-pointer hover:bg-warning/10 transition-colors"
+            className="px-4 py-2 border-b border-warning/30 bg-warning/5 flex items-center gap-2 cursor-pointer hover:bg-warning/10 transition-colors overflow-hidden"
             onClick={() => scrollToMessage(lastPinned.id)}
           >
             <Pin className="h-3.5 w-3.5 text-warning rotate-45 flex-shrink-0" />
