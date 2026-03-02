@@ -15,6 +15,7 @@ import ResetPassword from "@/pages/ResetPassword";
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
 const Principal = lazy(() => import("@/pages/Principal"));
+const ChatApp = lazy(() => import("@/pages/ChatApp"));
 
 function App() {
   return (
@@ -53,6 +54,16 @@ function App() {
               <ProtectedRoute>
                 <Suspense fallback={<SplashScreen />}>
                   <RevendedorPainel />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<SplashScreen />}>
+                  <ChatApp />
                 </Suspense>
               </ProtectedRoute>
             }

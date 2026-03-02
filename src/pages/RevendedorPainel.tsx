@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { ChatPage } from "@/components/chat/ChatPage";
+import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -60,7 +60,7 @@ interface Transaction {
   module: string | null;
 }
 
-type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "chat";
+type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -653,14 +653,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "historico", label: "Histórico de Pedidos", icon: History },
     { key: "extrato", label: "Extrato de Depósitos", icon: Landmark },
     { key: "contatos", label: "Minha Conta", icon: User },
-    { key: "chat", label: "Chat", icon: MessageCircle },
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
 
   const tabTitle: Record<PainelTab, string> = {
     recarga: "Nova Recarga", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
     extrato: "Extrato de Depósitos", contatos: "Minha Conta", status: "Status do Sistema",
-    chat: "Chat",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
@@ -1705,11 +1703,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           )}
 
 
-          {/* ===== TAB: CHAT ===== */}
-          {tab === "chat" && (
-            <ChatPage onBack={() => setTab("recarga")} />
-          )}
-
           {/* ===== TAB: STATUS ===== */}
           {tab === "status" && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
@@ -1816,7 +1809,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "contatos", label: "Conta", icon: User, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
-          { key: "chat", label: "Chat", icon: MessageCircle, color: "text-primary", animation: "float" },
         ] as NavItem[]}
         activeKey={tab}
         onSelect={(key) => {
@@ -1828,6 +1820,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         userAvatarUrl={avatarUrl}
         onSignOut={signOut}
         panelLinks={[
+          { label: "Bate-papo", path: "/chat", icon: MessageCircle, color: "text-primary" },
           ...(!isClientMode && (role === "admin" || role === "revendedor") ? [{ label: "Painel Admin", path: "/admin", icon: Shield, color: "text-primary" }] : []),
           ...(role === "admin" ? [{ label: "Principal", path: "/principal", icon: Landmark, color: "text-success" }] : []),
         ]}
