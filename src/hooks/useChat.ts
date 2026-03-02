@@ -40,6 +40,7 @@ export interface ChatMessage {
   pinned_at: string | null;
   pinned_by: string | null;
   created_at: string;
+  updated_at: string;
   reactions?: ChatReaction[];
   reply_to?: ChatMessage | null;
   sender?: { nome: string | null; avatar_url: string | null; isAdmin?: boolean };
@@ -347,6 +348,19 @@ export function useChatMessages(conversationId: string | null) {
     await supabase.from("chat_messages").update({ is_deleted: true, content: null }).eq("id", messageId).eq("sender_id", user.id);
   }, [user]);
 
+  const editMessage = useCallback(async (messageId: string, newContent: string) => {
+    if (!user || !newContent.trim()) return;
+    const msg = messages.find(m => m.id === messageId);
+    if (!msg || msg.sender_id !== user.id) return;
+    // 10-minute edit window
+    const diff = Date.now() - new Date(msg.created_at).getTime();
+    if (diff > 10 * 60 * 1000) return;
+    await supabase.from("chat_messages").update({
+      content: newContent.trim(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", messageId).eq("sender_id", user.id);
+  }, [user, messages]);
+
   const pinMessage = useCallback(async (messageId: string) => {
     if (!user || !conversationId) return;
     const msg = messages.find(m => m.id === messageId);
@@ -359,5 +373,5 @@ export function useChatMessages(conversationId: string | null) {
     }).eq("id", messageId);
   }, [user, conversationId, messages]);
 
-  return { messages, loading, sendMessage, toggleReaction, deleteMessage, pinMessage, fetchMessages };
+  return { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage, fetchMessages };
 }

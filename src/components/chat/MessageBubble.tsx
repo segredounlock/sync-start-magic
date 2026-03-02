@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, BadgeCheck } from "lucide-react";
+import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, BadgeCheck, Pencil } from "lucide-react";
 import { MessageInfoModal } from "./MessageInfoModal";
 
 interface MessageBubbleProps {
@@ -11,6 +11,7 @@ interface MessageBubbleProps {
   onReply: () => void;
   onReact: (emoji: string) => void;
   onDelete: () => void;
+  onEdit?: (newContent: string) => void;
   onPin?: () => void;
   onScrollToMessage?: (id: string) => void;
 }
@@ -18,11 +19,14 @@ interface MessageBubbleProps {
 const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 60;
 
-export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete, onPin, onScrollToMessage }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDelete, onEdit, onPin, onScrollToMessage }: MessageBubbleProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLongPressMenu, setShowLongPressMenu] = useState(false);
   const [showMessageInfo, setShowMessageInfo] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.content || "");
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
@@ -90,6 +94,12 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
   const senderName = message.sender?.nome || "Usuário";
   const isAdmin = message.sender?.isAdmin === true;
 
+  // Check if message can be edited (own, text, within 10 min)
+  const canEdit = isOwn && message.type === "text" && !message.is_deleted && onEdit &&
+    (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000;
+
+  const isEdited = message.created_at !== message.updated_at && !message.is_deleted;
+
   const reactions = message.reactions || [];
   const groupedReactions: Record<string, number> = {};
   reactions.forEach(r => { groupedReactions[r.emoji] = (groupedReactions[r.emoji] || 0) + 1; });
@@ -102,6 +112,26 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
     }
     setShowDropdown(false);
     setShowLongPressMenu(false);
+  };
+
+  const handleStartEdit = () => {
+    setEditText(message.content || "");
+    setIsEditing(true);
+    setShowDropdown(false);
+    setShowLongPressMenu(false);
+    setTimeout(() => editInputRef.current?.focus(), 100);
+  };
+
+  const handleSaveEdit = () => {
+    if (editText.trim() && editText.trim() !== message.content && onEdit) {
+      onEdit(editText.trim());
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditText(message.content || "");
   };
 
   const handleReplyClick = () => {
@@ -251,6 +281,11 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                   <button onClick={() => { setShowMessageInfo(true); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
                     <Info className="h-4 w-4 text-muted-foreground" /> Dados
                   </button>
+                  {canEdit && (
+                    <button onClick={handleStartEdit} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
+                      <Pencil className="h-4 w-4 text-warning" /> Editar
+                    </button>
+                  )}
                   {isOwn && (
                     <button onClick={() => { onDelete(); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
                       <Trash2 className="h-4 w-4" /> Apagar
@@ -262,7 +297,24 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
 
             {/* Text content */}
             {message.type === "text" && (
-              <p className="text-sm whitespace-pre-wrap break-words pr-4">{message.content}</p>
+              isEditing ? (
+                <div className="flex flex-col gap-1.5 pr-4">
+                  <textarea
+                    ref={editInputRef}
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); } if (e.key === "Escape") handleCancelEdit(); }}
+                    className="text-sm bg-transparent border border-primary-foreground/30 rounded-lg px-2 py-1 resize-none outline-none focus:border-primary-foreground/60 min-h-[40px]"
+                    rows={2}
+                  />
+                  <div className="flex gap-1.5 justify-end">
+                    <button onClick={handleCancelEdit} className="text-[10px] px-2 py-0.5 rounded bg-destructive/20 text-destructive hover:bg-destructive/30">Cancelar</button>
+                    <button onClick={handleSaveEdit} className="text-[10px] px-2 py-0.5 rounded bg-success/20 text-success hover:bg-success/30">Salvar</button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm whitespace-pre-wrap break-words pr-4">{message.content}</p>
+              )
             )}
 
             {/* Audio content */}
@@ -280,6 +332,7 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
             {/* Date, Time & status */}
             <div className={`flex items-center gap-1.5 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
               <span className={`text-[9px] ${isOwn ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>{date}</span>
+              {isEdited && <span className={`text-[8px] italic ${isOwn ? "text-primary-foreground/40" : "text-muted-foreground/60"}`}>editado</span>}
               <span className={`text-[9px] font-medium ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{time}</span>
               {isOwn && (
                 message.is_read ? (
@@ -385,6 +438,16 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
                   >
                     <span className="text-[15px]">{message.is_pinned ? "Desafixar" : "Fixar"}</span>
                     {message.is_pinned ? <PinOff className="h-5 w-5 text-warning" /> : <Pin className="h-5 w-5 text-warning" />}
+                  </button>
+                )}
+
+                {canEdit && (
+                  <button
+                    onClick={handleStartEdit}
+                    className="w-full flex items-center justify-between px-5 py-3.5 text-foreground active:bg-muted/60 transition-colors"
+                  >
+                    <span className="text-[15px]">Editar</span>
+                    <Pencil className="h-5 w-5 text-warning" />
                   </button>
                 )}
 
