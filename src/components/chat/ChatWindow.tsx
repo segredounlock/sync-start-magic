@@ -7,7 +7,8 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, BadgeCheck, ChevronDown, Camera } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera } from "lucide-react";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { toast } from "sonner";
 
 function formatLastSeen(dateStr: string): string {
@@ -24,7 +25,7 @@ function formatLastSeen(dateStr: string): string {
 
 interface ChatWindowProps {
   conversationId: string;
-  otherUser?: { id: string; nome: string | null; email: string | null; avatar_url: string | null; role?: string };
+  otherUser?: { id: string; nome: string | null; email: string | null; avatar_url: string | null; role?: string; verification_badge?: string | null };
   isGroup?: boolean;
   groupName?: string;
   groupIcon?: string | null;
@@ -230,15 +231,11 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground flex items-center gap-1">
             {name}
-            {otherUser?.role === 'admin' && (
-              <motion.div
-                animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
-                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                className="inline-flex flex-shrink-0"
-              >
-                <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
-              </motion.div>
-            )}
+            {otherUser?.verification_badge ? (
+              <VerificationBadge badge={otherUser.verification_badge as BadgeType} size="sm" />
+            ) : otherUser?.role === 'admin' ? (
+              <VerificationBadge badge="verificado" size="sm" />
+            ) : null}
           </h3>
           <span className="text-[10px] text-muted-foreground">
             {isGroup ? (
@@ -307,7 +304,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
                       <span className="text-xs font-medium text-foreground truncate flex items-center gap-1">
                         {m.nome || "Usuário"}
                         {m.id === user?.id && <span className="text-[9px] text-muted-foreground">(você)</span>}
-                        {m.role === "admin" && <BadgeCheck className="h-3 w-3 text-success fill-success/30 flex-shrink-0" />}
+                        {m.role === "admin" && <VerificationBadge badge="verificado" size="xs" animate={false} />}
                       </span>
                     </div>
                     <span className={`text-[9px] font-medium ${memberOnline ? "text-success" : "text-muted-foreground/50"}`}>

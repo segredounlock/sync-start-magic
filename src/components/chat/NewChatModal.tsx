@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
-import { X, Search, BadgeCheck } from "lucide-react";
+import { X, Search } from "lucide-react";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface NewChatModalProps {
   onClose: () => void;
@@ -15,6 +16,7 @@ interface UserItem {
   email: string | null;
   avatar_url: string | null;
   role?: string;
+  verification_badge?: string | null;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -42,7 +44,7 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
   useEffect(() => {
     const fetchUsers = async () => {
       if (!user) return;
-      let query = supabase.from("profiles").select("id, nome, email, avatar_url").neq("id", user.id).eq("active", true);
+      let query = supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").neq("id", user.id).eq("active", true);
 
       if (search.trim()) {
         query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
@@ -61,7 +63,7 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
       const roleMap: Record<string, string> = {};
       (roles || []).forEach(r => { roleMap[r.user_id] = r.role; });
 
-      setUsers(data.map(u => ({ ...u, role: roleMap[u.id] || "usuario" })));
+      setUsers(data.map(u => ({ ...u, role: roleMap[u.id] || "usuario", verification_badge: (u as any).verification_badge || null })));
       setLoading(false);
     };
     fetchUsers();
@@ -139,15 +141,11 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold text-foreground truncate">{name}</p>
-                      {isAdmin && (
-                        <motion.div
-                          animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
-                          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                          className="inline-flex flex-shrink-0"
-                        >
-                          <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
-                        </motion.div>
-                      )}
+                      {u.verification_badge ? (
+                        <VerificationBadge badge={u.verification_badge as BadgeType} size="sm" />
+                      ) : isAdmin ? (
+                        <VerificationBadge badge="verificado" size="sm" />
+                      ) : null}
                     </div>
                     <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${roleStyle}`}>
                       {roleLabel}

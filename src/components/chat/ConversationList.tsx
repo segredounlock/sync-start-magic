@@ -1,6 +1,7 @@
 import { ChatConversation, GENERAL_CHAT_ID } from "@/hooks/useChat";
 import { motion } from "framer-motion";
-import { Users, BadgeCheck } from "lucide-react";
+import { Users } from "lucide-react";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface ConversationListProps {
   conversations: ChatConversation[];
@@ -81,15 +82,11 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
                   <span className={`font-semibold text-sm truncate ${isGeneral ? "text-primary" : "text-foreground"}`}>
                     {name}
                   </span>
-                  {isAdmin && (
-                    <motion.div
-                      animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
-                      transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                      className="inline-flex flex-shrink-0"
-                    >
-                      <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/30" />
-                    </motion.div>
-                  )}
+                  {conv.other_user?.verification_badge ? (
+                    <VerificationBadge badge={conv.other_user.verification_badge as BadgeType} size="sm" />
+                  ) : isAdmin ? (
+                    <VerificationBadge badge="verificado" size="sm" />
+                  ) : null}
                 </span>
                 <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">{fmtTime(conv.last_message_at)}</span>
               </div>

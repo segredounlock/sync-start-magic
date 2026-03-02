@@ -20,6 +20,7 @@ export interface ChatConversation {
     email: string | null;
     avatar_url: string | null;
     role?: string;
+    verification_badge?: string | null;
   };
   unread_count?: number;
 }
@@ -47,7 +48,7 @@ export interface ChatMessage {
   updated_at: string;
   reactions?: ChatReaction[];
   reply_to?: ChatMessage | null;
-  sender?: { nome: string | null; avatar_url: string | null; isAdmin?: boolean };
+  sender?: { nome: string | null; avatar_url: string | null; isAdmin?: boolean; verification_badge?: string | null };
 }
 
 export interface ChatReaction {
@@ -83,7 +84,7 @@ export function useConversations() {
       let roleMap: Record<string, string> = {};
       if (uniqueIds.length > 0) {
         const [{ data: p }, { data: roles }] = await Promise.all([
-          supabase.from("profiles").select("id, nome, email, avatar_url").in("id", uniqueIds),
+          supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", uniqueIds),
           supabase.from("user_roles").select("user_id, role").in("user_id", uniqueIds),
         ]);
         profiles = p || [];
@@ -97,7 +98,7 @@ export function useConversations() {
         const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
         const profile = profiles.find((p: any) => p.id === otherId);
         const role = roleMap[otherId] || "usuario";
-        return { ...c, other_user: profile ? { ...profile, role } : { id: otherId, nome: null, email: null, avatar_url: null, role }, unread_count: 0 };
+        return { ...c, other_user: profile ? { ...profile, role, verification_badge: profile.verification_badge } : { id: otherId, nome: null, email: null, avatar_url: null, role, verification_badge: null }, unread_count: 0 };
       });
 
       // Fetch unread counts
@@ -213,7 +214,7 @@ export function useChatMessages(conversationId: string | null) {
     if (senderIds.length > 0) {
       const { data: s } = await supabase
         .from("profiles")
-        .select("id, nome, avatar_url")
+        .select("id, nome, avatar_url, verification_badge")
         .in("id", senderIds);
       senders = s || [];
 
