@@ -15,12 +15,13 @@ import { playSuccessSound } from "@/lib/sounds";
 import { FloatingPoll } from "@/components/FloatingPoll";
 import { SkeletonValue, SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import { ImageCropper } from "@/components/ImageCropper";
+import { RecargaReceipt } from "@/components/RecargaReceipt";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Wallet, Smartphone, History, Send, Clock, MessageCircle,
   Menu, X, User, Activity, Landmark, CreditCard, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
-  QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight,
+  QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -106,6 +107,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
   const lastDetectedPhoneRef = useRef<string>("");
   const [selectedRecarga, setSelectedRecarga] = useState<Recarga | null>(null);
+  const [receiptRecarga, setReceiptRecarga] = useState<Recarga | null>(null);
 
   // API Catalog
   const [catalog, setCatalog] = useState<CatalogCarrier[]>([]);
@@ -1564,7 +1566,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             </div>
                             <div className="flex items-center justify-between pt-3 border-t border-border">
                               <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
-                              <span className="font-bold font-mono text-foreground">{fmt(r.valor)}</span>
+                              <div className="flex items-center gap-2">
+                                {(r.status === "completed" || r.status === "concluida") && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setReceiptRecarga(r); }}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 text-success text-[10px] font-semibold hover:bg-success/20 transition-colors"
+                                  >
+                                    <FileText className="h-3 w-3" /> Comprovante
+                                  </button>
+                                )}
+                                <span className="font-bold font-mono text-foreground">{fmt(r.valor)}</span>
+                              </div>
                             </div>
                           </motion.div>
                         );
@@ -1676,6 +1688,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                         </div>
                         <div className="px-6 pb-5 flex gap-3">
+                          {isCompleted && (
+                            <button
+                              onClick={() => { setSelectedRecarga(null); setReceiptRecarga(r); }}
+                              className="flex-1 py-3 rounded-xl border border-success text-success font-semibold text-sm hover:bg-success/10 transition-all flex items-center justify-center gap-2"
+                            >
+                              <FileText className="h-4 w-4" /> Comprovante
+                            </button>
+                          )}
                           {r.external_id && (
                             <button
                               onClick={() => { setSelectedRecarga(null); handleTrackRecharge(r.external_id!, r); }}
@@ -1686,7 +1706,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           )}
                           <button
                             onClick={() => setSelectedRecarga(null)}
-                            className={`${r.external_id ? 'flex-1' : 'w-full'} py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all`}
+                            className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all"
                           >
                             Fechar
                           </button>
@@ -1698,6 +1718,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               </motion.div>
             )}
           </AnimatePresence>
+          {receiptRecarga && (
+            <RecargaReceipt
+              recarga={receiptRecarga}
+              open={!!receiptRecarga}
+              onClose={() => setReceiptRecarga(null)}
+              storeName={profileNome || "Recargas Brasil"}
+            />
+          )}
           {tab === "extrato" && (
             <>
               {/* Mobile cards */}
