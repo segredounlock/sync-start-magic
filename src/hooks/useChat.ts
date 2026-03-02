@@ -371,22 +371,29 @@ export function useChatMessages(conversationId: string | null) {
     const msg = messages.find(m => m.id === messageId);
     if (!msg) return;
 
+    const trimmed = newContent.trim();
+    const now = new Date().toISOString();
+
+    // Optimistic local update
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: trimmed, updated_at: now, edited_by: user.id } : m));
+
+    const updateData = { content: trimmed, updated_at: now, edited_by: user.id };
+
     if (isAdmin) {
-      // Admin can edit any message, no time limit
-      await supabase.from("chat_messages").update({
-        content: newContent.trim(),
-        updated_at: new Date().toISOString(),
-        edited_by: user.id,
-      }).eq("id", messageId);
+      const { error } = await supabase.from("chat_messages").update(updateData).eq("id", messageId);
+      if (error) {
+        console.error("Admin edit error:", error);
+        setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: msg.content, updated_at: msg.updated_at, edited_by: msg.edited_by } : m));
+      }
     } else {
       if (msg.sender_id !== user.id) return;
       const diff = Date.now() - new Date(msg.created_at).getTime();
       if (diff > 10 * 60 * 1000) return;
-      await supabase.from("chat_messages").update({
-        content: newContent.trim(),
-        updated_at: new Date().toISOString(),
-        edited_by: user.id,
-      }).eq("id", messageId).eq("sender_id", user.id);
+      const { error } = await supabase.from("chat_messages").update(updateData).eq("id", messageId).eq("sender_id", user.id);
+      if (error) {
+        console.error("Edit error:", error);
+        setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: msg.content, updated_at: msg.updated_at, edited_by: msg.edited_by } : m));
+      }
     }
   }, [user, messages]);
 
