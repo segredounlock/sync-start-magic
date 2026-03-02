@@ -941,8 +941,13 @@ export default function Principal() {
 
   // Dashboard computed metrics
   const dashboardMetrics = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const todayRecs = allRecargas.filter(r => r.created_at?.slice(0, 10) === todayStr);
+    const nowLocal = new Date();
+    const todayLocal = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, "0")}-${String(nowLocal.getDate()).padStart(2, "0")}`;
+    const todayRecs = allRecargas.filter(r => {
+      const d = new Date(r.created_at);
+      const dLocal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return dLocal === todayLocal;
+    });
     const completedToday = todayRecs.filter(r => r.status === "completed" || r.status === "concluida");
     const cobradoHoje = completedToday.reduce((s, r) => s + r.custo, 0);
     const custoApiHoje = completedToday.reduce((s, r) => s + r.custo_api, 0);
