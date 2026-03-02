@@ -395,7 +395,7 @@ serve(async (req) => {
           if (text === "/start" || text === "/menu") {
           if (linkedUser) {
             // Send menu first for snappy UX, then send pending notifications in background
-            await sendMainMenu(BOT_TOKEN, chatId, linkedUser);
+            await sendMainMenu(BOT_TOKEN, chatId, linkedUser, supabase);
             sendPendingNotifications(supabase, BOT_TOKEN, chatId, linkedUser.id).catch((e) =>
               console.error("[PENDING] Background send failed:", e)
             );
@@ -530,7 +530,7 @@ async function handleEmailStep(supabase: any, token: string, chatId: number, cha
 
     if (profile.telegram_id === telegramId) {
       deleteMessagesBatch(token, chatId, allMsgIds);
-      await sendMainMenu(token, chatId, { nome: profile.nome, email: profile.email });
+      await sendMainMenu(token, chatId, { nome: profile.nome, email: profile.email }, supabase);
       clearSession(supabase, chatIdStr);
       return;
     }
@@ -781,6 +781,8 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   }
 
   const webAppUrl = "https://recargasbrasill.com/miniapp";
+  const migrationConfig = await getMigrationConfig(supabase);
+  const migrationSiteUrl = migrationConfig.url || "https://recargasbrasill.com";
   const menuKb = (extra?: any[][]) => [
     ...(extra || []),
     [
@@ -796,7 +798,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
     ],
     [
-      { text: "💰 Usar Saldo Antigo", web_app: { url: "https://unlocked.poeki.dev/" } },
+      { text: "💰 Usar Saldo Antigo", web_app: { url: migrationSiteUrl } },
     ],
   ];
 
@@ -1322,8 +1324,13 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 
 // ===== MAIN MENU =====
 
-async function sendMainMenu(token: string, chatId: number, user: any) {
+async function sendMainMenu(token: string, chatId: number, user: any, supabase?: any) {
   const webAppUrl = "https://recargasbrasill.com/miniapp";
+  let migrationSiteUrl = "https://recargasbrasill.com";
+  if (supabase) {
+    const migrationConfig = await getMigrationConfig(supabase);
+    migrationSiteUrl = migrationConfig.url || migrationSiteUrl;
+  }
   await sendMessageWithKeyboard(token, chatId,
     `👋 Olá, <b>${user.nome || user.email}</b>!\n\nEscolha uma opção:`,
     [[
@@ -1336,7 +1343,7 @@ async function sendMainMenu(token: string, chatId: number, user: any) {
       { text: "👤 Minha Conta", callback_data: "menu_conta" },
       { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
     ], [
-      { text: "💰 Usar Saldo Antigo", web_app: { url: "https://unlocked.poeki.dev/" } },
+      { text: "💰 Usar Saldo Antigo", web_app: { url: migrationSiteUrl } },
     ]]
   );
 }
