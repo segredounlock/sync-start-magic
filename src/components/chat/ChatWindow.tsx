@@ -204,7 +204,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
       <AnimatePresence>
         {showEmoji && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t border-border overflow-hidden">
-            <EmojiPicker onSelect={(emoji) => { setText(prev => prev + emoji); inputRef.current?.focus(); }} />
+            <EmojiPicker onSelect={(emoji) => { setText(prev => prev + emoji); setTimeout(() => inputRef.current?.focus(), 50); }} />
           </motion.div>
         )}
       </AnimatePresence>
