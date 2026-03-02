@@ -143,20 +143,18 @@ export function MessageBubble({ message, isOwn, isGroup, onReply, onReact, onDel
 
         <div className={`max-w-[70%] ${isOwn ? "order-1" : ""}`}>
           {/* Sender name + admin badge */}
-          {!isOwn && (
-            <div className="flex items-center gap-1 ml-1 mb-0.5">
-              <span className="text-[11px] font-semibold text-primary">{senderName}</span>
-              {isAdmin && (
-                <motion.div
-                  animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  title="Administrador verificado"
-                >
-                  <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                </motion.div>
-              )}
-            </div>
-          )}
+          <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
+            <span className={`text-[11px] font-semibold ${isOwn ? "text-primary-foreground/70" : "text-primary"}`}>{senderName}</span>
+            {isAdmin && (
+              <motion.div
+                animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                title="Administrador verificado"
+              >
+                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+              </motion.div>
+            )}
+          </div>
 
           {/* Pinned indicator */}
           {message.is_pinned && (
