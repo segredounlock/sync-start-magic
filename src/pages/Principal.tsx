@@ -1120,13 +1120,13 @@ export default function Principal() {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[250px] z-30 border-r border-border glass-header">
+      <aside className="hidden md:block md:sticky top-0 left-0 h-screen w-[260px] z-30 border-r border-border bg-card">
         <div className="h-full flex flex-col">
           <div className="px-5 py-5 border-b border-border">
             <h1 className="font-display text-xl font-bold shimmer-letters">
               Recargas <span className="brasil-word">Brasil</span>
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-white font-medium mt-1">Principal</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary font-semibold mt-1.5">Principal</p>
           </div>
 
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -1239,25 +1239,25 @@ export default function Principal() {
                   { icon: BarChart3, label: "Lucro Total (Histórico)", rawValue: dashboardMetrics.lucroTotal, isInt: false, sub: "Vendas - Custo API de todas as recargas", color: "text-success", bgColor: "bg-success/10" },
                   { icon: Activity, label: "Faturamento Total (Cobrado)", rawValue: dashboardMetrics.receitaTotal, isInt: false, sub: "Total cobrado de todos os tempos", color: "text-primary", bgColor: "bg-primary/10" },
                 ].map((c) => (
-                  <div key={c.label} className="glass-card rounded-2xl p-4 md:p-5">
+              <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="kpi-card">
                     <div className="flex items-start justify-between mb-3">
-                      <div className={`w-11 h-11 rounded-2xl ${c.bgColor} flex items-center justify-center shrink-0`}>
+                      <div className={`w-10 h-10 rounded-xl ${c.bgColor} flex items-center justify-center shrink-0`}>
                         <c.icon className={`h-5 w-5 ${c.color}`} />
                       </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{c.label}</p>
-                    <p className={`text-xl md:text-2xl font-bold ${c.color} mt-0.5`}>
+                    <p className={`text-xl md:text-2xl font-bold ${c.color} mt-1`}>
                       {c.isInt ? (
                         <AnimatedInt value={c.rawValue} />
                       ) : (
                         <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" />
                       )}
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{c.sub}</p>
-                  </div>
+                    <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{c.sub}</p>
+                  </motion.div>
                 ))}
                 {/* Saldo Provedor (API) */}
-                <div className="glass-card rounded-2xl p-4 md:p-5 col-span-2 lg:col-span-1">
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="kpi-card col-span-2 lg:col-span-1">
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-11 h-11 rounded-2xl bg-[hsl(280,70%,60%)]/10 flex items-center justify-center shrink-0">
                       <Server className="h-5 w-5 text-[hsl(280,70%,60%)]" />
@@ -1282,7 +1282,7 @@ export default function Principal() {
                   <p className="text-[10px] text-muted-foreground mt-1">
                     {providerBalance.error ? "Falha ao consultar API" : "API Recarga Express"}
                   </p>
-                </div>
+                </motion.div>
               </div>
 
               {/* Quick Actions */}
