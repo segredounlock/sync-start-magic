@@ -112,6 +112,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // API Catalog
   const [catalog, setCatalog] = useState<CatalogCarrier[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const catalogLoaded = useRef(false);
 
   // Contacts
   const [telegramUsername, setTelegramUsername] = useState("");
@@ -124,6 +125,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // Transactions (extrato)
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transLoading, setTransLoading] = useState(false);
+  const transLoaded = useRef(false);
 
   // Histórico filters
   const [histSearch, setHistSearch] = useState("");
@@ -162,7 +164,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   }, []);
 
   const fetchCatalog = useCallback(async () => {
-    setCatalogLoading(true);
+    if (!catalogLoaded.current) setCatalogLoading(true);
     try {
       // Always build catalog from local DB with reseller/global pricing rules
       const [{ data: ops }, { data: globalRules }, { data: resellerRules }] = await Promise.all([
@@ -201,6 +203,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     } catch (err) {
       console.error("Erro ao buscar catálogo:", err);
     }
+    catalogLoaded.current = true;
     setCatalogLoading(false);
   }, [user?.id, callApi]);
 
@@ -232,7 +235,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
-    setTransLoading(true);
+    if (!transLoaded.current) setTransLoading(true);
     try {
       const { data } = await supabase
         .from("transactions")
@@ -242,6 +245,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         .limit(50);
       setTransactions(data || []);
     } catch { /* */ }
+    transLoaded.current = true;
     setTransLoading(false);
   }, [user]);
 
