@@ -6,7 +6,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
-import { Shield, ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User } from "lucide-react";
+import logo from "@/assets/recargas-brasil-logo.jpeg";
 
 type LoginPhase = "form" | "success" | "card-exit" | "logo-exit" | "done" | "forgot";
 
@@ -192,9 +193,9 @@ export default function Auth() {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4"
+                className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl border border-border/50 ring-1 ring-primary/20 mx-auto mb-4"
               >
-                <Shield className="h-7 w-7 text-primary" />
+                <img src={logo} alt="Recargas Brasil" className="w-full h-full object-cover" />
               </motion.div>
               <h1 className="font-display text-2xl font-bold shimmer-letters">
                 Recargas <span className="brasil-word">Brasil</span>
