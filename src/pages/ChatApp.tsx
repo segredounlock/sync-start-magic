@@ -60,10 +60,10 @@ export default function ChatApp() {
   // Mobile: full screen chat experience
   if (isMobileView) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="h-[100dvh] bg-background flex flex-col">
         <AnimatePresence mode="wait">
           {activeConversationId ? (
-            <motion.div key="chat" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="flex-1 flex flex-col min-h-0 h-screen">
+            <motion.div key="chat" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="flex-1 flex flex-col min-h-0">
               <ChatWindow
                 conversationId={activeConversationId}
                 otherUser={activeConversation?.other_user}
@@ -73,7 +73,7 @@ export default function ChatApp() {
               />
             </motion.div>
           ) : (
-            <motion.div key="list" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="flex-1 flex flex-col min-h-0 h-screen">
+            <motion.div key="list" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="flex-1 flex flex-col min-h-0">
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/80 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
@@ -110,7 +110,7 @@ export default function ChatApp() {
 
   // Desktop: full screen side-by-side
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-[100dvh] bg-background flex flex-col">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
