@@ -147,3 +147,41 @@ export function useUserPresence(userId: string | undefined) {
 
   return { isOnline, lastSeen };
 }
+
+/**
+ * Returns the list of online user IDs and count for group chats.
+ */
+export function useGroupPresence() {
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const channelRef = useRef<any>(null);
+
+  useEffect(() => {
+    const channel = getSharedChannel();
+    channelRef.current = channel;
+
+    const syncOnline = () => {
+      const state = channel.presenceState();
+      const ids = new Set<string>();
+      Object.values(state).forEach((entries: any) => {
+        if (Array.isArray(entries)) {
+          entries.forEach((e: any) => { if (e.user_id) ids.add(e.user_id); });
+        }
+      });
+      setOnlineUsers(Array.from(ids));
+    };
+
+    if (channel.state === "joined") syncOnline();
+    channel.on("presence", { event: "sync" }, syncOnline);
+
+    if (channel.state !== "joined" && channel.state !== "joining") {
+      channel.subscribe();
+    }
+
+    return () => {
+      releaseSharedChannel();
+      channelRef.current = null;
+    };
+  }, []);
+
+  return { onlineUsers, onlineCount: onlineUsers.length };
+}
