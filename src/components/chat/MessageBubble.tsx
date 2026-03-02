@@ -186,7 +186,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           </div>
         )}
 
-        <div className={`max-w-[70%] ${isOwn ? "order-1" : ""}`}>
+        <div className={`max-w-[70%] min-w-0 overflow-hidden ${isOwn ? "order-1" : ""}`}>
           {/* Sender name + verified badge */}
           <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
             <span className={`text-[11px] font-bold uppercase tracking-wide ${isOwn ? "text-primary" : "text-primary"}`}>{senderName}</span>
@@ -217,7 +217,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           )}
 
           <div
-            className={`relative px-3 py-2 rounded-2xl select-none ${
+            className={`relative px-3 py-2 rounded-2xl select-none overflow-hidden ${
               isOwn
                 ? "bg-[hsl(152,40%,22%)] text-white rounded-br-md"
                 : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
@@ -331,7 +331,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                   </div>
                 </div>
               ) : (
-                <p className="text-sm whitespace-pre-wrap break-words pr-4">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{message.content}</p>
               )
             )}
 
