@@ -166,12 +166,19 @@ export function useChatMessages(conversationId: string | null) {
   const [loading, setLoading] = useState(true);
   const initialLoadDone = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevConversationId = useRef<string | null>(null);
 
-  // Reset on conversation change
+  // Reset on conversation change - only show loading on first ever load
   useEffect(() => {
-    initialLoadDone.current = false;
-    setMessages([]);
-    setLoading(true);
+    if (prevConversationId.current !== conversationId) {
+      prevConversationId.current = conversationId;
+      initialLoadDone.current = false;
+      // Don't clear messages immediately - let new ones replace them
+      if (!conversationId) {
+        setMessages([]);
+        setLoading(false);
+      }
+    }
   }, [conversationId]);
 
   const fetchMessages = useCallback(async () => {
