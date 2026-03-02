@@ -107,7 +107,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   // Admin can delete any message
   const canDelete = isOwn || isCurrentUserAdmin;
 
-  const isEdited = message.created_at !== message.updated_at && !message.is_deleted;
+  const isEdited = !!message.edited_by && !message.is_deleted;
   const editedByAdmin = isEdited && message.edited_by && message.edited_by !== message.sender_id;
 
   const reactions = message.reactions || [];
