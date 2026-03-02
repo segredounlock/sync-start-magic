@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, Pencil } from "lucide-react";
@@ -26,6 +27,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const [showLongPressMenu, setShowLongPressMenu] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [dropdownPos, setDropdownPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dropdownBtnRef = useRef<HTMLButtonElement>(null);
   const [showMessageInfo, setShowMessageInfo] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -280,9 +283,21 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           >
             {/* Dropdown trigger (desktop) */}
             <button
+              ref={dropdownBtnRef}
               onPointerDown={(e) => { e.stopPropagation(); }}
               onPointerUp={(e) => { e.stopPropagation(); }}
-              onClick={(e) => { e.stopPropagation(); e.preventDefault(); setShowDropdown(!showDropdown); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (!showDropdown && dropdownBtnRef.current) {
+                  const rect = dropdownBtnRef.current.getBoundingClientRect();
+                  setDropdownPos({
+                    x: isOwn ? rect.right : rect.left,
+                    y: rect.bottom + 4,
+                  });
+                }
+                setShowDropdown(!showDropdown);
+              }}
               className={`absolute top-1.5 right-1.5 z-10 p-1 rounded-md transition-colors hidden sm:block ${
                 showDropdown ? "!block" : ""
               } ${
@@ -292,16 +307,22 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
 
-            {/* Desktop dropdown menu */}
-            <AnimatePresence>
-              {showDropdown && (
+            {/* Desktop dropdown menu - rendered via portal to avoid overflow clipping */}
+            {showDropdown && createPortal(
+              <AnimatePresence>
                 <motion.div
                   ref={dropdownRef}
                   initial={{ opacity: 0, scale: 0.9, y: -5 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: -5 }}
                   transition={{ duration: 0.15 }}
-                  className={`absolute z-30 ${isOwn ? "right-0" : "left-0"} top-full mt-1 bg-popover border border-border rounded-xl shadow-xl min-w-[150px] overflow-hidden`}
+                  style={{
+                    position: "fixed",
+                    top: dropdownPos.y,
+                    ...(isOwn ? { right: window.innerWidth - dropdownPos.x } : { left: dropdownPos.x }),
+                    zIndex: 9999,
+                  }}
+                  className="bg-popover border border-border rounded-xl shadow-xl min-w-[150px] overflow-hidden"
                 >
                   <button onClick={() => { onReply(); setShowDropdown(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
                     <Reply className="h-4 w-4 text-primary" /> Responder
@@ -332,8 +353,9 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                     </button>
                   )}
                 </motion.div>
-              )}
-            </AnimatePresence>
+              </AnimatePresence>,
+              document.body
+            )}
 
             {/* Desktop right-click context menu */}
             <AnimatePresence>
