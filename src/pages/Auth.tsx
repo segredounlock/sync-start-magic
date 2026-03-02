@@ -154,7 +154,7 @@ export default function Auth() {
         if (error) throw error;
         setDestination("/painel");
       }
-      toast.success(isLogin ? "Login realizado!" : "Conta criada com sucesso!");
+      if (!isLogin) toast.success("Conta criada com sucesso!");
       setPhase("splash");
     } catch (err: any) {
       const msg = translateAuthError(err.message);
