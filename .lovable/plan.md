@@ -1,19 +1,33 @@
 
 
-## Problema Identificado
+## Problema
 
-O filtro "Revendedor" ja existe no codigo (linha 1463 do Principal.tsx), mas esta **oculto** porque a logica `.filter(f => f.key === "todos" || f.count > 0)` esconde tabs com contagem zero. Como nenhum usuario tem o role "revendedor" no banco (so existem "admin" e "usuario"), o tab nao aparece.
+O administrador **já consegue** editar mensagens de outros usuários a qualquer momento. Porém, ao editar suas **próprias mensagens**, existe um limite de 10 minutos — o mesmo que usuários normais.
+
+O comportamento correto é: **admin pode editar qualquer mensagem (própria ou de terceiros) sem limite de tempo**.
 
 ## Plano
 
-### 1. Mostrar o filtro "Revendedor" sempre visivel
-- Remover a condicao que oculta tabs com count 0 para os roles principais (revendedor, usuario, cliente)
-- Manter oculto apenas "Sem funcao" quando count for 0
+**Arquivo:** `src/components/chat/MessageBubble.tsx` (linhas 101-105)
 
-### 2. Garantir que o botao "+ Novo Revendedor" crie usuarios com role "revendedor"
-- Verificar se o modal de criacao esta atribuindo o role correto ao criar novos revendedores
-- Se necessario, corrigir para que o role "revendedor" seja atribuido corretamente
+Ajustar a lógica de `canEdit` para que, quando o usuário for admin, não haja restrição de tempo nem para mensagens próprias:
 
-### Alteracoes
-- **Arquivo**: `src/pages/Principal.tsx` — linha 1467: ajustar filtro para sempre mostrar "Revendedor" mesmo com count 0
+```tsx
+// Atual:
+const canEditOwn = isOwn && message.type === "text" && !message.is_deleted && onEdit &&
+  (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000;
+const canEditAdmin = isCurrentUserAdmin && !isOwn && message.type === "text" && !message.is_deleted && onEdit;
+const canEdit = canEditOwn || canEditAdmin;
+
+// Novo:
+const isTextEditable = message.type === "text" && !message.is_deleted && !!onEdit;
+const canEditOwn = isOwn && isTextEditable &&
+  (isCurrentUserAdmin || (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000);
+const canEditAdmin = isCurrentUserAdmin && !isOwn && isTextEditable;
+const canEdit = canEditOwn || canEditAdmin;
+```
+
+Isso permite que o admin edite suas próprias mensagens a qualquer momento, enquanto usuários normais continuam com o limite de 10 minutos.
+
+Nenhuma alteração no backend (`useChat.ts`) é necessária — ele já suporta edição sem limite para admins.
 
