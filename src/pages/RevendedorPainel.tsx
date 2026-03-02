@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { ChatPage } from "@/components/chat/ChatPage";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -59,7 +60,7 @@ interface Transaction {
   module: string | null;
 }
 
-type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
+type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "chat";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -652,12 +653,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "historico", label: "Histórico de Pedidos", icon: History },
     { key: "extrato", label: "Extrato de Depósitos", icon: Landmark },
     { key: "contatos", label: "Minha Conta", icon: User },
+    { key: "chat", label: "Chat", icon: MessageCircle },
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
 
   const tabTitle: Record<PainelTab, string> = {
     recarga: "Nova Recarga", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
     extrato: "Extrato de Depósitos", contatos: "Minha Conta", status: "Status do Sistema",
+    chat: "Chat",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
@@ -1701,6 +1704,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </motion.div>
           )}
 
+
+          {/* ===== TAB: CHAT ===== */}
+          {tab === "chat" && (
+            <ChatPage onBack={() => setTab("recarga")} />
+          )}
 
           {/* ===== TAB: STATUS ===== */}
           {tab === "status" && (

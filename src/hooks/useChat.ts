@@ -1,0 +1,274 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+export interface ChatConversation {
+  id: string;
+  participant_1: string;
+  participant_2: string;
+  last_message_text: string | null;
+  last_message_at: string;
+  created_at: string;
+  other_user?: {
+    id: string;
+    nome: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  };
+  unread_count?: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string | null;
+  type: string;
+  audio_url: string | null;
+  image_url: string | null;
+  is_read: boolean;
+  read_at: string | null;
+  is_delivered: boolean;
+  delivered_at: string | null;
+  reply_to_id: string | null;
+  is_deleted: boolean;
+  created_at: string;
+  reactions?: ChatReaction[];
+  reply_to?: ChatMessage | null;
+  sender?: { nome: string | null; avatar_url: string | null };
+}
+
+export interface ChatReaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+}
+
+export function useConversations() {
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchConversations = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("chat_conversations")
+        .select("*")
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .order("last_message_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch other user profiles
+      const otherIds = (data || []).map((c: any) =>
+        c.participant_1 === user.id ? c.participant_2 : c.participant_1
+      );
+      const uniqueIds = [...new Set(otherIds)];
+
+      let profiles: any[] = [];
+      if (uniqueIds.length > 0) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("id, nome, email, avatar_url")
+          .in("id", uniqueIds);
+        profiles = p || [];
+      }
+
+      // Get unread counts
+      const convos = (data || []).map((c: any) => {
+        const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
+        const profile = profiles.find((p: any) => p.id === otherId);
+        return { ...c, other_user: profile || { id: otherId, nome: null, email: null, avatar_url: null }, unread_count: 0 };
+      });
+
+      // Fetch unread counts
+      for (const conv of convos) {
+        const { count } = await supabase
+          .from("chat_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("conversation_id", conv.id)
+          .neq("sender_id", user.id)
+          .eq("is_read", false);
+        conv.unread_count = count || 0;
+      }
+
+      setConversations(convos);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  // Realtime
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("chat-conversations-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_conversations" }, () => {
+        fetchConversations();
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => {
+        fetchConversations();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchConversations]);
+
+  const startConversation = useCallback(async (otherUserId: string) => {
+    if (!user) return null;
+    // Check existing
+    const ids = [user.id, otherUserId].sort();
+    const { data: existing } = await supabase
+      .from("chat_conversations")
+      .select("*")
+      .or(`and(participant_1.eq.${ids[0]},participant_2.eq.${ids[1]}),and(participant_1.eq.${ids[1]},participant_2.eq.${ids[0]})`)
+      .maybeSingle();
+
+    if (existing) return existing.id;
+
+    const { data, error } = await supabase
+      .from("chat_conversations")
+      .insert({ participant_1: ids[0], participant_2: ids[1] })
+      .select()
+      .single();
+
+    if (error) throw error;
+    await fetchConversations();
+    return data.id;
+  }, [user, fetchConversations]);
+
+  return { conversations, loading, fetchConversations, startConversation };
+}
+
+export function useChatMessages(conversationId: string | null) {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMessages = useCallback(async () => {
+    if (!conversationId) { setMessages([]); setLoading(false); return; }
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true })
+      .limit(200);
+
+    if (error) { setLoading(false); return; }
+
+    // Fetch reactions
+    const msgIds = (data || []).map((m: any) => m.id);
+    let reactions: any[] = [];
+    if (msgIds.length > 0) {
+      const { data: r } = await supabase
+        .from("chat_reactions")
+        .select("*")
+        .in("message_id", msgIds);
+      reactions = r || [];
+    }
+
+    // Fetch sender profiles
+    const senderIds = [...new Set((data || []).map((m: any) => m.sender_id))];
+    let senders: any[] = [];
+    if (senderIds.length > 0) {
+      const { data: s } = await supabase
+        .from("profiles")
+        .select("id, nome, avatar_url")
+        .in("id", senderIds);
+      senders = s || [];
+    }
+
+    const msgs = (data || []).map((m: any) => ({
+      ...m,
+      reactions: reactions.filter((r: any) => r.message_id === m.id),
+      sender: senders.find((s: any) => s.id === m.sender_id) || { nome: null, avatar_url: null },
+    }));
+
+    // Attach reply_to
+    for (const msg of msgs) {
+      if (msg.reply_to_id) {
+        msg.reply_to = msgs.find((m: any) => m.id === msg.reply_to_id) || null;
+      }
+    }
+
+    setMessages(msgs);
+    setLoading(false);
+
+    // Mark unread messages as read
+    if (user) {
+      const unreadIds = (data || [])
+        .filter((m: any) => m.sender_id !== user.id && !m.is_read)
+        .map((m: any) => m.id);
+      if (unreadIds.length > 0) {
+        await supabase
+          .from("chat_messages")
+          .update({ is_read: true, read_at: new Date().toISOString() })
+          .in("id", unreadIds);
+      }
+    }
+  }, [conversationId, user]);
+
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
+
+  // Realtime messages
+  useEffect(() => {
+    if (!conversationId) return;
+    const channel = supabase
+      .channel(`chat-msgs-${conversationId}`)
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "chat_messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      }, () => { fetchMessages(); })
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "chat_reactions",
+      }, () => { fetchMessages(); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [conversationId, fetchMessages]);
+
+  const sendMessage = useCallback(async (content: string, type = "text", audioUrl?: string, imageUrl?: string, replyToId?: string) => {
+    if (!conversationId || !user) return;
+    const { error } = await supabase.from("chat_messages").insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content: type === "text" ? content : null,
+      type,
+      audio_url: audioUrl || null,
+      image_url: imageUrl || null,
+      reply_to_id: replyToId || null,
+      is_delivered: true,
+      delivered_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+
+    // Update conversation last message
+    await supabase.from("chat_conversations").update({
+      last_message_text: type === "text" ? content : type === "audio" ? "🎤 Áudio" : "📷 Imagem",
+      last_message_at: new Date().toISOString(),
+    }).eq("id", conversationId);
+  }, [conversationId, user]);
+
+  const toggleReaction = useCallback(async (messageId: string, emoji: string) => {
+    if (!user) return;
+    const existing = messages.find(m => m.id === messageId)?.reactions?.find(
+      r => r.user_id === user.id && r.emoji === emoji
+    );
+    if (existing) {
+      await supabase.from("chat_reactions").delete().eq("id", existing.id);
+    } else {
+      await supabase.from("chat_reactions").insert({ message_id: messageId, user_id: user.id, emoji });
+    }
+  }, [user, messages]);
+
+  const deleteMessage = useCallback(async (messageId: string) => {
+    if (!user) return;
+    await supabase.from("chat_messages").update({ is_deleted: true, content: null }).eq("id", messageId).eq("sender_id", user.id);
+  }, [user]);
+
+  return { messages, loading, sendMessage, toggleReaction, deleteMessage, fetchMessages };
+}
