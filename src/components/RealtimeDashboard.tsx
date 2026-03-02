@@ -194,7 +194,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
         {[
           { icon: Zap, label: "Total Hoje", value: String(stats.total), color: "text-primary", bg: "bg-primary/10" },
           { icon: CheckCircle2, label: "Concluídas", value: String(stats.completed), color: "text-success", bg: "bg-success/10" },
-          { icon: Clock, label: "Pendentes", value: String(stats.pending), color: "text-warning", bg: "bg-warning/10" },
+          { icon: Clock, label: "Processando", value: String(stats.pending), color: "text-warning", bg: "bg-warning/10" },
           { icon: XCircle, label: "Falhas", value: String(stats.failed), color: "text-destructive", bg: "bg-destructive/10" },
         ].map((c, i) => (
           <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}

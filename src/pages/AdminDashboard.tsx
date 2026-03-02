@@ -3831,7 +3831,7 @@ function AdminAddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, us
             <div className="text-right">
               <p className={`font-bold ${(t.status === "completed" || t.status === "confirmado") ? "text-success" : "text-warning"}`}>+{fmt(t.amount)}</p>
               <span className={`text-[10px] font-semibold uppercase tracking-wide ${(t.status === "completed" || t.status === "confirmado") ? "text-success" : "text-warning"}`}>
-                {(t.status === "completed" || t.status === "confirmado") ? "✓ Confirmado" : "⏳ Pendente"}
+                {(t.status === "completed" || t.status === "confirmado") ? "✓ Confirmado" : "⏳ Processando"}
               </span>
             </div>
           </motion.div>

@@ -2157,7 +2157,7 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
             <div className="text-right">
               <p className={`font-bold ${t.status === "completed" ? "text-success" : t.status === "expired" ? "text-destructive" : "text-warning"}`}>+{fmt(t.amount)}</p>
               <span className={`text-[10px] font-semibold uppercase tracking-wide ${t.status === "completed" ? "text-success" : t.status === "expired" ? "text-destructive" : "text-warning"}`}>
-                {t.status === "completed" ? "✓ Confirmado" : t.status === "expired" ? "✕ Expirado" : "⏳ Pendente"}
+                {t.status === "completed" ? "✓ Confirmado" : t.status === "expired" ? "✕ Expirado" : "⏳ Processando"}
               </span>
             </div>
           </motion.div>
