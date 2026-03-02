@@ -7,7 +7,8 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, BadgeCheck, ChevronDown } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, BadgeCheck, ChevronDown, Camera } from "lucide-react";
+import { toast } from "sonner";
 
 function formatLastSeen(dateStr: string): string {
   const date = new Date(dateStr);
@@ -26,10 +27,11 @@ interface ChatWindowProps {
   otherUser?: { id: string; nome: string | null; email: string | null; avatar_url: string | null; role?: string };
   isGroup?: boolean;
   groupName?: string;
+  groupIcon?: string | null;
   onBack?: () => void;
 }
 
-export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBack }: ChatWindowProps) {
+export function ChatWindow({ conversationId, otherUser, isGroup, groupName, groupIcon, onBack }: ChatWindowProps) {
   const { user, role } = useAuth();
   const isUserAdmin = role === "admin";
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
@@ -43,6 +45,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
   const [members, setMembers] = useState<{ id: string; nome: string | null; avatar_url: string | null; role?: string }[]>([]);
+  const [currentGroupIcon, setCurrentGroupIcon] = useState<string | null>(groupIcon || null);
+  const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false);
+  const groupIconInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +92,34 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
     };
     fetchMembers();
   }, [isGroup, messages.length, onlineUsers.length]);
+
+  // Sync groupIcon prop
+  useEffect(() => { setCurrentGroupIcon(groupIcon || null); }, [groupIcon]);
+
+  const handleGroupIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !isUserAdmin) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) { toast.error("Use JPG, PNG, WebP ou GIF."); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Máximo 2MB."); return; }
+    e.target.value = "";
+    setUploadingGroupIcon(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `groups/${conversationId}/icon.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+      await supabase.from("chat_conversations").update({ icon: publicUrl } as any).eq("id", conversationId);
+      setCurrentGroupIcon(publicUrl);
+      toast.success("Foto do grupo atualizada!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao atualizar foto: " + (err.message || ""));
+    }
+    setUploadingGroupIcon(false);
+  };
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
@@ -155,8 +188,14 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
           </button>
         )}
         {isGroup ? (
-          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center relative">
-            <Users className="h-5 w-5 text-primary" />
+          <div className="relative group/avatar">
+            {currentGroupIcon && currentGroupIcon.startsWith("http") ? (
+              <img src={currentGroupIcon} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+            )}
             {onlineCount > 0 && (
               <motion.div
                 key={onlineCount}
@@ -166,6 +205,19 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, onBa
               >
                 <span className="text-[8px] font-bold text-white px-0.5">{onlineCount}</span>
               </motion.div>
+            )}
+            {isUserAdmin && (
+              <label
+                className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {uploadingGroupIcon ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4 text-white" />
+                )}
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleGroupIconUpload} className="hidden" ref={groupIconInputRef} disabled={uploadingGroupIcon} />
+              </label>
             )}
           </div>
         ) : otherUser?.avatar_url ? (
