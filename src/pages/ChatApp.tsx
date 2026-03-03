@@ -27,8 +27,8 @@ export default function ChatApp() {
   }, []);
 
   useEffect(() => {
-    supabase.from("system_config").select("value").eq("key", "chat_enabled").maybeSingle()
-      .then(({ data }) => { if (data) setChatEnabled(data.value === "true"); });
+    supabase.rpc("get_chat_enabled" as any)
+      .then(({ data }) => { setChatEnabled(data === true); });
   }, []);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);

@@ -26,12 +26,8 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const check = async () => {
-      const { data } = await supabase
-        .from("system_config")
-        .select("value")
-        .eq("key", "maintenanceMode")
-        .maybeSingle();
-      setMaintenance(data?.value === "true");
+      const { data } = await supabase.rpc("get_maintenance_mode" as any);
+      setMaintenance(data === true);
     };
     check();
 
