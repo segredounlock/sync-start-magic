@@ -492,9 +492,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
           groupedMessages.map(group => (
             <div key={group.date}>
               <div className="flex items-center gap-3 my-2 px-4">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-[10px] text-muted-foreground font-medium">{group.date}</span>
-                <div className="flex-1 h-px bg-border" />
+                <div className="flex-1 h-px bg-border" style={{ backgroundColor: 'var(--tg-hint, hsl(var(--border)))' , opacity: 0.3 }} />
+                <span className="text-[10px] text-muted-foreground font-medium" style={{ color: 'var(--tg-hint, hsl(var(--muted-foreground)))' }}>{group.date}</span>
+                <div className="flex-1 h-px bg-border" style={{ backgroundColor: 'var(--tg-hint, hsl(var(--border)))', opacity: 0.3 }} />
               </div>
               {group.msgs.map(msg => (
                 <div
