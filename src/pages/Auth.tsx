@@ -144,14 +144,21 @@ export default function Auth() {
           localStorage.removeItem("rememberedEmail");
           localStorage.removeItem("rememberedPass");
         }
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", (await supabase.auth.getUser()).data.user?.id || "")
-          .maybeSingle();
+        const userId = (await supabase.auth.getUser()).data.user?.id || "";
+        // Retry role check to handle race condition with trigger
+        let roleData: { role: string } | null = null;
+        for (let i = 0; i < 3; i++) {
+          const { data } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (data) { roleData = data; break; }
+          if (i < 2) await new Promise(r => setTimeout(r, 1000));
+        }
         if (!roleData) {
           await supabase.auth.signOut();
-          toast.error("Sua conta ainda não foi aprovada. Contate o administrador.");
+          toast.error("Sua conta ainda não possui um cargo atribuído. Aguarde a aprovação ou contate o administrador.");
           setSubmitting(false);
           return;
         }
