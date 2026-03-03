@@ -473,6 +473,11 @@ select option {
   border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent) !important;
 }
 
+/* Separador de seção nas conversas */
+.tg-chat-theme .bg-border {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 30%, transparent) !important;
+}
+
 .tg-chat-theme .hover\:bg-muted\/50:hover {
   background-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, var(--tg-bg, #17212b)) !important;
 }
