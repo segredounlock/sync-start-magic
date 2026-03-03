@@ -625,24 +625,38 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
               onClick={() => setShowImageLightbox(false)}
             >
-              <button
-                onClick={() => setShowImageLightbox(false)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
-              >
-                <X className="h-6 w-6" />
-              </button>
-              <motion.img
-                initial={{ scale: 0.8, opacity: 0 }}
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                src={message.image_url}
-                alt=""
-                className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+                exit={{ scale: 0.85, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="relative bg-card border border-border rounded-2xl shadow-2xl overflow-hidden max-w-[92vw] max-h-[88vh] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
-              />
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {message.sender?.nome || "Imagem"}
+                  </span>
+                  <button
+                    onClick={() => setShowImageLightbox(false)}
+                    className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
+                {/* Image */}
+                <div className="flex items-center justify-center p-3 overflow-auto">
+                  <img
+                    src={message.image_url}
+                    alt=""
+                    className="max-w-full max-h-[78vh] object-contain rounded-xl"
+                  />
+                </div>
+              </motion.div>
             </motion.div>
           </>,
           document.body
