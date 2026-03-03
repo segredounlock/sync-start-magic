@@ -34,7 +34,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
   const { onlineUsers, onlineCount } = useGroupPresence();
   const { messages, loading, loadingOlder, hasMore, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage, loadOlderMessages } = useChatMessages(conversationId);
-  const { typingText, sendTyping, sendStopTyping } = useTypingIndicator(conversationId);
+  const { typingText, typingActivity, sendTyping, sendStopTyping } = useTypingIndicator(conversationId);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [sending, setSending] = useState(false);
@@ -327,6 +327,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
 
   const handleAudioSend = async (audioUrl: string) => {
     setShowAudioRecorder(false);
+    sendStopTyping();
     await sendMessage("", "audio", audioUrl, undefined, replyTo?.id);
     setReplyTo(null);
   };
@@ -593,11 +594,20 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             className="px-4 overflow-hidden"
           >
             <div className="flex items-center gap-2 py-1.5">
-              <div className="flex gap-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
+              {typingActivity === "recording" ? (
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                  <Mic className="h-3.5 w-3.5 text-destructive/70" />
+                </div>
+              ) : typingActivity === "emoji" ? (
+                <Smile className="h-3.5 w-3.5 text-warning animate-bounce" />
+              ) : (
+                <div className="flex gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              )}
               <span className="text-[11px] text-muted-foreground italic">{typingText}</span>
             </div>
           </motion.div>
@@ -648,7 +658,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       {/* Audio recorder */}
       <AnimatePresence>
         {showAudioRecorder && (
-          <AudioRecorder onSend={handleAudioSend} onCancel={() => setShowAudioRecorder(false)} />
+          <AudioRecorder onSend={handleAudioSend} onCancel={() => { setShowAudioRecorder(false); sendStopTyping(); }} />
         )}
       </AnimatePresence>
 
@@ -664,7 +674,11 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       {/* Input bar */}
       {!showAudioRecorder && (
         <div className="flex items-center gap-2 px-3 py-3 border-t border-border bg-card/80 backdrop-blur-sm">
-          <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2.5 rounded-xl transition-colors ${showEmoji ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/50"}`}>
+          <button onClick={() => {
+            const newVal = !showEmoji;
+            setShowEmoji(newVal);
+            if (newVal) { sendTyping(myNome, "emoji"); } else { sendStopTyping(); }
+          }} className={`p-2.5 rounded-xl transition-colors ${showEmoji ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/50"}`}>
             <Smile className="h-5 w-5" />
           </button>
           {imagesAllowed && (
@@ -754,7 +768,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
               <Send className="h-5 w-5" />
             </button>
           ) : (
-            <button onClick={() => setShowAudioRecorder(true)} className="p-2.5 rounded-full text-muted-foreground hover:bg-muted/50 transition-colors">
+            <button onClick={() => { setShowAudioRecorder(true); sendTyping(myNome, "recording"); }} className="p-2.5 rounded-full text-muted-foreground hover:bg-muted/50 transition-colors">
               <Mic className="h-5 w-5" />
             </button>
           )}
