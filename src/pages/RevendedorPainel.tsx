@@ -2343,7 +2343,7 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              via {pixData.gateway}
+              via Pix
             </motion.p>
           </div>
 
