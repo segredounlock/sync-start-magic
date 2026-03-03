@@ -278,8 +278,18 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     }
   }, []);
 
+  // Detect URLs/links in text
+  const containsLink = (str: string) => /https?:\/\/|www\.|[a-zA-Z0-9-]+\.(com|net|org|br|io|me|co|app|dev|info|link|xyz|site|online|store|shop|ly|bit|goo|tinyurl)\b/i.test(str);
+
   const handleSend = async () => {
     if (!text.trim() || sending) return;
+
+    // Block links for non-admin users
+    if (!isUserAdmin && containsLink(text.trim())) {
+      toast.error("Envio de links não é permitido.");
+      return;
+    }
+
     setSending(true);
     const currentText = text.trim();
     const currentReplyToId = replyTo?.id || undefined;

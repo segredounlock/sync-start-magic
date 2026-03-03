@@ -44,7 +44,17 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
   useEffect(() => {
     const fetchUsers = async () => {
       if (!user) return;
-      let query = supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").neq("id", user.id).eq("active", true);
+      // First fetch admin user IDs, then fetch their profiles
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("role", "admin")
+        .neq("user_id", user.id);
+
+      const adminIds = (adminRoles || []).map(r => r.user_id);
+      if (adminIds.length === 0) { setUsers([]); setLoading(false); return; }
+
+      let query = supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", adminIds).eq("active", true);
 
       if (search.trim()) {
         query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
@@ -53,17 +63,7 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
       const { data } = await query.limit(50);
       if (!data || data.length === 0) { setUsers([]); setLoading(false); return; }
 
-      // Fetch roles for these users
-      const userIds = data.map(u => u.id);
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .in("user_id", userIds);
-
-      const roleMap: Record<string, string> = {};
-      (roles || []).forEach(r => { roleMap[r.user_id] = r.role; });
-
-      setUsers(data.map(u => ({ ...u, role: roleMap[u.id] || "usuario", verification_badge: (u as any).verification_badge || null })));
+      setUsers(data.map(u => ({ ...u, role: "admin", verification_badge: (u as any).verification_badge || null })));
       setLoading(false);
     };
     fetchUsers();
