@@ -60,7 +60,7 @@ export function ChatPage({ onBack }: ChatPageProps) {
   // Mobile: show either list or chat
   if (isMobileView) {
     return (
-      <div className="h-[calc(100vh-120px)] flex flex-col">
+      <div className="h-full flex flex-col">
         <AnimatePresence mode="wait">
           {activeConversationId ? (
             <motion.div key="chat" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="flex-1 flex flex-col min-h-0">
@@ -104,7 +104,7 @@ export function ChatPage({ onBack }: ChatPageProps) {
 
   // Desktop: side-by-side
   return (
-    <div className="h-[calc(100vh-120px)] flex rounded-2xl border border-border overflow-hidden bg-card">
+    <div className="h-full flex rounded-2xl border border-border overflow-hidden bg-card">
       {/* Left: Conversation list */}
       <div className="w-[340px] flex flex-col border-r border-border">
         <div className="flex items-center justify-between p-4 border-b border-border">
