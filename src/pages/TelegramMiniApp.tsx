@@ -1788,72 +1788,93 @@ export default function TelegramMiniApp() {
         </AnimatePresence>
       </div>
 
-      {/* Seasonal Effects for Mini App (own particles + banners) */}
-      {isSeasonalActive && (
+      {/* Seasonal Effects for Mini App (own particles + banners with smooth transitions) */}
+      {(isSeasonalActive || transitioning) && (
         <>
-          {/* Top seasonal banner */}
-          <AnimatePresence>
-            <motion.div
-              key={`miniapp-banner-${seasonalTheme.key}`}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className={`fixed top-0 left-0 right-0 z-40 bg-gradient-to-r ${seasonalTheme.accentGradient} overflow-hidden`}
-            >
+          {/* Top seasonal banner — smooth entry/exit */}
+          <AnimatePresence mode="wait">
+            {!transitioning && isSeasonalActive && (
               <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex items-center justify-center gap-2 py-1.5 px-4"
+                key={`miniapp-banner-${seasonalTheme.key}`}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+                className={`fixed top-0 left-0 right-0 z-40 bg-gradient-to-r ${seasonalTheme.accentGradient} overflow-hidden`}
               >
-                <span className="text-sm">{seasonalTheme.emoji}</span>
-                <span className="text-xs font-bold text-white drop-shadow-sm tracking-wide">{seasonalTheme.label.toUpperCase()}</span>
-                <span className="text-sm">{seasonalTheme.emoji}</span>
+                <motion.div
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="flex items-center justify-center gap-2 py-1.5 px-4"
+                >
+                  <span className="text-sm">{seasonalTheme.emoji}</span>
+                  <span className="text-xs font-bold text-white drop-shadow-sm tracking-wide">{seasonalTheme.label.toUpperCase()}</span>
+                  <span className="text-sm">{seasonalTheme.emoji}</span>
+                </motion.div>
               </motion.div>
-            </motion.div>
+            )}
           </AnimatePresence>
 
-          {/* Floating particles */}
+          {/* Floating particles — fade out gracefully when transitioning */}
           {seasonalTheme.particles.slice(0, 8).map((emoji, i) => (
             <motion.div
               key={`miniapp-p-${seasonalTheme.key}-${i}`}
               className="fixed pointer-events-none select-none z-[9999]"
-              initial={{ top: -40, left: `${(i * 12 + Math.random() * 8) % 95}%`, opacity: 0, scale: 0.5 }}
-              animate={{
-                top: "110vh",
-                opacity: [0, 0.8, 0.8, 0.4, 0],
-                scale: [0.5, 1, 0.8],
-                rotate: [0, 180, 360],
-              }}
-              transition={{ duration: 8 + Math.random() * 5, delay: i * 1.2, repeat: Infinity, ease: "linear" }}
+              initial={{ top: -40, left: `${(i * 12 + Math.random() * 8) % 95}%`, opacity: 0, scale: 0.5, rotate: 0 }}
+              animate={transitioning
+                ? { opacity: 0, scale: 0, rotate: 720, transition: { duration: 1.5, ease: "easeInOut" } }
+                : {
+                    top: "110vh",
+                    opacity: [0, 0.8, 0.8, 0.4, 0],
+                    scale: [0.5, 1, 0.8],
+                    rotate: [0, 180, 360],
+                  }
+              }
+              transition={transitioning ? undefined : { duration: 8 + Math.random() * 5, delay: i * 1.2, repeat: Infinity, ease: "linear" }}
               style={{ fontSize: 14 + Math.random() * 8 }}
             >
               {emoji}
             </motion.div>
           ))}
 
-          {/* Ambient glow */}
-          <motion.div
-            key={`miniapp-glow-${seasonalTheme.key}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-            className="fixed inset-0 pointer-events-none z-[9998]"
-            style={{
-              background: `radial-gradient(ellipse at 50% 0%, ${seasonalTheme.glowColor} 0%, transparent 60%)`,
-            }}
-          />
+          {/* Ambient glow — smooth fade */}
+          <AnimatePresence>
+            {!transitioning && seasonalTheme.glowColor && (
+              <motion.div
+                key={`miniapp-glow-${seasonalTheme.key}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+                className="fixed inset-0 pointer-events-none z-[9998]"
+                style={{
+                  background: `radial-gradient(ellipse at 50% 0%, ${seasonalTheme.glowColor} 0%, transparent 60%)`,
+                }}
+              />
+            )}
+          </AnimatePresence>
 
-          {/* Bottom seasonal strip above nav */}
-          <div className={`fixed bottom-[60px] left-0 right-0 z-20 bg-gradient-to-r ${seasonalTheme.accentGradient} overflow-hidden`}>
-            <div className="flex items-center justify-center gap-2 py-1 px-4">
-              <span className="text-xs">{seasonalTheme.emoji}</span>
-              <span className="text-[10px] font-bold text-white drop-shadow-sm tracking-wide">{seasonalTheme.label.toUpperCase()}</span>
-              <span className="text-xs">{seasonalTheme.emoji}</span>
-            </div>
-          </div>
+          {/* Bottom seasonal strip above nav — smooth entry/exit */}
+          <AnimatePresence mode="wait">
+            {!transitioning && isSeasonalActive && (
+              <motion.div
+                key={`miniapp-strip-${seasonalTheme.key}`}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                className={`fixed bottom-[60px] left-0 right-0 z-20 bg-gradient-to-r ${seasonalTheme.accentGradient} overflow-hidden`}
+              >
+                <div className="flex items-center justify-center gap-2 py-1 px-4">
+                  <span className="text-xs">{seasonalTheme.emoji}</span>
+                  <span className="text-[10px] font-bold text-white drop-shadow-sm tracking-wide">{seasonalTheme.label.toUpperCase()}</span>
+                  <span className="text-xs">{seasonalTheme.emoji}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
 
