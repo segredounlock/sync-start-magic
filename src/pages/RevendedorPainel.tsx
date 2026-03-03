@@ -9,7 +9,7 @@ import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { PromoBanner } from "@/components/PromoBanner";
 import { PopupBanner } from "@/components/PopupBanner";
-import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
+import { PixResult } from "@/lib/payment";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
 import { playSuccessSound } from "@/lib/sounds";
 import { FloatingPoll } from "@/components/FloatingPoll";
@@ -29,41 +29,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { appToast, styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 
-interface Recarga {
-  id: string;
-  telefone: string;
-  operadora: string | null;
-  valor: number;
-  custo: number;
-  custo_api: number;
-  status: string;
-  created_at: string;
-  external_id?: string | null;
-}
-
-interface CatalogValue {
-  valueId: string;
-  value: number;
-  cost: number;
-  label?: string;
-}
-
-interface CatalogCarrier {
-  carrierId: string;
-  name: string;
-  order: number;
-  extraField?: { required: boolean; title: string } | null;
-  values: CatalogValue[];
-}
-
-interface Transaction {
-  id: string;
-  amount: number;
-  type: string;
-  status: string;
-  created_at: string;
-  module: string | null;
-}
+import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
+import { usePixDeposit } from "@/hooks/usePixDeposit";
 
 type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
 
@@ -2108,93 +2075,21 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
   resellerId?: string;
   saldoTipo?: string;
 }) {
-  const [depositAmount, setDepositAmount] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [pixData, setPixData] = useState<PixResult | null>(null);
-  const [pixError, setPixError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [confirmedAmount, setConfirmedAmount] = useState(0);
-  const [pollCount, setPollCount] = useState(0);
+  const pix = usePixDeposit({
+    userEmail,
+    userName,
+    resellerId,
+    saldoTipo,
+    pollInterval: 3000,
+    onConfirmed: () => { onDeposited(); fetchTransactions(); },
+  });
 
-  const presetAmounts = [20, 50, 100, 200, 500, 1000];
-
-  // Auto-poll payment status every 5s when PIX is active
-  useEffect(() => {
-    if (!pixData?.payment_id || paymentConfirmed) return;
-    const interval = setInterval(async () => {
-      try {
-        const status = await checkPaymentStatus(pixData.payment_id);
-        setPollCount(p => p + 1);
-        if (status === "completed") {
-          setPaymentConfirmed(true);
-          setConfirmedAmount(pixData.amount);
-          // Toast handled by useBackgroundPaymentMonitor to avoid duplicates
-          onDeposited();
-          fetchTransactions();
-          clearInterval(interval);
-        }
-      } catch { /* silent */ }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [pixData, paymentConfirmed, onDeposited, fetchTransactions]);
-
-  const handleGeneratePix = async (amount?: number) => {
-    const value = amount || parseFloat(depositAmount.replace(",", "."));
-    if (!value || value <= 0) {
-      toast.error("Informe um valor válido");
-      return;
-    }
-    setGenerating(true);
-    setPixError(null);
-    setPixData(null);
-    setPaymentConfirmed(false);
-    setPollCount(0);
-    try {
-      const result = await createPixDeposit(value, userEmail, userName, !resellerId ? false : false, resellerId, saldoTipo);
-      setPixData(result);
-    } catch (err: any) {
-      const msg = err.message || "Erro ao gerar PIX";
-      setPixError(msg);
-      toast.error(msg);
-    }
-    setGenerating(false);
-  };
-
-  const handleCopyCode = () => {
-    if (!pixData?.qr_code) return;
-    navigator.clipboard.writeText(pixData.qr_code);
-    setCopied(true);
-    toast.success("Código PIX copiado!");
-    setTimeout(() => setCopied(false), 3000);
-  };
-
-  const handleCheckStatus = async () => {
-    if (!pixData?.payment_id) return;
-    setChecking(true);
-    try {
-      const status = await checkPaymentStatus(pixData.payment_id);
-      if (status === "completed") {
-        setPaymentConfirmed(true);
-        setConfirmedAmount(pixData.amount);
-        // Toast handled by useBackgroundPaymentMonitor to avoid duplicates
-        onDeposited();
-        fetchTransactions();
-      } else {
-        toast.info("Pagamento ainda pendente. Aguarde a confirmação.");
-      }
-    } catch { toast.error("Erro ao verificar status"); }
-    setChecking(false);
-  };
-
-  const handleNewPix = () => {
-    setPixData(null);
-    setDepositAmount("");
-    setPaymentConfirmed(false);
-    setPollCount(0);
-    setConfirmedAmount(0);
-  };
+  const {
+    depositAmount, setDepositAmount, generating, pixData, pixError,
+    copied, checking, paymentConfirmed, confirmedAmount, pollCount,
+    presetAmounts, generatePix: handleGeneratePix, copyCode: handleCopyCode,
+    checkStatus: handleCheckStatus, reset: handleNewPix,
+  } = pix;
 
   const DEPOSIT_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
   const depositTxs = transactions.filter(t => t.type === "deposit").map(t => {
