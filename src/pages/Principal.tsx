@@ -3193,6 +3193,73 @@ export default function Principal() {
                   </div>
                 </div>
 
+                {/* Notificações por Cargo */}
+                <div className="glass-card rounded-xl p-6 space-y-5">
+                  <div>
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <Megaphone className="h-4 w-4 text-primary" /> Notificações
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-1">Configure quais alertas visuais cada cargo recebe. Sons funcionam para todos.</p>
+                  </div>
+
+                  {/* Admin Master */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold text-foreground flex items-center gap-1.5">👑 Administrador Master</p>
+                    <div className="space-y-1.5 pl-1">
+                      {[
+                        { key: "notif_admin_deposit", label: "💰 Depósitos confirmados", defaultVal: "true" },
+                        { key: "notif_admin_recarga", label: "📱 Recargas processadas", defaultVal: "true" },
+                        { key: "notif_admin_new_user", label: "🆕 Novos cadastros", defaultVal: "true" },
+                      ].map(item => {
+                        const isOn = (globalConfig[item.key] ?? item.defaultVal) === "true";
+                        return (
+                          <div key={item.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                            <span className="text-sm text-foreground">{item.label}</span>
+                            <button
+                              onClick={() => setGlobalConfig(prev => ({ ...prev, [item.key]: isOn ? "false" : "true" }))}
+                              className="transition-colors"
+                            >
+                              {isOn
+                                ? <ToggleRight className="h-6 w-6 text-success" />
+                                : <ToggleLeft className="h-6 w-6 text-muted-foreground" />
+                              }
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Revendedor */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold text-foreground flex items-center gap-1.5">🏪 Revendedor</p>
+                    <div className="space-y-1.5 pl-1">
+                      {[
+                        { key: "notif_revendedor_deposit", label: "💰 Depósitos confirmados", defaultVal: "false" },
+                        { key: "notif_revendedor_recarga", label: "📱 Recargas processadas", defaultVal: "false" },
+                      ].map(item => {
+                        const isOn = (globalConfig[item.key] ?? item.defaultVal) === "true";
+                        return (
+                          <div key={item.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                            <span className="text-sm text-foreground">{item.label}</span>
+                            <button
+                              onClick={() => setGlobalConfig(prev => ({ ...prev, [item.key]: isOn ? "false" : "true" }))}
+                              className="transition-colors"
+                            >
+                              {isOn
+                                ? <ToggleRight className="h-6 w-6 text-success" />
+                                : <ToggleLeft className="h-6 w-6 text-muted-foreground" />
+                              }
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground italic">ℹ️ Sons funcionam para todos os cargos. Os toggles controlam apenas toasts e alertas visuais.</p>
+                </div>
+
                 <BannersManager botUsername={botStatus.botUsername} />
                 </>
               )}

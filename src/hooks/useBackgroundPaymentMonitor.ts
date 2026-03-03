@@ -1,16 +1,21 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { appToast } from "@/lib/toast";
+import { playCashRegisterSound } from "@/lib/sounds";
 
 /**
  * Hook that monitors pending transactions in the background.
  * When a payment is confirmed (status = "completed"), it shows a toast
  * and calls onBalanceUpdated so the UI refreshes the balance.
  * Works even if the user navigates away from the deposit tab.
+ *
+ * @param showToast - Whether to show the confirmation toast (default true).
+ *   Sound always plays regardless of this flag.
  */
 export function useBackgroundPaymentMonitor(
   userId: string | undefined,
-  onBalanceUpdated: () => void
+  onBalanceUpdated: () => void,
+  showToast: boolean = true,
 ) {
   const knownCompletedRef = useRef<Set<string>>(new Set());
 
@@ -55,10 +60,15 @@ export function useBackgroundPaymentMonitor(
             !knownCompletedRef.current.has(row.id)
           ) {
             knownCompletedRef.current.add(row.id);
-            appToast.depositConfirmed(
-              `✅ Depósito de R$ ${Number(row.amount).toFixed(2)} confirmado! Saldo atualizado.`,
-              { id: `deposit-${row.id}` }
-            );
+            // Sound always plays for everyone
+            try { playCashRegisterSound(); } catch {}
+            // Toast only if allowed by config
+            if (showToast) {
+              appToast.depositConfirmed(
+                `✅ Depósito de R$ ${Number(row.amount).toFixed(2)} confirmado! Saldo atualizado.`,
+                { id: `deposit-${row.id}` }
+              );
+            }
             onBalanceUpdated();
           }
         }
@@ -68,5 +78,5 @@ export function useBackgroundPaymentMonitor(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, onBalanceUpdated]);
+  }, [userId, onBalanceUpdated, showToast]);
 }

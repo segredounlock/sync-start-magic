@@ -307,12 +307,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
 
 
-  // Background payment monitor - detects payments even when not on deposit tab
+  // Background payment monitor — load revendedor deposit toast config
+  const [revDepositToast, setRevDepositToast] = useState(false);
+  useEffect(() => {
+    supabase.rpc("get_notif_config", { _key: "notif_revendedor_deposit" })
+      .then(({ data }) => { if (data === "true") setRevDepositToast(true); });
+  }, []);
   const handleBgPaymentConfirmed = useCallback(() => {
     fetchData();
     fetchTransactions();
   }, [fetchData, fetchTransactions]);
-  useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed);
+  useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed, revDepositToast);
 
   // Realtime: listen for recargas status changes
   // Realtime: saldo updates
