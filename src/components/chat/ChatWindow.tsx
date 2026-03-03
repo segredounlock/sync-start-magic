@@ -348,7 +348,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full touch-manipulation" style={{ touchAction: "pan-y" }}>
+    <div className="flex flex-col h-full touch-manipulation overflow-hidden" style={{ touchAction: "pan-y" }}>
       {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/80 backdrop-blur-sm cursor-pointer"
@@ -456,7 +456,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             transition={{ duration: 0.25 }}
             className="border-b border-border bg-muted/20 overflow-hidden"
           >
-            <div className="px-4 py-2 max-h-48 overflow-y-auto space-y-1">
+            <div className="px-4 py-2 max-h-48 overflow-y-auto scrollbar-hide space-y-1">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 Membros ({members.length})
               </p>
@@ -515,7 +515,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       })()}
 
       {/* Messages area */}
-      <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2 space-y-0.5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
+      <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2 space-y-0.5 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
         {/* Loading older messages indicator */}
         {loadingOlder && (
           <div className="flex items-center justify-center py-3">
@@ -529,7 +529,12 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         )}
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin"
+            />
           </div>
         ) : (
           groupedMessages.map(group => (
