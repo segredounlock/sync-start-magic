@@ -66,6 +66,7 @@ export default function ClientePortal() {
 
   const loadReseller = async () => {
     try {
+      // First get profile by slug
       const { data: profile } = await supabase
         .from("profiles")
         .select("id, nome, store_name, store_logo_url, store_primary_color, store_secondary_color, active")
@@ -78,6 +79,13 @@ export default function ClientePortal() {
         return;
       }
 
+      if (!profile.active) {
+        setError("Esta loja está temporariamente inativa.");
+        setLoading(false);
+        return;
+      }
+
+      // Verify role in parallel-ready fashion (already have profile.id)
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -87,12 +95,6 @@ export default function ClientePortal() {
 
       if (!roleData) {
         setError("Loja não encontrada.");
-        setLoading(false);
-        return;
-      }
-
-      if (!profile.active) {
-        setError("Esta loja está temporariamente inativa.");
         setLoading(false);
         return;
       }

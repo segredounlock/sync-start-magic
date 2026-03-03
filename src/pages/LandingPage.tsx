@@ -18,7 +18,7 @@ const features = [
 
 // Floating particle component
 function FloatingParticles() {
-  const particles = Array.from({ length: 30 }, (_, i) => ({
+  const particles = Array.from({ length: 15 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
