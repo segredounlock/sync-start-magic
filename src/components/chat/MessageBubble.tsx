@@ -441,7 +441,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           {/* Sender name + verified badge */}
           <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
             <span
-              className={`text-[11px] font-bold uppercase tracking-wide ${isAdmin ? "shimmer-letters" : isOwn ? "text-primary" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
+              className={`text-[11px] font-bold uppercase tracking-wide ${(isAdmin || !!message.sender?.verification_badge) ? "shimmer-letters" : isOwn ? "text-primary" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
               onPointerDown={(e) => { if (isCurrentUserAdmin && !isOwn) e.stopPropagation(); }}
               onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
             >{senderName}</span>
