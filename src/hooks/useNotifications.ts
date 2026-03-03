@@ -139,12 +139,12 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
               user_nome: profile.nome || undefined,
               user_email: profile.email || undefined,
               status: newRow.status,
-              created_at: newRow.updated_at || new Date().toISOString(),
+              created_at: newRow.updated_at || newRow.created_at,
               is_read: false,
             });
             try { playCashRegisterSound(); } catch {}
             showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
-            toast.success(`💰 Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at || new Date().toISOString())}` });
+            toast.success(`💰 Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
           }
         })
         .subscribe();
@@ -173,11 +173,11 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             user_nome: profile.nome || undefined,
             user_email: profile.email || undefined,
             status: r.status,
-            created_at: r.created_at || new Date().toISOString(),
+            created_at: r.created_at,
             is_read: false,
           });
           showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
-          toast.info(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at || new Date().toISOString())}` });
+          toast.info(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "recargas",
@@ -249,12 +249,12 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             user_nome: row.nome || undefined,
             user_email: row.email || undefined,
             status: "new",
-            created_at: row.created_at || new Date().toISOString(),
+            created_at: row.created_at,
             is_read: false,
           });
           try { playWebSignupSound(); } catch {}
           showSystemNotification("🆕 Novo cadastro", label);
-          toast.success(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at || new Date().toISOString())}` });
+          toast.success(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
         })
         .on("postgres_changes", {
           event: "INSERT", schema: "public", table: "telegram_users",
@@ -270,12 +270,12 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             user_id: row.id,
             user_nome: label,
             status: "new",
-            created_at: row.created_at || new Date().toISOString(),
+            created_at: row.created_at,
             is_read: false,
           });
           try { playTelegramSignupSound(); } catch {}
           showSystemNotification("🤖 Novo Telegram", label);
-          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at || new Date().toISOString())}` });
+          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "telegram_users",
@@ -292,12 +292,12 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             user_id: row.id,
             user_nome: label,
             status: "new",
-            created_at: row.updated_at || new Date().toISOString(),
+            created_at: row.updated_at || row.created_at,
             is_read: false,
           });
           try { playTelegramSignupSound(); } catch {}
           showSystemNotification("🤖 Novo Telegram", label);
-          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || new Date().toISOString())}` });
+          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
         })
         .subscribe();
       channels.push(ch);

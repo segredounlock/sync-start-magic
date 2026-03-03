@@ -27,7 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR } from "@/lib/timezone";
+import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 
 interface Recarga {
   id: string;
@@ -667,7 +667,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   };
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
-  const recargasHoje = recargas.filter((r) => r.created_at.startsWith(new Date().toISOString().split("T")[0])).length;
+  const recargasHoje = recargas.filter((r) => toLocalDateKey(r.created_at) === getTodayLocalKey()).length;
   const userLabel = profileNome || user?.email?.split("@")[0] || "Revendedor";
   const userInitial = (userLabel[0] || "R").toUpperCase();
 
