@@ -80,6 +80,43 @@ export function PageSkeleton() {
   );
 }
 
+/** Skeleton for pricing cards grid */
+export function SkeletonPricingGrid({ count = 6, className }: SkeletonProps & { count?: number }) {
+  return (
+    <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4", className)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="glass-card rounded-xl p-4 space-y-3 border border-border/50">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1.5">
+              <Skeleton className="h-2.5 w-14" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+            <div className="space-y-1.5 flex flex-col items-end">
+              <Skeleton className="h-2.5 w-12" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2.5">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-end">
+            <div className="space-y-1.5">
+              <Skeleton className="h-2.5 w-10" />
+              <Skeleton className="h-9 w-24 rounded-lg" />
+            </div>
+            <div className="space-y-1.5">
+              <Skeleton className="h-2.5 w-8" />
+              <Skeleton className="h-9 w-full rounded-lg" />
+            </div>
+            <Skeleton className="h-9 w-9 rounded-lg" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Inline skeleton for values like saldo (replaces "...") */
 export function SkeletonValue({ className, width = "w-16" }: SkeletonProps & { width?: string }) {
   return <Skeleton className={cn("h-5 inline-block align-middle", width, className)} />;
