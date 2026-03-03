@@ -23,8 +23,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <App />
         <Toaster
-          position="top-center"
-          style={{ top: '55%' }}
+          position="top-right"
           toastOptions={{
             className: "!rounded-2xl !shadow-2xl !border !border-border/30 !px-5 !py-4 !text-sm !font-semibold !backdrop-blur-xl !min-w-[320px]",
             style: {
