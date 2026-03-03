@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { playSuccessSound } from "@/lib/sounds";
-import { getLocalDayBoundsUTC } from "@/lib/timezone";
+import { getLocalDayBoundsUTC, formatTimeBR } from "@/lib/timezone";
 import {
   Smartphone, Clock, CheckCircle2, XCircle, AlertTriangle,
   TrendingUp, Activity, Zap, RefreshCw,
@@ -139,7 +139,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
 
   const fmtTime = (d: string) => {
     try {
-      return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      return formatTimeBR(d, true);
     } catch { return ""; }
   };
 

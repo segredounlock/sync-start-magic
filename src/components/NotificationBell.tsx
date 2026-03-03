@@ -3,6 +3,7 @@ import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2 } fr
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications, AppNotification } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { formatDateBR, formatTimeBR, isTodayBR, toLocalDateKey } from "@/lib/timezone";
 import { useAuth } from "@/hooks/useAuth";
 
 interface NotificationBellProps {
@@ -38,7 +39,7 @@ const STATUS_LABEL: Record<string, { icon: string; cls: string }> = {
 
 function fmtTime(d: string) {
   try {
-    return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return formatTimeBR(d);
   } catch {
     return "";
   }
@@ -46,13 +47,13 @@ function fmtTime(d: string) {
 
 function fmtDate(d: string) {
   try {
-    const date = new Date(d);
-    const today = new Date();
-    if (date.toDateString() === today.toDateString()) return "Hoje";
-    const yesterday = new Date(today);
+    if (isTodayBR(d)) return "Hoje";
+    const inputKey = toLocalDateKey(d);
+    const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) return "Ontem";
-    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    const yKey = toLocalDateKey(yesterday.toISOString());
+    if (inputKey === yKey) return "Ontem";
+    return formatDateBR(d);
   } catch {
     return "";
   }
