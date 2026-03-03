@@ -61,7 +61,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
     fetchRecargas();
   }, [fetchRecargas]);
 
-  // Realtime subscription
+  // Realtime subscription + polling fallback
   useEffect(() => {
     const channelConfig: any = {
       event: "INSERT" as const,
@@ -79,7 +79,10 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
       .channel(`dashboard-recargas-${userId || "all"}`)
       .on("postgres_changes", channelConfig, (payload: any) => {
         const row = payload.new as any;
-        setRecargas(prev => [row, ...prev].slice(0, 100));
+        setRecargas(prev => {
+          if (prev.some(r => r.id === row.id)) return prev;
+          return [row, ...prev].slice(0, 100);
+        });
         blinkLive();
       })
       .on("postgres_changes", updateConfig, (payload: any) => {
@@ -93,8 +96,16 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [userId]);
+    // Polling fallback every 15s to catch missed realtime events
+    const pollInterval = setInterval(() => {
+      fetchRecargas();
+    }, 15000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
+  }, [userId, fetchRecargas]);
 
   const blinkLive = () => {
     setLiveIndicator(true);
