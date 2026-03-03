@@ -20,7 +20,7 @@ import {
   Save, Eye, EyeOff, Globe, Key, Bot, Zap, Menu, X,
   Wifi, WifiOff, Hash, AtSign, Trash2, AlertTriangle, CheckCircle2, ChevronDown, Link2, RotateCcw,
   Settings2, Store, Upload, Palette, Image, Copy, Loader2, QrCode, ExternalLink, Clock,
-  Megaphone, Send,
+  Megaphone, Send, Check,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -154,12 +154,12 @@ export default function AdminDashboard() {
   const [storeLogoUploading, setStoreLogoUploading] = useState(false);
 
   const gatewayOptions = [
-    { value: "", label: "Nenhuma (usar gateway global)" },
-    { value: "mercadopago", label: "Mercado Pago" },
-    { value: "pushinpay", label: "PushinPay" },
-    { value: "virtualpay", label: "VirtualPay" },
-    { value: "efipay", label: "Efi Pay" },
-    { value: "misticpay", label: "MisticPay" },
+    { value: "", label: "Nenhuma (usar gateway global)", icon: "🌐", desc: "Usa a configuração global do sistema" },
+    { value: "mercadopago", label: "Mercado Pago", icon: "💳", desc: "Pagamentos via Mercado Pago" },
+    { value: "pushinpay", label: "PushinPay", icon: "⚡", desc: "Pagamentos PIX instantâneo" },
+    { value: "virtualpay", label: "VirtualPay", icon: "💎", desc: "Gateway VirtualPay" },
+    { value: "efipay", label: "Efi Pay", icon: "🏦", desc: "Pagamentos via Efi (Gerencianet)" },
+    { value: "misticpay", label: "MisticPay", icon: "🔮", desc: "Gateway MisticPay" },
   ];
   const gatewayFieldDefs: Record<string, { key: string; label: string; secret?: boolean }[]> = {
     mercadopago: [
@@ -2444,12 +2444,27 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="space-y-5">
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">Gateway</label>
-                      <select value={gwModule} onChange={(e) => setGwModule(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl glass-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                        {gatewayOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                      {!gwModule && <p className="text-xs text-muted-foreground mt-1">Sem gateway individual, o sistema usará a gateway global.</p>}
+                      <label className="block text-sm font-medium text-foreground mb-3">Selecione a Gateway</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {gatewayOptions.map((o) => (
+                          <button key={o.value} onClick={() => setGwModule(o.value)}
+                            className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                              gwModule === o.value
+                                ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                                : 'border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50'
+                            }`}>
+                            <span className="text-2xl block mb-2">{o.icon}</span>
+                            <p className={`text-sm font-semibold ${gwModule === o.value ? 'text-primary' : 'text-foreground'}`}>{o.label}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{o.desc}</p>
+                            {gwModule === o.value && (
+                              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      {!gwModule && <p className="text-xs text-muted-foreground mt-2">Sem gateway individual, o sistema usará a gateway global.</p>}
                     </div>
                     {gwModule && gatewayFieldDefs[gwModule] && (
                       <div className="space-y-3 border-t border-border pt-4">
@@ -2653,12 +2668,27 @@ export default function AdminDashboard() {
                       ) : (
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">Gateway</label>
-                            <select value={gwModule} onChange={(e) => setGwModule(e.target.value)}
-                              className="w-full px-4 py-3 rounded-xl glass-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                              {gatewayOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                            </select>
-                            {!gwModule && <p className="text-xs text-muted-foreground mt-1">Sem gateway individual, o sistema usará a gateway global.</p>}
+                            <label className="block text-sm font-medium text-foreground mb-3">Selecione a Gateway</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              {gatewayOptions.map((o) => (
+                                <button key={o.value} onClick={() => setGwModule(o.value)}
+                                  className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                                    gwModule === o.value
+                                      ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                                      : 'border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50'
+                                  }`}>
+                                  <span className="text-2xl block mb-2">{o.icon}</span>
+                                  <p className={`text-sm font-semibold ${gwModule === o.value ? 'text-primary' : 'text-foreground'}`}>{o.label}</p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{o.desc}</p>
+                                  {gwModule === o.value && (
+                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                      <Check className="h-3 w-3 text-primary-foreground" />
+                                    </div>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                            {!gwModule && <p className="text-xs text-muted-foreground mt-2">Sem gateway individual, o sistema usará a gateway global.</p>}
                           </div>
                           {gwModule && gatewayFieldDefs[gwModule] && (
                             <div className="space-y-3 border-t border-border pt-4">

@@ -2313,28 +2313,34 @@ export default function Principal() {
                     <h4 className="font-semibold text-foreground text-lg">Gateway Principal</h4>
                     <div>
                       <label className="block text-sm font-bold text-foreground mb-2">Provedor Selecionado</label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         {[
-                          { value: "mercadopago", label: "Mercado Pago", icon: "💳" },
-                          { value: "pushinpay", label: "PushinPay", icon: "⚡" },
-                          { value: "woovi", label: "Woovi (OpenPix)", icon: "🟢" },
-                          { value: "efipay", label: "Efi Pay", icon: "🏦" },
-                          { value: "virtualpay", label: "VirtualPay", icon: "💎" },
-                          { value: "misticpay", label: "MisticPay", icon: "✨" },
-                          { value: "pixgo", label: "PixGo", icon: "🟣" },
+                          { value: "mercadopago", label: "Mercado Pago", icon: "💳", desc: "Pagamentos via Mercado Pago" },
+                          { value: "pushinpay", label: "PushinPay", icon: "⚡", desc: "Pagamentos PIX instantâneo" },
+                          { value: "woovi", label: "Woovi (OpenPix)", icon: "🟢", desc: "PIX via OpenPix" },
+                          { value: "efipay", label: "Efi Pay", icon: "🏦", desc: "Pagamentos via Efi" },
+                          { value: "virtualpay", label: "VirtualPay", icon: "💎", desc: "Gateway VirtualPay" },
+                          { value: "misticpay", label: "MisticPay", icon: "🔮", desc: "Gateway MisticPay" },
+                          { value: "pixgo", label: "PixGo", icon: "🟣", desc: "PIX via PixGo/Depix" },
                         ].map(gw => (
                           <button
                             key={gw.value}
                             type="button"
                             onClick={() => setGlobalConfig(prev => ({ ...prev, paymentModule: gw.value }))}
-                            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left ${
+                            className={`relative rounded-xl border-2 p-4 text-left transition-all ${
                               (globalConfig.paymentModule || "virtualpay") === gw.value
-                                ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/30"
-                                : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                                : 'border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50'
                             }`}
                           >
-                            <span className="text-base">{gw.icon}</span>
-                            <span className="truncate">{gw.label}</span>
+                            <span className="text-2xl block mb-2">{gw.icon}</span>
+                            <p className={`text-sm font-semibold ${(globalConfig.paymentModule || "virtualpay") === gw.value ? 'text-primary' : 'text-foreground'}`}>{gw.label}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{gw.desc}</p>
+                            {(globalConfig.paymentModule || "virtualpay") === gw.value && (
+                              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <CheckCircle2 className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                            )}
                           </button>
                         ))}
                       </div>
