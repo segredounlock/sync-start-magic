@@ -1,27 +1,39 @@
 
 
-## Plano: Manter indicador "gravando áudio" ativo durante toda a gravação
+## Correção: efeito shimmer faltando no privado e grupo
 
-### Problema
+### Problema identificado
 
-O `sendTyping(myNome, "recording")` é chamado **uma única vez** ao clicar no botão do microfone (linha 771 do ChatWindow). Como o typing indicator tem timeout de 4 segundos, o status "gravando áudio" desaparece rapidamente enquanto o usuário continua gravando. O outro participante vê o indicador por ~4s e depois some.
+No `useChat.ts` (linha 236), ao carregar o perfil do usuário logado para cache, apenas o campo `nome` é buscado:
 
-### Solução
+```typescript
+supabase.from("profiles").select("nome").eq("id", user.id)
+```
 
-Passar a função `sendTyping` para o `AudioRecorder` e criar um intervalo interno que reenvia o sinal `"recording"` a cada 2.5 segundos enquanto a gravação estiver ativa — mantendo o indicador visível durante toda a duração, como no WhatsApp.
+O `verification_badge` **não é incluído** nessa consulta inicial. Quando o usuário envia uma mensagem, o dado otimista usa `senderCache.get(user.id)?.verification_badge`, que pode estar `null` se o perfil do próprio usuário ainda não foi carregado via `enrichMessages` (ex: conversa nova sem mensagens anteriores).
 
-### Alterações
+Além disso, o resultado dessa query é salvo em `cachedNome.current` mas **não** no `senderCache`, então mesmo buscando `verification_badge` aqui, o senderCache não teria o dado.
 
-**`src/components/chat/AudioRecorder.tsx`:**
-- Adicionar prop `onTypingPing?: () => void`
-- Dentro do `useEffect` de gravação, criar `setInterval` que chama `onTypingPing()` a cada 2500ms
-- Limpar o intervalo no cleanup e ao parar a gravação
+### Correção
 
-**`src/components/chat/ChatWindow.tsx`:**
-- Passar `onTypingPing={() => sendTyping(myNome, "recording")}` para o `<AudioRecorder />`
-- Manter o `sendStopTyping()` existente no `onCancel` e `onSend`
+**`src/hooks/useChat.ts` — linha 236:**
+
+Expandir a query para incluir `avatar_url` e `verification_badge`, e popular o `senderCache` com esses dados:
+
+```typescript
+supabase.from("profiles").select("nome, avatar_url, verification_badge").eq("id", user.id).maybeSingle().then(({ data }) => {
+  if (data?.nome) cachedNome.current = data.nome;
+  if (data) {
+    senderCache.set(user.id, {
+      nome: data.nome,
+      avatar_url: data.avatar_url,
+      verification_badge: data.verification_badge,
+    });
+  }
+});
+```
 
 ### Impacto
-- Indicador "gravando áudio..." permanece visível para o outro usuário durante toda a gravação
-- ~10 linhas adicionadas no total
+- 1 arquivo alterado, ~5 linhas
+- Garante que mensagens próprias sempre tenham o `verification_badge` disponível para o efeito shimmer, tanto em chats privados quanto em grupos
 
