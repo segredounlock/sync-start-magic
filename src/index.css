@@ -345,6 +345,7 @@ select option {
 }
 
 .shimmer-letters {
+  display: inline-block;
   background: linear-gradient(
     110deg,
     hsl(var(--foreground)) 0%,
@@ -356,6 +357,7 @@ select option {
   background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
+  color: transparent;
   -webkit-text-fill-color: transparent;
   animation: shimmer-letters 4s ease-in-out infinite;
 }

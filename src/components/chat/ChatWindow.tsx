@@ -244,6 +244,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   useEffect(() => { scrollToBottom(); }, [messages.length, scrollToBottom]);
 
   const name = isGroup ? (groupName || "Grupo") : (otherUser?.nome || otherUser?.email?.split("@")[0] || "Usuário");
+  const shouldShimmerName = otherUser?.role === "admin" || !!otherUser?.verification_badge;
   const initial = isGroup ? "" : (name[0] || "U").toUpperCase();
 
   const scrollToMessage = useCallback((msgId: string) => {
@@ -372,7 +373,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground flex items-center gap-1">
-            <span className={otherUser?.role === "admin" ? "shimmer-letters" : ""}>{name}</span>
+            <span className={shouldShimmerName ? "shimmer-letters" : ""}>{name}</span>
             {otherUser?.verification_badge ? (
               <VerificationBadge badge={otherUser.verification_badge as BadgeType} size="sm" />
             ) : otherUser?.role === 'admin' ? (
