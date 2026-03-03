@@ -3236,47 +3236,88 @@ export default function Principal() {
               </div>
 
               {/* Summary cards */}
-              {reportData.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                  {[
-                    { label: "Revendedores", value: reportData.length, icon: Users, color: "text-primary" },
-                    { label: "Total Recarga (Valor da Recarga)", value: fmt(reportData.reduce((s, r) => s + r.totalValor, 0)), icon: Smartphone, color: "text-foreground" },
-                    { label: "Custo da Operadora (API)", value: fmt(reportData.reduce((s, r) => s + r.totalCusto, 0)), icon: Wallet, color: "text-warning" },
-                    { label: "Total Cobrado (Vendas)", value: fmt(reportData.reduce((s, r) => s + r.totalVendas, 0)), icon: TrendingUp, color: "text-success" },
-                    { label: "Lucro do Período", value: fmt(reportData.reduce((s, r) => s + r.lucro, 0)), icon: DollarSign, color: "text-success" },
-                  ].map((card, i) => (
-                    <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                      className="glass-card rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <card.icon className={`h-4 w-4 ${card.color}`} />
+              {reportData.length > 0 && (() => {
+                const totalVendas = reportData.reduce((s, r) => s + r.totalVendas, 0);
+                const totalLucro = reportData.reduce((s, r) => s + r.lucro, 0);
+                const totalRecarga = reportData.reduce((s, r) => s + r.totalValor, 0);
+                const totalCusto = reportData.reduce((s, r) => s + r.totalCusto, 0);
+                const maxVal = Math.max(totalVendas, totalRecarga, totalCusto, Math.abs(totalLucro), 1);
+                const kpis = [
+                  { label: "Revendedores", value: String(reportData.length), icon: Users, color: "text-primary", bgColor: "bg-primary/15", pct: 100 },
+                  { label: "Total Recarga", value: fmt(totalRecarga), icon: Smartphone, color: "text-foreground", bgColor: "bg-muted", pct: (totalRecarga / maxVal) * 100 },
+                  { label: "Custo Operadora", value: fmt(totalCusto), icon: Wallet, color: "text-warning", bgColor: "bg-warning/15", pct: (totalCusto / maxVal) * 100 },
+                  { label: "Total Vendas", value: fmt(totalVendas), icon: TrendingUp, color: "text-success", bgColor: "bg-success/15", pct: (totalVendas / maxVal) * 100 },
+                  { label: "Lucro do Período", value: fmt(totalLucro), icon: DollarSign, color: totalLucro >= 0 ? "text-success" : "text-destructive", bgColor: totalLucro >= 0 ? "bg-success/15" : "bg-destructive/15", pct: (Math.abs(totalLucro) / maxVal) * 100 },
+                ];
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {kpis.map((card, i) => (
+                      <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                        className="glass-card rounded-xl p-4 relative overflow-hidden">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`w-8 h-8 rounded-lg ${card.bgColor} flex items-center justify-center`}>
+                            <card.icon className={`h-4 w-4 ${card.color}`} />
+                          </div>
+                        </div>
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{card.label}</span>
-                      </div>
-                      <p className="text-lg font-bold text-foreground">{card.value}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                        <p className={`text-lg font-bold mt-0.5 ${card.label === "Lucro do Período" ? card.color : "text-foreground"}`}>{card.value}</p>
+                        <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(card.pct, 100)}%` }} transition={{ duration: 0.8, delay: i * 0.1 }}
+                            className={`h-full rounded-full ${card.label === "Lucro do Período" ? (totalLucro >= 0 ? "bg-success" : "bg-destructive") : card.label === "Custo Operadora" ? "bg-warning" : "bg-primary"}`} />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                );
+              })()}
 
-              {/* Bar chart */}
-              {reportData.length > 0 && (
-                <div className="glass-card rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Lucro por Revendedor</h3>
-                  <ResponsiveContainer width="100%" height={Math.max(200, reportData.slice(0, 15).length * 45)}>
-                    <BarChart data={reportData.slice(0, 15)} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                      <XAxis type="number" tickFormatter={(v: number) => `R$${v.toFixed(0)}`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis type="category" dataKey="nome" width={120} tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} tickFormatter={(v: string) => v || "Sem nome"} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                        formatter={(value: number, name: string) => [fmt(value), name === "lucro" ? "Lucro" : name === "totalVendas" ? "Vendas" : "Custo"]}
-                        labelFormatter={(label: string) => label || "Sem nome"}
-                      />
-                      <Bar dataKey="totalVendas" name="Vendas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} opacity={0.3} />
-                      <Bar dataKey="lucro" name="Lucro" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
+              {/* Ranking Leaderboard */}
+              {reportData.length > 0 && (() => {
+                const top15 = reportData.slice(0, 15);
+                const maxLucro = Math.max(...top15.map(r => Math.abs(r.lucro)), 1);
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <div className="glass-card rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Trophy className="h-5 w-5 text-warning" />
+                      <h3 className="text-sm font-semibold text-foreground">Ranking de Lucro por Revendedor</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {top15.map((r, i) => {
+                        const margem = r.totalVendas > 0 ? ((r.lucro / r.totalVendas) * 100) : 0;
+                        const pct = (Math.abs(r.lucro) / maxLucro) * 100;
+                        const isTop3 = i < 3;
+                        return (
+                          <motion.div key={r.user_id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                            className={`flex items-center gap-3 rounded-xl p-3 transition-all hover:bg-muted/40 ${isTop3 ? "border border-primary/20 bg-primary/[0.04]" : "border border-transparent"}`}>
+                            {/* Position */}
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${isTop3 ? "bg-primary/15 text-primary" : "bg-muted/60 text-muted-foreground"}`}>
+                              {isTop3 ? <span className="text-lg">{medals[i]}</span> : <span>#{i + 1}</span>}
+                            </div>
+                            {/* Name + bar */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <p className={`text-sm truncate ${isTop3 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{r.nome || "Sem nome"}</p>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="text-xs text-muted-foreground hidden sm:inline">Vendas <span className="font-mono font-semibold text-foreground">{fmt(r.totalVendas)}</span></span>
+                                  <span className={`text-sm font-bold font-mono ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(r.lucro)}</span>
+                                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${margem > 15 ? "bg-success/15 text-success" : margem > 0 ? "bg-primary/15 text-primary" : "bg-destructive/15 text-destructive"}`}>
+                                    {margem.toFixed(1)}%
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-muted/60 overflow-hidden">
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: i * 0.05 }}
+                                  className={`h-full rounded-full ${r.lucro > 0 ? "bg-primary" : "bg-destructive"}`} />
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Table */}
               {reportLoading ? (
