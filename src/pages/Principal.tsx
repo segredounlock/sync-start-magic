@@ -199,6 +199,7 @@ export default function Principal() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"todos" | "admin" | "revendedor" | "cliente" | "usuario" | "sem_role">("todos");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [view, setView] = useState<PrincipalView>("dashboard");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
@@ -673,6 +674,13 @@ export default function Principal() {
     setRevGatewayLoading(false);
   }, []);
 
+  // Load current user's avatar
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
+      .then(({ data }) => { if (data?.avatar_url) setMyAvatarUrl(data.avatar_url); });
+  }, [user?.id]);
+
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // Realtime: atualiza usuários automaticamente
@@ -1114,6 +1122,24 @@ export default function Principal() {
           <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setMenuOpen(false)} />
           <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background border-t border-border rounded-t-2xl max-h-[70vh] overflow-y-auto">
             <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mt-3 mb-2" />
+
+            {/* User Info */}
+            <div className="mx-4 mb-3 p-3 rounded-xl bg-muted/50">
+              <div className="flex items-center gap-3">
+                {myAvatarUrl ? (
+                  <img src={myAvatarUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                    {(user?.email?.[0] || "A").toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground capitalize">Admin Master</p>
+                </div>
+              </div>
+            </div>
+
             <div className="px-4 pb-3 grid grid-cols-3 gap-2">
               {menuItems.map((item) => {
                 const isActive = view === item.key;
