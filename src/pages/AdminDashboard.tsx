@@ -2254,7 +2254,7 @@ export default function AdminDashboard() {
                 (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
               ).map(t => {
                 const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
-                const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
+                const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status;
                 const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                 return (
                   <div key={t.id} className="glass-card rounded-xl p-4 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
@@ -2331,7 +2331,7 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                           (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                        }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status}</span>
+                        }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status}</span>
                       </td>
                     </tr>
                   ))}
@@ -2349,7 +2349,7 @@ export default function AdminDashboard() {
                     {(() => {
                       const t = selectedDeposit;
                       const meta = (t.metadata && typeof t.metadata === "object" && !Array.isArray(t.metadata)) ? t.metadata as Record<string, unknown> : {};
-                      const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
+                      const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status;
                       const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                       const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                       const gw = (meta.gateway as string) || t.module || "";
