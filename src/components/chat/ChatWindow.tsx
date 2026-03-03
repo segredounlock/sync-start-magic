@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatMessages, ChatMessage } from "@/hooks/useChat";
 import { useUserPresence, useGroupPresence } from "@/hooks/usePresence";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
@@ -40,6 +41,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
   const { onlineUsers, onlineCount } = useGroupPresence();
   const { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage } = useChatMessages(conversationId);
+  const { typingText, sendTyping, sendStopTyping } = useTypingIndicator(conversationId);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
@@ -51,6 +53,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const [members, setMembers] = useState<{ id: string; nome: string | null; avatar_url: string | null; role?: string }[]>([]);
   const [currentGroupIcon, setCurrentGroupIcon] = useState<string | null>(groupIcon || null);
   const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false);
+  const [myNome, setMyNome] = useState<string>("Usuário");
   const groupIconInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -58,6 +61,15 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagesAllowed, setImagesAllowed] = useState(true);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const stopTypingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch my name for typing indicator
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle().then(({ data }) => {
+      if (data?.nome) setMyNome(data.nome);
+    });
+  }, [user]);
 
   // Fetch group members (unique senders who have posted in this conversation)
   useEffect(() => {
@@ -225,6 +237,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     const currentReplyToId = replyTo?.id || undefined;
     setText("");
     setShowEmoji(false);
+    sendStopTyping();
 
     try {
       if (editingMessage) {
@@ -476,6 +489,28 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         <div ref={bottomRef} />
       </div>
 
+      {/* Typing indicator */}
+      <AnimatePresence>
+        {typingText && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="px-4 overflow-hidden"
+          >
+            <div className="flex items-center gap-2 py-1.5">
+              <div className="flex gap-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+              <span className="text-[11px] text-muted-foreground italic">{typingText}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Edit preview - Telegram style */}
       <AnimatePresence>
         {editingMessage && (
@@ -577,6 +612,14 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
                 const val = e.target.value;
                 if (val.length > 700) return;
                 setText(val);
+                // Send typing indicator
+                if (val.trim()) {
+                  sendTyping(myNome);
+                  if (stopTypingTimeout.current) clearTimeout(stopTypingTimeout.current);
+                  stopTypingTimeout.current = setTimeout(() => sendStopTyping(), 3000);
+                } else {
+                  sendStopTyping();
+                }
                 // Detect @ mention
                 const cursorPos = e.target.selectionStart || val.length;
                 const beforeCursor = val.slice(0, cursorPos);
