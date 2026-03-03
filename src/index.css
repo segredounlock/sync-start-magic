@@ -467,3 +467,9 @@ select option {
 .tg-chat-theme textarea::placeholder {
   color: var(--tg-hint, #708499) !important;
 }
+
+/* Preserve shimmer effect in Telegram theme */
+.tg-chat-theme .shimmer-letters {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
