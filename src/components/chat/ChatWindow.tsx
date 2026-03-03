@@ -7,7 +7,7 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil, ImagePlus } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { toast } from "sonner";
 
@@ -50,8 +50,11 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const [currentGroupIcon, setCurrentGroupIcon] = useState<string | null>(groupIcon || null);
   const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false);
   const groupIconInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagesAllowed, setImagesAllowed] = useState(true);
 
   // Fetch group members (unique senders who have posted in this conversation)
   useEffect(() => {
@@ -97,6 +100,39 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
 
   // Sync groupIcon prop
   useEffect(() => { setCurrentGroupIcon(groupIcon || null); }, [groupIcon]);
+
+  // Check room image permission for groups
+  useEffect(() => {
+    if (!isGroup) { setImagesAllowed(true); return; }
+    const fetchConfig = async () => {
+      const { data } = await supabase.from("system_config").select("value").eq("key", `room_images_${conversationId}`).maybeSingle();
+      setImagesAllowed(data ? data.value !== "false" : true);
+    };
+    fetchConfig();
+  }, [isGroup, conversationId]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) { toast.error("Use JPG, PNG, WebP ou GIF."); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Máximo 5MB."); return; }
+    setUploadingImage(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user!.id}/${conversationId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("chat-images").upload(path, file);
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("chat-images").getPublicUrl(path);
+      await sendMessage("", "image", undefined, urlData.publicUrl, replyTo?.id);
+      setReplyTo(null);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao enviar imagem: " + (err.message || ""));
+    }
+    setUploadingImage(false);
+  };
 
   const handleGroupIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -462,6 +498,16 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
           <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2.5 rounded-xl transition-colors ${showEmoji ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/50"}`}>
             <Smile className="h-5 w-5" />
           </button>
+          {imagesAllowed && (
+            <label className={`p-2.5 rounded-xl transition-colors cursor-pointer ${uploadingImage ? "opacity-50 pointer-events-none" : "text-muted-foreground hover:bg-muted/50"}`}>
+              {uploadingImage ? (
+                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ImagePlus className="h-5 w-5" />
+              )}
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageUpload} className="hidden" ref={imageInputRef} disabled={uploadingImage} />
+            </label>
+          )}
           <div className="flex-1 relative">
             <input
               ref={inputRef}
