@@ -628,8 +628,12 @@ export default function AdminDashboard() {
   // Load current user's avatar
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
-      .then(({ data }) => { if (data?.avatar_url) setMyAvatarUrl(data.avatar_url); });
+    (async () => {
+      try {
+        const { data, error } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
+        if (!error && data?.avatar_url) setMyAvatarUrl(data.avatar_url);
+      } catch (e) { console.error("Failed to load avatar:", e); }
+    })();
   }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
