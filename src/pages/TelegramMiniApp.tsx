@@ -1730,10 +1730,24 @@ export default function TelegramMiniApp() {
             </motion.div>
           )}
           {section === "chat" && (!userId || !hasAuthSession) && (
-            <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center h-64 text-center">
-              <MessageCircle className="w-12 h-12 mb-3" style={st.hint} />
-              <p className="text-sm font-semibold" style={st.text}>Faça login para acessar o chat</p>
-              <p className="text-xs mt-1" style={st.hint}>Acesse sua conta na aba "Conta" para conversar</p>
+            <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
+              <MessageCircle className="w-14 h-14 mb-4" style={st.hint} />
+              <p className="text-base font-bold mb-2" style={st.text}>Faça login para acessar o chat</p>
+              <div className="rounded-xl p-4 mt-2 text-left space-y-2" style={{ background: "rgba(255,255,255,0.05)", border: st.borderMain }}>
+                <p className="text-xs font-semibold" style={st.text}>📋 Como acessar:</p>
+                <p className="text-xs" style={st.hint}>1. Toque na aba <strong style={st.text}>"Conta"</strong> no menu inferior</p>
+                <p className="text-xs" style={st.hint}>2. Se já estiver logado, toque em <strong style={st.text}>"Sair"</strong> e entre novamente</p>
+                <p className="text-xs" style={st.hint}>3. Faça login com seu <strong style={st.text}>e-mail e senha</strong></p>
+                <p className="text-xs" style={st.hint}>4. Volte para a aba <strong style={st.text}>"Chat"</strong></p>
+              </div>
+              <p className="text-[10px] mt-3" style={st.hint}>⚠️ Certifique-se de lembrar seu e-mail e senha cadastrados no sistema</p>
+              <button
+                onClick={() => setSection("conta")}
+                className="mt-4 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                style={{ background: (st.btn as any)?.backgroundColor || "var(--tg-btn, #2481cc)", color: (st.btnText as any)?.color || "#fff" }}
+              >
+                Ir para Conta
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
