@@ -60,9 +60,8 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
         return (
           <motion.button
             key={conv.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.03 }}
+            layout
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             onClick={() => onSelect(conv.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left hover:bg-muted/50 ${isActive ? "bg-primary/10 border-r-2 border-primary" : ""}`}
           >
