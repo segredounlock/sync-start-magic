@@ -9,11 +9,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "auto",
       includeAssets: ["favicon.png", "og-image.png"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
         clientsClaim: true,
         skipWaiting: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
       manifest: {
         name: "Recargas Brasil",
