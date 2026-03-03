@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader2 } from "lucide-react";
+import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader2, Image } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR } from "@/lib/timezone";
 import html2canvas from "html2canvas";
@@ -52,32 +52,53 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
     const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
 
     try {
-      const blob = await captureReceipt();
-
-      if (blob && navigator.canShare) {
-        const file = new File([blob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
-        const shareData = { title: "Comprovante de Recarga", text, files: [file] };
-
-        if (navigator.canShare(shareData)) {
-          await navigator.share(shareData);
+      // Try text-only share FIRST to preserve user gesture on iOS
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Comprovante de Recarga", text });
           setSharing(false);
           return;
+        } catch (e: any) {
+          if (e?.name === "AbortError") { setSharing(false); return; }
+          // If text share failed, fall through to clipboard
         }
       }
 
-      // Fallback: share text only
-      if (navigator.share) {
-        await navigator.share({ title: "Comprovante de Recarga", text });
-        setSharing(false);
-        return;
-      }
-
-      // Final fallback: copy text
+      // Fallback: copy text to clipboard
       await navigator.clipboard.writeText(text);
       toast.success("Comprovante copiado!");
+    } catch {
+      toast.error("Não foi possível compartilhar");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleShareImage = async () => {
+    setSharing(true);
+    const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
+
+    try {
+      const blob = await captureReceipt();
+      if (!blob) { toast.error("Erro ao gerar imagem"); setSharing(false); return; }
+
+      const file = new File([blob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "Comprovante de Recarga", text, files: [file] });
+      } else {
+        // Download fallback
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `comprovante-${r.id.slice(0, 8)}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Imagem salva!");
+      }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
-        toast.error("Não foi possível compartilhar");
+        toast.error("Não foi possível compartilhar imagem");
       }
     } finally {
       setSharing(false);
@@ -197,13 +218,21 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
             </div>
 
             {/* Action buttons outside receipt card */}
-            <div className="flex gap-3 mt-4 px-2">
+            <div className="flex gap-2 mt-4 px-2">
+              <button
+                onClick={handleShareImage}
+                disabled={sharing}
+                className="py-3 px-4 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-60"
+                title="Compartilhar como imagem"
+              >
+                {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
+              </button>
               <button
                 onClick={handleShare}
                 disabled={sharing}
                 className="flex-1 py-3 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-60"
               >
-                {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Gerando..." : "Compartilhar"}
+                <Share2 className="h-4 w-4" /> Compartilhar
               </button>
               <button
                 onClick={onClose}
