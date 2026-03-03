@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Hash, Eye, Lock, MessageSquare, MoreVertical,
   Edit3, EyeOff, Trash2, X, Loader2, Shield, AlertTriangle,
-  Save, Users,
+  Save, Users, ImageOff, Image,
 } from "lucide-react";
 
 interface ChatRoom {
@@ -35,6 +35,7 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
   const [editRoom, setEditRoom] = useState<ChatRoom | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [imagesConfig, setImagesConfig] = useState<Record<string, boolean>>({});
 
   const initialLoadDone = useRef(false);
 
@@ -83,7 +84,23 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
     }
   }, []);
 
-  useEffect(() => { fetchRooms(); }, [fetchRooms]);
+  // Fetch image configs for rooms
+  const fetchImageConfigs = useCallback(async () => {
+    const { data } = await supabase
+      .from("system_config")
+      .select("key, value")
+      .like("key", "room_images_%");
+    if (data) {
+      const cfg: Record<string, boolean> = {};
+      data.forEach(d => {
+        const roomId = d.key.replace("room_images_", "");
+        cfg[roomId] = d.value !== "false";
+      });
+      setImagesConfig(cfg);
+    }
+  }, []);
+
+  useEffect(() => { fetchRooms(); fetchImageConfigs(); }, [fetchRooms, fetchImageConfigs]);
 
   const totalRooms = rooms.length;
   const activeRooms = rooms.filter(r => !r.is_blocked).length;
@@ -183,6 +200,23 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
     } catch {
       toast.error("Erro ao salvar");
     }
+  };
+
+  const toggleRoomImages = async (roomId: string) => {
+    const current = imagesConfig[roomId] !== false; // default true
+    const newVal = !current;
+    setImagesConfig(prev => ({ ...prev, [roomId]: newVal }));
+    try {
+      await supabase.from("system_config").upsert(
+        { key: `room_images_${roomId}`, value: String(newVal), updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+      toast.success(newVal ? "Envio de imagens ativado!" : "Envio de imagens desativado!");
+    } catch {
+      toast.error("Erro ao salvar");
+      setImagesConfig(prev => ({ ...prev, [roomId]: current }));
+    }
+    setOpenMenu(null);
   };
 
   return (
@@ -297,6 +331,11 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
                               className="w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 flex items-center gap-2 transition-colors">
                               {room.is_private ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                               {room.is_private ? "Tornar Pública" : "Tornar Privada"}
+                            </button>
+                            <button onClick={() => toggleRoomImages(room.id)}
+                              className="w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 flex items-center gap-2 transition-colors">
+                              {imagesConfig[room.id] !== false ? <ImageOff className="h-4 w-4" /> : <Image className="h-4 w-4" />}
+                              {imagesConfig[room.id] !== false ? "Bloquear Imagens" : "Permitir Imagens"}
                             </button>
                             <button onClick={() => clearMessages(room)}
                               className="w-full px-4 py-2.5 text-sm text-warning hover:bg-muted/50 flex items-center gap-2 transition-colors">
