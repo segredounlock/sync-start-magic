@@ -3875,6 +3875,7 @@ export default function Principal() {
         mainCount={4}
         userLabel={user?.email || "Admin"}
         userRole="Administrador Master"
+        userAvatarUrl={myAvatarUrl}
         onSignOut={signOut}
         panelLinks={[
           { label: "Bate-papo", path: "/chat", icon: Send, color: "text-[hsl(200,80%,55%)]" },
