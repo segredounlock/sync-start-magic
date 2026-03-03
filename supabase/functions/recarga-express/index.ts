@@ -112,11 +112,14 @@ Deno.serve(async (req) => {
         if (!external_id) throw new Error("external_id é obrigatório");
 
         // Find order in API
-        const ordersResp = await proxyGet(apiKey, `/me/orders?page=1&limit=50`);
+        // Search across multiple pages with higher limit
         let order = null;
-        if (ordersResp?.success && ordersResp.data) {
-          const orders = Array.isArray(ordersResp.data) ? ordersResp.data : ordersResp.data.data || [];
+        for (let page = 1; page <= 3; page++) {
+          const ordersResp = await proxyGet(apiKey, `/me/orders?page=${page}&limit=200`);
+          if (!ordersResp?.success) break;
+          const orders = Array.isArray(ordersResp.data) ? ordersResp.data : ordersResp.data?.data || [];
           order = orders.find((o: any) => o._id === external_id);
+          if (order || orders.length < 200) break;
         }
 
         if (!order) {
@@ -408,12 +411,39 @@ Deno.serve(async (req) => {
         if (extraData) rechargeBody.extraData = extraData;
         if (webhookUrl) rechargeBody.webhookUrl = webhookUrl;
 
-        const rechargeResult = await proxyPost(apiKey, "/recharges", rechargeBody);
+        let rechargeResult = await proxyPost(apiKey, "/recharges", rechargeBody);
 
         console.log("recharge API full response:", JSON.stringify(rechargeResult));
 
         if (!rechargeResult?.success) {
           throw new Error(rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API");
+        }
+
+        // Server-side polling: try to get final status before returning
+        const orderData0 = rechargeResult.data || {};
+        const extId = orderData0._id || orderData0.id || orderData0.orderId || rechargeResult._id || null;
+        if (extId && orderData0.status !== "feita" && orderData0.status !== "completed") {
+          const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+          for (let attempt = 0; attempt < 3; attempt++) {
+            await sleep(5000);
+            try {
+              const pollResp = await proxyGet(apiKey, `/me/orders?page=1&limit=50`);
+              if (pollResp?.success) {
+                const pollOrders = Array.isArray(pollResp.data) ? pollResp.data : pollResp.data?.data || [];
+                const found = pollOrders.find((o: any) => o._id === extId);
+                if (found && (found.status === "feita" || found.status === "completed")) {
+                  rechargeResult = { ...rechargeResult, data: { ...rechargeResult.data, ...found } };
+                  console.log(`recharge polling: found completed on attempt ${attempt + 1}`);
+                  break;
+                }
+                if (found && (found.status === "falha" || found.status === "cancelada")) {
+                  rechargeResult = { ...rechargeResult, data: { ...rechargeResult.data, ...found } };
+                  console.log(`recharge polling: found failed on attempt ${attempt + 1}`);
+                  break;
+                }
+              }
+            } catch { /* continue polling */ }
+          }
         }
 
         // Deduct balance using the role-specific cost
