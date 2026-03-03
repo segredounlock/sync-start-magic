@@ -33,7 +33,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const isUserAdmin = role === "admin";
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
   const { onlineUsers, onlineCount } = useGroupPresence();
-  const { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage } = useChatMessages(conversationId);
+  const { messages, loading, loadingOlder, hasMore, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage, loadOlderMessages } = useChatMessages(conversationId);
   const { typingText, sendTyping, sendStopTyping } = useTypingIndicator(conversationId);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
@@ -47,6 +47,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const groupIconInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagesAllowed, setImagesAllowed] = useState(true);
@@ -230,11 +231,39 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     setUploadingGroupIcon(false);
   };
 
+  const prevMsgCountRef = useRef(0);
   const scrollToBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }, []);
 
-  useEffect(() => { scrollToBottom(); }, [messages.length, scrollToBottom]);
+  // Only scroll to bottom on new messages (not when loading older ones)
+  useEffect(() => {
+    const prevCount = prevMsgCountRef.current;
+    const newCount = messages.length;
+    prevMsgCountRef.current = newCount;
+    // Scroll to bottom on initial load or when new messages are appended (not prepended)
+    if (prevCount === 0 || (newCount > prevCount && messages[newCount - 1]?.created_at > (messages[prevCount - 1]?.created_at || ''))) {
+      scrollToBottom();
+    }
+  }, [messages.length, scrollToBottom, messages]);
+
+  // Infinite scroll: detect scroll near top
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el || loadingOlder || !hasMore) return;
+    if (el.scrollTop < 80) {
+      const prevScrollHeight = el.scrollHeight;
+      loadOlderMessages().then(() => {
+        // Preserve scroll position after prepending older messages
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            const newScrollHeight = scrollContainerRef.current.scrollHeight;
+            scrollContainerRef.current.scrollTop = newScrollHeight - prevScrollHeight;
+          }
+        });
+      });
+    }
+  }, [loadingOlder, hasMore, loadOlderMessages]);
 
   const name = isGroup ? (groupName || "Grupo") : (otherUser?.nome || otherUser?.email?.split("@")[0] || "Usuário");
   const shouldShimmerName = otherUser?.role === "admin" || !!otherUser?.verification_badge;
@@ -476,7 +505,18 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       })()}
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2 space-y-0.5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
+      <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2 space-y-0.5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
+        {/* Loading older messages indicator */}
+        {loadingOlder && (
+          <div className="flex items-center justify-center py-3">
+            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        {!loading && !hasMore && messages.length > 0 && (
+          <div className="flex items-center justify-center py-3">
+            <span className="text-[10px] text-muted-foreground/50">Início da conversa</span>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />

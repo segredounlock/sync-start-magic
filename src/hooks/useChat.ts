@@ -201,10 +201,14 @@ function isCacheValid() {
   return Date.now() - cacheTimestamp < CACHE_TTL;
 }
 
+const PAGE_SIZE = 50;
+
 export function useChatMessages(conversationId: string | null) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const initialLoadDone = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeConversationRef = useRef<string | null>(null);
@@ -216,6 +220,7 @@ export function useChatMessages(conversationId: string | null) {
     initialLoadDone.current = false;
     setMessages([]);
     setLoading(true);
+    setHasMore(true);
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
@@ -233,28 +238,14 @@ export function useChatMessages(conversationId: string | null) {
     });
   }, [user]);
 
-  const fetchMessages = useCallback(async () => {
-    if (!conversationId) { setMessages([]); setLoading(false); return; }
-    if (activeConversationRef.current !== conversationId) return;
+  // Enrich raw messages with sender info and reactions
+  const enrichMessages = useCallback(async (rawMsgs: any[]): Promise<ChatMessage[]> => {
+    if (rawMsgs.length === 0) return [];
 
-    const { data, error } = await supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true })
-      .limit(200);
-
-    if (activeConversationRef.current !== conversationId) return;
-    if (error) { setLoading(false); return; }
-
-    const rawMsgs = data || [];
     const msgIds = rawMsgs.map((m: any) => m.id);
     const senderIds = [...new Set(rawMsgs.map((m: any) => m.sender_id))];
-
-    // Check which senders we need to fetch (not in cache or cache expired)
     const needsFetch = !isCacheValid() || senderIds.some(id => !senderCache.has(id));
 
-    // Parallel: reactions + sender profiles + roles (only if needed)
     const [reactions, senders, roles] = await Promise.all([
       msgIds.length > 0
         ? supabase.from("chat_reactions").select("*").in("message_id", msgIds).then(r => r.data || [])
@@ -267,7 +258,6 @@ export function useChatMessages(conversationId: string | null) {
         : Promise.resolve(null),
     ]);
 
-    // Update cache if we fetched new data
     if (senders) {
       (senders as any[]).forEach((s: any) => {
         senderCache.set(s.id, { nome: s.nome, avatar_url: s.avatar_url, verification_badge: s.verification_badge });
@@ -277,8 +267,6 @@ export function useChatMessages(conversationId: string | null) {
     if (roles) {
       (roles as any[]).forEach((r: any) => adminCache.add(r.user_id));
     }
-
-    if (activeConversationRef.current !== conversationId) return;
 
     const msgs = rawMsgs.map((m: any) => {
       const cached = senderCache.get(m.sender_id);
@@ -300,19 +288,42 @@ export function useChatMessages(conversationId: string | null) {
       }
     }
 
+    return msgs;
+  }, []);
+
+  const fetchMessages = useCallback(async () => {
+    if (!conversationId) { setMessages([]); setLoading(false); return; }
+    if (activeConversationRef.current !== conversationId) return;
+
+    // Fetch last PAGE_SIZE messages (descending to get newest, then reverse)
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE);
+
+    if (activeConversationRef.current !== conversationId) return;
+    if (error) { setLoading(false); return; }
+
+    const rawMsgs = (data || []).reverse(); // chronological order
+    setHasMore(rawMsgs.length >= PAGE_SIZE);
+
+    const msgs = await enrichMessages(rawMsgs);
+    if (activeConversationRef.current !== conversationId) return;
+
     setMessages(msgs);
     if (!initialLoadDone.current) {
       setLoading(false);
       initialLoadDone.current = true;
     }
 
-    // Mark unread messages as read + insert read receipts (non-blocking)
+    // Mark unread messages as read (non-blocking)
     if (user) {
       const unreadIds = rawMsgs
         .filter((m: any) => m.sender_id !== user.id && !m.is_read)
         .map((m: any) => m.id);
       if (unreadIds.length > 0) {
-        // Fire and forget - don't await
         supabase
           .from("chat_messages")
           .update({ is_read: true, read_at: new Date().toISOString() })
@@ -330,7 +341,46 @@ export function useChatMessages(conversationId: string | null) {
           });
       }
     }
-  }, [conversationId, user]);
+  }, [conversationId, user, enrichMessages]);
+
+  // Load older messages (called on scroll to top)
+  const loadOlderMessages = useCallback(async () => {
+    if (!conversationId || !hasMore || loadingOlder) return;
+    const oldestMsg = messages[0];
+    if (!oldestMsg) return;
+
+    setLoadingOlder(true);
+    try {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .lt("created_at", oldestMsg.created_at)
+        .order("created_at", { ascending: false })
+        .limit(PAGE_SIZE);
+
+      if (error) return;
+
+      const rawMsgs = (data || []).reverse();
+      if (rawMsgs.length < PAGE_SIZE) setHasMore(false);
+      if (rawMsgs.length === 0) return;
+
+      const enriched = await enrichMessages(rawMsgs);
+      if (activeConversationRef.current !== conversationId) return;
+
+      // Resolve reply_to for old messages that reference each other or existing messages
+      const allMsgs = [...enriched, ...messages];
+      for (const msg of enriched) {
+        if (msg.reply_to_id && !msg.reply_to) {
+          msg.reply_to = allMsgs.find(m => m.id === msg.reply_to_id) || null;
+        }
+      }
+
+      setMessages(prev => [...enriched, ...prev]);
+    } finally {
+      setLoadingOlder(false);
+    }
+  }, [conversationId, hasMore, loadingOlder, messages, enrichMessages]);
 
   const debouncedFetch = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -587,5 +637,5 @@ export function useChatMessages(conversationId: string | null) {
     }).eq("id", messageId);
   }, [user, conversationId, messages]);
 
-  return { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage, fetchMessages };
+  return { messages, loading, loadingOlder, hasMore, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage, fetchMessages, loadOlderMessages };
 }
