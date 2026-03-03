@@ -14,6 +14,63 @@ import JSZip from "jszip";
 // This constant is only used for display fallback
 const TABLES_LABEL = "dinâmico";
 
+const SOURCE_PATHS = [
+  // Core
+  "src/App.tsx","src/main.tsx","src/index.css","src/vite-env.d.ts",
+  // Pages
+  "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ChatApp.tsx",
+  "src/pages/ClientePortal.tsx","src/pages/LandingPage.tsx","src/pages/NotFound.tsx",
+  "src/pages/Principal.tsx","src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/MaintenancePage.tsx",
+  "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx",
+  // Components
+  "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
+  "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
+  "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
+  "src/components/BannersManager.tsx","src/components/FloatingPoll.tsx",
+  "src/components/ImageCropper.tsx","src/components/MobileBottomNav.tsx",
+  "src/components/NotificationBell.tsx","src/components/PinProtection.tsx",
+  "src/components/PollManager.tsx","src/components/PopupBanner.tsx",
+  "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
+  "src/components/RealtimeDashboard.tsx","src/components/RecargaReceipt.tsx",
+  "src/components/RecargasTicker.tsx","src/components/Skeleton.tsx",
+  "src/components/SplashScreen.tsx","src/components/ThemeToggle.tsx",
+  "src/components/VerificationBadge.tsx","src/components/SeasonalEffects.tsx",
+  // Chat components
+  "src/components/chat/ChatPage.tsx","src/components/chat/ChatWindow.tsx",
+  "src/components/chat/ConversationList.tsx","src/components/chat/MessageBubble.tsx",
+  "src/components/chat/EmojiPicker.tsx","src/components/chat/AudioRecorder.tsx",
+  "src/components/chat/NewChatModal.tsx","src/components/chat/MessageInfoModal.tsx",
+  "src/components/chat/UserRecargasModal.tsx","src/components/chat/MentionDropdown.tsx",
+  "src/components/ChatRoomManager.tsx",
+  // Hooks
+  "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
+  "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/usePresence.ts",
+  "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
+  // Libs
+  "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
+  // Integrations
+  "src/integrations/supabase/client.ts","src/integrations/supabase/types.ts",
+  // Config
+  "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts",
+  "postcss.config.js","index.html","package.json","README.md",
+  // Edge Functions
+  "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
+  "supabase/functions/admin-toggle-role/index.ts",
+  "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
+  "supabase/functions/bootstrap-admin/index.ts",
+  "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
+  "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
+  "supabase/functions/expire-pending-deposits/index.ts",
+  "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
+  "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
+  "supabase/functions/sync-pending-recargas/index.ts","supabase/functions/send-push/index.ts",
+  "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
+  "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
+  "supabase/functions/vapid-setup/index.ts",
+  // Supabase config
+  "supabase/config.toml",
+];
+
 type TabKey = "dados" | "github" | "atualizacao";
 
 export default function BackupSection() {
@@ -63,6 +120,12 @@ export default function BackupSection() {
   const [savingPat, setSavingPat] = useState(false);
   const [patLoaded, setPatLoaded] = useState(false);
 
+  // Dynamic source paths manifest
+  const [dynamicPaths, setDynamicPaths] = useState<string[] | null>(null);
+
+  // Effective paths: dynamic from DB if available, otherwise hardcoded fallback
+  const effectivePaths = dynamicPaths || SOURCE_PATHS;
+
   useEffect(() => {
     const loadPat = async () => {
       const { data } = await supabase
@@ -73,7 +136,24 @@ export default function BackupSection() {
       if (data?.value) setGithubPat(data.value);
       setPatLoaded(true);
     };
+    const loadManifest = async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "source_paths_manifest")
+        .maybeSingle();
+      if (data?.value) {
+        try {
+          const paths = JSON.parse(data.value);
+          if (Array.isArray(paths) && paths.length > 0) {
+            setDynamicPaths(paths);
+            console.log(`[Backup] Manifesto dinâmico carregado: ${paths.length} arquivos`);
+          }
+        } catch { /* fallback to hardcoded */ }
+      }
+    };
     loadPat();
+    loadManifest();
   }, []);
 
   // Load current system version + update history
@@ -137,7 +217,7 @@ export default function BackupSection() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessão expirada");
-      const allPaths = SOURCE_PATHS;
+      const allPaths = effectivePaths;
       const files: { path: string; content: string }[] = [];
       for (let i = 0; i < allPaths.length; i++) {
         setSyncStage(`Coletando ${i + 1}/${allPaths.length}...`);
@@ -186,62 +266,7 @@ export default function BackupSection() {
     setSyncing(false);
   };
 
-  const SOURCE_PATHS = [
-    // Core
-    "src/App.tsx","src/main.tsx","src/index.css","src/vite-env.d.ts",
-    // Pages
-    "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ChatApp.tsx",
-    "src/pages/ClientePortal.tsx","src/pages/LandingPage.tsx","src/pages/NotFound.tsx",
-    "src/pages/Principal.tsx","src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/MaintenancePage.tsx",
-    "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx",
-    // Components
-    "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
-    "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
-    "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
-    "src/components/BannersManager.tsx","src/components/FloatingPoll.tsx",
-    "src/components/ImageCropper.tsx","src/components/MobileBottomNav.tsx",
-    "src/components/NotificationBell.tsx","src/components/PinProtection.tsx",
-    "src/components/PollManager.tsx","src/components/PopupBanner.tsx",
-    "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
-    "src/components/RealtimeDashboard.tsx","src/components/RecargaReceipt.tsx",
-    "src/components/RecargasTicker.tsx","src/components/Skeleton.tsx",
-    "src/components/SplashScreen.tsx","src/components/ThemeToggle.tsx",
-    "src/components/VerificationBadge.tsx","src/components/SeasonalEffects.tsx",
-    // Chat components
-    "src/components/chat/ChatPage.tsx","src/components/chat/ChatWindow.tsx",
-    "src/components/chat/ConversationList.tsx","src/components/chat/MessageBubble.tsx",
-    "src/components/chat/EmojiPicker.tsx","src/components/chat/AudioRecorder.tsx",
-    "src/components/chat/NewChatModal.tsx","src/components/chat/MessageInfoModal.tsx",
-    "src/components/chat/UserRecargasModal.tsx","src/components/chat/MentionDropdown.tsx",
-    "src/components/ChatRoomManager.tsx",
-    // Hooks
-    "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
-    "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/usePresence.ts",
-    "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
-    // Libs
-    "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
-    // Integrations
-    "src/integrations/supabase/client.ts","src/integrations/supabase/types.ts",
-    // Config
-    "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts",
-    "postcss.config.js","index.html","package.json","README.md",
-    // Edge Functions
-    "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
-    "supabase/functions/admin-toggle-role/index.ts",
-    "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
-    "supabase/functions/bootstrap-admin/index.ts",
-    "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
-    "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
-    "supabase/functions/expire-pending-deposits/index.ts",
-    "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
-    "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
-    "supabase/functions/sync-pending-recargas/index.ts","supabase/functions/send-push/index.ts",
-    "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
-    "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
-    "supabase/functions/vapid-setup/index.ts",
-    // Supabase config
-    "supabase/config.toml",
-  ];
+
 
   const handleExport = async () => {
     if (!includeDb && !includeSource) { toast.error("Selecione pelo menos uma opção"); return; }
@@ -254,7 +279,7 @@ export default function BackupSection() {
       let totalSteps = 0;
       let currentStep = 0;
       if (includeDb) totalSteps += 1; // DB export = 1 step (edge function handles it)
-      if (includeSource) totalSteps += SOURCE_PATHS.length;
+      if (includeSource) totalSteps += effectivePaths.length;
 
       // 1. Database export via edge function
       if (includeDb) {
@@ -282,8 +307,8 @@ export default function BackupSection() {
       if (includeSource) {
         const sourceFolder = zip.folder("source");
         let fetched = 0;
-        for (const filePath of SOURCE_PATHS) {
-          setExportStage(`Coletando ${fetched + 1}/${SOURCE_PATHS.length}: ${filePath.split("/").pop()}`);
+        for (const filePath of effectivePaths) {
+          setExportStage(`Coletando ${fetched + 1}/${effectivePaths.length}: ${filePath.split("/").pop()}`);
           try {
             const r = await fetch(new URL(`/${filePath}`, window.location.origin).href);
             if (r.ok) {
@@ -305,7 +330,7 @@ export default function BackupSection() {
         created_at: new Date().toISOString(),
         include_database: includeDb,
         include_source: includeSource,
-        source_files: includeSource ? SOURCE_PATHS.length : 0,
+        source_files: includeSource ? effectivePaths.length : 0,
         tables: "dynamic",
       }, null, 2));
 
@@ -356,7 +381,7 @@ export default function BackupSection() {
       if (!session) throw new Error("Sessão expirada");
 
       const zip = new JSZip();
-      const totalSteps = 1 + SOURCE_PATHS.length; // DB + source files
+      const totalSteps = 1 + effectivePaths.length; // DB + source files
       let currentStep = 0;
 
       // 1. Database export
@@ -381,8 +406,8 @@ export default function BackupSection() {
       // 2. Source code
       const sourceFolder = zip.folder("source");
       let fetched = 0;
-      for (const filePath of SOURCE_PATHS) {
-        setUpdateExportStage(`Coletando ${fetched + 1}/${SOURCE_PATHS.length}: ${filePath.split("/").pop()}`);
+      for (const filePath of effectivePaths) {
+        setUpdateExportStage(`Coletando ${fetched + 1}/${effectivePaths.length}: ${filePath.split("/").pop()}`);
         try {
           const r = await fetch(new URL(`/${filePath}`, window.location.origin).href);
           if (r.ok) {
@@ -395,14 +420,14 @@ export default function BackupSection() {
         setUpdateExportProgress(Math.round((currentStep / totalSteps) * 100));
       }
 
-      // 3. Generate update manifest with SOURCE_PATHS included for dynamic discovery
+      // 3. Generate update manifest with effectivePaths included for dynamic discovery
       const version = currentVersion || "1.0.0";
       zip.file("update-manifest.json", JSON.stringify({
         version,
         created_at: new Date().toISOString(),
         tables: "dynamic",
-        source_files: SOURCE_PATHS.length,
-        source_paths: SOURCE_PATHS,
+        source_files: effectivePaths.length,
+        source_paths: effectivePaths,
         type: "full-update",
       }, null, 2));
 
