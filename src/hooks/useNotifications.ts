@@ -275,7 +275,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
           });
           try { playTelegramSignupSound(); } catch {}
           showSystemNotification("🤖 Novo Telegram", label);
-          toast.info(`🤖 Novo Telegram: ${label}`);
+          toast.info(`🤖 Novo cadastro Telegram: ${label}`);
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "telegram_users",
@@ -297,7 +297,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
           });
           try { playTelegramSignupSound(); } catch {}
           showSystemNotification("🤖 Novo Telegram", label);
-          toast.info(`🤖 Novo Telegram: ${label}`);
+          toast.info(`🤖 Novo cadastro Telegram: ${label}`);
         })
         .subscribe();
       channels.push(ch);
