@@ -1,0 +1,14 @@
+{
+  "name": "Recargas Brasil",
+  "short_name": "Recargas",
+  "description": "Sistema de recargas de celular para revendedores",
+  "theme_color": "#10b981",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
