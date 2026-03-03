@@ -282,7 +282,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
           <h3 className="text-sm font-bold text-foreground">Feed em Tempo Real</h3>
           <span className="text-[10px] text-muted-foreground">{recargas.length} recargas hoje</span>
         </div>
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="overflow-hidden">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">
               <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 opacity-50" />
@@ -296,15 +296,15 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
             </div>
           ) : (
             <AnimatePresence initial={false}>
-              {recargas.map((r, i) => {
+              {recargas.slice(0, 5).map((r, i) => {
                 const procTime = getProcessingTime(r);
                 return (
                   <motion.div
                     key={r.id}
-                    initial={{ opacity: 0, x: -20, height: 0 }}
-                    animate={{ opacity: 1, x: 0, height: "auto" }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -40 }}
+                    transition={{ duration: 0.4, delay: i * 0.06, ease: "easeOut" }}
                     className="px-4 py-3 border-b border-border/50 hover:bg-muted/20 transition-colors"
                   >
                     <div className="flex items-center gap-3">
