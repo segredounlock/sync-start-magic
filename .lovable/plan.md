@@ -1,29 +1,55 @@
 
 
-## Plano: Adicionar saldo atual e botão de adicionar saldo no modal de recargas do usuário
+## Diagnóstico: Recargas travadas em "pending"
 
-### O que será feito
+### Problema identificado
 
-No modal `UserRecargasModal` (que abre ao clicar no perfil do usuário no chat), adicionar:
+A API externa (express.poeki.dev) processa recargas de forma assíncrona. Quando o pedido é criado via `POST /recharges`, a API retorna imediatamente com status inicial (geralmente diferente de "feita"/"concluida"). O sistema salva como `pending` e **depende de polling posterior** para atualizar.
 
-1. **Exibição do saldo atual** do usuário (tipo "revenda") no header, ao lado do nome
-2. **Botão rápido "Adicionar Saldo"** que abre um mini-formulário inline para inserir valor e confirmar a adição
+**Causas raiz das recargas travadas:**
 
-### Alterações
+1. **Sem webhook configurado**: A edge function não envia `webhookUrl` na maioria dos casos (o param é opcional e raramente passado pelo frontend). A API externa não tem como notificar proativamente quando a recarga é concluída.
 
-**Arquivo: `src/components/chat/UserRecargasModal.tsx`**
+2. **Polling limitado e frágil**: O polling client-side (a cada 30s) só funciona enquanto o usuário está com a tela aberta. Se o usuário fecha o app, o polling para e a recarga fica "pending" para sempre.
 
-- Buscar o saldo atual do usuário na tabela `saldos` (filtro `user_id` + `tipo = 'revenda'`) junto com as recargas no `useEffect`
-- Exibir o saldo no header como badge verde (ex: `R$ 150,00`)
-- Adicionar uma barra de ações rápidas entre o header e a lista de recargas com:
-  - **Saldo atual** visível em destaque
-  - **Botão "Adicionar Saldo"** (`Plus` icon) que expande um input inline com campo de valor e botão confirmar
-- Ao confirmar, atualizar o saldo na tabela `saldos` (ler atual → somar → update) e atualizar o estado local
-- Mostrar toast de sucesso/erro via `sonner`
+3. **order-status busca apenas 50 pedidos**: A consulta `GET /me/orders?page=1&limit=50` pode não encontrar pedidos mais antigos se houver volume alto, fazendo o `find` retornar `null` e a recarga nunca ser atualizada.
+
+4. **Sem atualização automática server-side**: Não existe nenhum cron/job que verifique periodicamente as recargas pending no banco e consulte seus status na API externa.
+
+### Dados atuais
+- **19 recargas pending** vs **63 completed** (23% das recargas ficam travadas)
+- Recargas pending vão desde 01/03 até 03/03
+
+### Plano de correção
+
+#### 1. Criar cron job para resolver recargas pending (server-side)
+Criar uma edge function `sync-pending-recargas` que:
+- Busca todas as recargas com `status = 'pending'` e `external_id` não nulo
+- Para cada uma, consulta a API externa via `/me/orders` (paginando se necessário)
+- Atualiza o status local para `completed` ou `falha` conforme resposta da API
+- Se uma recarga pending tem mais de 24h e não é encontrada na API, marca como `falha`
+
+#### 2. Registrar a function como cron (a cada 5 minutos)
+Usar `pg_cron` ou invocar via Supabase scheduled functions para executar automaticamente.
+
+#### 3. Melhorar o polling no momento da criação
+Na action `recharge`, após criar o pedido, usar polling server-side curto (3 tentativas com 5s de intervalo) antes de retornar ao cliente, para tentar capturar recargas que completam rapidamente.
+
+#### 4. Aumentar o limit do order-status
+Mudar o `limit=50` para `limit=200` na busca de orders, e implementar paginação se necessário.
 
 ### Detalhes técnicos
 
-- Consulta: `supabase.from("saldos").select("valor").eq("user_id", userId).eq("tipo", "revenda").maybeSingle()`
-- Update segue o mesmo padrão usado em `Principal.tsx` (linhas 3580-3584): ler valor atual, somar, e fazer update
-- O botão de adicionar saldo só aparece para admins (verificar via `useAuth` ou passar prop `isAdmin`)
+**Nova edge function `sync-pending-recargas/index.ts`:**
+- Autenticação via service_role (sem JWT do usuário)
+- Busca recargas pending do banco
+- Agrupa por lotes para não sobrecarregar a API
+- Atualiza status e dispara notificação Telegram para as concluídas
+
+**Modificações em `recarga-express/index.ts`:**
+- No case `recharge`: após salvar como pending, fazer 2-3 tentativas de polling com `await sleep(5000)` antes de retornar
+- No case `order-status`: aumentar limit para 200 e implementar busca paginada
+
+**Config em `supabase/config.toml`:**
+- Adicionar `[functions.sync-pending-recargas]` com `verify_jwt = false`
 
