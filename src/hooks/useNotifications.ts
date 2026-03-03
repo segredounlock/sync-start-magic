@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { playSuccessSound, playWebSignupSound, playTelegramSignupSound } from "@/lib/sounds";
+import { playSuccessSound, playWebSignupSound, playTelegramSignupSound, playCashRegisterSound } from "@/lib/sounds";
 
 // ── System notification (plays device sound without user interaction) ──
 let _notifPermission: NotificationPermission = typeof Notification !== "undefined" ? Notification.permission : "denied";
@@ -142,7 +142,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
               created_at: newRow.updated_at || new Date().toISOString(),
               is_read: false,
             });
-            try { playSuccessSound(); } catch {}
+            try { playCashRegisterSound(); } catch {}
             showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
             toast.success(`💰 Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` });
           }
