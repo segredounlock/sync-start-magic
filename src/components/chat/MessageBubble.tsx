@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, Pencil } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { MessageInfoModal } from "./MessageInfoModal";
+import { UserRecargasModal } from "./UserRecargasModal";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -30,6 +31,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const [dropdownPos, setDropdownPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const dropdownBtnRef = useRef<HTMLButtonElement>(null);
   const [showMessageInfo, setShowMessageInfo] = useState(false);
+  const [showUserRecargas, setShowUserRecargas] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(message.content || "");
@@ -194,7 +196,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
       >
         {/* Avatar for messages from others */}
         {!isOwn && (
-          <div className="flex-shrink-0 mr-2 mt-auto">
+          <div
+            className={`flex-shrink-0 mr-2 mt-auto ${isCurrentUserAdmin ? "cursor-pointer" : ""}`}
+            onClick={() => { if (isCurrentUserAdmin && message.sender_id) setShowUserRecargas(true); }}
+          >
             {message.sender?.avatar_url ? (
               <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border-2 border-border" />
             ) : (
@@ -208,7 +213,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         <div className={`max-w-[70%] min-w-0 overflow-hidden ${isOwn ? "order-1" : ""}`}>
           {/* Sender name + verified badge */}
           <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
-            <span className={`text-[11px] font-bold uppercase tracking-wide ${isOwn ? "text-primary" : "text-primary"}`}>{senderName}</span>
+            <span
+              className={`text-[11px] font-bold uppercase tracking-wide ${isOwn ? "text-primary" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
+              onClick={() => { if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
+            >{senderName}</span>
             {message.sender?.verification_badge ? (
               <VerificationBadge badge={message.sender.verification_badge as BadgeType} size="sm" />
             ) : isAdmin ? (
@@ -610,6 +618,16 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         open={showMessageInfo}
         onClose={() => setShowMessageInfo(false)}
       />
+
+      {/* User Recargas Modal (admin only) */}
+      {showUserRecargas && (
+        <UserRecargasModal
+          userId={message.sender_id}
+          userName={senderName}
+          avatarUrl={message.sender?.avatar_url}
+          onClose={() => setShowUserRecargas(false)}
+        />
+      )}
     </div>
   );
 }
