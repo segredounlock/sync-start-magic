@@ -20,7 +20,7 @@ import {
   Save, Eye, EyeOff, Globe, Key, Bot, Zap, Menu, X,
   Wifi, WifiOff, Hash, AtSign, Trash2, AlertTriangle, CheckCircle2, ChevronDown, Link2, RotateCcw,
   Settings2, Store, Upload, Palette, Image, Copy, Loader2, QrCode, ExternalLink, Clock,
-  Megaphone, Send, Check,
+  Megaphone, Send, Check, Construction,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -2666,6 +2666,45 @@ export default function AdminDashboard() {
                       <label className="block text-sm font-medium text-foreground mb-1">Nome do Site</label>
                       <input type="text" value={configData.siteTitle || ""} onChange={e => setConfigData(prev => ({ ...prev, siteTitle: e.target.value }))}
                         className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Recargas Brasil" />
+                    </div>
+
+                    {/* Modo Manutenção */}
+                    <div className="border-t border-border pt-4">
+                      <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                        configData.maintenanceMode === 'true' ? 'border-warning bg-warning/10' : 'border-border bg-muted/30'}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                            configData.maintenanceMode === "true" ? "bg-warning/20" : "bg-muted"
+                          }`}>
+                            <Construction className="h-5 w-5 text-warning" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-foreground">Modo Manutenção</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {configData.maintenanceMode === "true"
+                                ? "🔴 O site está INACESSÍVEL para os usuários"
+                                : "🟢 O site está funcionando normalmente"}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const newVal = configData.maintenanceMode === "true" ? "false" : "true";
+                            const action = newVal === "true" ? "ATIVAR" : "DESATIVAR";
+                            if (!window.confirm(`${action} o modo manutenção?\n\n${newVal === "true" ? "⚠️ O site ficará totalmente inacessível ao público.\nApenas o bot do Telegram continuará funcionando." : "✅ O site voltará a funcionar normalmente."}`)) return;
+                            setConfigData(prev => ({ ...prev, maintenanceMode: newVal }));
+                            await supabase.from("system_config").upsert({ key: "maintenanceMode", value: newVal }, { onConflict: "key" });
+                            toast.success(newVal === "true" ? "🚧 Modo manutenção ATIVADO!" : "✅ Modo manutenção DESATIVADO!");
+                          }}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                            configData.maintenanceMode === "true"
+                              ? "bg-success text-success-foreground hover:opacity-90"
+                              : "bg-warning text-warning-foreground hover:opacity-90"
+                          }`}
+                        >
+                          {configData.maintenanceMode === "true" ? "Desativar" : "Ativar Manutenção"}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Info: tokens moved to Principal */}
