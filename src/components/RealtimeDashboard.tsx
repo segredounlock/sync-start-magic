@@ -20,6 +20,7 @@ interface Recarga {
   status: string;
   created_at: string;
   completed_at: string | null;
+  user_id: string;
 }
 
 interface DashboardStats {
@@ -38,6 +39,7 @@ interface Props {
 
 export default function RealtimeDashboard({ userId, fmt }: Props) {
   const [recargas, setRecargas] = useState<Recarga[]>([]);
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [liveIndicator, setLiveIndicator] = useState(false);
   const audioRef = useRef(false);
@@ -46,7 +48,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
     const { start, end } = getLocalDayBoundsUTC();
     let query = supabase
       .from("recargas")
-      .select("id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at")
+      .select("id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at, user_id")
       .gte("created_at", start)
       .lte("created_at", end)
       .order("created_at", { ascending: false })
@@ -60,6 +62,20 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
   useEffect(() => {
     fetchRecargas();
   }, [fetchRecargas]);
+
+  // Fetch user names for display
+  useEffect(() => {
+    if (!userId) {
+      // Admin view: fetch all profile names
+      supabase.from("profiles").select("id, nome").then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach((p: any) => { if (p.nome) map[p.id] = p.nome; });
+          setUserNames(map);
+        }
+      });
+    }
+  }, [userId]);
 
   // Realtime subscription + polling fallback
   useEffect(() => {
@@ -302,6 +318,9 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
                           <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
                           {procTime && (
                             <span className="text-[10px] text-success font-medium">⚡ {procTime}</span>
+                          )}
+                          {!userId && userNames[r.user_id] && (
+                            <span className="text-[10px] text-muted-foreground/60 truncate max-w-[100px]">• {userNames[r.user_id]}</span>
                           )}
                         </div>
                       </div>
