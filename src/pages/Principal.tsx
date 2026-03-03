@@ -32,6 +32,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -242,6 +243,7 @@ export default function Principal() {
   const [globalConfigLoading, setGlobalConfigLoading] = useState(true);
   const globalConfigLoaded = useRef(false);
   const [globalConfigSaving, setGlobalConfigSaving] = useState(false);
+  const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
 
   // Bot status
   const [botStatus, setBotStatus] = useState<{
@@ -3003,14 +3005,7 @@ export default function Principal() {
                       </div>
                     </div>
                     <button
-                      onClick={async () => {
-                        const newVal = globalConfig.maintenanceMode === "true" ? "false" : "true";
-                        const action = newVal === "true" ? "ATIVAR" : "DESATIVAR";
-                        if (!window.confirm(`${action} o modo manutenção?\n\n${newVal === "true" ? "⚠️ O site ficará totalmente inacessível ao público.\nApenas o bot do Telegram continuará funcionando." : "✅ O site voltará a funcionar normalmente."}`)) return;
-                        setGlobalConfig(prev => ({ ...prev, maintenanceMode: newVal }));
-                        await supabase.from("system_config").upsert({ key: "maintenanceMode", value: newVal }, { onConflict: "key" });
-                        toast.success(newVal === "true" ? "🚧 Modo manutenção ATIVADO!" : "✅ Modo manutenção DESATIVADO!");
-                      }}
+                      onClick={() => setShowMaintenanceDialog(true)}
                       className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                         globalConfig.maintenanceMode === "true"
                           ? "bg-success text-success-foreground hover:opacity-90"
@@ -3021,6 +3016,89 @@ export default function Principal() {
                     </button>
                   </div>
                 </div>
+
+                {/* Maintenance Confirmation Dialog */}
+                <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
+                  <DialogPortal>
+                    <DialogOverlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+                    <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] border border-border bg-card rounded-2xl shadow-2xl p-0 overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+                      {/* Header */}
+                      <div className={`p-6 pb-4 ${globalConfig.maintenanceMode === "true" ? "bg-success/10" : "bg-warning/10"}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            globalConfig.maintenanceMode === "true" ? "bg-success/20" : "bg-warning/20"
+                          }`}>
+                            {globalConfig.maintenanceMode === "true" 
+                              ? <CheckCircle2 className="h-6 w-6 text-success" />
+                              : <AlertTriangle className="h-6 w-6 text-warning" />
+                            }
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-foreground">
+                              {globalConfig.maintenanceMode === "true" ? "Desativar Manutenção" : "Ativar Manutenção"}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                              {globalConfig.maintenanceMode === "true" ? "Restaurar acesso público" : "Restringir acesso ao site"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Body */}
+                      <div className="p-6 space-y-4">
+                        {globalConfig.maintenanceMode === "true" ? (
+                          <div className="flex items-start gap-3 p-4 rounded-xl bg-success/5 border border-success/20">
+                            <CheckCircle2 className="h-5 w-5 text-success mt-0.5 shrink-0" />
+                            <p className="text-sm text-foreground leading-relaxed">
+                              O site voltará a funcionar normalmente e todos os usuários terão acesso novamente.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/5 border border-warning/20">
+                              <AlertTriangle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
+                              <p className="text-sm text-foreground leading-relaxed">
+                                O site ficará <span className="font-bold text-warning">totalmente inacessível</span> ao público enquanto a manutenção estiver ativa.
+                              </p>
+                            </div>
+                            <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/30 border border-border">
+                              <Bot className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                O bot do Telegram continuará funcionando normalmente durante a manutenção.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="p-6 pt-2 flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => setShowMaintenanceDialog(false)}
+                          className="px-5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const newVal = globalConfig.maintenanceMode === "true" ? "false" : "true";
+                            setGlobalConfig(prev => ({ ...prev, maintenanceMode: newVal }));
+                            await supabase.from("system_config").upsert({ key: "maintenanceMode", value: newVal }, { onConflict: "key" });
+                            toast.success(newVal === "true" ? "🚧 Modo manutenção ATIVADO!" : "✅ Modo manutenção DESATIVADO!");
+                            setShowMaintenanceDialog(false);
+                          }}
+                          className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                            globalConfig.maintenanceMode === "true"
+                              ? "bg-success text-success-foreground hover:opacity-90"
+                              : "bg-warning text-warning-foreground hover:opacity-90"
+                          }`}
+                        >
+                          {globalConfig.maintenanceMode === "true" ? "✅ Sim, Desativar" : "🚧 Sim, Ativar Manutenção"}
+                        </button>
+                      </div>
+                    </DialogContent>
+                  </DialogPortal>
+                </Dialog>
 
                 {/* Temas Sazonais */}
                 <div className="glass-card rounded-xl p-6 space-y-4">
