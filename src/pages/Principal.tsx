@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
+import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
@@ -831,9 +832,9 @@ export default function Principal() {
 
   const reportPeriodStart = useMemo(() => {
     const now = new Date();
-    if (reportPeriod === "hoje") return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    if (reportPeriod === "7dias") { const d = new Date(now); d.setDate(d.getDate() - 7); return d.toISOString(); }
-    if (reportPeriod === "mes") return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    if (reportPeriod === "hoje") return getLocalDayStartUTC(now);
+    if (reportPeriod === "7dias") { const d = new Date(now); d.setDate(d.getDate() - 7); d.setHours(0, 0, 0, 0); return d.toISOString(); }
+    if (reportPeriod === "mes") return getLocalMonthStartUTC(now);
     return new Date(2020, 0, 1).toISOString();
   }, [reportPeriod]);
 
@@ -973,12 +974,9 @@ export default function Principal() {
 
   // Dashboard computed metrics
   const dashboardMetrics = useMemo(() => {
-    const nowLocal = new Date();
-    const todayLocal = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, "0")}-${String(nowLocal.getDate()).padStart(2, "0")}`;
+    const todayLocal = getTodayLocalKey();
     const todayRecs = allRecargas.filter(r => {
-      const d = new Date(r.created_at);
-      const dLocal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      return dLocal === todayLocal;
+      return toLocalDateKey(r.created_at) === todayLocal;
     });
     const completedToday = todayRecs.filter(r => r.status === "completed" || r.status === "concluida");
     const cobradoHoje = completedToday.reduce((s, r) => s + r.custo, 0);
