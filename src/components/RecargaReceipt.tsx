@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader2, Image } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
@@ -27,32 +27,53 @@ interface RecargaReceiptProps {
 export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
+  const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
+  const [imageReady, setImageReady] = useState(false);
   const r = recarga;
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
-  const captureReceipt = async (): Promise<Blob | null> => {
-    if (!receiptRef.current) return null;
-    try {
-      const canvas = await html2canvas(receiptRef.current, {
-        backgroundColor: null,
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-      return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/png", 1));
-    } catch {
-      return null;
+  const buildText = useCallback(() => {
+    return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
+  }, [r, storeName]);
+
+  // Pre-generate the image when the modal opens so it's ready instantly on click
+  useEffect(() => {
+    if (!open) {
+      setCachedBlob(null);
+      setImageReady(false);
+      return;
     }
-  };
+
+    // Small delay to let the modal render fully
+    const timer = setTimeout(async () => {
+      if (!receiptRef.current) return;
+      try {
+        const canvas = await html2canvas(receiptRef.current, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          logging: false,
+        });
+        const dataUrl = canvas.toDataURL("image/png");
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        setCachedBlob(blob);
+        setImageReady(true);
+      } catch (e) {
+        console.warn("Pre-capture failed:", e);
+        setImageReady(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [open]);
 
   const handleShare = async () => {
     setSharing(true);
-    const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
-
+    const text = buildText();
     try {
-      // Try text-only share FIRST to preserve user gesture on iOS
       if (navigator.share) {
         try {
           await navigator.share({ title: "Comprovante de Recarga", text });
@@ -60,11 +81,8 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
           return;
         } catch (e: any) {
           if (e?.name === "AbortError") { setSharing(false); return; }
-          // If text share failed, fall through to clipboard
         }
       }
-
-      // Fallback: copy text to clipboard
       await navigator.clipboard.writeText(text);
       toast.success("Comprovante copiado!");
     } catch {
@@ -76,18 +94,33 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
 
   const handleShareImage = async () => {
     setSharing(true);
-    const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
+    const text = buildText();
 
     try {
-      const blob = await captureReceipt();
-      if (!blob) { toast.error("Erro ao gerar imagem"); setSharing(false); return; }
+      const blob = cachedBlob;
+      if (!blob) {
+        toast.error("Imagem ainda carregando, tente novamente");
+        setSharing(false);
+        return;
+      }
 
       const file = new File([blob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
 
+      // On iOS/Android: share with files (uses pre-cached blob so gesture is preserved)
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ title: "Comprovante de Recarga", text, files: [file] });
+      } else if (navigator.share) {
+        // Fallback: share text only + download image
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `comprovante-${r.id.slice(0, 8)}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Imagem salva! Compartilhando texto...");
+        await navigator.share({ title: "Comprovante de Recarga", text });
       } else {
-        // Download fallback
+        // Final fallback: just download
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -221,11 +254,11 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
             <div className="flex gap-2 mt-4 px-2">
               <button
                 onClick={handleShareImage}
-                disabled={sharing}
-                className="py-3 px-4 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-60"
-                title="Compartilhar como imagem"
+                disabled={sharing || !imageReady}
+                className="py-3 px-4 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-40"
+                title={imageReady ? "Compartilhar como imagem" : "Gerando imagem..."}
               >
-                {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
+                {!imageReady ? <Loader2 className="h-4 w-4 animate-spin" /> : sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
               </button>
               <button
                 onClick={handleShare}
