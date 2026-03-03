@@ -841,7 +841,7 @@ export default function Principal() {
   }, [reportPeriod]);
 
   const fetchReport = useCallback(async () => {
-    if (!reportLoaded.current) setReportLoading(true);
+    setReportLoading(true);
     try {
       // Fetch recargas in batches to avoid 1000 row limit
       let allRecData: any[] = [];
