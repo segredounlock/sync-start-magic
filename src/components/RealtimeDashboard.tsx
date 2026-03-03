@@ -180,7 +180,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
             liveIndicator ? "bg-success/20 text-success scale-105" : "bg-success/10 text-success/70"
           }`}>
-            <span className={`w-2 h-2 rounded-full bg-success ${liveIndicator ? "animate-ping" : "animate-pulse"}`} />
+            <span className={`w-2.5 h-2.5 rounded-full bg-success`} style={{ animation: "rec-blink 1.2s ease-in-out infinite" }} />
             LIVE
           </div>
           <button onClick={fetchRecargas} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors" title="Atualizar">
