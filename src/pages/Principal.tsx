@@ -233,6 +233,8 @@ export default function Principal() {
   const [reportLoading, setReportLoading] = useState(false);
   const reportLoaded = useRef(false);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("mes");
+  const [reportPage, setReportPage] = useState(0);
+  const REPORT_PER_PAGE = 15;
 
   // Config API states
   const [apiConfig, setApiConfig] = useState<Record<string, string>>({});
@@ -3235,7 +3237,7 @@ export default function Principal() {
                   <div className="p-4 border-b border-border">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input type="text" value={reportSearch} onChange={e => setReportSearch(e.target.value)} placeholder="Buscar revendedor..." className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground" />
+                      <input type="text" value={reportSearch} onChange={e => { setReportSearch(e.target.value); setReportPage(0); }} placeholder="Buscar revendedor..." className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground" />
                     </div>
                   </div>
                   <div className="overflow-x-auto">
@@ -3252,32 +3254,37 @@ export default function Principal() {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.filter(r => {
-                          if (!reportSearch) return true;
-                          const q = reportSearch.toLowerCase();
-                          return (r.nome || "").toLowerCase().includes(q) || (r.email || "").toLowerCase().includes(q);
-                        }).map((r, i) => {
-                          const margem = r.totalVendas > 0 ? ((r.lucro / r.totalVendas) * 100) : 0;
-                          return (
-                            <motion.tr key={r.user_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                              className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                              <td className="px-2 md:px-4 py-3">
-                                <p className="font-medium text-foreground truncate max-w-[140px] md:max-w-none">{r.nome || "Sem nome"}</p>
-                                <p className="text-xs text-muted-foreground truncate max-w-[140px] md:max-w-none">{r.email}</p>
-                              </td>
-                              <td className="px-2 md:px-4 py-3 text-center font-mono text-foreground">{r.totalRecargas}</td>
-                              <td className="hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalValor)}</td>
-                              <td className="hidden lg:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalCusto)}</td>
-                              <td className="px-2 md:px-4 py-3 text-right font-mono text-foreground">{fmt(r.totalVendas)}</td>
-                              <td className={`px-2 md:px-4 py-3 text-right font-mono font-bold ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                                {fmt(r.lucro)}
-                              </td>
-                              <td className={`hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-sm ${margem > 0 ? "text-success" : margem < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                                {margem.toFixed(1)}%
-                              </td>
-                            </motion.tr>
-                          );
-                        })}
+                        {(() => {
+                          const filtered = reportData.filter(r => {
+                            if (!reportSearch) return true;
+                            const q = reportSearch.toLowerCase();
+                            return (r.nome || "").toLowerCase().includes(q) || (r.email || "").toLowerCase().includes(q);
+                          });
+                          const totalPages = Math.ceil(filtered.length / REPORT_PER_PAGE);
+                          const paged = filtered.slice(reportPage * REPORT_PER_PAGE, (reportPage + 1) * REPORT_PER_PAGE);
+                          return paged.map((r, i) => {
+                            const margem = r.totalVendas > 0 ? ((r.lucro / r.totalVendas) * 100) : 0;
+                            return (
+                              <motion.tr key={r.user_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                                className="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                                <td className="px-2 md:px-4 py-3">
+                                  <p className="font-medium text-foreground truncate max-w-[140px] md:max-w-none">{r.nome || "Sem nome"}</p>
+                                  <p className="text-xs text-muted-foreground truncate max-w-[140px] md:max-w-none">{r.email}</p>
+                                </td>
+                                <td className="px-2 md:px-4 py-3 text-center font-mono text-foreground">{r.totalRecargas}</td>
+                                <td className="hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalValor)}</td>
+                                <td className="hidden lg:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalCusto)}</td>
+                                <td className="px-2 md:px-4 py-3 text-right font-mono text-foreground">{fmt(r.totalVendas)}</td>
+                                <td className={`px-2 md:px-4 py-3 text-right font-mono font-bold ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                                  {fmt(r.lucro)}
+                                </td>
+                                <td className={`hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-sm ${margem > 0 ? "text-success" : margem < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                                  {margem.toFixed(1)}%
+                                </td>
+                              </motion.tr>
+                            );
+                          });
+                        })()}
                       </tbody>
                       <tfoot>
                         <tr className="bg-muted/40 font-bold">
@@ -3294,6 +3301,34 @@ export default function Principal() {
                       </tfoot>
                     </table>
                   </div>
+                  {/* Pagination */}
+                  {(() => {
+                    const filtered = reportData.filter(r => {
+                      if (!reportSearch) return true;
+                      const q = reportSearch.toLowerCase();
+                      return (r.nome || "").toLowerCase().includes(q) || (r.email || "").toLowerCase().includes(q);
+                    });
+                    const totalPages = Math.ceil(filtered.length / REPORT_PER_PAGE);
+                    if (totalPages <= 1) return null;
+                    return (
+                      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                        <span className="text-xs text-muted-foreground">
+                          {reportPage * REPORT_PER_PAGE + 1}–{Math.min((reportPage + 1) * REPORT_PER_PAGE, filtered.length)} de {filtered.length}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button disabled={reportPage === 0} onClick={() => setReportPage(p => p - 1)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">
+                            Anterior
+                          </button>
+                          <span className="text-xs text-muted-foreground px-2">{reportPage + 1}/{totalPages}</span>
+                          <button disabled={reportPage >= totalPages - 1} onClick={() => setReportPage(p => p + 1)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">
+                            Próximo
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </motion.div>
