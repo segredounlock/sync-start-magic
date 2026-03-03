@@ -36,6 +36,7 @@ import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLoc
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { styledToast as toast } from "@/lib/toast";
+import { unlockAudio, playCashRegisterSound } from "@/lib/sounds";
 import { useNavigate } from "react-router-dom";
 
 interface Revendedor {
@@ -3288,6 +3289,13 @@ export default function Principal() {
                   </div>
 
                   <p className="text-[11px] text-muted-foreground italic">ℹ️ Sons funcionam para todos os cargos. Os toggles controlam apenas toasts e alertas visuais.</p>
+
+                  <button
+                    onClick={() => { unlockAudio(); playCashRegisterSound(); }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 text-foreground font-medium text-sm transition-all active:scale-95"
+                  >
+                    🔊 Testar Som de Depósito
+                  </button>
                 </div>
 
                 <BannersManager botUsername={botStatus.botUsername} />
