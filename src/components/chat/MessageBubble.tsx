@@ -203,7 +203,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         {!isOwn && (
           <div
             className={`flex-shrink-0 mr-2 mt-auto ${isCurrentUserAdmin ? "cursor-pointer" : ""}`}
-            onClick={() => { if (isCurrentUserAdmin && message.sender_id) setShowUserRecargas(true); }}
+            onPointerDown={(e) => { if (isCurrentUserAdmin) e.stopPropagation(); }}
+            onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && message.sender_id) setShowUserRecargas(true); }}
           >
             {message.sender?.avatar_url ? (
               <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border-2 border-border" />
@@ -220,7 +221,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
             <span
               className={`text-[11px] font-bold uppercase tracking-wide ${isAdmin ? "shimmer-letters" : isOwn ? "text-primary" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
-              onClick={() => { if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
+              onPointerDown={(e) => { if (isCurrentUserAdmin && !isOwn) e.stopPropagation(); }}
+              onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
             >{senderName}</span>
             {message.sender?.verification_badge ? (
               <VerificationBadge badge={message.sender.verification_badge as BadgeType} size="sm" />
