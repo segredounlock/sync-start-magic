@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, Pencil } from "lucide-react";
+import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, Pencil, Play, Pause } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { MessageInfoModal } from "./MessageInfoModal";
 import { UserRecargasModal } from "./UserRecargasModal";
@@ -22,6 +22,106 @@ interface MessageBubbleProps {
 
 const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 60;
+
+function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTime = () => setCurrentTime(audio.currentTime);
+    const onMeta = () => setDuration(audio.duration || 0);
+    const onEnd = () => { setPlaying(false); setCurrentTime(0); };
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("ended", onEnd);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("ended", onEnd);
+    };
+  }, []);
+
+  const toggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) { audio.pause(); setPlaying(false); }
+    else { audio.play(); setPlaying(true); }
+  };
+
+  const seek = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    const bar = progressRef.current;
+    const audio = audioRef.current;
+    if (!bar || !audio || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    audio.currentTime = pct * duration;
+    setCurrentTime(audio.currentTime);
+  };
+
+  const fmt = (s: number) => {
+    if (!s || !isFinite(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div
+      className="flex items-center gap-2.5 min-w-[200px] max-w-[260px]"
+      onPointerDownCapture={(e) => e.stopPropagation()}
+    >
+      <audio ref={audioRef} src={src} preload="metadata" />
+      <button
+        onClick={toggle}
+        className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+          isOwn
+            ? "bg-white/15 hover:bg-white/25 text-white"
+            : "bg-primary/15 hover:bg-primary/25 text-primary"
+        }`}
+      >
+        {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+      </button>
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <div
+          ref={progressRef}
+          className={`h-[5px] rounded-full cursor-pointer relative ${
+            isOwn ? "bg-white/15" : "bg-muted-foreground/15"
+          }`}
+          onClick={seek}
+          onTouchStart={seek}
+        >
+          <motion.div
+            className={`absolute inset-y-0 left-0 rounded-full ${
+              isOwn ? "bg-white/70" : "bg-primary"
+            }`}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.1 }}
+          />
+          <motion.div
+            className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full shadow-md ${
+              isOwn ? "bg-white" : "bg-primary"
+            }`}
+            animate={{ left: `calc(${pct}% - 6px)` }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
+        <span className={`text-[10px] tabular-nums ${isOwn ? "text-white/50" : "text-muted-foreground/70"}`}>
+          {fmt(currentTime)} / {fmt(duration)}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onReply, onReact, onDelete, onEdit, onPin, onScrollToMessage }: MessageBubbleProps) {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -432,9 +532,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
 
             {/* Audio content */}
             {message.type === "audio" && message.audio_url && (
-              <audio controls className="max-w-[250px]" preload="metadata">
-                <source src={message.audio_url} type="audio/webm" />
-              </audio>
+              <CustomAudioPlayer src={message.audio_url} isOwn={isOwn} />
             )}
 
             {/* Image content */}
