@@ -1,30 +1,40 @@
 
 
-## Plano: Melhorar a interface do módulo de Backup
+## Plano: Melhorias Visuais no Dashboard (com cautela)
 
-O screenshot mostra que o diálogo nativo do navegador (`window.confirm`) ainda está aparecendo. Porém, no código atual, o modal customizado já existe e o `window.confirm` foi removido. Isso indica que o build anterior não foi aplicado. O código já contém o modal elegante — basta garantir que o build está correto.
-
-Além disso, vou melhorar a interface geral das 3 abas para ficar mais profissional:
+O dashboard já está funcional e bem estruturado. As melhorias serão **cosméticas e incrementais**, sem alterar lógica de dados ou estrutura de estado.
 
 ### Melhorias Planejadas
 
-**1. Aba GitHub — Redesign visual**
-- Cards com ícones e bordas mais refinadas para PAT, seleção de repo e resumo do projeto
-- Seletor de repositório estilizado com ícone de cadeado/globo inline em vez de emoji
-- Contador de arquivos dinâmico baseado no `effectivePaths` real em vez de números hardcoded ("9 páginas · 10 componentes...")
-- Botão "Sincronizar tudo" com gradiente e animação hover
+**1. KPI Cards — Micro-refinamentos** (linhas ~1275-1328)
+- Adicionar bordas sutis nos cards com cor contextual (border-success/10, border-primary/10)
+- Hover com leve elevação (`hover:shadow-lg hover:-translate-y-0.5 transition-all`)
+- Ícone do Saldo Provedor: tornar o card visualmente distinto com borda roxa
 
-**2. Aba Dados — Refinamentos**
-- Botões de Exportar/Restaurar com visual de card mais consistente com a aba Atualização
-- Progress bar com label mais descritiva
+**2. Ações Rápidas — Visual mais premium** (linhas ~1330-1349)
+- Botão "Novo Revendedor" com gradiente verde e ícone animado
+- Os outros botões com ícones coloridos contextuais (Users=azul, FileText=amarelo, Settings=roxo)
 
-**3. Unificar os dois modais de confirmação**
-- Atualmente existem DOIS modais: `showConfirmation` (para updates) e `confirmModal` (para GitHub sync e restore)
-- Unificar tudo no `confirmModal` genérico que já é elegante, removendo o `showConfirmation` duplicado
+**3. Atividade Recente — Badges de status mais claros** (linhas ~1352-1408)
+- Substituir o ponto colorido por badges textuais ("Concluída", "Processando", "Falha") como no RealtimeDashboard
+- Mostrar o nome da operadora em cor (TIM=azul, VIVO=roxo, Claro=vermelho) para scan rápido
 
-**4. Contadores dinâmicos**
-- Calcular automaticamente quantas páginas, componentes, hooks, libs e edge functions existem no `effectivePaths` em vez de valores fixos hardcoded na linha 836
+**4. Top Revendedores — Medalha dourada no #1** (linhas ~1384-1408)
+- Posição #1 com fundo dourado mais vibrante e ícone de troféu
+- Valores em verde para destaque
 
-### Arquivos a modificar
-- `src/components/BackupSection.tsx` — todas as melhorias acima
+**5. Saldo Baixo — Borda mais evidente** (linhas ~1411-1450)
+- Adicionar ícone de AlertTriangle dentro de cada card individual
+- Borda amarela mais visível nos cards
+
+**6. Status do Sistema — Indicadores mais ricos** (linhas ~1452-1487)
+- Adicionar ícone específico em cada status (Database, Shield, Users, Smartphone)
+- Pulse animation apenas no indicador verde
+
+### Arquivo a modificar
+- `src/pages/Principal.tsx` — somente a seção `view === "dashboard"` (linhas ~1272-1492)
+
+### Segurança
+- Nenhuma alteração de lógica, estado, queries ou fetching
+- Apenas classes CSS e pequenos ajustes de JSX na renderização do dashboard
 
