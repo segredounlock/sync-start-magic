@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart3, Plus, Trash2, ToggleLeft, ToggleRight, Eye, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { formatTimeBR, formatDateFullBR } from "@/lib/timezone";
 
 interface PollOption {
   label: string;
@@ -316,7 +317,7 @@ export function PollManager() {
                     {pollVotes.slice(0, 20).map((v, i) => (
                       <div key={i} className="flex justify-between text-xs text-muted-foreground">
                         <span>{selectedPoll.options[v.option_index]?.label || `Opção ${v.option_index + 1}`}</span>
-                        <span>{new Date(v.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <span>{formatTimeBR(v.created_at)}</span>
                       </div>
                     ))}
                   </div>
@@ -365,7 +366,7 @@ export function PollManager() {
                           </span>
                         )}
                         <span className="text-[10px] text-muted-foreground">
-                          {new Date(poll.created_at).toLocaleDateString("pt-BR")}
+                          {formatDateFullBR(poll.created_at)}
                         </span>
                       </div>
                       <p className="font-bold text-foreground text-sm leading-snug">{poll.question}</p>

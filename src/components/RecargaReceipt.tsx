@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { formatDateTimeBR, formatFullDateTimeBR } from "@/lib/timezone";
 
 interface Recarga {
   id: string;
@@ -27,9 +28,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
   const r = recarga;
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", {
-    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
+  const fmtDate = (d: string) => formatDateTimeBR(d);
 
   const handleShare = async () => {
     const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
@@ -161,7 +160,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
               {/* Footer */}
               <div className="px-6 pb-5 pt-2 border-t border-border">
                 <p className="text-center text-[10px] text-muted-foreground/60">
-                  Comprovante gerado em {new Date().toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  Comprovante gerado em {formatDateTimeBR(new Date())}
                 </p>
               </div>
             </div>

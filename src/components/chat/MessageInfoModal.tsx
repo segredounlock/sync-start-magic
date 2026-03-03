@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/hooks/useChat";
+import { formatDateFullBR, formatTimeBR } from "@/lib/timezone";
 
 interface MessageInfoModalProps {
   message: ChatMessage;
@@ -62,9 +63,7 @@ export function MessageInfoModal({ message, open, onClose }: MessageInfoModalPro
   }, [open, message.id, message.sender_id]);
 
   const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }) +
-      " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return formatDateFullBR(dateStr) + " às " + formatTimeBR(dateStr);
   };
 
   const formatRelative = (dateStr: string) => {
