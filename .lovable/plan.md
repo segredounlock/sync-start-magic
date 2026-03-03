@@ -1,18 +1,30 @@
 
 
-## Plano: Leitura dinâmica do manifesto de arquivos
+## Plano: Melhorar a interface do módulo de Backup
 
-### O que muda
-No `BackupSection.tsx`, ao inicializar e ao exportar/sincronizar, o componente tentará ler a chave `source_paths_manifest` do `system_config` no banco. Se existir, usa essa lista. Se não existir (primeira vez), usa o `SOURCE_PATHS` hardcoded como fallback.
+O screenshot mostra que o diálogo nativo do navegador (`window.confirm`) ainda está aparecendo. Porém, no código atual, o modal customizado já existe e o `window.confirm` foi removido. Isso indica que o build anterior não foi aplicado. O código já contém o modal elegante — basta garantir que o build está correto.
 
-### Alterações em `src/components/BackupSection.tsx`
+Além disso, vou melhorar a interface geral das 3 abas para ficar mais profissional:
 
-1. **Adicionar estado e fetch do manifesto** — No carregamento do componente, buscar `system_config` onde `key = 'source_paths_manifest'` e parsear o JSON como array de strings.
+### Melhorias Planejadas
 
-2. **Usar lista dinâmica** — Todas as funções que usam `SOURCE_PATHS` (exportação, sincronização GitHub) passam a usar `dynamicPaths || SOURCE_PATHS` como fallback.
+**1. Aba GitHub — Redesign visual**
+- Cards com ícones e bordas mais refinadas para PAT, seleção de repo e resumo do projeto
+- Seletor de repositório estilizado com ícone de cadeado/globo inline em vez de emoji
+- Contador de arquivos dinâmico baseado no `effectivePaths` real em vez de números hardcoded ("9 páginas · 10 componentes...")
+- Botão "Sincronizar tudo" com gradiente e animação hover
 
-3. **Manter `SOURCE_PATHS` como fallback** — A constante continua existindo para o caso do banco não ter o manifesto (ambiente de desenvolvimento ou primeira execução).
+**2. Aba Dados — Refinamentos**
+- Botões de Exportar/Restaurar com visual de card mais consistente com a aba Atualização
+- Progress bar com label mais descritiva
+
+**3. Unificar os dois modais de confirmação**
+- Atualmente existem DOIS modais: `showConfirmation` (para updates) e `confirmModal` (para GitHub sync e restore)
+- Unificar tudo no `confirmModal` genérico que já é elegante, removendo o `showConfirmation` duplicado
+
+**4. Contadores dinâmicos**
+- Calcular automaticamente quantas páginas, componentes, hooks, libs e edge functions existem no `effectivePaths` em vez de valores fixos hardcoded na linha 836
 
 ### Arquivos a modificar
-- `src/components/BackupSection.tsx` — adicionar fetch do manifesto + usar lista dinâmica
+- `src/components/BackupSection.tsx` — todas as melhorias acima
 
