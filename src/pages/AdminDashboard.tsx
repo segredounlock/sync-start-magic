@@ -3747,6 +3747,7 @@ export default function AdminDashboard() {
         mainCount={4}
         userLabel={user?.email || "Admin"}
         userRole={role === "admin" ? "Administrador" : "Revendedor"}
+        userAvatarUrl={myAvatarUrl}
         onSignOut={signOut}
         panelLinks={[
           ...(role === "admin" ? [{ label: "Principal", path: "/principal", icon: Users, color: "text-success" }] : []),
