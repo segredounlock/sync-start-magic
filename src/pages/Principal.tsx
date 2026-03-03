@@ -3336,39 +3336,48 @@ export default function Principal() {
 
           {/* ===== PRECIFICAÇÃO ===== */}
           {view === "precificacao" && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground">Precificação</h2>
-                  <p className="text-sm text-muted-foreground">Regras de preço globais e por revendedor.</p>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+              {/* Header */}
+              <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+                    <Tag className="h-5 w-5 text-warning" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-xl font-bold text-foreground">Precificação</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Regras de preço globais e por revendedor</p>
+                  </div>
                 </div>
-                <button onClick={fetchPricingData} className="p-2 rounded-lg border border-border hover:bg-muted/50 text-muted-foreground transition-colors">
+                <button onClick={fetchPricingData} className="p-2.5 rounded-xl border border-border/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all active:scale-95">
                   <RefreshCw className={`h-4 w-4 ${pricingLoading ? "animate-spin" : ""}`} />
                 </button>
               </div>
 
               {/* Tabs: Global / Por Revendedor */}
-              <div className="flex rounded-xl bg-muted/50 p-1 gap-1">
+              <div className="flex rounded-2xl bg-muted/40 border border-border/40 p-1.5 gap-1.5">
                 <button
                   onClick={() => setPricingTab("global")}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${pricingTab === "global" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${pricingTab === "global" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
                 >
-                  <Globe className="h-4 w-4 inline mr-1.5" />Global
+                  <Globe className="h-4 w-4" />Global
                 </button>
                 <button
                   onClick={() => setPricingTab("revendedor")}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${pricingTab === "revendedor" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${pricingTab === "revendedor" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
                 >
-                  <Users className="h-4 w-4 inline mr-1.5" />Por Revendedor
+                  <Users className="h-4 w-4" />Por Revendedor
                 </button>
               </div>
 
               {pricingLoading ? (
-                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                <div className="space-y-3">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : pricingOps.length === 0 ? (
-                <div className="glass-card rounded-xl p-8 text-center">
-                  <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Nenhuma operadora ativa cadastrada.</p>
+                <div className="glass-card rounded-2xl p-10 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                    <Tag className="h-7 w-7 text-muted-foreground opacity-50" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">Nenhuma operadora ativa cadastrada.</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">Sincronize a API para carregar operadoras.</p>
                 </div>
               ) : (
                 <>
@@ -3378,10 +3387,10 @@ export default function Principal() {
                       <div className="flex gap-2 flex-wrap">
                         {pricingOps.map(op => (
                           <button key={op.id} onClick={() => setPricingSelectedOp(op.id)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                               (pricingSelectedOp || pricingOps[0]?.id) === op.id
-                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                                : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]"
+                                : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:scale-[1.01]"
                             }`}>
                             <Smartphone className="h-4 w-4" />{op.nome}
                           </button>
@@ -3421,8 +3430,8 @@ export default function Principal() {
                   {pricingTab === "revendedor" && (
                     <>
                       {/* Reseller selector */}
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-1">Selecione o Revendedor</label>
+                      <div className="glass-card rounded-2xl p-4">
+                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Selecione o Revendedor</label>
                         <select
                           value={resellerPricingSelectedUser}
                           onChange={e => {
@@ -3430,7 +3439,7 @@ export default function Principal() {
                             setResellerPricingSelectedOp("");
                             if (e.target.value) fetchResellerPricingRules(e.target.value);
                           }}
-                          className="w-full px-3 py-2.5 rounded-lg glass-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border/60 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
                         >
                           <option value="">Selecione...</option>
                           {revendedores.filter(r => r.role === "revendedor" || r.isRevendedor).map(r => (
@@ -3444,10 +3453,10 @@ export default function Principal() {
                           <div className="flex gap-2 flex-wrap">
                             {pricingOps.map(op => (
                               <button key={op.id} onClick={() => setResellerPricingSelectedOp(op.id)}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                                   (resellerPricingSelectedOp || pricingOps[0]?.id) === op.id
-                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                                    : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]"
+                                    : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:scale-[1.01]"
                                 }`}>
                                 <Smartphone className="h-4 w-4" />{op.nome}
                               </button>
@@ -3489,9 +3498,12 @@ export default function Principal() {
                       )}
 
                       {!resellerPricingSelectedUser && (
-                        <div className="glass-card rounded-xl p-8 text-center">
-                          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                          <p className="text-muted-foreground">Selecione um revendedor para gerenciar seus preços personalizados.</p>
+                        <div className="glass-card rounded-2xl p-10 text-center">
+                          <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                            <Users className="h-7 w-7 text-muted-foreground opacity-50" />
+                          </div>
+                          <p className="text-muted-foreground font-medium">Selecione um revendedor</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">Para gerenciar preços personalizados.</p>
                         </div>
                       )}
                     </>
@@ -3677,42 +3689,56 @@ function PricingCard({ valor, savedTipo, savedValor, savedCusto, onSave, onReset
   const precoFinal = tipo === "fixo" ? regra : valor * (1 + regra / 100);
   const lucro = precoFinal - savedCusto;
   return (
-    <div className={`glass-card rounded-xl p-4 space-y-3 ${highlight ? "border border-primary/40" : ""}`}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={`glass-card rounded-2xl p-4 space-y-3 transition-all hover:shadow-lg ${highlight ? "border-2 border-primary/40 ring-1 ring-primary/10" : "border border-border/30"}`}
+    >
+      {/* Top: Value vs Price */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recarga</p>
-          <p className="text-xl font-bold text-foreground">{fmtCurrency(valor)}</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mb-0.5">Recarga</p>
+          <p className="text-xl font-extrabold text-foreground tabular-nums">{fmtCurrency(valor)}</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{label}</p>
-          <p className={`text-xl font-bold ${precoFinal > 0 ? "text-success" : "text-muted-foreground"}`}>{precoFinal > 0 ? fmtCurrency(precoFinal) : "—"}</p>
+          <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold mb-0.5 px-2 py-0.5 rounded-lg ${highlight ? "bg-primary/15 text-primary" : "bg-muted/60 text-muted-foreground/70"}`}>
+            {highlight ? <Zap className="h-2.5 w-2.5" /> : <Globe className="h-2.5 w-2.5" />}
+            {label}
+          </span>
+          <p className={`text-xl font-extrabold tabular-nums ${precoFinal > 0 ? "text-success" : "text-muted-foreground"}`}>{precoFinal > 0 ? fmtCurrency(precoFinal) : "—"}</p>
         </div>
       </div>
-      <div className="flex items-center justify-between rounded-2xl bg-muted/40 border border-border/40 px-4 py-3 text-sm">
-        <span className="text-muted-foreground">Custo: <span className="font-medium text-foreground">{fmtCurrency(savedCusto)}</span></span>
-        <span className={`font-medium ${lucro > 0 ? "text-success" : lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>Lucro: {fmtCurrency(lucro)}</span>
+
+      {/* Cost & Profit bar */}
+      <div className="flex items-center justify-between rounded-xl bg-muted/30 border border-border/30 px-3.5 py-2.5 text-xs">
+        <span className="text-muted-foreground">Custo <span className="font-bold text-foreground tabular-nums">{fmtCurrency(savedCusto)}</span></span>
+        <span className={`font-bold tabular-nums ${lucro > 0 ? "text-success" : lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+          {lucro > 0 ? "+" : ""}{fmtCurrency(lucro)}
+        </span>
       </div>
+
+      {/* Controls */}
       <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-end">
         <div>
-          <label className="text-[10px] text-muted-foreground mb-1 block">Tipo</label>
+          <label className="text-[10px] text-muted-foreground/70 font-medium mb-1 block">Tipo</label>
           <select value={tipo} onChange={e => { const t = e.target.value as "fixo" | "margem"; setTipo(t); onSave({ custo: savedCusto, tipo_regra: t, regra_valor: regra }); }}
-            className="h-11 rounded-2xl bg-muted/70 border border-border/60 px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-            <option value="margem">Margem (%)</option>
-            <option value="fixo">Fixo (R$)</option>
+            className="h-10 rounded-xl bg-muted/50 border border-border/50 px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors">
+            <option value="margem">Margem %</option>
+            <option value="fixo">Fixo R$</option>
           </select>
         </div>
         <div>
-          <label className="text-[10px] text-muted-foreground mb-1 block">Valor</label>
+          <label className="text-[10px] text-muted-foreground/70 font-medium mb-1 block">Valor</label>
           <input type="number" value={regra}
             onChange={e => setRegra(parseFloat(e.target.value) || 0)}
             onBlur={() => onSave({ custo: savedCusto, tipo_regra: tipo as "fixo" | "margem", regra_valor: regra })}
-            className="h-11 w-full rounded-2xl bg-muted/70 border border-border/60 px-4 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+            className="h-10 w-full rounded-xl bg-muted/50 border border-border/50 px-3 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" />
         </div>
-        <button onClick={onReset} className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors" title="Resetar">
+        <button onClick={onReset} className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-destructive/10 text-destructive/50 hover:text-destructive transition-all active:scale-95" title="Resetar">
           <RotateCcw className="h-4 w-4" />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
