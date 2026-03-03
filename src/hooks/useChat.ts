@@ -72,11 +72,26 @@ export function useConversations() {
       const { data, error } = await supabase
         .from("chat_conversations")
         .select("*")
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id},type.eq.group`)
         .order("last_message_at", { ascending: false });
 
       if (error) throw error;
 
-      const allConvos = data || [];
+      // Deduplicate direct conversations (keep the one with most recent message)
+      const seen = new Map<string, any>();
+      for (const c of (data || [])) {
+        if (c.type === 'direct') {
+          const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
+          const key = `direct-${otherId}`;
+          const existing = seen.get(key);
+          if (!existing || new Date(c.last_message_at || 0) > new Date(existing.last_message_at || 0)) {
+            seen.set(key, c);
+          }
+        } else {
+          seen.set(c.id, c);
+        }
+      }
+      const allConvos = Array.from(seen.values());
       const directConvos = allConvos.filter((c: any) => c.type === 'direct');
       const otherIds = directConvos.map((c: any) =>
         c.participant_1 === user.id ? c.participant_2 : c.participant_1
