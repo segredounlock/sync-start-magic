@@ -3340,13 +3340,13 @@ export default function Principal() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border bg-muted/30">
-                          <th className="text-left px-2 md:px-4 py-3 font-medium text-muted-foreground">Revendedor</th>
-                          <th className="text-center px-2 md:px-4 py-3 font-medium text-muted-foreground">Recargas</th>
-                          <th className="hidden md:table-cell text-right px-2 md:px-4 py-3 font-medium text-muted-foreground">Recarga</th>
-                          <th className="hidden lg:table-cell text-right px-2 md:px-4 py-3 font-medium text-muted-foreground">Custo</th>
-                          <th className="text-right px-2 md:px-4 py-3 font-medium text-muted-foreground">Vendas</th>
-                          <th className="text-right px-2 md:px-4 py-3 font-medium text-muted-foreground">Lucro</th>
-                          <th className="hidden md:table-cell text-right px-2 md:px-4 py-3 font-medium text-muted-foreground">Margem</th>
+                          <th className="text-left px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Revendedor</th>
+                          <th className="text-center px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Qtd</th>
+                          <th className="hidden md:table-cell text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Recarga</th>
+                          <th className="hidden lg:table-cell text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Custo API</th>
+                          <th className="text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Vendas</th>
+                          <th className="text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Lucro</th>
+                          <th className="hidden md:table-cell text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Margem</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3383,17 +3383,27 @@ export default function Principal() {
                         })()}
                       </tbody>
                       <tfoot>
-                        <tr className="bg-muted/40 font-bold">
-                          <td className="px-2 md:px-4 py-3 text-foreground">Total</td>
-                          <td className="px-2 md:px-4 py-3 text-center font-mono text-foreground">{reportData.reduce((s, r) => s + r.totalRecargas, 0)}</td>
-                          <td className="hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(reportData.reduce((s, r) => s + r.totalValor, 0))}</td>
-                          <td className="hidden lg:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(reportData.reduce((s, r) => s + r.totalCusto, 0))}</td>
-                          <td className="px-2 md:px-4 py-3 text-right font-mono text-foreground">{fmt(reportData.reduce((s, r) => s + r.totalVendas, 0))}</td>
-                          <td className="px-2 md:px-4 py-3 text-right font-mono text-success">{fmt(reportData.reduce((s, r) => s + r.lucro, 0))}</td>
-                          <td className="hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-success">
-                            {(() => { const tv = reportData.reduce((s, r) => s + r.totalVendas, 0); const tl = reportData.reduce((s, r) => s + r.lucro, 0); return tv > 0 ? `${((tl / tv) * 100).toFixed(1)}%` : "—"; })()}
-                          </td>
-                        </tr>
+                        {(() => {
+                          const tRec = reportData.reduce((s, r) => s + r.totalRecargas, 0);
+                          const tVal = reportData.reduce((s, r) => s + r.totalValor, 0);
+                          const tCusto = reportData.reduce((s, r) => s + r.totalCusto, 0);
+                          const tVendas = reportData.reduce((s, r) => s + r.totalVendas, 0);
+                          const tLucro = reportData.reduce((s, r) => s + r.lucro, 0);
+                          const tMargem = tVendas > 0 ? ((tLucro / tVendas) * 100) : 0;
+                          return (
+                            <tr className="bg-primary/[0.06] border-t border-primary/20 font-bold">
+                              <td className="px-2 md:px-4 py-3 text-foreground">Total</td>
+                              <td className="px-2 md:px-4 py-3 text-center font-mono text-foreground">{tRec}</td>
+                              <td className="hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(tVal)}</td>
+                              <td className="hidden lg:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(tCusto)}</td>
+                              <td className="px-2 md:px-4 py-3 text-right font-mono text-foreground">{fmt(tVendas)}</td>
+                              <td className={`px-2 md:px-4 py-3 text-right font-mono font-bold ${tLucro > 0 ? "text-success" : tLucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(tLucro)}</td>
+                              <td className={`hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono ${tMargem > 0 ? "text-success" : tMargem < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                                {tMargem !== 0 ? `${tMargem.toFixed(1)}%` : "—"}
+                              </td>
+                            </tr>
+                          );
+                        })()}
                       </tfoot>
                     </table>
                   </div>
