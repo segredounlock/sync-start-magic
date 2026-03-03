@@ -99,13 +99,55 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
     return () => clearTimeout(timer);
   }, [open]);
 
+  const generateBlob = async (): Promise<Blob | null> => {
+    if (cachedBlob) return cachedBlob;
+    if (!receiptRef.current) return null;
+    try {
+      const computedBg = getComputedStyle(receiptRef.current).backgroundColor;
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: computedBg || "#ffffff",
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        onclone: (_doc: Document, clonedEl: HTMLElement) => {
+          const closeBtn = clonedEl.querySelector("[data-hide-capture]");
+          if (closeBtn) (closeBtn as HTMLElement).style.display = "none";
+          const resolveStyles = (el: Element) => {
+            const computed = getComputedStyle(el);
+            const htmlEl = el as HTMLElement;
+            htmlEl.style.color = computed.color;
+            htmlEl.style.backgroundColor = computed.backgroundColor;
+            htmlEl.style.borderColor = computed.borderColor;
+            htmlEl.style.borderTopColor = computed.borderTopColor;
+            htmlEl.style.borderBottomColor = computed.borderBottomColor;
+            htmlEl.style.borderLeftColor = computed.borderLeftColor;
+            htmlEl.style.borderRightColor = computed.borderRightColor;
+            const bgImage = computed.backgroundImage;
+            if (bgImage && bgImage !== "none") htmlEl.style.backgroundImage = bgImage;
+            el.querySelectorAll("*").forEach(resolveStyles);
+          };
+          resolveStyles(clonedEl);
+        },
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      setCachedBlob(blob);
+      setImageReady(true);
+      return blob;
+    } catch (e) {
+      console.warn("Image generation failed:", e);
+      return null;
+    }
+  };
+
   const handleShare = async () => {
     setSharing(true);
     const text = buildText();
     try {
-      const blob = cachedBlob;
+      // Always try to get the image (cached or generate on demand)
+      const blob = await generateBlob();
 
-      // If image is ready, try sharing image + text (instant, gesture preserved)
       if (blob) {
         const file = new File([blob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
