@@ -407,10 +407,10 @@ Deno.serve(async (req) => {
         { global: { headers: { Authorization: authHeader } } }
       );
 
-      // Try getClaims first (for normal authenticated users)
-      const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-      if (!claimsError && claimsData?.claims?.sub) {
-        userId = claimsData.claims.sub as string;
+      // Get authenticated user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (!userError && userData?.user?.id) {
+        userId = userData.user.id;
       } else {
         // Fallback: parse body to check for reseller_user_id (e.g. Telegram Mini App)
         const body = await req.json();
