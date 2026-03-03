@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 // (removed duplicate toast hook)
 import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
-import { SkeletonRow, SkeletonCard, SkeletonValue } from "@/components/Skeleton";
+import { SkeletonRow, SkeletonCard, SkeletonValue, SkeletonPricingGrid } from "@/components/Skeleton";
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
@@ -2853,7 +2853,7 @@ export default function AdminDashboard() {
             {pricingSubTab === "global" && (
               <>
                 {operadorasLoading ? (
-                  <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                  <SkeletonPricingGrid />
                 ) : operadoras.filter(o => o.ativo).length === 0 ? (
                   <div className="glass-card rounded-xl p-8 text-center">
                     <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
@@ -2957,7 +2957,7 @@ export default function AdminDashboard() {
                       <p className="text-muted-foreground">Selecione um revendedor para gerenciar seus preços personalizados.</p>
                     </div>
                   ) : operadorasLoading ? (
-                    <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                    <SkeletonPricingGrid />
                   ) : operadoras.filter(o => o.ativo).length === 0 ? (
                     <div className="glass-card rounded-xl p-8 text-center">
                       <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
@@ -3052,7 +3052,7 @@ export default function AdminDashboard() {
             </div>
 
             {operadorasLoading ? (
-              <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+              <SkeletonPricingGrid />
             ) : operadoras.filter(o => o.ativo).length === 0 ? (
               <div className="glass-card rounded-xl p-8 text-center">
                 <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
