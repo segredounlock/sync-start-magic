@@ -1,39 +1,29 @@
 
 
-## Correção retroativa das 5 recargas com custo_api = 0
+## Plano: Adicionar saldo atual e botão de adicionar saldo no modal de recargas do usuário
 
-### Problema duplo identificado
-1. **`custo_api`** salvo como 0 (já corrigido para futuras recargas)
-2. **`valor`** salvo como o preço do revendedor em vez do valor facial real
+### O que será feito
 
-### Correções via SQL
+No modal `UserRecargasModal` (que abre ao clicar no perfil do usuário no chat), adicionar:
 
-Atualizar os 5 registros com os valores corretos:
+1. **Exibição do saldo atual** do usuário (tipo "revenda") no header, ao lado do nome
+2. **Botão rápido "Adicionar Saldo"** que abre um mini-formulário inline para inserir valor e confirmar a adição
 
-```sql
--- Claro R$35 (preço final 15.60, custo API 12.00)
-UPDATE recargas SET custo_api = 12.00, valor = 35 WHERE id = 'd10ec4ab-70ce-4e20-8735-2bbd76fb2fbb';
+### Alterações
 
--- TIM R$40 (preço final 17.00, custo API 14.00)
-UPDATE recargas SET custo_api = 14.00, valor = 40 WHERE id = 'eefe74f2-8fc5-49b2-a2ba-feb7c9b5c14f';
+**Arquivo: `src/components/chat/UserRecargasModal.tsx`**
 
--- TIM R$20 (preço final 9.30, custo API 8.00)
-UPDATE recargas SET custo_api = 8.00, valor = 20 WHERE id = '7c84bc9c-87a1-4be8-bf14-cd4d6f515cc7';
+- Buscar o saldo atual do usuário na tabela `saldos` (filtro `user_id` + `tipo = 'revenda'`) junto com as recargas no `useEffect`
+- Exibir o saldo no header como badge verde (ex: `R$ 150,00`)
+- Adicionar uma barra de ações rápidas entre o header e a lista de recargas com:
+  - **Saldo atual** visível em destaque
+  - **Botão "Adicionar Saldo"** (`Plus` icon) que expande um input inline com campo de valor e botão confirmar
+- Ao confirmar, atualizar o saldo na tabela `saldos` (ler atual → somar → update) e atualizar o estado local
+- Mostrar toast de sucesso/erro via `sonner`
 
--- TIM R$20 (preço final 9.30, custo API 8.00)
-UPDATE recargas SET custo_api = 8.00, valor = 20 WHERE id = '76201471-def4-4746-9e96-36e3091fb345';
+### Detalhes técnicos
 
--- Claro R$40 (preço final 16.50, custo API 14.00)
-UPDATE recargas SET custo_api = 14.00, valor = 40 WHERE id = '8d9628f2-58f0-451e-8166-abaa0ca0afdd';
-```
-
-### Bug adicional no telegram-bot: campo `valor`
-
-O `valorFacial` na linha ~1203 do telegram-bot usa `orderData.value || orderData.valor || cost`. Como a API não retorna `value`/`valor`, cai no fallback `cost` (preço do revendedor). Precisa buscar o valor facial do catálogo na sessão, da mesma forma que fizemos com `api_cost`.
-
-**Correção**: salvar o valor facial real do catálogo na sessão (handler `rec_val_`) e usá-lo na inserção.
-
-### Arquivos
-- Migração SQL para corrigir os 5 registros
-- `supabase/functions/telegram-bot/index.ts` — salvar `valor_facial` na sessão e usar na inserção
+- Consulta: `supabase.from("saldos").select("valor").eq("user_id", userId).eq("tipo", "revenda").maybeSingle()`
+- Update segue o mesmo padrão usado em `Principal.tsx` (linhas 3580-3584): ler valor atual, somar, e fazer update
+- O botão de adicionar saldo só aparece para admins (verificar via `useAuth` ou passar prop `isAdmin`)
 
