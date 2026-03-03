@@ -388,3 +388,82 @@ select option {
 .ticker-scroll:hover {
   animation-play-state: paused;
 }
+
+/* ── Telegram Mini App Chat Theme Override ── */
+.tg-chat-theme {
+  --background: var(--tg-bg, #17212b);
+  --foreground: var(--tg-text, #f5f5f5);
+  --card: var(--tg-secondary-bg, #232e3c);
+  --card-foreground: var(--tg-text, #f5f5f5);
+  --popover: var(--tg-secondary-bg, #232e3c);
+  --popover-foreground: var(--tg-text, #f5f5f5);
+  --muted: var(--tg-secondary-bg, #232e3c);
+  --muted-foreground: var(--tg-hint, #708499);
+  --border: color-mix(in srgb, var(--tg-hint, #708499) 25%, transparent);
+  --primary: var(--tg-btn, #5288c1);
+  --primary-foreground: var(--tg-btn-text, #ffffff);
+  --accent: var(--tg-accent, #6ab2f2);
+  --accent-foreground: var(--tg-text, #f5f5f5);
+  --destructive: var(--tg-destructive, #ec3942);
+  --secondary: var(--tg-secondary-bg, #232e3c);
+  --secondary-foreground: var(--tg-text, #f5f5f5);
+  color: var(--tg-text, #f5f5f5);
+  background-color: var(--tg-bg, #17212b);
+}
+
+.tg-chat-theme * {
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent);
+}
+
+.tg-chat-theme .bg-card,
+.tg-chat-theme .bg-card\/80,
+.tg-chat-theme .bg-card\/50 {
+  background-color: var(--tg-secondary-bg, #232e3c) !important;
+}
+
+.tg-chat-theme .bg-muted,
+.tg-chat-theme .bg-muted\/50,
+.tg-chat-theme .bg-muted\/60,
+.tg-chat-theme .bg-muted\/40,
+.tg-chat-theme .bg-muted\/30 {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 15%, var(--tg-bg, #17212b)) !important;
+}
+
+.tg-chat-theme .text-foreground {
+  color: var(--tg-text, #f5f5f5) !important;
+}
+
+.tg-chat-theme .text-muted-foreground {
+  color: var(--tg-hint, #708499) !important;
+}
+
+.tg-chat-theme .text-primary {
+  color: var(--tg-accent, #6ab2f2) !important;
+}
+
+.tg-chat-theme .bg-primary\/10,
+.tg-chat-theme .bg-primary\/15,
+.tg-chat-theme .bg-primary\/20 {
+  background-color: color-mix(in srgb, var(--tg-btn, #5288c1) 15%, transparent) !important;
+}
+
+.tg-chat-theme .border-border,
+.tg-chat-theme .border-border\/50 {
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent) !important;
+}
+
+.tg-chat-theme .hover\:bg-muted\/50:hover {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, var(--tg-bg, #17212b)) !important;
+}
+
+.tg-chat-theme input,
+.tg-chat-theme textarea {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 10%, var(--tg-bg, #17212b)) !important;
+  color: var(--tg-text, #f5f5f5) !important;
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 25%, transparent) !important;
+}
+
+.tg-chat-theme input::placeholder,
+.tg-chat-theme textarea::placeholder {
+  color: var(--tg-hint, #708499) !important;
+}
