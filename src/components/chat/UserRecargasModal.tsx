@@ -20,6 +20,7 @@ interface Recarga {
   operadora: string | null;
   valor: number;
   custo: number;
+  custo_api: number;
   status: string;
   created_at: string;
 }
@@ -30,6 +31,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
   const { role, user: currentUser } = useAuth();
   const isAdmin = role === "admin";
   const [recargas, setRecargas] = useState<Recarga[]>([]);
+  const [selectedRecarga, setSelectedRecarga] = useState<Recarga | null>(null);
   const [loading, setLoading] = useState(true);
   const [saldo, setSaldo] = useState<number>(0);
   const [activeAction, setActiveAction] = useState<SaldoAction>(null);
@@ -53,7 +55,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
       const [recargasRes, saldoRes, profileRes, roleRes] = await Promise.all([
         supabase
           .from("recargas")
-          .select("id, telefone, operadora, valor, custo, status, created_at")
+          .select("id, telefone, operadora, valor, custo, custo_api, status, created_at")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(10),
@@ -386,7 +388,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                 const st = statusConfig[r.status] || statusConfig.pending;
                 const StatusIcon = st.icon;
                 return (
-                  <div key={r.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
+                  <div key={r.id} onClick={() => setSelectedRecarga(r)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                       r.status === "completed" ? "bg-emerald-500/15" : r.status === "failed" ? "bg-red-500/15" : "bg-yellow-500/15"
                     }`}>
@@ -414,6 +416,84 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
               })
             )}
           </div>
+
+          {/* Detail modal */}
+          <AnimatePresence>
+            {selectedRecarga && (() => {
+              const r = selectedRecarga;
+              const isCompleted = r.status === "completed" || r.status === "concluida";
+              const isPending = r.status === "pending";
+              const isFailed = r.status === "falha" || r.status === "failed";
+              const statusLabel = isCompleted ? "Concluída" : isPending ? "Processando" : isFailed ? "Falha" : r.status;
+              const statusClass = isCompleted ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : isPending ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" : "bg-red-500/15 text-red-400 border-red-500/30";
+              const lucro = r.custo > 0 && r.custo_api > 0 ? r.custo - r.custo_api : null;
+              return (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-10 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+                  onClick={() => setSelectedRecarga(null)}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="pt-5 pb-3 text-center">
+                      <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-2">
+                        {isCompleted ? <CheckCircle className="h-6 w-6 text-emerald-400" /> : isPending ? <Loader2 className="h-6 w-6 text-yellow-400 animate-spin" /> : <XCircle className="h-6 w-6 text-red-400" />}
+                      </div>
+                      <h4 className="text-sm font-bold text-foreground">Detalhes do Pedido</h4>
+                      <span className={`inline-block mt-1 px-3 py-0.5 rounded-full text-[10px] font-bold border ${statusClass}`}>{statusLabel}</span>
+                    </div>
+                    <div className="px-5 pb-4 space-y-2.5">
+                      <div className="flex justify-between items-center py-1.5 border-b border-border">
+                        <span className="text-xs text-muted-foreground">Telefone</span>
+                        <span className="text-xs font-mono font-semibold text-foreground">{r.telefone}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-1.5 border-b border-border">
+                        <span className="text-xs text-muted-foreground">Operadora</span>
+                        <span className="text-xs font-semibold text-foreground">{r.operadora || "—"}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-1.5 border-b border-border">
+                        <span className="text-xs text-muted-foreground">Valor (facial)</span>
+                        <span className="text-xs font-mono font-bold text-foreground">{formatCurrency(r.valor)}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-1.5 border-b border-border">
+                        <span className="text-xs text-muted-foreground">Custo (debitado)</span>
+                        <span className="text-xs font-mono font-semibold text-foreground">{formatCurrency(r.custo)}</span>
+                      </div>
+                      {lucro !== null && (
+                        <div className="flex justify-between items-center py-2 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                          <span className="text-xs font-semibold text-emerald-400">Lucro</span>
+                          <span className="text-xs font-mono font-bold text-emerald-400">+{formatCurrency(lucro)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center py-1.5 border-b border-border">
+                        <span className="text-xs text-muted-foreground">Data</span>
+                        <span className="text-xs text-foreground">{formatDate(r.created_at)}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-1.5">
+                        <span className="text-xs text-muted-foreground">ID</span>
+                        <span className="text-[9px] font-mono text-muted-foreground/70 max-w-[140px] truncate">{r.id}</span>
+                      </div>
+                    </div>
+                    <div className="px-5 pb-4">
+                      <button
+                        onClick={() => setSelectedRecarga(null)}
+                        className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              );
+            })()}
+          </AnimatePresence>
         </motion.div>
       </motion.div>
     </AnimatePresence>,
