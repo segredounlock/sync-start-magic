@@ -491,8 +491,10 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         ) : (
           groupedMessages.map(group => (
             <div key={group.date}>
-              <div className="flex justify-center my-1">
-                <span className="text-[10px] bg-muted/60 text-muted-foreground px-3 py-0.5 rounded-full font-medium">{group.date}</span>
+              <div className="flex items-center gap-3 my-2 px-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-[10px] text-muted-foreground font-medium">{group.date}</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
               {group.msgs.map(msg => (
                 <div
