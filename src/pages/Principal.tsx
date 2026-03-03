@@ -2980,6 +2980,48 @@ export default function Principal() {
                   </div>
                 </div>
 
+                {/* Modo Manutenção */}
+                <div className="glass-card rounded-xl p-6 space-y-4">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-warning" /> Modo Manutenção
+                  </h4>
+                  <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                    globalConfig.maintenanceMode === 'true' ? 'border-warning bg-warning/10' : 'border-border bg-muted/30'}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                        globalConfig.maintenanceMode === "true" ? "bg-warning/20" : "bg-muted"
+                      }`}>
+                        <AlertTriangle className="h-5 w-5 text-warning" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">Status do Site</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {globalConfig.maintenanceMode === "true"
+                            ? "🔴 O site está INACESSÍVEL para os usuários"
+                            : "🟢 O site está funcionando normalmente"}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const newVal = globalConfig.maintenanceMode === "true" ? "false" : "true";
+                        const action = newVal === "true" ? "ATIVAR" : "DESATIVAR";
+                        if (!window.confirm(`${action} o modo manutenção?\n\n${newVal === "true" ? "⚠️ O site ficará totalmente inacessível ao público.\nApenas o bot do Telegram continuará funcionando." : "✅ O site voltará a funcionar normalmente."}`)) return;
+                        setGlobalConfig(prev => ({ ...prev, maintenanceMode: newVal }));
+                        await supabase.from("system_config").upsert({ key: "maintenanceMode", value: newVal }, { onConflict: "key" });
+                        toast.success(newVal === "true" ? "🚧 Modo manutenção ATIVADO!" : "✅ Modo manutenção DESATIVADO!");
+                      }}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                        globalConfig.maintenanceMode === "true"
+                          ? "bg-success text-success-foreground hover:opacity-90"
+                          : "bg-warning text-warning-foreground hover:opacity-90"
+                      }`}
+                    >
+                      {globalConfig.maintenanceMode === "true" ? "Desativar" : "Ativar Manutenção"}
+                    </button>
+                  </div>
+                </div>
+
                 <BannersManager botUsername={botStatus.botUsername} />
                 </>
               )}
