@@ -236,6 +236,7 @@ export default function BackupSection() {
     "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
     "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
     "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
+    "supabase/functions/expire-pending-deposits/index.ts",
     "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
     "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
     "supabase/functions/sync-pending-recargas/index.ts","supabase/functions/send-push/index.ts",
