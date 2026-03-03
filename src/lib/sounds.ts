@@ -161,47 +161,20 @@ export function playSuccessSound() {
 }
 
 /**
- * Cash register "ka-ching!" sound for confirmed deposits.
+ * Pix confirmation sound for confirmed deposits.
+ * Uses the custom Pix.mp3 file.
  */
+let _pixAudio: HTMLAudioElement | null = null;
+
 export function playCashRegisterSound() {
   const playNow = () => {
     try {
-      const ctx = getAudioContext();
-      if (ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
+      if (!_pixAudio) {
+        _pixAudio = new Audio("/sounds/pix.mp3");
+        _pixAudio.volume = 0.5;
       }
-      const now = ctx.currentTime;
-
-      // Metallic "ka" hit
-      const noise = ctx.createBufferSource();
-      const noiseLen = 0.08;
-      const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * noiseLen, ctx.sampleRate);
-      const noiseData = noiseBuf.getChannelData(0);
-      for (let i = 0; i < noiseData.length; i++) noiseData[i] = (Math.random() * 2 - 1) * 0.4;
-      noise.buffer = noiseBuf;
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.25, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + noiseLen);
-      const noiseFilt = ctx.createBiquadFilter();
-      noiseFilt.type = "bandpass";
-      noiseFilt.frequency.value = 3000;
-      noiseFilt.Q.value = 2;
-      noise.connect(noiseFilt).connect(noiseGain).connect(ctx.destination);
-      noise.start(now);
-      noise.stop(now + noiseLen);
-
-      // Bell "ching" — two bright tones
-      [{ f: 1567.98, d: 0.05 }, { f: 2093.0, d: 0.06 }].forEach(({ f, d }) => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = f;
-        g.gain.setValueAtTime(0.22, now + d);
-        g.gain.exponentialRampToValueAtTime(0.001, now + d + 0.5);
-        osc.connect(g).connect(ctx.destination);
-        osc.start(now + d);
-        osc.stop(now + d + 0.5);
-      });
+      _pixAudio.currentTime = 0;
+      _pixAudio.play().catch(() => {});
     } catch {}
   };
 
