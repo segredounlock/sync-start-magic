@@ -22,7 +22,7 @@ interface MessageBubbleProps {
 }
 
 const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
-const SWIPE_THRESHOLD = 60;
+const SWIPE_THRESHOLD = 45;
 
 function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -207,8 +207,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const longPressTriggered = useRef(false);
   const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
   const x = useMotionValue(0);
-  const replyIconOpacity = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -20] : [20, SWIPE_THRESHOLD], [1, 0]);
-  const replyIconScale = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -10] : [10, SWIPE_THRESHOLD], [1, 0.3]);
+  const replyIconOpacity = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -10] : [10, SWIPE_THRESHOLD], [1, 0]);
+  const replyIconScale = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -5] : [5, SWIPE_THRESHOLD], [1, 0.2]);
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -242,8 +242,11 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   }, [showContextMenu]);
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (isOwn && info.offset.x < -SWIPE_THRESHOLD) onReply();
-    else if (!isOwn && info.offset.x > SWIPE_THRESHOLD) onReply();
+    const triggered = isOwn ? info.offset.x < -SWIPE_THRESHOLD : info.offset.x > SWIPE_THRESHOLD;
+    if (triggered) {
+      if (navigator.vibrate) navigator.vibrate(15);
+      onReply();
+    }
   };
 
   // Long press handlers
@@ -346,14 +349,14 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   };
 
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-2 relative overflow-visible`}>
+    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1 relative overflow-visible`}>
       {/* Swipe reply indicator */}
       <motion.div
-        className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "left-3" : "right-3"} flex items-center justify-center`}
+        className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "left-2" : "right-2"} flex items-center justify-center pointer-events-none`}
         style={{ opacity: replyIconOpacity, scale: replyIconScale }}
       >
-        <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
-          <Reply className="h-3 w-3 text-primary" />
+        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shadow-sm">
+          <Reply className="h-4 w-4 text-primary" />
         </div>
       </motion.div>
 
@@ -361,9 +364,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         className={`flex ${isOwn ? "justify-end" : "justify-start"} w-full group`}
         style={{ x }}
         drag="x"
-        dragConstraints={{ left: isOwn ? -80 : 0, right: isOwn ? 0 : 80 }}
-        dragElastic={0.3}
+        dragConstraints={{ left: isOwn ? -70 : 0, right: isOwn ? 0 : 70 }}
+        dragElastic={0.15}
         dragSnapToOrigin
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
       >
         {/* Avatar for messages from others */}
@@ -383,7 +387,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           </div>
         )}
 
-        <div className={`max-w-[70%] min-w-0 overflow-hidden ${isOwn ? "order-1" : ""}`}>
+        <div className={`max-w-[75%] min-w-0 overflow-hidden ${isOwn ? "order-1" : ""}`}>
           {/* Sender name + verified badge */}
           <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
             <span
@@ -418,10 +422,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           )}
 
           <div
-            className={`group relative px-3 py-2 rounded-2xl select-none overflow-visible ${
+            className={`group relative px-3 py-1.5 select-none overflow-visible ${
               isOwn
-                ? "bg-[hsl(152,40%,22%)] text-white rounded-br-md"
-                : "bg-muted/60 text-foreground border border-border/50 rounded-bl-md"
+                ? "bg-[hsl(152,45%,18%)] text-white rounded-2xl rounded-tr-md shadow-sm"
+                : "bg-card text-foreground border border-border/40 rounded-2xl rounded-tl-md shadow-sm"
             }`}
             onPointerDown={(e) => {
               if (e.pointerType !== "touch") return;
