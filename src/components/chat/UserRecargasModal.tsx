@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal } from "lucide-react";
+import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Wallet, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface UserRecargasModalProps {
   userId: string;
@@ -22,23 +24,72 @@ interface Recarga {
 }
 
 export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: UserRecargasModalProps) {
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saldo, setSaldo] = useState<number>(0);
+  const [showAddSaldo, setShowAddSaldo] = useState(false);
+  const [addValue, setAddValue] = useState("");
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    const fetchRecargas = async () => {
-      const { data, error } = await supabase
-        .from("recargas")
-        .select("id, telefone, operadora, valor, custo, status, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(10);
+    const fetchData = async () => {
+      const [recargasRes, saldoRes] = await Promise.all([
+        supabase
+          .from("recargas")
+          .select("id, telefone, operadora, valor, custo, status, created_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("saldos")
+          .select("valor")
+          .eq("user_id", userId)
+          .eq("tipo", "revenda")
+          .maybeSingle(),
+      ]);
 
-      if (!error && data) setRecargas(data);
+      if (!recargasRes.error && recargasRes.data) setRecargas(recargasRes.data);
+      if (!saldoRes.error && saldoRes.data) setSaldo(saldoRes.data.valor);
       setLoading(false);
     };
-    fetchRecargas();
+    fetchData();
   }, [userId]);
+
+  const handleAddSaldo = async () => {
+    const valor = parseFloat(addValue.replace(",", "."));
+    if (!valor || valor <= 0) {
+      toast.error("Insira um valor válido");
+      return;
+    }
+    setAdding(true);
+    try {
+      const { data: current } = await supabase
+        .from("saldos")
+        .select("valor")
+        .eq("user_id", userId)
+        .eq("tipo", "revenda")
+        .maybeSingle();
+
+      const novoValor = (current?.valor || 0) + valor;
+      const { error } = await supabase
+        .from("saldos")
+        .update({ valor: novoValor })
+        .eq("user_id", userId)
+        .eq("tipo", "revenda");
+
+      if (error) throw error;
+      setSaldo(novoValor);
+      setAddValue("");
+      setShowAddSaldo(false);
+      toast.success(`R$ ${valor.toFixed(2)} adicionado ao saldo`);
+    } catch {
+      toast.error("Erro ao adicionar saldo");
+    } finally {
+      setAdding(false);
+    }
+  };
 
   const statusConfig: Record<string, { icon: typeof CheckCircle; color: string; label: string }> = {
     completed: { icon: CheckCircle, color: "text-emerald-400", label: "Concluída" },
@@ -83,13 +134,76 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-foreground truncate">{userName}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground truncate">{userName}</h3>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                  {formatCurrency(saldo)}
+                </span>
+              </div>
               <p className="text-[10px] text-muted-foreground">Últimas 10 recargas</p>
             </div>
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
               <X className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
+
+          {/* Quick actions bar (admin only) */}
+          {isAdmin && (
+            <div className="px-4 py-2 border-b border-border bg-muted/15">
+              <AnimatePresence mode="wait">
+                {showAddSaldo ? (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="flex-1 relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0,00"
+                        value={addValue}
+                        onChange={(e) => setAddValue(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        autoFocus
+                        onKeyDown={(e) => e.key === "Enter" && handleAddSaldo()}
+                      />
+                    </div>
+                    <button
+                      onClick={handleAddSaldo}
+                      disabled={adding}
+                      className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 transition-colors disabled:opacity-50"
+                    >
+                      {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    </button>
+                    <button
+                      onClick={() => { setShowAddSaldo(false); setAddValue(""); }}
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div key="btn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Wallet className="h-3.5 w-3.5" />
+                      <span className="text-[11px]">Saldo Revenda</span>
+                    </div>
+                    <button
+                      onClick={() => setShowAddSaldo(true)}
+                      className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Adicionar Saldo
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
