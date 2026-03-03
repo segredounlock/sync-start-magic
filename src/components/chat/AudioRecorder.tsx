@@ -7,9 +7,10 @@ import { Mic, Square, Send, Trash2, Loader2 } from "lucide-react";
 interface AudioRecorderProps {
   onSend: (audioUrl: string) => void;
   onCancel: () => void;
+  onTypingPing?: () => void;
 }
 
-export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
+export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderProps) {
   const { user } = useAuth();
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -54,6 +55,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
       setRecording(true);
       setDuration(0);
       timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
+
+      // Ping typing indicator every 2.5s to keep "gravando áudio" visible
+      if (onTypingPing) {
+        onTypingPing();
+        const pingInterval = setInterval(() => onTypingPing(), 2500);
+        recorder.addEventListener("stop", () => clearInterval(pingInterval), { once: true });
+      }
     } catch (err) {
       console.error("Mic error:", err);
       onCancel();
