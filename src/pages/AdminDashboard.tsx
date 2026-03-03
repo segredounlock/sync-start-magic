@@ -1165,23 +1165,29 @@ export default function AdminDashboard() {
                   <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((Math.abs(analytics.lucro) / Math.max(analytics.totalCobrado, 1)) * 100, 100)}%` }} transition={{ duration: 0.8 }}
                     className={`h-full rounded-full ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
                 </div>
-                <div className="flex justify-between mt-3 pt-3 border-t border-border">
-                  <div>
+                <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
+                  <div className="text-center p-1.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Cobrado</p>
                     <p className="text-sm font-bold text-foreground"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   {role === "admin" && (
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Custo API</p>
-                    <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCustoApi} prefix="R$&nbsp;" /></p>
+                  <div className="text-center p-1.5 rounded-lg bg-destructive/10">
+                    <p className="text-[10px] uppercase tracking-wider text-destructive font-medium">Custo API</p>
+                    <p className="text-sm font-bold text-destructive"><AnimatedCounter value={analytics.totalCustoApi} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
                   {role === "revendedor" && (
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Meu Custo</p>
-                    <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
+                  <div className="text-center p-1.5 rounded-lg bg-destructive/10">
+                    <p className="text-[10px] uppercase tracking-wider text-destructive font-medium">Meu Custo</p>
+                    <p className="text-sm font-bold text-destructive"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
+                  <div className={`text-center p-1.5 rounded-lg ${analytics.lucro >= 0 ? "bg-success/10" : "bg-destructive/10"}`}>
+                    <p className={`text-[10px] uppercase tracking-wider font-medium ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>Lucro</p>
+                    <p className={`text-sm font-bold ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
+                      {analytics.lucro >= 0 ? "+" : ""}<AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" />
+                    </p>
+                  </div>
                 </div>
               </motion.div>
 
