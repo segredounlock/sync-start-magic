@@ -462,15 +462,23 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
           <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2.5 rounded-xl transition-colors ${showEmoji ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/50"}`}>
             <Smile className="h-5 w-5" />
           </button>
-          <input
-            ref={inputRef}
-            type="text"
-            value={text}
-            onChange={e => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Mensagem..."
-            className="flex-1 py-2.5 px-4 rounded-2xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
-          />
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={text}
+              onChange={e => { if (e.target.value.length <= 700) setText(e.target.value); }}
+              onKeyDown={handleKeyDown}
+              maxLength={700}
+              placeholder="Mensagem..."
+              className="w-full py-2.5 px-4 rounded-2xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
+            />
+            {text.length > 600 && (
+              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-medium ${text.length >= 700 ? "text-destructive" : "text-muted-foreground/60"}`}>
+                {text.length}/700
+              </span>
+            )}
+          </div>
           {text.trim() ? (
             <button onClick={handleSend} disabled={sending} className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:brightness-110 transition-all disabled:opacity-50">
               <Send className="h-5 w-5" />
