@@ -623,7 +623,7 @@ export default function AdminDashboard() {
       .then(({ data }) => { if (data && data.value === "false") setAdminDepositToast(false); });
   }, []);
   const handleBgPaymentConfirmed = useCallback(() => { fetchData(); }, [fetchData]);
-  useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed, adminDepositToast);
+  useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed, adminDepositToast, false);
 
   // Load current user's avatar
   useEffect(() => {
