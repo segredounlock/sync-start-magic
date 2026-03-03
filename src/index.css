@@ -470,6 +470,18 @@ select option {
 
 /* Preserve shimmer effect in Telegram theme */
 .tg-chat-theme .shimmer-letters {
+  background: linear-gradient(
+    110deg,
+    var(--tg-text, #fff) 0%,
+    var(--tg-text, #fff) 38%,
+    hsl(152, 72%, 55%) 50%,
+    var(--tg-text, #fff) 62%,
+    var(--tg-text, #fff) 100%
+  ) !important;
+  background-size: 300% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
+  animation: shimmer-letters 4s ease-in-out infinite !important;
 }
