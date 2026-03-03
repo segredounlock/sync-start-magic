@@ -275,7 +275,7 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
             </div>
             <div className="space-y-2">
               {groupedRooms[cat].map(room => (
-                <div key={room.id} className="glass-card rounded-xl p-4 flex items-center gap-4 group hover:border-primary/30 transition-colors">
+                <div key={room.id} className={`glass-card relative rounded-xl p-4 flex items-center gap-4 group hover:border-primary/30 transition-colors ${openMenu === room.id ? "z-40" : "z-0"}`}>
                   <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center text-lg flex-shrink-0">
                     {room.icon}
                   </div>
@@ -321,7 +321,7 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
                             initial={{ opacity: 0, scale: 0.9, y: -5 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: -5 }}
-                            className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-30 overflow-hidden"
+                            className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
                           >
                             <button onClick={() => { setEditRoom(room); setOpenMenu(null); }}
                               className="w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 flex items-center gap-2 transition-colors">
