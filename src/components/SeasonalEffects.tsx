@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,23 +39,24 @@ export const SEASONAL_THEMES: SeasonalThemeConfig[] = [
   { key: "natal", label: "Natal", emoji: "🎄", description: "Papai Noel e neve", particles: ["🎄", "❄️", "🎅", "⭐", "🎁", "☃️"], accentGradient: "from-red-500 via-green-500 to-red-500", glowColor: "rgba(34, 197, 94, 0.12)" },
 ];
 
-function Particle({ emoji, delay, duration, x, size }: { emoji: string; delay: number; duration: number; x: number; size: number }) {
+// ── Particle with graceful exit ──
+function Particle({ emoji, delay, duration, x, size, exiting }: {
+  emoji: string; delay: number; duration: number; x: number; size: number; exiting: boolean;
+}) {
   return (
     <motion.div
       className="fixed pointer-events-none select-none z-[9999]"
       initial={{ top: -40, left: `${x}%`, opacity: 0, scale: 0.5, rotate: 0 }}
-      animate={{
-        top: "110vh",
-        opacity: [0, 1, 1, 0.5, 0],
-        scale: [0.5, 1, 0.8],
-        rotate: [0, 180, 360],
-      }}
-      transition={{
-        duration,
-        delay,
-        repeat: Infinity,
-        ease: "linear",
-      }}
+      animate={exiting
+        ? { opacity: 0, scale: 0, rotate: 720, transition: { duration: 1.5, ease: "easeInOut" } }
+        : {
+            top: "110vh",
+            opacity: [0, 1, 1, 0.5, 0],
+            scale: [0.5, 1, 0.8],
+            rotate: [0, 180, 360],
+          }
+      }
+      transition={exiting ? undefined : { duration, delay, repeat: Infinity, ease: "linear" }}
       style={{ fontSize: size }}
     >
       {emoji}
@@ -63,38 +64,95 @@ function Particle({ emoji, delay, duration, x, size }: { emoji: string; delay: n
   );
 }
 
+// ── Banner with smooth slide/fade ──
 function SeasonalBanner({ theme }: { theme: SeasonalThemeConfig }) {
   return (
     <motion.div
+      key={theme.key}
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: "auto", opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
       className={`w-full bg-gradient-to-r ${theme.accentGradient} overflow-hidden`}
     >
-      <div className="flex items-center justify-center gap-2 py-1.5 px-4">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -20, opacity: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="flex items-center justify-center gap-2 py-1.5 px-4"
+      >
         <span className="text-sm">{theme.emoji}</span>
         <span className="text-xs font-bold text-white drop-shadow-sm tracking-wide">
           {theme.label.toUpperCase()}
         </span>
         <span className="text-sm">{theme.emoji}</span>
-      </div>
+      </motion.div>
     </motion.div>
+  );
+}
+
+// ── Glow overlay with smooth fade ──
+function GlowOverlay({ color }: { color: string }) {
+  return (
+    <motion.div
+      key={color}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.5, ease: "easeInOut" }}
+      className="fixed inset-0 pointer-events-none z-[9998]"
+      style={{
+        background: `radial-gradient(ellipse at 50% 0%, ${color} 0%, transparent 60%)`,
+      }}
+    />
   );
 }
 
 export default function SeasonalEffects() {
   const [activeTheme, setActiveTheme] = useState<SeasonalThemeKey>("none");
+  // Track the "displayed" theme separately for graceful transitions
+  const [displayedTheme, setDisplayedTheme] = useState<SeasonalThemeKey>("none");
+  const [exiting, setExiting] = useState(false);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const applyThemeChange = useCallback((newThemeKey: SeasonalThemeKey) => {
+    setActiveTheme(prev => {
+      if (prev === newThemeKey) return prev;
+
+      // If currently showing effects, start graceful exit first
+      if (prev !== "none") {
+        setExiting(true);
+        // Clear any pending timer
+        if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+
+        // Phase 1: particles fade out (1.5s)
+        // Phase 2: banner slides out (0.8s, starts at 0.5s)
+        // Phase 3: glow fades (1.5s)
+        // Total graceful exit: ~2s then apply new theme
+        exitTimerRef.current = setTimeout(() => {
+          setExiting(false);
+          setDisplayedTheme(newThemeKey);
+        }, 2000);
+      } else {
+        // No current theme, apply immediately
+        setDisplayedTheme(newThemeKey);
+      }
+
+      return newThemeKey;
+    });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.rpc("get_seasonal_theme" as any);
       if (data && data !== "none") {
-        setActiveTheme(data as SeasonalThemeKey);
+        applyThemeChange(data as SeasonalThemeKey);
       }
     };
     load();
 
-    // Realtime updates (only works for authenticated users)
+    // Realtime updates
     const channel = supabase
       .channel("seasonal-theme")
       .on("postgres_changes", {
@@ -103,22 +161,24 @@ export default function SeasonalEffects() {
         table: "system_config",
         filter: "key=eq.seasonalTheme",
       }, (payload: any) => {
-        const val = payload.new?.value || "none";
-        setActiveTheme(val as SeasonalThemeKey);
+        const val = (payload.new?.value || "none") as SeasonalThemeKey;
+        applyThemeChange(val);
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+    return () => {
+      supabase.removeChannel(channel);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
+  }, [applyThemeChange]);
 
   const theme = useMemo(
-    () => SEASONAL_THEMES.find(t => t.key === activeTheme) || SEASONAL_THEMES[0],
-    [activeTheme]
+    () => SEASONAL_THEMES.find(t => t.key === displayedTheme) || SEASONAL_THEMES[0],
+    [displayedTheme]
   );
 
   const particles = useMemo(() => {
-    if (activeTheme === "none" || theme.particles.length === 0) return [];
-    // Generate 12 particles with random positions
+    if (displayedTheme === "none" || theme.particles.length === 0) return [];
     return Array.from({ length: 12 }, (_, i) => ({
       id: i,
       emoji: theme.particles[i % theme.particles.length],
@@ -127,31 +187,39 @@ export default function SeasonalEffects() {
       x: Math.random() * 95,
       size: 14 + Math.random() * 10,
     }));
-  }, [activeTheme, theme]);
+  }, [displayedTheme, theme]);
 
-  if (activeTheme === "none") return null;
+  // Nothing to show
+  if (displayedTheme === "none" && !exiting) return null;
 
   return (
     <>
-      {/* Top banner */}
-      <AnimatePresence>
-        <SeasonalBanner theme={theme} />
+      {/* Top banner — smooth entry/exit */}
+      <AnimatePresence mode="wait">
+        {!exiting && displayedTheme !== "none" && (
+          <SeasonalBanner key={theme.key} theme={theme} />
+        )}
       </AnimatePresence>
 
-      {/* Floating particles */}
+      {/* Floating particles — fade out gracefully when exiting */}
       {particles.map(p => (
-        <Particle key={p.id} emoji={p.emoji} delay={p.delay} duration={p.duration} x={p.x} size={p.size} />
+        <Particle
+          key={`${displayedTheme}-${p.id}`}
+          emoji={p.emoji}
+          delay={p.delay}
+          duration={p.duration}
+          x={p.x}
+          size={p.size}
+          exiting={exiting}
+        />
       ))}
 
-      {/* Ambient glow overlay */}
-      {theme.glowColor && (
-        <div
-          className="fixed inset-0 pointer-events-none z-[9998]"
-          style={{
-            background: `radial-gradient(ellipse at 50% 0%, ${theme.glowColor} 0%, transparent 60%)`,
-          }}
-        />
-      )}
+      {/* Ambient glow — smooth fade */}
+      <AnimatePresence>
+        {!exiting && theme.glowColor && (
+          <GlowOverlay key={theme.key} color={theme.glowColor} />
+        )}
+      </AnimatePresence>
     </>
   );
 }
