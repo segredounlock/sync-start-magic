@@ -615,9 +615,14 @@ export default function AdminDashboard() {
     } catch (err: any) { toast.error(err.message || "Erro"); }
   };
 
-  // Background payment monitor
+  // Background payment monitor — load admin deposit toast config
+  const [adminDepositToast, setAdminDepositToast] = useState(true);
+  useEffect(() => {
+    supabase.from("system_config").select("value").eq("key", "notif_admin_deposit").maybeSingle()
+      .then(({ data }) => { if (data && data.value === "false") setAdminDepositToast(false); });
+  }, []);
   const handleBgPaymentConfirmed = useCallback(() => { fetchData(); }, [fetchData]);
-  useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed);
+  useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed, adminDepositToast);
 
   useEffect(() => { fetchData(); }, [fetchData]);
    useEffect(() => { if (tab === "historico") fetchRecargas(); }, [tab, fetchRecargas]);

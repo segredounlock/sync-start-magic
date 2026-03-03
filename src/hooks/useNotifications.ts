@@ -38,9 +38,16 @@ export interface AppNotification {
 
 type ListenType = "deposit" | "recarga" | "new_user";
 
+export interface NotifConfig {
+  showDepositToast?: boolean;
+  showRecargaToast?: boolean;
+  showNewUserToast?: boolean;
+}
+
 interface UseNotificationsOptions {
   listenTo: ListenType[];
   revendedores?: { id: string; nome: string | null; email: string | null }[];
+  notifConfig?: NotifConfig;
 }
 
 async function persistNotification(n: Omit<AppNotification, "is_read">) {
@@ -57,7 +64,10 @@ async function persistNotification(n: Omit<AppNotification, "is_read">) {
   } as any);
 }
 
-export function useNotifications({ listenTo, revendedores }: UseNotificationsOptions) {
+export function useNotifications({ listenTo, revendedores, notifConfig }: UseNotificationsOptions) {
+  const showDeposit = notifConfig?.showDepositToast !== false;
+  const showRecarga = notifConfig?.showRecargaToast !== false;
+  const showNewUser = notifConfig?.showNewUserToast !== false;
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -143,8 +153,10 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
               is_read: false,
             });
             try { playCashRegisterSound(); } catch {}
-            showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
-            appToast.depositConfirmed(`Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
+            if (showDeposit) {
+              showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
+              appToast.depositConfirmed(`Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
+            }
           }
         })
         .subscribe();
@@ -176,8 +188,10 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             created_at: r.created_at,
             is_read: false,
           });
-          showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
-          appToast.recargaProcessing(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+          if (showRecarga) {
+            showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
+            appToast.recargaProcessing(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+          }
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "recargas",
@@ -253,8 +267,10 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             is_read: false,
           });
           try { playWebSignupSound(); } catch {}
-          showSystemNotification("🆕 Novo cadastro", label);
-          appToast.newUserWeb(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
+          if (showNewUser) {
+            showSystemNotification("🆕 Novo cadastro", label);
+            appToast.newUserWeb(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
+          }
         })
         .on("postgres_changes", {
           event: "INSERT", schema: "public", table: "telegram_users",
@@ -274,8 +290,10 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             is_read: false,
           });
           try { playTelegramSignupSound(); } catch {}
-          showSystemNotification("🤖 Novo Telegram", label);
-          appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
+          if (showNewUser) {
+            showSystemNotification("🤖 Novo Telegram", label);
+            appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
+          }
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "telegram_users",
@@ -296,8 +314,10 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             is_read: false,
           });
           try { playTelegramSignupSound(); } catch {}
-          showSystemNotification("🤖 Novo Telegram", label);
-          appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
+          if (showNewUser) {
+            showSystemNotification("🤖 Novo Telegram", label);
+            appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
+          }
         })
         .subscribe();
       channels.push(ch);

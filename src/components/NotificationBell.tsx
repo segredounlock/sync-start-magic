@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNotifications, AppNotification } from "@/hooks/useNotifications";
+import { useNotifications, AppNotification, NotifConfig } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { formatDateBR, formatTimeBR, isTodayBR, toLocalDateKey } from "@/lib/timezone";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NotificationBellProps {
   listenTo: ("deposit" | "recarga" | "new_user")[];
@@ -62,10 +63,31 @@ function fmtDate(d: string) {
 export function NotificationBell({ listenTo, revendedores }: NotificationBellProps) {
   const { user } = useAuth();
   usePushNotifications(user?.id);
-  
+
+  // Load notification config from system_config
+  const [notifConfig, setNotifConfig] = useState<NotifConfig>({});
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("key, value")
+        .like("key", "notif_admin_%");
+      if (data) {
+        const cfg: NotifConfig = {};
+        data.forEach((r: any) => {
+          if (r.key === "notif_admin_deposit") cfg.showDepositToast = r.value !== "false";
+          if (r.key === "notif_admin_recarga") cfg.showRecargaToast = r.value !== "false";
+          if (r.key === "notif_admin_new_user") cfg.showNewUserToast = r.value !== "false";
+        });
+        setNotifConfig(cfg);
+      }
+    })();
+  }, []);
+
   const { notifications, unreadCount, loading, markAllRead, clearAll } = useNotifications({
     listenTo,
     revendedores,
+    notifConfig,
   });
 
   const [open, setOpen] = useState(false);

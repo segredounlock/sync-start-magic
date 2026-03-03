@@ -1004,6 +1004,7 @@ export type Database = {
     Functions: {
       get_chat_enabled: { Args: never; Returns: boolean }
       get_maintenance_mode: { Args: never; Returns: boolean }
+      get_notif_config: { Args: { _key: string }; Returns: string }
       get_public_tables: {
         Args: never
         Returns: {
