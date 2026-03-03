@@ -1408,15 +1408,20 @@ export default function TelegramMiniApp() {
                       </button>
                     ))}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span style={st.hint}>R$</span>
-                    <input type="text" inputMode="decimal" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value.replace(/[^\d,.]/g, ""))}
-                      placeholder="Outro valor" className="flex-1 rounded-xl p-3 focus:outline-none"
-                      style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }} />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span style={st.hint}>R$</span>
+                      <input type="text" inputMode="decimal" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value.replace(/[^\d,.]/g, ""))}
+                        placeholder="Outro valor (mín. R$ 10)" className="flex-1 rounded-xl p-3 focus:outline-none"
+                        style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }} />
+                    </div>
+                    {depositAmount && parseFloat(depositAmount.replace(",", ".")) > 0 && parseFloat(depositAmount.replace(",", ".")) < 10 && (
+                      <p className="text-xs" style={{ color: "var(--tg-destructive, #ec3942)" }}>Valor mínimo: R$ 10,00</p>
+                    )}
                   </div>
                   <motion.button
                     onClick={handleDeposit}
-                    disabled={depositLoading || !depositAmount}
+                    disabled={depositLoading || !depositAmount || parseFloat((depositAmount || "0").replace(",", ".")) < 10}
                     className="w-full rounded-2xl py-4 font-bold text-base transition disabled:opacity-40 flex items-center justify-center gap-3 relative overflow-hidden"
                     style={{ backgroundColor: "#4ade80", color: "#000" }}
                     whileTap={{ scale: 0.97 }}

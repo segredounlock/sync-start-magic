@@ -1220,7 +1220,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
 
     await setSession(supabase, String(chatId), "awaiting_deposit_amount", { user_id: user.id, bot_msg_id: msgId });
     await editMessageWithKeyboard(token, chatId, msgId,
-      "💳 <b>Depósito PIX</b>\n\nEscolha um valor ou digite manualmente:",
+      "💳 <b>Depósito PIX</b>\n\n💰 Valor mínimo: <b>R$ 10,00</b>\n\nEscolha um valor ou digite manualmente:",
       [
         [{ text: "R$ 10", callback_data: "deposit_10" }, { text: "R$ 15", callback_data: "deposit_15" }, { text: "R$ 20", callback_data: "deposit_20" }],
         [{ text: "R$ 30", callback_data: "deposit_30" }, { text: "R$ 50", callback_data: "deposit_50" }, { text: "R$ 100", callback_data: "deposit_100" }],
@@ -1501,8 +1501,8 @@ async function handleDepositAmount(supabase: any, token: string, chatId: number,
   deleteMessageFire(token, chatId, userMsgId);
 
   const valor = parseFloat(text.replace(",", "."));
-  if (isNaN(valor) || valor <= 0 || valor > 10000) {
-    await sendMessage(token, chatId, "❌ Valor inválido. Digite um valor entre R$ 1,00 e R$ 10.000,00:");
+  if (isNaN(valor) || valor < 10 || valor > 10000) {
+    await sendMessage(token, chatId, "❌ Valor inválido. O valor mínimo é <b>R$ 10,00</b> e o máximo é R$ 10.000,00.\n\nDigite um valor válido:");
     return;
   }
 

@@ -55,7 +55,7 @@ export function usePixDeposit(options: UsePixDepositOptions = {}): UsePixDeposit
     saldoTipo = "revenda",
     pollInterval = 3000,
     onConfirmed,
-    presetAmounts = [20, 50, 100, 200, 500, 1000],
+    presetAmounts = [10, 15, 20, 50, 100, 200],
   } = options;
 
   const [depositAmount, setDepositAmount] = useState("");
