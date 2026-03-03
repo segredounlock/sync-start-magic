@@ -13,10 +13,12 @@ export function useTypingIndicator(conversationId: string | null) {
   const typingTimeouts = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const lastSent = useRef(0);
   const channelRef = useRef<any>(null);
+  const subscribedRef = useRef(false);
 
   useEffect(() => {
     if (!conversationId || !user) return;
 
+    subscribedRef.current = false;
     const channel = supabase.channel(`typing-${conversationId}`);
     channelRef.current = channel;
 
@@ -53,11 +55,16 @@ export function useTypingIndicator(conversationId: string | null) {
           typingTimeouts.current.delete(userId);
         }
       })
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === "SUBSCRIBED") {
+          subscribedRef.current = true;
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
       channelRef.current = null;
+      subscribedRef.current = false;
       typingTimeouts.current.forEach(t => clearTimeout(t));
       typingTimeouts.current.clear();
       setTypingUsers([]);
@@ -66,7 +73,7 @@ export function useTypingIndicator(conversationId: string | null) {
 
   const sendTyping = useCallback(
     (nome: string) => {
-      if (!channelRef.current || !user) return;
+      if (!channelRef.current || !user || !subscribedRef.current) return;
       const now = Date.now();
       // Throttle: send at most once per 2 seconds
       if (now - lastSent.current < 2000) return;
@@ -81,7 +88,7 @@ export function useTypingIndicator(conversationId: string | null) {
   );
 
   const sendStopTyping = useCallback(() => {
-    if (!channelRef.current || !user) return;
+    if (!channelRef.current || !user || !subscribedRef.current) return;
     channelRef.current.send({
       type: "broadcast",
       event: "stop_typing",
