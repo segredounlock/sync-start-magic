@@ -50,11 +50,40 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
     const timer = setTimeout(async () => {
       if (!receiptRef.current) return;
       try {
+        // Get the computed background color for the receipt
+        const computedBg = getComputedStyle(receiptRef.current).backgroundColor;
+
         const canvas = await html2canvas(receiptRef.current, {
-          backgroundColor: null,
-          scale: 2,
+          backgroundColor: computedBg || "#ffffff",
+          scale: 3,
           useCORS: true,
           logging: false,
+          onclone: (clonedDoc, clonedEl) => {
+            // Hide the close button in the cloned version
+            const closeBtn = clonedEl.querySelector("[data-hide-capture]");
+            if (closeBtn) (closeBtn as HTMLElement).style.display = "none";
+
+            // Resolve all CSS custom properties to computed values for html2canvas
+            const resolveStyles = (el: Element) => {
+              const computed = getComputedStyle(el);
+              const htmlEl = el as HTMLElement;
+              // Apply key visual properties that html2canvas struggles with
+              htmlEl.style.color = computed.color;
+              htmlEl.style.backgroundColor = computed.backgroundColor;
+              htmlEl.style.borderColor = computed.borderColor;
+              htmlEl.style.borderTopColor = computed.borderTopColor;
+              htmlEl.style.borderBottomColor = computed.borderBottomColor;
+              htmlEl.style.borderLeftColor = computed.borderLeftColor;
+              htmlEl.style.borderRightColor = computed.borderRightColor;
+              // Resolve gradient backgrounds
+              const bgImage = computed.backgroundImage;
+              if (bgImage && bgImage !== "none") {
+                htmlEl.style.backgroundImage = bgImage;
+              }
+              el.querySelectorAll("*").forEach(resolveStyles);
+            };
+            resolveStyles(clonedEl);
+          },
         });
         const dataUrl = canvas.toDataURL("image/png");
         const res = await fetch(dataUrl);
@@ -130,7 +159,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
             <div ref={receiptRef} className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
               {/* Header gradient */}
               <div className="bg-gradient-to-br from-primary to-primary/80 px-6 pt-6 pb-8 text-center relative">
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3" data-hide-capture>
                   <button onClick={onClose} className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors">
                     <X className="h-4 w-4 text-primary-foreground" />
                   </button>
