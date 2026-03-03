@@ -351,7 +351,7 @@ async function sendPendingNotifications(supabase: any, token: string, chatId: nu
         ? new Date(tx.metadata.confirmed_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
         : "";
       
-      const msg = `✅ <b>Pagamento Confirmado!</b>\n\n💰 Valor: <b>R$ ${valorFmt}</b>\n💳 Saldo atual: <b>R$ ${saldoFmt}</b>${confirmedAt ? `\n🕐 Confirmado em: ${confirmedAt}` : ""}\n\n🎉 Saldo creditado com sucesso!`;
+      const msg = `🎉🎉🎉🎉🎉🎉🎉🎉\n\n✅ <b>Pagamento Confirmado!</b> ✅\n\n💸 Valor recebido: <b>R$ ${valorFmt}</b>\n💰 Saldo atual: <b>R$ ${saldoFmt}</b>${confirmedAt ? `\n🕐 Confirmado em: ${confirmedAt}` : ""}\n\n🚀 Seu saldo foi creditado!\n🎊 Bora fazer recarga! 🎊`;
 
       const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: "POST",
@@ -360,6 +360,7 @@ async function sendPendingNotifications(supabase: any, token: string, chatId: nu
           chat_id: chatId,
           text: msg,
           parse_mode: "HTML",
+          message_effect_id: "5046509860389126442",
           reply_markup: {
             inline_keyboard: [
               [{ text: "💰 Ver Saldo", callback_data: "menu_saldo" }, { text: "📱 Fazer Recarga", callback_data: "menu_recarga" }],
@@ -820,28 +821,37 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     }).catch(() => {});
   }
 
-  const webAppUrl = "https://recargasbrasill.com/miniapp";
-  const migrationConfig = await getMigrationConfig(supabase);
+  let webAppUrl = "https://recargasbrasill.com/miniapp";
+  const [migrationConfig, em, webAppConfig] = await Promise.all([
+    getMigrationConfig(supabase),
+    getSeasonalEmojis(supabase),
+    supabase.from("system_config").select("value").eq("key", "webAppUrl").maybeSingle(),
+  ]);
   const migrationSiteUrl = migrationConfig.url || "https://recargasbrasill.com";
-  const em = await getSeasonalEmojis(supabase);
-  const menuKb = (extra?: any[][]) => [
-    ...(extra || []),
-    [
-      { text: `${se(em, "saldo")} Ver Saldo`, callback_data: "menu_saldo" },
-      { text: `${se(em, "recarga")} Fazer Recarga`, callback_data: "menu_recarga" },
-    ],
-    [
-      { text: `${se(em, "historico")} Histórico`, callback_data: "menu_recargas" },
-      { text: `${se(em, "deposito")} Depositar PIX`, callback_data: "menu_deposito" },
-    ],
-    [
-      { text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" },
-      { text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } },
-    ],
-    [
-      { text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } },
-    ],
-  ];
+  if (webAppConfig?.data?.value) webAppUrl = webAppConfig.data.value;
+
+  const menuKb = (extra?: any[][]) => {
+    const kb = [
+      ...(extra || []),
+      [
+        { text: `${se(em, "saldo")} Ver Saldo`, callback_data: "menu_saldo" },
+        { text: `${se(em, "recarga")} Fazer Recarga`, callback_data: "menu_recarga" },
+      ],
+      [
+        { text: `${se(em, "historico")} Histórico`, callback_data: "menu_recargas" },
+        { text: `${se(em, "deposito")} Depositar PIX`, callback_data: "menu_deposito" },
+      ],
+      [
+        { text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" },
+        { text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } },
+      ],
+    ];
+    if (migrationConfig.enabled) {
+      kb.push([{ text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } }]);
+    }
+    kb.push([{ text: "❓ Ajuda / Suporte", callback_data: "menu_ajuda" }]);
+    return kb;
+  };
 
   // === Migration callbacks ===
   if (data === "migration_continue") {
@@ -869,12 +879,19 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     return;
   }
 
+  if (data === "menu_ajuda") {
+    await handleAjuda(token, chatId);
+    return;
+  }
+
   if (data === "menu_main") {
     const user = await findUserByTelegram(supabase, telegramId);
     if (user) {
-      // Show menu immediately, then process pending notifications in background
+      // Fetch balance for welcome message
+      const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle();
+      const saldoFmt = Number(saldo?.valor || 0).toFixed(2).replace(".", ",");
       await editMessageWithKeyboard(token, chatId, msgId,
-        `👋 Olá, <b>${user.nome || user.email}</b>!\n\nEscolha uma opção:`,
+        `👋 Olá, <b>${user.nome || user.email}</b>!\n💰 Saldo: <b>R$ ${saldoFmt}</b>\n\nEscolha uma opção:`,
         menuKb()
       );
       sendPendingNotifications(supabase, token, chatId, user.id).catch((e) =>
@@ -1390,28 +1407,52 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 // ===== MAIN MENU =====
 
 async function sendMainMenu(token: string, chatId: number, user: any, supabase?: any) {
-  const webAppUrl = "https://recargasbrasill.com/miniapp";
+  let webAppUrl = "https://recargasbrasill.com/miniapp";
   let migrationSiteUrl = "https://recargasbrasill.com";
+  let migrationEnabled = false;
   let em: Record<string, string> = {};
+  let saldoFmt = "0,00";
+
   if (supabase) {
-    const migrationConfig = await getMigrationConfig(supabase);
+    // Fetch migration config, seasonal emojis, webAppUrl config, and balance in parallel
+    const [migrationConfig, emojis, webAppConfig, saldoData] = await Promise.all([
+      getMigrationConfig(supabase),
+      getSeasonalEmojis(supabase),
+      supabase.from("system_config").select("value").eq("key", "webAppUrl").maybeSingle(),
+      user.id ? supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle() : Promise.resolve({ data: null }),
+    ]);
     migrationSiteUrl = migrationConfig.url || migrationSiteUrl;
-    em = await getSeasonalEmojis(supabase);
+    migrationEnabled = migrationConfig.enabled;
+    em = emojis;
+    if (webAppConfig?.data?.value) webAppUrl = webAppConfig.data.value;
+    const saldoVal = Number(saldoData?.data?.valor || 0);
+    saldoFmt = saldoVal.toFixed(2).replace(".", ",");
   }
-  await sendMessageWithKeyboard(token, chatId,
-    `👋 Olá, <b>${user.nome || user.email}</b>!\n\nEscolha uma opção:`,
-    [[
+
+  const keyboard: any[][] = [
+    [
       { text: `${se(em, "saldo")} Ver Saldo`, callback_data: "menu_saldo" },
       { text: `${se(em, "recarga")} Fazer Recarga`, callback_data: "menu_recarga" },
-    ], [
+    ],
+    [
       { text: `${se(em, "historico")} Histórico`, callback_data: "menu_recargas" },
       { text: `${se(em, "deposito")} Depositar PIX`, callback_data: "menu_deposito" },
-    ], [
+    ],
+    [
       { text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" },
       { text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } },
-    ], [
-      { text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } },
-    ]]
+    ],
+  ];
+
+  if (migrationEnabled) {
+    keyboard.push([{ text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } }]);
+  }
+
+  keyboard.push([{ text: "❓ Ajuda / Suporte", callback_data: "menu_ajuda" }]);
+
+  await sendMessageWithKeyboard(token, chatId,
+    `👋 Olá, <b>${user.nome || user.email}</b>!\n💰 Saldo: <b>R$ ${saldoFmt}</b>\n\nEscolha uma opção:`,
+    keyboard
   );
 }
 
