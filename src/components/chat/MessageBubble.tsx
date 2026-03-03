@@ -194,7 +194,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const [showLongPressMenu, setShowLongPressMenu] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [dropdownPos, setDropdownPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [dropdownPos, setDropdownPos] = useState<{ x: number; y: number; openUp?: boolean }>({ x: 0, y: 0 });
   const dropdownBtnRef = useRef<HTMLButtonElement>(null);
   const [showMessageInfo, setShowMessageInfo] = useState(false);
   const [showUserRecargas, setShowUserRecargas] = useState(false);
@@ -463,7 +463,11 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                 // Ensure menu doesn't overflow viewport
                 const menuHeight = 220;
                 const menuWidth = 170;
-                const y = Math.max(60, Math.min(e.clientY, window.innerHeight - menuHeight));
+                const spaceBelow = window.innerHeight - e.clientY;
+                const openUp = spaceBelow < menuHeight && e.clientY > menuHeight;
+                const y = openUp
+                  ? Math.max(10, e.clientY - menuHeight)
+                  : Math.max(60, Math.min(e.clientY, window.innerHeight - menuHeight));
                 const x = Math.min(e.clientX, window.innerWidth - menuWidth);
                 setContextMenuPos({ x, y });
                 setShowContextMenu(true);
@@ -482,9 +486,13 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                 e.preventDefault();
                 if (!showDropdown && dropdownBtnRef.current) {
                   const rect = dropdownBtnRef.current.getBoundingClientRect();
+                  const menuH = 220;
+                  const spaceBelow = window.innerHeight - rect.bottom;
+                  const openUp = spaceBelow < menuH && rect.top > menuH;
                   setDropdownPos({
                     x: isOwn ? rect.right : rect.left,
-                    y: rect.bottom + 4,
+                    y: openUp ? rect.top - 4 : rect.bottom + 4,
+                    openUp,
                   });
                 }
                 setShowDropdown(!showDropdown);
@@ -509,7 +517,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
                   transition={{ duration: 0.15 }}
                   style={{
                     position: "fixed",
-                    top: dropdownPos.y,
+                    ...(dropdownPos.openUp ? { bottom: window.innerHeight - dropdownPos.y } : { top: dropdownPos.y }),
                     ...(isOwn ? { right: window.innerWidth - dropdownPos.x } : { left: dropdownPos.x }),
                     zIndex: 9999,
                   }}
