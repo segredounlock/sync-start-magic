@@ -509,7 +509,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
                     onReact={(emoji) => toggleReaction(msg.id, emoji)}
                     onDelete={() => deleteMessage(msg.id, isUserAdmin && msg.sender_id !== user?.id)}
                     onEdit={() => handleStartEdit(msg)}
-                    onPin={() => pinMessage(msg.id)}
+                    onPin={isUserAdmin ? () => pinMessage(msg.id) : undefined}
                     onScrollToMessage={scrollToMessage}
                   />
                 </div>
