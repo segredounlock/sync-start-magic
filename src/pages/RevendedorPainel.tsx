@@ -2196,7 +2196,13 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
     setConfirmedAmount(0);
   };
 
-  const depositTxs = transactions.filter(t => t.type === "deposit");
+  const DEPOSIT_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
+  const depositTxs = transactions.filter(t => t.type === "deposit").map(t => {
+    if (t.status === "pending" && (Date.now() - new Date(t.created_at).getTime()) > DEPOSIT_EXPIRY_MS) {
+      return { ...t, status: "expired" };
+    }
+    return t;
+  });
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">

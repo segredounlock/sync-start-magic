@@ -17,6 +17,19 @@ export function useBackgroundPaymentMonitor(
   useEffect(() => {
     if (!userId) return;
 
+    // Auto-expire old pending deposits (>30 min) on mount
+    const expireOldDeposits = async () => {
+      const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      await supabase
+        .from("transactions")
+        .update({ status: "expired", updated_at: new Date().toISOString() })
+        .eq("user_id", userId)
+        .eq("status", "pending")
+        .eq("type", "deposit")
+        .lt("created_at", cutoff);
+    };
+    expireOldDeposits();
+
     // Subscribe to realtime changes on the transactions table for this user
     const channel = supabase
       .channel(`bg-payment-${userId}`)
