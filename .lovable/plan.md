@@ -1,28 +1,27 @@
 
 
-## Plano: Corrigir preview de resposta mostrando "Áudio" para imagens
+## Plano: Manter indicador "gravando áudio" ativo durante toda a gravação
 
 ### Problema
-Na `MessageBubble.tsx` linha 470, o preview de resposta (reply) usa:
-```typescript
-{message.reply_to.content || "🎤 Áudio"}
-```
-Quando `content` é null (caso de imagens e áudios), **sempre** mostra "🎤 Áudio", mesmo quando a mensagem original era uma imagem. É o bug mostrado na screenshot (círculo amarelo).
 
-### Correção
-Substituir o fallback fixo por verificação do `type`, igual já é feito corretamente em outros locais (ChatWindow linhas 512 e 648):
+O `sendTyping(myNome, "recording")` é chamado **uma única vez** ao clicar no botão do microfone (linha 771 do ChatWindow). Como o typing indicator tem timeout de 4 segundos, o status "gravando áudio" desaparece rapidamente enquanto o usuário continua gravando. O outro participante vê o indicador por ~4s e depois some.
 
-**`src/components/chat/MessageBubble.tsx` linha 470:**
-```typescript
-// De:
-{message.reply_to.content || "🎤 Áudio"}
-// Para:
-{message.reply_to.content || (message.reply_to.type === "audio" ? "🎤 Áudio" : "📷 Imagem")}
-```
+### Solução
 
-Também adicionar thumbnail da imagem no preview de resposta para melhor contexto visual.
+Passar a função `sendTyping` para o `AudioRecorder` e criar um intervalo interno que reenvia o sinal `"recording"` a cada 2.5 segundos enquanto a gravação estiver ativa — mantendo o indicador visível durante toda a duração, como no WhatsApp.
+
+### Alterações
+
+**`src/components/chat/AudioRecorder.tsx`:**
+- Adicionar prop `onTypingPing?: () => void`
+- Dentro do `useEffect` de gravação, criar `setInterval` que chama `onTypingPing()` a cada 2500ms
+- Limpar o intervalo no cleanup e ao parar a gravação
+
+**`src/components/chat/ChatWindow.tsx`:**
+- Passar `onTypingPing={() => sendTyping(myNome, "recording")}` para o `<AudioRecorder />`
+- Manter o `sendStopTyping()` existente no `onCancel` e `onSend`
 
 ### Impacto
-- Correção de 1 linha principal
-- Preview de resposta passa a mostrar o ícone/texto correto para cada tipo de mensagem
+- Indicador "gravando áudio..." permanece visível para o outro usuário durante toda a gravação
+- ~10 linhas adicionadas no total
 
