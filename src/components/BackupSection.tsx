@@ -211,7 +211,7 @@ export default function BackupSection() {
     "src/components/RealtimeDashboard.tsx","src/components/RecargaReceipt.tsx",
     "src/components/RecargasTicker.tsx","src/components/Skeleton.tsx",
     "src/components/SplashScreen.tsx","src/components/ThemeToggle.tsx",
-    "src/components/VerificationBadge.tsx",
+    "src/components/VerificationBadge.tsx","src/components/SeasonalEffects.tsx",
     // Chat components
     "src/components/chat/ChatPage.tsx","src/components/chat/ChatWindow.tsx",
     "src/components/chat/ConversationList.tsx","src/components/chat/MessageBubble.tsx",
