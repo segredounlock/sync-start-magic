@@ -3033,6 +3033,58 @@ export default function Principal() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Menu do Bot - Botões visíveis */}
+                  <div className="glass-card rounded-xl p-6 space-y-4 border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Menu className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground">Menu do Bot</h4>
+                        <p className="text-xs text-muted-foreground">Escolha quais botões aparecem no menu principal do bot</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {[
+                        { key: "bot_btn_saldo", label: "💰 Ver Saldo", desc: "Exibe o saldo do usuário", defaultOn: true },
+                        { key: "bot_btn_recarga", label: "📱 Fazer Recarga", desc: "Permite fazer recargas", defaultOn: true },
+                        { key: "bot_btn_historico", label: "📋 Histórico", desc: "Lista de recargas realizadas", defaultOn: true },
+                        { key: "bot_btn_deposito", label: "💳 Depositar PIX", desc: "Gera QR Code para depósito", defaultOn: true },
+                        { key: "bot_btn_conta", label: "👤 Minha Conta", desc: "Dados da conta do usuário", defaultOn: true },
+                        { key: "bot_btn_webapp", label: "🌐 Abrir Web App", desc: "Abre o painel web dentro do Telegram", defaultOn: true },
+                        { key: "bot_btn_migration", label: "🔄 Usar Saldo Antigo", desc: "Link para o site antigo (migração)", defaultOn: false },
+                        { key: "bot_btn_ajuda", label: "❓ Ajuda / Suporte", desc: "Botão de ajuda no menu", defaultOn: true },
+                      ].map(btn => {
+                        const isOn = globalConfig[btn.key] !== undefined ? globalConfig[btn.key] === "true" : btn.defaultOn;
+                        return (
+                          <div key={btn.key} className="flex items-center justify-between p-3 rounded-xl border border-border bg-background/50 hover:bg-accent/30 transition-colors">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground">{btn.label}</p>
+                              <p className="text-[11px] text-muted-foreground">{btn.desc}</p>
+                            </div>
+                            <button
+                              onClick={() => setGlobalConfig(prev => ({ ...prev, [btn.key]: isOn ? "false" : "true" }))}
+                              className="shrink-0 ml-3"
+                            >
+                              {isOn ? (
+                                <ToggleRight className="h-7 w-7 text-success" />
+                              ) : (
+                                <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Web App URL */}
+                    <div className="pt-2 border-t border-border">
+                      <label className="block text-sm font-medium text-foreground mb-1">URL do Web App</label>
+                      <input type="url" value={globalConfig.webAppUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, webAppUrl: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://recargasbrasill.com/miniapp" />
+                      <p className="text-[11px] text-muted-foreground mt-1">URL que abre ao clicar em "Abrir Web App". Deixe vazio para usar o padrão.</p>
+                    </div>
+                  </div>
                 </>
               )}
             </motion.div>
