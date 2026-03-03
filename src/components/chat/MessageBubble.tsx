@@ -44,6 +44,8 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    let maxTimeReached = 0;
+
     const updateDuration = () => {
       const rawDuration = audio.duration;
       const seekableDuration = audio.seekable && audio.seekable.length > 0
@@ -51,7 +53,7 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
         : 0;
       const resolvedDuration = (rawDuration && isFinite(rawDuration) && rawDuration > 0)
         ? rawDuration
-        : seekableDuration;
+        : seekableDuration > 0 ? seekableDuration : 0;
 
       if (resolvedDuration && isFinite(resolvedDuration) && resolvedDuration > 0) {
         setDuration(resolvedDuration);
@@ -59,16 +61,45 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
     };
     const onTime = () => {
       setCurrentTime(audio.currentTime);
-      updateDuration(); // Also try to get duration during playback
+      // Track max time reached as fallback duration for WebM without metadata
+      if (audio.currentTime > maxTimeReached) {
+        maxTimeReached = audio.currentTime;
+      }
+      updateDuration();
     };
-    const onEnd = () => { setPlaying(false); setCurrentTime(0); };
+    const onEnd = () => {
+      // Use maxTimeReached as duration if we still don't have it
+      if (!duration && maxTimeReached > 0) {
+        setDuration(maxTimeReached);
+      }
+      setPlaying(false);
+      setCurrentTime(0);
+    };
+
+    // Workaround for WebM: set currentTime to a huge number to force duration calculation
+    const forceDuration = () => {
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) return;
+      // Temporarily seek to end to discover duration
+      audio.currentTime = 1e10;
+      const onSeeked = () => {
+        audio.removeEventListener("seeked", onSeeked);
+        if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
+          setDuration(audio.duration);
+        } else if (audio.currentTime > 0) {
+          setDuration(audio.currentTime);
+        }
+        audio.currentTime = 0;
+      };
+      audio.addEventListener("seeked", onSeeked);
+    };
+
     audio.addEventListener("timeupdate", onTime);
-    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("loadedmetadata", () => { updateDuration(); forceDuration(); });
     audio.addEventListener("durationchange", updateDuration);
     audio.addEventListener("canplay", updateDuration);
     audio.addEventListener("ended", onEnd);
-    // Try immediately in case already loaded
     updateDuration();
+
     return () => {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("loadedmetadata", updateDuration);
