@@ -102,7 +102,12 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
         className="relative p-2 rounded-xl hover:bg-muted/60 text-muted-foreground transition-all duration-200 active:scale-95"
         aria-label="Notificações"
       >
-        <Bell className="h-5 w-5" />
+        <motion.div
+          animate={unreadCount > 0 ? { rotate: [0, 12, -12, 8, -8, 0] } : {}}
+          transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 4 }}
+        >
+          <Bell className="h-5 w-5" />
+        </motion.div>
         <AnimatePresence>
           {unreadCount > 0 && (
             <motion.span
