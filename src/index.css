@@ -344,22 +344,38 @@ select option {
   40% { background-position: -200% center; }
 }
 
+/* Fallback: pulsação de cor para WebViews que não suportam background-clip:text */
+@keyframes shimmer-color-pulse {
+  0%, 100% { color: inherit; }
+  25% { color: hsl(152, 72%, 55%); }
+  50% { color: inherit; }
+  75% { color: hsl(152, 72%, 55%); }
+}
+
 .shimmer-letters {
   display: inline-block;
-  background: linear-gradient(
-    110deg,
-    hsl(var(--foreground)) 0%,
-    hsl(var(--foreground)) 38%,
-    hsl(152, 72%, 55%) 50%,
-    hsl(var(--foreground)) 62%,
-    hsl(var(--foreground)) 100%
-  );
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer-letters 4s ease-in-out infinite;
+  /* Fallback animation first (will be overridden if background-clip works) */
+  animation: shimmer-color-pulse 4s ease-in-out infinite;
+}
+
+/* Progressive enhancement: gradient shimmer for browsers that support it */
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .shimmer-letters {
+    background: linear-gradient(
+      110deg,
+      hsl(var(--foreground)) 0%,
+      hsl(var(--foreground)) 38%,
+      hsl(152, 72%, 55%) 50%,
+      hsl(var(--foreground)) 62%,
+      hsl(var(--foreground)) 100%
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-letters 4s ease-in-out infinite;
+  }
 }
 
 .shimmer-letters .brasil-word {
@@ -473,18 +489,27 @@ select option {
 /* Preserve shimmer effect in Telegram theme */
 .tg-chat-theme .shimmer-letters {
   display: inline-block !important;
-  background: linear-gradient(
-    110deg,
-    #f5f5f5 0%,
-    #f5f5f5 38%,
-    #4ade80 50%,
-    #f5f5f5 62%,
-    #f5f5f5 100%
-  ) !important;
-  background-size: 300% 100% !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  animation: shimmer-letters 4s ease-in-out infinite !important;
+  /* Fallback: color pulse always works in any WebView */
+  animation: shimmer-color-pulse 4s ease-in-out infinite !important;
+  color: #f5f5f5 !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .tg-chat-theme .shimmer-letters {
+    background: linear-gradient(
+      110deg,
+      #f5f5f5 0%,
+      #f5f5f5 38%,
+      #4ade80 50%,
+      #f5f5f5 62%,
+      #f5f5f5 100%
+    ) !important;
+    background-size: 300% 100% !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: shimmer-letters 4s ease-in-out infinite !important;
+  }
 }
