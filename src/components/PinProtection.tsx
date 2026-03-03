@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Lock } from "lucide-react";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 
 interface PinProtectionProps {
   children: React.ReactNode;

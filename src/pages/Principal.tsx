@@ -35,7 +35,7 @@ import { fetchAllRows } from "@/lib/fetchAll";
 import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateFullBR, formatTimeBR } from "@/lib/timezone";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { useNavigate } from "react-router-dom";
 
 interface Revendedor {

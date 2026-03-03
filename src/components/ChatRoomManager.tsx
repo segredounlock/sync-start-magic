@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Hash, Eye, Lock, MessageSquare, MoreVertical,

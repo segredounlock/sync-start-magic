@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PromoBanner } from "./PromoBanner";
 import { PopupBanner } from "./PopupBanner";
 import { ToggleLeft, ToggleRight, Zap, Save, Loader2, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BannerData {

@@ -9,7 +9,7 @@ import {
   Smartphone, Zap, Shield, LogIn, UserPlus, Loader2,
   ArrowRight, CheckCircle, Headphones, TrendingUp, CreditCard, Globe,
 } from "lucide-react";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import RevendedorPainel from "./RevendedorPainel";
 
 interface ResellerInfo {

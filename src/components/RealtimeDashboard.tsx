@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { playSuccessSound } from "@/lib/sounds";
 import { getLocalDayBoundsUTC, formatTimeBR } from "@/lib/timezone";
 import {

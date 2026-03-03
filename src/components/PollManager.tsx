@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart3, Plus, Trash2, ToggleLeft, ToggleRight, Eye, Loader2, X } from "lucide-react";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { formatTimeBR, formatDateFullBR } from "@/lib/timezone";
 
 interface PollOption {

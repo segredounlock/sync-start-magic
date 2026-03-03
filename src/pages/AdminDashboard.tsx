@@ -26,7 +26,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,

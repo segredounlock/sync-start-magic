@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Target, Wallet, Check, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { formatDateShortBR, formatTimeBR } from "@/lib/timezone";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 

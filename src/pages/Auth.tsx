@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { appToast } from "@/lib/toast";
 import { Navigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -106,9 +106,9 @@ export default function Auth() {
       });
       if (error) throw error;
       setForgotSent(true);
-      toast.success("E-mail de recuperação enviado!");
+      appToast.emailSent("E-mail de recuperação enviado!");
     } catch (err: any) {
-      toast.error(translateAuthError(err.message));
+      appToast.error(translateAuthError(err.message));
     } finally {
       setForgotSubmitting(false);
     }
@@ -117,7 +117,7 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin && isLocked) {
-      toast.error(`Muitas tentativas. Aguarde ${cooldownRemaining}s`);
+      appToast.blocked(`Muitas tentativas. Aguarde ${cooldownRemaining}s`);
       return;
     }
     setSubmitting(true);
@@ -129,7 +129,7 @@ export default function Auth() {
           setFailedAttempts(newAttempts);
           if (newAttempts >= MAX_ATTEMPTS) {
             startCooldown();
-            toast.error(`Bloqueado por 60 segundos após ${MAX_ATTEMPTS} tentativas`);
+            appToast.blocked(`Bloqueado por 60 segundos após ${MAX_ATTEMPTS} tentativas`);
           }
           throw error;
         }
@@ -146,7 +146,7 @@ export default function Auth() {
         }
         const { data: { session: freshSession } } = await supabase.auth.getSession();
         const userId = freshSession?.user?.id || "";
-        if (!userId) { toast.error("Erro ao obter sessão"); setSubmitting(false); return; }
+        if (!userId) { appToast.error("Erro ao obter sessão"); setSubmitting(false); return; }
         // Retry role check to handle race condition with trigger
         const rolePriority = ["admin", "revendedor", "cliente", "usuario", "user"];
         let resolvedRole: string | null = null;
@@ -171,7 +171,7 @@ export default function Auth() {
 
         if (!resolvedRole) {
           await supabase.auth.signOut();
-          toast.error("Sua conta ainda não possui um cargo atribuído. Aguarde a aprovação ou contate o administrador.");
+          appToast.authError("Sua conta ainda não possui um cargo atribuído. Aguarde a aprovação ou contate o administrador.");
           setSubmitting(false);
           return;
         }
@@ -186,11 +186,11 @@ export default function Auth() {
         if (error) throw error;
         setDestination("/painel");
       }
-      if (!isLogin) toast.success("Conta criada com sucesso!");
+      if (!isLogin) appToast.success("Conta criada com sucesso!");
       setPhase("splash");
     } catch (err: any) {
       const msg = translateAuthError(err.message);
-      toast.error(msg);
+      appToast.authError(msg);
       setSubmitting(false);
     }
   };

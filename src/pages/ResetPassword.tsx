@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { useNavigate } from "react-router-dom";
 import { Lock, ArrowLeft, CheckCircle } from "lucide-react";
 
