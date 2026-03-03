@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Wallet, Check } from "lucide-react";
+import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Target, Wallet, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -23,15 +23,17 @@ interface Recarga {
   created_at: string;
 }
 
+type SaldoAction = "add" | "remove" | "set" | null;
+
 export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: UserRecargasModalProps) {
-  const { role } = useAuth();
+  const { role, user: currentUser } = useAuth();
   const isAdmin = role === "admin";
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const [loading, setLoading] = useState(true);
   const [saldo, setSaldo] = useState<number>(0);
-  const [showAddSaldo, setShowAddSaldo] = useState(false);
-  const [addValue, setAddValue] = useState("");
-  const [adding, setAdding] = useState(false);
+  const [activeAction, setActiveAction] = useState<SaldoAction>(null);
+  const [actionValue, setActionValue] = useState("");
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,13 +59,14 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
     fetchData();
   }, [userId]);
 
-  const handleAddSaldo = async () => {
-    const valor = parseFloat(addValue.replace(",", "."));
-    if (!valor || valor <= 0) {
+  const handleSaldoAction = async () => {
+    if (!activeAction || !currentUser) return;
+    const valor = parseFloat(actionValue.replace(",", "."));
+    if (isNaN(valor) || valor < 0 || (activeAction !== "set" && valor <= 0)) {
       toast.error("Insira um valor válido");
       return;
     }
-    setAdding(true);
+    setProcessing(true);
     try {
       const { data: current } = await supabase
         .from("saldos")
@@ -72,7 +75,31 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
         .eq("tipo", "revenda")
         .maybeSingle();
 
-      const novoValor = (current?.valor || 0) + valor;
+      const saldoAtual = current?.valor || 0;
+      let novoValor: number;
+      let transactionType: string;
+      let transactionAmount: number;
+
+      switch (activeAction) {
+        case "add":
+          novoValor = saldoAtual + valor;
+          transactionType = "admin_credit";
+          transactionAmount = valor;
+          break;
+        case "remove":
+          novoValor = Math.max(0, saldoAtual - valor);
+          transactionType = "admin_debit";
+          transactionAmount = Math.min(valor, saldoAtual);
+          break;
+        case "set":
+          novoValor = valor;
+          transactionType = valor >= saldoAtual ? "admin_credit" : "admin_debit";
+          transactionAmount = Math.abs(valor - saldoAtual);
+          break;
+        default:
+          return;
+      }
+
       const { error } = await supabase
         .from("saldos")
         .update({ valor: novoValor })
@@ -80,14 +107,34 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
         .eq("tipo", "revenda");
 
       if (error) throw error;
+
+      // Register transaction for audit
+      if (transactionAmount > 0) {
+        await supabase.from("transactions").insert({
+          user_id: userId,
+          type: transactionType,
+          amount: transactionAmount,
+          status: "completed",
+          module: "chat_balance",
+          metadata: {
+            action: activeAction,
+            previous_balance: saldoAtual,
+            new_balance: novoValor,
+            performed_by: currentUser.id,
+          },
+        });
+      }
+
       setSaldo(novoValor);
-      setAddValue("");
-      setShowAddSaldo(false);
-      toast.success(`R$ ${valor.toFixed(2)} adicionado ao saldo`);
+      setActionValue("");
+      setActiveAction(null);
+
+      const labels = { add: "adicionado", remove: "removido", set: "definido" };
+      toast.success(`Saldo ${labels[activeAction]} com sucesso`);
     } catch {
-      toast.error("Erro ao adicionar saldo");
+      toast.error("Erro ao atualizar saldo");
     } finally {
-      setAdding(false);
+      setProcessing(false);
     }
   };
 
@@ -106,6 +153,12 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
 
   const formatCurrency = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const actionLabels: Record<string, { label: string; placeholder: string }> = {
+    add: { label: "Adicionar", placeholder: "Valor a adicionar" },
+    remove: { label: "Remover", placeholder: "Valor a remover" },
+    set: { label: "Definir", placeholder: "Novo saldo" },
+  };
 
   return createPortal(
     <AnimatePresence>
@@ -151,54 +204,80 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
           {isAdmin && (
             <div className="px-4 py-2 border-b border-border bg-muted/15">
               <AnimatePresence mode="wait">
-                {showAddSaldo ? (
+                {activeAction ? (
                   <motion.div
                     key="form"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="flex items-center gap-2"
+                    className="space-y-2"
                   >
-                    <div className="flex-1 relative">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0,00"
-                        value={addValue}
-                        onChange={(e) => setAddValue(e.target.value)}
-                        className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                        autoFocus
-                        onKeyDown={(e) => e.key === "Enter" && handleAddSaldo()}
-                      />
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                        {actionLabels[activeAction].label} Saldo
+                      </span>
                     </div>
-                    <button
-                      onClick={handleAddSaldo}
-                      disabled={adding}
-                      className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 transition-colors disabled:opacity-50"
-                    >
-                      {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    </button>
-                    <button
-                      onClick={() => { setShowAddSaldo(false); setAddValue(""); }}
-                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          placeholder={actionLabels[activeAction].placeholder}
+                          value={actionValue}
+                          onChange={(e) => setActionValue(e.target.value)}
+                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                          autoFocus
+                          onKeyDown={(e) => e.key === "Enter" && handleSaldoAction()}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSaldoAction}
+                        disabled={processing}
+                        className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 transition-colors disabled:opacity-50"
+                      >
+                        {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                      </button>
+                      <button
+                        onClick={() => { setActiveAction(null); setActionValue(""); }}
+                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </motion.div>
                 ) : (
-                  <motion.div key="btn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-between">
+                  <motion.div key="btns" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Wallet className="h-3.5 w-3.5" />
                       <span className="text-[11px]">Saldo Revenda</span>
                     </div>
-                    <button
-                      onClick={() => setShowAddSaldo(true)}
-                      className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
-                    >
-                      <Plus className="h-3 w-3" />
-                      Adicionar Saldo
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setActiveAction("add")}
+                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors"
+                        title="Adicionar saldo"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adicionar
+                      </button>
+                      <button
+                        onClick={() => setActiveAction("remove")}
+                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                        title="Remover saldo"
+                      >
+                        <Minus className="h-3 w-3" />
+                        Remover
+                      </button>
+                      <button
+                        onClick={() => setActiveAction("set")}
+                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors"
+                        title="Definir saldo"
+                      >
+                        <Target className="h-3 w-3" />
+                        Definir
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
