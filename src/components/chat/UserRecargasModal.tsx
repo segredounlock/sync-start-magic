@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Target, Wallet, Check } from "lucide-react";
+import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Target, Wallet, Check, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface UserRecargasModalProps {
   userId: string;
@@ -34,10 +35,21 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
   const [activeAction, setActiveAction] = useState<SaldoAction>(null);
   const [actionValue, setActionValue] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userBadge, setUserBadge] = useState<string | null>(null);
+  const [showBadgePicker, setShowBadgePicker] = useState(false);
+
+  const badgeOptions: { value: string | null; label: string; icon: string }[] = [
+    { value: null, label: "Nenhum", icon: "❌" },
+    { value: "verificado", label: "Verificado", icon: "✅" },
+    { value: "diamante", label: "Diamante", icon: "💎" },
+    { value: "top", label: "Top", icon: "🔥" },
+    { value: "elite", label: "Elite", icon: "🏆" },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
-      const [recargasRes, saldoRes] = await Promise.all([
+      const [recargasRes, saldoRes, profileRes] = await Promise.all([
         supabase
           .from("recargas")
           .select("id, telefone, operadora, valor, custo, status, created_at")
@@ -50,14 +62,38 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
           .eq("user_id", userId)
           .eq("tipo", "revenda")
           .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("email, verification_badge")
+          .eq("id", userId)
+          .maybeSingle(),
       ]);
 
       if (!recargasRes.error && recargasRes.data) setRecargas(recargasRes.data);
       if (!saldoRes.error && saldoRes.data) setSaldo(saldoRes.data.valor);
+      if (!profileRes.error && profileRes.data) {
+        setUserEmail(profileRes.data.email);
+        setUserBadge(profileRes.data.verification_badge);
+      }
       setLoading(false);
     };
     fetchData();
   }, [userId]);
+
+  const handleBadgeChange = async (badge: string | null) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ verification_badge: badge })
+        .eq("id", userId);
+      if (error) throw error;
+      setUserBadge(badge);
+      setShowBadgePicker(false);
+      toast.success(badge ? `Selo ${badge} atribuído` : "Selo removido");
+    } catch {
+      toast.error("Erro ao atualizar selo");
+    }
+  };
 
   const handleSaldoAction = async () => {
     if (!activeAction || !currentUser) return;
@@ -189,11 +225,42 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-foreground truncate">{userName}</h3>
+                {userBadge && <VerificationBadge badge={userBadge as BadgeType} size="sm" />}
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                   {formatCurrency(saldo)}
                 </span>
               </div>
-              <p className="text-[10px] text-muted-foreground">Últimas 10 recargas</p>
+              {userEmail && (
+                <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
+              )}
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-[10px] text-muted-foreground">Últimas 10 recargas</p>
+                {isAdmin && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowBadgePicker(!showBadgePicker)}
+                      className="flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                    >
+                      <Shield className="h-2.5 w-2.5" />
+                      Selo
+                    </button>
+                    {showBadgePicker && (
+                      <div className="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-lg p-1.5 min-w-[140px]">
+                        {badgeOptions.map((opt) => (
+                          <button
+                            key={opt.label}
+                            onClick={() => handleBadgeChange(opt.value)}
+                            className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded-lg hover:bg-muted/60 transition-colors ${userBadge === opt.value ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                          >
+                            <span>{opt.icon}</span>
+                            <span>{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
               <X className="h-4 w-4 text-muted-foreground" />
