@@ -112,7 +112,7 @@ function GlowOverlay({ color }: { color: string }) {
 export default function SeasonalEffects() {
   // Don't render on miniapp (handles its own) or landing page (no seasonal effects needed)
   const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-  const shouldSkip = pathname === "/miniapp" || pathname === "/";
+  const shouldSkip = pathname === "/miniapp" || pathname === "/" || pathname === "/login" || pathname === "/auth";
 
   const [activeTheme, setActiveTheme] = useState<SeasonalThemeKey>("none");
   // Track the "displayed" theme separately for graceful transitions
