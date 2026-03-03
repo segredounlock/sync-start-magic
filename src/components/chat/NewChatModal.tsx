@@ -140,7 +140,7 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+                      <p className={`text-sm font-semibold truncate ${isAdmin ? "shimmer-letters" : "text-foreground"}`}>{name}</p>
                       {u.verification_badge ? (
                         <VerificationBadge badge={u.verification_badge as BadgeType} size="sm" />
                       ) : isAdmin ? (

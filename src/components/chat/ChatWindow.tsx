@@ -372,7 +372,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground flex items-center gap-1">
-            {name}
+            <span className={otherUser?.role === "admin" ? "shimmer-letters" : ""}>{name}</span>
             {otherUser?.verification_badge ? (
               <VerificationBadge badge={otherUser.verification_badge as BadgeType} size="sm" />
             ) : otherUser?.role === 'admin' ? (
