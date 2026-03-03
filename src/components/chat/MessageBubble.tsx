@@ -32,6 +32,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const dropdownBtnRef = useRef<HTMLButtonElement>(null);
   const [showMessageInfo, setShowMessageInfo] = useState(false);
   const [showUserRecargas, setShowUserRecargas] = useState(false);
+  const [showImageLightbox, setShowImageLightbox] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
@@ -410,7 +411,13 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
 
             {/* Image content */}
             {message.type === "image" && message.image_url && (
-              <img src={message.image_url} alt="" className="max-w-[250px] rounded-xl" />
+              <img
+                src={message.image_url}
+                alt=""
+                className="max-w-[250px] max-h-[300px] rounded-xl cursor-pointer hover:brightness-90 transition-all object-cover"
+                onClick={(e) => { e.stopPropagation(); setShowImageLightbox(true); }}
+                loading="lazy"
+              />
             )}
 
             {/* Date, Time & status */}
@@ -586,6 +593,38 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
           onClose={() => setShowUserRecargas(false)}
         />
       )}
+
+      {/* Image Lightbox */}
+      <AnimatePresence>
+        {showImageLightbox && message.image_url && createPortal(
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center"
+              onClick={() => setShowImageLightbox(false)}
+            >
+              <button
+                onClick={() => setShowImageLightbox(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              <motion.img
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                src={message.image_url}
+                alt=""
+                className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </motion.div>
+          </>,
+          document.body
+        )}
+      </AnimatePresence>
     </div>
   );
 }
