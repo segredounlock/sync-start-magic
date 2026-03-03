@@ -35,14 +35,14 @@ import {
 
 import type { Revendedor, RecargaHistorico, Operadora, PricingRule, Period } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
+import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const dataLoaded = useRef(false);
+  const { loading, runFetch } = useResilientFetch();
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
   const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
@@ -281,10 +281,8 @@ export default function AdminDashboard() {
   }, [period]);
 
   const fetchData = useCallback(async () => {
-    if (!dataLoaded.current) setLoading(true);
-    try {
+    await runFetch(async () => {
       if (role === "revendedor") {
-        // Revendedor: only fetch their own clients (profiles with reseller_id = user.id)
         const [clientProfiles, ownSaldos, clientSaldos, recData, transData] = await Promise.all([
           fetchAllRows("profiles", { filters: (q: any) => q.eq("reseller_id", user?.id) }),
           fetchAllRows("saldos", { filters: (q: any) => q.eq("user_id", user?.id).eq("tipo", "revenda") }),
@@ -294,8 +292,6 @@ export default function AdminDashboard() {
         ]);
 
         const clientIds = (clientProfiles || []).map((p: any) => p.id);
-        
-        // Own balance
         if (user?.id && ownSaldos?.length) setMeuSaldo(Number(ownSaldos[0].valor) || 0);
 
         const saldoMap: Record<string, number> = {};
@@ -311,7 +307,6 @@ export default function AdminDashboard() {
 
         setAllProfiles((clientProfiles || []).map((p: any) => ({ id: p.id, telegram_id: p.telegram_id, telegram_username: p.telegram_username, created_at: p.created_at })));
 
-        // Filter recargas and transactions to only client IDs + own
         const allowedIds = new Set([...clientIds, user?.id]);
         const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
         (clientProfiles || []).forEach((p: any) => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
@@ -323,7 +318,6 @@ export default function AdminDashboard() {
         })));
         setAllTransactions((transData || []).filter((t: any) => allowedIds.has(t.user_id)).map((t: any) => ({ ...t, amount: Number(t.amount) })));
       } else {
-        // Admin: fetch ALL profiles, roles, and saldos
         const [allRoles, allProfilesData, allSaldos, recData, transData] = await Promise.all([
           fetchAllRows("user_roles", { select: "user_id, role" }),
           fetchAllRows("profiles"),
@@ -352,13 +346,8 @@ export default function AdminDashboard() {
                 : "sem_role";
 
           return {
-            id: p.id,
-            nome: p.nome,
-            email: p.email,
-            active: p.active,
-            created_at: p.created_at,
-            saldo: saldoMap[p.id] ?? 0,
-            role: resolvedRole,
+            id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
+            saldo: saldoMap[p.id] ?? 0, role: resolvedRole,
             avatar_url: (p as any).avatar_url || null,
           };
         });
@@ -373,42 +362,30 @@ export default function AdminDashboard() {
           user_email: profileMap[r.user_id]?.email || null,
         })));
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao carregar dados");
-    }
-    dataLoaded.current = true;
-    setLoading(false);
-  }, [role, user?.id]);
+    });
+  }, [role, user?.id, runFetch]);
 
   const fetchRecargas = useCallback(async () => {
-    if (!recargasLoaded.current) setRecargasLoading(true);
-    try {
+    await guardedFetch(recargasLoaded, setRecargasLoading, async () => {
       const { data: allRec } = await supabase.from("recargas").select("*").order("created_at", { ascending: false }).limit(200);
-      if (!allRec?.length) { setRecargas([]); recargasLoaded.current = true; setRecargasLoading(false); return; }
+      if (!allRec?.length) { setRecargas([]); return; }
       const userIds = [...new Set(allRec.map(r => r.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("id, nome, email").in("id", userIds);
       const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
       profiles?.forEach(p => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
       setRecargas(allRec.map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), user_nome: profileMap[r.user_id]?.nome || null, user_email: profileMap[r.user_id]?.email || null })));
-    } catch (err) { console.error(err); }
-    recargasLoaded.current = true;
-    setRecargasLoading(false);
+    });
   }, []);
 
   const fetchOperadoras = useCallback(async () => {
-    if (!operadorasLoaded.current) setOperadorasLoading(true);
-    try {
+    await guardedFetch(operadorasLoaded, setOperadorasLoading, async () => {
       const { data } = await supabase.from("operadoras").select("*").order("nome");
       setOperadoras((data || []).map(o => ({ ...o, valores: (o.valores as unknown as number[]) || [] })));
-    } catch (err) { console.error(err); }
-    operadorasLoaded.current = true;
-    setOperadorasLoading(false);
+    });
   }, []);
 
   const fetchConfig = useCallback(async () => {
-    if (!configLoaded.current) setConfigLoading(true);
-    try {
+    await guardedFetch(configLoaded, setConfigLoading, async () => {
       const { data } = await supabase.from("system_config").select("key, value");
       const map: Record<string, string> = {};
       data?.forEach(row => { map[row.key] = row.value || ""; });
@@ -421,9 +398,7 @@ export default function AdminDashboard() {
       }
 
       setConfigData(map);
-    } catch (err) { console.error(err); }
-    configLoaded.current = true;
-    setConfigLoading(false);
+    });
   }, [role, user]);
 
   const saveConfig = async () => {
@@ -449,18 +424,15 @@ export default function AdminDashboard() {
   };
 
   const fetchDeposits = useCallback(async () => {
-    if (!depositLoaded.current) setDepositLoading(true);
-    try {
+    await guardedFetch(depositLoaded, setDepositLoading, async () => {
       const { data: txs } = await supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(500);
-      if (!txs?.length) { setDepositTransactions([]); depositLoaded.current = true; setDepositLoading(false); return; }
+      if (!txs?.length) { setDepositTransactions([]); return; }
       const userIds = [...new Set(txs.map(t => t.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("id, nome, email").in("id", userIds);
       const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
       profiles?.forEach(p => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
       setDepositTransactions(txs.map(t => ({ ...t, amount: Number(t.amount), user_nome: profileMap[t.user_id]?.nome || undefined, user_email: profileMap[t.user_id]?.email || undefined })));
-    } catch (err) { console.error(err); }
-    depositLoaded.current = true;
-    setDepositLoading(false);
+    });
   }, []);
 
   const fetchPricingRules = useCallback(async () => {

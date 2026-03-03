@@ -40,6 +40,7 @@ import { unlockAudio, playCashRegisterSound } from "@/lib/sounds";
 import { useNavigate } from "react-router-dom";
 
 import type { Revendedor, RecargaHistorico, PricingRule } from "@/types";
+import { useResilientFetch } from "@/hooks/useAsync";
 
 type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo";
 
@@ -160,8 +161,7 @@ export default function Principal() {
 
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const dataLoaded = useRef(false);
+  const { loading, runFetch } = useResilientFetch();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"todos" | "admin" | "revendedor" | "cliente" | "usuario" | "sem_role">("todos");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -567,8 +567,7 @@ export default function Principal() {
   }, [botStatus.botId, fetchTelegramJson, globalConfig.telegramBotToken]);
 
   const fetchData = useCallback(async () => {
-    if (!dataLoaded.current) setLoading(true);
-    try {
+    await runFetch(async () => {
       const [roles, profiles, saldos, recData] = await Promise.all([
         fetchAllRows("user_roles", { select: "user_id, role" }),
         fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url, verification_badge" }),
@@ -605,13 +604,8 @@ export default function Principal() {
 
       setRevendedores(list);
       setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), custo_api: Number(r.custo_api || 0) })));
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao carregar dados");
-    }
-    dataLoaded.current = true;
-    setLoading(false);
-  }, []);
+    });
+  }, [runFetch]);
 
   const fetchRevDetail = useCallback(async (rev: Revendedor) => {
     setRevLoading(true);
