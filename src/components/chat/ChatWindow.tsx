@@ -210,6 +210,10 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
           <div className="relative group/avatar">
             {currentGroupIcon && currentGroupIcon.startsWith("http") ? (
               <img src={currentGroupIcon} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" />
+            ) : currentGroupIcon && !currentGroupIcon.startsWith("http") ? (
+              <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
+                <span className="text-xl">{currentGroupIcon}</span>
+              </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
                 <Users className="h-5 w-5 text-primary" />
