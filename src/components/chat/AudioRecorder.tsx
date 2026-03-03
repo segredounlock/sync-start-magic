@@ -90,7 +90,14 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
 
     try {
       const fileName = `${user.id}/${Date.now()}.webm`;
-      const { error } = await supabase.storage.from("chat-audio").upload(fileName, audioBlob, { contentType: "audio/webm" });
+      
+      // Upload with 30s timeout to prevent hanging at 90%
+      const uploadPromise = supabase.storage.from("chat-audio").upload(fileName, audioBlob, { contentType: "audio/webm" });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Upload timeout (30s)")), 30000)
+      );
+      
+      const { error } = await Promise.race([uploadPromise, timeoutPromise]);
       
       clearInterval(progressInterval);
       
@@ -108,8 +115,8 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
       // Brief delay to show 100% then send
       await new Promise(resolve => setTimeout(resolve, 300));
       onSend(urlData.publicUrl);
-    } catch (err) {
-      console.error("Audio upload exception:", err);
+    } catch (err: any) {
+      console.error("Audio upload exception:", err?.message || err);
       clearInterval(progressInterval);
       setUploading(false);
       setUploadProgress(0);
