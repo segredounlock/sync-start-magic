@@ -276,13 +276,13 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
         </div>
       )}
 
-      {/* Live Feed */}
+      {/* Live Feed — credits-style scroll */}
       <div className="glass-card rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground">Feed em Tempo Real</h3>
           <span className="text-[10px] text-muted-foreground">{recargas.length} recargas hoje</span>
         </div>
-        <div className="overflow-hidden">
+        <div className="relative max-h-[420px] overflow-y-auto scroll-smooth" style={{ scrollbarWidth: "thin" }}>
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">
               <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 opacity-50" />
@@ -296,15 +296,16 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
             </div>
           ) : (
             <AnimatePresence initial={false}>
-              {recargas.slice(0, 5).map((r, i) => {
+              {recargas.map((r, i) => {
                 const procTime = getProcessingTime(r);
                 return (
                   <motion.div
                     key={r.id}
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -40 }}
-                    transition={{ duration: 0.4, delay: i * 0.06, ease: "easeOut" }}
+                    layout
+                    initial={{ opacity: 0, y: 60, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                    transition={{ duration: 0.5, delay: Math.min(i * 0.04, 0.4), ease: "easeOut" }}
                     className="px-4 py-3 border-b border-border/50 hover:bg-muted/20 transition-colors"
                   >
                     <div className="flex items-center gap-3">
