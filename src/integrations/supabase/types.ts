@@ -1024,6 +1024,13 @@ export type Database = {
           valor: number
         }[]
       }
+      get_unread_counts: {
+        Args: { _conversation_ids: string[]; _user_id: string }
+        Returns: {
+          conversation_id: string
+          unread_count: number
+        }[]
+      }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
     }
     Enums: {

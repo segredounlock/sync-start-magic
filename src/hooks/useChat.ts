@@ -98,33 +98,26 @@ export function useConversations() {
       ).filter(Boolean);
       const uniqueIds = [...new Set(otherIds)];
 
-      // Parallel: fetch profiles, roles, AND all unread counts at once
+      // Parallel: fetch profiles, roles, AND batch unread counts (single RPC call)
       const convoIds = allConvos.map(c => c.id);
 
-      const [profiles, roleData, unreadCounts] = await Promise.all([
+      const [profiles, roleData, unreadData] = await Promise.all([
         uniqueIds.length > 0
           ? supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", uniqueIds).then(r => r.data || [])
           : Promise.resolve([]),
         uniqueIds.length > 0
           ? supabase.from("user_roles").select("user_id, role").in("user_id", uniqueIds).then(r => r.data || [])
           : Promise.resolve([]),
-        // Batch unread counts: one query per conversation in parallel
-        Promise.all(convoIds.map(async (cid) => {
-          const { count } = await supabase
-            .from("chat_messages")
-            .select("id", { count: "exact", head: true })
-            .eq("conversation_id", cid)
-            .neq("sender_id", user.id)
-            .eq("is_read", false);
-          return { id: cid, count: count || 0 };
-        })),
+        convoIds.length > 0
+          ? supabase.rpc("get_unread_counts", { _user_id: user.id, _conversation_ids: convoIds }).then(r => r.data || [])
+          : Promise.resolve([]),
       ]);
 
       const roleMap: Record<string, string> = {};
       (roleData as any[]).forEach((r: any) => { roleMap[r.user_id] = r.role; });
 
       const unreadMap: Record<string, number> = {};
-      unreadCounts.forEach(u => { unreadMap[u.id] = u.count; });
+      (unreadData as any[]).forEach((u: any) => { unreadMap[u.conversation_id] = Number(u.unread_count) || 0; });
 
       const convos = allConvos.map((c: any) => {
         if (c.type === 'group') {
@@ -346,15 +339,96 @@ export function useChatMessages(conversationId: string | null) {
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
-  // Realtime messages - STRICT filter by conversation_id
+  // Realtime messages - handle INSERTs locally, only full-fetch for UPDATE/DELETE
   useEffect(() => {
     if (!conversationId) return;
     const channel = supabase
       .channel(`chat-msgs-${conversationId}`)
       .on("postgres_changes", {
-        event: "*", schema: "public", table: "chat_messages",
+        event: "INSERT", schema: "public", table: "chat_messages",
         filter: `conversation_id=eq.${conversationId}`,
-      }, () => { debouncedFetch(); })
+      }, async (payload: any) => {
+        const newMsg = payload.new;
+        if (!newMsg) return;
+        // Skip if it's our own message (already handled optimistically)
+        if (newMsg.sender_id === user?.id) {
+          // Replace the optimistic message with the real one
+          setMessages(prev => {
+            const hasOptimistic = prev.some(m => m.id.startsWith("optimistic-") && m.sender_id === newMsg.sender_id);
+            if (hasOptimistic) {
+              // Remove first optimistic message and append real one
+              const filtered = prev.filter((m, i) => {
+                if (m.id.startsWith("optimistic-") && m.sender_id === newMsg.sender_id) {
+                  // Only remove the first match
+                  const firstOptIdx = prev.findIndex(x => x.id.startsWith("optimistic-") && x.sender_id === newMsg.sender_id);
+                  return i !== firstOptIdx;
+                }
+                return true;
+              });
+              const cached = senderCache.get(newMsg.sender_id);
+              return [...filtered, {
+                ...newMsg,
+                reactions: [],
+                reply_to: newMsg.reply_to_id ? filtered.find((m: any) => m.id === newMsg.reply_to_id) || null : null,
+                sender: {
+                  nome: cached?.nome || null,
+                  avatar_url: cached?.avatar_url || null,
+                  verification_badge: cached?.verification_badge || null,
+                  isAdmin: adminCache.has(newMsg.sender_id),
+                },
+              }];
+            }
+            return prev;
+          });
+          return;
+        }
+        // For other users' messages, append locally with cached sender info
+        let cached = senderCache.get(newMsg.sender_id);
+        if (!cached) {
+          const { data } = await supabase.from("profiles").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).maybeSingle();
+          if (data) {
+            cached = { nome: data.nome, avatar_url: data.avatar_url, verification_badge: data.verification_badge };
+            senderCache.set(data.id, cached);
+            cacheTimestamp = Date.now();
+          }
+        }
+        setMessages(prev => {
+          if (prev.some(m => m.id === newMsg.id)) return prev;
+          return [...prev, {
+            ...newMsg,
+            reactions: [],
+            reply_to: newMsg.reply_to_id ? prev.find((m: any) => m.id === newMsg.reply_to_id) || null : null,
+            sender: {
+              nome: cached?.nome || null,
+              avatar_url: cached?.avatar_url || null,
+              verification_badge: cached?.verification_badge || null,
+              isAdmin: adminCache.has(newMsg.sender_id),
+            },
+          }];
+        });
+        // Mark as read non-blocking
+        if (user) {
+          supabase.from("chat_messages")
+            .update({ is_read: true, read_at: new Date().toISOString() })
+            .eq("id", newMsg.id).then(() => {});
+        }
+      })
+      .on("postgres_changes", {
+        event: "UPDATE", schema: "public", table: "chat_messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      }, (payload: any) => {
+        const updated = payload.new;
+        if (!updated) return;
+        setMessages(prev => prev.map(m => m.id === updated.id ? { ...m, ...updated } : m));
+      })
+      .on("postgres_changes", {
+        event: "DELETE", schema: "public", table: "chat_messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      }, (payload: any) => {
+        const deleted = payload.old;
+        if (!deleted) return;
+        setMessages(prev => prev.filter(m => m.id !== deleted.id));
+      })
       .subscribe();
 
     // Separate channel for reactions
@@ -375,34 +449,79 @@ export function useChatMessages(conversationId: string | null) {
       supabase.removeChannel(reactionsChannel);
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [conversationId, debouncedFetch]);
+  }, [conversationId, user, debouncedFetch]);
 
   const sendMessage = useCallback(async (content: string, type = "text", audioUrl?: string, imageUrl?: string, replyToId?: string) => {
     if (!conversationId || !user) return;
-    const { error } = await supabase.from("chat_messages").insert({
+
+    // Optimistic: insert message into local state immediately
+    const optimisticId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const now = new Date().toISOString();
+    const senderName = cachedNome.current || "Você";
+    const optimisticMsg: ChatMessage = {
+      id: optimisticId,
       conversation_id: conversationId,
       sender_id: user.id,
       content: type === "text" ? content : null,
       type,
       audio_url: audioUrl || null,
       image_url: imageUrl || null,
+      is_read: false,
+      read_at: null,
+      is_delivered: false,
+      delivered_at: null,
       reply_to_id: replyToId || null,
-      is_delivered: true,
-      delivered_at: new Date().toISOString(),
-    });
-    if (error) throw error;
+      is_deleted: false,
+      is_pinned: false,
+      pinned_at: null,
+      pinned_by: null,
+      deleted_by: null,
+      edited_by: null,
+      created_at: now,
+      updated_at: now,
+      reactions: [],
+      reply_to: replyToId ? messages.find(m => m.id === replyToId) || null : null,
+      sender: {
+        nome: senderName,
+        avatar_url: senderCache.get(user.id)?.avatar_url || null,
+        verification_badge: senderCache.get(user.id)?.verification_badge || null,
+        isAdmin: adminCache.has(user.id),
+      },
+    };
 
-    // Use cached name instead of querying every time
-    const senderName = cachedNome.current || "Você";
+    setMessages(prev => [...prev, optimisticMsg]);
+
+    try {
+      const { error } = await supabase.from("chat_messages").insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: type === "text" ? content : null,
+        type,
+        audio_url: audioUrl || null,
+        image_url: imageUrl || null,
+        reply_to_id: replyToId || null,
+        is_delivered: true,
+        delivered_at: now,
+      });
+      if (error) {
+        // Remove optimistic message on failure
+        setMessages(prev => prev.filter(m => m.id !== optimisticId));
+        throw error;
+      }
+    } catch (err) {
+      setMessages(prev => prev.filter(m => m.id !== optimisticId));
+      throw err;
+    }
+
     const msgPreview = type === "text" ? content : type === "audio" ? "🎤 Áudio" : "📷 Imagem";
     const previewText = `${senderName}: ${msgPreview}`;
 
     // Non-blocking conversation update
     supabase.from("chat_conversations").update({
       last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
-      last_message_at: new Date().toISOString(),
+      last_message_at: now,
     }).eq("id", conversationId).then(() => {});
-  }, [conversationId, user]);
+  }, [conversationId, user, messages]);
 
   const toggleReaction = useCallback(async (messageId: string, emoji: string) => {
     if (!user) return;
