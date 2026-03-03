@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,6 +36,8 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  const initialLoadDone = useRef(false);
+
   const fetchRooms = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -47,7 +49,6 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
 
       if (error) throw error;
 
-      // Fetch message counts
       const roomsWithCounts: ChatRoom[] = [];
       for (const room of data || []) {
         const { count: msgCount } = await supabase
@@ -74,8 +75,12 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
     } catch (err) {
       console.error(err);
       toast.error("Erro ao carregar salas");
+    } finally {
+      if (!initialLoadDone.current) {
+        setLoading(false);
+        initialLoadDone.current = true;
+      }
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => { fetchRooms(); }, [fetchRooms]);

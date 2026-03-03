@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PromoBanner } from "./PromoBanner";
 import { PopupBanner } from "./PopupBanner";
@@ -26,8 +26,9 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [expandedBanner, setExpandedBanner] = useState<number | null>(null);
 
+  const initialLoadDone = useRef(false);
+
   const fetchBanners = useCallback(async () => {
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("banners")
@@ -40,8 +41,12 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
       })));
     } catch {
       toast.error("Erro ao carregar banners");
+    } finally {
+      if (!initialLoadDone.current) {
+        setLoading(false);
+        initialLoadDone.current = true;
+      }
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => { fetchBanners(); }, [fetchBanners]);

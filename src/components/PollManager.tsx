@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,43 +31,53 @@ export function PollManager() {
   const [selectedPoll, setSelectedPoll] = useState<Poll | null>(null);
   const [pollVotes, setPollVotes] = useState<{ option_index: number; created_at: string }[]>([]);
 
+  const initialLoadDone = useRef(false);
+
   const fetchPolls = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("polls")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (!error && data) {
-      // Fetch all votes to count properly
-      const pollIds = data.map(p => p.id);
-      const { data: allVotes } = await supabase
-        .from("poll_votes")
-        .select("poll_id, option_index")
-        .in("poll_id", pollIds);
+    try {
+      const { data, error } = await supabase
+        .from("polls")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      if (data) {
+        const pollIds = data.map(p => p.id);
+        const { data: allVotes } = await supabase
+          .from("poll_votes")
+          .select("poll_id, option_index")
+          .in("poll_id", pollIds);
 
-      const votesMap: Record<string, Record<number, number>> = {};
-      (allVotes || []).forEach((v: any) => {
-        if (!votesMap[v.poll_id]) votesMap[v.poll_id] = {};
-        votesMap[v.poll_id][v.option_index] = (votesMap[v.poll_id][v.option_index] || 0) + 1;
-      });
+        const votesMap: Record<string, Record<number, number>> = {};
+        (allVotes || []).forEach((v: any) => {
+          if (!votesMap[v.poll_id]) votesMap[v.poll_id] = {};
+          votesMap[v.poll_id][v.option_index] = (votesMap[v.poll_id][v.option_index] || 0) + 1;
+        });
 
-      setPolls(data.map(p => {
-        const baseOptions = (p.options as any as PollOption[]) || [];
-        const pollVotesMap = votesMap[p.id] || {};
-        const enrichedOptions = baseOptions.map((opt, i) => ({ ...opt, votes: pollVotesMap[i] || 0 }));
-        const totalReal = Object.values(pollVotesMap).reduce((s, v) => s + v, 0);
-        return {
-          id: p.id,
-          question: p.question,
-          options: enrichedOptions,
-          active: p.active,
-          total_votes: totalReal,
-          created_at: p.created_at,
-          expires_at: p.expires_at,
-        };
-      }));
+        setPolls(data.map(p => {
+          const baseOptions = (p.options as any as PollOption[]) || [];
+          const pollVotesMap = votesMap[p.id] || {};
+          const enrichedOptions = baseOptions.map((opt, i) => ({ ...opt, votes: pollVotesMap[i] || 0 }));
+          const totalReal = Object.values(pollVotesMap).reduce((s, v) => s + v, 0);
+          return {
+            id: p.id,
+            question: p.question,
+            options: enrichedOptions,
+            active: p.active,
+            total_votes: totalReal,
+            created_at: p.created_at,
+            expires_at: p.expires_at,
+          };
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao carregar enquetes");
+    } finally {
+      if (!initialLoadDone.current) {
+        setLoading(false);
+        initialLoadDone.current = true;
+      }
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => { fetchPolls(); }, [fetchPolls]);
