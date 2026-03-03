@@ -28,6 +28,7 @@ import {
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
+  Trophy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -1281,7 +1282,7 @@ export default function Principal() {
                   { icon: BarChart3, label: "Lucro Total (Histórico)", rawValue: dashboardMetrics.lucroTotal, isInt: false, sub: "Vendas - Custo API de todas as recargas", color: "text-success", bgColor: "bg-success/10" },
                   { icon: Activity, label: "Faturamento Total (Cobrado)", rawValue: dashboardMetrics.receitaTotal, isInt: false, sub: "Total cobrado de todos os tempos", color: "text-primary", bgColor: "bg-primary/10" },
                 ].map((c) => (
-              <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="kpi-card">
+              <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="kpi-card hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
                     <div className="flex items-start justify-between mb-3">
                       <div className={`w-10 h-10 rounded-xl ${c.bgColor} flex items-center justify-center shrink-0`}>
                         <c.icon className={`h-5 w-5 ${c.color}`} />
@@ -1299,7 +1300,7 @@ export default function Principal() {
                   </motion.div>
                 ))}
                 {/* Saldo Provedor (API) */}
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="kpi-card col-span-2 lg:col-span-1">
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="kpi-card col-span-2 lg:col-span-1 border border-[hsl(280,70%,60%)]/20 hover:shadow-lg hover:shadow-[hsl(280,70%,60%)]/5 hover:-translate-y-0.5 transition-all duration-200">
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-11 h-11 rounded-2xl bg-[hsl(280,70%,60%)]/10 flex items-center justify-center shrink-0">
                       <Server className="h-5 w-5 text-[hsl(280,70%,60%)]" />
@@ -1333,17 +1334,17 @@ export default function Principal() {
                   <Zap className="h-4 w-4 text-primary" /> Ações Rápidas
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
+                  <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-r from-success/20 to-primary/20 text-success text-sm font-semibold hover:from-success/30 hover:to-primary/30 hover:shadow-md transition-all duration-200">
                     <Plus className="h-4 w-4" /> Novo Revendedor
                   </button>
-                  <button onClick={() => setView("lista")} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted transition-colors">
-                    <Users className="h-4 w-4" /> Ver Revendedores
+                  <button onClick={() => setView("lista")} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted hover:shadow-sm transition-all duration-200">
+                    <Users className="h-4 w-4 text-primary" /> Ver Revendedores
                   </button>
-                  <button onClick={() => { setView("relatorios"); }} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted transition-colors">
-                    <FileText className="h-4 w-4" /> Relatórios
+                  <button onClick={() => { setView("relatorios"); }} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted hover:shadow-sm transition-all duration-200">
+                    <FileText className="h-4 w-4 text-warning" /> Relatórios
                   </button>
-                  <button onClick={() => { setView("config-api"); fetchApiConfig(); }} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted transition-colors">
-                    <Settings className="h-4 w-4" /> Configurar API
+                  <button onClick={() => { setView("config-api"); fetchApiConfig(); }} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted hover:shadow-sm transition-all duration-200">
+                    <Settings className="h-4 w-4 text-[hsl(280,70%,60%)]" /> Configurar API
                   </button>
                 </div>
               </div>
@@ -1366,10 +1367,12 @@ export default function Principal() {
                         const statusOk = r.status === "completed" || r.status === "concluida";
                         return (
                           <div key={r.id} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
-                            <div className={`w-2 h-2 rounded-full shrink-0 ${statusOk ? "bg-success" : r.status === "pending" ? "bg-warning" : "bg-destructive"}`} />
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${statusOk ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
+                              {statusOk ? "Concluída" : r.status === "pending" ? "Processando" : "Falha"}
+                            </span>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-foreground truncate">
-                                {rev?.nome || rev?.email?.split("@")[0] || "—"} • {r.operadora || "—"}
+                                {rev?.nome || rev?.email?.split("@")[0] || "—"} • <span className={r.operadora?.toLowerCase().includes("tim") ? "text-blue-400" : r.operadora?.toLowerCase().includes("vivo") ? "text-purple-400" : r.operadora?.toLowerCase().includes("claro") ? "text-red-400" : "text-foreground"}>{r.operadora || "—"}</span>
                               </p>
                               <p className="text-[10px] text-muted-foreground">{r.telefone} • {fmtDate(r.created_at)}</p>
                             </div>
@@ -1391,10 +1394,10 @@ export default function Principal() {
                   ) : (
                     <div className="space-y-2">
                       {dashboardMetrics.topResellers.map((r, i) => (
-                        <div key={r.id} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0 cursor-pointer hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-colors"
+                        <div key={r.id} className={`flex items-center gap-3 py-2 border-b border-border/30 last:border-0 cursor-pointer hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-all duration-200 ${i === 0 ? "bg-warning/5" : ""}`}
                           onClick={() => { const rev = revendedores.find(rv => rv.id === r.id); if (rev) openRevDetail(rev); }}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${i === 0 ? "bg-warning/20 text-warning" : "bg-muted/60 text-muted-foreground"}`}>
-                            {i + 1}
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${i === 0 ? "bg-warning/25 text-warning" : i === 1 ? "bg-muted/80 text-muted-foreground" : "bg-muted/60 text-muted-foreground"}`}>
+                            {i === 0 ? <Trophy className="h-3.5 w-3.5" /> : i + 1}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{r.nome}</p>
@@ -1422,10 +1425,11 @@ export default function Principal() {
                     <AlertTriangle className="h-4 w-4" /> Saldo Baixo ({dashboardMetrics.lowBalanceRevs.length})
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {paginated.map(r => (
-                      <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-warning/20 bg-warning/5 p-3 cursor-pointer hover:bg-warning/10 transition-colors"
+                      {paginated.map(r => (
+                      <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 cursor-pointer hover:bg-warning/10 hover:border-warning/50 transition-all duration-200"
                         onClick={() => setShowSaldoModal(r)}>
-                        <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
                           <p className="text-sm font-medium text-foreground truncate">{r.nome || r.email?.split("@")[0] || "—"}</p>
                         </div>
                         <span className="text-sm font-bold font-mono text-warning shrink-0">{fmt(r.saldo)}</span>
@@ -1455,29 +1459,29 @@ export default function Principal() {
                   <Activity className="h-4 w-4 text-primary" /> Status do Sistema
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/30 p-3">
+                    <Database className="h-4 w-4 text-success shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-foreground">Banco de Dados</p>
-                      <p className="text-[10px] text-muted-foreground">Conectado</p>
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" /> Conectado</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/30 p-3">
+                    <Shield className="h-4 w-4 text-success shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-foreground">Autenticação</p>
-                      <p className="text-[10px] text-muted-foreground">Ativo</p>
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" /> Ativo</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/30 p-3">
+                    <Users className="h-4 w-4 text-primary shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-foreground">Revendedores</p>
                       <p className="text-[10px] text-muted-foreground">{activeCount} ativos</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
-                    <Smartphone className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/30 p-3">
+                    <Smartphone className="h-4 w-4 text-primary shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-foreground">Recargas Total</p>
                       <p className="text-[10px] text-muted-foreground">{allRecargas.length} registros</p>
