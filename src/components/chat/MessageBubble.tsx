@@ -13,6 +13,7 @@ interface MessageBubbleProps {
   isOwn: boolean;
   isGroup?: boolean;
   isCurrentUserAdmin?: boolean;
+  isCurrentUserModerator?: boolean;
   onReply: () => void;
   onReact: (emoji: string) => void;
   onDelete: () => void;
@@ -191,7 +192,7 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
   );
 }
 
-export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onReply, onReact, onDelete, onEdit, onPin, onScrollToMessage }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isCurrentUserModerator, onReply, onReact, onDelete, onEdit, onPin, onScrollToMessage }: MessageBubbleProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLongPressMenu, setShowLongPressMenu] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
@@ -339,15 +340,16 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const senderName = message.sender?.nome || "Usuário";
   const isAdmin = message.sender?.isAdmin === true;
 
-  // Check if message can be edited (own within 10 min, or admin any time for any message)
+  const isMod = isCurrentUserAdmin || isCurrentUserModerator;
+  // Check if message can be edited (own within 10 min, or moderator any time for any message)
   const isTextEditable = message.type === "text" && !message.is_deleted && !!onEdit;
   const canEditOwn = isOwn && isTextEditable &&
-    (isCurrentUserAdmin || (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000);
-  const canEditAdmin = isCurrentUserAdmin && !isOwn && isTextEditable;
+    (isMod || (Date.now() - new Date(message.created_at).getTime()) < 10 * 60 * 1000);
+  const canEditAdmin = isMod && !isOwn && isTextEditable;
   const canEdit = canEditOwn || canEditAdmin;
 
-  // Admin can delete any message
-  const canDelete = isOwn || isCurrentUserAdmin;
+  // Moderators can delete any message
+  const canDelete = isOwn || isMod;
 
   const isEdited = !!message.edited_by && !message.is_deleted;
   const editedByAdmin = isEdited && message.edited_by && message.edited_by !== message.sender_id;
