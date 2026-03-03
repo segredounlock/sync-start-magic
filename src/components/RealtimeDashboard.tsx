@@ -171,18 +171,30 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
   const audioRef = useRef(false);
 
   const fetchRecargas = useCallback(async () => {
-    const { start, end } = getLocalDayBoundsUTC();
-    let query = supabase
-      .from("recargas")
-      .select("id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at, user_id")
-      .gte("created_at", start)
-      .lte("created_at", end)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (userId) query = query.eq("user_id", userId);
-    const { data } = await query;
-    setRecargas(data || []);
-    setLoading(false);
+    try {
+      const { start, end } = getLocalDayBoundsUTC();
+      let query = supabase
+        .from("recargas")
+        .select("id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at, user_id")
+        .gte("created_at", start)
+        .lte("created_at", end)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (userId) query = query.eq("user_id", userId);
+
+      const result = await Promise.race([
+        query,
+        new Promise<{ data: null }>((resolve) =>
+          setTimeout(() => resolve({ data: null }), 10000)
+        ),
+      ]);
+
+      if (result.data) setRecargas(result.data as any[]);
+    } catch (err) {
+      console.error("RealtimeDashboard fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
