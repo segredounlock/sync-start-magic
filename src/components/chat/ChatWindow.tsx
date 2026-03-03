@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatMessages, ChatMessage } from "@/hooks/useChat";
 import { useUserPresence, useGroupPresence } from "@/hooks/usePresence";
@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil, ImagePlus } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { toast } from "sonner";
+import { MentionDropdown } from "./MentionDropdown";
+import { AnimatePresence as MentionPresence } from "framer-motion";
 
 function formatLastSeen(dateStr: string): string {
   const date = new Date(dateStr);
@@ -55,6 +57,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagesAllowed, setImagesAllowed] = useState(true);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
 
   // Fetch group members (unique senders who have posted in this conversation)
   useEffect(() => {
@@ -524,12 +527,55 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             </label>
           )}
           <div className="flex-1 relative">
+            <MentionPresence>
+              <MentionDropdown
+                users={members}
+                filter={mentionQuery || ""}
+                visible={mentionQuery !== null}
+                onSelect={(u) => {
+                  const name = u.nome || "Usuário";
+                  const cursorPos = inputRef.current?.selectionStart || text.length;
+                  const beforeCursor = text.slice(0, cursorPos);
+                  const atIndex = beforeCursor.lastIndexOf("@");
+                  if (atIndex !== -1) {
+                    const newText = text.slice(0, atIndex) + `@${name} ` + text.slice(cursorPos);
+                    setText(newText);
+                  }
+                  setMentionQuery(null);
+                  setTimeout(() => inputRef.current?.focus(), 50);
+                }}
+              />
+            </MentionPresence>
             <input
               ref={inputRef}
               type="text"
               value={text}
-              onChange={e => { if (e.target.value.length <= 700) setText(e.target.value); }}
-              onKeyDown={handleKeyDown}
+              onChange={e => {
+                const val = e.target.value;
+                if (val.length > 700) return;
+                setText(val);
+                // Detect @ mention
+                const cursorPos = e.target.selectionStart || val.length;
+                const beforeCursor = val.slice(0, cursorPos);
+                const atIndex = beforeCursor.lastIndexOf("@");
+                if (atIndex !== -1 && (atIndex === 0 || beforeCursor[atIndex - 1] === " ")) {
+                  const query = beforeCursor.slice(atIndex + 1);
+                  if (!query.includes(" ")) {
+                    setMentionQuery(query);
+                  } else {
+                    setMentionQuery(null);
+                  }
+                } else {
+                  setMentionQuery(null);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape" && mentionQuery !== null) {
+                  setMentionQuery(null);
+                  return;
+                }
+                handleKeyDown(e);
+              }}
               maxLength={700}
               placeholder="Mensagem..."
               className="w-full py-2.5 px-4 rounded-2xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"

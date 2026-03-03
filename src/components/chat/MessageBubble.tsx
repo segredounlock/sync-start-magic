@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
@@ -155,6 +155,27 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
     if (message.reply_to && onScrollToMessage) {
       onScrollToMessage(message.reply_to.id);
     }
+  };
+
+  const renderContentWithMentions = (content: string) => {
+    const mentionRegex = /@([\w\sÀ-ÿ]+?)(?=\s|$|[.,!?;:])/g;
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    let key = 0;
+    while ((match = mentionRegex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+      parts.push(
+        <span key={key++} className="text-primary font-semibold">@{match[1]}</span>
+      );
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+    return parts.length > 0 ? parts : content;
   };
 
   return (
@@ -399,7 +420,9 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             </AnimatePresence>
 
             {message.type === "text" && (
-              <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{message.content}</p>
+              <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                {renderContentWithMentions(message.content || "")}
+              </p>
             )}
 
             {/* Audio content */}
