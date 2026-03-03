@@ -56,8 +56,11 @@ async function verifyAdmin(req: Request) {
 const BACKUP_MODULE_FILES = [
   "supabase/functions/backup-export/index.ts",
   "supabase/functions/backup-restore/index.ts",
+  "supabase/functions/expire-pending-deposits/index.ts",
+  "supabase/functions/github-sync/index.ts",
   "src/components/BackupSection.tsx",
   "src/pages/Principal.tsx",
+  "src/pages/MaintenancePage.tsx",
 ];
 
 serve(async (req) => {
