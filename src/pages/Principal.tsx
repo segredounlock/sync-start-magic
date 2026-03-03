@@ -790,12 +790,21 @@ export default function Principal() {
     }
   };
 
+  const [listPage, setListPage] = useState(1);
+  const LIST_PAGE_SIZE = 15;
+
   const filtered = revendedores.filter(r => {
     const matchSearch = (r.nome || "").toLowerCase().includes(search.toLowerCase()) ||
       (r.email || "").toLowerCase().includes(search.toLowerCase());
     const matchRole = roleFilter === "todos" || r.role === roleFilter;
     return matchSearch && matchRole;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+  const paginatedList = filtered.slice((listPage - 1) * LIST_PAGE_SIZE, listPage * LIST_PAGE_SIZE);
+
+  // Reset page when search/filter changes
+  useEffect(() => { setListPage(1); }, [search, roleFilter]);
 
   const totalUsers = allUsers.length;
   const activeCount = allUsers.filter(u => u.active).length;
@@ -1553,7 +1562,7 @@ export default function Principal() {
                   </div>
                 ) : (() => {
                   const todayStr = new Date().toISOString().slice(0, 10);
-                  return filtered.map(r => {
+                  return paginatedList.map(r => {
                     const initial = ((r.nome || r.email || "R")[0]).toUpperCase();
                     const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                     const recCount = userRecs.length;
@@ -1670,7 +1679,7 @@ export default function Principal() {
                       </td></tr>
                     ) : (() => {
                       const todayStr = new Date().toISOString().slice(0, 10);
-                      return filtered.map(r => {
+                      return paginatedList.map(r => {
                         const initial = ((r.nome || r.email || "R")[0]).toUpperCase();
                         const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                         const recCount = userRecs.length;
@@ -1765,6 +1774,55 @@ export default function Principal() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between glass-card rounded-xl px-4 py-3">
+                  <p className="text-xs text-muted-foreground">
+                    Mostrando {(listPage - 1) * LIST_PAGE_SIZE + 1}–{Math.min(listPage * LIST_PAGE_SIZE, filtered.length)} de {filtered.length}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setListPage(p => Math.max(1, p - 1))}
+                      disabled={listPage <= 1}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Anterior
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || Math.abs(p - listPage) <= 1)
+                      .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                        if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((p, i) =>
+                        typeof p === "string" ? (
+                          <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            onClick={() => setListPage(p)}
+                            className={`min-w-[32px] h-8 rounded-lg text-xs font-semibold transition-all ${
+                              listPage === p
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        )
+                      )}
+                    <button
+                      onClick={() => setListPage(p => Math.min(totalPages, p + 1))}
+                      disabled={listPage >= totalPages}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Próximo →
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
