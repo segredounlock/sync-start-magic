@@ -528,13 +528,25 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
           </div>
         )}
         {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin"
-            />
+          <div className="flex-1 flex flex-col justify-end px-3 py-2 space-y-3">
+            {/* Skeleton shimmer messages */}
+            {[...Array(6)].map((_, i) => {
+              const isRight = i % 3 === 0;
+              const width = ["60%", "45%", "70%", "50%", "55%", "40%"][i];
+              return (
+                <div key={i} className={`flex ${isRight ? "justify-end" : "justify-start"}`}>
+                  <div className="flex items-end gap-1.5" style={{ maxWidth: width }}>
+                    {!isRight && <div className="w-7 h-7 rounded-full bg-muted/40 animate-pulse flex-shrink-0" />}
+                    <div className={`rounded-2xl px-4 py-3 space-y-1.5 ${isRight ? "bg-primary/10" : "bg-muted/30"} animate-pulse`} style={{ width: "100%", minWidth: 80 }}>
+                      <div className="h-3 rounded-full bg-muted/40" style={{ width: "100%" }} />
+                      {i % 2 === 0 && <div className="h-3 rounded-full bg-muted/30" style={{ width: "60%" }} />}
+                      <div className="h-2 rounded-full bg-muted/20 mt-1" style={{ width: 40 }} />
+                    </div>
+                    {isRight && <div className="w-7 h-7 rounded-full bg-muted/40 animate-pulse flex-shrink-0" />}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           groupedMessages.map(group => (

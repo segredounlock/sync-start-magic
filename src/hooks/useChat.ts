@@ -291,55 +291,97 @@ export function useChatMessages(conversationId: string | null) {
     return msgs;
   }, []);
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = useCallback(async (retryCount = 0) => {
     if (!conversationId) { setMessages([]); setLoading(false); return; }
     if (activeConversationRef.current !== conversationId) return;
 
-    // Fetch last PAGE_SIZE messages (descending to get newest, then reverse)
-    const { data, error } = await supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: false })
-      .limit(PAGE_SIZE);
+    try {
+      // Timeout: abort if takes longer than 8 seconds
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
 
-    if (activeConversationRef.current !== conversationId) return;
-    if (error) { setLoading(false); return; }
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: false })
+        .limit(PAGE_SIZE)
+        .abortSignal(controller.signal);
 
-    const rawMsgs = (data || []).reverse(); // chronological order
-    setHasMore(rawMsgs.length >= PAGE_SIZE);
+      clearTimeout(timeout);
 
-    const msgs = await enrichMessages(rawMsgs);
-    if (activeConversationRef.current !== conversationId) return;
+      if (activeConversationRef.current !== conversationId) return;
 
-    setMessages(msgs);
-    if (!initialLoadDone.current) {
-      setLoading(false);
-      initialLoadDone.current = true;
+      if (error) {
+        console.error("Erro ao carregar mensagens:", error);
+        // Retry up to 2 times with exponential backoff
+        if (retryCount < 2) {
+          setTimeout(() => fetchMessages(retryCount + 1), 1000 * (retryCount + 1));
+          return;
+        }
+        setLoading(false);
+        return;
+      }
+
+      const rawMsgs = (data || []).reverse();
+      setHasMore(rawMsgs.length >= PAGE_SIZE);
+
+      const msgs = await enrichMessages(rawMsgs);
+      if (activeConversationRef.current !== conversationId) return;
+
+      setMessages(msgs);
+    } catch (err: any) {
+      console.error("Erro inesperado ao carregar mensagens:", err);
+      // Retry on abort/network errors
+      if (retryCount < 2) {
+        setTimeout(() => fetchMessages(retryCount + 1), 1500 * (retryCount + 1));
+        return;
+      }
+      // Even on failure, stop loading to prevent infinite spinner
+      setMessages([]);
+    } finally {
+      if (activeConversationRef.current === conversationId) {
+        if (!initialLoadDone.current) {
+          setLoading(false);
+          initialLoadDone.current = true;
+        }
+      }
     }
 
-    // Mark unread messages as read (non-blocking)
-    if (user) {
-      const unreadIds = rawMsgs
-        .filter((m: any) => m.sender_id !== user.id && !m.is_read)
-        .map((m: any) => m.id);
-      if (unreadIds.length > 0) {
-        supabase
+    // Mark unread messages as read (non-blocking, separate try/catch)
+    try {
+      if (user) {
+        const currentMsgs = messages;
+        // Re-read from state might be stale, but marking read is best-effort
+        const { data: unread } = await supabase
           .from("chat_messages")
-          .update({ is_read: true, read_at: new Date().toISOString() })
-          .in("id", unreadIds)
-          .then(() => {
-            const readReceipts = unreadIds.map((msgId: string) => ({
-              message_id: msgId,
-              user_id: user.id,
-              read_at: new Date().toISOString(),
-            }));
-            supabase
-              .from("chat_message_reads")
-              .upsert(readReceipts, { onConflict: "message_id,user_id" })
-              .then(() => {});
-          });
+          .select("id")
+          .eq("conversation_id", conversationId)
+          .neq("sender_id", user.id)
+          .eq("is_read", false)
+          .limit(100);
+
+        const unreadIds = (unread || []).map((m: any) => m.id);
+        if (unreadIds.length > 0) {
+          await supabase
+            .from("chat_messages")
+            .update({ is_read: true, read_at: new Date().toISOString() })
+            .in("id", unreadIds);
+          
+          const readReceipts = unreadIds.map((msgId: string) => ({
+            message_id: msgId,
+            user_id: user.id,
+            read_at: new Date().toISOString(),
+          }));
+          supabase
+            .from("chat_message_reads")
+            .upsert(readReceipts, { onConflict: "message_id,user_id" })
+            .then(() => {});
+        }
       }
+    } catch (readErr) {
+      // Silently ignore read-marking errors
+      console.warn("Erro ao marcar como lido:", readErr);
     }
   }, [conversationId, user, enrichMessages]);
 
