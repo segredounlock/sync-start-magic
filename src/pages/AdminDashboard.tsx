@@ -1108,17 +1108,17 @@ export default function AdminDashboard() {
                 <h2 className="font-display text-2xl font-bold text-foreground">Visão Geral</h2>
                 <p className="text-sm text-muted-foreground">Acompanhe o desempenho da sua plataforma.</p>
               </div>
-              <div className="flex rounded-lg overflow-hidden glass w-fit">
+              <div className="flex rounded-2xl overflow-hidden bg-muted/40 border border-border/40 p-1 gap-0.5 w-fit">
                 {([
                   { key: "hoje", label: "Hoje" },
                   { key: "7dias", label: "7 Dias" },
-                  { key: "mes", label: "Mês Atual" },
-                  { key: "total", label: "Todo Período" },
+                  { key: "mes", label: "Mês" },
+                  { key: "total", label: "Total" },
                 ] as { key: Period; label: string }[]).map(p => (
                   <button
                     key={p.key}
                     onClick={() => setPeriod(p.key)}
-                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${period === p.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${period === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     {p.label}
                   </button>
@@ -1150,32 +1150,35 @@ export default function AdminDashboard() {
 
 
             {/* Performance Financeira */}
-            <h3 className="font-display text-lg font-bold text-foreground mb-3">Performance Financeira & Operacional</h3>
+            <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Performance Financeira & Operacional</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {/* Lucro do Período */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card rounded-xl p-4">
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center">
                     <AnimatedIcon icon={TrendingUp} className="h-4 w-4 text-success" animation="bounce" delay={0.05} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Lucro do Período (Cobrado - Custo API)</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" /></p>
-                <span className="text-xs font-semibold text-success">Vendas - Custo da Operadora</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro do Período</span>
+                <p className={`text-2xl font-bold mt-0.5 ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}><AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" /></p>
+                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((Math.abs(analytics.lucro) / Math.max(analytics.totalCobrado, 1)) * 100, 100)}%` }} transition={{ duration: 0.8 }}
+                    className={`h-full rounded-full ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
+                </div>
                 <div className="flex justify-between mt-3 pt-3 border-t border-border">
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Cobrado do Revendedor</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Cobrado</p>
                     <p className="text-sm font-bold text-foreground"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   {role === "admin" && (
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">Custo da Operadora (API)</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Custo API</p>
                     <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCustoApi} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
                   {role === "revendedor" && (
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">Meu Custo (Cobrado pelo Sistema)</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Meu Custo</p>
                     <p className="text-sm font-bold text-destructive">- <AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
                   </div>
                   )}
@@ -1183,97 +1186,117 @@ export default function AdminDashboard() {
               </motion.div>
 
               {/* Depósitos Recebidos */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-4">
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
                     <AnimatedIcon icon={CreditCard} className="h-4 w-4 text-primary" animation="pulse" delay={0.1} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Total de Depósitos Recebidos</span>
                   <span className="ml-auto text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">{analytics.txCount} txs</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Depósitos Recebidos</span>
+                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
+                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, delay: 0.1 }}
+                    className="h-full rounded-full bg-primary" />
+                </div>
               </motion.div>
 
               {/* Saldo dos Revendedores */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-xl p-4">
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center">
                     <AnimatedIcon icon={Wallet} className="h-4 w-4 text-warning" animation="wiggle" delay={0.15} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Saldo dos Revendedores (Passivo)</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
-                <span className="text-xs text-success">Crédito disponível nas carteiras</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Saldo Revendedores</span>
+                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
+                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((analytics.saldoCarteiras / Math.max(analytics.totalDeposited, 1)) * 100, 100)}%` }} transition={{ duration: 0.8, delay: 0.15 }}
+                    className="h-full rounded-full bg-warning" />
+                </div>
               </motion.div>
             </div>
 
             {/* KPI Row 2 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {/* Volume de Recargas */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <AnimatedIcon icon={Smartphone} className="h-5 w-5 text-primary" animation="float" />
-                  <span className="font-semibold text-foreground">Volume de Recargas</span>
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <AnimatedIcon icon={Smartphone} className="h-4 w-4 text-primary" animation="float" />
+                  </div>
                   {analytics.pendingRec > 0 && (
                     <span className="ml-auto text-xs bg-destructive/15 text-destructive px-2 py-0.5 rounded-full font-medium">● {analytics.pendingRec} Processando</span>
                   )}
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Volume de Recargas</span>
+                <div className="grid grid-cols-3 gap-2 mt-2">
                   <div className="text-center p-2 rounded-lg bg-muted/50">
-                    <p className="text-[10px] text-muted-foreground">Total</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Total</p>
                     <p className="text-lg font-bold text-foreground"><AnimatedInt value={analytics.totalRec} /></p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-success/10">
-                    <p className="text-[10px] text-success">Sucesso</p>
+                    <p className="text-[10px] uppercase tracking-wider text-success font-medium">Sucesso</p>
                     <p className="text-lg font-bold text-success"><AnimatedInt value={analytics.successRec} /></p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-destructive/10">
-                    <p className="text-[10px] text-destructive">Processando</p>
+                    <p className="text-[10px] uppercase tracking-wider text-destructive font-medium">Pendente</p>
                     <p className="text-lg font-bold text-destructive"><AnimatedInt value={analytics.pendingRec} /></p>
                   </div>
+                </div>
+                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${analytics.totalRec > 0 ? (analytics.successRec / analytics.totalRec) * 100 : 0}%` }} transition={{ duration: 0.8, delay: 0.2 }}
+                    className="h-full rounded-full bg-success" />
                 </div>
               </motion.div>
 
               {/* Revendedores Cadastrados */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-xl p-4">
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
                     <AnimatedIcon icon={Users} className="h-4 w-4 text-primary" animation="pulse" delay={0.25} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Revendedores Cadastrados</span>
                   {allProfiles.filter(p => p.created_at >= periodStart).length > 0 && (
                     <span className="ml-auto text-xs bg-success/15 text-success px-2 py-0.5 rounded-full font-medium flex items-center gap-0.5">
                       <ArrowUpRight className="h-3 w-3" />+{allProfiles.filter(p => p.created_at >= periodStart).length} novos
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-foreground"><AnimatedInt value={allProfiles.length || revendedores.length} /></p>
-                <span className="text-xs text-muted-foreground">Site + Bot Telegram</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Revendedores</span>
+                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedInt value={allProfiles.length || revendedores.length} /></p>
                 <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
                   <div className="text-center p-1.5 rounded-lg bg-muted/50">
-                    <p className="text-[10px] text-muted-foreground">Total</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Total</p>
                     <p className="text-sm font-bold text-foreground"><AnimatedInt value={allProfiles.length || revendedores.length} /></p>
                   </div>
                   <div className="text-center p-1.5 rounded-lg bg-success/10">
-                    <p className="text-[10px] text-success flex items-center justify-center gap-0.5"><Bot className="h-3 w-3" /> Bot</p>
+                    <p className="text-[10px] uppercase tracking-wider text-success font-medium flex items-center justify-center gap-0.5"><Bot className="h-3 w-3" /> Bot</p>
                     <p className="text-sm font-bold text-success"><AnimatedInt value={allProfiles.filter(p => !!p.telegram_id).length} /></p>
                   </div>
                   <div className="text-center p-1.5 rounded-lg bg-primary/10">
-                    <p className="text-[10px] text-primary flex items-center justify-center gap-0.5"><Globe className="h-3 w-3" /> Site</p>
+                    <p className="text-[10px] uppercase tracking-wider text-primary font-medium flex items-center justify-center gap-0.5"><Globe className="h-3 w-3" /> Site</p>
                     <p className="text-sm font-bold text-primary"><AnimatedInt value={allProfiles.filter(p => !p.telegram_id).length || revendedores.length} /></p>
                   </div>
+                </div>
+                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, delay: 0.25 }}
+                    className="h-full rounded-full bg-primary" />
                 </div>
               </motion.div>
 
               {/* Valor Médio por Recarga */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-4">
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
                     <AnimatedIcon icon={FileText} className="h-4 w-4 text-accent-foreground" animation="bounce" delay={0.3} />
                   </div>
-                  <span className="text-sm text-muted-foreground">Valor Médio por Recarga</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.ticketMedio} prefix="R$&nbsp;" /></p>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Ticket Médio</span>
+                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedCounter value={analytics.ticketMedio} prefix="R$&nbsp;" /></p>
+                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((analytics.ticketMedio / 50) * 100, 100)}%` }} transition={{ duration: 0.8, delay: 0.3 }}
+                    className="h-full rounded-full bg-primary" />
+                </div>
               </motion.div>
             </div>
 
