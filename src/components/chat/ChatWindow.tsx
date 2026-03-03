@@ -129,16 +129,13 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     return () => { supabase.removeChannel(channel); };
   }, [isGroup, conversationId]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
+  const uploadImageFile = async (file: File) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowed.includes(file.type)) { toast.error("Use JPG, PNG, WebP ou GIF."); return; }
     if (file.size > 5 * 1024 * 1024) { toast.error("Máximo 5MB."); return; }
     setUploadingImage(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = file.name?.split(".").pop() || (file.type === "image/png" ? "png" : "jpg");
       const path = `${user!.id}/${conversationId}/${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("chat-images").upload(path, file);
       if (upErr) throw upErr;
@@ -151,6 +148,32 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     }
     setUploadingImage(false);
   };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    await uploadImageFile(file);
+  };
+
+  // Ctrl+V paste image from clipboard
+  useEffect(() => {
+    if (!imagesAllowed) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) uploadImageFile(file);
+          return;
+        }
+      }
+    };
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [imagesAllowed, conversationId, replyTo]);
 
   const handleGroupIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
