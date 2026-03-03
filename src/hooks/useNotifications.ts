@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { playSuccessSound, playWebSignupSound, playTelegramSignupSound, playCashRegisterSound } from "@/lib/sounds";
-
+import { formatTimeBR } from "@/lib/timezone";
 // ── System notification (plays device sound without user interaction) ──
 let _notifPermission: NotificationPermission = typeof Notification !== "undefined" ? Notification.permission : "denied";
 
@@ -144,7 +144,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             });
             try { playCashRegisterSound(); } catch {}
             showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
-            toast.success(`💰 Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` });
+            toast.success(`💰 Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at || new Date().toISOString())}` });
           }
         })
         .subscribe();
@@ -177,7 +177,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             is_read: false,
           });
           showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
-          toast.info(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` });
+          toast.info(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at || new Date().toISOString())}` });
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "recargas",
@@ -254,7 +254,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
           });
           try { playWebSignupSound(); } catch {}
           showSystemNotification("🆕 Novo cadastro", label);
-          toast.success(`Novo cadastro Web: ${label}`, { description: `${label} · ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` });
+          toast.success(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at || new Date().toISOString())}` });
         })
         .on("postgres_changes", {
           event: "INSERT", schema: "public", table: "telegram_users",
@@ -275,7 +275,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
           });
           try { playTelegramSignupSound(); } catch {}
           showSystemNotification("🤖 Novo Telegram", label);
-          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` });
+          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at || new Date().toISOString())}` });
         })
         .on("postgres_changes", {
           event: "UPDATE", schema: "public", table: "telegram_users",
@@ -297,7 +297,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
           });
           try { playTelegramSignupSound(); } catch {}
           showSystemNotification("🤖 Novo Telegram", label);
-          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` });
+          toast.info(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || new Date().toISOString())}` });
         })
         .subscribe();
       channels.push(ch);
