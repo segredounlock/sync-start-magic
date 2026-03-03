@@ -10,21 +10,23 @@ import { MessageCircle, ArrowLeft, Plus } from "lucide-react";
 
 interface ChatPageProps {
   onBack?: () => void;
+  forceMobile?: boolean;
 }
 
-export function ChatPage({ onBack }: ChatPageProps) {
+export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
   const { user } = useAuth();
   const { conversations, loading, startConversation } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(GENERAL_CHAT_ID);
   const [showNewChat, setShowNewChat] = useState(false);
   const [chatEnabled, setChatEnabled] = useState(true);
-  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+  const [isMobileView, setIsMobileView] = useState(forceMobile || window.innerWidth < 768);
 
   useEffect(() => {
+    if (forceMobile) return;
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [forceMobile]);
 
   // Check if chat is enabled
   useEffect(() => {

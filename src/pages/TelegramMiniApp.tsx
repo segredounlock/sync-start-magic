@@ -1714,7 +1714,7 @@ export default function TelegramMiniApp() {
           {/* ── Chat ── */}
           {section === "chat" && userId && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-[calc(100vh-180px)] tg-chat-theme">
-              <ChatPage onBack={() => setSection("recarga")} />
+              <ChatPage onBack={() => setSection("recarga")} forceMobile />
             </motion.div>
           )}
           {section === "chat" && !userId && (
