@@ -146,23 +146,35 @@ export default function Auth() {
         }
         const userId = (await supabase.auth.getUser()).data.user?.id || "";
         // Retry role check to handle race condition with trigger
-        let roleData: { role: string } | null = null;
+        const rolePriority = ["admin", "revendedor", "cliente", "usuario", "user"];
+        let resolvedRole: string | null = null;
+
         for (let i = 0; i < 3; i++) {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from("user_roles")
-            .select("role")
+            .select("role, created_at")
             .eq("user_id", userId)
-            .maybeSingle();
-          if (data) { roleData = data; break; }
-          if (i < 2) await new Promise(r => setTimeout(r, 1000));
+            .order("created_at", { ascending: false });
+
+          if (error) throw error;
+
+          if (data && data.length > 0) {
+            const roles = data.map((r) => r.role);
+            resolvedRole = rolePriority.find((r) => roles.includes(r)) || roles[0] || null;
+            break;
+          }
+
+          if (i < 2) await new Promise((r) => setTimeout(r, 1000));
         }
-        if (!roleData) {
+
+        if (!resolvedRole) {
           await supabase.auth.signOut();
           toast.error("Sua conta ainda não possui um cargo atribuído. Aguarde a aprovação ou contate o administrador.");
           setSubmitting(false);
           return;
         }
-        setDestination(roleData.role === "admin" ? "/principal" : "/painel");
+
+        setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
