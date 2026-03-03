@@ -28,6 +28,46 @@ const TOKEN_CACHE_TTL = 120_000; // 2 minutes
 let migrationCache: { enabled: boolean; url: string; time: number } | null = null;
 const MIGRATION_CACHE_TTL = 300_000; // 5 minutes
 
+// Seasonal theme cache
+let seasonalCache: { theme: string; emojis: Record<string, string>; time: number } | null = null;
+const SEASONAL_CACHE_TTL = 60_000; // 1 minute
+
+const SEASONAL_EMOJI_MAP: Record<string, Record<string, string>> = {
+  none: {},
+  ano_novo: { saldo: "🥂", recarga: "🎆", historico: "🎇", deposito: "✨", conta: "⭐", webapp: "🎉", migration: "🎇", menu: "🎉" },
+  carnaval: { saldo: "🎭", recarga: "💃", historico: "🎊", deposito: "🪇", conta: "🌈", webapp: "🎉", migration: "🎊", menu: "🎭" },
+  pascoa: { saldo: "🥚", recarga: "🐰", historico: "🐣", deposito: "🍫", conta: "🌸", webapp: "🌷", migration: "🐣", menu: "🐰" },
+  dia_maes: { saldo: "💐", recarga: "🌹", historico: "🌸", deposito: "❤️", conta: "💕", webapp: "🌺", migration: "🌸", menu: "💐" },
+  dia_namorados: { saldo: "💘", recarga: "💕", historico: "💖", deposito: "❤️", conta: "💝", webapp: "🥰", migration: "💕", menu: "💕" },
+  festa_junina: { saldo: "🌽", recarga: "🔥", historico: "🪗", deposito: "🎪", conta: "⛺", webapp: "🎏", migration: "🌽", menu: "🎪" },
+  dia_pais: { saldo: "👔", recarga: "⭐", historico: "🏆", deposito: "💪", conta: "🎖️", webapp: "💙", migration: "👔", menu: "👔" },
+  dia_criancas: { saldo: "🎈", recarga: "🎮", historico: "🧸", deposito: "🍭", conta: "🌈", webapp: "🎠", migration: "🎈", menu: "🎈" },
+  black_friday: { saldo: "💰", recarga: "⚡", historico: "🏷️", deposito: "💸", conta: "🤑", webapp: "🔥", migration: "💸", menu: "🏷️" },
+  natal: { saldo: "🎁", recarga: "🎄", historico: "❄️", deposito: "🎅", conta: "☃️", webapp: "⭐", migration: "🎁", menu: "🎄" },
+};
+
+async function getSeasonalEmojis(supabase: any): Promise<Record<string, string>> {
+  if (seasonalCache && (Date.now() - seasonalCache.time) < SEASONAL_CACHE_TTL) {
+    return seasonalCache.emojis;
+  }
+  const { data } = await supabase
+    .from("system_config")
+    .select("value")
+    .eq("key", "seasonalTheme")
+    .maybeSingle();
+  const theme = data?.value || "none";
+  const emojis = SEASONAL_EMOJI_MAP[theme] || {};
+  seasonalCache = { theme, emojis, time: Date.now() };
+  return emojis;
+}
+
+// Default emojis (when no seasonal theme)
+const DEFAULT_EMOJIS = { saldo: "💰", recarga: "📱", historico: "📋", deposito: "💳", conta: "👤", webapp: "🌐", migration: "💰", menu: "📖" };
+
+function se(emojis: Record<string, string>, key: string): string {
+  return emojis[key] || DEFAULT_EMOJIS[key] || "";
+}
+
 async function getMigrationConfig(supabase: any): Promise<{ enabled: boolean; url: string }> {
   if (migrationCache && (Date.now() - migrationCache.time) < MIGRATION_CACHE_TTL) {
     return { enabled: migrationCache.enabled, url: migrationCache.url };
@@ -783,22 +823,23 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   const webAppUrl = "https://recargasbrasill.com/miniapp";
   const migrationConfig = await getMigrationConfig(supabase);
   const migrationSiteUrl = migrationConfig.url || "https://recargasbrasill.com";
+  const em = await getSeasonalEmojis(supabase);
   const menuKb = (extra?: any[][]) => [
     ...(extra || []),
     [
-      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
-      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+      { text: `${se(em, "saldo")} Ver Saldo`, callback_data: "menu_saldo" },
+      { text: `${se(em, "recarga")} Fazer Recarga`, callback_data: "menu_recarga" },
     ],
     [
-      { text: "📋 Histórico", callback_data: "menu_recargas" },
-      { text: "💳 Depositar PIX", callback_data: "menu_deposito" },
+      { text: `${se(em, "historico")} Histórico`, callback_data: "menu_recargas" },
+      { text: `${se(em, "deposito")} Depositar PIX`, callback_data: "menu_deposito" },
     ],
     [
-      { text: "👤 Minha Conta", callback_data: "menu_conta" },
-      { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
+      { text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" },
+      { text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } },
     ],
     [
-      { text: "💰 Usar Saldo Antigo", web_app: { url: migrationSiteUrl } },
+      { text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } },
     ],
   ];
 
@@ -1351,23 +1392,25 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 async function sendMainMenu(token: string, chatId: number, user: any, supabase?: any) {
   const webAppUrl = "https://recargasbrasill.com/miniapp";
   let migrationSiteUrl = "https://recargasbrasill.com";
+  let em: Record<string, string> = {};
   if (supabase) {
     const migrationConfig = await getMigrationConfig(supabase);
     migrationSiteUrl = migrationConfig.url || migrationSiteUrl;
+    em = await getSeasonalEmojis(supabase);
   }
   await sendMessageWithKeyboard(token, chatId,
     `👋 Olá, <b>${user.nome || user.email}</b>!\n\nEscolha uma opção:`,
     [[
-      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
-      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
+      { text: `${se(em, "saldo")} Ver Saldo`, callback_data: "menu_saldo" },
+      { text: `${se(em, "recarga")} Fazer Recarga`, callback_data: "menu_recarga" },
     ], [
-      { text: "📋 Histórico", callback_data: "menu_recargas" },
-      { text: "💳 Depositar PIX", callback_data: "menu_deposito" },
+      { text: `${se(em, "historico")} Histórico`, callback_data: "menu_recargas" },
+      { text: `${se(em, "deposito")} Depositar PIX`, callback_data: "menu_deposito" },
     ], [
-      { text: "👤 Minha Conta", callback_data: "menu_conta" },
-      { text: "🌐 Abrir Web App", web_app: { url: webAppUrl } },
+      { text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" },
+      { text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } },
     ], [
-      { text: "💰 Usar Saldo Antigo", web_app: { url: migrationSiteUrl } },
+      { text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } },
     ]]
   );
 }

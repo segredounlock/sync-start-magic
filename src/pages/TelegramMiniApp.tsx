@@ -13,6 +13,8 @@ import {
   AlertTriangle, CheckCircle2, XCircle, MessageCircle
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
+import { useSeasonalTheme, SEASONAL_BUTTON_EMOJIS } from "@/hooks/useSeasonalTheme";
+import { SEASONAL_THEMES, type SeasonalThemeKey } from "@/components/SeasonalEffects";
 
 declare global {
   interface Window {
@@ -175,6 +177,8 @@ export default function TelegramMiniApp() {
       document.removeEventListener("gesturechange", preventGesture);
     };
   }, []);
+
+  const { activeTheme, theme: seasonalTheme, emojis: seasonalEmojis, isActive: isSeasonalActive } = useSeasonalTheme();
 
   const [section, setSection] = useState<Section>("recarga");
   const [loading, setLoading] = useState(true);
@@ -1784,16 +1788,27 @@ export default function TelegramMiniApp() {
         </AnimatePresence>
       </div>
 
+      {/* Seasonal Banner for Mini App */}
+      {isSeasonalActive && (
+        <div className={`fixed bottom-[60px] left-0 right-0 z-20 bg-gradient-to-r ${seasonalTheme.accentGradient} overflow-hidden`}>
+          <div className="flex items-center justify-center gap-2 py-1 px-4">
+            <span className="text-xs">{seasonalTheme.emoji}</span>
+            <span className="text-[10px] font-bold text-white drop-shadow-sm tracking-wide">{seasonalTheme.label.toUpperCase()}</span>
+            <span className="text-xs">{seasonalTheme.emoji}</span>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Tab Bar */}
       <div className="fixed bottom-0 left-0 right-0 backdrop-blur-xl z-30 safe-area-bottom"
         style={{ ...st.bottomBar, borderTop: st.borderMain }}>
         <div className="flex justify-around items-center px-2 py-2.5">
           {([
-            { id: "recarga" as Section, icon: Smartphone, label: "Recarga" },
-            { id: "deposito" as Section, icon: Plus, label: "Saldo" },
-            { id: "chat" as Section, icon: MessageCircle, label: "Chat" },
-            { id: "historico" as Section, icon: Clock, label: "Pedidos" },
-            { id: "conta" as Section, icon: User, label: "Conta" },
+            { id: "recarga" as Section, icon: Smartphone, label: seasonalEmojis.recarga ? `${seasonalEmojis.recarga}` : "Recarga", defaultLabel: "Recarga" },
+            { id: "deposito" as Section, icon: Plus, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo" },
+            { id: "chat" as Section, icon: MessageCircle, label: seasonalEmojis.chat ? `${seasonalEmojis.chat}` : "Chat", defaultLabel: "Chat" },
+            { id: "historico" as Section, icon: Clock, label: seasonalEmojis.historico ? `${seasonalEmojis.historico}` : "Pedidos", defaultLabel: "Pedidos" },
+            { id: "conta" as Section, icon: User, label: seasonalEmojis.conta ? `${seasonalEmojis.conta}` : "Conta", defaultLabel: "Conta" },
           ]).map((item) => {
             const isActive = section === item.id;
             // Unique animation per icon

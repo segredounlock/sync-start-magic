@@ -222,7 +222,7 @@ export default function BackupSection() {
     // Hooks
     "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
     "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/usePresence.ts",
-    "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts",
+    "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
     // Libs
     "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
     // Integrations
