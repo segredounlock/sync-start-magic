@@ -201,7 +201,7 @@ function isCacheValid() {
   return Date.now() - cacheTimestamp < CACHE_TTL;
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 25;
 
 export function useChatMessages(conversationId: string | null) {
   const { user } = useAuth();
