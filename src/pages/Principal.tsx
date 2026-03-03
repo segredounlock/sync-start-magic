@@ -1041,7 +1041,7 @@ export default function Principal() {
     switch (view) {
       case "dashboard": return "Dashboard";
       case "config-api": return "Configurações API";
-      case "pagamentos": return "Pagamentos";
+      case "pagamentos": return "Gateway Principal";
       case "depositos": return "Depósitos";
       case "bot": return "Bot Telegram";
       case "geral": return "Configurações Gerais";
@@ -1093,7 +1093,7 @@ export default function Principal() {
     { key: "relatorios", icon: FileText, label: "Relatórios", color: "text-warning" },
     { key: "precificacao", icon: Tag, label: "Precificação", color: "text-warning" },
     { key: "config-api", icon: Settings, label: "API Recarga", color: "text-[hsl(280,70%,60%)]" },
-    { key: "pagamentos", icon: CreditCard, label: "Pagamentos", color: "text-destructive" },
+    { key: "pagamentos", icon: CreditCard, label: "Gateway Principal", color: "text-destructive" },
     { key: "depositos", icon: Landmark, label: "Depósitos", color: "text-success" },
     { key: "bot", icon: Bot, label: "Bot Telegram", color: "text-[hsl(200,80%,55%)]" },
     { key: "broadcast", icon: Megaphone, label: "Broadcast", color: "text-warning" },
@@ -1232,7 +1232,7 @@ export default function Principal() {
               {view === "lista" && "Gerencie todos os revendedores e clientes."}
               {view === "relatorios" && "Relatórios detalhados de vendas e lucro."}
               {view === "config-api" && "Configure a API de recargas."}
-              {view === "pagamentos" && "Configure gateways de pagamento."}
+              {view === "pagamentos" && "Configure a gateway de pagamento principal do sistema."}
               {view === "depositos" && "Configure limites e taxas de depósitos."}
               {view === "bot" && "Configure o bot do Telegram."}
               {view === "geral" && "Configurações gerais do sistema."}
@@ -2309,10 +2309,17 @@ export default function Principal() {
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <PinProtection configKey="adminPin">
-                  <div className="glass-card rounded-xl p-6 space-y-4">
-                    <h4 className="font-semibold text-foreground text-lg">Gateway Principal</h4>
+                  <div className="glass-card rounded-2xl p-6 md:p-8 space-y-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center">
+                        <CreditCard className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-display text-xl font-bold text-foreground">Gateway Principal</h4>
+                        <p className="text-sm text-muted-foreground">Selecione o provedor de pagamento PIX do sistema</p>
+                      </div>
+                    </div>
                     <div>
-                      <label className="block text-sm font-bold text-foreground mb-2">Provedor Selecionado</label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         {[
                           { value: "mercadopago", label: "Mercado Pago", icon: "💳", desc: "Pagamentos via Mercado Pago" },
