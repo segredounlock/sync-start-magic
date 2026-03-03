@@ -1618,7 +1618,8 @@ export default function TelegramMiniApp() {
           {/* ── Conta ── */}
           {section === "conta" && (
             <motion.div key="conta" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-4">
-              <div className="rounded-2xl p-5 flex items-center gap-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, type: "spring", damping: 20 }}
+                className="rounded-2xl p-5 flex items-center gap-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
                 {/* Avatar with upload */}
                 <label className="relative cursor-pointer group shrink-0">
                   <div className="w-[72px] h-[72px] rounded-full p-[3px] rgb-border flex items-center justify-center">
@@ -1639,13 +1640,13 @@ export default function TelegramMiniApp() {
                   <p className="text-sm" style={st.hint}>{userEmail}</p>
                   <p className="text-xs mt-1" style={st.hint}>Toque na foto para alterar</p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Telegram Vinculado */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, type: "spring", damping: 20 }}
                 className="rounded-2xl p-4 flex items-center gap-3 overflow-hidden relative"
                 style={{ ...st.secondaryBg, border: "1px solid rgba(34,197,94,0.3)" }}
               >
@@ -1678,7 +1679,8 @@ export default function TelegramMiniApp() {
                 </motion.div>
               </motion.div>
 
-              <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, type: "spring", damping: 20 }}
+                className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
                 <div className="flex items-center gap-2 mb-1">
                   <motion.svg
                     width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -1694,11 +1696,12 @@ export default function TelegramMiniApp() {
                   <p className="text-[11px] uppercase tracking-wider" style={st.hint}>Saldo de Revenda</p>
                 </div>
                 <p className="text-2xl font-bold" style={st.green}>{formatCurrency(saldo)}</p>
-              </div>
-              <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm transition"
+              </motion.div>
+              <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, type: "spring", damping: 20 }}
+                onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm transition"
                 style={{ ...st.destructive, border: st.borderSub }}>
                 <LogOut className="w-4 h-4" /> Sair da conta
-              </button>
+              </motion.button>
             </motion.div>
           )}
 
