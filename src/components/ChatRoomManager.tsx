@@ -52,10 +52,18 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
 
       const roomsWithCounts: ChatRoom[] = [];
       for (const room of data || []) {
-        const { count: msgCount } = await supabase
-          .from("chat_messages")
-          .select("id", { count: "exact", head: true })
-          .eq("conversation_id", room.id);
+        const [{ count: msgCount }, { data: senders }] = await Promise.all([
+          supabase
+            .from("chat_messages")
+            .select("id", { count: "exact", head: true })
+            .eq("conversation_id", room.id),
+          supabase
+            .from("chat_messages")
+            .select("sender_id")
+            .eq("conversation_id", room.id),
+        ]);
+
+        const uniqueSenders = new Set((senders || []).map((s: any) => s.sender_id));
 
         roomsWithCounts.push({
           id: room.id,
@@ -68,7 +76,7 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
           is_private: (room as any).is_private || false,
           created_at: room.created_at,
           msg_count: msgCount || 0,
-          member_count: 0,
+          member_count: uniqueSenders.size,
         });
       }
 
