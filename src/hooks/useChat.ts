@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+
 export const GENERAL_CHAT_ID = "00000000-0000-0000-0000-000000000001";
 export const BUG_REPORT_CHAT_ID = "00000000-0000-0000-0000-000000000002";
 
@@ -75,43 +76,56 @@ export function useConversations() {
 
       if (error) throw error;
 
-      const directConvos = (data || []).filter((c: any) => c.type === 'direct');
+      const allConvos = data || [];
+      const directConvos = allConvos.filter((c: any) => c.type === 'direct');
       const otherIds = directConvos.map((c: any) =>
         c.participant_1 === user.id ? c.participant_2 : c.participant_1
       ).filter(Boolean);
       const uniqueIds = [...new Set(otherIds)];
 
-      let profiles: any[] = [];
-      let roleMap: Record<string, string> = {};
-      if (uniqueIds.length > 0) {
-        const [{ data: p }, { data: roles }] = await Promise.all([
-          supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", uniqueIds),
-          supabase.from("user_roles").select("user_id, role").in("user_id", uniqueIds),
-        ]);
-        profiles = p || [];
-        (roles || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
-      }
+      // Parallel: fetch profiles, roles, AND all unread counts at once
+      const convoIds = allConvos.map(c => c.id);
 
-      const convos = (data || []).map((c: any) => {
+      const [profiles, roleData, unreadCounts] = await Promise.all([
+        uniqueIds.length > 0
+          ? supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", uniqueIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        uniqueIds.length > 0
+          ? supabase.from("user_roles").select("user_id, role").in("user_id", uniqueIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        // Batch unread counts: one query per conversation in parallel
+        Promise.all(convoIds.map(async (cid) => {
+          const { count } = await supabase
+            .from("chat_messages")
+            .select("id", { count: "exact", head: true })
+            .eq("conversation_id", cid)
+            .neq("sender_id", user.id)
+            .eq("is_read", false);
+          return { id: cid, count: count || 0 };
+        })),
+      ]);
+
+      const roleMap: Record<string, string> = {};
+      (roleData as any[]).forEach((r: any) => { roleMap[r.user_id] = r.role; });
+
+      const unreadMap: Record<string, number> = {};
+      unreadCounts.forEach(u => { unreadMap[u.id] = u.count; });
+
+      const convos = allConvos.map((c: any) => {
         if (c.type === 'group') {
-          return { ...c, other_user: undefined, unread_count: 0 };
+          return { ...c, other_user: undefined, unread_count: unreadMap[c.id] || 0 };
         }
         const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
-        const profile = profiles.find((p: any) => p.id === otherId);
+        const profile = (profiles as any[]).find((p: any) => p.id === otherId);
         const role = roleMap[otherId] || "usuario";
-        return { ...c, other_user: profile ? { ...profile, role, verification_badge: profile.verification_badge } : { id: otherId, nome: null, email: null, avatar_url: null, role, verification_badge: null }, unread_count: 0 };
+        return {
+          ...c,
+          other_user: profile
+            ? { ...profile, role, verification_badge: profile.verification_badge }
+            : { id: otherId, nome: null, email: null, avatar_url: null, role, verification_badge: null },
+          unread_count: unreadMap[c.id] || 0,
+        };
       });
-
-      // Fetch unread counts
-      for (const conv of convos) {
-        const { count } = await supabase
-          .from("chat_messages")
-          .select("id", { count: "exact", head: true })
-          .eq("conversation_id", conv.id)
-          .neq("sender_id", user.id)
-          .eq("is_read", false);
-        conv.unread_count = count || 0;
-      }
 
       const pinnedOrder: Record<string, number> = { [GENERAL_CHAT_ID]: 0, [BUG_REPORT_CHAT_ID]: 1 };
       convos.sort((a: any, b: any) => {
@@ -169,6 +183,16 @@ export function useConversations() {
   return { conversations, loading, fetchConversations, startConversation };
 }
 
+// Cache for sender profiles to avoid re-fetching on every realtime update
+const senderCache = new Map<string, { nome: string | null; avatar_url: string | null; verification_badge: string | null }>();
+const adminCache = new Set<string>();
+let cacheTimestamp = 0;
+const CACHE_TTL = 60_000; // 1 minute
+
+function isCacheValid() {
+  return Date.now() - cacheTimestamp < CACHE_TTL;
+}
+
 export function useChatMessages(conversationId: string | null) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -176,6 +200,7 @@ export function useChatMessages(conversationId: string | null) {
   const initialLoadDone = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeConversationRef = useRef<string | null>(null);
+  const cachedNome = useRef<string | null>(null);
 
   // Reset on conversation change
   useEffect(() => {
@@ -192,9 +217,16 @@ export function useChatMessages(conversationId: string | null) {
     }
   }, [conversationId]);
 
+  // Cache user's own name for sendMessage
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle().then(({ data }) => {
+      if (data?.nome) cachedNome.current = data.nome;
+    });
+  }, [user]);
+
   const fetchMessages = useCallback(async () => {
     if (!conversationId) { setMessages([]); setLoading(false); return; }
-    // Guard against stale fetches
     if (activeConversationRef.current !== conversationId) return;
 
     const { data, error } = await supabase
@@ -204,49 +236,55 @@ export function useChatMessages(conversationId: string | null) {
       .order("created_at", { ascending: true })
       .limit(200);
 
-    // Check again after async — conversation may have changed
     if (activeConversationRef.current !== conversationId) return;
     if (error) { setLoading(false); return; }
 
-    const msgIds = (data || []).map((m: any) => m.id);
-    let reactions: any[] = [];
-    if (msgIds.length > 0) {
-      const { data: r } = await supabase
-        .from("chat_reactions")
-        .select("*")
-        .in("message_id", msgIds);
-      reactions = r || [];
+    const rawMsgs = data || [];
+    const msgIds = rawMsgs.map((m: any) => m.id);
+    const senderIds = [...new Set(rawMsgs.map((m: any) => m.sender_id))];
+
+    // Check which senders we need to fetch (not in cache or cache expired)
+    const needsFetch = !isCacheValid() || senderIds.some(id => !senderCache.has(id));
+
+    // Parallel: reactions + sender profiles + roles (only if needed)
+    const [reactions, senders, roles] = await Promise.all([
+      msgIds.length > 0
+        ? supabase.from("chat_reactions").select("*").in("message_id", msgIds).then(r => r.data || [])
+        : Promise.resolve([]),
+      needsFetch && senderIds.length > 0
+        ? supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", senderIds).then(r => r.data || [])
+        : Promise.resolve(null),
+      needsFetch && senderIds.length > 0
+        ? supabase.from("user_roles").select("user_id").in("user_id", senderIds).eq("role", "admin").then(r => r.data || [])
+        : Promise.resolve(null),
+    ]);
+
+    // Update cache if we fetched new data
+    if (senders) {
+      (senders as any[]).forEach((s: any) => {
+        senderCache.set(s.id, { nome: s.nome, avatar_url: s.avatar_url, verification_badge: s.verification_badge });
+      });
+      cacheTimestamp = Date.now();
+    }
+    if (roles) {
+      (roles as any[]).forEach((r: any) => adminCache.add(r.user_id));
     }
 
-    const senderIds = [...new Set((data || []).map((m: any) => m.sender_id))];
-    let senders: any[] = [];
-    let adminIds = new Set<string>();
-    if (senderIds.length > 0) {
-      const { data: s } = await supabase
-        .from("profiles")
-        .select("id, nome, avatar_url, verification_badge")
-        .in("id", senderIds);
-      senders = s || [];
-
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .in("user_id", senderIds)
-        .eq("role", "admin");
-      (roles || []).forEach((r: any) => adminIds.add(r.user_id));
-    }
-
-    // Final stale check before setting state
     if (activeConversationRef.current !== conversationId) return;
 
-    const msgs = (data || []).map((m: any) => ({
-      ...m,
-      reactions: reactions.filter((r: any) => r.message_id === m.id),
-      sender: {
-        ...(senders.find((s: any) => s.id === m.sender_id) || { nome: null, avatar_url: null }),
-        isAdmin: adminIds.has(m.sender_id),
-      },
-    }));
+    const msgs = rawMsgs.map((m: any) => {
+      const cached = senderCache.get(m.sender_id);
+      return {
+        ...m,
+        reactions: (reactions as any[]).filter((r: any) => r.message_id === m.id),
+        sender: {
+          nome: cached?.nome || null,
+          avatar_url: cached?.avatar_url || null,
+          verification_badge: cached?.verification_badge || null,
+          isAdmin: adminCache.has(m.sender_id),
+        },
+      };
+    });
 
     for (const msg of msgs) {
       if (msg.reply_to_id) {
@@ -260,25 +298,28 @@ export function useChatMessages(conversationId: string | null) {
       initialLoadDone.current = true;
     }
 
-    // Mark unread messages as read + insert read receipts
+    // Mark unread messages as read + insert read receipts (non-blocking)
     if (user) {
-      const unreadIds = (data || [])
+      const unreadIds = rawMsgs
         .filter((m: any) => m.sender_id !== user.id && !m.is_read)
         .map((m: any) => m.id);
       if (unreadIds.length > 0) {
-        await supabase
+        // Fire and forget - don't await
+        supabase
           .from("chat_messages")
           .update({ is_read: true, read_at: new Date().toISOString() })
-          .in("id", unreadIds);
-
-        const readReceipts = unreadIds.map((msgId: string) => ({
-          message_id: msgId,
-          user_id: user.id,
-          read_at: new Date().toISOString(),
-        }));
-        await supabase
-          .from("chat_message_reads")
-          .upsert(readReceipts, { onConflict: "message_id,user_id" });
+          .in("id", unreadIds)
+          .then(() => {
+            const readReceipts = unreadIds.map((msgId: string) => ({
+              message_id: msgId,
+              user_id: user.id,
+              read_at: new Date().toISOString(),
+            }));
+            supabase
+              .from("chat_message_reads")
+              .upsert(readReceipts, { onConflict: "message_id,user_id" })
+              .then(() => {});
+          });
       }
     }
   }, [conversationId, user]);
@@ -336,21 +377,16 @@ export function useChatMessages(conversationId: string | null) {
     });
     if (error) throw error;
 
-    let senderName = "Você";
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("nome")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (profile?.nome) senderName = profile.nome;
-
+    // Use cached name instead of querying every time
+    const senderName = cachedNome.current || "Você";
     const msgPreview = type === "text" ? content : type === "audio" ? "🎤 Áudio" : "📷 Imagem";
     const previewText = `${senderName}: ${msgPreview}`;
 
-    await supabase.from("chat_conversations").update({
+    // Non-blocking conversation update
+    supabase.from("chat_conversations").update({
       last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
       last_message_at: new Date().toISOString(),
-    }).eq("id", conversationId);
+    }).eq("id", conversationId).then(() => {});
   }, [conversationId, user]);
 
   const toggleReaction = useCallback(async (messageId: string, emoji: string) => {
