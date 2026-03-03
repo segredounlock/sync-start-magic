@@ -97,47 +97,46 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     });
   }, [user]);
 
-  // Fetch group members (unique senders who have posted in this conversation)
+  // Fetch group members — use stable stringified deps to avoid excessive re-fetches
+  const memberSenderIds = useMemo(() => {
+    if (!isGroup) return "";
+    const ids = new Set(messages.map(m => m.sender_id));
+    onlineUsers.forEach(uid => ids.add(uid));
+    return [...ids].sort().join(",");
+  }, [isGroup, messages, onlineUsers]);
+
   useEffect(() => {
-    if (!isGroup) return;
-    const fetchMembers = async () => {
-      // Get unique sender IDs from messages
-      const senderIds = [...new Set(messages.map(m => m.sender_id))];
-      // Also add online users who may not have sent a message yet
-      onlineUsers.forEach(uid => { if (!senderIds.includes(uid)) senderIds.push(uid); });
-      if (senderIds.length === 0) return;
-      
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, nome, avatar_url, verification_badge")
-        .in("id", senderIds);
-      
-      if (data) {
-        // Fetch roles
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("user_id, role")
-          .in("user_id", senderIds);
-        
-        const roleMap = new Map<string, string>();
-        roles?.forEach(r => { if (r.role === "admin") roleMap.set(r.user_id, r.role); });
-        
-        const sorted = data.map(p => ({ ...p, role: roleMap.get(p.id) }))
-          .sort((a, b) => {
-            // Admins first, then online, then alphabetical
-            const aAdmin = a.role === "admin" ? 0 : 1;
-            const bAdmin = b.role === "admin" ? 0 : 1;
-            if (aAdmin !== bAdmin) return aAdmin - bAdmin;
-            const aOnline = onlineUsers.includes(a.id) ? 0 : 1;
-            const bOnline = onlineUsers.includes(b.id) ? 0 : 1;
-            if (aOnline !== bOnline) return aOnline - bOnline;
-            return (a.nome || "").localeCompare(b.nome || "");
-          });
-        setMembers(sorted);
-      }
-    };
-    fetchMembers();
-  }, [isGroup, messages.length, onlineUsers.length]);
+    if (!isGroup || !memberSenderIds) return;
+    const senderIds = memberSenderIds.split(",").filter(Boolean);
+    if (senderIds.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const [{ data }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", senderIds),
+        supabase.from("user_roles").select("user_id, role").in("user_id", senderIds),
+      ]);
+
+      if (cancelled || !data) return;
+
+      const roleMap = new Map<string, string>();
+      roles?.forEach(r => { if (r.role === "admin") roleMap.set(r.user_id, r.role); });
+
+      const sorted = data.map(p => ({ ...p, role: roleMap.get(p.id) }))
+        .sort((a, b) => {
+          const aAdmin = a.role === "admin" ? 0 : 1;
+          const bAdmin = b.role === "admin" ? 0 : 1;
+          if (aAdmin !== bAdmin) return aAdmin - bAdmin;
+          const aOnline = onlineUsers.includes(a.id) ? 0 : 1;
+          const bOnline = onlineUsers.includes(b.id) ? 0 : 1;
+          if (aOnline !== bOnline) return aOnline - bOnline;
+          return (a.nome || "").localeCompare(b.nome || "");
+        });
+      setMembers(sorted);
+    })();
+
+    return () => { cancelled = true; };
+  }, [isGroup, memberSenderIds, onlineUsers]);
 
   // Sync groupIcon prop
   useEffect(() => { setCurrentGroupIcon(groupIcon || null); }, [groupIcon]);
@@ -303,14 +302,17 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  // Group messages by date
-  const groupedMessages: { date: string; msgs: ChatMessage[] }[] = [];
-  messages.forEach(msg => {
-    const date = new Date(msg.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
-    const last = groupedMessages[groupedMessages.length - 1];
-    if (last && last.date === date) { last.msgs.push(msg); }
-    else { groupedMessages.push({ date, msgs: [msg] }); }
-  });
+  // Group messages by date — memoized to avoid recalculation on every render
+  const groupedMessages = useMemo(() => {
+    const groups: { date: string; msgs: ChatMessage[] }[] = [];
+    messages.forEach(msg => {
+      const date = new Date(msg.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+      const last = groups[groups.length - 1];
+      if (last && last.date === date) { last.msgs.push(msg); }
+      else { groups.push({ date, msgs: [msg] }); }
+    });
+    return groups;
+  }, [messages]);
 
   return (
     <div className="flex flex-col h-full">
