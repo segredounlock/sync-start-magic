@@ -5,11 +5,18 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   server: { host: "::", port: 8080 },
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      injectRegister: "auto",
+      injectRegister: "inline",
       includeAssets: ["favicon.png", "og-image.png"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
