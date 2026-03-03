@@ -28,6 +28,17 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [waveform] = useState(() => {
+    // Generate pseudo-random waveform bars (deterministic per src)
+    const bars: number[] = [];
+    let seed = 0;
+    for (let i = 0; i < src.length && i < 20; i++) seed += src.charCodeAt(i);
+    for (let i = 0; i < 32; i++) {
+      seed = (seed * 16807 + 7) % 2147483647;
+      bars.push(0.2 + (seed % 100) / 125); // 0.2 to 1.0
+    }
+    return bars;
+  });
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -92,31 +103,34 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
         {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
       </button>
       <div className="flex-1 min-w-0 flex flex-col gap-1">
+        {/* Waveform bars */}
         <div
           ref={progressRef}
-          className={`h-[5px] rounded-full cursor-pointer relative ${
-            isOwn ? "bg-white/15" : "bg-muted-foreground/15"
-          }`}
+          className="flex items-end gap-[2px] h-[28px] cursor-pointer relative"
           onClick={seek}
           onTouchStart={seek}
         >
-          <motion.div
-            className={`absolute inset-y-0 left-0 rounded-full ${
-              isOwn ? "bg-white/70" : "bg-primary"
-            }`}
-            animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.1 }}
-          />
-          <motion.div
-            className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full shadow-md ${
-              isOwn ? "bg-white" : "bg-primary"
-            }`}
-            animate={{ left: `calc(${pct}% - 6px)` }}
-            transition={{ duration: 0.1 }}
-          />
+          {waveform.map((h, i) => {
+            const barPct = ((i + 0.5) / waveform.length) * 100;
+            const isPlayed = barPct <= pct;
+            const isActive = playing && isPlayed && Math.abs(barPct - pct) < (100 / waveform.length);
+            return (
+              <motion.div
+                key={i}
+                className={`flex-1 rounded-full transition-colors duration-150 ${
+                  isPlayed
+                    ? isOwn ? "bg-white/80" : "bg-primary"
+                    : isOwn ? "bg-white/20" : "bg-muted-foreground/20"
+                }`}
+                style={{ height: `${h * 100}%`, minHeight: 3 }}
+                animate={isActive ? { scaleY: [1, 1.3, 1] } : { scaleY: 1 }}
+                transition={isActive ? { duration: 0.3, repeat: Infinity } : { duration: 0.15 }}
+              />
+            );
+          })}
         </div>
         <span className={`text-[10px] tabular-nums ${isOwn ? "text-white/50" : "text-muted-foreground/70"}`}>
-          {fmt(currentTime)} / {fmt(duration)}
+          {playing ? fmt(currentTime) : fmt(duration)} 
         </span>
       </div>
     </div>
