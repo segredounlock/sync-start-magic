@@ -587,7 +587,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
 
         {/* Avatar for own messages */}
         {isOwn && (
-          <div className="flex-shrink-0 ml-2 mt-auto">
+          <div className="flex-shrink-0 ml-2 mt-auto order-2">
             {message.sender?.avatar_url ? (
               <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border-2 border-primary/30" />
             ) : (
