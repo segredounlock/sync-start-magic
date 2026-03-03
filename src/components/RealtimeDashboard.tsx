@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { styledToast as toast } from "@/lib/toast";
@@ -35,6 +35,132 @@ interface DashboardStats {
 interface Props {
   userId?: string;
   fmt: (v: number) => string;
+}
+
+/* ── Credits-style scrolling feed ── */
+function CreditsFeed({
+  recargas, loading, userId, userNames, fmt, fmtTime,
+  getProcessingTime, statusIcon, statusLabel, statusClass, opColor,
+}: {
+  recargas: Recarga[];
+  loading: boolean;
+  userId?: string;
+  userNames: Record<string, string>;
+  fmt: (v: number) => string;
+  fmtTime: (d: string) => string;
+  getProcessingTime: (r: Recarga) => string | null;
+  statusIcon: (s: string) => ReactNode;
+  statusLabel: (s: string) => string;
+  statusClass: (s: string) => string;
+  opColor: (op: string | null) => string;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const offsetRef = useRef(0);
+  const pausedRef = useRef(false);
+  const [paused, setPaused] = useState(false);
+
+  const SPEED = 0.4; // px per frame (~24px/s at 60fps)
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    const inner = innerRef.current;
+    if (!container || !inner || recargas.length === 0) return;
+
+    const animate = () => {
+      if (!pausedRef.current && inner) {
+        offsetRef.current += SPEED;
+        const contentH = inner.scrollHeight / 2; // we duplicate content
+        if (contentH > 0 && offsetRef.current >= contentH) {
+          offsetRef.current -= contentH;
+        }
+        inner.style.transform = `translateY(-${offsetRef.current}px)`;
+      }
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [recargas.length]);
+
+  const handlePause = () => { pausedRef.current = true; setPaused(true); };
+  const handleResume = () => { pausedRef.current = false; setPaused(false); };
+
+  const renderRow = (r: Recarga, key: string) => {
+    const procTime = getProcessingTime(r);
+    return (
+      <div key={key} className="px-4 py-3 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          {statusIcon(r.status)}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={`font-bold text-sm ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
+              <span className="text-xs text-muted-foreground font-mono">{r.telefone}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
+              {procTime && <span className="text-[10px] text-success font-medium">⚡ {procTime}</span>}
+              {!userId && userNames[r.user_id] && (
+                <span className="text-[10px] text-muted-foreground/60 truncate max-w-[100px]">• {userNames[r.user_id]}</span>
+              )}
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="font-bold text-sm text-foreground">{fmt(r.valor)}</p>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusClass(r.status)}`}>
+              {statusLabel(r.status)}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="glass-card rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+        <h3 className="text-sm font-bold text-foreground">Feed em Tempo Real</h3>
+        <div className="flex items-center gap-2">
+          {paused && <span className="text-[10px] text-warning font-medium">⏸ Pausado</span>}
+          <span className="text-[10px] text-muted-foreground">{recargas.length} recargas hoje</span>
+        </div>
+      </div>
+      <div
+        ref={scrollRef}
+        className="relative overflow-hidden"
+        style={{ height: recargas.length > 0 ? Math.min(420, recargas.length * 68) : 140 }}
+        onMouseEnter={handlePause}
+        onMouseLeave={handleResume}
+        onTouchStart={handlePause}
+        onTouchEnd={handleResume}
+      >
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground">
+            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Carregando...</p>
+          </div>
+        ) : recargas.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            <Smartphone className="h-8 w-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">Nenhuma recarga hoje</p>
+            <p className="text-[10px] mt-1">Novas recargas aparecerão aqui automaticamente</p>
+          </div>
+        ) : (
+          <div ref={innerRef} className="will-change-transform">
+            {recargas.map((r) => renderRow(r, r.id))}
+            {/* Duplicate for seamless loop */}
+            {recargas.map((r) => renderRow(r, `dup-${r.id}`))}
+          </div>
+        )}
+      </div>
+      {/* Fade edges */}
+      {recargas.length > 3 && (
+        <>
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent" style={{ position: 'relative', marginTop: '-48px' }} />
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function RealtimeDashboard({ userId, fmt }: Props) {
@@ -277,68 +403,19 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
       )}
 
       {/* Live Feed — credits-style scroll */}
-      <div className="glass-card rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">Feed em Tempo Real</h3>
-          <span className="text-[10px] text-muted-foreground">{recargas.length} recargas hoje</span>
-        </div>
-        <div className="relative max-h-[420px] overflow-y-auto scroll-smooth" style={{ scrollbarWidth: "thin" }}>
-          {loading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Carregando...</p>
-            </div>
-          ) : recargas.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <Smartphone className="h-8 w-8 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Nenhuma recarga hoje</p>
-              <p className="text-[10px] mt-1">Novas recargas aparecerão aqui automaticamente</p>
-            </div>
-          ) : (
-            <AnimatePresence initial={false}>
-              {recargas.map((r, i) => {
-                const procTime = getProcessingTime(r);
-                return (
-                  <motion.div
-                    key={r.id}
-                    layout
-                    initial={{ opacity: 0, y: 60, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -30, scale: 0.95 }}
-                    transition={{ duration: 0.5, delay: Math.min(i * 0.04, 0.4), ease: "easeOut" }}
-                    className="px-4 py-3 border-b border-border/50 hover:bg-muted/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {statusIcon(r.status)}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-bold text-sm ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
-                          <span className="text-xs text-muted-foreground font-mono">{r.telefone}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
-                          {procTime && (
-                            <span className="text-[10px] text-success font-medium">⚡ {procTime}</span>
-                          )}
-                          {!userId && userNames[r.user_id] && (
-                            <span className="text-[10px] text-muted-foreground/60 truncate max-w-[100px]">• {userNames[r.user_id]}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="font-bold text-sm text-foreground">{fmt(r.valor)}</p>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusClass(r.status)}`}>
-                          {statusLabel(r.status)}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          )}
-        </div>
-      </div>
+      <CreditsFeed
+        recargas={recargas}
+        loading={loading}
+        userId={userId}
+        userNames={userNames}
+        fmt={fmt}
+        fmtTime={fmtTime}
+        getProcessingTime={getProcessingTime}
+        statusIcon={statusIcon}
+        statusLabel={statusLabel}
+        statusClass={statusClass}
+        opColor={opColor}
+      />
     </motion.div>
   );
 }
