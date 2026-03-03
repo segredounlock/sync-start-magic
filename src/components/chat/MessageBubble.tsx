@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ChatMessage } from "@/hooks/useChat";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff, X, Info, Pencil, Play, Pause } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { MessageInfoModal } from "./MessageInfoModal";
@@ -22,7 +22,8 @@ interface MessageBubbleProps {
 }
 
 const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
-const SWIPE_THRESHOLD = 45;
+const SWIPE_THRESHOLD = 50;
+const SWIPE_LOCK_ANGLE = 30; // degrees - lock horizontal after this angle
 
 function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -205,7 +206,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
-  const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
+  const swipeStartRef = useRef<{ x: number; y: number; locked: boolean; direction: 'none' | 'h' | 'v' } | null>(null);
   const x = useMotionValue(0);
   const replyIconOpacity = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -10] : [10, SWIPE_THRESHOLD], [1, 0]);
   const replyIconScale = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -5] : [5, SWIPE_THRESHOLD], [1, 0.2]);
@@ -241,21 +242,12 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
     return () => document.removeEventListener("mousedown", handler);
   }, [showContextMenu]);
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    const triggered = isOwn ? info.offset.x < -SWIPE_THRESHOLD : info.offset.x > SWIPE_THRESHOLD;
-    if (triggered) {
-      if (navigator.vibrate) navigator.vibrate(15);
-      onReply();
-    }
-  };
-
   // Long press handlers
   const startLongPress = useCallback(() => {
     longPressTriggered.current = false;
     longPressTimer.current = setTimeout(() => {
       longPressTriggered.current = true;
       setShowLongPressMenu(true);
-      // Haptic feedback if available
       if (navigator.vibrate) navigator.vibrate(30);
     }, 500);
   }, []);
@@ -266,6 +258,67 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
       longPressTimer.current = null;
     }
   }, []);
+
+  const handleSwipeReply = useCallback(() => {
+    if (navigator.vibrate) navigator.vibrate(20);
+    onReply();
+    animate(x, 0, { type: "spring", stiffness: 500, damping: 30 });
+  }, [onReply, x]);
+
+  // Custom touch-based swipe for mobile
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY, locked: false, direction: 'none' };
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const start = swipeStartRef.current;
+    if (!start) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+
+    if (start.direction === 'none') {
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (absDx < 8 && absDy < 8) return;
+      if (absDy > absDx) {
+        start.direction = 'v';
+        return;
+      }
+      start.direction = 'h';
+    }
+
+    if (start.direction !== 'h') return;
+    cancelLongPress();
+
+    const maxSwipe = 80;
+    let clampedDx: number;
+    if (isOwn) {
+      clampedDx = Math.max(-maxSwipe, Math.min(0, dx));
+    } else {
+      clampedDx = Math.min(maxSwipe, Math.max(0, dx));
+    }
+
+    x.set(clampedDx);
+
+    if (!start.locked && Math.abs(clampedDx) >= SWIPE_THRESHOLD) {
+      start.locked = true;
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+  }, [isOwn, x, cancelLongPress]);
+
+  const handleTouchEnd = useCallback(() => {
+    const start = swipeStartRef.current;
+    const currentX = x.get();
+    swipeStartRef.current = null;
+
+    if (start?.direction === 'h' && Math.abs(currentX) >= SWIPE_THRESHOLD) {
+      handleSwipeReply();
+    } else {
+      animate(x, 0, { type: "spring", stiffness: 500, damping: 30 });
+    }
+  }, [x, handleSwipeReply]);
 
   if (message.is_deleted) {
     const deletedByAdmin = message.deleted_by && message.deleted_by !== message.sender_id;
@@ -363,12 +416,9 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
       <motion.div
         className={`flex ${isOwn ? "justify-end" : "justify-start"} w-full group`}
         style={{ x }}
-        drag="x"
-        dragConstraints={{ left: isOwn ? -70 : 0, right: isOwn ? 0 : 70 }}
-        dragElastic={0.15}
-        dragSnapToOrigin
-        dragMomentum={false}
-        onDragEnd={handleDragEnd}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Avatar for messages from others */}
         {!isOwn && (
@@ -430,7 +480,6 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             onPointerDown={(e) => {
               if (e.pointerType !== "touch") return;
               e.stopPropagation();
-              touchStartPoint.current = { x: e.clientX, y: e.clientY };
               startLongPress();
             }}
             onPointerUp={(e) => {
@@ -438,26 +487,14 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               e.stopPropagation();
               const wasLongPress = longPressTriggered.current;
               cancelLongPress();
-              touchStartPoint.current = null;
-              // Don't open message info if tapping on an image or audio element
               const target = e.target as HTMLElement;
               const isInteractive = target.tagName === "IMG" || target.closest("audio") || target.closest("button");
               if (isOwn && !wasLongPress && !isInteractive) {
                 setShowMessageInfo(true);
               }
             }}
-            onPointerCancel={() => {
-              cancelLongPress();
-              touchStartPoint.current = null;
-            }}
-            onPointerMove={(e) => {
-              if (e.pointerType !== "touch" || !touchStartPoint.current) return;
-              const dx = Math.abs(e.clientX - touchStartPoint.current.x);
-              const dy = Math.abs(e.clientY - touchStartPoint.current.y);
-              if (dx > 12 || dy > 12) {
-                cancelLongPress();
-              }
-            }}
+            onPointerCancel={() => { cancelLongPress(); }}
+            onPointerMove={() => {}}
             onContextMenu={(e) => {
               e.preventDefault();
               // Mobile: show bottom sheet; Desktop: show context menu at position
