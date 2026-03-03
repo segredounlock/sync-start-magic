@@ -46,70 +46,86 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
     return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
   };
 
+  const pinnedIds = new Set([GENERAL_CHAT_ID, '00000000-0000-0000-0000-000000000002']);
+  const pinned = conversations.filter(c => pinnedIds.has(c.id));
+  const regular = conversations.filter(c => !pinnedIds.has(c.id));
+
+  const renderItem = (conv: ChatConversation) => {
+    const isGroup = conv.type === 'group';
+    const isGeneral = conv.id === GENERAL_CHAT_ID;
+    const name = isGroup ? (conv.name || "Grupo") : (conv.other_user?.nome || conv.other_user?.email?.split("@")[0] || "Usuário");
+    const initial = isGroup ? "G" : (name[0] || "U").toUpperCase();
+    const isActive = activeId === conv.id;
+    const isAdmin = conv.other_user?.role === 'admin';
+    const hasSpecialNameEffect = isAdmin || !!conv.other_user?.verification_badge;
+
+    return (
+      <motion.button
+        key={conv.id}
+        layout
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        onClick={() => onSelect(conv.id)}
+        className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left hover:bg-muted/50 ${isActive ? "bg-primary/10 border-r-2 border-primary" : ""}`}
+      >
+        {isGroup ? (
+          conv.icon && conv.icon.startsWith("http") ? (
+            <img src={conv.icon} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
+          ) : (
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${isGeneral ? "bg-primary/15 border-primary/30" : "bg-accent/15 border-accent/30"}`}>
+              {conv.icon && !conv.icon.startsWith("http") ? (
+                <span className="text-xl">{conv.icon}</span>
+              ) : (
+                <Users className={`h-5 w-5 ${isGeneral ? "text-primary" : "text-accent"}`} />
+              )}
+            </div>
+          )
+        ) : conv.other_user?.avatar_url ? (
+          <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+            {initial}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1 min-w-0">
+              <span className={`font-semibold text-sm truncate ${hasSpecialNameEffect ? "shimmer-letters" : isGeneral ? "text-primary" : "text-foreground"}`}>
+                {name}
+              </span>
+              {conv.other_user?.verification_badge ? (
+                <VerificationBadge badge={conv.other_user.verification_badge as BadgeType} size="sm" />
+              ) : isAdmin ? (
+                <VerificationBadge badge="verificado" size="sm" />
+              ) : null}
+            </span>
+            <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">{fmtTime(conv.last_message_at)}</span>
+          </div>
+          <div className="flex items-center justify-between mt-0.5">
+            <span className="text-xs text-muted-foreground truncate">{conv.last_message_text || "Nova conversa"}</span>
+            {(conv.unread_count || 0) > 0 && (
+              <span className="ml-2 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                {conv.unread_count}
+              </span>
+            )}
+          </div>
+        </div>
+      </motion.button>
+    );
+  };
+
   return (
     <div className="flex-1 overflow-y-auto">
-      {conversations.map((conv, i) => {
-        const isGroup = conv.type === 'group';
-        const isGeneral = conv.id === GENERAL_CHAT_ID;
-        const name = isGroup ? (conv.name || "Grupo") : (conv.other_user?.nome || conv.other_user?.email?.split("@")[0] || "Usuário");
-        const initial = isGroup ? "G" : (name[0] || "U").toUpperCase();
-        const isActive = activeId === conv.id;
-        const isAdmin = conv.other_user?.role === 'admin';
-        const hasSpecialNameEffect = isAdmin || !!conv.other_user?.verification_badge;
-
-        return (
-          <motion.button
-            key={conv.id}
-            layout
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            onClick={() => onSelect(conv.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left hover:bg-muted/50 ${isActive ? "bg-primary/10 border-r-2 border-primary" : ""}`}
-          >
-            {isGroup ? (
-              conv.icon && conv.icon.startsWith("http") ? (
-                <img src={conv.icon} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
-              ) : (
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${isGeneral ? "bg-primary/15 border-primary/30" : "bg-accent/15 border-accent/30"}`}>
-                  {conv.icon && !conv.icon.startsWith("http") ? (
-                    <span className="text-xl">{conv.icon}</span>
-                  ) : (
-                    <Users className={`h-5 w-5 ${isGeneral ? "text-primary" : "text-accent"}`} />
-                  )}
-                </div>
-              )
-            ) : conv.other_user?.avatar_url ? (
-              <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                {initial}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1 min-w-0">
-                  <span className={`font-semibold text-sm truncate ${hasSpecialNameEffect ? "shimmer-letters" : isGeneral ? "text-primary" : "text-foreground"}`}>
-                    {name}
-                  </span>
-                  {conv.other_user?.verification_badge ? (
-                    <VerificationBadge badge={conv.other_user.verification_badge as BadgeType} size="sm" />
-                  ) : isAdmin ? (
-                    <VerificationBadge badge="verificado" size="sm" />
-                  ) : null}
-                </span>
-                <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">{fmtTime(conv.last_message_at)}</span>
-              </div>
-              <div className="flex items-center justify-between mt-0.5">
-                <span className="text-xs text-muted-foreground truncate">{conv.last_message_text || "Nova conversa"}</span>
-                {(conv.unread_count || 0) > 0 && (
-                  <span className="ml-2 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                    {conv.unread_count}
-                  </span>
-                )}
-              </div>
-            </div>
-          </motion.button>
-        );
-      })}
+      {pinned.map(renderItem)}
+      {pinned.length > 0 && regular.length > 0 && (
+        <div className="px-4 py-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Contatos</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+        </div>
+      )}
+      {regular.map(renderItem)}
     </div>
   );
 }
