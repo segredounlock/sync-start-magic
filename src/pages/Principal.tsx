@@ -3299,8 +3299,8 @@ export default function Principal() {
                               <div className="flex items-center justify-between gap-2 mb-1">
                                 <p className={`text-sm truncate ${isTop3 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{r.nome || "Sem nome"}</p>
                                 <div className="flex items-center gap-3 shrink-0">
-                                  <span className="text-xs text-muted-foreground hidden sm:inline">Vendas <span className="font-mono font-semibold text-foreground">{fmt(r.totalVendas)}</span></span>
-                                  <span className={`text-sm font-bold font-mono ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(r.lucro)}</span>
+                                  <span className="hidden sm:inline text-right"><span className="text-[10px] text-muted-foreground block leading-tight">Vendas</span><span className="font-mono font-semibold text-xs text-foreground">{fmt(r.totalVendas)}</span></span>
+                                  <span className="text-right"><span className={`text-[10px] block leading-tight ${r.lucro > 0 ? "text-success/70" : r.lucro < 0 ? "text-destructive/70" : "text-muted-foreground"}`}>Lucro</span><span className={`text-sm font-bold font-mono ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(r.lucro)}</span></span>
                                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${margem > 15 ? "bg-success/15 text-success" : margem > 0 ? "bg-primary/15 text-primary" : "bg-destructive/15 text-destructive"}`}>
                                     {margem.toFixed(1)}%
                                   </span>
