@@ -115,6 +115,16 @@ export default function BackupSection() {
   // Update history
   const [updateHistory, setUpdateHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+
+  // Generic confirmation modal
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    details?: string[];
+    icon?: "sync" | "restore";
+    onConfirm: () => void;
+  }>({ open: false, title: "", description: "", onConfirm: () => {} });
   // GitHub PAT
   const [githubPat, setGithubPat] = useState("");
   const [showPat, setShowPat] = useState(false);
@@ -213,7 +223,17 @@ export default function BackupSection() {
 
   const handleGitHubSync = async () => {
     if (!selectedRepo) { toast.error("Selecione um repositório"); return; }
-    if (!window.confirm(`Enviar TODOS os arquivos do projeto para ${selectedRepo}?\n\nInclui: páginas, componentes, hooks, libs, edge functions, configs`)) return;
+    setConfirmModal({
+      open: true,
+      title: "Sincronizar com GitHub",
+      description: `Enviar todos os arquivos do projeto para o repositório ${selectedRepo}?`,
+      details: ["Páginas e componentes", "Hooks e bibliotecas", "Edge Functions", "Configurações"],
+      icon: "sync",
+      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeGitHubSync(); },
+    });
+  };
+
+  const executeGitHubSync = async () => {
     setSyncing(true); setSyncResult(null); setSyncProgress(0); setSyncStage("Coletando arquivos..."); setSyncLog([]);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -354,7 +374,17 @@ export default function BackupSection() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.endsWith(".zip")) { toast.error("Selecione um arquivo .zip"); return; }
-    if (!window.confirm("⚠️ A restauração vai SOBRESCREVER os dados atuais.\n\nContinuar?")) { if (fileInputRef.current) fileInputRef.current.value = ""; return; }
+    setConfirmModal({
+      open: true,
+      title: "Restaurar Backup",
+      description: "A restauração vai sobrescrever os dados atuais do banco de dados.",
+      details: ["Todos os dados serão substituídos", "Esta ação não pode ser desfeita"],
+      icon: "restore",
+      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeImport(file); },
+    });
+  };
+
+  const executeImport = async (file: File) => {
     setImporting(true); setRestoreResult(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -1090,6 +1120,85 @@ export default function BackupSection() {
                 <button onClick={confirmAndApplyUpdate}
                   className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                   <PackageCheck className="h-4 w-4" /> Aplicar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Elegant Confirmation Modal */}
+      <AnimatePresence>
+        {confirmModal.open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl border border-border/40 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-6 pb-4 text-center">
+                <div className={`mx-auto h-14 w-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg ${
+                  confirmModal.icon === "restore"
+                    ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-amber-500/10"
+                    : "bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-emerald-500/10"
+                }`}>
+                  {confirmModal.icon === "restore" ? (
+                    <AlertTriangle className="h-6 w-6 text-amber-400" />
+                  ) : (
+                    <Github className="h-6 w-6 text-emerald-400" />
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-foreground">{confirmModal.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{confirmModal.description}</p>
+              </div>
+
+              {/* Details */}
+              {confirmModal.details && confirmModal.details.length > 0 && (
+                <div className="mx-6 mb-4 p-3.5 rounded-xl bg-muted/50 border border-border/30">
+                  <div className="space-y-2">
+                    {confirmModal.details.map((detail, i) => (
+                      <div key={i} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                        <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+                          confirmModal.icon === "restore" ? "bg-amber-400/70" : "bg-emerald-400/70"
+                        }`} />
+                        {detail}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="p-6 pt-2 flex gap-3">
+                <button
+                  onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+                  className="flex-1 py-3 rounded-xl bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-all duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmModal.onConfirm}
+                  className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                    confirmModal.icon === "restore"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25"
+                      : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/25"
+                  }`}
+                >
+                  {confirmModal.icon === "restore" ? (
+                    <><Upload className="h-4 w-4" /> Restaurar</>
+                  ) : (
+                    <><FolderSync className="h-4 w-4" /> Sincronizar</>
+                  )}
                 </button>
               </div>
             </motion.div>
