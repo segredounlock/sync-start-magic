@@ -402,10 +402,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   };
 
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1 relative overflow-visible`}>
+    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1 relative`}>
       {/* Swipe reply indicator */}
       <motion.div
-        className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "left-2" : "right-2"} flex items-center justify-center pointer-events-none`}
+        className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "left-2" : "right-2"} flex items-center justify-center pointer-events-none z-10`}
         style={{ opacity: replyIconOpacity, scale: replyIconScale }}
       >
         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shadow-sm">
@@ -414,30 +414,30 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
       </motion.div>
 
       <motion.div
-        className={`flex ${isOwn ? "justify-end" : "justify-start"} w-full group`}
+        className={`flex items-end ${isOwn ? "flex-row-reverse" : "flex-row"} max-w-[85%] group`}
         style={{ x }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Avatar for messages from others */}
-        {!isOwn && (
+        {/* Avatar */}
+        {!isOwn ? (
           <div
-            className={`flex-shrink-0 mr-2 mt-auto ${isCurrentUserAdmin ? "cursor-pointer" : ""}`}
+            className={`flex-shrink-0 mr-1.5 mb-0.5 ${isCurrentUserAdmin ? "cursor-pointer" : ""}`}
             onPointerDown={(e) => { if (isCurrentUserAdmin) e.stopPropagation(); }}
             onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && message.sender_id) setShowUserRecargas(true); }}
           >
             {message.sender?.avatar_url ? (
-              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border-2 border-border" />
+              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover border border-border" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[11px]">
+              <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
                 {(senderName[0] || "U").toUpperCase()}
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
-        <div className={`max-w-[75%] min-w-0 overflow-hidden ${isOwn ? "order-1" : ""}`}>
+        <div className={`min-w-0 overflow-hidden`}>
           {/* Sender name + verified badge */}
           <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
             <span
@@ -709,11 +709,11 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
 
         {/* Avatar for own messages */}
         {isOwn && (
-          <div className="flex-shrink-0 ml-2 mt-auto order-2">
+          <div className="flex-shrink-0 ml-1.5 mb-0.5">
             {message.sender?.avatar_url ? (
-              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border-2 border-primary/30" />
+              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover border border-primary/30" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[11px]">
+              <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
                 {(senderName[0] || "U").toUpperCase()}
               </div>
             )}
