@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { playSuccessSound } from "@/lib/sounds";
+import { getLocalDayBoundsUTC } from "@/lib/timezone";
 import {
   Smartphone, Clock, CheckCircle2, XCircle, AlertTriangle,
   TrendingUp, Activity, Zap, RefreshCw,
@@ -42,13 +43,12 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
   const audioRef = useRef(false);
 
   const fetchRecargas = useCallback(async () => {
-    // Use local date (Brazil UTC-3) instead of UTC to match user's "today"
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const { start, end } = getLocalDayBoundsUTC();
     let query = supabase
       .from("recargas")
       .select("id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at")
-      .gte("created_at", today)
+      .gte("created_at", start)
+      .lte("created_at", end)
       .order("created_at", { ascending: false })
       .limit(100);
     if (userId) query = query.eq("user_id", userId);

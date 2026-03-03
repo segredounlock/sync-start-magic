@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { NotificationBell } from "@/components/NotificationBell";
+import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
 import { FloatingPoll } from "@/components/FloatingPoll";
@@ -311,9 +312,9 @@ export default function AdminDashboard() {
 
   const periodStart = useMemo(() => {
     const now = new Date();
-    if (period === "hoje") return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    if (period === "7dias") { const d = new Date(now); d.setDate(d.getDate() - 7); return d.toISOString(); }
-    if (period === "mes") return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    if (period === "hoje") return getLocalDayStartUTC(now);
+    if (period === "7dias") { const d = new Date(now); d.setDate(d.getDate() - 7); d.setHours(0, 0, 0, 0); return d.toISOString(); }
+    if (period === "mes") return getLocalMonthStartUTC(now);
     return new Date(2020, 0, 1).toISOString();
   }, [period]);
 
@@ -650,10 +651,7 @@ export default function AdminDashboard() {
   }, [filteredRecargas, filteredTransactions, revendedores]);
 
   // Helper: data local YYYY-MM-DD (sem problemas de fuso UTC)
-  const toLocalDateKey = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
+  // Now using centralized timezone utility
 
   // Chart: Vendas & Lucro por dia (preenche todos os dias do período)
   const vendasLucroPorDia = useMemo(() => {
@@ -1756,14 +1754,14 @@ export default function AdminDashboard() {
                 if (filtered.length === 0) return <p className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</p>;
                 const totalPages = Math.ceil(filtered.length / USERS_PER_PAGE);
                 const paged = filtered.slice((usersPage - 1) * USERS_PER_PAGE, usersPage * USERS_PER_PAGE);
-                const todayStr = new Date().toISOString().slice(0, 10);
+                const todayStr = getTodayLocalKey();
                 return <>{paged.map(r => {
                   const initials = (r.nome || r.email || "?").slice(0, 1).toUpperCase();
                   const colors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                   const colorIdx = r.id.charCodeAt(0) % colors.length;
                   const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                   const recCount = userRecs.length;
-                  const recHoje = userRecs.filter(rc => rc.created_at?.slice(0, 10) === todayStr).length;
+                  const recHoje = userRecs.filter(rc => toLocalDateKey(rc.created_at) === todayStr).length;
                   const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
                   const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
                   const totalLucro = completedRecs.reduce((s, rc) => s + ((Number(rc.custo) || 0) - (Number((rc as any).custo_api) || 0)), 0);
@@ -1865,14 +1863,14 @@ export default function AdminDashboard() {
                     if (filtered.length === 0) return <tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</td></tr>;
                     const totalPagesD = Math.ceil(filtered.length / USERS_PER_PAGE);
                     const pagedD = filtered.slice((usersPage - 1) * USERS_PER_PAGE, usersPage * USERS_PER_PAGE);
-                    const todayStr = new Date().toISOString().slice(0, 10);
+                    const todayStr = getTodayLocalKey();
                     return <>{pagedD.map(r => {
                       const initials = (r.nome || r.email || "?").slice(0, 1).toUpperCase();
                       const colors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                       const colorIdx = r.id.charCodeAt(0) % colors.length;
                       const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                       const recCount = userRecs.length;
-                      const recHoje = userRecs.filter(rc => rc.created_at?.slice(0, 10) === todayStr).length;
+                      const recHoje = userRecs.filter(rc => toLocalDateKey(rc.created_at) === todayStr).length;
                       const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
                       const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
                       const totalLucro = completedRecs.reduce((s, rc) => s + ((Number(rc.custo) || 0) - (Number((rc as any).custo_api) || 0)), 0);
