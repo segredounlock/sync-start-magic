@@ -16,6 +16,7 @@ export function useBackgroundPaymentMonitor(
   userId: string | undefined,
   onBalanceUpdated: () => void,
   showToast: boolean = true,
+  playSound: boolean = true,
 ) {
   const knownCompletedRef = useRef<Set<string>>(new Set());
 
@@ -60,8 +61,8 @@ export function useBackgroundPaymentMonitor(
             !knownCompletedRef.current.has(row.id)
           ) {
             knownCompletedRef.current.add(row.id);
-            // Sound always plays for everyone
-            try { playCashRegisterSound(); } catch {}
+            // Sound only if not handled by another hook (e.g. useNotifications)
+            if (playSound) { try { playCashRegisterSound(); } catch {} }
             // Toast only if allowed by config
             if (showToast) {
               appToast.depositConfirmed(
@@ -78,5 +79,5 @@ export function useBackgroundPaymentMonitor(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, onBalanceUpdated, showToast]);
+  }, [userId, onBalanceUpdated, showToast, playSound]);
 }
