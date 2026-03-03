@@ -107,22 +107,21 @@ export default function BackupSection() {
   const [currentVersion, setCurrentVersion] = useState<string | null>(null);
   const updateFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Confirmation modal
+  // Pending update state (used by confirmModal)
   const [pendingUpdateFile, setPendingUpdateFile] = useState<File | null>(null);
   const [pendingManifest, setPendingManifest] = useState<any>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Update history
   const [updateHistory, setUpdateHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Generic confirmation modal
+  // Generic confirmation modal (unified for all confirmations)
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
     title: string;
     description: string;
     details?: string[];
-    icon?: "sync" | "restore";
+    icon?: "sync" | "restore" | "update";
     onConfirm: () => void;
   }>({ open: false, title: "", description: "", onConfirm: () => {} });
   // GitHub PAT
@@ -499,17 +498,31 @@ export default function BackupSection() {
 
       setPendingUpdateFile(file);
       setPendingManifest(manifest);
-      setShowConfirmation(true);
+      // Show confirmation via the unified confirmModal
+      setConfirmModal({
+        open: true,
+        title: "Confirmar Atualização",
+        description: `Aplicar pacote v${manifest.version} com ${dbTableCount} tabelas e ${manifest.source_files || 0} arquivos fonte?`,
+        details: [
+          `Versão do pacote: v${manifest.version}`,
+          `Data de criação: ${new Date(manifest.created_at).toLocaleString("pt-BR")}`,
+          `${dbTableCount} tabelas · ${manifest.source_files || 0} arquivos fonte`,
+          `Versão atual: ${currentVersion || "1.0.0"}`,
+        ],
+        icon: "update",
+        onConfirm: () => {
+          setConfirmModal(prev => ({ ...prev, open: false }));
+          confirmAndApplyUpdate();
+        },
+      });
     } catch (err: any) {
       toast.error(`Erro ao ler pacote: ${err.message}`);
     }
     if (updateFileInputRef.current) updateFileInputRef.current.value = "";
   };
 
-  // Step 2: User confirms → apply update
   const confirmAndApplyUpdate = async () => {
     if (!pendingUpdateFile || !pendingManifest) return;
-    setShowConfirmation(false);
     const file = pendingUpdateFile;
     const manifest = pendingManifest;
     setPendingUpdateFile(null);
@@ -614,7 +627,7 @@ export default function BackupSection() {
   };
 
   const cancelUpdate = () => {
-    setShowConfirmation(false);
+    setConfirmModal(prev => ({ ...prev, open: false }));
     setPendingUpdateFile(null);
     setPendingManifest(null);
   };
@@ -820,27 +833,40 @@ export default function BackupSection() {
 
             {repos.length > 0 && (
               <>
-                <select value={selectedRepo} onChange={e => setSelectedRepo(e.target.value)}
-                  className="w-full py-2.5 px-3 rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] text-foreground text-sm focus:ring-2 focus:ring-primary/30 focus:outline-none">
-                  {repos.map((r: any) => (
-                    <option key={r.full_name} value={r.full_name}>
-                      {r.full_name} {r.private ? "🔒" : "🌐"} ({r.default_branch})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select value={selectedRepo} onChange={e => setSelectedRepo(e.target.value)}
+                    className="w-full py-2.5 px-3 pl-9 rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] text-foreground text-sm focus:ring-2 focus:ring-primary/30 focus:outline-none appearance-none">
+                    {repos.map((r: any) => (
+                      <option key={r.full_name} value={r.full_name}>
+                        {r.full_name} ({r.default_branch}) {r.private ? "• privado" : "• público"}
+                      </option>
+                    ))}
+                  </select>
+                  <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                </div>
 
-                {!syncing && (
-                  <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] p-3">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-semibold text-foreground">Projeto completo:</span>{" "}
-                      9 páginas · 10 componentes · 3 hooks · 3 libs · 14 edge functions · configs
-                    </p>
-                  </div>
-                )}
+                {!syncing && (() => {
+                  const pages = effectivePaths.filter(p => p.startsWith("src/pages/")).length;
+                  const components = effectivePaths.filter(p => p.startsWith("src/components/")).length;
+                  const hooks = effectivePaths.filter(p => p.startsWith("src/hooks/")).length;
+                  const libs = effectivePaths.filter(p => p.startsWith("src/lib/")).length;
+                  const edgeFns = effectivePaths.filter(p => p.startsWith("supabase/functions/")).length;
+                  const configs = effectivePaths.filter(p => !p.startsWith("src/") && !p.startsWith("supabase/functions/") && !p.startsWith("public/")).length;
+                  return (
+                    <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] p-3">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">Projeto completo:</span>{" "}
+                        {pages} páginas · {components} componentes · {hooks} hooks · {libs} libs · {edgeFns} edge functions{configs > 0 ? ` · ${configs} configs` : ""}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">{effectivePaths.length} arquivos total</p>
+                    </div>
+                  );
+                })()}
 
                 {!syncing ? (
                   <button onClick={handleGitHubSync} disabled={!selectedRepo}
-                    className="w-full py-3 rounded-2xl bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
+                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                     <FolderSync className="h-4 w-4" /> Sincronizar tudo
                   </button>
                 ) : (
@@ -1062,72 +1088,7 @@ export default function BackupSection() {
         )}
       </AnimatePresence>
 
-      {/* Confirmation Modal */}
-      <AnimatePresence>
-        {showConfirmation && pendingManifest && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={cancelUpdate}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md rounded-2xl bg-card border border-border p-6 space-y-4 shadow-2xl"
-              onClick={e => e.stopPropagation()}>
-              <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 flex items-center justify-center">
-                  <AlertTriangle className="h-5 w-5 text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground">Confirmar Atualização</h3>
-                  <p className="text-xs text-muted-foreground">Revise os detalhes antes de aplicar</p>
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-muted/30 p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Versão do pacote:</span>
-                  <span className="font-mono font-semibold text-foreground">v{pendingManifest.version}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Data de criação:</span>
-                  <span className="text-foreground">{new Date(pendingManifest.created_at).toLocaleString("pt-BR")}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tabelas no pacote:</span>
-                  <span className="text-foreground">{pendingManifest._dbTableCount || pendingManifest.tables?.length || 0}</span>
-                </div>
-                {pendingManifest.source_files && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Arquivos fonte:</span>
-                    <span className="text-foreground">{pendingManifest.source_files}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Versão atual:</span>
-                  <span className="font-mono text-foreground">{currentVersion || "1.0.0"}</span>
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
-                <p className="text-xs text-amber-300">
-                  ⚠️ Esta ação vai restaurar os dados do banco via upsert (sem apagar dados existentes). Certifique-se de que o pacote é confiável.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button onClick={cancelUpdate}
-                  className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-colors">
-                  Cancelar
-                </button>
-                <button onClick={confirmAndApplyUpdate}
-                  className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                  <PackageCheck className="h-4 w-4" /> Aplicar
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Elegant Confirmation Modal */}
+      {/* Unified Confirmation Modal */}
       <AnimatePresence>
         {confirmModal.open && (
           <motion.div
@@ -1150,10 +1111,14 @@ export default function BackupSection() {
                 <div className={`mx-auto h-14 w-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg ${
                   confirmModal.icon === "restore"
                     ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-amber-500/10"
+                    : confirmModal.icon === "update"
+                    ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20 shadow-blue-500/10"
                     : "bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-emerald-500/10"
                 }`}>
                   {confirmModal.icon === "restore" ? (
                     <AlertTriangle className="h-6 w-6 text-amber-400" />
+                  ) : confirmModal.icon === "update" ? (
+                    <PackageCheck className="h-6 w-6 text-blue-400" />
                   ) : (
                     <Github className="h-6 w-6 text-emerald-400" />
                   )}
@@ -1169,7 +1134,7 @@ export default function BackupSection() {
                     {confirmModal.details.map((detail, i) => (
                       <div key={i} className="flex items-center gap-2.5 text-sm text-muted-foreground">
                         <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
-                          confirmModal.icon === "restore" ? "bg-amber-400/70" : "bg-emerald-400/70"
+                          confirmModal.icon === "restore" ? "bg-amber-400/70" : confirmModal.icon === "update" ? "bg-blue-400/70" : "bg-emerald-400/70"
                         }`} />
                         {detail}
                       </div>
@@ -1191,11 +1156,15 @@ export default function BackupSection() {
                   className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
                     confirmModal.icon === "restore"
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25"
+                      : confirmModal.icon === "update"
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:shadow-lg hover:shadow-blue-500/25"
                       : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/25"
                   }`}
                 >
                   {confirmModal.icon === "restore" ? (
                     <><Upload className="h-4 w-4" /> Restaurar</>
+                  ) : confirmModal.icon === "update" ? (
+                    <><PackageCheck className="h-4 w-4" /> Aplicar</>
                   ) : (
                     <><FolderSync className="h-4 w-4" /> Sincronizar</>
                   )}
