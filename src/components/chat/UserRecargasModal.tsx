@@ -35,6 +35,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
   const [activeAction, setActiveAction] = useState<SaldoAction>(null);
   const [actionValue, setActionValue] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [userRole, setUserRole] = useState<string>("usuario");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userBadge, setUserBadge] = useState<string | null>(null);
   const [showBadgePicker, setShowBadgePicker] = useState(false);
@@ -49,7 +50,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
 
   useEffect(() => {
     const fetchData = async () => {
-      const [recargasRes, saldoRes, profileRes] = await Promise.all([
+      const [recargasRes, saldoRes, profileRes, roleRes] = await Promise.all([
         supabase
           .from("recargas")
           .select("id, telefone, operadora, valor, custo, status, created_at")
@@ -67,6 +68,11 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
           .select("email, verification_badge")
           .eq("id", userId)
           .maybeSingle(),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle(),
       ]);
 
       if (!recargasRes.error && recargasRes.data) setRecargas(recargasRes.data);
@@ -74,6 +80,10 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
       if (!profileRes.error && profileRes.data) {
         setUserEmail(profileRes.data.email);
         setUserBadge(profileRes.data.verification_badge);
+      }
+      if (!roleRes.error && roleRes.data) {
+        const r = roleRes.data.role === "user" ? "usuario" : roleRes.data.role;
+        setUserRole(r);
       }
       setLoading(false);
     };
@@ -230,9 +240,18 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                   {formatCurrency(saldo)}
                 </span>
               </div>
-              {userEmail && (
-                <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
-              )}
+              <div className="flex items-center gap-2">
+                {userEmail && (
+                  <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
+                )}
+                <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${
+                  userRole === "admin" ? "bg-primary/15 text-primary" :
+                  userRole === "revendedor" ? "bg-blue-500/15 text-blue-400" :
+                  "bg-muted text-muted-foreground"
+                }`}>
+                  {userRole === "admin" ? "Admin" : userRole === "revendedor" ? "Revendedor" : "Usuário"}
+                </span>
+              </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <p className="text-[10px] text-muted-foreground">Últimas 10 recargas</p>
                 {isAdmin && (
