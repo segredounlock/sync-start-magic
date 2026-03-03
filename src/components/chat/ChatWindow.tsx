@@ -309,7 +309,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full touch-manipulation" style={{ touchAction: "pan-y" }}>
       {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/80 backdrop-blur-sm cursor-pointer"
@@ -476,7 +476,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       })()}
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-1" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.02) 0%, transparent 70%)" }}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2 space-y-0.5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -633,6 +633,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             <input
               ref={inputRef}
               type="text"
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
               value={text}
               onChange={e => {
                 const val = e.target.value;
@@ -670,7 +673,8 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
               }}
               maxLength={700}
               placeholder="Mensagem..."
-              className="w-full py-2.5 px-4 rounded-2xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
+              className="w-full py-2.5 px-4 rounded-full bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
+              style={{ fontSize: "16px" }}
             />
             {text.length > 600 && (
               <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-medium ${text.length >= 700 ? "text-destructive" : "text-muted-foreground/60"}`}>
@@ -679,11 +683,11 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             )}
           </div>
           {text.trim() ? (
-            <button onClick={handleSend} disabled={sending} className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:brightness-110 transition-all disabled:opacity-50">
+            <button onClick={handleSend} disabled={sending} className="p-2.5 rounded-full bg-primary text-primary-foreground hover:brightness-110 transition-all disabled:opacity-50 shadow-sm">
               <Send className="h-5 w-5" />
             </button>
           ) : (
-            <button onClick={() => setShowAudioRecorder(true)} className="p-2.5 rounded-xl text-muted-foreground hover:bg-muted/50 transition-colors">
+            <button onClick={() => setShowAudioRecorder(true)} className="p-2.5 rounded-full text-muted-foreground hover:bg-muted/50 transition-colors">
               <Mic className="h-5 w-5" />
             </button>
           )}
