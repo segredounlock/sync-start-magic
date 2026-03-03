@@ -7,7 +7,7 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { toast } from "sonner";
 
@@ -42,6 +42,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [sending, setSending] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
@@ -145,16 +146,37 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     setSending(true);
     const currentText = text.trim();
     setText("");
-    setReplyTo(null);
     setShowEmoji(false);
-    try {
-      await sendMessage(currentText, "text", undefined, undefined, replyTo?.id);
-    } catch (err) {
-      console.error(err);
-      setText(currentText);
+
+    // If editing, save the edit
+    if (editingMessage) {
+      const msgId = editingMessage.id;
+      const isAdminEdit = isUserAdmin && editingMessage.sender_id !== user?.id;
+      setEditingMessage(null);
+      try {
+        await editMessage(msgId, currentText, isAdminEdit);
+      } catch (err) {
+        console.error(err);
+        setText(currentText);
+      }
+    } else {
+      setReplyTo(null);
+      try {
+        await sendMessage(currentText, "text", undefined, undefined, replyTo?.id);
+      } catch (err) {
+        console.error(err);
+        setText(currentText);
+      }
     }
     setSending(false);
     inputRef.current?.focus();
+  };
+
+  const handleStartEdit = (msg: ChatMessage) => {
+    setEditingMessage(msg);
+    setText(msg.content || "");
+    setReplyTo(null);
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const handleAudioSend = async (audioUrl: string) => {
@@ -365,7 +387,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
                     onReply={() => { setReplyTo(msg); inputRef.current?.focus(); }}
                     onReact={(emoji) => toggleReaction(msg.id, emoji)}
                     onDelete={() => deleteMessage(msg.id, isUserAdmin && msg.sender_id !== user?.id)}
-                    onEdit={(newContent) => editMessage(msg.id, newContent, isUserAdmin && msg.sender_id !== user?.id)}
+                    onEdit={() => handleStartEdit(msg)}
                     onPin={() => pinMessage(msg.id)}
                     onScrollToMessage={scrollToMessage}
                   />
@@ -377,9 +399,27 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
         <div ref={bottomRef} />
       </div>
 
+      {/* Edit preview - Telegram style */}
+      <AnimatePresence>
+        {editingMessage && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="px-4 border-t border-border bg-muted/30 overflow-hidden">
+            <div className="flex items-center gap-2 py-2">
+              <Pencil className="h-4 w-4 text-primary flex-shrink-0" />
+              <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
+                <span className="text-xs font-semibold text-primary">Editar mensagem</span>
+                <p className="text-xs text-muted-foreground truncate">{editingMessage.content}</p>
+              </div>
+              <button onClick={() => { setEditingMessage(null); setText(""); }} className="p-1 rounded-lg hover:bg-muted/50">
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Reply preview */}
       <AnimatePresence>
-        {replyTo && (
+        {replyTo && !editingMessage && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="px-4 border-t border-border bg-muted/30 overflow-hidden">
             <div className="flex items-center gap-2 py-2">
               <Reply className="h-4 w-4 text-primary flex-shrink-0" />

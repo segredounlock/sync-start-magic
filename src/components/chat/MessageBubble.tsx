@@ -15,7 +15,7 @@ interface MessageBubbleProps {
   onReply: () => void;
   onReact: (emoji: string) => void;
   onDelete: () => void;
-  onEdit?: (newContent: string) => void;
+  onEdit?: () => void;
   onPin?: () => void;
   onScrollToMessage?: (id: string) => void;
 }
@@ -33,9 +33,6 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   const [showMessageInfo, setShowMessageInfo] = useState(false);
   const [showUserRecargas, setShowUserRecargas] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(message.content || "");
-  const editInputRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -147,24 +144,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   };
 
   const handleStartEdit = () => {
-    setEditText(message.content || "");
-    setIsEditing(true);
     setShowDropdown(false);
     setShowLongPressMenu(false);
     setShowContextMenu(false);
-    setTimeout(() => editInputRef.current?.focus(), 100);
-  };
-
-  const handleSaveEdit = () => {
-    if (editText.trim() && editText.trim() !== message.content && onEdit) {
-      onEdit(editText.trim());
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditText(message.content || "");
+    if (onEdit) onEdit();
   };
 
   const handleReplyClick = () => {
@@ -415,48 +398,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
             </AnimatePresence>
 
             {message.type === "text" && (
-              isEditing ? (
-                <div className="flex flex-col gap-0 -mx-3 -my-2">
-                  {/* Edit header - Telegram style */}
-                  <div className={`flex items-center gap-2 px-3 py-1.5 border-b ${
-                    isOwn ? "border-white/10" : "border-border/50"
-                  }`}>
-                    <Pencil className={`h-3 w-3 ${isOwn ? "text-emerald-300" : "text-primary"}`} />
-                    <span className={`text-[11px] font-semibold ${isOwn ? "text-emerald-300" : "text-primary"}`}>Editar mensagem</span>
-                  </div>
-                  {/* Edit input */}
-                  <div className="flex items-end gap-1.5 px-2 py-1.5">
-                    <textarea
-                      ref={editInputRef}
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); } if (e.key === "Escape") handleCancelEdit(); }}
-                      className={`flex-1 text-sm rounded-lg px-2 py-1.5 resize-none outline-none min-h-[32px] max-h-[120px] transition-all ${
-                        isOwn
-                          ? "bg-transparent text-white placeholder:text-white/40"
-                          : "bg-transparent text-foreground placeholder:text-muted-foreground"
-                      }`}
-                      rows={1}
-                      style={{ height: 'auto' }}
-                      onInput={(e) => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
-                    />
-                    <div className="flex items-center gap-1 flex-shrink-0 pb-0.5">
-                      <button onClick={handleCancelEdit} className={`p-1.5 rounded-full transition-colors ${
-                        isOwn ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                      }`}>
-                        <X className="h-4 w-4" />
-                      </button>
-                      <button onClick={handleSaveEdit} className={`p-1.5 rounded-full transition-colors ${
-                        isOwn ? "hover:bg-white/10 text-emerald-300" : "hover:bg-muted text-primary"
-                      }`}>
-                        <Check className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{message.content}</p>
-              )
+              <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{message.content}</p>
             )}
 
             {/* Audio content */}
