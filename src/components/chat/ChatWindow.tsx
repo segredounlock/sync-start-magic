@@ -658,7 +658,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       {/* Audio recorder */}
       <AnimatePresence>
         {showAudioRecorder && (
-          <AudioRecorder onSend={handleAudioSend} onCancel={() => { setShowAudioRecorder(false); sendStopTyping(); }} />
+          <AudioRecorder onSend={handleAudioSend} onCancel={() => { setShowAudioRecorder(false); sendStopTyping(); }} onTypingPing={() => sendTyping(myNome, "recording")} />
         )}
       </AnimatePresence>
 
