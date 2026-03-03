@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export const GENERAL_CHAT_ID = "00000000-0000-0000-0000-000000000001";
+export const BUG_REPORT_CHAT_ID = "00000000-0000-0000-0000-000000000002";
 
 export interface ChatConversation {
   id: string;
@@ -112,9 +113,11 @@ export function useConversations() {
         conv.unread_count = count || 0;
       }
 
+      const pinnedOrder: Record<string, number> = { [GENERAL_CHAT_ID]: 0, [BUG_REPORT_CHAT_ID]: 1 };
       convos.sort((a: any, b: any) => {
-        if (a.id === GENERAL_CHAT_ID) return -1;
-        if (b.id === GENERAL_CHAT_ID) return 1;
+        const aPin = pinnedOrder[a.id] ?? 999;
+        const bPin = pinnedOrder[b.id] ?? 999;
+        if (aPin !== bPin) return aPin - bPin;
         return new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime();
       });
 
