@@ -112,6 +112,8 @@ export default function AdminDashboard() {
   const [recargasLoading, setRecargasLoading] = useState(false);
   const recargasLoaded = useRef(false);
   const [recargaSearch, setRecargaSearch] = useState("");
+  const [recargaPage, setRecargaPage] = useState(1);
+  const RECARGAS_PER_PAGE = 20;
 
   // Operadoras state
   const [operadoras, setOperadoras] = useState<Operadora[]>([]);
@@ -778,6 +780,9 @@ export default function AdminDashboard() {
     (r.operadora || "").toLowerCase().includes(recargaSearch.toLowerCase())
   );
 
+  const recargaTotalPages = Math.max(1, Math.ceil(filteredRecargasHistorico.length / RECARGAS_PER_PAGE));
+  const paginatedRecargas = filteredRecargasHistorico.slice((recargaPage - 1) * RECARGAS_PER_PAGE, recargaPage * RECARGAS_PER_PAGE);
+
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
 
@@ -1382,15 +1387,15 @@ export default function AdminDashboard() {
           <>
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" value={recargaSearch} onChange={e => setRecargaSearch(e.target.value)} placeholder="Buscar por telefone, revendedor ou operadora..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm" />
+               <input type="text" value={recargaSearch} onChange={e => { setRecargaSearch(e.target.value); setRecargaPage(1); }} placeholder="Buscar por telefone, revendedor ou operadora..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm" />
             </div>
             {/* Mobile: Card Layout */}
             <div className="md:hidden space-y-3">
               {recargasLoading ? (
                 <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
-              ) : filteredRecargasHistorico.length === 0 ? (
+              ) : paginatedRecargas.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</p>
-              ) : filteredRecargasHistorico.map(r => {
+              ) : paginatedRecargas.map(r => {
                 const initials = (r.user_nome || r.user_email || "?").slice(0, 2).toUpperCase();
                 const avatarColors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                 const colorIdx = (r.user_id || "").charCodeAt(0) % avatarColors.length;
@@ -1458,9 +1463,9 @@ export default function AdminDashboard() {
                 <tbody>
                   {recargasLoading ? (
                     <tr><td colSpan={5} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
-                  ) : filteredRecargasHistorico.length === 0 ? (
+                  ) : paginatedRecargas.length === 0 ? (
                     <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
-                  ) : filteredRecargasHistorico.map(r => {
+                  ) : paginatedRecargas.map(r => {
                     const initials = (r.user_nome || r.user_email || "?").slice(0, 2).toUpperCase();
                     const avatarColors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                     const colorIdx = (r.user_id || "").charCodeAt(0) % avatarColors.length;
@@ -1509,6 +1514,53 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            {recargaTotalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 px-1">
+                <span className="text-xs text-muted-foreground">
+                  {filteredRecargasHistorico.length} resultado{filteredRecargasHistorico.length !== 1 ? 's' : ''} · Página {recargaPage} de {recargaTotalPages}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setRecargaPage(p => Math.max(1, p - 1))}
+                    disabled={recargaPage <= 1}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Anterior
+                  </button>
+                  {Array.from({ length: Math.min(5, recargaTotalPages) }, (_, i) => {
+                    let page: number;
+                    if (recargaTotalPages <= 5) {
+                      page = i + 1;
+                    } else if (recargaPage <= 3) {
+                      page = i + 1;
+                    } else if (recargaPage >= recargaTotalPages - 2) {
+                      page = recargaTotalPages - 4 + i;
+                    } else {
+                      page = recargaPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setRecargaPage(page)}
+                        className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
+                          recargaPage === page ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setRecargaPage(p => Math.min(recargaTotalPages, p + 1))}
+                    disabled={recargaPage >= recargaTotalPages}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 
