@@ -1002,6 +1002,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_chat_enabled: { Args: never; Returns: boolean }
+      get_maintenance_mode: { Args: never; Returns: boolean }
       get_seasonal_theme: { Args: never; Returns: string }
       get_ticker_recargas: {
         Args: never
