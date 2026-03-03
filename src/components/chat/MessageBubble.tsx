@@ -467,7 +467,12 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               className={`mb-1 px-3 py-1.5 rounded-xl cursor-pointer transition-colors hover:brightness-110 overflow-hidden min-w-0 w-full ${isOwn ? "bg-primary/5 border-l-2 border-primary/40" : "bg-muted/40 border-l-2 border-muted-foreground/30 hover:bg-muted/60"}`}
             >
               <p className="text-[10px] font-semibold text-primary truncate">{message.reply_to.sender?.nome || "Usuário"}</p>
-              <p className="text-[10px] text-muted-foreground line-clamp-2">{message.reply_to.content || "🎤 Áudio"}</p>
+              {message.reply_to.type === "image" && message.reply_to.image_url && (
+                <img src={message.reply_to.image_url} alt="Imagem" className="w-8 h-8 rounded object-cover mt-0.5" />
+              )}
+              <p className="text-[10px] text-muted-foreground line-clamp-2">
+                {message.reply_to.content || (message.reply_to.type === "audio" ? "🎤 Áudio" : "📷 Imagem")}
+              </p>
             </div>
           )}
 
