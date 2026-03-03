@@ -87,7 +87,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1 min-w-0">
-                  <span className={`font-semibold text-sm truncate ${isGeneral ? "text-primary" : "text-foreground"}`}>
+                  <span className={`font-semibold text-sm truncate ${isAdmin ? "shimmer-letters" : isGeneral ? "text-primary" : "text-foreground"}`}>
                     {name}
                   </span>
                   {conv.other_user?.verification_badge ? (
