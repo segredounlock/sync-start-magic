@@ -1124,12 +1124,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                 <span className="text-xs text-muted-foreground">Custo (debitado)</span>
                                 <span className="text-xs font-bold text-foreground">{fmt(trackingStatus.localRecarga.custo)}</span>
                               </div>
-                              {(trackingStatus.localRecarga.status === "completed" || trackingStatus.localRecarga.status === "concluida") && trackingStatus.localRecarga.custo > 0 && (
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-success/10 border border-success/20">
-                                  <span className="text-xs text-success font-medium">Lucro</span>
-                                  <span className="text-xs font-bold text-success">+{fmt(trackingStatus.localRecarga.custo - trackingStatus.localRecarga.custo_api)}</span>
-                                </div>
-                              )}
                             </>
                           ) : trackingStatus.data.value ? (
                             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
@@ -1676,12 +1670,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <span className="text-sm text-muted-foreground">Custo (debitado)</span>
                             <span className="text-sm font-mono font-semibold text-foreground">{fmt(r.custo)}</span>
                           </div>
-                          {isCompleted && r.custo > 0 && r.custo_api > 0 && (
-                            <div className="flex justify-between items-center py-2.5 px-3 rounded-lg bg-success/10 border border-success/20">
-                              <span className="text-sm text-success font-medium">Lucro</span>
-                              <span className="text-sm font-mono font-bold text-success">+{fmt(r.custo - r.custo_api)}</span>
-                            </div>
-                          )}
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Data</span>
                             <span className="text-sm text-foreground">{fmtDate(r.created_at)}</span>
