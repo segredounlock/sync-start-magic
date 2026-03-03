@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { PinProtection } from "@/components/PinProtection";
-import { SkeletonRow, SkeletonCard } from "@/components/Skeleton";
+import { SkeletonRow, SkeletonCard, SkeletonPricingGrid } from "@/components/Skeleton";
 import BackupSection from "@/components/BackupSection";
 import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
@@ -2232,13 +2232,25 @@ export default function Principal() {
           )}
 
           {/* ===== CONFIG API ===== */}
-          {view === "config-api" && (
+           {view === "config-api" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Header */}
+              <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[hsl(280,70%,60%)]/15 flex items-center justify-center">
+                    <Settings className="h-5 w-5 text-[hsl(280,70%,60%)]" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-xl font-bold text-foreground">API Recarga</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Provedor de recarga e consulta de operadora</p>
+                  </div>
+                </div>
+              </div>
               {configLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <PinProtection configKey="adminPin">
-                  <div className="glass-card rounded-xl p-6 space-y-4">
+                  <div className="glass-card rounded-2xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg flex items-center gap-2">
                       <Smartphone className="h-5 w-5 text-primary" /> Provedor de Recarga
                     </h4>
@@ -2690,13 +2702,26 @@ export default function Principal() {
           )}
 
           {/* ===== DEPÓSITOS ===== */}
-          {view === "depositos" && (
+           {view === "depositos" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
-                  <div className="glass-card rounded-xl p-6 space-y-4">
+                  {/* Header */}
+                  <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
+                        <Landmark className="h-5 w-5 text-success" />
+                      </div>
+                      <div>
+                        <h2 className="font-display text-xl font-bold text-foreground">Depósitos</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">Limites, regras e taxas de depósito PIX</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-card rounded-2xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg">Limites e Regras</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -2754,8 +2779,20 @@ export default function Principal() {
           )}
 
           {/* ===== BOT TELEGRAM ===== */}
-          {view === "bot" && (
+           {view === "bot" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Header */}
+              <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[hsl(200,80%,55%)]/15 flex items-center justify-center">
+                    <Bot className="h-5 w-5 text-[hsl(200,80%,55%)]" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-xl font-bold text-foreground">Bot Telegram</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Configuração e status do bot</p>
+                  </div>
+                </div>
+              </div>
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
@@ -2973,6 +3010,16 @@ export default function Principal() {
           {/* ===== GERAL ===== */}
           {view === "geral" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Header */}
+              <div className="glass-card rounded-2xl p-5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <h2 className="font-display text-xl font-bold text-foreground">Configurações</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Configurações gerais, temas e banners</p>
+                </div>
+              </div>
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
@@ -3155,28 +3202,36 @@ export default function Principal() {
           {/* ===== RELATÓRIOS ===== */}
           {view === "relatorios" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground">Relatório de Lucro</h2>
-                  <p className="text-sm text-muted-foreground">Lucro por revendedor baseado nos preços personalizados vs custo.</p>
+              {/* Header */}
+              <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-warning" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-xl font-bold text-foreground">Relatório de Lucro</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Lucro por revendedor baseado nos preços vs custo</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex rounded-lg overflow-hidden glass w-fit">
-                    {([
-                      { key: "hoje" as ReportPeriod, label: "Hoje" },
-                      { key: "7dias" as ReportPeriod, label: "7 Dias" },
-                      { key: "mes" as ReportPeriod, label: "Mês" },
-                      { key: "total" as ReportPeriod, label: "Total" },
-                    ]).map(p => (
-                      <button key={p.key} onClick={() => setReportPeriod(p.key)}
-                        className={`px-3 py-1.5 text-xs font-medium transition-colors ${reportPeriod === p.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                  <button onClick={fetchReport} disabled={reportLoading} className="p-2 rounded-lg border border-border hover:bg-muted/50 text-muted-foreground transition-colors">
+                  <button onClick={fetchReport} disabled={reportLoading} className="p-2.5 rounded-xl border border-border/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all active:scale-95">
                     <RefreshCw className={`h-4 w-4 ${reportLoading ? "animate-spin" : ""}`} />
                   </button>
+                </div>
+              </div>
+              <div className="flex items-center justify-end">
+                <div className="flex rounded-2xl overflow-hidden bg-muted/40 border border-border/40 p-1 gap-0.5">
+                  {([
+                    { key: "hoje" as ReportPeriod, label: "Hoje" },
+                    { key: "7dias" as ReportPeriod, label: "7 Dias" },
+                    { key: "mes" as ReportPeriod, label: "Mês" },
+                    { key: "total" as ReportPeriod, label: "Total" },
+                  ]).map(p => (
+                    <button key={p.key} onClick={() => setReportPeriod(p.key)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${reportPeriod === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -3370,7 +3425,7 @@ export default function Principal() {
               </div>
 
               {pricingLoading ? (
-                <div className="space-y-3">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                <SkeletonPricingGrid count={6} />
               ) : pricingOps.length === 0 ? (
                 <div className="glass-card rounded-2xl p-10 text-center">
                   <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
@@ -3516,16 +3571,22 @@ export default function Principal() {
           {/* ===== BROADCAST ===== */}
           {view === "broadcast" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-extrabold text-foreground">Notificações</h2>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-                    <Users className="w-4 h-4" /> {broadcastUserCount} usuários ativos para receber
-                  </p>
+              {/* Header */}
+              <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+                    <Megaphone className="h-5 w-5 text-warning" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-xl font-bold text-foreground">Broadcast</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" /> {broadcastUserCount} usuários ativos
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowBroadcastModal(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity glow-primary text-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity text-sm active:scale-95"
                 >
                   <Send className="w-4 h-4" /> Nova Notificação
                 </button>
