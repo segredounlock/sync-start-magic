@@ -15,7 +15,7 @@ export default function ChatApp() {
   const { user } = useAuth();
   usePresenceTracker();
   const { conversations, loading, startConversation } = useConversations();
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(GENERAL_CHAT_ID);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
   const [chatEnabled, setChatEnabled] = useState(true);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
