@@ -818,7 +818,7 @@ export default function Principal() {
   const totalSaldo = revendedores.reduce((s, r) => s + r.saldo, 0);
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const fmtDate = (d: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(d));
 
   const userLabel = user?.email?.split("@")[0] || "Admin";
   const userInitial = (userLabel[0] || "A").toUpperCase();
