@@ -182,6 +182,7 @@ export default function TelegramMiniApp() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [saldo, setSaldo] = useState(0);
+  const [hasAuthSession, setHasAuthSession] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -302,6 +303,7 @@ export default function TelegramMiniApp() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user && !cancelled) {
+          setHasAuthSession(true);
           const { data, error } = await supabase.functions.invoke("telegram-miniapp", {
             body: { action: "lookup_by_user_id", user_id: session.user.id },
           });
@@ -646,6 +648,7 @@ export default function TelegramMiniApp() {
         applySession(sess);
         saveSession(sess);
       }
+      setHasAuthSession(true);
     } catch (err: any) { setLoginError(err.message || "Erro ao fazer login"); }
     setLoginLoading(false);
   };
@@ -654,6 +657,7 @@ export default function TelegramMiniApp() {
     await supabase.auth.signOut();
     clearSession();
     setUserId(null); setUserName(""); setUserEmail(""); setSaldo(0);
+    setHasAuthSession(false);
   };
 
   // Detect phone number in clipboard when phone step is active
@@ -1712,16 +1716,16 @@ export default function TelegramMiniApp() {
             </motion.div>
           )}
           {/* ── Chat ── */}
-          {section === "chat" && userId && (
+          {section === "chat" && userId && hasAuthSession && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-[calc(100vh-180px)] tg-chat-theme">
               <ChatPage onBack={() => setSection("recarga")} forceMobile />
             </motion.div>
           )}
-          {section === "chat" && !userId && (
+          {section === "chat" && (!userId || !hasAuthSession) && (
             <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center h-64 text-center">
               <MessageCircle className="w-12 h-12 mb-3" style={st.hint} />
               <p className="text-sm font-semibold" style={st.text}>Faça login para acessar o chat</p>
-              <p className="text-xs mt-1" style={st.hint}>Acesse sua conta para conversar</p>
+              <p className="text-xs mt-1" style={st.hint}>Acesse sua conta na aba "Conta" para conversar</p>
             </motion.div>
           )}
         </AnimatePresence>
