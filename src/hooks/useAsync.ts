@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, MutableRefObject } from "react";
 
 interface UseAsyncOptions {
   /** Number of retries on failure (default: 0) */
   retries?: number;
   /** Timeout in ms (default: 15000) */
   timeout?: number;
-  /** Show initial loading only on first call */
+  /** Show loading only on first call (default: false) */
   initialOnly?: boolean;
 }
 
@@ -18,14 +18,7 @@ interface UseAsyncReturn<T> {
 }
 
 /**
- * Hook global de loading resiliente.
- * Encapsula o padrão repetido de loading/error/retry com timeout.
- *
- * @example
- * const { execute, loading, error, data } = useAsync(async () => {
- *   const { data } = await supabase.from("recargas").select("*");
- *   return data;
- * }, { retries: 2, timeout: 10000 });
+ * Hook global de loading resiliente com retry e timeout.
  */
 export function useAsync<T = any>(
   asyncFn: (...args: any[]) => Promise<T>,
@@ -38,13 +31,11 @@ export function useAsync<T = any>(
   const hasRun = useRef(false);
 
   const execute = useCallback(async (...args: any[]): Promise<T | null> => {
-    // If initialOnly and already ran, don't show loading
     const showLoading = !initialOnly || !hasRun.current;
     if (showLoading) setLoading(true);
     setError(null);
 
     let lastError: string | null = null;
-
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const result = await Promise.race([
@@ -60,7 +51,6 @@ export function useAsync<T = any>(
       } catch (err: any) {
         lastError = err?.message || "Erro desconhecido";
         if (attempt < retries) {
-          // Exponential backoff: 1s, 2s, 4s...
           await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
         }
       }
@@ -80,4 +70,69 @@ export function useAsync<T = any>(
   }, []);
 
   return { data, loading, error, execute, reset };
+}
+
+/**
+ * Hook para fetch principal com loading resiliente e padrão initialOnly.
+ * Loading só aparece no primeiro fetch; chamadas subsequentes são silenciosas.
+ * Timeout de 20s garante que loading nunca trava.
+ */
+export function useResilientFetch(options: { timeout?: number } = {}) {
+  const { timeout = 20000 } = options;
+  const [loading, setLoading] = useState(true);
+  const hasLoaded = useRef(false);
+
+  const runFetch = useCallback(async (fn: () => Promise<void>) => {
+    if (!hasLoaded.current) setLoading(true);
+    try {
+      await Promise.race([
+        fn(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeout)
+        ),
+      ]);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      hasLoaded.current = true;
+      setLoading(false);
+    }
+  }, [timeout]);
+
+  return { loading, runFetch };
+}
+
+/**
+ * Função utilitária (não-hook) para wrapping seguro de operações async.
+ * Garante que setLoading(false) e loadedRef.current = true sempre executam.
+ *
+ * @example
+ * const fetchRecargas = useCallback(async () => {
+ *   await guardedFetch(recargasLoaded, setRecargasLoading, async () => {
+ *     const { data } = await supabase.from("recargas").select("*");
+ *     setRecargas(data || []);
+ *   });
+ * }, []);
+ */
+export async function guardedFetch(
+  loadedRef: MutableRefObject<boolean>,
+  setLoading: (v: boolean) => void,
+  fn: () => Promise<void>,
+  options?: { timeout?: number }
+): Promise<void> {
+  const timeout = options?.timeout || 20000;
+  if (!loadedRef.current) setLoading(true);
+  try {
+    await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), timeout)
+      ),
+    ]);
+  } catch (err) {
+    console.error("guardedFetch error:", err);
+  } finally {
+    loadedRef.current = true;
+    setLoading(false);
+  }
 }

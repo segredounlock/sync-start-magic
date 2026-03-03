@@ -31,6 +31,7 @@ import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalD
 
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
+import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 
 type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
 
@@ -50,8 +51,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const { user, role, signOut } = useAuth();
   const [saldo, setSaldo] = useState(0);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
-  const [loading, setLoading] = useState(true);
-  const initialLoadDone = useRef(false);
+  const { loading, runFetch } = useResilientFetch();
   const [tab, setTab] = useState<PainelTab>("recarga");
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileNome, setProfileNome] = useState("");
@@ -132,8 +132,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   }, []);
 
   const fetchCatalog = useCallback(async () => {
-    if (!catalogLoaded.current) setCatalogLoading(true);
-    try {
+    await guardedFetch(catalogLoaded, setCatalogLoading, async () => {
       // Always build catalog from local DB with reseller/global pricing rules
       const [{ data: ops }, { data: globalRules }, { data: resellerRules }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
@@ -147,7 +146,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           const opResellerRules = (resellerRules || []).filter((r: any) => r.operadora_id === op.id);
           const valores = (op.valores as unknown as number[]) || [];
           const values: CatalogValue[] = valores.map((v: number) => {
-            // Reseller rules first, then global rules, then face value
             const resellerRule = opResellerRules.find((r: any) => r.valor_recarga === v);
             const globalRule = opGlobalRules.find((r) => r.valor_recarga === v);
             const rule = resellerRule || globalRule;
@@ -162,23 +160,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         });
         setCatalog(localCatalog);
       } else {
-        // Fallback to API catalog if local DB fails
         try {
           const resp = await callApi("catalog");
           if (resp?.success && resp.data) setCatalog(resp.data);
         } catch { /* */ }
       }
-    } catch (err) {
-      console.error("Erro ao buscar catálogo:", err);
-    }
-    catalogLoaded.current = true;
-    setCatalogLoading(false);
+    });
   }, [user?.id, callApi]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
-    if (!initialLoadDone.current) setLoading(true);
-    try {
+    await runFetch(async () => {
       const [{ data: saldoData }, { data: recargasData }, { data: profile }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
@@ -194,17 +186,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setTelegramLinked(!!p?.telegram_id);
       setProfileSlug(p?.slug || "");
       setAvatarUrl(p?.avatar_url || null);
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-    initialLoadDone.current = true;
-  }, [user]);
+    });
+  }, [user, runFetch]);
 
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
-    if (!transLoaded.current) setTransLoading(true);
-    try {
+    await guardedFetch(transLoaded, setTransLoading, async () => {
       const { data } = await supabase
         .from("transactions")
         .select("*")
@@ -212,9 +199,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         .order("created_at", { ascending: false })
         .limit(50);
       setTransactions(data || []);
-    } catch { /* */ }
-    transLoaded.current = true;
-    setTransLoading(false);
+    });
   }, [user]);
 
   const fetchStatus = useCallback(async () => {
