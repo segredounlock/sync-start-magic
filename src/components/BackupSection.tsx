@@ -53,11 +53,12 @@ const SOURCE_PATHS = [
   // Config
   "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts",
   "postcss.config.js","index.html","package.json","README.md",
+  // PWA
+  "public/sw-push.js",
   // Edge Functions
   "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
   "supabase/functions/admin-toggle-role/index.ts",
   "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
-  "supabase/functions/bootstrap-admin/index.ts",
   "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
   "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
   "supabase/functions/expire-pending-deposits/index.ts",
