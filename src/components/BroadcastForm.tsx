@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { styledToast as toast } from "@/lib/toast";
 import { Loader2, Send, Image, Plus, Trash2, Link, Upload, X, Sparkles, Tag, Zap, Bell, Megaphone, TrendingUp } from 'lucide-react';
 
 interface BroadcastButton {

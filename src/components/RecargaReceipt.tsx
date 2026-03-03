@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign } from "lucide-react";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR, formatFullDateTimeBR } from "@/lib/timezone";
 
 interface Recarga {

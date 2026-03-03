@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { appToast } from "@/lib/toast";
 
 /**
  * Hook that monitors pending transactions in the background.
@@ -55,7 +55,7 @@ export function useBackgroundPaymentMonitor(
             !knownCompletedRef.current.has(row.id)
           ) {
             knownCompletedRef.current.add(row.id);
-            toast.success(
+            appToast.depositConfirmed(
               `✅ Depósito de R$ ${Number(row.amount).toFixed(2)} confirmado! Saldo atualizado.`,
               { id: `deposit-${row.id}` }
             );

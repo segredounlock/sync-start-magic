@@ -10,7 +10,7 @@ import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil, ImagePlus } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import { MentionDropdown } from "./MentionDropdown";
 import { formatLastSeenBR, formatDateLongUpperBR } from "@/lib/timezone";
 import { AnimatePresence as MentionPresence } from "framer-motion";

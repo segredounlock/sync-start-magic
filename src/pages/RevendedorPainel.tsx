@@ -26,7 +26,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { toast } from "sonner";
+import { appToast, styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 
 interface Recarga {
@@ -349,7 +349,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         const newRow = payload.new as any;
         const oldRow = payload.old as any;
         if (newRow.status === "completed" && oldRow?.status !== "completed") {
-          toast.success(`✅ Recarga ${newRow.operadora || ""} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
+          appToast.recargaCompleted(`Recarga ${newRow.operadora || ""} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
           playSuccessSound();
           fetchData();
         }
@@ -389,7 +389,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         try {
           const resp = await callApi("order-status", { external_id: (r as any).external_id });
           if (resp?.success && resp.data?.localStatus === "completed") {
-            toast.success(`✅ Recarga ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)} para ${r.telefone} concluída!`);
+            appToast.recargaCompleted(`Recarga ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)} para ${r.telefone} concluída!`);
             playSuccessSound();
             fetchData();
             break;
@@ -455,7 +455,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   }, []);
 
   const handleCheckPhone = async () => {
-    if (!telefone.trim()) { toast.error("Digite o número"); return; }
+    if (!telefone.trim()) { appToast.error("Digite o número"); return; }
     
     const normalizedPhone = telefone.replace(/\D/g, "");
 
@@ -475,7 +475,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             const matched = catalog.find(c => normalize(c.name).includes(normalize(operatorName)) || normalize(operatorName).includes(normalize(c.name)));
             if (matched) {
               setSelectedCarrier(matched);
-              toast.success(`Operadora detectada: ${matched.name}`);
+              appToast.success(`Operadora detectada: ${matched.name}`);
               // Now proceed to check-phone with the detected carrier
               try {
                 const resp = await callApi("check-phone", { phoneNumber: normalizedPhone, carrierId: matched.carrierId });
@@ -487,9 +487,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       : (resp.data.message || "Número disponível para recarga."),
                   };
                   setPhoneCheckResult(checkResult);
-                  if (checkResult.status === "CLEAR") toast.success("Número disponível!");
-                  else if (checkResult.status === "COOLDOWN") toast.warning(checkResult.message);
-                  else if (checkResult.status === "BLACKLISTED") toast.error(checkResult.message);
+                  if (checkResult.status === "CLEAR") appToast.success("Número disponível!");
+                  else if (checkResult.status === "COOLDOWN") appToast.warning(checkResult.message);
+                  else if (checkResult.status === "BLACKLISTED") appToast.blocked(checkResult.message);
                 }
               } catch { /* ignore check-phone error after auto-detect */ }
               setCheckingPhone(false);

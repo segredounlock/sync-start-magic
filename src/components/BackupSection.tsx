@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatFullDateTimeBR, formatDateFullBR } from "@/lib/timezone";
-import { toast } from "sonner";
+import { styledToast as toast } from "@/lib/toast";
 import JSZip from "jszip";
 
 // Tables are now discovered dynamically by the edge functions
