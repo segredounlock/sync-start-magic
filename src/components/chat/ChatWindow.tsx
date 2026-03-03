@@ -31,6 +31,8 @@ interface ChatWindowProps {
 export function ChatWindow({ conversationId, otherUser, isGroup, groupName, groupIcon, onBack }: ChatWindowProps) {
   const { user, role } = useAuth();
   const isUserAdmin = role === "admin";
+  const [myBadge, setMyBadge] = useState<string | null>(null);
+  const isUserModerator = isUserAdmin || !!myBadge; // badge holders have mod powers
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
   const { onlineUsers, onlineCount } = useGroupPresence();
   const { messages, loading, loadingOlder, hasMore, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage, loadOlderMessages } = useChatMessages(conversationId);
@@ -86,8 +88,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("nome, verification_badge").eq("id", user.id).maybeSingle().then(({ data }) => {
       if (data?.nome) setMyNome(data.nome);
+      setMyBadge(data?.verification_badge ?? null);
     });
   }, [user]);
 
@@ -302,7 +305,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     try {
       if (editingMessage) {
         const msgId = editingMessage.id;
-        const isAdminEdit = isUserAdmin && editingMessage.sender_id !== user?.id;
+        const isAdminEdit = isUserModerator && editingMessage.sender_id !== user?.id;
         setEditingMessage(null);
         await editMessage(msgId, currentText, isAdminEdit);
       } else {
@@ -568,9 +571,10 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
                     isOwn={msg.sender_id === user?.id}
                     isGroup={isGroup}
                     isCurrentUserAdmin={isUserAdmin}
+                    isCurrentUserModerator={isUserModerator}
                     onReply={() => { setReplyTo(msg); inputRef.current?.focus(); }}
                     onReact={(emoji) => toggleReaction(msg.id, emoji)}
-                    onDelete={() => deleteMessage(msg.id, isUserAdmin && msg.sender_id !== user?.id)}
+                    onDelete={() => deleteMessage(msg.id, isUserModerator && msg.sender_id !== user?.id)}
                     onEdit={() => handleStartEdit(msg)}
                     onPin={isUserAdmin ? () => pinMessage(msg.id) : undefined}
                     onScrollToMessage={scrollToMessage}
