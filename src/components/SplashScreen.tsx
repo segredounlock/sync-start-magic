@@ -41,14 +41,15 @@ export function SplashScreen() {
             key={i}
             className="w-2.5 h-2.5 rounded-full bg-primary"
             animate={{
-              scale: [1, 1.4, 1],
-              opacity: [0.4, 1, 0.4],
+              y: [0, -10, 0],
+              scale: [1, 1.2, 1],
+              opacity: [0.5, 1, 0.5],
             }}
             transition={{
-              duration: 1,
+              duration: 0.6,
               repeat: Infinity,
-              delay: i * 0.2,
-              ease: "easeInOut",
+              delay: i * 0.15,
+              ease: [0.45, 0, 0.55, 1],
             }}
           />
         ))}
