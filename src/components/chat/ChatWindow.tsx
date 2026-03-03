@@ -42,11 +42,8 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const { onlineUsers, onlineCount } = useGroupPresence();
   const { messages, loading, sendMessage, toggleReaction, deleteMessage, editMessage, pinMessage } = useChatMessages(conversationId);
   const { typingText, sendTyping, sendStopTyping } = useTypingIndicator(conversationId);
-  const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
-  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
-  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [sending, setSending] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
@@ -63,13 +60,34 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const stopTypingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clear reply/edit state when switching conversations
+  // Per-conversation draft state (text, replyTo, editingMessage)
+  const draftsRef = useRef<Record<string, { text: string; replyTo: ChatMessage | null; editingMessage: ChatMessage | null }>>({});
+  const prevConversationId = useRef<string | null>(null);
+
+  const [text, setText] = useState("");
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
+
+  // Save draft when leaving a conversation, restore when entering
   useEffect(() => {
-    setReplyTo(null);
-    setEditingMessage(null);
-    setText("");
+    // Save previous conversation draft
+    if (prevConversationId.current && prevConversationId.current !== conversationId) {
+      draftsRef.current[prevConversationId.current] = { text, replyTo, editingMessage };
+    }
+    // Restore draft for new conversation
+    const draft = draftsRef.current[conversationId];
+    if (draft) {
+      setText(draft.text);
+      setReplyTo(draft.replyTo);
+      setEditingMessage(draft.editingMessage);
+    } else {
+      setText("");
+      setReplyTo(null);
+      setEditingMessage(null);
+    }
     setShowEmoji(false);
     setShowAudioRecorder(false);
+    prevConversationId.current = conversationId;
   }, [conversationId]);
 
   useEffect(() => {
@@ -245,6 +263,8 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     const currentReplyToId = replyTo?.id || undefined;
     setText("");
     setShowEmoji(false);
+    // Clear draft for this conversation after sending
+    delete draftsRef.current[conversationId];
     sendStopTyping();
 
     try {
