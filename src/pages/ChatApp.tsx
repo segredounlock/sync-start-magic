@@ -44,7 +44,9 @@ export default function ChatApp() {
     }
   };
 
-  if (!chatEnabled) {
+  const { role } = useAuth();
+
+  if (!chatEnabled && role !== 'admin') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
         <div className="w-16 h-16 rounded-2xl bg-muted/50 border border-border flex items-center justify-center mb-4">

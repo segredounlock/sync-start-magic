@@ -47,7 +47,9 @@ export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
     }
   };
 
-  if (!chatEnabled) {
+  const { role } = useAuth();
+
+  if (!chatEnabled && role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full py-20 text-center px-4">
         <div className="w-16 h-16 rounded-2xl bg-muted/50 border border-border flex items-center justify-center mb-4">
