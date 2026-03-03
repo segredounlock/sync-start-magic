@@ -3022,6 +3022,48 @@ export default function Principal() {
                   </div>
                 </div>
 
+                {/* Temas Sazonais */}
+                <div className="glass-card rounded-xl p-6 space-y-4">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" /> Temas Sazonais
+                  </h4>
+                  <p className="text-xs text-muted-foreground">Ative um tema especial para datas comemorativas. Os efeitos aparecem em todo o site.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { key: "none", label: "Nenhum", emoji: "⚪" },
+                      { key: "ano_novo", label: "Ano Novo", emoji: "🎆" },
+                      { key: "carnaval", label: "Carnaval", emoji: "🎭" },
+                      { key: "pascoa", label: "Páscoa", emoji: "🐰" },
+                      { key: "dia_maes", label: "Dia das Mães", emoji: "💐" },
+                      { key: "dia_namorados", label: "Dia dos Namorados", emoji: "💕" },
+                      { key: "festa_junina", label: "Festa Junina", emoji: "🎪" },
+                      { key: "dia_pais", label: "Dia dos Pais", emoji: "👔" },
+                      { key: "dia_criancas", label: "Dia das Crianças", emoji: "🎈" },
+                      { key: "black_friday", label: "Black Friday", emoji: "🏷️" },
+                      { key: "natal", label: "Natal", emoji: "🎄" },
+                    ].map(t => (
+                      <button
+                        key={t.key}
+                        onClick={async () => {
+                          setGlobalConfig(prev => ({ ...prev, seasonalTheme: t.key }));
+                          await supabase.from("system_config").upsert({ key: "seasonalTheme", value: t.key }, { onConflict: "key" });
+                          toast.success(t.key === "none" ? "Tema sazonal desativado" : `Tema ${t.label} ativado! ${t.emoji}`);
+                        }}
+                        className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+                          (globalConfig.seasonalTheme || "none") === t.key
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border bg-muted/30 hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        <span className="text-xl">{t.emoji}</span>
+                        <span className={`text-xs font-medium ${
+                          (globalConfig.seasonalTheme || "none") === t.key ? "text-primary" : "text-foreground"
+                        }`}>{t.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <BannersManager botUsername={botStatus.botUsername} />
                 </>
               )}
