@@ -606,17 +606,18 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               <div
                 onPointerDownCapture={(e) => e.stopPropagation()}
                 onTouchStartCapture={(e) => e.stopPropagation()}
+                onTouchEndCapture={(e) => e.stopPropagation()}
+                onClickCapture={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowImageLightbox(true);
+                }}
+                className="cursor-pointer"
               >
                 <img
                   src={message.image_url}
                   alt=""
-                  className="max-w-[250px] max-h-[300px] rounded-xl cursor-pointer hover:brightness-90 transition-all object-cover"
-                  onClick={(e) => { e.stopPropagation(); setShowImageLightbox(true); }}
-                  onTouchEnd={(e) => {
-                    // Fallback for mobile: if onClick doesn't fire due to drag interception
-                    e.stopPropagation();
-                    setShowImageLightbox(true);
-                  }}
+                  className="max-w-[250px] max-h-[300px] rounded-xl hover:brightness-90 transition-all object-cover pointer-events-none"
                   loading="lazy"
                 />
               </div>
@@ -796,51 +797,53 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
         />
       )}
 
-      {/* Image Lightbox */}
-      <AnimatePresence>
-        {showImageLightbox && message.image_url && createPortal(
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-              onClick={() => setShowImageLightbox(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.85, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.85, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="relative bg-card border border-border rounded-2xl shadow-2xl overflow-hidden max-w-[92vw] max-h-[88vh] flex flex-col"
-                onClick={(e) => e.stopPropagation()}
+      {/* Image Lightbox - rendered unconditionally via portal for reliable touch */}
+      {showImageLightbox && message.image_url && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ touchAction: "none" }}
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-black/85 backdrop-blur-sm"
+            onClick={() => setShowImageLightbox(false)}
+            onTouchEnd={(e) => { e.preventDefault(); setShowImageLightbox(false); }}
+          />
+          {/* Content */}
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative z-10 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden max-w-[92vw] max-h-[88vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
+              <span className="text-xs font-medium text-muted-foreground">
+                {message.sender?.nome || "Imagem"}
+              </span>
+              <button
+                onClick={() => setShowImageLightbox(false)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors active:bg-muted"
               >
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {message.sender?.nome || "Imagem"}
-                  </span>
-                  <button
-                    onClick={() => setShowImageLightbox(false)}
-                    className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </div>
-                {/* Image */}
-                <div className="flex items-center justify-center p-3 overflow-auto">
-                  <img
-                    src={message.image_url}
-                    alt=""
-                    className="max-w-full max-h-[78vh] object-contain rounded-xl"
-                  />
-                </div>
-              </motion.div>
-            </motion.div>
-          </>,
-          document.body
-        )}
-      </AnimatePresence>
+                <X className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+            {/* Image */}
+            <div className="flex items-center justify-center p-3 overflow-auto">
+              <img
+                src={message.image_url}
+                alt=""
+                className="max-w-full max-h-[78vh] object-contain rounded-xl"
+              />
+            </div>
+          </motion.div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
