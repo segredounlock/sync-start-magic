@@ -23,13 +23,9 @@ export function useSeasonalTheme() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from("system_config")
-        .select("value")
-        .eq("key", "seasonalTheme")
-        .maybeSingle();
-      if (data?.value && data.value !== "none") {
-        setActiveTheme(data.value as SeasonalThemeKey);
+      const { data } = await supabase.rpc("get_seasonal_theme" as any);
+      if (data && data !== "none") {
+        setActiveTheme(data as SeasonalThemeKey);
       }
     };
     load();
