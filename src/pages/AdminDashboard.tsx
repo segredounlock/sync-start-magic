@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { NotificationBell } from "@/components/NotificationBell";
-import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
+import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { createPixDeposit, checkPaymentStatus, PixResult } from "@/lib/payment";
 import { FloatingPoll } from "@/components/FloatingPoll";
@@ -784,7 +784,7 @@ export default function AdminDashboard() {
   const paginatedRecargas = filteredRecargasHistorico.slice((recargaPage - 1) * RECARGAS_PER_PAGE, recargaPage * RECARGAS_PER_PAGE);
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const fmtDate = (d: string) => formatDateTimeBR(d);
 
   // Gateway config fetch/save
   const fetchGatewayConfig = useCallback(async () => {
@@ -2086,7 +2086,7 @@ export default function AdminDashboard() {
                               <p className="font-bold text-success text-sm">{fmt(c.saldo)}</p>
                             </div>
                             <div className="flex items-center justify-between pt-3 border-t border-border">
-                              <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString("pt-BR")}</span>
+                              <span className="text-xs text-muted-foreground">{formatDateFullBR(c.created_at)}</span>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => { setClientHistoryModal({ id: c.id, nome: c.nome, email: c.email }); fetchClientRecargas(c.id); }}
@@ -2132,7 +2132,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
                                 <td className="px-4 py-3 text-right font-bold text-success">{fmt(c.saldo)}</td>
-                                <td className="px-4 py-3 text-muted-foreground">{new Date(c.created_at).toLocaleDateString("pt-BR")}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{formatDateFullBR(c.created_at)}</td>
                                 <td className="px-4 py-3 text-center">
                                   <div className="flex items-center justify-center gap-2">
                                     <button

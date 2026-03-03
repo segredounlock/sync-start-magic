@@ -6,6 +6,7 @@ import { Check, CheckCheck, Reply, Trash2, Star, ChevronDown, Copy, Pin, PinOff,
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { MessageInfoModal } from "./MessageInfoModal";
 import { UserRecargasModal } from "./UserRecargasModal";
+import { formatTimeBR, formatDateShortBR } from "@/lib/timezone";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -277,8 +278,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
   }
 
   const dateTime = new Date(message.created_at);
-  const time = dateTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  const date = dateTime.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  const time = formatTimeBR(dateTime);
+  const date = formatDateShortBR(dateTime);
   const senderName = message.sender?.nome || "Usuário";
   const isAdmin = message.sender?.isAdmin === true;
 

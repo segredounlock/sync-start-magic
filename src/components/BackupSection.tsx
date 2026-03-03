@@ -7,6 +7,7 @@ import {
   Eye, EyeOff, Save, Code2, PackageCheck, UploadCloud, Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatFullDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { toast } from "sonner";
 import JSZip from "jszip";
 
@@ -505,7 +506,7 @@ export default function BackupSection() {
         description: `Aplicar pacote v${manifest.version} com ${dbTableCount} tabelas e ${manifest.source_files || 0} arquivos fonte?`,
         details: [
           `Versão do pacote: v${manifest.version}`,
-          `Data de criação: ${new Date(manifest.created_at).toLocaleString("pt-BR")}`,
+          `Data de criação: ${formatFullDateTimeBR(manifest.created_at)}`,
           `${dbTableCount} tabelas · ${manifest.source_files || 0} arquivos fonte`,
           `Versão atual: ${currentVersion || "1.0.0"}`,
         ],
@@ -653,7 +654,7 @@ export default function BackupSection() {
         </div>
         <div>
           <h2 className="text-lg font-bold text-foreground">Backup & Sync</h2>
-          <p className="text-xs text-muted-foreground">Tabelas dinâmicas · {new Date().toLocaleDateString("pt-BR")}</p>
+          <p className="text-xs text-muted-foreground">Tabelas dinâmicas · {formatDateFullBR(new Date())}</p>
         </div>
       </div>
 
@@ -772,7 +773,7 @@ export default function BackupSection() {
                     </button>
                   </div>
                   <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {restoreResult.backup_date ? new Date(restoreResult.backup_date).toLocaleString("pt-BR") : "—"}</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {restoreResult.backup_date ? formatFullDateTimeBR(restoreResult.backup_date) : "—"}</span>
                     <span>{restoreResult.backup_by || "—"}</span>
                   </div>
                   <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -1000,7 +1001,7 @@ export default function BackupSection() {
                   </div>
                   <div className="flex gap-4 text-xs text-muted-foreground">
                     <span className="font-mono">v{updateResult.from_version} → v{updateResult.to_version}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {updateResult.manifest?.created_at ? new Date(updateResult.manifest.created_at).toLocaleString("pt-BR") : "—"}</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {updateResult.manifest?.created_at ? formatFullDateTimeBR(updateResult.manifest.created_at) : "—"}</span>
                   </div>
                   {updateResult.restore?.results && (
                     <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -1050,7 +1051,7 @@ export default function BackupSection() {
                                 {h.previous_version ? `v${h.previous_version} → ` : ""}v{h.version}
                               </span>
                               <span className="text-[10px] text-muted-foreground">
-                                {new Date(h.applied_at).toLocaleString("pt-BR")}
+                                {formatFullDateTimeBR(h.applied_at)}
                               </span>
                             </div>
                             <div className="flex gap-3 text-[10px]">
@@ -1061,7 +1062,7 @@ export default function BackupSection() {
                             </div>
                             {h.backup_date && (
                               <p className="text-[10px] text-muted-foreground">
-                                Pacote de {new Date(h.backup_date).toLocaleDateString("pt-BR")}
+                                Pacote de {formatDateFullBR(h.backup_date)}
                                 {h.backup_by ? ` por ${h.backup_by}` : ""}
                               </p>
                             )}

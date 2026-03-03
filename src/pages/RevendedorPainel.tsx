@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR } from "@/lib/timezone";
 
 interface Recarga {
   id: string;
@@ -441,13 +442,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
     try {
       const dt = new Date(isoMatch[1]);
-      const formatted = dt.toLocaleString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      const formatted = formatFullDateTimeBR(dt);
 
       if (message.toLowerCase().includes("cooldown")) {
         return `⏳ Cooldown ativo!\nEste número recebeu uma recarga recentemente.\nUma nova recarga só será permitida após ${formatted}.`;
@@ -670,7 +665,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setTrackingStatus({ loading: false, data: { _id: externalId, status: "Erro ao consultar" }, open: true, localRecarga: lr });
     }
   };
-  const fmtDate = (d: string) => new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const fmtDate = (d: string) => formatDateTimeBR(d);
 
   const recargasHoje = recargas.filter((r) => r.created_at.startsWith(new Date().toISOString().split("T")[0])).length;
   const userLabel = profileNome || user?.email?.split("@")[0] || "Revendedor";
@@ -1548,7 +1543,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       ) : (() => {
                         let lastDate = "";
                         return filtered.map((r, i) => {
-                          const dateLabel = new Date(r.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                          const dateLabel = formatDateLongUpperBR(r.created_at);
                           const showSep = dateLabel !== lastDate;
                           lastDate = dateLabel;
                           const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
@@ -1744,7 +1739,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 ) : (() => {
                   let lastDate = "";
                   return transactions.map((t, i) => {
-                    const dateLabel = new Date(t.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                    const dateLabel = formatDateLongUpperBR(t.created_at);
                     const showSep = dateLabel !== lastDate;
                     lastDate = dateLabel;
                     const isDeposit = t.type === "deposit" || t.type === "deposito";

@@ -15,6 +15,7 @@ import {
 import { ChatPage } from "@/components/chat/ChatPage";
 import { useSeasonalTheme, SEASONAL_BUTTON_EMOJIS } from "@/hooks/useSeasonalTheme";
 import { SEASONAL_THEMES, type SeasonalThemeKey } from "@/components/SeasonalEffects";
+import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR } from "@/lib/timezone";
 
 declare global {
   interface Window {
@@ -548,7 +549,7 @@ export default function TelegramMiniApp() {
       tgWebApp?.HapticFeedback?.notificationOccurred("success");
       const orderData = result.data || {};
       const now = new Date();
-      const hora = now.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const hora = formatFullDateTimeBR(now);
       const receiptValue =
         (Number(selectedValor.value) > 0 ? Number(selectedValor.value) : 0) ||
         (() => {
@@ -585,7 +586,7 @@ export default function TelegramMiniApp() {
     const isoMatch = msg.match(/(\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
     if (isoMatch) {
       const d = new Date(isoMatch[1]);
-      const formatted = d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      const formatted = formatDateTimeBR(d);
       if (msg.toLowerCase().includes("cooldown")) {
         return `⏳ Cooldown ativo! Nova recarga permitida após ${formatted}.`;
       }
@@ -1488,7 +1489,7 @@ export default function TelegramMiniApp() {
                           { icon: Zap, label: "Operadora", value: viewingReceipt.operadora || "—" },
                           { icon: Wallet, label: "Valor", value: formatCurrency(viewingReceipt.valor), highlight: true },
                           { icon: Hash, label: "ID do Pedido", value: viewingReceipt.external_id || viewingReceipt.id.slice(0, 8) },
-                          { icon: Clock, label: "Data", value: new Date(viewingReceipt.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) },
+                          { icon: Clock, label: "Data", value: formatDateTimeBR(viewingReceipt.created_at) },
                         ].map((row) => (
                           <div key={row.label} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                             <div className="flex items-center gap-2">
@@ -1504,7 +1505,7 @@ export default function TelegramMiniApp() {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={async () => {
-                            const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${formatPhone(viewingReceipt.telefone)}\n📡 Operadora: ${viewingReceipt.operadora || "—"}\n💰 Valor: ${formatCurrency(viewingReceipt.valor)}\n🆔 Pedido: ${viewingReceipt.external_id || viewingReceipt.id.slice(0, 8)}\n🕐 Data: ${new Date(viewingReceipt.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\nRecarga realizada com sucesso!`;
+                            const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${formatPhone(viewingReceipt.telefone)}\n📡 Operadora: ${viewingReceipt.operadora || "—"}\n💰 Valor: ${formatCurrency(viewingReceipt.valor)}\n🆔 Pedido: ${viewingReceipt.external_id || viewingReceipt.id.slice(0, 8)}\n🕐 Data: ${formatFullDateTimeBR(viewingReceipt.created_at)}\n\nRecarga realizada com sucesso!`;
                             try {
                               if (navigator.share) await navigator.share({ title: "Comprovante de Recarga", text });
                               else { await navigator.clipboard.writeText(text); tgWebApp?.HapticFeedback?.notificationOccurred("success"); }
@@ -1534,7 +1535,7 @@ export default function TelegramMiniApp() {
                 let lastDate = "";
                 return recargas.map((r) => {
                   const d = new Date(r.created_at);
-                  const dateLabel = d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                  const dateLabel = formatDateLongUpperBR(r.created_at);
                   const showSep = dateLabel !== lastDate;
                   lastDate = dateLabel;
                   return (
@@ -1587,7 +1588,7 @@ export default function TelegramMiniApp() {
                 let lastDate = "";
                 return transactions.map((t) => {
                   const d = new Date(t.created_at);
-                  const dateLabel = d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                  const dateLabel = formatDateLongUpperBR(t.created_at);
                   const showSep = dateLabel !== lastDate;
                   lastDate = dateLabel;
                   const isPending = t.status === "pending";
@@ -1624,7 +1625,7 @@ export default function TelegramMiniApp() {
                           </div>
                           <div>
                             <p className="font-semibold text-sm" style={st.text}>Depósito PIX</p>
-                            <p className="text-xs" style={st.hint}>{d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+                            <p className="text-xs" style={st.hint}>{formatTimeBR(t.created_at)}</p>
                           </div>
                         </div>
                         <div className="text-right flex items-center gap-2">

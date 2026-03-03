@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Clock, XCircle, Smartphone } from "lucide-react";
+import { formatTimeBR } from "@/lib/timezone";
 
 interface TickerRecarga {
   id: string;
@@ -116,7 +117,7 @@ export default function RecargasTicker() {
   };
 
   const fmtTime = (d: string) => {
-    try { return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
+    try { return formatTimeBR(d); } catch { return ""; }
   };
 
   if (initialLoading) {

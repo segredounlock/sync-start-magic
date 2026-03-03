@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
-import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
+import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateFullBR, formatTimeBR } from "@/lib/timezone";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
@@ -1861,7 +1861,7 @@ export default function Principal() {
                         <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> {selectedRev.telefone || "Não informado"}
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Desde {new Date(selectedRev.created_at).toLocaleDateString("pt-BR")}
+                        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Desde {formatDateFullBR(selectedRev.created_at)}
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                         <Hash className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> ID: {selectedRev.id.slice(0, 8)}...
@@ -2771,7 +2771,7 @@ export default function Principal() {
                         <h4 className="font-semibold text-foreground text-sm">Status do Bot</h4>
                         <p className="text-[10px] text-muted-foreground">
                           Sincronização automática ({Math.round(botPollIntervalMs / 1000)}s)
-                          {botStatus.lastSyncAt ? ` • última atualização às ${new Date(botStatus.lastSyncAt).toLocaleTimeString("pt-BR")}` : ""}
+                          {botStatus.lastSyncAt ? ` • última atualização às ${formatTimeBR(new Date(botStatus.lastSyncAt))}` : ""}
                         </p>
                       </div>
                       {botStatus.connected ? (

@@ -1,4 +1,5 @@
 import { ChatConversation, GENERAL_CHAT_ID } from "@/hooks/useChat";
+import { formatChatTimestamp } from "@/lib/timezone";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
@@ -35,16 +36,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
     );
   }
 
-  const fmtTime = (d: string) => {
-    const date = new Date(d);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffDays === 0) return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    if (diffDays === 1) return "Ontem";
-    if (diffDays < 7) return date.toLocaleDateString("pt-BR", { weekday: "short" });
-    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-  };
+  const fmtTime = (d: string) => formatChatTimestamp(d);
 
   const pinnedIds = new Set([GENERAL_CHAT_ID, '00000000-0000-0000-0000-000000000002']);
   const pinned = conversations.filter(c => pinnedIds.has(c.id));

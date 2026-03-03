@@ -5,6 +5,7 @@ import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Ta
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { formatDateShortBR, formatTimeBR } from "@/lib/timezone";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface UserRecargasModalProps {
@@ -194,9 +195,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
   };
 
   const formatDate = (d: string) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) +
-      " " + date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return formatDateShortBR(d) + " " + formatTimeBR(d);
   };
 
   const formatCurrency = (v: number) =>

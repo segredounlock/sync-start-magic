@@ -12,18 +12,11 @@ import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera,
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { toast } from "sonner";
 import { MentionDropdown } from "./MentionDropdown";
+import { formatLastSeenBR, formatDateLongUpperBR } from "@/lib/timezone";
 import { AnimatePresence as MentionPresence } from "framer-motion";
 
 function formatLastSeen(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "agora";
-  if (diffMin < 60) return `há ${diffMin}min`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `há ${diffH}h`;
-  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return formatLastSeenBR(dateStr);
 }
 
 interface ChatWindowProps {
@@ -307,7 +300,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const groupedMessages = useMemo(() => {
     const groups: { date: string; msgs: ChatMessage[] }[] = [];
     messages.forEach(msg => {
-      const date = new Date(msg.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+      const date = formatDateLongUpperBR(msg.created_at);
       const last = groups[groups.length - 1];
       if (last && last.date === date) { last.msgs.push(msg); }
       else { groups.push({ date, msgs: [msg] }); }
