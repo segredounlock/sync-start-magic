@@ -1,31 +1,20 @@
 
 
-## Plano: Redesign das Métricas do Relatório de Lucro
+## Plano: Ocultar nome interno do gateway para usuários
 
-Substituir o gráfico de barras horizontais (Recharts) por um **ranking visual com cards individuais** por revendedor — mais moderno e legível.
+### Problema
+No `RevendedorPainel.tsx` (linha 2346), quando o revendedor gera um PIX, aparece `via PixGo`, `via PushinPay`, etc. Usuários normais não devem ver o nome interno do gateway — deve aparecer apenas **"via Pix"**.
 
-### O que muda
+### Locais encontrados
+| Arquivo | Linha | Contexto | Visível para |
+|---|---|---|---|
+| `RevendedorPainel.tsx` | 2346 | `via {pixData.gateway}` na tela de pagamento PIX | Revendedores/usuários |
+| `AdminDashboard.tsx` | 2356-2368 | Modal "Detalhes do Depósito" com badge do gateway | Apenas admin ✅ |
 
-**1. Substituir o BarChart por um Ranking Visual** (linhas 3260-3279)
-- Remover o `<BarChart>` do Recharts
-- Criar um ranking estilo "leaderboard" com cards individuais para cada revendedor (top 15)
-- Cada card mostra:
-  - Posição (#1, #2, #3 com medalhas dourada/prata/bronze)
-  - Nome do revendedor
-  - Barra de progresso proporcional ao maior lucro (visual de preenchimento)
-  - Valores de Vendas e Lucro lado a lado
-  - Badge de margem (%)
-- Top 3 com destaque visual (borda gradiente, fundo mais vibrante)
+O AdminDashboard é exclusivo de admins, então os nomes técnicos (PixGo, PushinPay, etc.) podem permanecer lá.
 
-**2. Summary Cards — Mais visuais** (linhas 3238-3258)
-- Adicionar mini barra de progresso colorida sob cada KPI
-- Valor do lucro com cor condicional (verde positivo, vermelho negativo)
-- Ícones com fundo mais vibrante
-
-### Arquivo
-- `src/pages/Principal.tsx` — seção `view === "relatorios"`, linhas ~3238-3279
-
-### Segurança
-- Apenas alterações visuais no JSX/CSS
-- Nenhuma modificação em lógica de dados, queries ou estado
+### Alteração
+**`src/pages/RevendedorPainel.tsx` (linha 2346)**
+- Trocar `via {pixData.gateway}` por `via Pix`
+- Simples e direto — o método de pagamento é sempre PIX, independente do gateway interno.
 
