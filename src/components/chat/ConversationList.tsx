@@ -106,7 +106,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
       {pinned.map(renderItem)}
       {pinned.length > 0 && regular.length > 0 && (
         <div className="px-4 py-2">
