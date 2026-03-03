@@ -175,23 +175,28 @@ export function useChatMessages(conversationId: string | null) {
   const [loading, setLoading] = useState(true);
   const initialLoadDone = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevConversationId = useRef<string | null>(null);
+  const activeConversationRef = useRef<string | null>(null);
 
-  // Reset on conversation change - only show loading on first ever load
+  // Reset on conversation change
   useEffect(() => {
-    if (prevConversationId.current !== conversationId) {
-      prevConversationId.current = conversationId;
-      initialLoadDone.current = false;
-      // Don't clear messages immediately - let new ones replace them
-      if (!conversationId) {
-        setMessages([]);
-        setLoading(false);
-      }
+    activeConversationRef.current = conversationId;
+    initialLoadDone.current = false;
+    setMessages([]);
+    setLoading(true);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    if (!conversationId) {
+      setLoading(false);
     }
   }, [conversationId]);
 
   const fetchMessages = useCallback(async () => {
     if (!conversationId) { setMessages([]); setLoading(false); return; }
+    // Guard against stale fetches
+    if (activeConversationRef.current !== conversationId) return;
+
     const { data, error } = await supabase
       .from("chat_messages")
       .select("*")
@@ -199,6 +204,8 @@ export function useChatMessages(conversationId: string | null) {
       .order("created_at", { ascending: true })
       .limit(200);
 
+    // Check again after async — conversation may have changed
+    if (activeConversationRef.current !== conversationId) return;
     if (error) { setLoading(false); return; }
 
     const msgIds = (data || []).map((m: any) => m.id);
@@ -228,6 +235,9 @@ export function useChatMessages(conversationId: string | null) {
         .eq("role", "admin");
       (roles || []).forEach((r: any) => adminIds.add(r.user_id));
     }
+
+    // Final stale check before setting state
+    if (activeConversationRef.current !== conversationId) return;
 
     const msgs = (data || []).map((m: any) => ({
       ...m,
@@ -261,7 +271,6 @@ export function useChatMessages(conversationId: string | null) {
           .update({ is_read: true, read_at: new Date().toISOString() })
           .in("id", unreadIds);
 
-        // Insert read receipts for each message
         const readReceipts = unreadIds.map((msgId: string) => ({
           message_id: msgId,
           user_id: user.id,
@@ -292,20 +301,15 @@ export function useChatMessages(conversationId: string | null) {
       }, () => { debouncedFetch(); })
       .subscribe();
 
-    // Separate channel for reactions - poll on message changes only
+    // Separate channel for reactions
     const reactionsChannel = supabase
       .channel(`chat-reactions-${conversationId}`)
       .on("postgres_changes", {
         event: "*", schema: "public", table: "chat_reactions",
       }, (payload: any) => {
-        // Only refetch if the reaction is for a message in this conversation
         const messageId = payload.new?.message_id || payload.old?.message_id;
         if (messageId) {
-          // Check if message belongs to current conversation
-          const belongsToConversation = messages.some(m => m.id === messageId);
-          if (belongsToConversation) {
-            debouncedFetch();
-          }
+          debouncedFetch();
         }
       })
       .subscribe();
@@ -315,7 +319,7 @@ export function useChatMessages(conversationId: string | null) {
       supabase.removeChannel(reactionsChannel);
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [conversationId, debouncedFetch, messages]);
+  }, [conversationId, debouncedFetch]);
 
   const sendMessage = useCallback(async (content: string, type = "text", audioUrl?: string, imageUrl?: string, replyToId?: string) => {
     if (!conversationId || !user) return;
