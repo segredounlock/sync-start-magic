@@ -45,8 +45,16 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
     const audio = audioRef.current;
     if (!audio) return;
     const updateDuration = () => {
-      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
-        setDuration(audio.duration);
+      const rawDuration = audio.duration;
+      const seekableDuration = audio.seekable && audio.seekable.length > 0
+        ? audio.seekable.end(audio.seekable.length - 1)
+        : 0;
+      const resolvedDuration = (rawDuration && isFinite(rawDuration) && rawDuration > 0)
+        ? rawDuration
+        : seekableDuration;
+
+      if (resolvedDuration && isFinite(resolvedDuration) && resolvedDuration > 0) {
+        setDuration(resolvedDuration);
       }
     };
     const onTime = () => {
@@ -143,7 +151,7 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
           })}
         </div>
         <span className={`text-[10px] tabular-nums ${isOwn ? "text-white/50" : "text-muted-foreground/70"}`}>
-          {playing ? fmt(currentTime) : fmt(duration)} 
+          {fmt(currentTime)} / {fmt(duration)} 
         </span>
       </div>
     </div>
