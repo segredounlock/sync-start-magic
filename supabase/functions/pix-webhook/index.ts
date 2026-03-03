@@ -222,6 +222,31 @@ Deno.serve(async (req) => {
         const txMeta = (tx.metadata as Record<string, unknown>) || {};
         const saldoTipo = (txMeta.saldo_tipo as string) || "revenda";
 
+        // Load system config for fees
+        const { data: feeConfigRows } = await supabase
+          .from("system_config")
+          .select("key, value")
+          .in("key", ["taxaTipo", "taxaValor"]);
+        const feeConfig: Record<string, string> = {};
+        feeConfigRows?.forEach((r: { key: string; value: string | null }) => {
+          feeConfig[r.key] = r.value || "";
+        });
+
+        // Calculate fee
+        let fee = 0;
+        const taxaTipo = feeConfig.taxaTipo || "fixo";
+        const taxaValor = Number((feeConfig.taxaValor || "0").replace(",", ".")) || 0;
+        if (taxaValor > 0) {
+          if (taxaTipo === "percentual") {
+            fee = Number(tx.amount) * (taxaValor / 100);
+          } else {
+            fee = taxaValor;
+          }
+          fee = Math.round(fee * 100) / 100; // round to 2 decimal places
+        }
+
+        const creditAmount = Math.max(0, Number(tx.amount) - fee);
+
         // Credit user balance
         const { data: saldo } = await supabase
           .from("saldos")
@@ -231,7 +256,7 @@ Deno.serve(async (req) => {
           .single();
 
         const currentBalance = saldo?.valor || 0;
-        const newBalance = currentBalance + Number(tx.amount);
+        const newBalance = currentBalance + creditAmount;
 
         await supabase
           .from("saldos")
@@ -239,8 +264,17 @@ Deno.serve(async (req) => {
           .eq("user_id", tx.user_id)
           .eq("tipo", saldoTipo);
 
+        // Store fee info in transaction metadata
+        if (fee > 0) {
+          const feeUpdatedMeta = { ...updatedMeta, fee_applied: fee, fee_type: taxaTipo, fee_rate: taxaValor, credited_amount: creditAmount };
+          await supabase
+            .from("transactions")
+            .update({ metadata: feeUpdatedMeta })
+            .eq("id", tx.id);
+        }
+
         console.log(
-          `Balance updated (${saldoTipo}): ${currentBalance} -> ${newBalance} for user ${tx.user_id}`
+          `Balance updated (${saldoTipo}): ${currentBalance} -> ${newBalance} for user ${tx.user_id} (fee: R$${fee.toFixed(2)})`
         );
 
         // ===== TELEGRAM NOTIFICATION =====
@@ -285,7 +319,8 @@ Deno.serve(async (req) => {
             const nome = profile.nome || "Usuário";
             const valorFmt = Number(tx.amount).toFixed(2).replace(".", ",");
             const saldoFmt = newBalance.toFixed(2).replace(".", ",");
-            const msg = `✅ <b>Pagamento Confirmado!</b>\n\n💰 Valor: <b>R$ ${valorFmt}</b>\n💳 Novo saldo: <b>R$ ${saldoFmt}</b>\n👤 ${nome}\n\n🎉 Saldo creditado com sucesso!`;
+            const feeNote = fee > 0 ? `\n💸 Taxa: <b>R$ ${fee.toFixed(2).replace(".", ",")}</b>\n💵 Creditado: <b>R$ ${creditAmount.toFixed(2).replace(".", ",")}</b>` : "";
+            const msg = `✅ <b>Pagamento Confirmado!</b>\n\n💰 Valor: <b>R$ ${valorFmt}</b>${feeNote}\n💳 Novo saldo: <b>R$ ${saldoFmt}</b>\n👤 ${nome}\n\n🎉 Saldo creditado com sucesso!`;
 
             const tgResp = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
               method: "POST",

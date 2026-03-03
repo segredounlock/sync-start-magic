@@ -540,6 +540,27 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Enforce max pending PIX limit
+    const maxPendingPix = Number(config.maxPendingPix || 0);
+    if (maxPendingPix > 0) {
+      const { count, error: countErr } = await adminClient
+        .from("transactions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("status", "pending")
+        .eq("type", "deposit");
+
+      if (!countErr && (count || 0) >= maxPendingPix) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Você já possui ${count} PIX pendente(s). Aguarde a confirmação antes de gerar outro.`,
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     const reference = `DEP_${userId.substring(0, 8)}_${Date.now()}`;
 
     // Build webhook URL
