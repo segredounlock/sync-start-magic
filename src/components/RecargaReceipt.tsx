@@ -29,6 +29,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
   const [sharing, setSharing] = useState(false);
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [imageReady, setImageReady] = useState(false);
+  const [preparingImage, setPreparingImage] = useState(false);
   const r = recarga;
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -43,12 +44,18 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
     if (!open) {
       setCachedBlob(null);
       setImageReady(false);
+      setPreparingImage(false);
       return;
     }
 
-    // Small delay to let the modal render fully
+    setPreparingImage(true);
+
+    // Pequeno atraso para garantir render completo sem atrasar demais o pré-carregamento
     const timer = setTimeout(async () => {
-      if (!receiptRef.current) return;
+      if (!receiptRef.current) {
+        setPreparingImage(false);
+        return;
+      }
       try {
         // Get the computed background color for the receipt
         const computedBg = getComputedStyle(receiptRef.current).backgroundColor;
@@ -93,8 +100,10 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
       } catch (e) {
         console.warn("Pre-capture failed:", e);
         setImageReady(false);
+      } finally {
+        setPreparingImage(false);
       }
-    }, 500);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [open]);
@@ -102,6 +111,8 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
   const generateBlob = async (): Promise<Blob | null> => {
     if (cachedBlob) return cachedBlob;
     if (!receiptRef.current) return null;
+
+    setPreparingImage(true);
     try {
       const computedBg = getComputedStyle(receiptRef.current).backgroundColor;
       const canvas = await html2canvas(receiptRef.current, {
@@ -138,23 +149,27 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
     } catch (e) {
       console.warn("Image generation failed:", e);
       return null;
+    } finally {
+      setPreparingImage(false);
     }
   };
 
   const handleShare = async () => {
+    // Em alguns navegadores móveis, compartilhar arquivo só funciona com gesto direto.
+    // Se ainda não estiver pronto, evitamos falha na primeira tentativa.
+    if (!imageReady || !cachedBlob) {
+      toast.info("Preparando imagem do comprovante...");
+      return;
+    }
+
     setSharing(true);
     const text = buildText();
     try {
-      // Always try to get the image (cached or generate on demand)
-      const blob = await generateBlob();
-
-      if (blob) {
-        const file = new File([blob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: "Comprovante de Recarga", text, files: [file] });
-          setSharing(false);
-          return;
-        }
+      const file = new File([cachedBlob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "Comprovante de Recarga", text, files: [file] });
+        setSharing(false);
+        return;
       }
 
       // Fallback: share text only
@@ -295,10 +310,10 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
             <div className="flex gap-3 mt-4 px-2">
               <button
                 onClick={handleShare}
-                disabled={sharing}
+                disabled={sharing || preparingImage || !imageReady}
                 className="flex-1 py-3 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-60"
               >
-                {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Gerando..." : "Compartilhar"}
+                {sharing || preparingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Compartilhando..." : preparingImage || !imageReady ? "Preparando imagem..." : "Compartilhar"}
               </button>
               <button
                 onClick={onClose}
