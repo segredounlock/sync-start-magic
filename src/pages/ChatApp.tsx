@@ -26,6 +26,15 @@ export default function ChatApp() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Block pinch-zoom inside chat
+  useEffect(() => {
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault();
+    };
+    document.addEventListener("touchmove", preventZoom, { passive: false });
+    return () => document.removeEventListener("touchmove", preventZoom);
+  }, []);
+
   useEffect(() => {
     supabase.rpc("get_chat_enabled" as any)
       .then(({ data }) => { setChatEnabled(data === true); });
@@ -64,7 +73,7 @@ export default function ChatApp() {
   // Mobile: full screen chat experience
   if (isMobileView) {
     return (
-      <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+      <div className="h-[100dvh] bg-background flex flex-col overflow-hidden" style={{ touchAction: "pan-y", userSelect: "none", WebkitUserSelect: "none" }}>
         <AnimatePresence mode="wait">
           {activeConversationId ? (
             <motion.div key="chat" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="flex-1 flex flex-col min-h-0">
@@ -115,7 +124,7 @@ export default function ChatApp() {
 
   // Desktop: full screen side-by-side
   return (
-    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden" style={{ touchAction: "pan-y", userSelect: "none", WebkitUserSelect: "none" }}>
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
