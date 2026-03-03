@@ -44,15 +44,28 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onTime = () => setCurrentTime(audio.currentTime);
-    const onMeta = () => setDuration(audio.duration || 0);
+    const updateDuration = () => {
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration);
+      }
+    };
+    const onTime = () => {
+      setCurrentTime(audio.currentTime);
+      updateDuration(); // Also try to get duration during playback
+    };
     const onEnd = () => { setPlaying(false); setCurrentTime(0); };
     audio.addEventListener("timeupdate", onTime);
-    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("durationchange", updateDuration);
+    audio.addEventListener("canplay", updateDuration);
     audio.addEventListener("ended", onEnd);
+    // Try immediately in case already loaded
+    updateDuration();
     return () => {
       audio.removeEventListener("timeupdate", onTime);
-      audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("durationchange", updateDuration);
+      audio.removeEventListener("canplay", updateDuration);
       audio.removeEventListener("ended", onEnd);
     };
   }, []);
