@@ -439,13 +439,23 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
 
             {/* Image content */}
             {message.type === "image" && message.image_url && (
-              <img
-                src={message.image_url}
-                alt=""
-                className="max-w-[250px] max-h-[300px] rounded-xl cursor-pointer hover:brightness-90 transition-all object-cover"
-                onClick={(e) => { e.stopPropagation(); setShowImageLightbox(true); }}
-                loading="lazy"
-              />
+              <div
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                onTouchStartCapture={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={message.image_url}
+                  alt=""
+                  className="max-w-[250px] max-h-[300px] rounded-xl cursor-pointer hover:brightness-90 transition-all object-cover"
+                  onClick={(e) => { e.stopPropagation(); setShowImageLightbox(true); }}
+                  onTouchEnd={(e) => {
+                    // Fallback for mobile: if onClick doesn't fire due to drag interception
+                    e.stopPropagation();
+                    setShowImageLightbox(true);
+                  }}
+                  loading="lazy"
+                />
+              </div>
             )}
 
             {/* Date, Time & status */}
