@@ -10,8 +10,9 @@ import {
   ChevronRight, RefreshCw, Copy, Check,
   ArrowLeft, Shield, LogOut, Camera, Loader2,
   Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
-  AlertTriangle, CheckCircle2, XCircle
+  AlertTriangle, CheckCircle2, XCircle, MessageCircle
 } from "lucide-react";
+import { ChatPage } from "@/components/chat/ChatPage";
 
 declare global {
   interface Window {
@@ -89,7 +90,7 @@ function useTelegramTheme() {
   }, []);
 }
 
-type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status";
+type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat";
 
 interface ValorItem { valueId: string; cost: number; value?: number; label: string; }
 interface Operadora { id: string; nome: string; carrierId: string; valores: ValorItem[]; }
@@ -685,7 +686,7 @@ export default function TelegramMiniApp() {
 
   const sectionTitle: Record<Section, string> = {
     recarga: "Nova Recarga", deposito: "Adicionar Saldo", historico: "Histórico de Pedidos",
-    extrato: "Extrato de Depósitos", conta: "Minha Conta", status: "Status do Sistema",
+    extrato: "Extrato de Depósitos", conta: "Minha Conta", status: "Status do Sistema", chat: "Bate-papo",
   };
 
   const initials = userName ? userName.slice(0, 2).toUpperCase() : "US";
@@ -1710,6 +1711,19 @@ export default function TelegramMiniApp() {
               ))}
             </motion.div>
           )}
+          {/* ── Chat ── */}
+          {section === "chat" && userId && (
+            <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-[calc(100vh-140px)]">
+              <ChatPage onBack={() => setSection("recarga")} />
+            </motion.div>
+          )}
+          {section === "chat" && !userId && (
+            <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center h-64 text-center">
+              <MessageCircle className="w-12 h-12 mb-3" style={st.hint} />
+              <p className="text-sm font-semibold" style={st.text}>Faça login para acessar o chat</p>
+              <p className="text-xs mt-1" style={st.hint}>Acesse sua conta para conversar</p>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
@@ -1720,8 +1734,8 @@ export default function TelegramMiniApp() {
           {([
             { id: "recarga" as Section, icon: Smartphone, label: "Recarga" },
             { id: "deposito" as Section, icon: Plus, label: "Saldo" },
+            { id: "chat" as Section, icon: MessageCircle, label: "Chat" },
             { id: "historico" as Section, icon: Clock, label: "Pedidos" },
-            { id: "extrato" as Section, icon: Landmark, label: "Extrato" },
             { id: "conta" as Section, icon: User, label: "Conta" },
           ]).map((item) => {
             const isActive = section === item.id;
@@ -1729,6 +1743,7 @@ export default function TelegramMiniApp() {
             const iconAnimations: Record<string, any> = {
               recarga: { rotate: [0, -15, 15, -10, 0], scale: [1, 1.15, 1], transition: { duration: 0.5, ease: "easeInOut" } },
               deposito: { scale: [1, 1.3, 1], rotate: [0, 90, 180, 270, 360], transition: { duration: 0.6, ease: "easeInOut" } },
+              chat: { scale: [1, 1.2, 1], y: [0, -4, 0], transition: { duration: 0.4, ease: "easeOut" } },
               historico: { rotate: [0, 360], transition: { duration: 0.8, ease: "easeInOut" } },
               extrato: { y: [0, -6, 0], scale: [1, 1.1, 1], transition: { duration: 0.4, ease: "easeOut" } },
               conta: { scale: [1, 1.2, 0.9, 1.1, 1], transition: { duration: 0.5, type: "spring" } },
@@ -1736,6 +1751,7 @@ export default function TelegramMiniApp() {
             const continuousAnimations: Record<string, any> = {
               recarga: { y: [0, -3, 0], transition: { repeat: Infinity, duration: 1.8, ease: "easeInOut" } },
               deposito: { rotate: [0, 8, -8, 0], transition: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } },
+              chat: { y: [0, -2, 0], scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               historico: { rotate: [0, 360], transition: { repeat: Infinity, duration: 4, ease: "linear" } },
               extrato: { y: [0, -2, 0, 2, 0], transition: { repeat: Infinity, duration: 2.2, ease: "easeInOut" } },
               conta: { scale: [1, 1.08, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
