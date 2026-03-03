@@ -1526,33 +1526,48 @@ export default function TelegramMiniApp() {
 
               {recargas.length === 0 ? (
                 <p className="text-center py-12 text-sm" style={st.hint}>Nenhuma recarga encontrada</p>
-              ) : recargas.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => { setViewingReceipt(r); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
-                  className="w-full rounded-xl p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
-                  style={{ ...st.secondaryBg, border: st.borderSub }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={st.bg}>
-                      <Smartphone className="w-4 h-4" style={st.hint} />
+              ) : (() => {
+                let lastDate = "";
+                return recargas.map((r) => {
+                  const d = new Date(r.created_at);
+                  const dateLabel = d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                  const showSep = dateLabel !== lastDate;
+                  lastDate = dateLabel;
+                  return (
+                    <div key={r.id}>
+                      {showSep && (
+                        <div className="flex justify-center my-2">
+                          <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => { setViewingReceipt(r); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                        className="w-full rounded-xl p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+                        style={{ ...st.secondaryBg, border: st.borderSub }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={st.bg}>
+                            <Smartphone className="w-4 h-4" style={st.hint} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm" style={st.text}>{r.operadora || "—"}</p>
+                            <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex items-center gap-2">
+                          <div>
+                            <p className="font-semibold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
+                            <p className="text-[10px]" style={{ color: r.status === "completed" ? "#4ade80" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
+                              {r.status === "completed" ? "✅ Concluída" : r.status === "pending" ? "⏳ Processando" : "❌ Falha"}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />
+                        </div>
+                      </button>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm" style={st.text}>{r.operadora || "—"}</p>
-                      <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
-                    </div>
-                  </div>
-                  <div className="text-right flex items-center gap-2">
-                    <div>
-                      <p className="font-semibold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
-                      <p className="text-[10px]" style={{ color: r.status === "completed" ? "#4ade80" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
-                        {r.status === "completed" ? "✅ Concluída" : r.status === "pending" ? "⏳ Processando" : "❌ Falha"}
-                      </p>
-                    </div>
-                    <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />
-                  </div>
-                </button>
-              ))}
+                  );
+                });
+              })()}
               <button onClick={async () => { setRefreshingRecargas(true); await loadRecargas(); setRefreshingRecargas(false); }} className="w-full text-center text-sm transition py-2 flex items-center justify-center gap-1" style={st.hint}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshingRecargas ? "animate-spin" : ""}`} /> Atualizar
               </button>
@@ -1564,51 +1579,64 @@ export default function TelegramMiniApp() {
             <motion.div key="extrato" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-2">
               {transactions.length === 0 ? (
                 <p className="text-center py-12 text-sm" style={st.hint}>Nenhum depósito encontrado</p>
-              ) : transactions.map((t) => {
-                const isPending = t.status === "pending";
-                const hasQr = isPending && t.metadata?.qr_code && t.metadata.qr_code !== "yes" && t.metadata.qr_code !== "no";
-                return (
-                  <button
-                    key={t.id}
-                    className="w-full rounded-xl p-3 flex items-center justify-between text-left"
-                    style={{ ...st.secondaryBg, border: st.borderSub }}
-                    onClick={() => {
-                      if (hasQr) {
-                        setPixData({
-                          gateway: t.metadata?.gateway || "",
-                          payment_id: t.payment_id || "",
-                          qr_code: t.metadata.qr_code,
-                          qr_code_base64: null,
-                          payment_link: null,
-                          amount: t.amount,
-                          status: "pending",
-                        });
-                        setSection("deposito");
-                        tgWebApp?.HapticFeedback?.impactOccurred("light");
-                      }
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, #4ade80 10%, transparent)" }}>
-                        <Landmark className="w-4 h-4" style={st.green} />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm" style={st.text}>Depósito PIX</p>
-                        <p className="text-xs" style={st.hint}>{new Date(t.created_at).toLocaleDateString("pt-BR")} {new Date(t.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
-                      </div>
+              ) : (() => {
+                let lastDate = "";
+                return transactions.map((t) => {
+                  const d = new Date(t.created_at);
+                  const dateLabel = d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                  const showSep = dateLabel !== lastDate;
+                  lastDate = dateLabel;
+                  const isPending = t.status === "pending";
+                  const hasQr = isPending && t.metadata?.qr_code && t.metadata.qr_code !== "yes" && t.metadata.qr_code !== "no";
+                  return (
+                    <div key={t.id}>
+                      {showSep && (
+                        <div className="flex justify-center my-2">
+                          <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
+                        </div>
+                      )}
+                      <button
+                        className="w-full rounded-xl p-3 flex items-center justify-between text-left"
+                        style={{ ...st.secondaryBg, border: st.borderSub }}
+                        onClick={() => {
+                          if (hasQr) {
+                            setPixData({
+                              gateway: t.metadata?.gateway || "",
+                              payment_id: t.payment_id || "",
+                              qr_code: t.metadata.qr_code,
+                              qr_code_base64: null,
+                              payment_link: null,
+                              amount: t.amount,
+                              status: "pending",
+                            });
+                            setSection("deposito");
+                            tgWebApp?.HapticFeedback?.impactOccurred("light");
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, #4ade80 10%, transparent)" }}>
+                            <Landmark className="w-4 h-4" style={st.green} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm" style={st.text}>Depósito PIX</p>
+                            <p className="text-xs" style={st.hint}>{d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex items-center gap-2">
+                          <div>
+                            <p className="font-semibold text-sm" style={st.green}>+{formatCurrency(t.amount)}</p>
+                            <p className="text-[10px]" style={{ color: (t.status === "approved" || t.status === "completed") ? "#4ade80" : isPending ? "#facc15" : "var(--tg-destructive)" }}>
+                              {(t.status === "approved" || t.status === "completed") ? "✅ Confirmado" : isPending ? "⏳ Processando" : "❌ Falha"}
+                            </p>
+                          </div>
+                          {hasQr && <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />}
+                        </div>
+                      </button>
                     </div>
-                    <div className="text-right flex items-center gap-2">
-                      <div>
-                        <p className="font-semibold text-sm" style={st.green}>+{formatCurrency(t.amount)}</p>
-                        <p className="text-[10px]" style={{ color: (t.status === "approved" || t.status === "completed") ? "#4ade80" : isPending ? "#facc15" : "var(--tg-destructive)" }}>
-                          {(t.status === "approved" || t.status === "completed") ? "✅ Confirmado" : isPending ? "⏳ Processando" : "❌ Falha"}
-                        </p>
-                      </div>
-                      {hasQr && <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />}
-                    </div>
-                  </button>
-                );
-              })}
+                  );
+                });
+              })()}
               <button onClick={async () => { setRefreshingExtrato(true); await loadTransactions(); setRefreshingExtrato(false); }} className="w-full text-center text-sm transition py-2 flex items-center justify-center gap-1" style={st.hint}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshingExtrato ? "animate-spin" : ""}`} /> Atualizar
               </button>

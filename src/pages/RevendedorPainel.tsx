@@ -1542,45 +1542,58 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     ) : null}
 
                     {/* Mobile cards */}
-                    <div className="md:hidden space-y-3">
+                    <div className="md:hidden space-y-2">
                       {filtered.length === 0 ? (
                         <p className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</p>
-                      ) : filtered.map((r, i) => {
-                        const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
-                        const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
-                        return (
-                          <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                            className="glass-card rounded-xl p-4 cursor-pointer hover:bg-muted/30 active:scale-[0.98] transition-all"
-                            onClick={() => setSelectedRecarga(r)}>
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                                  <Smartphone className="h-5 w-5 text-muted-foreground" />
+                      ) : (() => {
+                        let lastDate = "";
+                        return filtered.map((r, i) => {
+                          const dateLabel = new Date(r.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                          const showSep = dateLabel !== lastDate;
+                          lastDate = dateLabel;
+                          const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
+                          const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                          return (
+                            <div key={r.id}>
+                              {showSep && (
+                                <div className="flex justify-center my-2">
+                                  <span className="text-[10px] bg-muted/60 text-muted-foreground px-3 py-0.5 rounded-full font-medium">{dateLabel}</span>
                                 </div>
-                                <div>
-                                  <p className="font-semibold text-foreground text-sm">{r.operadora || "Operadora"}</p>
-                                  <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
+                              )}
+                              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                                className="glass-card rounded-xl p-4 cursor-pointer hover:bg-muted/30 active:scale-[0.98] transition-all"
+                                onClick={() => setSelectedRecarga(r)}>
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                                      <Smartphone className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-foreground text-sm">{r.operadora || "Operadora"}</p>
+                                      <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
+                                    </div>
+                                  </div>
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
                                 </div>
-                              </div>
-                              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                                <div className="flex items-center justify-between pt-3 border-t border-border">
+                                  <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
+                                  <div className="flex items-center gap-2">
+                                    {(r.status === "completed" || r.status === "concluida") && (
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setReceiptRecarga(r); }}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 text-success text-[10px] font-semibold hover:bg-success/20 transition-colors"
+                                      >
+                                        <FileText className="h-3 w-3" /> Comprovante
+                                      </button>
+                                    )}
+                                    <span className="font-bold font-mono text-foreground">{fmt(r.valor)}</span>
+                                  </div>
+                                </div>
+                              </motion.div>
                             </div>
-                            <div className="flex items-center justify-between pt-3 border-t border-border">
-                              <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
-                              <div className="flex items-center gap-2">
-                                {(r.status === "completed" || r.status === "concluida") && (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setReceiptRecarga(r); }}
-                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 text-success text-[10px] font-semibold hover:bg-success/20 transition-colors"
-                                  >
-                                    <FileText className="h-3 w-3" /> Comprovante
-                                  </button>
-                                )}
-                                <span className="font-bold font-mono text-foreground">{fmt(r.valor)}</span>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                          );
+                        });
+                      })()}
                     </div>
                     {/* Desktop table */}
                     <div className="hidden md:block glass-card rounded-xl overflow-hidden">
@@ -1723,34 +1736,47 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {tab === "extrato" && (
             <>
               {/* Mobile cards */}
-              <div className="md:hidden space-y-3">
+              <div className="md:hidden space-y-2">
                 {transLoading ? (
                   <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
                 ) : transactions.length === 0 ? (
                   <p className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</p>
-                ) : transactions.map((t, i) => {
-                  const isDeposit = t.type === "deposit" || t.type === "deposito";
-                  const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
-                  const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
-                  return (
-                    <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                      className="glass-card rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="font-semibold text-foreground text-sm capitalize">{isDeposit ? "Depósito" : t.type}</p>
-                          <p className="text-xs text-muted-foreground">PIX</p>
-                        </div>
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                ) : (() => {
+                  let lastDate = "";
+                  return transactions.map((t, i) => {
+                    const dateLabel = new Date(t.created_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase();
+                    const showSep = dateLabel !== lastDate;
+                    lastDate = dateLabel;
+                    const isDeposit = t.type === "deposit" || t.type === "deposito";
+                    const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
+                    const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                    return (
+                      <div key={t.id}>
+                        {showSep && (
+                          <div className="flex justify-center my-2">
+                            <span className="text-[10px] bg-muted/60 text-muted-foreground px-3 py-0.5 rounded-full font-medium">{dateLabel}</span>
+                          </div>
+                        )}
+                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                          className="glass-card rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <p className="font-semibold text-foreground text-sm capitalize">{isDeposit ? "Depósito" : t.type}</p>
+                              <p className="text-xs text-muted-foreground">PIX</p>
+                            </div>
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                          </div>
+                          <div className="flex items-center justify-between pt-3 border-t border-border">
+                            <span className="text-xs text-muted-foreground">{fmtDate(t.created_at)}</span>
+                            <span className={`font-bold font-mono ${isDeposit ? "text-success" : "text-foreground"}`}>
+                              {isDeposit ? "+" : "-"}{fmt(t.amount)}
+                            </span>
+                          </div>
+                        </motion.div>
                       </div>
-                      <div className="flex items-center justify-between pt-3 border-t border-border">
-                        <span className="text-xs text-muted-foreground">{fmtDate(t.created_at)}</span>
-                        <span className={`font-bold font-mono ${isDeposit ? "text-success" : "text-foreground"}`}>
-                          {isDeposit ? "+" : "-"}{fmt(t.amount)}
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
               {/* Desktop table */}
               <div className="hidden md:block glass-card rounded-xl overflow-hidden">
