@@ -10,14 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import JSZip from "jszip";
 
-const TABLES = [
-  "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
-  "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
-  "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
-  "admin_notifications", "banners", "polls", "poll_votes",
-  "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
-  "push_subscriptions", "update_history",
-];
+// Tables are now discovered dynamically by the edge functions
+// This constant is only used for display fallback
+const TABLES_LABEL = "dinâmico";
 
 type TabKey = "dados" | "github" | "atualizacao";
 
@@ -311,7 +306,7 @@ export default function BackupSection() {
         include_database: includeDb,
         include_source: includeSource,
         source_files: includeSource ? SOURCE_PATHS.length : 0,
-        tables: includeDb ? TABLES : [],
+        tables: "dynamic",
       }, null, 2));
 
       setExportStage("Gerando ZIP...");
@@ -400,13 +395,14 @@ export default function BackupSection() {
         setUpdateExportProgress(Math.round((currentStep / totalSteps) * 100));
       }
 
-      // 3. Generate update manifest
+      // 3. Generate update manifest with SOURCE_PATHS included for dynamic discovery
       const version = currentVersion || "1.0.0";
       zip.file("update-manifest.json", JSON.stringify({
         version,
         created_at: new Date().toISOString(),
-        tables: TABLES,
+        tables: "dynamic",
         source_files: SOURCE_PATHS.length,
+        source_paths: SOURCE_PATHS,
         type: "full-update",
       }, null, 2));
 
@@ -503,6 +499,15 @@ export default function BackupSection() {
         setUpdateImportProgress(80);
       }
 
+      // Save source_paths from manifest to system_config for dynamic discovery on this site
+      if (manifest.source_paths && Array.isArray(manifest.source_paths)) {
+        setUpdateImportStage("Salvando manifesto de arquivos...");
+        await supabase.from("system_config").upsert(
+          { key: "source_paths_manifest", value: JSON.stringify(manifest.source_paths) },
+          { onConflict: "key" }
+        );
+      }
+
       // Update system version
       const previousVersion = currentVersion || "1.0.0";
       const newVersion = incrementVersion(manifest.version);
@@ -579,7 +584,7 @@ export default function BackupSection() {
         </div>
         <div>
           <h2 className="text-lg font-bold text-foreground">Backup & Sync</h2>
-          <p className="text-xs text-muted-foreground">{TABLES.length} tabelas · {new Date().toLocaleDateString("pt-BR")}</p>
+          <p className="text-xs text-muted-foreground">Tabelas dinâmicas · {new Date().toLocaleDateString("pt-BR")}</p>
         </div>
       </div>
 
@@ -648,11 +653,9 @@ export default function BackupSection() {
                 <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Tabelas no backup</p>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {TABLES.map(t => (
-                  <span key={t} className="text-[10px] font-mono px-2 py-1 rounded-lg bg-white/[0.05] text-muted-foreground shadow-[inset_0_1px_0px_rgba(255,255,255,0.04)]">
-                    {t}
-                  </span>
-                ))}
+                <span className="text-[10px] font-mono px-2 py-1 rounded-lg bg-white/[0.05] text-muted-foreground shadow-[inset_0_1px_0px_rgba(255,255,255,0.04)]">
+                  🔄 Descoberta automática — todas as tabelas do schema public
+                </span>
               </div>
             </div>
 

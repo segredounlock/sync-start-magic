@@ -1004,6 +1004,12 @@ export type Database = {
     Functions: {
       get_chat_enabled: { Args: never; Returns: boolean }
       get_maintenance_mode: { Args: never; Returns: boolean }
+      get_public_tables: {
+        Args: never
+        Returns: {
+          table_name: string
+        }[]
+      }
       get_seasonal_theme: { Args: never; Returns: string }
       get_ticker_recargas: {
         Args: never

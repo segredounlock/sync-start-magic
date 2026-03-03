@@ -13,7 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify admin role
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
@@ -61,37 +60,51 @@ serve(async (req) => {
 
     const zip = new JSZip();
 
+    // Discover all public tables dynamically
+    let tables: string[] = [];
+    if (includeDatabase) {
+      const { data: tableRows, error: tableError } = await supabaseAdmin.rpc("get_public_tables");
+      if (tableError) {
+        console.error("Error discovering tables via RPC, using fallback query:", tableError.message);
+        // Fallback: try raw query via PostgREST isn't possible, so use a known list as last resort
+        tables = [];
+      } else {
+        tables = (tableRows || []).map((r: any) => r.table_name);
+      }
+
+      // If RPC didn't work or returned empty, try fetching from information_schema via a different approach
+      if (tables.length === 0) {
+        // Use supabaseAdmin to query each known table and discover dynamically
+        // As a robust fallback, list all tables we can successfully query
+        const candidateTables = [
+          "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
+          "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
+          "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
+          "admin_notifications", "banners", "polls", "poll_votes",
+          "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
+          "push_subscriptions", "update_history",
+        ];
+        for (const t of candidateTables) {
+          const { error } = await supabaseAdmin.from(t).select("id").limit(0);
+          if (!error) tables.push(t);
+        }
+      }
+    }
+
     // Metadata
     zip.file("backup-info.json", JSON.stringify({
-      version: "1.0",
+      version: "2.0",
       created_at: new Date().toISOString(),
       created_by: user.email,
       include_database: includeDatabase,
-      tables: includeDatabase ? [
-        "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
-        "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
-        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
-        "admin_notifications", "banners", "polls", "poll_votes",
-        "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
-        "push_subscriptions", "update_history"
-      ] : [],
+      tables: tables,
     }, null, 2));
 
-    if (includeDatabase) {
-      const tables = [
-        "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
-        "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
-        "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
-        "admin_notifications", "banners", "polls", "poll_votes",
-        "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
-        "push_subscriptions", "update_history"
-      ];
-
+    if (includeDatabase && tables.length > 0) {
       const dbFolder = zip.folder("database");
 
       for (const table of tables) {
         try {
-          // Fetch all rows in batches
           let allRows: any[] = [];
           let from = 0;
           const batchSize = 1000;
@@ -139,7 +152,6 @@ serve(async (req) => {
       }
     }
 
-    // Generate ZIP as base64
     const zipBlob = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 
     return new Response(zipBlob, {
