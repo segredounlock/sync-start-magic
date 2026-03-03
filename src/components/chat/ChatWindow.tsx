@@ -63,7 +63,15 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const stopTypingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch my name for typing indicator
+  // Clear reply/edit state when switching conversations
+  useEffect(() => {
+    setReplyTo(null);
+    setEditingMessage(null);
+    setText("");
+    setShowEmoji(false);
+    setShowAudioRecorder(false);
+  }, [conversationId]);
+
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle().then(({ data }) => {
