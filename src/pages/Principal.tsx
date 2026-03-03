@@ -39,44 +39,9 @@ import { styledToast as toast } from "@/lib/toast";
 import { unlockAudio, playCashRegisterSound } from "@/lib/sounds";
 import { useNavigate } from "react-router-dom";
 
-interface Revendedor {
-  id: string;
-  nome: string | null;
-  email: string | null;
-  active: boolean;
-  created_at: string;
-  saldo: number;
-  telefone: string | null;
-  telegram_username: string | null;
-  whatsapp_number: string | null;
-  isRevendedor: boolean;
-  role: "admin" | "revendedor" | "cliente" | "usuario" | "sem_role";
-  avatar_url: string | null;
-  verification_badge: string | null;
-}
-
-interface RecargaHistorico {
-  id: string;
-  user_id: string;
-  telefone: string;
-  operadora: string | null;
-  valor: number;
-  custo: number;
-  custo_api: number;
-  status: string;
-  created_at: string;
-}
+import type { Revendedor, RecargaHistorico, PricingRule } from "@/types";
 
 type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo";
-
-interface PricingRule {
-  id?: string;
-  operadora_id: string;
-  valor_recarga: number;
-  custo: number;
-  tipo_regra: "fixo" | "margem";
-  regra_valor: number;
-}
 
 type ReportPeriod = "hoje" | "7dias" | "mes" | "total";
 
@@ -995,7 +960,7 @@ export default function Principal() {
     });
     const completedToday = todayRecs.filter(r => r.status === "completed" || r.status === "concluida");
     const cobradoHoje = completedToday.reduce((s, r) => s + r.custo, 0);
-    const custoApiHoje = completedToday.reduce((s, r) => s + r.custo_api, 0);
+    const custoApiHoje = completedToday.reduce((s, r) => s + (r.custo_api || 0), 0);
     const lucroHoje = cobradoHoje - custoApiHoje;
     const receitaHoje = cobradoHoje;
 
@@ -1003,7 +968,7 @@ export default function Principal() {
     const mesStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const mesRecs = allRecargas.filter(r => r.created_at >= mesStart && (r.status === "completed" || r.status === "concluida"));
     const cobradoMes = mesRecs.reduce((s, r) => s + r.custo, 0);
-    const custoApiMes = mesRecs.reduce((s, r) => s + r.custo_api, 0);
+    const custoApiMes = mesRecs.reduce((s, r) => s + (r.custo_api || 0), 0);
     const lucroMes = cobradoMes - custoApiMes;
     const receitaMes = cobradoMes;
 
@@ -1030,7 +995,7 @@ export default function Principal() {
     // Total global (all time)
     const allCompleted = allRecargas.filter(r => r.status === "completed" || r.status === "concluida");
     const cobradoTotal = allCompleted.reduce((s, r) => s + r.custo, 0);
-    const custoApiTotal = allCompleted.reduce((s, r) => s + r.custo_api, 0);
+    const custoApiTotal = allCompleted.reduce((s, r) => s + (r.custo_api || 0), 0);
     const lucroTotal = cobradoTotal - custoApiTotal;
     const receitaTotal = cobradoTotal;
     const custoTotal = custoApiTotal;

@@ -95,9 +95,10 @@ function useTelegramTheme() {
 
 type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat";
 
+import type { Recarga } from "@/types";
+
 interface ValorItem { valueId: string; cost: number; value?: number; label: string; }
-interface Operadora { id: string; nome: string; carrierId: string; valores: ValorItem[]; }
-interface Recarga { id: string; telefone: string; valor: number; operadora: string | null; status: string; created_at: string; external_id?: string | null; }
+interface TgOperadora { id: string; nome: string; carrierId: string; valores: ValorItem[]; }
 
 export default function TelegramMiniApp() {
   useTelegramTheme();
@@ -194,8 +195,8 @@ export default function TelegramMiniApp() {
   const [loginError, setLoginError] = useState("");
 
   // Recarga
-  const [operadoras, setOperadoras] = useState<Operadora[]>([]);
-  const [selectedOp, setSelectedOp] = useState<Operadora | null>(null);
+  const [operadoras, setOperadoras] = useState<TgOperadora[]>([]);
+  const [selectedOp, setSelectedOp] = useState<TgOperadora | null>(null);
   const [selectedValor, setSelectedValor] = useState<ValorItem | null>(null);
   const [phone, setPhone] = useState("");
   const [clipboardPhone, setClipboardPhone] = useState<string | null>(null);
@@ -1195,7 +1196,7 @@ export default function TelegramMiniApp() {
                       <h2 className="text-lg font-bold" style={st.text}>{selectedOp.nome} — Valor</h2>
 
                       <div className="grid grid-cols-2 gap-3">
-                        {selectedOp.valores.sort((a, b) => a.cost - b.cost).map((v) => {
+                        {selectedOp.valores.sort((a: ValorItem, b: ValorItem) => a.cost - b.cost).map((v: ValorItem) => {
                           const faceValue = v.value || v.cost;
                           const discount = faceValue > v.cost ? Math.round(((faceValue - v.cost) / faceValue) * 100) : 0;
                           return (
