@@ -145,31 +145,27 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
     if (!text.trim() || sending) return;
     setSending(true);
     const currentText = text.trim();
+    const currentReplyToId = replyTo?.id || undefined;
     setText("");
     setShowEmoji(false);
 
-    // If editing, save the edit
-    if (editingMessage) {
-      const msgId = editingMessage.id;
-      const isAdminEdit = isUserAdmin && editingMessage.sender_id !== user?.id;
-      setEditingMessage(null);
-      try {
+    try {
+      if (editingMessage) {
+        const msgId = editingMessage.id;
+        const isAdminEdit = isUserAdmin && editingMessage.sender_id !== user?.id;
+        setEditingMessage(null);
         await editMessage(msgId, currentText, isAdminEdit);
-      } catch (err) {
-        console.error(err);
-        setText(currentText);
+      } else {
+        setReplyTo(null);
+        await sendMessage(currentText, "text", undefined, undefined, currentReplyToId);
       }
-    } else {
-      setReplyTo(null);
-      try {
-        await sendMessage(currentText, "text", undefined, undefined, replyTo?.id);
-      } catch (err) {
-        console.error(err);
-        setText(currentText);
-      }
+    } catch (err) {
+      console.error("Erro ao enviar mensagem:", err);
+      setText(currentText);
+    } finally {
+      setSending(false);
+      inputRef.current?.focus();
     }
-    setSending(false);
-    inputRef.current?.focus();
   };
 
   const handleStartEdit = (msg: ChatMessage) => {
