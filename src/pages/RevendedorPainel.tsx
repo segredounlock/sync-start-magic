@@ -1670,6 +1670,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <span className="text-sm text-muted-foreground">Custo (debitado)</span>
                             <span className="text-sm font-mono font-semibold text-foreground">{fmt(r.custo)}</span>
                           </div>
+                          {r.custo > 0 && r.custo_api > 0 && (
+                            <div className="flex justify-between items-center py-2.5 px-3 rounded-xl bg-success/10 border border-success/20">
+                              <span className="text-sm font-semibold text-success">Lucro</span>
+                              <span className="text-sm font-mono font-bold text-success">+{fmt(r.custo - r.custo_api)}</span>
+                            </div>
+                          )}
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Data</span>
                             <span className="text-sm text-foreground">{fmtDate(r.created_at)}</span>
