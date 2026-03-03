@@ -233,8 +233,15 @@ export function useChatMessages(conversationId: string | null) {
   // Cache user's own name for sendMessage
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("nome, avatar_url, verification_badge").eq("id", user.id).maybeSingle().then(({ data }) => {
       if (data?.nome) cachedNome.current = data.nome;
+      if (data) {
+        senderCache.set(user.id, {
+          nome: data.nome,
+          avatar_url: data.avatar_url,
+          verification_badge: data.verification_badge,
+        });
+      }
     });
   }, [user]);
 
