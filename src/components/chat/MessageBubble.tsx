@@ -460,7 +460,12 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               if (isTouchDevice && window.innerWidth < 640) {
                 setShowLongPressMenu(true);
               } else {
-                setContextMenuPos({ x: e.clientX, y: e.clientY });
+                // Ensure menu doesn't overflow viewport
+                const menuHeight = 220;
+                const menuWidth = 170;
+                const y = Math.max(60, Math.min(e.clientY, window.innerHeight - menuHeight));
+                const x = Math.min(e.clientX, window.innerWidth - menuWidth);
+                setContextMenuPos({ x, y });
                 setShowContextMenu(true);
               }
             }}
