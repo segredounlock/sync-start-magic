@@ -1,55 +1,34 @@
 
 
-## Diagnóstico: Recargas travadas em "pending"
+## Diferenças entre os Efeitos Sazonais: Global (`SeasonalEffects.tsx`) vs Mini App (`TelegramMiniApp.tsx`)
 
-### Problema identificado
+### Componente Global (`SeasonalEffects.tsx` — usado em App.tsx)
+- **Transição suave completa**: Tem sistema de `exiting` com timer de 2s, partículas fazem fade-out com rotação antes de trocar o tema
+- **12 partículas** com tamanhos e delays aleatórios
+- **AnimatePresence** no banner e no glow para saída animada
+- **Exclusão do Mini App**: Detecta `pathname === "/miniapp"` e retorna `null` (não renderiza)
+- Funciona em todas as páginas exceto `/miniapp`
 
-A API externa (express.poeki.dev) processa recargas de forma assíncrona. Quando o pedido é criado via `POST /recharges`, a API retorna imediatamente com status inicial (geralmente diferente de "feita"/"concluida"). O sistema salva como `pending` e **depende de polling posterior** para atualizar.
+### Mini App (`TelegramMiniApp.tsx` — efeitos inline)
+- **Sem transição de saída**: Quando muda o tema, simplesmente troca os emojis e gradientes sem animação de saída graceful. Falta o sistema `exiting` / `transitioning`
+- **8 partículas** (otimizado para mobile)
+- **Banner extra na parte inferior** (strip acima da nav bar) — exclusivo do Mini App
+- **Sem AnimatePresence no glow** (falta `exit` coordenado)
+- Usa `useSeasonalTheme()` hook mas **ignora o estado `transitioning`**
 
-**Causas raiz das recargas travadas:**
+### Problema Identificado
+O Mini App tem efeitos sazonais **sem as transições suaves** que foram implementadas no componente global. Quando o tema muda, os efeitos cortam abruptamente ao invés de sair com elegância.
 
-1. **Sem webhook configurado**: A edge function não envia `webhookUrl` na maioria dos casos (o param é opcional e raramente passado pelo frontend). A API externa não tem como notificar proativamente quando a recarga é concluída.
+### Plano de Correção
 
-2. **Polling limitado e frágil**: O polling client-side (a cada 30s) só funciona enquanto o usuário está com a tela aberta. Se o usuário fecha o app, o polling para e a recarga fica "pending" para sempre.
+1. **Adicionar lógica de transição no Mini App** — usar o estado `transitioning` do hook `useSeasonalTheme` para controlar animações de saída:
+   - Partículas: fade-out com rotação (igual ao global)
+   - Banner top e bottom: slide-out com opacidade
+   - Glow: fade suave de 1.5s
+   
+2. **Separar `displayedTheme` de `activeTheme`** — o Mini App já recebe `displayedTheme` do hook, mas precisa respeitar o estado `transitioning` para não trocar os visuais abruptamente
 
-3. **order-status busca apenas 50 pedidos**: A consulta `GET /me/orders?page=1&limit=50` pode não encontrar pedidos mais antigos se houver volume alto, fazendo o `find` retornar `null` e a recarga nunca ser atualizada.
+3. **Envolver banner e glow em `AnimatePresence`** com condição `!transitioning` para coordenar a saída
 
-4. **Sem atualização automática server-side**: Não existe nenhum cron/job que verifique periodicamente as recargas pending no banco e consulte seus status na API externa.
-
-### Dados atuais
-- **19 recargas pending** vs **63 completed** (23% das recargas ficam travadas)
-- Recargas pending vão desde 01/03 até 03/03
-
-### Plano de correção
-
-#### 1. Criar cron job para resolver recargas pending (server-side)
-Criar uma edge function `sync-pending-recargas` que:
-- Busca todas as recargas com `status = 'pending'` e `external_id` não nulo
-- Para cada uma, consulta a API externa via `/me/orders` (paginando se necessário)
-- Atualiza o status local para `completed` ou `falha` conforme resposta da API
-- Se uma recarga pending tem mais de 24h e não é encontrada na API, marca como `falha`
-
-#### 2. Registrar a function como cron (a cada 5 minutos)
-Usar `pg_cron` ou invocar via Supabase scheduled functions para executar automaticamente.
-
-#### 3. Melhorar o polling no momento da criação
-Na action `recharge`, após criar o pedido, usar polling server-side curto (3 tentativas com 5s de intervalo) antes de retornar ao cliente, para tentar capturar recargas que completam rapidamente.
-
-#### 4. Aumentar o limit do order-status
-Mudar o `limit=50` para `limit=200` na busca de orders, e implementar paginação se necessário.
-
-### Detalhes técnicos
-
-**Nova edge function `sync-pending-recargas/index.ts`:**
-- Autenticação via service_role (sem JWT do usuário)
-- Busca recargas pending do banco
-- Agrupa por lotes para não sobrecarregar a API
-- Atualiza status e dispara notificação Telegram para as concluídas
-
-**Modificações em `recarga-express/index.ts`:**
-- No case `recharge`: após salvar como pending, fazer 2-3 tentativas de polling com `await sleep(5000)` antes de retornar
-- No case `order-status`: aumentar limit para 200 e implementar busca paginada
-
-**Config em `supabase/config.toml`:**
-- Adicionar `[functions.sync-pending-recargas]` com `verify_jwt = false`
+Resultado: comportamento idêntico ao global — efeitos saem devagar e com estilo antes do novo tema entrar.
 
