@@ -36,6 +36,8 @@ import {
 import type { Revendedor, RecargaHistorico, Operadora, PricingRule, Period } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
+import { useCrud } from "@/hooks/useCrud";
+import { confirm } from "@/lib/confirm";
 
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
@@ -490,24 +492,19 @@ export default function AdminDashboard() {
     setResellerPricingSaving(prev => ({ ...prev, [key]: false }));
   };
 
+  const { remove: removeResellerPricing } = useCrud("reseller_pricing_rules", { onRefresh: fetchResellerPricingRules, messages: { deleted: "Preço removido (usará preço global)" } });
+  const { remove: removePricingRule } = useCrud("pricing_rules", { onRefresh: fetchPricingRules, messages: { deleted: "Regra removida" } });
+
   const resetResellerPricingRule = async (operadora_id: string, valor_recarga: number) => {
     const existing = resellerPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
     if (!existing?.id) return;
-    try {
-      await supabase.from("reseller_pricing_rules").delete().eq("id", existing.id);
-      toast.success("Preço removido (usará preço global)");
-      fetchResellerPricingRules();
-    } catch (err: any) { toast.error(err.message || "Erro"); }
+    await removeResellerPricing(existing.id);
   };
 
   const resetPricingRule = async (operadora_id: string, valor_recarga: number) => {
     const existing = pricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
     if (!existing?.id) return;
-    try {
-      await supabase.from("pricing_rules").delete().eq("id", existing.id);
-      toast.success("Regra removida");
-      fetchPricingRules();
-    } catch (err: any) { toast.error(err.message || "Erro"); }
+    await removePricingRule(existing.id);
   };
 
   // Target user pricing (admin managing pricing for a specific reseller or client)
@@ -543,7 +540,7 @@ export default function AdminDashboard() {
     const existing = targetUserPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
     if (!existing?.id) return;
     try {
-      await supabase.from("reseller_pricing_rules").delete().eq("id", existing.id);
+      await (supabase.from("reseller_pricing_rules" as any) as any).delete().eq("id", existing.id);
       toast.success("Preço removido (usará preço global)");
       fetchTargetUserPricingRules(userId);
     } catch (err: any) { toast.error(err.message || "Erro"); }
@@ -712,12 +709,9 @@ export default function AdminDashboard() {
     fetchOperadoras();
   };
 
+  const { remove: removeOperadora } = useCrud("operadoras", { onRefresh: fetchOperadoras, messages: { deleted: "Operadora excluída" } });
   const deleteOperadora = async (op: Operadora) => {
-    if (!confirm(`Excluir operadora ${op.nome}?`)) return;
-    const { error } = await supabase.from("operadoras").delete().eq("id", op.id);
-    if (error) { toast.error("Erro ao excluir"); return; }
-    toast.success("Operadora excluída");
-    fetchOperadoras();
+    await removeOperadora(op.id, `Excluir operadora ${op.nome}?`);
   };
 
 

@@ -41,6 +41,8 @@ import { useNavigate } from "react-router-dom";
 
 import type { Revendedor, RecargaHistorico, PricingRule } from "@/types";
 import { useResilientFetch } from "@/hooks/useAsync";
+import { useCrud } from "@/hooks/useCrud";
+import { confirm } from "@/lib/confirm";
 
 type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo";
 
@@ -420,14 +422,11 @@ export default function Principal() {
     setPricingSaving(prev => ({ ...prev, [key]: false }));
   };
 
+  const { remove: removePricingRule } = useCrud("pricing_rules", { onRefresh: fetchPricingData, messages: { deleted: "Regra removida" } });
   const resetPricingRule = async (operadora_id: string, valor_recarga: number) => {
     const existing = pricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
     if (!existing?.id) return;
-    try {
-      await supabase.from("pricing_rules").delete().eq("id", existing.id);
-      toast.success("Regra removida");
-      fetchPricingData();
-    } catch (err: any) { toast.error(err.message || "Erro"); }
+    await removePricingRule(existing.id);
   };
 
   const fetchResellerPricingRules = useCallback(async (userId: string) => {
@@ -464,8 +463,7 @@ export default function Principal() {
       || revDetailPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
     if (!existing?.id) return;
     try {
-      await supabase.from("reseller_pricing_rules").delete().eq("id", existing.id);
-      // Update local state immediately to avoid page jump
+      await (supabase.from("reseller_pricing_rules" as any) as any).delete().eq("id", existing.id);
       const filter = (rules: PricingRule[]) => rules.filter(r => r.id !== existing.id);
       setResellerPricingRules(prev => filter(prev));
       setRevDetailPricingRules(prev => filter(prev));
@@ -758,9 +756,10 @@ export default function Principal() {
   };
 
   const resetRevGateway = async (userId: string) => {
-    if (!confirm("Resetar gateway do revendedor? Ele usará a gateway global.")) return;
+    const ok = await confirm("Resetar gateway do revendedor? Ele usará a gateway global.", { destructive: true, confirmText: "Resetar" });
+    if (!ok) return;
     try {
-      await supabase.from("reseller_config").delete().eq("user_id", userId);
+      await (supabase.from("reseller_config" as any) as any).delete().eq("user_id", userId);
       toast.success("Gateway do revendedor resetada!");
       setRevGatewayConfig({});
     } catch (err: any) {
@@ -1884,7 +1883,8 @@ export default function Principal() {
                     </button>
                     <button
                       onClick={async () => {
-                        if (!confirm(`Tem certeza que deseja DELETAR permanentemente o usuário "${selectedRev.nome || selectedRev.email}"? Esta ação não pode ser desfeita.`)) return;
+                        const ok = await confirm(`Tem certeza que deseja DELETAR permanentemente o usuário "${selectedRev.nome || selectedRev.email}"? Esta ação não pode ser desfeita.`, { destructive: true, confirmText: "Deletar" });
+                        if (!ok) return;
                         try {
                           const { data, error } = await supabase.functions.invoke("admin-delete-user", {
                             body: { user_id: selectedRev.id },
