@@ -144,7 +144,9 @@ export default function Auth() {
           localStorage.removeItem("rememberedEmail");
           localStorage.removeItem("rememberedPass");
         }
-        const userId = (await supabase.auth.getUser()).data.user?.id || "";
+        const { data: { session: freshSession } } = await supabase.auth.getSession();
+        const userId = freshSession?.user?.id || "";
+        if (!userId) { toast.error("Erro ao obter sessão"); setSubmitting(false); return; }
         // Retry role check to handle race condition with trigger
         const rolePriority = ["admin", "revendedor", "cliente", "usuario", "user"];
         let resolvedRole: string | null = null;

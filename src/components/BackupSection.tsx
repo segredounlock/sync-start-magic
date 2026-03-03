@@ -16,6 +16,7 @@ const TABLES = [
   "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
   "admin_notifications", "banners", "polls", "poll_votes",
   "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
+  "push_subscriptions", "update_history",
 ];
 
 type TabKey = "dados" | "github" | "atualizacao";
@@ -216,11 +217,12 @@ export default function BackupSection() {
     "src/components/chat/ConversationList.tsx","src/components/chat/MessageBubble.tsx",
     "src/components/chat/EmojiPicker.tsx","src/components/chat/AudioRecorder.tsx",
     "src/components/chat/NewChatModal.tsx","src/components/chat/MessageInfoModal.tsx",
+    "src/components/chat/UserRecargasModal.tsx","src/components/chat/MentionDropdown.tsx",
     "src/components/ChatRoomManager.tsx",
     // Hooks
     "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
     "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/usePresence.ts",
-    "src/hooks/useTheme.tsx",
+    "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts",
     // Libs
     "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
     // Integrations
@@ -236,8 +238,10 @@ export default function BackupSection() {
     "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
     "supabase/functions/github-sync/index.ts","supabase/functions/pix-webhook/index.ts",
     "supabase/functions/recarga-express/index.ts","supabase/functions/send-broadcast/index.ts",
+    "supabase/functions/sync-pending-recargas/index.ts","supabase/functions/send-push/index.ts",
     "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
     "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
+    "supabase/functions/vapid-setup/index.ts",
     // Supabase config
     "supabase/config.toml",
   ];

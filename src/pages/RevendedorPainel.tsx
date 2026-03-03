@@ -357,8 +357,10 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchData]);
 
-  useEffect(() => { fetchData(); fetchCatalog(); }, [fetchData, fetchCatalog]);
   useEffect(() => {
+    // Parallel initial load: data + catalog + banners
+    fetchData();
+    fetchCatalog();
     supabase.from("banners").select("*").order("position").then(({ data }) => {
       setBannersList((data || []).map(b => ({
         id: b.id,
@@ -370,7 +372,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         link: b.link,
       })));
     });
-  }, []);
+  }, [fetchData, fetchCatalog]);
   useEffect(() => { if (tab === "extrato" || tab === "addSaldo") fetchTransactions(); }, [tab, fetchTransactions]);
   useEffect(() => { if (tab === "status") fetchStatus(); }, [tab, fetchStatus]);
 

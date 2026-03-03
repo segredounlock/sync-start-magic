@@ -138,6 +138,8 @@ serve(async (req) => {
       "chat_messages",
       "chat_message_reads",
       "chat_reactions",
+      "push_subscriptions",
+      "update_history",
     ];
 
     for (const table of restoreOrder) {
