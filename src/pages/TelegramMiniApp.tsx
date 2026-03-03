@@ -273,6 +273,17 @@ export default function TelegramMiniApp() {
       liveTg?.ready();
       liveTg?.expand();
 
+      // Check auth session first (used by chat RLS)
+      let existingSessionUserId: string | null = null;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        existingSessionUserId = session?.user?.id ?? null;
+        if (!cancelled) setHasAuthSession(!!session?.user);
+      } catch (err) {
+        console.error("Mini App auth session precheck error:", err);
+        if (!cancelled) setHasAuthSession(false);
+      }
+
       // 1) Try Telegram initData lookup
       const tgUser = await (async () => {
         for (let i = 0; i < 12; i++) {
@@ -299,34 +310,31 @@ export default function TelegramMiniApp() {
         } catch (err) { console.error("Mini App TG lookup error:", err); }
       }
 
-      // 2) Try existing Supabase auth session
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user && !cancelled) {
-          setHasAuthSession(true);
+      // 2) Try existing auth user if available
+      if (existingSessionUserId && !cancelled) {
+        try {
           const { data, error } = await supabase.functions.invoke("telegram-miniapp", {
-            body: { action: "lookup_by_user_id", user_id: session.user.id },
+            body: { action: "lookup_by_user_id", user_id: existingSessionUserId },
           });
           if (!error && data?.found) {
-            const sess = { userId: data.user_id, userName: data.nome || "", userEmail: session.user.email || "", saldo: Number(data.saldo || 0) };
+            const sess = { userId: data.user_id, userName: data.nome || "", userEmail: "", saldo: Number(data.saldo || 0) };
             applySession(sess);
             saveSession(sess);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
             if (!cancelled) setLoading(false);
             return;
           } else {
-            // User exists in auth but no profile match — still use it
             const { data: sData } = await supabase.functions.invoke("telegram-miniapp", {
-              body: { action: "saldo", user_id: session.user.id },
+              body: { action: "saldo", user_id: existingSessionUserId },
             });
-            const sess = { userId: session.user.id, userName: session.user.email || "", userEmail: session.user.email || "", saldo: Number(sData?.saldo || 0) };
+            const sess = { userId: existingSessionUserId, userName: "", userEmail: "", saldo: Number(sData?.saldo || 0) };
             applySession(sess);
             saveSession(sess);
             if (!cancelled) setLoading(false);
             return;
           }
-        }
-      } catch (err) { console.error("Mini App auth session error:", err); }
+        } catch (err) { console.error("Mini App auth session error:", err); }
+      }
 
       // 3) Try saved localStorage session (offline/fallback)
       const saved = loadSavedSession();
