@@ -268,7 +268,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, onR
               const wasLongPress = longPressTriggered.current;
               cancelLongPress();
               touchStartPoint.current = null;
-              if (isOwn && !wasLongPress) {
+              // Don't open message info if tapping on an image or audio element
+              const target = e.target as HTMLElement;
+              const isInteractive = target.tagName === "IMG" || target.closest("audio") || target.closest("button");
+              if (isOwn && !wasLongPress && !isInteractive) {
                 setShowMessageInfo(true);
               }
             }}
