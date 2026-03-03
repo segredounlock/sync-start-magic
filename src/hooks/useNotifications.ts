@@ -197,19 +197,19 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
             };
             const label = statusMap[r.status] || r.status;
             const updatedMsg = `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`;
-            const updatedAt = r.updated_at || new Date().toISOString();
+            const originalTime = r.created_at; // Always use the recharge creation time
 
             // Update the existing INSERT notification in-place instead of creating a duplicate
             const originalId = r.id;
             if (knownIds.current.has(originalId)) {
               setNotifications(prev => prev.map(n =>
                 n.id === originalId
-                  ? { ...n, message: updatedMsg, status: r.status, created_at: updatedAt }
+                  ? { ...n, message: updatedMsg, status: r.status, created_at: originalTime }
                   : n
               ));
               // Also update in the database
               supabase.from("admin_notifications" as any)
-                .update({ message: updatedMsg, status: r.status, created_at: updatedAt } as any)
+                .update({ message: updatedMsg, status: r.status, created_at: originalTime } as any)
                 .eq("id", originalId)
                 .then(() => {});
             } else {
@@ -222,7 +222,7 @@ export function useNotifications({ listenTo, revendedores }: UseNotificationsOpt
                 user_nome: profile.nome || undefined,
                 user_email: profile.email || undefined,
                 status: r.status,
-                created_at: updatedAt,
+                created_at: originalTime,
                 is_read: false,
               });
             }
