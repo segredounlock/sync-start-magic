@@ -101,14 +101,29 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
   // Sync groupIcon prop
   useEffect(() => { setCurrentGroupIcon(groupIcon || null); }, [groupIcon]);
 
-  // Check room image permission for groups
+  // Check room image permission for groups (with realtime sync)
   useEffect(() => {
     if (!isGroup) { setImagesAllowed(true); return; }
+    const configKey = `room_images_${conversationId}`;
     const fetchConfig = async () => {
-      const { data } = await supabase.from("system_config").select("value").eq("key", `room_images_${conversationId}`).maybeSingle();
+      const { data } = await supabase.from("system_config").select("value").eq("key", configKey).maybeSingle();
       setImagesAllowed(data ? data.value !== "false" : true);
     };
     fetchConfig();
+
+    const channel = supabase
+      .channel(`room-images-${conversationId}`)
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "system_config",
+      }, (payload: any) => {
+        const row = payload.new;
+        if (row?.key === configKey) {
+          setImagesAllowed(row.value !== "false");
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [isGroup, conversationId]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
