@@ -82,6 +82,7 @@ export default function AdminDashboard() {
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [loading, setLoading] = useState(true);
   const dataLoaded = useRef(false);
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
   const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
   const [configSubTab, setConfigSubTab] = useState<"geral" | "pagamentos" | "depositos">("geral");
@@ -624,6 +625,13 @@ export default function AdminDashboard() {
   const handleBgPaymentConfirmed = useCallback(() => { fetchData(); }, [fetchData]);
   useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed, adminDepositToast);
 
+  // Load current user's avatar
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
+      .then(({ data }) => { if (data?.avatar_url) setMyAvatarUrl(data.avatar_url); });
+  }, [user?.id]);
+
   useEffect(() => { fetchData(); }, [fetchData]);
    useEffect(() => { if (tab === "historico") fetchRecargas(); }, [tab, fetchRecargas]);
   useEffect(() => { if (tab === "operadoras" || tab === "precificacao" || tab === "meusprecos") { fetchOperadoras(); fetchPricingRules(); } }, [tab, fetchOperadoras, fetchPricingRules]);
@@ -953,9 +961,13 @@ export default function AdminDashboard() {
             {/* User Info */}
             <div className="mx-4 mb-3 p-3 rounded-xl bg-muted/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                  {(user?.email?.[0] || "A").toUpperCase()}
-                </div>
+                {myAvatarUrl ? (
+                  <img src={myAvatarUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                    {(user?.email?.[0] || "A").toUpperCase()}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{user?.email}</p>
                   <p className="text-xs text-muted-foreground capitalize">{role || "Admin"}</p>
