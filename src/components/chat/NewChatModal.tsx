@@ -122,6 +122,7 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
               const name = u.nome || u.email?.split("@")[0] || "Usuário";
               const initial = (name[0] || "U").toUpperCase();
               const isAdmin = u.role === "admin";
+              const hasSpecialNameEffect = isAdmin || !!u.verification_badge;
               const roleKey = u.role || "usuario";
               const roleLabel = ROLE_LABELS[roleKey] || "Usuário";
               const roleStyle = ROLE_STYLES[roleKey] || ROLE_STYLES.usuario;
@@ -140,7 +141,7 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <p className={`text-sm font-semibold truncate ${isAdmin ? "shimmer-letters" : "text-foreground"}`}>{name}</p>
+                      <p className={`text-sm font-semibold truncate ${hasSpecialNameEffect ? "shimmer-letters" : "text-foreground"}`}>{name}</p>
                       {u.verification_badge ? (
                         <VerificationBadge badge={u.verification_badge as BadgeType} size="sm" />
                       ) : isAdmin ? (
