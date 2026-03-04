@@ -270,9 +270,12 @@ async function sendTelegramPhoto(
   // Share button — opens Telegram's native share/forward picker
   const shareText = caption.replace(/<[^>]*>/g, "");
   form.append("reply_markup", JSON.stringify({
-    inline_keyboard: [[
-      { text: "📤 Compartilhar comprovante", url: `https://t.me/share/url?url=&text=${encodeURIComponent(shareText)}` }
-    ]]
+    inline_keyboard: [
+      [
+        { text: "📋 Copiar texto", copy_text: { text: shareText } },
+        { text: "📤 Compartilhar", url: `https://t.me/share/url?url=&text=${encodeURIComponent(shareText)}` }
+      ]
+    ]
   }));
   const resp = await fetch(`${TELEGRAM_API}${token}/sendPhoto`, {
     method: "POST",
