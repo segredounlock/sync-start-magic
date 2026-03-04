@@ -96,46 +96,80 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
     });
   }, [user]);
 
-  // Fetch group members — use stable stringified deps to avoid excessive re-fetches
-  const memberSenderIds = useMemo(() => {
-    if (!isGroup) return "";
-    const ids = new Set(messages.map(m => m.sender_id));
-    onlineUsers.forEach(uid => ids.add(uid));
-    return [...ids].sort().join(",");
-  }, [isGroup, messages, onlineUsers]);
+  // Auto-join group as member on open
+  useEffect(() => {
+    if (!isGroup || !user) return;
+    (async () => {
+      const { error } = await supabase.from("chat_members").upsert(
+        { conversation_id: conversationId, user_id: user.id },
+        { onConflict: "conversation_id,user_id" }
+      );
+      if (error) console.error("Auto-join error:", error);
+    })();
+  }, [isGroup, conversationId, user]);
+
+  // Fetch group members from chat_members table
+  const [memberCount, setMemberCount] = useState(0);
+
+  const fetchGroupMembers = useCallback(async () => {
+    if (!isGroup) return;
+    // Get all member user_ids from chat_members
+    const { data: memberRows } = await supabase
+      .from("chat_members")
+      .select("user_id")
+      .eq("conversation_id", conversationId);
+
+    if (!memberRows || memberRows.length === 0) {
+      setMembers([]);
+      setMemberCount(0);
+      return;
+    }
+
+    const memberIds = memberRows.map(r => r.user_id);
+    setMemberCount(memberIds.length);
+
+    const [{ data }, { data: roles }] = await Promise.all([
+      supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", memberIds),
+      supabase.from("user_roles").select("user_id, role").in("user_id", memberIds),
+    ]);
+
+    if (!data) return;
+
+    const roleMap = new Map<string, string>();
+    roles?.forEach(r => { if (r.role === "admin") roleMap.set(r.user_id, r.role); });
+
+    const sorted = data.map(p => ({ ...p, role: roleMap.get(p.id) }))
+      .sort((a, b) => {
+        const aAdmin = a.role === "admin" ? 0 : 1;
+        const bAdmin = b.role === "admin" ? 0 : 1;
+        if (aAdmin !== bAdmin) return aAdmin - bAdmin;
+        const aOnline = onlineUsers.includes(a.id) ? 0 : 1;
+        const bOnline = onlineUsers.includes(b.id) ? 0 : 1;
+        if (aOnline !== bOnline) return aOnline - bOnline;
+        return (a.nome || "").localeCompare(b.nome || "");
+      });
+    setMembers(sorted);
+  }, [isGroup, conversationId, onlineUsers]);
 
   useEffect(() => {
-    if (!isGroup || !memberSenderIds) return;
-    const senderIds = memberSenderIds.split(",").filter(Boolean);
-    if (senderIds.length === 0) return;
+    fetchGroupMembers();
+  }, [fetchGroupMembers]);
 
-    let cancelled = false;
-    (async () => {
-      const [{ data }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", senderIds),
-        supabase.from("user_roles").select("user_id, role").in("user_id", senderIds),
-      ]);
+  // Realtime: update member list when someone joins
+  useEffect(() => {
+    if (!isGroup) return;
+    const channel = supabase
+      .channel(`chat-members-${conversationId}`)
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "chat_members",
+        filter: `conversation_id=eq.${conversationId}`,
+      }, () => {
+        fetchGroupMembers();
+      })
+      .subscribe();
 
-      if (cancelled || !data) return;
-
-      const roleMap = new Map<string, string>();
-      roles?.forEach(r => { if (r.role === "admin") roleMap.set(r.user_id, r.role); });
-
-      const sorted = data.map(p => ({ ...p, role: roleMap.get(p.id) }))
-        .sort((a, b) => {
-          const aAdmin = a.role === "admin" ? 0 : 1;
-          const bAdmin = b.role === "admin" ? 0 : 1;
-          if (aAdmin !== bAdmin) return aAdmin - bAdmin;
-          const aOnline = onlineUsers.includes(a.id) ? 0 : 1;
-          const bOnline = onlineUsers.includes(b.id) ? 0 : 1;
-          if (aOnline !== bOnline) return aOnline - bOnline;
-          return (a.nome || "").localeCompare(b.nome || "");
-        });
-      setMembers(sorted);
-    })();
-
-    return () => { cancelled = true; };
-  }, [isGroup, memberSenderIds, onlineUsers]);
+    return () => { supabase.removeChannel(channel); };
+  }, [isGroup, conversationId, fetchGroupMembers]);
 
   // Sync groupIcon prop
   useEffect(() => { setCurrentGroupIcon(groupIcon || null); }, [groupIcon]);
@@ -437,7 +471,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                   {onlineCount} online
                 </motion.span>
                 <span className="text-muted-foreground/60">·</span>
-                <span>{members.length} membros</span>
+                <span>{memberCount} membros</span>
               </span>
             ) : isOnline ? (
               <span className="flex items-center gap-1">
