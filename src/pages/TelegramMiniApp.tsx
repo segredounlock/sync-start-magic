@@ -167,7 +167,7 @@ export default function TelegramMiniApp() {
       document.body.style.overflow = "";
       if (viewportMeta) viewportMeta.content = originalViewport;
       document.removeEventListener("touchstart", preventZoom);
-      document.removeEventListener("touchend", preventDoubleTap);
+      
       document.removeEventListener("gesturestart", preventGesture);
       document.removeEventListener("gesturechange", preventGesture);
     };
