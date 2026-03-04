@@ -4,6 +4,7 @@ import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR } from "@/lib/timezone";
 import html2canvas from "html2canvas";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Recarga {
   id: string;
@@ -22,14 +23,16 @@ interface RecargaReceiptProps {
   open: boolean;
   onClose: () => void;
   storeName?: string;
+  userId?: string;
 }
 
-export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaReceiptProps) {
+export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: RecargaReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [imageReady, setImageReady] = useState(false);
   const [preparingImage, setPreparingImage] = useState(false);
+  const telegramSentRef = useRef(false);
   const r = recarga;
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -45,6 +48,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
       setCachedBlob(null);
       setImageReady(false);
       setPreparingImage(false);
+      telegramSentRef.current = false;
       return;
     }
 
@@ -97,6 +101,8 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
         const blob = await res.blob();
         setCachedBlob(blob);
         setImageReady(true);
+        // Upload to storage and notify Telegram
+        uploadAndNotifyTelegram(blob);
       } catch (e) {
         console.warn("Pre-capture failed:", e);
         setImageReady(false);
@@ -107,6 +113,39 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
 
     return () => clearTimeout(timer);
   }, [open]);
+  const uploadAndNotifyTelegram = useCallback(async (blob: Blob) => {
+    if (telegramSentRef.current || !userId) return;
+    telegramSentRef.current = true;
+    try {
+      const filePath = `${r.id}.png`;
+      const { error: uploadErr } = await supabase.storage
+        .from("receipts")
+        .upload(filePath, blob, { contentType: "image/png", upsert: true });
+      if (uploadErr) {
+        console.warn("Receipt upload failed:", uploadErr);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(filePath);
+      if (!urlData?.publicUrl) return;
+      
+      await supabase.functions.invoke("telegram-notify", {
+        body: {
+          type: "recarga_completed",
+          user_id: userId,
+          data: {
+            telefone: r.telefone,
+            operadora: r.operadora || null,
+            valor: r.valor,
+            recarga_id: r.id,
+            created_at: r.created_at,
+            image_url: urlData.publicUrl,
+          },
+        },
+      });
+    } catch (e) {
+      console.warn("Telegram receipt notify failed:", e);
+    }
+  }, [r, userId]);
 
   const generateBlob = async (): Promise<Blob | null> => {
     if (cachedBlob) return cachedBlob;

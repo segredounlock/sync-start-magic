@@ -343,7 +343,29 @@ Deno.serve(async (req) => {
         `📱 Valor: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
       ].filter(Boolean).join("\n");
 
-      // Try to generate and send receipt image
+      // Priority 1: Use pre-generated image from storage (same as website receipt)
+      if (data.image_url) {
+        console.log(`Downloading receipt image from storage: ${data.image_url}`);
+        try {
+          const imgResp = await fetch(data.image_url);
+          if (imgResp.ok) {
+            const imageData = new Uint8Array(await imgResp.arrayBuffer());
+            console.log(`Sending stored receipt photo (${imageData.length} bytes)`);
+            const sent = await sendTelegramPhoto(BOT_TOKEN, profile.telegram_id, imageData, caption);
+            if (sent) {
+              return new Response(
+                JSON.stringify({ success: true, method: "photo_stored" }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+              );
+            }
+            console.warn("sendPhoto with stored image failed, trying Satori fallback");
+          }
+        } catch (e) {
+          console.warn("Failed to fetch stored image:", e);
+        }
+      }
+
+      // Priority 2: Generate image with Satori (fallback)
       console.log(`Generating receipt image for user telegram_id=${profile.telegram_id}`);
       const imageData = await generateReceiptPng({
         telefone: data.telefone,
@@ -356,11 +378,11 @@ Deno.serve(async (req) => {
       });
 
       if (imageData) {
-        console.log(`Sending receipt photo (${imageData.length} bytes)`);
+        console.log(`Sending Satori receipt photo (${imageData.length} bytes)`);
         const sent = await sendTelegramPhoto(BOT_TOKEN, profile.telegram_id, imageData, caption);
         if (sent) {
           return new Response(
-            JSON.stringify({ success: true, method: "photo" }),
+            JSON.stringify({ success: true, method: "photo_satori" }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
