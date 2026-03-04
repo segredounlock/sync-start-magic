@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateShortBR, formatTimeBR } from "@/lib/timezone";
+import { operadoraColors } from "@/lib/utils";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface UserRecargasModalProps {
@@ -409,7 +410,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                         <Phone className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs font-mono text-foreground">{r.telefone}</span>
                         {r.operadora && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium uppercase">{r.operadora}</span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora}</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
