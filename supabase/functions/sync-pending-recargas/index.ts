@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
 
         if (apiStatus === "feita" || apiStatus === "completed") {
           newStatus = "completed";
-        } else if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled") {
+        } else if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired") {
           newStatus = "falha";
         }
         // else still pending, skip
