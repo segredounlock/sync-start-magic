@@ -1,42 +1,40 @@
 
 
-## PWA Completo — App Instalável para iPhone e Android
+## Diagnóstico e Correção
 
-O projeto já tem um `manifest.webmanifest` básico e um service worker de push (`sw-push.js`), mas falta a configuração completa de PWA com cache offline, prompt de instalação e ícones adequados.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### O que será feito
+### Plano
 
-1. **Instalar `vite-plugin-pwa`** — Plugin que gera automaticamente o service worker com cache offline, precaching de assets e integração com o manifest.
+**1. Corrigir o mapeamento de status na sync function**
 
-2. **Configurar `vite.config.ts`** — Adicionar o plugin PWA com:
-   - Manifest completo (nome, ícones, cores, display standalone)
-   - Workbox para precaching de todos os assets do build
-   - `navigateFallbackDenylist` com `/~oauth` para não quebrar autenticação
-   - Manter o service worker de push existente (`sw-push.js`) separado
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-3. **Atualizar `manifest.webmanifest`** — Será gerado automaticamente pelo plugin, mas garantir ícones corretos (192x192 e 512x512) e `"id": "/"` para consistência.
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-4. **Criar página `/instalar`** — Tela dedicada com instruções visuais para instalar o app:
-   - Detectar se já está instalado (display-mode: standalone)
-   - Botão de instalar que dispara o `beforeinstallprompt` (Android/Chrome)
-   - Instruções para iPhone (Compartilhar → Adicionar à Tela de Início)
-   - Mostrar que já está instalado quando aplicável
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-5. **Registrar ambos service workers** — O SW do vite-plugin-pwa (cache/offline) e o `sw-push.js` (notificações) precisam coexistir. O plugin gerará o SW principal e o push SW será registrado separadamente no `main.tsx`.
+**2. Corrigir manualmente o pedido preso**
 
-6. **Atualizar `index.html`** — Adicionar meta tags mobile otimizadas (`apple-mobile-web-app-capable` já existe, adicionar `apple-touch-startup-image` se necessário).
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-### Arquivos a criar/editar
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-| Arquivo | Ação |
-|---|---|
-| `package.json` | Adicionar `vite-plugin-pwa` |
-| `vite.config.ts` | Configurar VitePWA plugin |
-| `src/pages/InstallApp.tsx` | Página de instalação com instruções |
-| `src/App.tsx` | Adicionar rota `/instalar` |
-| `src/main.tsx` | Registrar SW de push separadamente |
-| `index.html` | Remover link manual do manifest (plugin gera) |
+**3. Verificar se há outros pedidos presos**
 
-### Resultado
-O app poderá ser instalado na tela inicial de qualquer celular (iPhone ou Android), funcionar offline, e manter as notificações push existentes.
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

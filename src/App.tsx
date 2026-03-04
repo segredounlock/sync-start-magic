@@ -13,6 +13,7 @@ import LandingPage from "@/pages/LandingPage";
 import ClientePortal from "@/pages/ClientePortal";
 import ResetPassword from "@/pages/ResetPassword";
 import MaintenancePage from "@/pages/MaintenancePage";
+import InstallApp from "@/pages/InstallApp";
 import SeasonalEffects from "@/components/SeasonalEffects";
 
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
@@ -78,6 +79,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/loja/:slug" element={<ClientePortal />} />
             <Route path="/miniapp" element={<TelegramMiniApp />} />
+            <Route path="/instalar" element={<InstallApp />} />
             <Route
               path="/admin"
               element={
