@@ -118,7 +118,7 @@ export default function ChatApp() {
                 conversations={conversations}
                 loading={loading}
                 activeId={activeConversationId}
-                onSelect={setActiveConversationId}
+                onSelect={handleSelectConversation}
               />
             </motion.div>
           )}
@@ -161,7 +161,7 @@ export default function ChatApp() {
             conversations={conversations}
             loading={loading}
             activeId={activeConversationId}
-            onSelect={setActiveConversationId}
+            onSelect={handleSelectConversation}
           />
         </div>
 

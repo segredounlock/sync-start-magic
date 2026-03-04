@@ -102,7 +102,7 @@ export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
                 conversations={conversations}
                 loading={loading}
                 activeId={activeConversationId}
-                onSelect={setActiveConversationId}
+                onSelect={handleSelectConversation}
               />
             </motion.div>
           )}
@@ -134,7 +134,7 @@ export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
           conversations={conversations}
           loading={loading}
           activeId={activeConversationId}
-          onSelect={setActiveConversationId}
+          onSelect={handleSelectConversation}
         />
       </div>
 
