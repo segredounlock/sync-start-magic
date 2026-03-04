@@ -379,6 +379,8 @@ Deno.serve(async (req) => {
         "",
         "📱 Use /recarga para recarregar!",
       ].join("\n");
+    } else if (type === "custom_message") {
+      message = data.message || "Mensagem do sistema";
     } else {
       return new Response(
         JSON.stringify({ success: false, reason: "unknown_type" }),
