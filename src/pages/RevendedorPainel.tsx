@@ -1003,7 +1003,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           >
                             <Loader2 className="h-10 w-10 text-warning" />
                           </motion.div>
-                        : <XCircle className="h-10 w-10 text-destructive" />
+                        : <motion.div
+                            animate={{ scale: [1, 1.15, 1, 1.1, 1], rotate: [0, -10, 10, -5, 0], opacity: [1, 0.7, 1] }}
+                            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                          >
+                            <XCircle className="h-10 w-10 text-destructive drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                          </motion.div>
                       }
                     </motion.div>
                     <h3 className={`font-display text-xl font-bold mb-2 ${recargaResult.success ? "text-warning" : "text-destructive"}`}>
@@ -1441,8 +1446,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                 <Loader2 className="h-6 w-6 text-warning" />
                               </motion.div>
                             ) : r.status === "falha" ? (
-                              <motion.div animate={{ rotate: [0, -8, 8, -8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-                                <XCircle className="h-6 w-6 text-destructive" />
+                              <motion.div
+                                animate={{ 
+                                  scale: [1, 1.15, 1, 1.1, 1],
+                                  rotate: [0, -10, 10, -5, 0],
+                                  opacity: [1, 0.7, 1]
+                                }}
+                                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                              >
+                                <XCircle className="h-6 w-6 text-destructive drop-shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
                               </motion.div>
                             ) : (
                               <Smartphone className="h-5 w-5 text-muted-foreground" />
