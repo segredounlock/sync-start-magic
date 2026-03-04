@@ -1,4 +1,5 @@
 import { ChatConversation, GENERAL_CHAT_ID, UPDATES_CHAT_ID } from "@/hooks/useChat";
+import { useGroupPresence } from "@/hooks/usePresence";
 import { formatChatTimestamp } from "@/lib/timezone";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
