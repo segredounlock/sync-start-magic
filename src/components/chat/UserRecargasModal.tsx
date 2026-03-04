@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import AnimatedCheck from "@/components/AnimatedCheck";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Target, Wallet, Check, Shield } from "lucide-react";
@@ -388,10 +389,18 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                 const StatusIcon = st.icon;
                 return (
                   <div key={r.id} onClick={() => setSelectedRecarga(r)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      r.status === "completed" ? "bg-emerald-500/15" : r.status === "failed" ? "bg-red-500/15" : "bg-yellow-500/15"
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                      r.status === "completed" ? "bg-success/15" : r.status === "failed" || r.status === "falha" ? "bg-destructive/15" : "bg-warning/15"
                     }`}>
-                      <StatusIcon className={`h-4 w-4 ${st.color} ${r.status === "pending" || r.status === "processing" ? "animate-spin" : ""}`} />
+                      {r.status === "completed" ? (
+                        <AnimatedCheck size={24} className="text-success" />
+                      ) : r.status === "failed" || r.status === "falha" ? (
+                        <XCircle className="h-5 w-5 text-destructive" />
+                      ) : (
+                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+                          <Loader2 className="h-5 w-5 text-warning" />
+                        </motion.div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
