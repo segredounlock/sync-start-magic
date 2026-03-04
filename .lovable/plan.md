@@ -1,40 +1,25 @@
 
 
-## Diagnóstico e Correção
+## Problema
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+As notificações (toasts) estão aparecendo no topo da tela no desktop, em vez do centro. Isso acontece porque o componente `<Toaster>` do Sonner está configurado com `position="top-center"`, e o container do Sonner posiciona os toasts no topo — a tentativa de sobrescrever com `position: "fixed"` no `randomStyle()` de cada toast individual não consegue escapar do container pai do Sonner.
 
-### Plano
+Além disso, o arquivo `useCrud.ts` e `usePixDeposit.ts` usam `toast` importado diretamente do Sonner (sem `randomStyle()`), então esses toasts nunca receberiam o posicionamento centralizado.
 
-**1. Corrigir o mapeamento de status na sync function**
+## Solução
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+1. **Reposicionar o container do Sonner via CSS** — Adicionar estilos globais no `index.css` para mover o container `[data-sonner-toaster]` para o centro vertical da tela (`top: 50%; transform: translateY(-50%)`), mantendo centralizado horizontalmente.
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+2. **Simplificar o `randomStyle()`** — Remover o `position: fixed` e `top/left/transform` do `randomStyle()`, já que o posicionamento será controlado pelo container. Manter apenas o `zIndex`.
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+3. **Atualizar `useCrud.ts`** — Trocar a importação de `toast` do Sonner para usar `styledToast` do `@/lib/toast`, garantindo consistência visual.
 
-**2. Corrigir manualmente o pedido preso**
+4. **Atualizar `usePixDeposit.ts`** — Mesma troca para garantir que todos os toasts passem pelo sistema centralizado.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+## Arquivos a editar
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+- `src/index.css` — Adicionar regra CSS para `[data-sonner-toaster]` centralizar verticalmente
+- `src/lib/toast.tsx` — Simplificar `randomStyle()` 
+- `src/hooks/useCrud.ts` — Trocar `toast` por `styledToast`
+- `src/hooks/usePixDeposit.ts` — Trocar `toast` por `styledToast`
 
