@@ -97,7 +97,7 @@ type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "sta
 
 import type { Recarga } from "@/types";
 
-interface ValorItem { valueId: string; cost: number; value?: number; label: string; }
+interface ValorItem { valueId: string; cost: number; userCost?: number; value?: number; label: string; }
 interface TgOperadora { id: string; nome: string; carrierId: string; valores: ValorItem[]; }
 
 export default function TelegramMiniApp() {
@@ -377,10 +377,10 @@ export default function TelegramMiniApp() {
 
   const loadOperadoras = useCallback(async () => {
     try {
-      const { data } = await supabase.functions.invoke("telegram-miniapp", { body: { action: "operadoras" } });
+      const { data } = await supabase.functions.invoke("telegram-miniapp", { body: { action: "operadoras", user_id: userId } });
       setOperadoras(data?.operadoras || []);
     } catch (err) { console.error("loadOperadoras error:", err); }
-  }, []);
+  }, [userId]);
 
   const loadRecargas = useCallback(async () => {
     if (!userId) return;
@@ -1196,9 +1196,10 @@ export default function TelegramMiniApp() {
                       <h2 className="text-lg font-bold" style={st.text}>{selectedOp.nome} — Valor</h2>
 
                       <div className="grid grid-cols-2 gap-3">
-                        {selectedOp.valores.sort((a: ValorItem, b: ValorItem) => a.cost - b.cost).map((v: ValorItem) => {
+                        {selectedOp.valores.sort((a: ValorItem, b: ValorItem) => (a.userCost ?? a.cost) - (b.userCost ?? b.cost)).map((v: ValorItem) => {
                           const faceValue = v.value || v.cost;
-                          const discount = faceValue > v.cost ? Math.round(((faceValue - v.cost) / faceValue) * 100) : 0;
+                          const displayCost = v.userCost ?? v.cost;
+                          const discount = faceValue > displayCost ? Math.round(((faceValue - displayCost) / faceValue) * 100) : 0;
                           return (
                             <button key={v.valueId} onClick={() => { setSelectedValor(v); setRecargaStep("confirm"); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
                               className="relative rounded-xl py-4 px-3 text-left transition-all active:scale-95"
@@ -1217,7 +1218,7 @@ export default function TelegramMiniApp() {
                               {discount > 0 && (
                                 <div className="mt-2 pt-2" style={{ borderTop: st.borderSub }}>
                                   <span className="text-[11px]" style={st.hint}>Você paga </span>
-                                  <span className="text-sm font-bold" style={{ color: "#22c55e" }}>R$ {v.cost.toFixed(2)}</span>
+                                  <span className="text-sm font-bold" style={{ color: "#22c55e" }}>R$ {displayCost.toFixed(2)}</span>
                                 </div>
                               )}
                             </button>
