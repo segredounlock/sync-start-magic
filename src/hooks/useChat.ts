@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const GENERAL_CHAT_ID = "00000000-0000-0000-0000-000000000001";
 export const BUG_REPORT_CHAT_ID = "00000000-0000-0000-0000-000000000002";
+export const UPDATES_CHAT_ID = "00000000-0000-0000-0000-000000000003";
 
 export interface ChatConversation {
   id: string;
@@ -137,7 +138,7 @@ export function useConversations() {
         };
       });
 
-      const pinnedOrder: Record<string, number> = { [GENERAL_CHAT_ID]: 0, [BUG_REPORT_CHAT_ID]: 1 };
+      const pinnedOrder: Record<string, number> = { [UPDATES_CHAT_ID]: 0, [GENERAL_CHAT_ID]: 1, [BUG_REPORT_CHAT_ID]: 2 };
       convos.sort((a: any, b: any) => {
         const aPin = pinnedOrder[a.id] ?? 999;
         const bPin = pinnedOrder[b.id] ?? 999;
