@@ -101,8 +101,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
         const blob = await res.blob();
         setCachedBlob(blob);
         setImageReady(true);
-        // Upload to storage and notify Telegram
-        uploadAndNotifyTelegram(blob);
+        // Telegram notification is now sent automatically on completion (RevendedorPainel)
       } catch (e) {
         console.warn("Pre-capture failed:", e);
         setImageReady(false);

@@ -310,6 +310,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           appToast.recargaCompleted(`Recarga ${newRow.operadora || ""} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
           playSuccessSound();
           fetchData();
+          // Auto-send receipt to Telegram (uses Satori fallback for image)
+          supabase.functions.invoke("telegram-notify", {
+            body: {
+              type: "recarga_completed",
+              user_id: user.id,
+              data: {
+                telefone: newRow.telefone,
+                operadora: newRow.operadora || null,
+                valor: Number(newRow.valor),
+                recarga_id: newRow.id,
+                created_at: newRow.created_at,
+              },
+            },
+          }).catch(e => console.warn("Auto telegram receipt failed:", e));
         }
       })
       .subscribe();
