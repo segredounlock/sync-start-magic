@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { type, user_id, data } = await req.json();
+    const { type, user_id, telegram_id: direct_telegram_id, data } = await req.json();
 
     // Resolve bot token
     const { data: tokenRow } = await supabase
@@ -317,16 +317,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get user profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("nome, email, telegram_id")
-      .eq("id", user_id)
-      .single();
+    // Support direct telegram_id or lookup from user profile
+    let targetTelegramId = direct_telegram_id || null;
+    let profileName = "";
 
-    if (!profile?.telegram_id) {
+    if (!targetTelegramId && user_id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nome, email, telegram_id")
+        .eq("id", user_id)
+        .single();
+
+      if (!profile?.telegram_id) {
+        return new Response(
+          JSON.stringify({ success: false, reason: "no_telegram_linked" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      targetTelegramId = profile.telegram_id;
+      profileName = profile.nome || "";
+    }
+
+    if (!targetTelegramId) {
       return new Response(
-        JSON.stringify({ success: false, reason: "no_telegram_linked" }),
+        JSON.stringify({ success: false, reason: "no_telegram_id" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -351,7 +365,7 @@ Deno.serve(async (req) => {
           if (imgResp.ok) {
             const imageData = new Uint8Array(await imgResp.arrayBuffer());
             console.log(`Sending stored receipt photo (${imageData.length} bytes)`);
-            const sent = await sendTelegramPhoto(BOT_TOKEN, profile.telegram_id, imageData, caption);
+            const sent = await sendTelegramPhoto(BOT_TOKEN, targetTelegramId, imageData, caption);
             if (sent) {
               return new Response(
                 JSON.stringify({ success: true, method: "photo_stored" }),
@@ -366,7 +380,7 @@ Deno.serve(async (req) => {
       }
 
       // Priority 2: Generate image with Satori (fallback)
-      console.log(`Generating receipt image for user telegram_id=${profile.telegram_id}`);
+      console.log(`Generating receipt image for user telegram_id=${targetTelegramId}`);
       const imageData = await generateReceiptPng({
         telefone: data.telefone,
         operadora: data.operadora || "—",
@@ -379,7 +393,7 @@ Deno.serve(async (req) => {
 
       if (imageData) {
         console.log(`Sending Satori receipt photo (${imageData.length} bytes)`);
-        const sent = await sendTelegramPhoto(BOT_TOKEN, profile.telegram_id, imageData, caption);
+        const sent = await sendTelegramPhoto(BOT_TOKEN, targetTelegramId, imageData, caption);
         if (sent) {
           return new Response(
             JSON.stringify({ success: true, method: "photo_satori" }),
@@ -419,8 +433,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Sending ${type} text notification to telegram_id=${profile.telegram_id}`);
-    const sent = await sendTelegramMessage(BOT_TOKEN, profile.telegram_id, message);
+    console.log(`Sending ${type} text notification to telegram_id=${targetTelegramId}`);
+    const sent = await sendTelegramMessage(BOT_TOKEN, targetTelegramId, message);
 
     return new Response(
       JSON.stringify({ success: sent }),
