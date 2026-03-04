@@ -762,7 +762,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
                 }
                 handleKeyDown(e);
               }}
-              maxLength={700}
+              maxLength={isUserAdmin ? undefined : 700}
               placeholder="Mensagem..."
               className="w-full py-2.5 px-4 rounded-full bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
               style={{ fontSize: "16px" }}
