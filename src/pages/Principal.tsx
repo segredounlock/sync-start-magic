@@ -1082,8 +1082,8 @@ export default function Principal() {
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
         <>
-          <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setMenuOpen(false)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background border-t border-border rounded-t-2xl max-h-[70vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 z-[60] md:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-[61] md:hidden bg-background border-t border-border rounded-t-2xl max-h-[70vh] overflow-y-auto">
             <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mt-3 mb-2" />
 
             {/* User Info */}
