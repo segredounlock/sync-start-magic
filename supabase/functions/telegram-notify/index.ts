@@ -267,7 +267,13 @@ async function sendTelegramPhoto(
   form.append("photo", new Blob([imageData], { type: "image/png" }), "comprovante.png");
   form.append("caption", caption);
   form.append("parse_mode", "HTML");
-
+  // Share button — opens Telegram's native share/forward picker
+  const shareText = caption.replace(/<[^>]*>/g, "");
+  form.append("reply_markup", JSON.stringify({
+    inline_keyboard: [[
+      { text: "📤 Compartilhar comprovante", url: `https://t.me/share/url?url=&text=${encodeURIComponent(shareText)}` }
+    ]]
+  }));
   const resp = await fetch(`${TELEGRAM_API}${token}/sendPhoto`, {
     method: "POST",
     body: form,
