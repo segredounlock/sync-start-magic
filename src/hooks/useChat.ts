@@ -683,7 +683,7 @@ export function useChatMessages(conversationId: string | null) {
       const sortedMsgs = [...messages].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       const latestMsg = sortedMsgs[0];
       if (latestMsg && latestMsg.id === messageId) {
-        const senderName = latestMsg.sender_name || user.email?.split("@")[0] || "Usuário";
+        const senderName = latestMsg.sender?.nome || user.email?.split("@")[0] || "Usuário";
         const previewText = `${senderName}: ${trimmed}`;
         supabase.from("chat_conversations").update({
           last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
