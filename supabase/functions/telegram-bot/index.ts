@@ -1429,49 +1429,48 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
   let em: Record<string, string> = {};
   let saldoFmt = "0,00";
   const keyboard: any[][] = [];
-    // Fetch migration config, seasonal emojis, webAppUrl config, balance, and button toggles in parallel
-    const [migrationConfig, emojis, webAppConfig, saldoData, btnConfigs] = await Promise.all([
-      getMigrationConfig(supabase),
-      getSeasonalEmojis(supabase),
-      supabase.from("system_config").select("value").eq("key", "webAppUrl").maybeSingle(),
-      user.id ? supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle() : Promise.resolve({ data: null }),
-      supabase.from("system_config").select("key, value").like("key", "bot_btn_%"),
-    ]);
-    migrationSiteUrl = migrationConfig.url || migrationSiteUrl;
-    migrationEnabled = migrationConfig.enabled;
-    em = emojis;
-    if (webAppConfig?.data?.value) webAppUrl = webAppConfig.data.value;
-    const saldoVal = Number(saldoData?.data?.valor || 0);
-    saldoFmt = saldoVal.toFixed(2).replace(".", ",");
+  // Fetch migration config, seasonal emojis, webAppUrl config, balance, and button toggles in parallel
+  const [migrationConfig, emojis, webAppConfig, saldoData, btnConfigs] = await Promise.all([
+    getMigrationConfig(supabase),
+    getSeasonalEmojis(supabase),
+    supabase.from("system_config").select("value").eq("key", "webAppUrl").maybeSingle(),
+    user.id ? supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle() : Promise.resolve({ data: null }),
+    supabase.from("system_config").select("key, value").like("key", "bot_btn_%"),
+  ]);
+  migrationSiteUrl = migrationConfig.url || migrationSiteUrl;
+  migrationEnabled = migrationConfig.enabled;
+  em = emojis;
+  if (webAppConfig?.data?.value) webAppUrl = webAppConfig.data.value;
+  const saldoVal = Number(saldoData?.data?.valor || 0);
+  saldoFmt = saldoVal.toFixed(2).replace(".", ",");
 
-    // Build button visibility map
-    const btnMap: Record<string, boolean> = {
-      bot_btn_saldo: true, bot_btn_recarga: true, bot_btn_historico: true,
-      bot_btn_deposito: true, bot_btn_conta: true, bot_btn_webapp: true,
-      bot_btn_migration: false, bot_btn_ajuda: true,
-    };
-    for (const row of (btnConfigs?.data || [])) {
-      btnMap[row.key] = row.value === "true";
-    }
+  // Build button visibility map
+  const btnMap: Record<string, boolean> = {
+    bot_btn_saldo: true, bot_btn_recarga: true, bot_btn_historico: true,
+    bot_btn_deposito: true, bot_btn_conta: true, bot_btn_webapp: true,
+    bot_btn_migration: false, bot_btn_ajuda: true,
+  };
+  for (const row of (btnConfigs?.data || [])) {
+    btnMap[row.key] = row.value === "true";
+  }
 
-    const row1: any[] = [];
-    if (btnMap.bot_btn_saldo) row1.push({ text: `${se(em, "saldo")} Ver Saldo`, callback_data: "menu_saldo" });
-    if (btnMap.bot_btn_recarga) row1.push({ text: `${se(em, "recarga")} Fazer Recarga`, callback_data: "menu_recarga" });
-    if (row1.length) keyboard.push(row1);
-    const row2: any[] = [];
-    if (btnMap.bot_btn_historico) row2.push({ text: `${se(em, "historico")} Histórico`, callback_data: "menu_recargas" });
-    if (btnMap.bot_btn_deposito) row2.push({ text: `${se(em, "deposito")} Depositar PIX`, callback_data: "menu_deposito" });
-    if (row2.length) keyboard.push(row2);
-    const row3: any[] = [];
-    if (btnMap.bot_btn_conta) row3.push({ text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" });
-    if (btnMap.bot_btn_webapp) row3.push({ text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } });
-    if (row3.length) keyboard.push(row3);
-    if (btnMap.bot_btn_migration && migrationEnabled) {
-      keyboard.push([{ text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } }]);
-    }
-    if (btnMap.bot_btn_ajuda) {
-      keyboard.push([{ text: "❓ Ajuda / Suporte", callback_data: "menu_ajuda" }]);
-    }
+  const row1: any[] = [];
+  if (btnMap.bot_btn_saldo) row1.push({ text: `${se(em, "saldo")} Ver Saldo`, callback_data: "menu_saldo" });
+  if (btnMap.bot_btn_recarga) row1.push({ text: `${se(em, "recarga")} Fazer Recarga`, callback_data: "menu_recarga" });
+  if (row1.length) keyboard.push(row1);
+  const row2: any[] = [];
+  if (btnMap.bot_btn_historico) row2.push({ text: `${se(em, "historico")} Histórico`, callback_data: "menu_recargas" });
+  if (btnMap.bot_btn_deposito) row2.push({ text: `${se(em, "deposito")} Depositar PIX`, callback_data: "menu_deposito" });
+  if (row2.length) keyboard.push(row2);
+  const row3: any[] = [];
+  if (btnMap.bot_btn_conta) row3.push({ text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" });
+  if (btnMap.bot_btn_webapp) row3.push({ text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } });
+  if (row3.length) keyboard.push(row3);
+  if (btnMap.bot_btn_migration && migrationEnabled) {
+    keyboard.push([{ text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } }]);
+  }
+  if (btnMap.bot_btn_ajuda) {
+    keyboard.push([{ text: "❓ Ajuda / Suporte", callback_data: "menu_ajuda" }]);
   }
 
   await sendMessageWithKeyboard(token, chatId,
