@@ -1,4 +1,4 @@
-import { ChatConversation, GENERAL_CHAT_ID } from "@/hooks/useChat";
+import { ChatConversation, GENERAL_CHAT_ID, UPDATES_CHAT_ID } from "@/hooks/useChat";
 import { formatChatTimestamp } from "@/lib/timezone";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
@@ -38,7 +38,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
 
   const fmtTime = (d: string) => formatChatTimestamp(d);
 
-  const pinnedIds = new Set([GENERAL_CHAT_ID, '00000000-0000-0000-0000-000000000002']);
+  const pinnedIds = new Set([UPDATES_CHAT_ID, GENERAL_CHAT_ID, '00000000-0000-0000-0000-000000000002']);
   const pinned = conversations.filter(c => pinnedIds.has(c.id));
   const regular = conversations.filter(c => !pinnedIds.has(c.id));
 
