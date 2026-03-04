@@ -227,6 +227,28 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
     setOpenMenu(null);
   };
 
+  // New conv filter config
+  const [newConvFilter, setNewConvFilter] = useState(globalConfig.chat_new_conv_filter || "admin_badge");
+
+  useEffect(() => {
+    // Load current filter value
+    supabase.from("system_config").select("value").eq("key", "chat_new_conv_filter").single()
+      .then(({ data }) => { if (data?.value) setNewConvFilter(data.value); });
+  }, []);
+
+  const handleNewConvFilterChange = async (val: string) => {
+    setNewConvFilter(val);
+    try {
+      await supabase.from("system_config").upsert(
+        { key: "chat_new_conv_filter", value: val, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+      toast.success("Filtro atualizado!");
+    } catch {
+      toast.error("Erro ao salvar filtro");
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       {/* Header with toggle + new room */}
@@ -244,6 +266,38 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
           className="h-9 px-4 rounded-lg bg-destructive text-destructive-foreground flex items-center gap-2 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm font-semibold shadow-sm">
           <Plus className="h-4 w-4" /> Nova Sala
         </button>
+      </div>
+
+      {/* New conversation filter config */}
+      <div className="glass-card rounded-xl p-4 space-y-2">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <Users className="h-4 w-4 text-primary" />
+          Quem aparece em "Nova Conversa"
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: "admin_badge", label: "Admin + Selo" },
+            { value: "admin_only", label: "Apenas Admins" },
+            { value: "all", label: "Todos" },
+          ].map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => handleNewConvFilterChange(opt.value)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                newConvFilter === opt.value
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          {newConvFilter === "admin_badge" && "Admins e usuários com selo de verificação aparecerão na lista."}
+          {newConvFilter === "admin_only" && "Apenas administradores aparecerão na lista."}
+          {newConvFilter === "all" && "Todos os usuários ativos aparecerão na lista."}
+        </p>
       </div>
 
       {/* Stats */}

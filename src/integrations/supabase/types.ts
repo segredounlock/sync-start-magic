@@ -1003,6 +1003,7 @@ export type Database = {
     }
     Functions: {
       get_chat_enabled: { Args: never; Returns: boolean }
+      get_chat_new_conv_filter: { Args: never; Returns: string }
       get_maintenance_mode: { Args: never; Returns: boolean }
       get_notif_config: { Args: { _key: string }; Returns: string }
       get_public_tables: {
