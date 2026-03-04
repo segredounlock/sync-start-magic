@@ -318,7 +318,10 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
       setText(currentText);
     } finally {
       setSending(false);
-      inputRef.current?.focus();
+      if (inputRef.current) {
+        inputRef.current.style.height = "auto";
+        inputRef.current.focus();
+      }
     }
   };
 
