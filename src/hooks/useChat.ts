@@ -361,36 +361,48 @@ export function useChatMessages(conversationId: string | null) {
     // Mark unread messages as read (non-blocking, separate try/catch)
     try {
       if (user) {
-        const currentMsgs = messages;
-        // Re-read from state might be stale, but marking read is best-effort
-        const { data: unread } = await supabase
+        // Find messages not yet read by this user (using chat_message_reads for per-user tracking)
+        const { data: allMsgs } = await supabase
           .from("chat_messages")
           .select("id")
           .eq("conversation_id", conversationId)
           .neq("sender_id", user.id)
-          .eq("is_read", false)
-          .limit(100);
+          .eq("is_deleted", false)
+          .limit(200);
 
-        const unreadIds = (unread || []).map((m: any) => m.id);
-        if (unreadIds.length > 0) {
-          await supabase
-            .from("chat_messages")
-            .update({ is_read: true, read_at: new Date().toISOString() })
-            .in("id", unreadIds);
-          
-          const readReceipts = unreadIds.map((msgId: string) => ({
-            message_id: msgId,
-            user_id: user.id,
-            read_at: new Date().toISOString(),
-          }));
-          supabase
+        if (allMsgs && allMsgs.length > 0) {
+          const allIds = allMsgs.map((m: any) => m.id);
+          const { data: alreadyRead } = await supabase
             .from("chat_message_reads")
-            .upsert(readReceipts, { onConflict: "message_id,user_id" })
-            .then(() => {});
+            .select("message_id")
+            .eq("user_id", user.id)
+            .in("message_id", allIds);
+
+          const readSet = new Set((alreadyRead || []).map((r: any) => r.message_id));
+          const unreadIds = allIds.filter(id => !readSet.has(id));
+
+          if (unreadIds.length > 0) {
+            // Update global is_read for direct chats (backward compat)
+            supabase
+              .from("chat_messages")
+              .update({ is_read: true, read_at: new Date().toISOString() })
+              .in("id", unreadIds)
+              .then(() => {});
+
+            // Insert per-user read receipts
+            const readReceipts = unreadIds.map((msgId: string) => ({
+              message_id: msgId,
+              user_id: user.id,
+              read_at: new Date().toISOString(),
+            }));
+            supabase
+              .from("chat_message_reads")
+              .upsert(readReceipts, { onConflict: "message_id,user_id" })
+              .then(() => {});
+          }
         }
       }
     } catch (readErr) {
-      // Silently ignore read-marking errors
       console.warn("Erro ao marcar como lido:", readErr);
     }
   }, [conversationId, user, enrichMessages]);
