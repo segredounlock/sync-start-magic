@@ -725,7 +725,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
               />
             </MentionPresence>
             <textarea
-              ref={inputRef as any}
+              ref={inputRef}
               autoComplete="off"
               autoCorrect="off"
               value={text}
