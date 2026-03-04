@@ -242,7 +242,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       // Ensure all active operators appear
       const activeOps = ["Claro", "TIM", "Vivo"];
       activeOps.forEach(op => {
-        if (!operatorStats.find(s => s.operadora === op)) {
+        if (!operatorStats.find(s => s.operadora.toLowerCase() === op.toLowerCase())) {
           operatorStats.push({ operadora: op, avgRecent: 0, min24h: 0, avg24h: 0, max24h: 0, recentCount: 0 });
         }
       });
