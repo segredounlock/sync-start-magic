@@ -1,40 +1,34 @@
 
 
-## Diagnóstico e Correção
+## Plano: Filtro configuravel de usuarios no "Nova Conversa"
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Problema atual
+O modal "Nova Conversa" filtra apenas admins (`user_roles.role = 'admin'`). O usuario quer que apareçam **admins + usuarios com selo de verificação**, e que isso seja configuravel no Painel Principal (aba Bate-papo).
 
-### Plano
+### Alterações
 
-**1. Corrigir o mapeamento de status na sync function**
+**1. Adicionar configuração `chat_new_conv_filter` na `system_config`**
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+Nova chave na tabela `system_config`:
+- `chat_new_conv_filter` com valores possiveis: `"admin_badge"` (padrão - só admins e usuarios com selo), `"admin_only"` (só admins), `"all"` (todos)
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+**2. Atualizar `ChatRoomManager.tsx`** (aba Bate-papo no Principal)
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+Adicionar um seletor/toggle na seção de configurações do chat:
+- "Quem aparece em Nova Conversa": opções Admin + Selo (padrão), Apenas Admins, Todos
+- Salva na `system_config` com chave `chat_new_conv_filter`
 
-**2. Corrigir manualmente o pedido preso**
+**3. Atualizar `NewChatModal.tsx`**
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+Alterar a lógica de `fetchUsers`:
+- Carregar a config `chat_new_conv_filter` da `system_config`
+- Se `"admin_badge"` (padrão): buscar admins via `user_roles` + perfis com `verification_badge IS NOT NULL`, excluindo o proprio usuario
+- Se `"admin_only"`: manter logica atual (só admins)
+- Se `"all"`: buscar todos os perfis ativos
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+A query combinará os dois conjuntos (admins + badged users) e removerá duplicatas.
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Arquivos afetados
+- `src/components/chat/NewChatModal.tsx` — lógica de filtro dinâmico
+- `src/components/ChatRoomManager.tsx` — UI de configuração
 
