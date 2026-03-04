@@ -871,8 +871,8 @@ export default function AdminDashboard() {
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
         <>
-          <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setMenuOpen(false)} />
-          <div className="fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-2xl bg-background shadow-[0_-8px_30px_rgba(0,0,0,0.4)] pb-[env(safe-area-inset-bottom)]">
+          <div className="fixed inset-0 bg-black/60 z-[60] md:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="fixed inset-x-0 bottom-0 z-[61] md:hidden rounded-t-2xl bg-background shadow-[0_-8px_30px_rgba(0,0,0,0.4)] pb-[env(safe-area-inset-bottom)]">
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
