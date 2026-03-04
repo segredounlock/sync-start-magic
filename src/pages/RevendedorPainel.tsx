@@ -1712,6 +1712,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               open={!!receiptRecarga}
               onClose={() => setReceiptRecarga(null)}
               storeName={profileNome || "Recargas Brasil"}
+              userId={user?.id}
             />
           )}
           {tab === "extrato" && (
