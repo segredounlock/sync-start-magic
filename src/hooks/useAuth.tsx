@@ -1,15 +1,16 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "admin" | "revendedor" | "cliente" | "usuario" | null;
-type RoleState = AppRole | "loading";
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: AppRole;
   loading: boolean;
+  authReady: boolean;
+  roleLoaded: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -18,6 +19,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   role: null,
   loading: true,
+  authReady: false,
+  roleLoaded: false,
   signOut: async () => {},
 });
 
@@ -28,53 +31,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole>(null);
   const [roleLoaded, setRoleLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const isMountedRef = useRef(true);
 
-  const fetchRole = async (userId: string) => {
+  const fetchRole = useCallback(async (userId: string) => {
     try {
       const { data } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
         .maybeSingle();
+
+      if (!isMountedRef.current) return;
       setRole((data?.role as AppRole) ?? null);
+    } catch {
+      if (!isMountedRef.current) return;
+      setRole(null);
     } finally {
+      if (!isMountedRef.current) return;
       setRoleLoaded(true);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    let initialSessionHandled = false;
+    isMountedRef.current = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        if (session?.user) {
-          if (!initialSessionHandled) {
-            return;
-          }
-          setRoleLoaded(false);
-          await fetchRole(session.user.id);
-        } else {
-          setRole(null);
-          setRoleLoaded(true);
-        }
-        setLoading(false);
-      }
-    );
+    const hydrateSession = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!isMountedRef.current) return;
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      initialSessionHandled = true;
-      setSession(session);
-      if (session?.user) {
-        await fetchRole(session.user.id);
+      setSession(currentSession);
+      if (currentSession?.user) {
+        setRoleLoaded(false);
+        void fetchRole(currentSession.user.id);
       } else {
+        setRole(null);
         setRoleLoaded(true);
       }
+
+      setAuthReady(true);
+      setLoading(false);
+    };
+
+    void hydrateSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!isMountedRef.current) return;
+
+      setSession(nextSession);
+      if (nextSession?.user) {
+        setRoleLoaded(false);
+        void fetchRole(nextSession.user.id);
+      } else {
+        setRole(null);
+        setRoleLoaded(true);
+      }
+
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      isMountedRef.current = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchRole]);
 
   // Realtime subscription for role changes
   useEffect(() => {
@@ -82,17 +102,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!userId) return;
 
     const channel = supabase
-      .channel('user-role-changes')
+      .channel("user-role-changes")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_roles', filter: `user_id=eq.${userId}` },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_roles", filter: `user_id=eq.${userId}` },
         (payload) => {
-          if (payload.eventType === 'DELETE') {
+          if (payload.eventType === "DELETE") {
             setRole(null);
           } else {
             const newRole = (payload.new as any)?.role as AppRole;
             setRole(newRole ?? null);
           }
+          setRoleLoaded(true);
         }
       )
       .subscribe();
@@ -108,12 +129,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setSession(null);
     setRole(null);
+    setRoleLoaded(true);
     window.location.href = "/";
   };
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, role, loading, signOut }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, role, loading, authReady, roleLoaded, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
