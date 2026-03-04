@@ -8,7 +8,7 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil, ImagePlus } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil, ImagePlus, Lock } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { styledToast as toast } from "@/lib/toast";
 import { MentionDropdown } from "./MentionDropdown";
@@ -23,12 +23,13 @@ interface ChatWindowProps {
   conversationId: string;
   otherUser?: { id: string; nome: string | null; email: string | null; avatar_url: string | null; role?: string; verification_badge?: string | null };
   isGroup?: boolean;
+  isBlocked?: boolean;
   groupName?: string;
   groupIcon?: string | null;
   onBack?: () => void;
 }
 
-export function ChatWindow({ conversationId, otherUser, isGroup, groupName, groupIcon, onBack }: ChatWindowProps) {
+export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, groupName, groupIcon, onBack }: ChatWindowProps) {
   const { user, role } = useAuth();
   const isUserAdmin = role === "admin";
   const [myBadge, setMyBadge] = useState<string | null>(null);
@@ -676,7 +677,12 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
       </AnimatePresence>
 
       {/* Input bar */}
-      {!showAudioRecorder && (
+      {isBlocked && !isUserAdmin ? (
+        <div className="flex items-center justify-center gap-2 px-4 py-4 border-t border-border bg-card/80 backdrop-blur-sm">
+          <Lock className="h-4 w-4 text-muted-foreground/60" />
+          <span className="text-sm text-muted-foreground/60">Esta sala está bloqueada</span>
+        </div>
+      ) : !showAudioRecorder ? (
         <div className="flex items-center gap-2 px-3 py-3 border-t border-border bg-card/80 backdrop-blur-sm">
           <button onClick={() => {
             const newVal = !showEmoji;
@@ -777,7 +783,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, groupName, grou
             </button>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
