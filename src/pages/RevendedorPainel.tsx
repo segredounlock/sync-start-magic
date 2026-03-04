@@ -1583,8 +1583,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                           <Loader2 className="h-7 w-7 text-warning" />
                                         </motion.div>
                                       ) : r.status === "falha" ? (
-                                        <motion.div animate={{ rotate: [0, -8, 8, -8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-                                          <XCircle className="h-7 w-7 text-destructive" />
+                                        <motion.div animate={{ scale: [1, 1.15, 1, 1.1, 1], rotate: [0, -10, 10, -5, 0], opacity: [1, 0.7, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>
+                                          <XCircle className="h-7 w-7 text-destructive drop-shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
                                         </motion.div>
                                       ) : (
                                         <Smartphone className="h-6 w-6 text-muted-foreground" />
@@ -1680,7 +1680,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     const isPending = r.status === "pending";
                     const statusLabel = isCompleted ? "Concluída" : isPending ? "Processando" : r.status === "falha" ? "Falha" : r.status;
                     const statusClass = isCompleted ? "bg-success/15 text-success border-success/30" : isPending ? "bg-warning/15 text-warning border-warning/30" : "bg-destructive/15 text-destructive border-destructive/30";
-                    const statusIcon = isCompleted ? <CheckCircle2 className="h-8 w-8 text-success" /> : isPending ? <Clock className="h-8 w-8 text-warning" /> : <XCircle className="h-8 w-8 text-destructive" />;
+                    const statusIcon = isCompleted ? <CheckCircle2 className="h-8 w-8 text-success" /> : isPending ? <Clock className="h-8 w-8 text-warning" /> : <motion.div animate={{ scale: [1, 1.15, 1, 1.1, 1], rotate: [0, -10, 10, -5, 0], opacity: [1, 0.7, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}><XCircle className="h-8 w-8 text-destructive drop-shadow-[0_0_6px_rgba(239,68,68,0.5)]" /></motion.div>;
                     return (
                       <>
                         <div className="px-6 pt-6 pb-4 text-center">

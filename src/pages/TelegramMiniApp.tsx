@@ -1148,8 +1148,8 @@ export default function TelegramMiniApp() {
                                 <AlertTriangle className="w-12 h-12" style={{ color: "#eab308" }} />
                               </motion.div>
                             ) : (
-                              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.5 }}>
-                                <XCircle className="w-12 h-12" style={{ color: "#ef4444" }} />
+                              <motion.div animate={{ scale: [1, 1.15, 1, 1.1, 1], rotate: [0, -10, 10, -5, 0], opacity: [1, 0.7, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>
+                                <XCircle className="w-12 h-12 text-destructive drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                               </motion.div>
                             )}
                             <p className="text-sm font-semibold text-center" style={{
