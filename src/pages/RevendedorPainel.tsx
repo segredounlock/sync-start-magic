@@ -1409,8 +1409,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         <motion.div key={r.id}
                           initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07, duration: 0.3 }}
                           className="px-5 py-4 border-b border-border last:border-0 flex items-center gap-3 hover:bg-muted/20 transition-colors">
-                          <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                            <Smartphone className="h-5 w-5 text-muted-foreground" />
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                            (r.status === "completed" || r.status === "concluida") ? "bg-success/15" : r.status === "pending" ? "bg-warning/15" : r.status === "falha" ? "bg-destructive/15" : "bg-muted/50"
+                          }`}>
+                            {(r.status === "completed" || r.status === "concluida") ? (
+                              <AnimatedCheck size={24} className="text-success" />
+                            ) : r.status === "pending" ? (
+                              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+                                <Loader2 className="h-6 w-6 text-warning" />
+                              </motion.div>
+                            ) : r.status === "falha" ? (
+                              <XCircle className="h-6 w-6 text-destructive" />
+                            ) : (
+                              <Smartphone className="h-5 w-5 text-muted-foreground" />
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-semibold text-foreground">{r.operadora || "Operadora"}</p>
@@ -1517,8 +1529,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                 onClick={() => setSelectedRecarga(r)}>
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                                      <Smartphone className="h-5 w-5 text-muted-foreground" />
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                                      (r.status === "completed" || r.status === "concluida") ? "bg-success/15" : r.status === "pending" ? "bg-warning/15" : r.status === "falha" ? "bg-destructive/15" : "bg-muted/50"
+                                    }`}>
+                                      {(r.status === "completed" || r.status === "concluida") ? (
+                                        <AnimatedCheck size={28} className="text-success" />
+                                      ) : r.status === "pending" ? (
+                                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+                                          <Loader2 className="h-7 w-7 text-warning" />
+                                        </motion.div>
+                                      ) : r.status === "falha" ? (
+                                        <XCircle className="h-7 w-7 text-destructive" />
+                                      ) : (
+                                        <Smartphone className="h-6 w-6 text-muted-foreground" />
+                                      )}
                                     </div>
                                     <div>
                                       <p className="font-semibold text-foreground text-sm">{r.operadora || "Operadora"}</p>
