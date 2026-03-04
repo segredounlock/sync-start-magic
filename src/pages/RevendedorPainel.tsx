@@ -1423,7 +1423,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       ) : recargas.slice(0, 5).map((r, i) => (
                         <motion.div key={r.id}
                           initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07, duration: 0.3 }}
-                          className="px-5 py-4 border-b border-border last:border-0 flex items-center gap-3 hover:bg-muted/20 transition-colors">
+                          onClick={() => (r.status === "completed" || r.status === "concluida") ? setReceiptRecarga(r) : null}
+                          className={`px-5 py-4 border-b border-border last:border-0 flex items-center gap-3 transition-colors ${(r.status === "completed" || r.status === "concluida") ? "hover:bg-muted/20 cursor-pointer active:bg-muted/30" : "hover:bg-muted/20"}`}>
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
                             (r.status === "completed" || r.status === "concluida") ? "bg-success/15" : r.status === "pending" ? "bg-warning/15" : r.status === "falha" ? "bg-destructive/15" : "bg-muted/50"
                           }`}>
@@ -1442,14 +1443,22 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "Operadora"}</span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "Operadora"}</span>
+                            </div>
                             <p className="text-sm text-muted-foreground font-mono">{r.telefone}</p>
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="font-bold text-foreground">{fmt(r.valor)}</p>
                             <span className={`text-xs font-medium ${(r.status === "completed" || r.status === "concluida") ? "text-success" : r.status === "pending" ? "text-warning" : r.status === "falha" ? "text-destructive" : "text-muted-foreground"}`}>
                               {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}
                             </span>
+                            {(r.status === "completed" || r.status === "concluida") && (
+                              <div className="mt-1">
+                                <span className="text-[10px] text-primary/70 font-medium">📄 Ver comprovante</span>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       ))}
