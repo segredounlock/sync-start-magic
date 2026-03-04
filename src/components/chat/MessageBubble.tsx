@@ -418,14 +418,14 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
       </motion.div>
 
       <motion.div
-        className={`flex items-end ${isOwn ? "flex-row-reverse" : "flex-row"} max-w-[85%] group`}
+        className={`flex items-end ${isOwn ? "flex-row-reverse" : "flex-row"} max-w-[85%] group min-w-0`}
         style={{ x }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
 
-        <div className={`min-w-0 overflow-hidden`}>
+        <div className={`min-w-0 overflow-hidden max-w-full`}>
           {/* Pinned indicator */}
           {message.is_pinned && (
             <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
@@ -451,7 +451,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
           )}
 
           <div
-            className={`group relative px-3 py-2 select-none overflow-visible ${
+            className={`group relative px-3 py-2 select-none overflow-hidden ${
               isOwn
                 ? "bg-[hsl(152,45%,18%)] text-white rounded-2xl rounded-tr-md shadow-sm"
                 : "bg-card text-foreground border border-border/40 rounded-2xl rounded-tl-md shadow-sm"
@@ -651,7 +651,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
             </AnimatePresence>
 
             {message.type === "text" && (
-              <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+              <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
                 {renderContentWithMentions(message.content || "")}
               </p>
             )}
