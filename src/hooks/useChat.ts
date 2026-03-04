@@ -13,6 +13,7 @@ export interface ChatConversation {
   type: string;
   name: string | null;
   icon: string | null;
+  is_blocked?: boolean;
   last_message_text: string | null;
   last_message_at: string;
   created_at: string;
