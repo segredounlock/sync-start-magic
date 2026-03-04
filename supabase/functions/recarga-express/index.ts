@@ -484,7 +484,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               type: "recarga_completed",
               user_id: userId,
-              data: { telefone: phoneNumber, operadora: orderData.carrier?.name || carrierId, valor_recarga: catalogValue, custo: chargedCost, novo_saldo: newBalance },
+              data: { telefone: phoneNumber, operadora: orderData.carrier?.name || carrierId, valor_recarga: catalogValue, custo: chargedCost, novo_saldo: newBalance, recarga_id: externalId || "" },
             }),
           });
         } catch { /* ignore */ }
