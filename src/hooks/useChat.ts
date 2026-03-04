@@ -63,11 +63,12 @@ export interface ChatReaction {
 export function useConversations() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const initialLoadDone = useRef(false);
 
   const fetchConversations = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
+    if (!user) return;
+    if (!initialLoadDone.current) setLoading(true);
     try {
       const { data, error } = await supabase
         .from("chat_conversations")
