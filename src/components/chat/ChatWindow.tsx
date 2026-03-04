@@ -486,7 +486,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {isUserAdmin && (
+          {isUserAdmin && isGroup && (
             <button
               onClick={async (e) => {
                 e.stopPropagation();
