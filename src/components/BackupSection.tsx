@@ -44,11 +44,15 @@ const SOURCE_PATHS = [
   "src/components/chat/UserRecargasModal.tsx","src/components/chat/MentionDropdown.tsx",
   "src/components/ChatRoomManager.tsx",
   // Hooks
-  "src/hooks/useAuth.tsx","src/hooks/useBackgroundPaymentMonitor.ts",
-  "src/hooks/useChat.ts","src/hooks/useNotifications.ts","src/hooks/usePresence.ts",
+  "src/hooks/useAuth.tsx","src/hooks/useAsync.ts","src/hooks/useBackgroundPaymentMonitor.ts",
+  "src/hooks/useChat.ts","src/hooks/useCrud.ts","src/hooks/useNotifications.ts",
+  "src/hooks/usePixDeposit.ts","src/hooks/usePresence.ts",
   "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
   // Libs
-  "src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts","src/lib/utils.ts",
+  "src/lib/confirm.tsx","src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts",
+  "src/lib/timezone.ts","src/lib/toast.tsx","src/lib/utils.ts",
+  // Types
+  "src/types/index.ts",
   // Integrations
   "src/integrations/supabase/client.ts","src/integrations/supabase/types.ts",
   // Config
