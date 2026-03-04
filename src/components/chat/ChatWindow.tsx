@@ -8,7 +8,7 @@ import { MessageBubble } from "./MessageBubble";
 import { EmojiPicker } from "./EmojiPicker";
 import { AudioRecorder } from "./AudioRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil, ImagePlus, Lock } from "lucide-react";
+import { ArrowLeft, Send, Smile, Mic, X, Reply, Users, Pin, ChevronDown, Camera, Pencil, ImagePlus, Lock, Unlock } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { styledToast as toast } from "@/lib/toast";
 import { MentionDropdown } from "./MentionDropdown";
@@ -29,10 +29,11 @@ interface ChatWindowProps {
   onBack?: () => void;
 }
 
-export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, groupName, groupIcon, onBack }: ChatWindowProps) {
+export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: initialBlocked, groupName, groupIcon, onBack }: ChatWindowProps) {
   const { user, role } = useAuth();
   const isUserAdmin = role === "admin";
   const [myBadge, setMyBadge] = useState<string | null>(null);
+  const [isBlocked, setIsBlocked] = useState(!!initialBlocked);
   const isUserModerator = isUserAdmin || !!myBadge; // badge holders have mod powers
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
   const { onlineUsers, onlineCount } = useGroupPresence();
@@ -450,11 +451,33 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
             )}
           </span>
         </div>
-        {isGroup && (
-          <motion.div animate={{ rotate: showMembers ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </motion.div>
-        )}
+        <div className="flex items-center gap-1">
+          {isUserAdmin && (
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                const newBlocked = !isBlocked;
+                setIsBlocked(newBlocked);
+                const { error } = await supabase.from("chat_conversations").update({ is_blocked: newBlocked }).eq("id", conversationId);
+                if (error) {
+                  setIsBlocked(!newBlocked);
+                  toast.error("Erro ao alterar status da sala.");
+                } else {
+                  toast.success(newBlocked ? "Sala fechada" : "Sala aberta");
+                }
+              }}
+              className={`p-2 rounded-xl transition-colors ${isBlocked ? "bg-destructive/15 hover:bg-destructive/25 text-destructive" : "hover:bg-muted/50 text-muted-foreground"}`}
+              title={isBlocked ? "Abrir sala" : "Fechar sala"}
+            >
+              {isBlocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+            </button>
+          )}
+          {isGroup && (
+            <motion.div animate={{ rotate: showMembers ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </motion.div>
+          )}
+        </div>
       </div>
 
       {/* Members panel */}
