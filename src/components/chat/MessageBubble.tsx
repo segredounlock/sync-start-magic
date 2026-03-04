@@ -46,39 +46,29 @@ function CustomAudioPlayer({ src, isOwn, senderAvatar, senderName }: { src: stri
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    let maxTimeReached = 0;
 
     const updateDuration = () => {
-      const rawDuration = audio.duration;
-      const seekableDuration = audio.seekable && audio.seekable.length > 0
-        ? audio.seekable.end(audio.seekable.length - 1)
-        : 0;
-      const resolvedDuration = (rawDuration && isFinite(rawDuration) && rawDuration > 0)
-        ? rawDuration
-        : seekableDuration > 0 ? seekableDuration : 0;
-
-      if (resolvedDuration && isFinite(resolvedDuration) && resolvedDuration > 0) {
-        setDuration(resolvedDuration);
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration);
       }
     };
     const onTime = () => {
       setCurrentTime(audio.currentTime);
-      if (audio.currentTime > maxTimeReached) {
-        maxTimeReached = audio.currentTime;
-      }
       updateDuration();
     };
     const onEnd = () => {
-      if (!duration && maxTimeReached > 0) {
-        setDuration(maxTimeReached);
-      }
       setPlaying(false);
       setCurrentTime(0);
+      // Reset audio to beginning to prevent repeat
+      audio.currentTime = 0;
     };
 
+    // Force duration discovery for streaming audio (webm without duration header)
     const forceDuration = () => {
       if (audio.duration && isFinite(audio.duration) && audio.duration > 0) return;
-      audio.currentTime = 1e10;
+      // Only try once
+      const savedTime = audio.currentTime;
+      audio.currentTime = 1e6; // seek far ahead
       const onSeeked = () => {
         audio.removeEventListener("seeked", onSeeked);
         if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
@@ -86,24 +76,24 @@ function CustomAudioPlayer({ src, isOwn, senderAvatar, senderName }: { src: stri
         } else if (audio.currentTime > 0) {
           setDuration(audio.currentTime);
         }
-        audio.currentTime = 0;
+        audio.currentTime = savedTime;
       };
-      audio.addEventListener("seeked", onSeeked);
+      audio.addEventListener("seeked", onSeeked, { once: true });
     };
 
     audio.addEventListener("timeupdate", onTime);
-    audio.addEventListener("loadedmetadata", () => { updateDuration(); forceDuration(); });
+    audio.addEventListener("loadedmetadata", () => { updateDuration(); setTimeout(forceDuration, 100); });
     audio.addEventListener("durationchange", updateDuration);
-    audio.addEventListener("canplay", updateDuration);
     audio.addEventListener("ended", onEnd);
-    updateDuration();
+
+    // Preload audio
+    audio.load();
 
     return () => {
       audio.removeEventListener("timeupdate", onTime);
-      audio.removeEventListener("loadedmetadata", updateDuration);
       audio.removeEventListener("durationchange", updateDuration);
-      audio.removeEventListener("canplay", updateDuration);
       audio.removeEventListener("ended", onEnd);
+      audio.pause();
     };
   }, []);
 
