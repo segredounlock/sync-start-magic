@@ -384,6 +384,27 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
     }
   };
 
+  const renderFormattedText = (text: string, keyPrefix: string = "f"): (string | JSX.Element)[] => {
+    const boldRegex = /\*\*(.+?)\*\*/g;
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    let key = 0;
+    while ((match = boldRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+      parts.push(
+        <strong key={`${keyPrefix}-${key++}`} className="font-bold">{match[1]}</strong>
+      );
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
+    return parts.length > 0 ? parts : [text];
+  };
+
   const renderContentWithMentions = (content: string) => {
     const mentionRegex = /@([\w\sÀ-ÿ]+?)(?=\s|$|[.,!?;:])/g;
     const parts: (string | JSX.Element)[] = [];
@@ -392,7 +413,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
     let key = 0;
     while ((match = mentionRegex.exec(content)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(content.slice(lastIndex, match.index));
+        const textBefore = content.slice(lastIndex, match.index);
+        parts.push(...renderFormattedText(textBefore, `t${key}`));
       }
       parts.push(
         <span key={key++} className="text-primary font-semibold">@{match[1]}</span>
@@ -400,9 +422,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
       lastIndex = match.index + match[0].length;
     }
     if (lastIndex < content.length) {
-      parts.push(content.slice(lastIndex));
+      const remaining = content.slice(lastIndex);
+      parts.push(...renderFormattedText(remaining, `r${key}`));
     }
-    return parts.length > 0 ? parts : content;
+    return parts.length > 0 ? parts : renderFormattedText(content);
   };
 
   return (
