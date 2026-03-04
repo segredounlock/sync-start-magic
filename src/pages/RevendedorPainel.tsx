@@ -32,6 +32,7 @@ import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalD
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
+import { operadoraColors } from "@/lib/utils";
 
 type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
 
@@ -1427,7 +1428,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-foreground">{r.operadora || "Operadora"}</p>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "Operadora"}</span>
                             <p className="text-sm text-muted-foreground font-mono">{r.telefone}</p>
                           </div>
                           <div className="text-right shrink-0">
@@ -1549,7 +1550,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                       )}
                                     </div>
                                     <div>
-                                      <p className="font-semibold text-foreground text-sm">{r.operadora || "Operadora"}</p>
+                                      <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "Operadora"}</span>
                                       <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
                                     </div>
                                   </div>
@@ -1596,7 +1597,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               onClick={() => setSelectedRecarga(r)}>
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
-                              <td className="px-4 py-3 text-foreground">{r.operadora || "—"}</td>
+                              <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span></td>
                               <td className="px-4 py-3 text-right font-mono font-medium text-foreground">{fmt(r.valor)}</td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -1655,7 +1656,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Operadora</span>
-                            <span className="text-sm font-semibold text-foreground">{r.operadora || "—"}</span>
+                            <span className={`text-sm font-bold px-2.5 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Valor da Recarga</span>
