@@ -305,8 +305,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
 
     try {
       if (editingMessage) {
-        const msgId = editingMessage.id;
-        const isAdminEdit = isUserModerator && editingMessage.sender_id !== user?.id;
+        const messageBeingEdited = editingMessage;
+        const msgId = messageBeingEdited.id;
+        const isAdminEdit = isUserModerator;
         setEditingMessage(null);
         await editMessage(msgId, currentText, isAdminEdit);
       } else {
@@ -315,6 +316,8 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
       }
     } catch (err) {
       console.error("Erro ao enviar mensagem:", err);
+      toast.error(err instanceof Error ? err.message : "Não foi possível enviar/editar a mensagem.");
+      if (editingMessage) setEditingMessage(editingMessage);
       setText(currentText);
     } finally {
       setSending(false);

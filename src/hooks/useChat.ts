@@ -647,20 +647,20 @@ export function useChatMessages(conversationId: string | null) {
   }, [user]);
 
   const editMessage = useCallback(async (messageId: string, newContent: string, isAdmin = false) => {
-    if (!user || !newContent.trim()) return;
+    if (!user || !newContent.trim()) throw new Error("Mensagem inválida para edição.");
     const msg = messages.find(m => m.id === messageId);
-    if (!msg) return;
+    if (!msg) throw new Error("Mensagem não encontrada.");
 
     const trimmed = newContent.trim();
     const now = new Date().toISOString();
 
     // Validate BEFORE optimistic update to prevent silent reverts
     if (!isAdmin) {
-      if (msg.sender_id !== user.id) return;
+      if (msg.sender_id !== user.id) throw new Error("Você não pode editar essa mensagem.");
       const diff = Date.now() - new Date(msg.created_at).getTime();
       if (diff > 10 * 60 * 1000) {
         console.warn("Edição bloqueada: mensagem com mais de 10 minutos");
-        return;
+        throw new Error("Edição permitida apenas nos primeiros 10 minutos.");
       }
     }
 
@@ -676,6 +676,7 @@ export function useChatMessages(conversationId: string | null) {
         console.error("Admin edit error:", error);
         setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: msg.content, updated_at: msg.updated_at, edited_by: msg.edited_by } : m));
         editError = true;
+        throw new Error("Não foi possível editar a mensagem.");
       }
     } else {
       const { error } = await supabase.from("chat_messages").update(updateData).eq("id", messageId).eq("sender_id", user.id);
@@ -683,6 +684,7 @@ export function useChatMessages(conversationId: string | null) {
         console.error("Edit error:", error);
         setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: msg.content, updated_at: msg.updated_at, edited_by: msg.edited_by } : m));
         editError = true;
+        throw new Error("Não foi possível editar a mensagem.");
       }
     }
 
