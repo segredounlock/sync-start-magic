@@ -39,7 +39,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
   const buildText = useCallback(() => {
-    return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
+    return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
   }, [r, storeName]);
 
   // Pre-generate the image when the modal opens so it's ready instantly on click
@@ -263,7 +263,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
                   <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <h3 className="text-lg font-bold text-primary-foreground">Comprovante de Recarga</h3>
-                <p className="text-primary-foreground/70 text-xs mt-1">{storeName || "Recargas Brasil"}</p>
+                {storeName && <p className="text-primary-foreground/70 text-xs mt-1">{storeName}</p>}
               </div>
 
               {/* Notch effect */}
