@@ -15,8 +15,13 @@ interface ChatPageProps {
 
 export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
   const { user } = useAuth();
-  const { conversations, loading, startConversation } = useConversations();
+  const { conversations, loading, startConversation, clearUnread } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(GENERAL_CHAT_ID);
+
+  const handleSelectConversation = (id: string) => {
+    setActiveConversationId(id);
+    clearUnread(id);
+  };
   const [showNewChat, setShowNewChat] = useState(false);
   const [chatEnabled, setChatEnabled] = useState(true);
   const [isMobileView, setIsMobileView] = useState(forceMobile || window.innerWidth < 768);
