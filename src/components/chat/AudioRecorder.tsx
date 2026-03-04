@@ -30,6 +30,11 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
       if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
         mediaRecorder.current.stop();
       }
+      // Always stop all mic tracks on unmount
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
       if (audioUrl) URL.revokeObjectURL(audioUrl);
     };
   }, []);
