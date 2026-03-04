@@ -81,7 +81,7 @@ export default function ChatApp() {
                 conversationId={activeConversationId}
                 otherUser={activeConversation?.other_user}
                 isGroup={isGroupChat}
-                isBlocked={!!(activeConversation as any)?.is_blocked}
+                isBlocked={!!activeConversation?.is_blocked}
                 groupName={activeConversation?.name || undefined}
                 groupIcon={activeConversation?.icon}
                 onBack={() => setActiveConversationId(null)}
@@ -167,7 +167,7 @@ export default function ChatApp() {
               conversationId={activeConversationId}
               otherUser={activeConversation?.other_user}
               isGroup={isGroupChat}
-              isBlocked={!!(activeConversation as any)?.is_blocked}
+              isBlocked={!!activeConversation?.is_blocked}
               groupName={activeConversation?.name || undefined}
               groupIcon={activeConversation?.icon}
             />

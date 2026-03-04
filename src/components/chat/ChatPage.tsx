@@ -72,7 +72,7 @@ export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
                 conversationId={activeConversationId}
                 otherUser={activeConversation?.other_user}
                 isGroup={isGroupChat}
-                isBlocked={!!(activeConversation as any)?.is_blocked}
+                isBlocked={!!activeConversation?.is_blocked}
                 groupName={activeConversation?.name || undefined}
                 groupIcon={activeConversation?.icon}
                 onBack={() => setActiveConversationId(null)}
@@ -140,7 +140,7 @@ export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
             conversationId={activeConversationId}
             otherUser={activeConversation?.other_user}
             isGroup={isGroupChat}
-            isBlocked={!!(activeConversation as any)?.is_blocked}
+            isBlocked={!!activeConversation?.is_blocked}
             groupName={activeConversation?.name || undefined}
             groupIcon={activeConversation?.icon}
           />
