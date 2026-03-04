@@ -6,7 +6,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { appToast } from "@/lib/toast";
 import { Navigate } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Download } from "lucide-react";
+import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
 
@@ -352,6 +353,24 @@ export default function Auth() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Install App Button */}
+        {phase === "form" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-4 text-center"
+          >
+            <Link
+              to="/instalar"
+              className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-xl hover:bg-primary/5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Instalar App no celular
+            </Link>
+          </motion.div>
+        )}
 
         {/* Forgot Password Panel */}
         <AnimatePresence>
