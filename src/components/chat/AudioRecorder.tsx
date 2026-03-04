@@ -19,6 +19,7 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
