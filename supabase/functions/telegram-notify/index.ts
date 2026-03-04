@@ -209,6 +209,12 @@ async function sendTelegramPhoto(
   form.append("photo", new Blob([imageData], { type: "image/png" }), "comprovante.png");
   form.append("caption", caption);
   form.append("parse_mode", "HTML");
+  // Inline keyboard with share button
+  form.append("reply_markup", JSON.stringify({
+    inline_keyboard: [[
+      { text: "📤 Compartilhar comprovante", switch_inline_query: caption.replace(/<[^>]*>/g, "") }
+    ]]
+  }));
 
   const resp = await fetch(`${TELEGRAM_API}${token}/sendPhoto`, {
     method: "POST",
