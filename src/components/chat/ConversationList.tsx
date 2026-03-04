@@ -12,7 +12,6 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ conversations, loading, activeId, onSelect }: ConversationListProps) {
-  const { onlineCount } = useGroupPresence();
 
   if (loading) {
     return (
