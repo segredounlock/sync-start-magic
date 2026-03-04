@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, MutableRefObject } from "react";
+import { useState, useCallback, useRef, useEffect, MutableRefObject } from "react";
 
 interface UseAsyncOptions {
   /** Number of retries on failure (default: 0) */
@@ -79,8 +79,19 @@ export function useAsync<T = any>(
  */
 export function useResilientFetch(options: { timeout?: number } = {}) {
   const { timeout = 20000 } = options;
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const hasLoaded = useRef(false);
+
+  // Safety net: ensure loading never stays true forever
+  useEffect(() => {
+    const safety = setTimeout(() => {
+      if (!hasLoaded.current) {
+        hasLoaded.current = true;
+        setLoading(false);
+      }
+    }, 10000);
+    return () => clearTimeout(safety);
+  }, []);
 
   const runFetch = useCallback(async (fn: () => Promise<void>) => {
     if (!hasLoaded.current) setLoading(true);
