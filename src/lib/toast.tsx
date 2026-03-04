@@ -33,9 +33,9 @@ function iconNode(Icon: LucideIcon, color: string): ReactNode {
 /** Generate a random offset so each toast pops up in a different spot */
 function randomStyle(): React.CSSProperties {
   // Slight horizontal jitter: -40px to +40px from center
-  const x = Math.round(Math.random() * 80 - 40);
-  // Vertical: 8% to 18% from top (always near top-center)
-  const yPercent = Math.round(8 + Math.random() * 10);
+  const x = Math.round(Math.random() * 60 - 30);
+  // Vertical: centered around 45-55% of viewport
+  const yPercent = Math.round(45 + Math.random() * 10);
   return {
     position: "fixed" as const,
     left: `calc(50% + ${x}px)`,
