@@ -418,16 +418,6 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                 <Users className="h-5 w-5 text-primary" />
               </div>
             )}
-            {onlineCount > 0 && (
-              <motion.div
-                key={onlineCount}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="absolute -top-1 -left-1 min-w-[16px] h-4 rounded-full bg-success border-2 border-card flex items-center justify-center"
-              >
-                <span className="text-[8px] font-bold text-white px-0.5">{onlineCount}</span>
-              </motion.div>
-            )}
             {isUserAdmin && (
               <label
                 className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
