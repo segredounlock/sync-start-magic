@@ -1419,7 +1419,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                 <Loader2 className="h-6 w-6 text-warning" />
                               </motion.div>
                             ) : r.status === "falha" ? (
-                              <XCircle className="h-6 w-6 text-destructive" />
+                              <motion.div animate={{ rotate: [0, -8, 8, -8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
+                                <XCircle className="h-6 w-6 text-destructive" />
+                              </motion.div>
                             ) : (
                               <Smartphone className="h-5 w-5 text-muted-foreground" />
                             )}
@@ -1539,7 +1541,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                           <Loader2 className="h-7 w-7 text-warning" />
                                         </motion.div>
                                       ) : r.status === "falha" ? (
-                                        <XCircle className="h-7 w-7 text-destructive" />
+                                        <motion.div animate={{ rotate: [0, -8, 8, -8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
+                                          <XCircle className="h-7 w-7 text-destructive" />
+                                        </motion.div>
                                       ) : (
                                         <Smartphone className="h-6 w-6 text-muted-foreground" />
                                       )}

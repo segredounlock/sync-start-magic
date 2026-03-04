@@ -395,7 +395,9 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                       {r.status === "completed" ? (
                         <AnimatedCheck size={24} className="text-success" />
                       ) : r.status === "failed" || r.status === "falha" ? (
-                        <XCircle className="h-5 w-5 text-destructive" />
+                        <motion.div animate={{ rotate: [0, -8, 8, -8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
+                          <XCircle className="h-5 w-5 text-destructive" />
+                        </motion.div>
                       ) : (
                         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
                           <Loader2 className="h-5 w-5 text-warning" />
