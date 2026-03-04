@@ -30,19 +30,9 @@ function iconNode(Icon: LucideIcon, color: string): ReactNode {
   return <Icon className={`h-5 w-5 ${color}`} />;
 }
 
-/** Generate a random offset so each toast pops up in a different spot */
+/** Minimal style override – positioning is handled by CSS on [data-sonner-toaster] */
 function randomStyle(): React.CSSProperties {
-  // Slight horizontal jitter: -40px to +40px from center
-  const x = Math.round(Math.random() * 60 - 30);
-  // Vertical: centered around 45-55% of viewport
-  const yPercent = Math.round(45 + Math.random() * 10);
-  return {
-    position: "fixed" as const,
-    left: `calc(50% + ${x}px)`,
-    top: `${yPercent}%`,
-    transform: "translateX(-50%)",
-    zIndex: 9999,
-  };
+  return { zIndex: 9999 };
 }
 
 type ToastOpts = Parameters<typeof toast>[1];
