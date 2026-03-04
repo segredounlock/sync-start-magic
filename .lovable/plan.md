@@ -1,40 +1,44 @@
 
 
-## Diagnóstico e Correção
+## Diagnóstico: Scroll bloqueado na seção "Últimas Recargas"
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Causa raiz
 
-### Plano
+O problema está no `useEffect` de inicialização do Telegram Mini App (linhas 138-141):
 
-**1. Corrigir o mapeamento de status na sync function**
-
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```javascript
+document.documentElement.style.height = "100%";
+document.body.style.height = "100%";
+document.body.style.overflow = "hidden";
 ```
 
-**2. Corrigir manualmente o pedido preso**
+Combinado com o handler `preventDoubleTap` (linhas 158-161) que chama `e.preventDefault()` em eventos `touchend` rápidos (< 300ms), o que pode cancelar o scroll inercial (momentum scroll) no iOS/Telegram WebView.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+O container de conteúdo (`flex-1 overflow-y-auto pb-20`, linha 887) deveria permitir scroll interno, mas dois fatores o impedem:
+1. O `body.overflow = "hidden"` junto com `height: 100%` no html/body pode restringir a cadeia de layout flex
+2. O `preventDoubleTap` no `touchend` interfere com o gesto de scroll natural, especialmente em toques rápidos consecutivos
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+### Plano de correção
 
-**3. Verificar se há outros pedidos presos**
+**1. Ajustar o container principal e remover restrições desnecessárias**
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+No `useEffect` de inicialização (~linha 138-141):
+- Manter `overflow: hidden` no body (necessário para evitar bounce do Telegram)
+- Adicionar `touch-action: manipulation` ao container de conteúdo para permitir scroll sem zoom
+- Garantir que o container principal use `h-screen` com `overflow: hidden` e o container de conteúdo tenha `overflow-y: auto` com `-webkit-overflow-scrolling: touch`
 
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+**2. Corrigir o handler preventDoubleTap**
+
+No handler `preventDoubleTap` (~linha 158-161):
+- Verificar se o evento não está dentro do container de conteúdo scrollável antes de chamar `preventDefault()`
+- Alternativa mais simples: usar CSS `touch-action: manipulation` no container e remover o handler JavaScript de double-tap, pois `touch-action: manipulation` já previne double-tap zoom nativamente
+
+**3. Adicionar CSS de suporte ao scroll**
+
+No container de conteúdo (linha 887):
+- Adicionar `style={{ WebkitOverflowScrolling: 'touch' }}` e `touch-action: pan-y` para garantir scroll suave no WebView do Telegram/iOS
+- Adicionar classe `scrollbar-hide` (já existente no CSS)
+
+### Arquivos afetados
+- `src/pages/TelegramMiniApp.tsx` — ajustar useEffect de zoom e classes do container de conteúdo
 
