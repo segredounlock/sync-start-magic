@@ -376,24 +376,26 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     return () => { cancelled = true; clearInterval(interval); };
   }, [recargas, callApi, fetchData]);
 
-  // Detect phone number in clipboard for quick paste
+  // Detect phone number in clipboard for quick paste (delayed to avoid iOS "Paste" popup on load)
   useEffect(() => {
     if (tab !== "recarga" || telefone.length > 0) {
       setClipboardPhone(null);
       return;
     }
-    const detectClipboard = async () => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (cancelled || !document.hasFocus()) return;
       try {
         if (!navigator.clipboard?.readText) return;
         const text = await navigator.clipboard.readText();
-        if (!text) return;
+        if (cancelled || !text) return;
         const digits = text.replace(/\D/g, "");
         if (digits.length >= 10 && digits.length <= 11) {
           setClipboardPhone(digits);
         }
       } catch { /* clipboard permission denied */ }
-    };
-    detectClipboard();
+    }, 1500);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [tab, telefone]);
 
    // Auto-detect removed — user selects operator manually, then clicks "Verificar"
