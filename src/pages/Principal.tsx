@@ -3113,8 +3113,8 @@ export default function Principal() {
                 {/* Maintenance Confirmation Dialog */}
                 <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
                   <DialogPortal>
-                    <DialogOverlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-                    <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] border border-border bg-card rounded-2xl shadow-2xl p-0 overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+                    <DialogOverlay className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+                    <DialogContent className="fixed left-[50%] top-[50%] z-[70] w-full max-w-md translate-x-[-50%] translate-y-[-50%] border border-border bg-card rounded-2xl shadow-2xl p-0 overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
                       {/* Header */}
                       <div className={`p-6 pb-4 ${globalConfig.maintenanceMode === "true" ? "bg-success/10" : "bg-warning/10"}`}>
                         <div className="flex items-center gap-3">
@@ -3823,7 +3823,7 @@ export default function Principal() {
               </div>
 
               {showBroadcastModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !broadcastSending && setShowBroadcastModal(false)} />
                   <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto glass-modal rounded-2xl p-6 z-10">
                     <div className="flex items-center justify-between mb-5">
@@ -4060,7 +4060,7 @@ function CreateRevendedorModal({ onClose, onCreated }: { onClose: () => void; on
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4" onClick={onClose}>
       <div className="glass-modal rounded-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
         <h2 className="font-display text-lg font-semibold text-foreground mb-4">Novo Usuário</h2>
         <form onSubmit={handleCreate} className="space-y-4">
@@ -4139,7 +4139,7 @@ function SaldoModal({ rev, onClose, onUpdated }: { rev: Revendedor; onClose: () 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4" onClick={onClose}>
       <div className="glass-modal rounded-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
         <h2 className="font-display text-lg font-semibold text-foreground mb-1">Gerenciar Saldo</h2>
         <p className="text-sm text-muted-foreground mb-4">{rev.nome || rev.email} — Saldo atual: <strong className="text-foreground">{rev.saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></p>

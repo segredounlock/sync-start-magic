@@ -1941,7 +1941,7 @@ export default function AdminDashboard() {
             {/* Modal editar saldo */}
             <AnimatePresence>
               {editSaldoUser && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm" onClick={() => setEditSaldoUser(null)}>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-center justify-center bg-background/70 backdrop-blur-sm" onClick={() => setEditSaldoUser(null)}>
                   <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="glass-card rounded-xl p-6 w-full max-w-sm mx-4 space-y-4" onClick={e => e.stopPropagation()}>
                     <h4 className="font-semibold text-foreground text-lg">Editar Saldo</h4>
                     <p className="text-sm text-muted-foreground">{editSaldoUser.nome || editSaldoUser.email}</p>
@@ -1978,7 +1978,7 @@ export default function AdminDashboard() {
             {/* Modal confirmação remover role */}
             <AnimatePresence>
               {confirmRoleRemove && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm" onClick={() => setConfirmRoleRemove(null)}>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-center justify-center bg-background/70 backdrop-blur-sm" onClick={() => setConfirmRoleRemove(null)}>
                   <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="glass-card rounded-xl p-6 w-full max-w-sm mx-4 space-y-4" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center gap-3">
                       <AlertTriangle className="h-6 w-6 text-warning" />
@@ -2292,7 +2292,7 @@ export default function AdminDashboard() {
             {/* Deposit Detail Modal */}
             <AnimatePresence>
               {selectedDeposit && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedDeposit(null)}>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedDeposit(null)}>
                   <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="glass-card rounded-2xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                     {(() => {
                       const t = selectedDeposit;
@@ -3386,7 +3386,7 @@ export default function AdminDashboard() {
 
         {/* Credit Client Modal */}
         {creditClientModal && (
-          <div className="fixed inset-0 bg-background/70 backdrop-blur-sm z-50 flex items-center justify-center px-4" onClick={() => setCreditClientModal(null)}>
+          <div className="fixed inset-0 bg-background/70 backdrop-blur-sm z-[70] flex items-center justify-center px-4" onClick={() => setCreditClientModal(null)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               className="glass-card rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}
@@ -3433,7 +3433,7 @@ export default function AdminDashboard() {
 
         {/* Client History Modal */}
         {clientHistoryModal && (
-          <div className="fixed inset-0 bg-background/70 backdrop-blur-sm z-50 flex items-start justify-center pt-8 md:pt-16 px-4" onClick={() => setClientHistoryModal(null)}>
+          <div className="fixed inset-0 bg-background/70 backdrop-blur-sm z-[70] flex items-start justify-center pt-8 md:pt-16 px-4" onClick={() => setClientHistoryModal(null)}>
             <motion.div
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
               className="glass-card rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 md:p-6" onClick={e => e.stopPropagation()}
@@ -3585,7 +3585,7 @@ export default function AdminDashboard() {
 
             {/* Broadcast Modal */}
             {showBroadcastModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !broadcastSending && setShowBroadcastModal(false)} />
                 <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto glass-modal rounded-2xl p-6 z-10">
                   <div className="flex items-center justify-between mb-5">
@@ -3918,7 +3918,7 @@ function OperadoraModal({ operadora, onClose, onSaved }: { operadora: Operadora 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4" onClick={onClose}>
       <div className="glass-modal rounded-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
         <h2 className="font-display text-lg font-semibold text-foreground mb-4">{operadora ? "Editar" : "Nova"} Operadora</h2>
         <form onSubmit={handleSave} className="space-y-4">

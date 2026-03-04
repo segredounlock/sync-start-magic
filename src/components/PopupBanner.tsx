@@ -49,7 +49,7 @@ export function PopupBanner({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70]"
             onClick={handleClose}
           />
 
@@ -59,7 +59,7 @@ export function PopupBanner({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 40 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none"
           >
             <div className="relative w-full max-w-sm rounded-2xl border border-primary/20 bg-card shadow-2xl overflow-hidden pointer-events-auto">
               {/* Background gradient */}
