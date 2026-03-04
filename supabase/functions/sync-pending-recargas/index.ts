@@ -138,6 +138,7 @@ Deno.serve(async (req) => {
                       valor_recarga: recarga.valor,
                       custo: recarga.custo,
                       novo_saldo: Number(saldoData?.valor) || 0,
+                      recarga_id: recarga.id,
                     },
                   }),
                 });
