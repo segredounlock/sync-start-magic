@@ -191,7 +191,11 @@ export function useConversations() {
     return data.id;
   }, [user, fetchConversations]);
 
-  return { conversations, loading, fetchConversations, startConversation };
+  const clearUnread = useCallback((conversationId: string) => {
+    setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+  }, []);
+
+  return { conversations, loading, fetchConversations, startConversation, clearUnread };
 }
 
 // Cache for sender profiles to avoid re-fetching on every realtime update
@@ -398,7 +402,14 @@ export function useChatMessages(conversationId: string | null) {
             supabase
               .from("chat_message_reads")
               .upsert(readReceipts, { onConflict: "message_id,user_id" })
-              .then(() => {});
+              .then(() => {
+                // Touch conversation to trigger realtime refetch of unread counts
+                supabase
+                  .from("chat_conversations")
+                  .update({ updated_at: new Date().toISOString() })
+                  .eq("id", conversationId)
+                  .then(() => {});
+              });
           }
         }
       }

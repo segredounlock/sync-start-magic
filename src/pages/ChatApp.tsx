@@ -14,8 +14,13 @@ export default function ChatApp() {
   const navigate = useNavigate();
   const { user } = useAuth();
   usePresenceTracker();
-  const { conversations, loading, startConversation } = useConversations();
+  const { conversations, loading, startConversation, clearUnread } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+
+  const handleSelectConversation = (id: string) => {
+    setActiveConversationId(id);
+    clearUnread(id);
+  };
   const [showNewChat, setShowNewChat] = useState(false);
   const [chatEnabled, setChatEnabled] = useState(true);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
@@ -113,7 +118,7 @@ export default function ChatApp() {
                 conversations={conversations}
                 loading={loading}
                 activeId={activeConversationId}
-                onSelect={setActiveConversationId}
+                onSelect={handleSelectConversation}
               />
             </motion.div>
           )}
@@ -156,7 +161,7 @@ export default function ChatApp() {
             conversations={conversations}
             loading={loading}
             activeId={activeConversationId}
-            onSelect={setActiveConversationId}
+            onSelect={handleSelectConversation}
           />
         </div>
 
