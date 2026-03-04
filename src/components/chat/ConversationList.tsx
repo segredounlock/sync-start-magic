@@ -63,17 +63,24 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
         className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left hover:bg-muted/50 ${isActive ? "bg-primary/10 border-r-2 border-primary" : ""}`}
       >
         {isGroup ? (
-          conv.icon && conv.icon.startsWith("http") ? (
-            <img src={conv.icon} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
-          ) : (
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${isGeneral ? "bg-primary/15 border-primary/30" : "bg-accent/15 border-accent/30"}`}>
-              {conv.icon && !conv.icon.startsWith("http") ? (
-                <span className="text-xl">{conv.icon}</span>
-              ) : (
-                <Users className={`h-5 w-5 ${isGeneral ? "text-primary" : "text-accent"}`} />
-              )}
-            </div>
-          )
+          <div className="relative">
+            {conv.icon && conv.icon.startsWith("http") ? (
+              <img src={conv.icon} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
+            ) : (
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${isGeneral ? "bg-primary/15 border-primary/30" : "bg-accent/15 border-accent/30"}`}>
+                {conv.icon && !conv.icon.startsWith("http") ? (
+                  <span className="text-xl">{conv.icon}</span>
+                ) : (
+                  <Users className={`h-5 w-5 ${isGeneral ? "text-primary" : "text-accent"}`} />
+                )}
+              </div>
+            )}
+            {onlineCount > 0 && (
+              <div className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] rounded-full bg-success border-2 border-card flex items-center justify-center">
+                <span className="text-[9px] font-bold text-white px-0.5">{onlineCount}</span>
+              </div>
+            )}
+          </div>
         ) : conv.other_user?.avatar_url ? (
           <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
         ) : (
