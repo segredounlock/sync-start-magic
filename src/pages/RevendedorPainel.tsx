@@ -836,15 +836,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <div className="glass-card rounded-xl p-3.5 flex items-center gap-3 rgb-border">
               <AvatarDisplay />
               <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground truncate uppercase flex items-center gap-1.5 shimmer-letters">
-                  {userLabel}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate uppercase shimmer-letters">
+                    {userLabel}
+                  </p>
                   {role === "admin" && (
                     <svg className="h-4 w-4 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor" style={{ animationName: 'spin-wobble' }}>
                       <path d="M12 2L14.09 8.26L21 9.27L16.18 13.14L17.64 20.02L12 16.77L6.36 20.02L7.82 13.14L3 9.27L9.91 8.26L12 2Z" />
                       <path d="M9.5 12.5L11 14L14.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                     </svg>
                   )}
-                </p>
+                </div>
                 <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
             </div>
