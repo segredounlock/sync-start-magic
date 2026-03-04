@@ -26,19 +26,18 @@ const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 50;
 const SWIPE_LOCK_ANGLE = 30; // degrees - lock horizontal after this angle
 
-function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
+function CustomAudioPlayer({ src, isOwn, senderAvatar, senderName }: { src: string; isOwn: boolean; senderAvatar?: string | null; senderName?: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [waveform] = useState(() => {
-    // Generate pseudo-random waveform bars (deterministic per src)
     const bars: number[] = [];
     let seed = 0;
     for (let i = 0; i < src.length && i < 20; i++) seed += src.charCodeAt(i);
-    for (let i = 0; i < 32; i++) {
+    for (let i = 0; i < 28; i++) {
       seed = (seed * 16807 + 7) % 2147483647;
-      bars.push(0.2 + (seed % 100) / 125); // 0.2 to 1.0
+      bars.push(0.25 + (seed % 100) / 133);
     }
     return bars;
   });
@@ -64,14 +63,12 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
     };
     const onTime = () => {
       setCurrentTime(audio.currentTime);
-      // Track max time reached as fallback duration for WebM without metadata
       if (audio.currentTime > maxTimeReached) {
         maxTimeReached = audio.currentTime;
       }
       updateDuration();
     };
     const onEnd = () => {
-      // Use maxTimeReached as duration if we still don't have it
       if (!duration && maxTimeReached > 0) {
         setDuration(maxTimeReached);
       }
@@ -79,10 +76,8 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
       setCurrentTime(0);
     };
 
-    // Workaround for WebM: set currentTime to a huge number to force duration calculation
     const forceDuration = () => {
       if (audio.duration && isFinite(audio.duration) && audio.duration > 0) return;
-      // Temporarily seek to end to discover duration
       audio.currentTime = 1e10;
       const onSeeked = () => {
         audio.removeEventListener("seeked", onSeeked);
@@ -140,28 +135,35 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
   };
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const initial = (senderName?.[0] || "U").toUpperCase();
 
   return (
     <div
-      className="flex items-center gap-2.5 min-w-[200px] max-w-[260px]"
+      className={`flex items-center gap-3 min-w-[220px] max-w-[280px] py-1`}
       onPointerDownCapture={(e) => e.stopPropagation()}
     >
       <audio ref={audioRef} src={src} preload="metadata" />
-      <button
-        onClick={toggle}
-        className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-          isOwn
-            ? "bg-white/15 hover:bg-white/25 text-white"
-            : "bg-primary/15 hover:bg-primary/25 text-primary"
-        }`}
-      >
-        {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+      
+      {/* Avatar with play overlay */}
+      <button onClick={toggle} className="relative flex-shrink-0 group/play">
+        {senderAvatar ? (
+          <img src={senderAvatar} alt="" referrerPolicy="no-referrer" className="w-11 h-11 rounded-full object-cover border-2 border-white/20" />
+        ) : (
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm border-2 ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
+            {initial}
+          </div>
+        )}
+        {/* Play/Pause overlay */}
+        <div className={`absolute inset-0 rounded-full flex items-center justify-center transition-all ${playing ? "bg-black/30" : "bg-black/20 group-hover/play:bg-black/40"}`}>
+          {playing ? <Pause className="h-4 w-4 text-white drop-shadow" /> : <Play className="h-4 w-4 text-white ml-0.5 drop-shadow" />}
+        </div>
       </button>
+
+      {/* Waveform + time */}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        {/* Waveform bars */}
         <div
           ref={progressRef}
-          className="flex items-end gap-[2px] h-[28px] cursor-pointer relative"
+          className="flex items-center gap-[2px] h-[30px] cursor-pointer relative"
           onClick={seek}
           onTouchStart={seek}
         >
@@ -174,11 +176,11 @@ function CustomAudioPlayer({ src, isOwn }: { src: string; isOwn: boolean }) {
                 key={i}
                 className={`flex-1 rounded-full transition-colors duration-150 ${
                   isPlayed
-                    ? isOwn ? "bg-white/80" : "bg-primary"
-                    : isOwn ? "bg-white/20" : "bg-muted-foreground/20"
+                    ? isOwn ? "bg-white/90" : "bg-primary"
+                    : isOwn ? "bg-white/25" : "bg-muted-foreground/25"
                 }`}
                 style={{ height: `${h * 100}%`, minHeight: 3 }}
-                animate={isActive ? { scaleY: [1, 1.3, 1] } : { scaleY: 1 }}
+                animate={isActive ? { scaleY: [1, 1.4, 1] } : { scaleY: 1 }}
                 transition={isActive ? { duration: 0.3, repeat: Infinity } : { duration: 0.15 }}
               />
             );
@@ -422,38 +424,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Avatar */}
-        {!isOwn ? (
-          <div
-            className={`flex-shrink-0 mr-1.5 mb-0.5 ${isCurrentUserAdmin ? "cursor-pointer" : ""}`}
-            onPointerDown={(e) => { if (isCurrentUserAdmin) e.stopPropagation(); }}
-            onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && message.sender_id) setShowUserRecargas(true); }}
-          >
-            {message.sender?.avatar_url ? (
-              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover border border-border" />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
-                {(senderName[0] || "U").toUpperCase()}
-              </div>
-            )}
-          </div>
-        ) : null}
 
         <div className={`min-w-0 overflow-hidden`}>
-          {/* Sender name + verified badge */}
-          <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
-            <span
-              className={`text-[11px] font-bold uppercase tracking-wide ${(isAdmin || !!message.sender?.verification_badge) ? "shimmer-letters" : isOwn ? "text-primary" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
-              onPointerDown={(e) => { if (isCurrentUserAdmin && !isOwn) e.stopPropagation(); }}
-              onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
-            >{senderName}</span>
-            {message.sender?.verification_badge ? (
-              <VerificationBadge badge={message.sender.verification_badge as BadgeType} size="sm" />
-            ) : isAdmin ? (
-              <VerificationBadge badge="verificado" size="sm" />
-            ) : null}
-          </div>
-
           {/* Pinned indicator */}
           {message.is_pinned && (
             <div className={`flex items-center gap-1 mb-0.5 ${isOwn ? "justify-end mr-1" : "ml-1"}`}>
@@ -479,7 +451,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
           )}
 
           <div
-            className={`group relative px-3 py-1.5 select-none overflow-visible ${
+            className={`group relative px-3 py-2 select-none overflow-visible ${
               isOwn
                 ? "bg-[hsl(152,45%,18%)] text-white rounded-2xl rounded-tr-md shadow-sm"
                 : "bg-card text-foreground border border-border/40 rounded-2xl rounded-tl-md shadow-sm"
@@ -504,12 +476,10 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
             onPointerMove={() => {}}
             onContextMenu={(e) => {
               e.preventDefault();
-              // Mobile: show bottom sheet; Desktop: show context menu at position
               const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
               if (isTouchDevice && window.innerWidth < 640) {
                 setShowLongPressMenu(true);
               } else {
-                // Ensure menu doesn't overflow viewport
                 const menuHeight = 220;
                 const menuWidth = 170;
                 const spaceBelow = window.innerHeight - e.clientY;
@@ -523,6 +493,34 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               }
             }}
           >
+            {/* Avatar + Name inside bubble */}
+            <div className={`flex items-center gap-2 mb-1`}>
+              <div
+                className={`flex-shrink-0 ${isCurrentUserAdmin && !isOwn ? "cursor-pointer" : ""}`}
+                onPointerDown={(e) => { if (isCurrentUserAdmin && !isOwn) e.stopPropagation(); }}
+                onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
+              >
+                {message.sender?.avatar_url ? (
+                  <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover border border-white/20" />
+                ) : (
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
+                    {(senderName[0] || "U").toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-1 min-w-0">
+                <span
+                  className={`text-[11px] font-bold uppercase tracking-wide truncate ${(isAdmin || !!message.sender?.verification_badge) ? "shimmer-letters" : isOwn ? "text-white/80" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
+                  onPointerDown={(e) => { if (isCurrentUserAdmin && !isOwn) e.stopPropagation(); }}
+                  onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
+                >{senderName}</span>
+                {message.sender?.verification_badge ? (
+                  <VerificationBadge badge={message.sender.verification_badge as BadgeType} size="sm" />
+                ) : isAdmin ? (
+                  <VerificationBadge badge="verificado" size="sm" />
+                ) : null}
+              </div>
+            </div>
             {/* Dropdown trigger (desktop) */}
             <button
               ref={dropdownBtnRef}
@@ -660,7 +658,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
 
             {/* Audio content */}
             {message.type === "audio" && message.audio_url && (
-              <CustomAudioPlayer src={message.audio_url} isOwn={isOwn} />
+              <CustomAudioPlayer src={message.audio_url} isOwn={isOwn} senderAvatar={message.sender?.avatar_url} senderName={senderName} />
             )}
 
             {/* Image content */}
@@ -714,18 +712,6 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
           )}
         </div>
 
-        {/* Avatar for own messages */}
-        {isOwn && (
-          <div className="flex-shrink-0 ml-1.5 mb-0.5">
-            {message.sender?.avatar_url ? (
-              <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover border border-primary/30" />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
-                {(senderName[0] || "U").toUpperCase()}
-              </div>
-            )}
-          </div>
-        )}
       </motion.div>
 
       {/* Mobile long-press bottom sheet */}
