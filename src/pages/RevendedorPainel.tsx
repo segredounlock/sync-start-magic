@@ -712,7 +712,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // Reset error when URL changes
   useEffect(() => { setAvatarError(false); }, [avatarUrl]);
 
-  const AvatarDisplay = ({ size = "w-10 h-10", textSize = "text-sm" }: { size?: string; textSize?: string }) => (
+  const AvatarDisplay = ({ size = "w-12 h-12", textSize = "text-base" }: { size?: string; textSize?: string }) => (
     avatarUrl && !avatarError ? (
       <img 
         src={avatarUrl} 
