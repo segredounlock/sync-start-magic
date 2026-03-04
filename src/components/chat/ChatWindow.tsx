@@ -51,7 +51,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
   const imageInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagesAllowed, setImagesAllowed] = useState(true);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
@@ -318,7 +318,10 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
       setText(currentText);
     } finally {
       setSending(false);
-      inputRef.current?.focus();
+      if (inputRef.current) {
+        inputRef.current.style.height = "auto";
+        inputRef.current.focus();
+      }
     }
   };
 
@@ -721,17 +724,20 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
                 }}
               />
             </MentionPresence>
-            <input
+            <textarea
               ref={inputRef}
-              type="text"
-              inputMode="text"
               autoComplete="off"
               autoCorrect="off"
               value={text}
+              rows={1}
               onChange={e => {
                 const val = e.target.value;
-                if (val.length > 700) return;
+                if (!isUserAdmin && val.length > 700) return;
                 setText(val);
+                // Auto-resize textarea
+                const el = e.target;
+                el.style.height = "auto";
+                el.style.height = Math.min(el.scrollHeight, 120) + "px";
                 // Send typing indicator
                 if (val.trim()) {
                   sendTyping(myNome);
@@ -764,11 +770,11 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
               }}
               maxLength={isUserAdmin ? undefined : 700}
               placeholder="Mensagem..."
-              className="w-full py-2.5 px-4 rounded-full bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
-              style={{ fontSize: "16px" }}
+              className="w-full py-2.5 px-4 rounded-2xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm resize-none scrollbar-hide"
+              style={{ fontSize: "16px", maxHeight: "120px", overflowY: "auto" }}
             />
-            {text.length > 600 && (
-              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-medium ${text.length >= 700 ? "text-destructive" : "text-muted-foreground/60"}`}>
+            {!isUserAdmin && text.length > 600 && (
+              <span className={`absolute right-3 bottom-2 text-[9px] font-medium ${text.length >= 700 ? "text-destructive" : "text-muted-foreground/60"}`}>
                 {text.length}/700
               </span>
             )}
