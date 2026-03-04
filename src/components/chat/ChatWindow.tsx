@@ -423,7 +423,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                 key={onlineCount}
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-success border-2 border-card flex items-center justify-center"
+                className="absolute -top-1 -left-1 min-w-[16px] h-4 rounded-full bg-success border-2 border-card flex items-center justify-center"
               >
                 <span className="text-[8px] font-bold text-white px-0.5">{onlineCount}</span>
               </motion.div>
