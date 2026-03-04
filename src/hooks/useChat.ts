@@ -657,12 +657,14 @@ export function useChatMessages(conversationId: string | null) {
     setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: trimmed, updated_at: now, edited_by: user.id } : m));
 
     const updateData = { content: trimmed, updated_at: now, edited_by: user.id };
+    let editError = false;
 
     if (isAdmin) {
       const { error } = await supabase.from("chat_messages").update(updateData).eq("id", messageId);
       if (error) {
         console.error("Admin edit error:", error);
         setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: msg.content, updated_at: msg.updated_at, edited_by: msg.edited_by } : m));
+        editError = true;
       }
     } else {
       if (msg.sender_id !== user.id) return;
@@ -672,9 +674,23 @@ export function useChatMessages(conversationId: string | null) {
       if (error) {
         console.error("Edit error:", error);
         setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: msg.content, updated_at: msg.updated_at, edited_by: msg.edited_by } : m));
+        editError = true;
       }
     }
-  }, [user, messages]);
+
+    // Update last_message_text if this is the latest message in the conversation
+    if (!editError && conversationId) {
+      const sortedMsgs = [...messages].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const latestMsg = sortedMsgs[0];
+      if (latestMsg && latestMsg.id === messageId) {
+        const senderName = latestMsg.sender_name || user.email?.split("@")[0] || "Usuário";
+        const previewText = `${senderName}: ${trimmed}`;
+        supabase.from("chat_conversations").update({
+          last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
+        }).eq("id", conversationId).then(() => {});
+      }
+    }
+  }, [user, messages, conversationId]);
 
   const pinMessage = useCallback(async (messageId: string) => {
     if (!user || !conversationId) return;
