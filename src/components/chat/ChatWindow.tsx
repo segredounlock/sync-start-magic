@@ -51,7 +51,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked, grou
   const imageInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagesAllowed, setImagesAllowed] = useState(true);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
