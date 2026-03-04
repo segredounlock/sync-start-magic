@@ -1034,6 +1034,10 @@ export type Database = {
       }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_verification_badge: { Args: { _user_id: string }; Returns: boolean }
+      sync_chat_conversation_preview: {
+        Args: { _conversation_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
