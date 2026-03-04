@@ -1,99 +1,40 @@
 
 
-## Diagnóstico: Painel "Nova Recarga" travado no loading (skeleton infinito)
+## Plano: Limpar comprovante Telegram para cliente final + botão de compartilhar nativo
 
-### Causa Raiz Identificada
+### Contexto
+O comprovante enviado no Telegram é para o **cliente final** do revendedor. Portanto, informações internas (saldo, cobrado, nome "Recargas Brasil") devem ser removidas. Além disso, o botão "Compartilhar" deve abrir o menu nativo do Telegram para encaminhar a imagem diretamente para WhatsApp ou outros apps.
 
-O problema está na interação entre `useResilientFetch` e `fetchData` no `RevendedorPainel.tsx`:
+### Alterações na Edge Function `telegram-notify/index.ts`
 
-1. **`useResilientFetch()`** inicializa `loading = true` (linha 82 do `useAsync.ts`)
-2. **`fetchData`** tem um guard `if (!user) return;` que sai sem chamar `runFetch`
-3. Se o `user` ainda for `null` no momento do primeiro `useEffect` (linhas 318-333), `runFetch` nunca é chamado
-4. Como `runFetch` nunca executa, `hasLoaded.current` permanece `false` e `loading` permanece `true` **para sempre**
-5. Resultado: os cards "Recargas Hoje" e "Total" ficam com `SkeletonValue` infinitamente
+**1. Imagem do comprovante — remover campos desnecessários:**
+- Remover "Recargas Brasil" do cabeçalho (linha 146)
+- Manter apenas o título "Comprovante de Recarga"
+- Remover a linha `row("💲", "Cobrado", ...)` — já não existe na imagem atual, mas existe no **caption texto** (linha 344)
+- Remover `novo_saldo` da imagem (não exibir saldo do revendedor ao cliente)
+- Manter apenas: Telefone, Operadora, Valor da Recarga, Data/Hora, ID do Pedido, badge "Recarga Concluída"
 
-Isso acontece especialmente quando:
-- O `AuthProvider` ainda não resolveu a sessão no momento do primeiro render
-- O componente é lazy-loaded via `Suspense` e o `useEffect` dispara antes do `user` estar disponível
+**2. Caption texto — limpar também:**
+- Remover linha `💰 Cobrado:` (linha 344)
+- Remover linha `💳 Novo saldo:` (linha 346)
+- Manter apenas: Telefone, Operadora, Valor da Recarga
 
-### Plano de Correção
+**3. Botão de compartilhar — usar `forward` nativo do Telegram:**
+- Substituir o `inline_keyboard` com `switch_inline_query` (que não funciona bem para imagens) por um botão que usa a API `forwardMessage` ou, mais eficaz, simplesmente **não incluir inline keyboard** e confiar no botão nativo de "Encaminhar" do Telegram
+- **Alternativa melhor**: Usar `reply_markup` com um botão `callback_data` que instrui o bot a reenviar a mensagem via `copyMessage` para um contato escolhido — porém isso é complexo
+- **Solução prática**: Remover o `reply_markup` com `switch_inline_query` (que abre inline query, não share nativo). Em vez disso, enviar a foto **sem** reply_markup — o Telegram já possui nativamente o botão de encaminhar/compartilhar em qualquer mensagem. O cliente pode tocar na imagem → menu de 3 pontos → Encaminhar → escolher WhatsApp/contato
 
-#### 1. Corrigir `fetchData` para sinalizar loading=false mesmo sem user
+### Detalhes técnicos
 
-No `RevendedorPainel.tsx`, alterar a função `fetchData` para que, quando `user` for null, ainda assim marque o loading como concluído:
+| Item | Ação |
+|------|------|
+| Linha 143-146 | Remover "Recargas Brasil", manter só "Comprovante de Recarga" |
+| Linha 185 (imagem) | Manter valor da recarga |
+| Remover da imagem | `novo_saldo` (não exibir) |
+| Linha 344 (caption) | Remover "Cobrado" |
+| Linha 346 (caption) | Remover "Novo saldo" |
+| Linhas 274-278 | Remover `reply_markup` inline keyboard |
+| Footer da imagem | Manter "Comprovante gerado em..." (sem "Recargas Brasil") |
 
-```typescript
-const fetchData = useCallback(async () => {
-  if (!user) {
-    // Sem user, não há dados para buscar - desabilitar loading
-    return;
-  }
-  await runFetch(async () => { /* ...existing code... */ });
-}, [user, runFetch]);
-```
-
-A correção real precisa estar no `useEffect` que chama `fetchData`, garantindo que se `user` não existir, o estado de loading é desativado.
-
-#### 2. Adicionar safety net no `useResilientFetch`
-
-Modificar o hook para aceitar uma dependência de "readiness" ou adicionar um timeout de segurança que desativa o loading após X segundos mesmo sem `runFetch` ser chamado:
-
-```typescript
-// Em useResilientFetch, adicionar timeout de segurança
-useEffect(() => {
-  const safety = setTimeout(() => {
-    if (!hasLoaded.current) {
-      hasLoaded.current = true;
-      setLoading(false);
-    }
-  }, 10000); // 10s safety net
-  return () => clearTimeout(safety);
-}, []);
-```
-
-#### 3. Garantir que o useEffect reaja à mudança de `user`
-
-O `useEffect` na linha 318-333 tem `[fetchData, fetchCatalog]` como dependências. Como `fetchData` depende de `user`, quando `user` mudar o efeito re-executa. **Porém**, na primeira execução (user=null), `fetchData` retorna sem chamar `runFetch`.
-
-A correção principal: no `useEffect`, se `user` for null, forçar `loading = false`:
-
-```typescript
-useEffect(() => {
-  if (!user) return; // Don't fetch without user, but loading stays managed by runFetch
-  fetchData();
-  fetchCatalog();
-  // ...banners fetch...
-}, [fetchData, fetchCatalog]);
-```
-
-Mas isso não resolve porque `loading` começa `true`. A correção correta é **inicializar `loading` como `false` no `useResilientFetch`** e só ativar na primeira chamada de `runFetch`:
-
-```typescript
-export function useResilientFetch(options = {}) {
-  const [loading, setLoading] = useState(false); // Antes era true
-  // ...
-  const runFetch = useCallback(async (fn) => {
-    if (!hasLoaded.current) setLoading(true); // Ativa loading apenas quando realmente inicia
-    // ...
-  }, [timeout]);
-}
-```
-
-#### 4. Corrigir erro de build no telegram-bot
-
-Verificar e corrigir o erro de parse em `supabase/functions/telegram-bot/index.ts` que está impedindo o deploy das edge functions.
-
-### Arquivos a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/hooks/useAsync.ts` | Mudar `useState(true)` para `useState(false)` no `useResilientFetch` e adicionar timeout de segurança |
-| `src/pages/RevendedorPainel.tsx` | Ajustar o `useEffect` de carregamento para não depender de `runFetch` ter sido chamado para exibir conteúdo |
-| `supabase/functions/telegram-bot/index.ts` | Investigar/corrigir erro de parse na linha 1481 |
-
-### Impacto
-
-- **Zero breaking changes**: a interface continua com skeletons durante o carregamento real
-- **Resolve o travamento**: loading nunca fica stuck porque começa como `false` e só ativa quando há fetch real
-- **Safety net**: timeout de 10s garante que mesmo em falha de rede o UI destranca
+O compartilhamento nativo do Telegram (encaminhar mensagem) já permite enviar para WhatsApp via "Compartilhar" no menu de opções da mensagem — não é necessário um botão customizado.
 
