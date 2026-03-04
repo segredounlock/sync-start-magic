@@ -21,7 +21,7 @@ async function getFont(): Promise<ArrayBuffer> {
   return cachedFont;
 }
 
-// ── Receipt image generation (mirrors RecargaReceipt.tsx design) ─
+// ── Receipt image generation (HD – mirrors RecargaReceipt.tsx) ──
 function buildReceiptElement(data: {
   telefone: string;
   operadora: string;
@@ -33,8 +33,7 @@ function buildReceiptElement(data: {
 }) {
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
-  // Colors matching the web dark theme
-  const colors = {
+  const c = {
     bg: "#0f172a",
     card: "#1a2332",
     border: "#2a3a4e",
@@ -42,22 +41,22 @@ function buildReceiptElement(data: {
     primaryLight: "#059669",
     text: "#e2e8f0",
     muted: "#94a3b8",
-    mutedBg: "rgba(148,163,184,0.1)",
-    successBg: "rgba(16,185,129,0.1)",
-    successBorder: "rgba(16,185,129,0.2)",
+    mutedBg: "rgba(148,163,184,0.12)",
+    successBg: "rgba(16,185,129,0.12)",
+    successBorder: "rgba(16,185,129,0.25)",
   };
 
   const iconBox = (emoji: string, isSuccess = false) =>
     h("div", {
       style: {
         display: "flex",
-        width: "36px",
-        height: "36px",
-        borderRadius: "8px",
-        backgroundColor: isSuccess ? colors.successBg : colors.mutedBg,
+        width: "72px",
+        height: "72px",
+        borderRadius: "16px",
+        backgroundColor: isSuccess ? c.successBg : c.mutedBg,
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "16px",
+        fontSize: "32px",
         flexShrink: 0,
       },
     }, emoji);
@@ -67,33 +66,32 @@ function buildReceiptElement(data: {
       style: {
         display: "flex",
         alignItems: "center",
-        gap: "12px",
+        gap: "24px",
       },
     }, [
       iconBox(emoji, opts.isSuccess),
-      h("div", { style: { display: "flex", flexDirection: "column", gap: "2px", flex: "1" } }, [
+      h("div", { style: { display: "flex", flexDirection: "column", gap: "4px", flex: "1" } }, [
         h("span", {
           style: {
-            fontSize: "9px",
-            color: colors.muted,
-            letterSpacing: "1.5px",
+            fontSize: "18px",
+            color: c.muted,
+            letterSpacing: "3px",
             textTransform: "uppercase" as const,
             fontWeight: "500",
           },
         }, label),
         h("span", {
           style: {
-            fontSize: opts.large ? "20px" : "14px",
+            fontSize: opts.large ? "40px" : "28px",
             fontWeight: "700",
-            color: opts.isSuccess ? colors.primary : colors.text,
+            color: opts.isSuccess ? c.primary : c.text,
             fontFamily: opts.mono !== false ? "Inter, monospace" : "Inter, sans-serif",
           },
         }, value),
       ]),
     ]);
 
-  // Format date
-  const dateStr = data.created_at
+  const dateStr = data.created_at && data.created_at.length > 0
     ? new Date(data.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })
     : new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
 
@@ -107,9 +105,9 @@ function buildReceiptElement(data: {
         flexDirection: "column",
         width: "100%",
         height: "100%",
-        backgroundColor: colors.card,
+        backgroundColor: c.card,
         fontFamily: "Inter, sans-serif",
-        borderRadius: "16px",
+        borderRadius: "32px",
         overflow: "hidden",
       },
     },
@@ -123,29 +121,28 @@ function buildReceiptElement(data: {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`,
-            padding: "24px 24px 32px",
+            background: `linear-gradient(135deg, ${c.primary}, ${c.primaryLight})`,
+            padding: "48px 48px 64px",
           },
         },
         [
-          // Checkmark circle
           h("div", {
             style: {
               display: "flex",
-              width: "56px",
-              height: "56px",
+              width: "112px",
+              height: "112px",
               borderRadius: "50%",
               backgroundColor: "rgba(255,255,255,0.2)",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "12px",
+              marginBottom: "24px",
             },
-          }, h("span", { style: { fontSize: "28px" } }, "✓")),
+          }, h("span", { style: { fontSize: "56px", color: "white" } }, "✓")),
           h("span", {
-            style: { color: "white", fontSize: "18px", fontWeight: "800", letterSpacing: "-0.3px" },
+            style: { color: "white", fontSize: "36px", fontWeight: "800", letterSpacing: "-0.5px" },
           }, "Comprovante de Recarga"),
           h("span", {
-            style: { color: "rgba(255,255,255,0.7)", fontSize: "11px", marginTop: "4px" },
+            style: { color: "rgba(255,255,255,0.7)", fontSize: "22px", marginTop: "8px" },
           }, "Recargas Brasil"),
         ]
       ),
@@ -155,37 +152,18 @@ function buildReceiptElement(data: {
         style: {
           display: "flex",
           alignItems: "center",
-          marginTop: "-16px",
-          height: "32px",
-          padding: "0",
+          marginTop: "-32px",
+          height: "64px",
         },
       }, [
         h("div", {
-          style: {
-            width: "32px",
-            height: "32px",
-            borderRadius: "50%",
-            backgroundColor: colors.bg,
-            marginLeft: "-16px",
-            flexShrink: 0,
-          },
+          style: { width: "64px", height: "64px", borderRadius: "50%", backgroundColor: c.bg, marginLeft: "-32px", flexShrink: 0 },
         }),
         h("div", {
-          style: {
-            flex: "1",
-            borderBottom: `2px dashed ${colors.border}`,
-            margin: "0 4px",
-          },
+          style: { flex: "1", borderBottom: `3px dashed ${c.border}`, margin: "0 8px" },
         }),
         h("div", {
-          style: {
-            width: "32px",
-            height: "32px",
-            borderRadius: "50%",
-            backgroundColor: colors.bg,
-            marginRight: "-16px",
-            flexShrink: 0,
-          },
+          style: { width: "64px", height: "64px", borderRadius: "50%", backgroundColor: c.bg, marginRight: "-32px", flexShrink: 0 },
         }),
       ]),
 
@@ -196,8 +174,8 @@ function buildReceiptElement(data: {
           style: {
             display: "flex",
             flexDirection: "column",
-            padding: "20px 24px",
-            gap: "16px",
+            padding: "40px 48px",
+            gap: "32px",
             flex: "1",
           },
         },
@@ -210,24 +188,20 @@ function buildReceiptElement(data: {
 
           // Status badge
           h("div", {
-            style: {
-              display: "flex",
-              justifyContent: "center",
-              paddingTop: "8px",
-            },
+            style: { display: "flex", justifyContent: "center", paddingTop: "16px" },
           }, [
             h("span", {
               style: {
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
-                background: colors.successBg,
-                border: `1.5px solid ${colors.successBorder}`,
-                borderRadius: "20px",
-                padding: "8px 20px",
-                fontSize: "12px",
+                gap: "12px",
+                background: c.successBg,
+                border: `3px solid ${c.successBorder}`,
+                borderRadius: "40px",
+                padding: "16px 40px",
+                fontSize: "24px",
                 fontWeight: "800",
-                color: colors.primary,
+                color: c.primary,
               },
             }, "✅ Recarga Concluída"),
           ]),
@@ -239,11 +213,11 @@ function buildReceiptElement(data: {
         style: {
           display: "flex",
           justifyContent: "center",
-          padding: "12px 24px 16px",
-          borderTop: `1px solid ${colors.border}`,
+          padding: "24px 48px 32px",
+          borderTop: `2px solid ${c.border}`,
         },
       }, [
-        h("span", { style: { fontSize: "10px", color: "rgba(148,163,184,0.6)" } },
+        h("span", { style: { fontSize: "20px", color: "rgba(148,163,184,0.6)" } },
           `Comprovante gerado em ${nowStr}`),
       ]),
     ]
@@ -256,8 +230,8 @@ async function generateReceiptPng(data: any): Promise<Uint8Array | null> {
     const element = buildReceiptElement(data);
 
     const response = new ImageResponse(element, {
-      width: 400,
-      height: 600,
+      width: 800,
+      height: 1200,
       fonts: [
         { name: "Inter", data: font, style: "normal" as const, weight: 700 },
       ],
