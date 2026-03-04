@@ -1999,7 +1999,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     const secs = Math.round(s % 60);
                     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
                   };
-                  const opColor = op.operadora === "Claro" ? "text-red-400" : op.operadora === "TIM" ? "text-blue-400" : "text-purple-400";
+                  const opName = op.operadora.toUpperCase();
+                  const opColor = opName === "CLARO" ? "text-red-400" : opName === "TIM" ? "text-blue-400" : opName === "VIVO" ? "text-purple-400" : "text-muted-foreground";
                   const avgColor = op.avgRecent <= 120 ? "text-emerald-400" : op.avgRecent <= 300 ? "text-yellow-400" : "text-red-400";
                   return (
                     <motion.div key={op.operadora} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
