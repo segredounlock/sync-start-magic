@@ -44,6 +44,7 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 48000 },
       });
+      streamRef.current = stream;
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
       chunksRef.current = [];
 
