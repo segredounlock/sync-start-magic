@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Sonner toaster: centralizar verticalmente na tela */
+[data-sonner-toaster] {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
 /* Hide scrollbars for mini-app feel */
 .scrollbar-hide {
   -ms-overflow-style: none;
