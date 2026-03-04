@@ -654,7 +654,17 @@ export function useChatMessages(conversationId: string | null) {
     const trimmed = newContent.trim();
     const now = new Date().toISOString();
 
-    // Optimistic local update
+    // Validate BEFORE optimistic update to prevent silent reverts
+    if (!isAdmin) {
+      if (msg.sender_id !== user.id) return;
+      const diff = Date.now() - new Date(msg.created_at).getTime();
+      if (diff > 10 * 60 * 1000) {
+        console.warn("Edição bloqueada: mensagem com mais de 10 minutos");
+        return;
+      }
+    }
+
+    // Optimistic local update (only after validation passes)
     setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: trimmed, updated_at: now, edited_by: user.id } : m));
 
     const updateData = { content: trimmed, updated_at: now, edited_by: user.id };
@@ -668,9 +678,6 @@ export function useChatMessages(conversationId: string | null) {
         editError = true;
       }
     } else {
-      if (msg.sender_id !== user.id) return;
-      const diff = Date.now() - new Date(msg.created_at).getTime();
-      if (diff > 10 * 60 * 1000) return;
       const { error } = await supabase.from("chat_messages").update(updateData).eq("id", messageId).eq("sender_id", user.id);
       if (error) {
         console.error("Edit error:", error);
