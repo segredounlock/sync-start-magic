@@ -678,33 +678,14 @@ export function useChatMessages(conversationId: string | null) {
       }
     }
 
-    // Update preview in conversation list if edited message is still the latest non-deleted message
+    // Recompute/persist latest conversation preview via backend function
     if (!editError && conversationId) {
-      const { data: latestMsg, error: latestErr } = await supabase
-        .from("chat_messages")
-        .select("id, sender_id")
-        .eq("conversation_id", conversationId)
-        .eq("is_deleted", false)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { error: syncErr } = await supabase.rpc("sync_chat_conversation_preview" as any, {
+        _conversation_id: conversationId,
+      });
 
-      if (latestErr) {
-        console.error("Latest message check error:", latestErr);
-      } else if (latestMsg?.id === messageId) {
-        const senderFromState = messages.find(m => m.id === messageId)?.sender?.nome;
-        const senderName = senderFromState || user.email?.split("@")[0] || "Usuário";
-        const previewText = `${senderName}: ${trimmed}`;
-        const { error: convErr } = await supabase
-          .from("chat_conversations")
-          .update({
-            last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
-          })
-          .eq("id", conversationId);
-
-        if (convErr) {
-          console.error("Conversation preview update error:", convErr);
-        }
+      if (syncErr) {
+        console.error("Conversation preview sync error:", syncErr);
       }
     }
   }, [user, messages, conversationId]);
