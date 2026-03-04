@@ -678,16 +678,33 @@ export function useChatMessages(conversationId: string | null) {
       }
     }
 
-    // Update last_message_text if this is the latest message in the conversation
+    // Update preview in conversation list if edited message is still the latest non-deleted message
     if (!editError && conversationId) {
-      const sortedMsgs = [...messages].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      const latestMsg = sortedMsgs[0];
-      if (latestMsg && latestMsg.id === messageId) {
-        const senderName = latestMsg.sender?.nome || user.email?.split("@")[0] || "Usuário";
+      const { data: latestMsg, error: latestErr } = await supabase
+        .from("chat_messages")
+        .select("id, sender_id")
+        .eq("conversation_id", conversationId)
+        .eq("is_deleted", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (latestErr) {
+        console.error("Latest message check error:", latestErr);
+      } else if (latestMsg?.id === messageId) {
+        const senderFromState = messages.find(m => m.id === messageId)?.sender?.nome;
+        const senderName = senderFromState || user.email?.split("@")[0] || "Usuário";
         const previewText = `${senderName}: ${trimmed}`;
-        supabase.from("chat_conversations").update({
-          last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
-        }).eq("id", conversationId).then(() => {});
+        const { error: convErr } = await supabase
+          .from("chat_conversations")
+          .update({
+            last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
+          })
+          .eq("id", conversationId);
+
+        if (convErr) {
+          console.error("Conversation preview update error:", convErr);
+        }
       }
     }
   }, [user, messages, conversationId]);
