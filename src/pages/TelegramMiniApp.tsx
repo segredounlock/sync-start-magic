@@ -1237,10 +1237,10 @@ export default function TelegramMiniApp() {
                         <h2 className="text-lg font-bold text-center" style={st.text}>Confirmar Recarga</h2>
                         <div className="flex justify-between"><span style={st.hint}>Operadora</span><span className="font-semibold" style={st.text}>{selectedOp.nome}</span></div>
                         <div className="flex justify-between"><span style={st.hint}>Número</span><span className="font-mono" style={st.text}>{formatPhone(phone)}</span></div>
-                        <div className="flex justify-between"><span style={st.hint}>Valor</span><span className="font-bold" style={st.green}>{formatCurrency(selectedValor.cost)}</span></div>
-                        <div className="flex justify-between text-sm"><span style={st.hint}>Saldo após</span><span style={st.text}>{formatCurrency(saldo - selectedValor.cost)}</span></div>
+                        <div className="flex justify-between"><span style={st.hint}>Valor</span><span className="font-bold" style={st.green}>{formatCurrency(selectedValor.userCost ?? selectedValor.cost)}</span></div>
+                        <div className="flex justify-between text-sm"><span style={st.hint}>Saldo após</span><span style={st.text}>{formatCurrency(saldo - (selectedValor.userCost ?? selectedValor.cost))}</span></div>
                       </div>
-                      {selectedValor.cost > saldo ? (
+                      {(selectedValor.userCost ?? selectedValor.cost) > saldo ? (
                         <p className="text-center text-sm" style={st.destructive}>Saldo insuficiente</p>
                       ) : (
                         <button onClick={handleRecargaConfirm} disabled={recargaLoading}
