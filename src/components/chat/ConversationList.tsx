@@ -78,10 +78,21 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
                 <span className="text-[9px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
               </div>
             )}
-          <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+          </div>
         ) : (
-          <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-            {initial}
+          <div className="relative">
+            {conv.other_user?.avatar_url ? (
+              <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                {initial}
+              </div>
+            )}
+            {(conv.unread_count || 0) > 0 && (
+              <div className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
+                <span className="text-[9px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
+              </div>
+            )}
           </div>
         )}
         <div className="flex-1 min-w-0">
