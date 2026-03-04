@@ -111,11 +111,6 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
           </div>
           <div className="flex items-center justify-between mt-0.5">
             <span className="text-xs text-muted-foreground truncate">{conv.last_message_text || "Nova conversa"}</span>
-            {(conv.unread_count || 0) > 0 && (
-              <span className="ml-2 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                {conv.unread_count}
-              </span>
-            )}
           </div>
         </div>
       </motion.button>
