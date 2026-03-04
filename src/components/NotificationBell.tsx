@@ -150,7 +150,7 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
           <>
             {/* Mobile backdrop */}
             <motion.div
-              className="fixed inset-0 bg-black/40 z-40 sm:hidden"
+              className="fixed inset-0 bg-black/40 z-[60] sm:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -162,7 +162,7 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.96 }}
               transition={{ type: "spring", damping: 24, stiffness: 300 }}
-              className="fixed inset-x-3 top-14 bottom-auto z-50 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] max-h-[75vh] sm:max-h-[480px] rounded-2xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col"
+              className="fixed inset-x-3 top-14 bottom-auto z-[61] sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] max-h-[75vh] sm:max-h-[480px] rounded-2xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col"
             >
               {/* Header */}
               <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between bg-muted/20">

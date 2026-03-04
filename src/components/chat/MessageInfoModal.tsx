@@ -92,7 +92,7 @@ export function MessageInfoModal({ message, open, onClose }: MessageInfoModalPro
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-50"
+            className="fixed inset-0 bg-black/60 z-[70]"
             onClick={onClose}
           />
           {/* Modal */}
@@ -101,7 +101,7 @@ export function MessageInfoModal({ message, open, onClose }: MessageInfoModalPro
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-[15%] sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] z-50 bg-card border border-border rounded-2xl shadow-2xl max-h-[70vh] flex flex-col overflow-hidden"
+            className="fixed inset-x-4 top-[15%] sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] z-[70] bg-card border border-border rounded-2xl shadow-2xl max-h-[70vh] flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}

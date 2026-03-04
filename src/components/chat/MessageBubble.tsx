@@ -614,7 +614,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.12 }}
-                  className="fixed z-50 bg-popover border border-border rounded-xl shadow-2xl min-w-[160px] overflow-hidden"
+                  className="fixed z-[70] bg-popover border border-border rounded-xl shadow-2xl min-w-[160px] overflow-hidden"
                   style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
                 >
                   <button onClick={() => { onReply(); setShowContextMenu(false); }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-foreground hover:bg-muted/60 transition-colors">
@@ -737,7 +737,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40"
+              className="fixed inset-0 bg-black/50 z-[60]"
               onClick={() => setShowLongPressMenu(false)}
             />
             {/* Bottom sheet */}
@@ -746,7 +746,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border rounded-t-2xl shadow-2xl"
+              className="fixed bottom-0 left-0 right-0 z-[61] bg-card border-t border-border rounded-t-2xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Handle bar */}

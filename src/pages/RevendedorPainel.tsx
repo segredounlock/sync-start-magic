@@ -1013,7 +1013,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 {trackingStatus.open && (
                   <motion.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-background/70 backdrop-blur-sm z-50 flex items-center justify-center px-4"
+                    className="fixed inset-0 bg-background/70 backdrop-blur-sm z-[70] flex items-center justify-center px-4"
                     onClick={() => setTrackingStatus(prev => ({ ...prev, open: false }))}
                   >
                     <motion.div
@@ -1119,7 +1119,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     {showValoresModal && (
                       <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-background/70 backdrop-blur-sm z-50 flex items-start justify-center pt-8 md:pt-16 px-4"
+                        className="fixed inset-0 bg-background/70 backdrop-blur-sm z-[70] flex items-start justify-center pt-8 md:pt-16 px-4"
                         onClick={() => setShowValoresModal(false)}
                       >
                         <motion.div
@@ -1357,7 +1357,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+                          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
                           onClick={() => setPendingWarning(null)}
                         >
                           <motion.div
@@ -1623,7 +1623,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+                className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
                 onClick={() => setSelectedRecarga(null)}
               >
                 <motion.div
