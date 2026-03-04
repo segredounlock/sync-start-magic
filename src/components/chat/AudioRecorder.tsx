@@ -19,6 +19,7 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -29,6 +30,11 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
       if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
         mediaRecorder.current.stop();
       }
+      // Always stop all mic tracks on unmount
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
       if (audioUrl) URL.revokeObjectURL(audioUrl);
     };
   }, []);
@@ -38,6 +44,7 @@ export function AudioRecorder({ onSend, onCancel, onTypingPing }: AudioRecorderP
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 48000 },
       });
+      streamRef.current = stream;
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
       chunksRef.current = [];
 
