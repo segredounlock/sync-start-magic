@@ -27,6 +27,9 @@ interface RecargaReceiptProps {
 export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
+  const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
+  const [imageReady, setImageReady] = useState(false);
+  const [preparingImage, setPreparingImage] = useState(false);
   const r = recarga;
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -36,8 +39,80 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
     return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...\n\n${storeName || "Recargas Brasil"}`;
   }, [r, storeName]);
 
-  const captureImage = async (): Promise<Blob | null> => {
+  // Pre-generate the image when the modal opens so it's ready instantly on click
+  useEffect(() => {
+    if (!open) {
+      setCachedBlob(null);
+      setImageReady(false);
+      setPreparingImage(false);
+      return;
+    }
+
+    setPreparingImage(true);
+
+    // Pequeno atraso para garantir render completo sem atrasar demais o pré-carregamento
+    const timer = setTimeout(async () => {
+      if (!receiptRef.current) {
+        setPreparingImage(false);
+        return;
+      }
+      try {
+        // Get the computed background color for the receipt
+        const computedBg = getComputedStyle(receiptRef.current).backgroundColor;
+
+        const canvas = await html2canvas(receiptRef.current, {
+          backgroundColor: computedBg || "#ffffff",
+          scale: 3,
+          useCORS: true,
+          logging: false,
+          onclone: (clonedDoc, clonedEl) => {
+            // Hide the close button in the cloned version
+            const closeBtn = clonedEl.querySelector("[data-hide-capture]");
+            if (closeBtn) (closeBtn as HTMLElement).style.display = "none";
+
+            // Resolve all CSS custom properties to computed values for html2canvas
+            const resolveStyles = (el: Element) => {
+              const computed = getComputedStyle(el);
+              const htmlEl = el as HTMLElement;
+              // Apply key visual properties that html2canvas struggles with
+              htmlEl.style.color = computed.color;
+              htmlEl.style.backgroundColor = computed.backgroundColor;
+              htmlEl.style.borderColor = computed.borderColor;
+              htmlEl.style.borderTopColor = computed.borderTopColor;
+              htmlEl.style.borderBottomColor = computed.borderBottomColor;
+              htmlEl.style.borderLeftColor = computed.borderLeftColor;
+              htmlEl.style.borderRightColor = computed.borderRightColor;
+              // Resolve gradient backgrounds
+              const bgImage = computed.backgroundImage;
+              if (bgImage && bgImage !== "none") {
+                htmlEl.style.backgroundImage = bgImage;
+              }
+              el.querySelectorAll("*").forEach(resolveStyles);
+            };
+            resolveStyles(clonedEl);
+          },
+        });
+        const dataUrl = canvas.toDataURL("image/png");
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        setCachedBlob(blob);
+        setImageReady(true);
+      } catch (e) {
+        console.warn("Pre-capture failed:", e);
+        setImageReady(false);
+      } finally {
+        setPreparingImage(false);
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  const generateBlob = async (): Promise<Blob | null> => {
+    if (cachedBlob) return cachedBlob;
     if (!receiptRef.current) return null;
+
+    setPreparingImage(true);
     try {
       const computedBg = getComputedStyle(receiptRef.current).backgroundColor;
       const canvas = await html2canvas(receiptRef.current, {
@@ -67,34 +142,44 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
       });
       const dataUrl = canvas.toDataURL("image/png");
       const res = await fetch(dataUrl);
-      return await res.blob();
+      const blob = await res.blob();
+      setCachedBlob(blob);
+      setImageReady(true);
+      return blob;
     } catch (e) {
-      console.warn("Image capture failed:", e);
+      console.warn("Image generation failed:", e);
       return null;
+    } finally {
+      setPreparingImage(false);
     }
   };
 
   const handleShare = async () => {
+    // Em alguns navegadores móveis, compartilhar arquivo só funciona com gesto direto.
+    // Se ainda não estiver pronto, evitamos falha na primeira tentativa.
+    if (!imageReady || !cachedBlob) {
+      toast.info("Preparando imagem do comprovante...");
+      return;
+    }
+
     setSharing(true);
     const text = buildText();
     try {
-      const blob = await captureImage();
-
-      if (blob) {
-        const file = new File([blob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: "Comprovante de Recarga", text, files: [file] });
-          return;
-        }
+      const file = new File([cachedBlob], `comprovante-${r.id.slice(0, 8)}.png`, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "Comprovante de Recarga", text, files: [file] });
+        setSharing(false);
+        return;
       }
 
       // Fallback: share text only
       if (navigator.share) {
         try {
           await navigator.share({ title: "Comprovante de Recarga", text });
+          setSharing(false);
           return;
         } catch (e: any) {
-          if (e?.name === "AbortError") return;
+          if (e?.name === "AbortError") { setSharing(false); return; }
         }
       }
       await navigator.clipboard.writeText(text);
@@ -225,10 +310,10 @@ export function RecargaReceipt({ recarga, open, onClose, storeName }: RecargaRec
             <div className="flex gap-3 mt-4 px-2">
               <button
                 onClick={handleShare}
-                disabled={sharing}
+                disabled={sharing || preparingImage || !imageReady}
                 className="flex-1 py-3 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-60"
               >
-                {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Gerando..." : "Compartilhar"}
+                {sharing || preparingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Compartilhando..." : preparingImage || !imageReady ? "Preparando imagem..." : "Compartilhar"}
               </button>
               <button
                 onClick={onClose}
