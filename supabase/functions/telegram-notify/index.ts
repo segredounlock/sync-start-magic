@@ -141,9 +141,6 @@ function buildReceiptElement(data: {
           h("span", {
             style: { color: "white", fontSize: "36px", fontWeight: "800", letterSpacing: "-0.5px" },
           }, "Comprovante de Recarga"),
-          h("span", {
-            style: { color: "rgba(255,255,255,0.7)", fontSize: "22px", marginTop: "8px" },
-          }, "Recargas Brasil"),
         ]
       ),
 
@@ -270,12 +267,6 @@ async function sendTelegramPhoto(
   form.append("photo", new Blob([imageData], { type: "image/png" }), "comprovante.png");
   form.append("caption", caption);
   form.append("parse_mode", "HTML");
-  // Inline keyboard with share button
-  form.append("reply_markup", JSON.stringify({
-    inline_keyboard: [[
-      { text: "📤 Compartilhar comprovante", switch_inline_query: caption.replace(/<[^>]*>/g, "") }
-    ]]
-  }));
 
   const resp = await fetch(`${TELEGRAM_API}${token}/sendPhoto`, {
     method: "POST",
@@ -340,10 +331,7 @@ Deno.serve(async (req) => {
         "",
         `📞 Telefone: <code>${data.telefone}</code>`,
         data.operadora ? `📡 Operadora: ${data.operadora}` : "",
-        `📱 Recarga: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
-        `💰 Cobrado: <b>${fmt(data.custo || data.valor)}</b>`,
-        "",
-        `💳 Novo saldo: <b>${fmt(data.novo_saldo)}</b>`,
+        `📱 Valor: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
       ].filter(Boolean).join("\n");
 
       // Try to generate and send receipt image
