@@ -81,20 +81,31 @@ export function useResilientFetch(options: { timeout?: number } = {}) {
   const { timeout = 20000 } = options;
   const [loading, setLoading] = useState(false);
   const hasLoaded = useRef(false);
+  const mountedRef = useRef(true);
+  const activeRequestRef = useRef(0);
 
   // Safety net: ensure loading never stays true forever
   useEffect(() => {
+    mountedRef.current = true;
     const safety = setTimeout(() => {
-      if (!hasLoaded.current) {
+      if (mountedRef.current && !hasLoaded.current) {
         hasLoaded.current = true;
         setLoading(false);
       }
     }, 10000);
-    return () => clearTimeout(safety);
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(safety);
+    };
   }, []);
 
   const runFetch = useCallback(async (fn: () => Promise<void>) => {
-    if (!hasLoaded.current) setLoading(true);
+    const requestId = ++activeRequestRef.current;
+
+    if (!hasLoaded.current && mountedRef.current) {
+      setLoading(true);
+    }
+
     try {
       await Promise.race([
         fn(),
@@ -105,6 +116,7 @@ export function useResilientFetch(options: { timeout?: number } = {}) {
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
+      if (!mountedRef.current || requestId !== activeRequestRef.current) return;
       hasLoaded.current = true;
       setLoading(false);
     }
