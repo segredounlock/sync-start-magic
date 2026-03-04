@@ -25,9 +25,20 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const [maintenance, setMaintenance] = useState<boolean | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    const timeout = setTimeout(() => {
+      if (mounted && maintenance === null) setMaintenance(false);
+    }, 5000);
+
     const check = async () => {
-      const { data } = await supabase.rpc("get_maintenance_mode" as any);
-      setMaintenance(data === true);
+      try {
+        const { data, error } = await supabase.rpc("get_maintenance_mode" as any);
+        if (!mounted) return;
+        if (error) { setMaintenance(false); return; }
+        setMaintenance(data === true);
+      } catch {
+        if (mounted) setMaintenance(false);
+      }
     };
     check();
 
@@ -35,11 +46,11 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     const channel = supabase
       .channel("maintenance-mode")
       .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.maintenanceMode" }, (payload: any) => {
-        setMaintenance(payload.new?.value === "true");
+        if (mounted) setMaintenance(payload.new?.value === "true");
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { mounted = false; clearTimeout(timeout); supabase.removeChannel(channel); };
   }, []);
 
   // Still loading
