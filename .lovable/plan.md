@@ -1,40 +1,46 @@
 
 
-## Diagnóstico e Correção
+## Plano: Traduzir labels em inglês para português em todo o sistema
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Problema
+Vários locais exibem valores brutos do banco de dados em inglês (ex: "deposit", "expired", "pending", "completed") diretamente na interface, sem tradução.
 
-### Plano
+### Alterações
 
-**1. Corrigir o mapeamento de status na sync function**
+**1. `src/pages/RevendedorPainel.tsx`**
+- **Linha 1809**: `{t.type}` com `capitalize` → traduzir: "deposit"/"deposito" → "Depósito", "withdrawal" → "Saque", fallback → valor original
+- **Linha 1817**: fallback final `: t.status` → traduzir "expired" → "Expirado"
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+**2. `src/pages/AdminDashboard.tsx`**
+- **Linha 2205, 2225, 2274**: Onde faz `t.type === "deposito" ? "Depósito" : t.type` — incluir também `"deposit"` → "Depósito"
+- **Linhas 2205, 2282, 2300**: Fallback `: t.status` já traduz "expired" → "Expirado", mas garantir cobertura total
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+**3. `src/pages/Principal.tsx`**
+- **Linha 2173**: statusLabel fallback `: t.status` → traduzir "expired" → "Expirado"
+- **Linha 2204**: `{t.type}` com `capitalize` → traduzir tipo
+- **Linha 2210**: statusLabel fallback `: t.status` → traduzir
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+**4. `src/components/BroadcastProgress.tsx`**
+- **Linha 108**: `{progress.status}` renderizado cru → traduzir:
+  - "pending" → "Aguardando"
+  - "running" → "Enviando"
+  - "completed" → "Concluído"
+  - "failed" → "Falhou"
+  - "cancelled" → "Cancelado"
 
-**2. Corrigir manualmente o pedido preso**
+### Abordagem
+Criar mapas de tradução inline (ou constantes locais) para `type` e `status`, aplicando em cada ponto onde o valor bruto aparece. Não alterar os valores internos/banco — apenas a exibição.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+### Mapa de tradução
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+| Campo   | Inglês     | Português    |
+|---------|-----------|--------------|
+| type    | deposit   | Depósito     |
+| type    | withdrawal| Saque        |
+| status  | completed | Confirmado   |
+| status  | pending   | Processando  |
+| status  | expired   | Expirado     |
+| status  | running   | Enviando     |
+| status  | failed    | Falhou       |
+| status  | cancelled | Cancelado    |
 
