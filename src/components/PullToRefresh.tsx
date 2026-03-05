@@ -69,7 +69,7 @@ export default function PullToRefresh() {
   }, [pullDistance, refreshing]);
 
   useEffect(() => {
-    if (!isStandalone()) return;
+    if (!isStandalone() || disabled) return;
 
     document.addEventListener("touchstart", onTouchStart, { passive: true });
     document.addEventListener("touchmove", onTouchMove, { passive: false });
