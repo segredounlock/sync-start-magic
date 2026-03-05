@@ -215,8 +215,12 @@ Deno.serve(async (req) => {
             .update({ status: "falha" })
             .eq("id", recarga.id);
 
-          // Refund balance
+          // Refund balance + notify
           try {
+            const baseUrl = Deno.env.get("SUPABASE_URL")!;
+            const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            const authHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
+
             const { data: saldoData } = await adminClient
               .from("saldos")
               .select("valor")
@@ -224,14 +228,42 @@ Deno.serve(async (req) => {
               .eq("tipo", "revenda")
               .single();
 
+            let newBalance = Number(saldoData?.valor) || 0;
             if (saldoData) {
-              const newBalance = Number(saldoData.valor) + Number(recarga.custo);
+              newBalance = Number(saldoData.valor) + Number(recarga.custo);
               await adminClient
                 .from("saldos")
                 .update({ valor: newBalance })
                 .eq("user_id", recarga.user_id)
                 .eq("tipo", "revenda");
             }
+
+            // Telegram notification
+            fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                type: "recarga_failed",
+                user_id: recarga.user_id,
+                data: {
+                  telefone: recarga.telefone,
+                  operadora: recarga.operadora,
+                  valor_recarga: recarga.valor,
+                  custo: recarga.custo,
+                  novo_saldo: newBalance,
+                  recarga_id: recarga.id,
+                },
+              }),
+            }).catch(() => {});
+
+            // Push notification
+            fetch(`${baseUrl}/functions/v1/send-push`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                title: "❌ Recarga Falhou",
+                body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} falhou. Saldo estornado automaticamente.`,
+                user_ids: [recarga.user_id],
+              }),
+            }).catch(() => {});
           } catch { /* ignore */ }
 
           notFound++;
