@@ -45,11 +45,11 @@ function InlineLinkButton({ label, path, isOwn, type = "btn" }: { label: string;
   return (
     <button
       onClick={handleClick}
-      className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-all touch-manipulation flex items-center justify-center gap-2 ${
+      className={`w-full px-4 py-3 text-sm font-semibold transition-all touch-manipulation flex items-center justify-center gap-2 ${
         isOwn
-          ? "bg-white/20 hover:bg-white/30 text-white border border-white/25"
-          : "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/25"
-      }`}
+          ? "bg-white/10 hover:bg-white/20 text-white border-t border-white/15"
+          : "bg-primary/10 hover:bg-primary/20 text-primary border-t border-primary/15"
+      } ${isExternal ? "" : "rounded-b-xl"}`}
     >
       {label}
       {isExternal && <span className="text-xs opacity-60">↗</span>}
@@ -712,7 +712,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
                     {renderContentWithMentions(textContent)}
                   </p>
                   {buttons.length > 0 && (
-                    <div className="mt-2.5 flex flex-col gap-1.5">
+                    <div className="mt-2.5 -mx-3 -mb-2 border-t border-white/10 pt-0">
                       {buttons.map((btn, i) => (
                         <InlineLinkButton key={i} label={btn.label} path={btn.path} isOwn={isOwn} type={btn.type} />
                       ))}
