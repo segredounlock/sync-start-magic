@@ -16,6 +16,7 @@ import MaintenancePage from "@/pages/MaintenancePage";
 import InstallApp from "@/pages/InstallApp";
 import SeasonalEffects from "@/components/SeasonalEffects";
 import PullToRefresh from "@/components/PullToRefresh";
+import { useCacheCleanup } from "@/hooks/useCacheCleanup";
 
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
@@ -68,6 +69,8 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useCacheCleanup();
+
   return (
     <ThemeProvider>
       <AuthProvider>
