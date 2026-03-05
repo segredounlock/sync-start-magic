@@ -19,7 +19,7 @@ async function showSystemNotification(title: string, body: string) {
     // Use ServiceWorker showNotification for background support
     if ("serviceWorker" in navigator) {
       const reg = await navigator.serviceWorker.ready;
-      reg.showNotification(title, {
+      (reg as any).showNotification(title, {
         body,
         icon: "/favicon.png",
         badge: "/favicon.png",
@@ -27,7 +27,7 @@ async function showSystemNotification(title: string, body: string) {
         renotify: true,
         vibrate: [200, 100, 200],
         requireInteraction: false,
-      });
+      } as any);
     } else {
       new Notification(title, { body, icon: "/favicon.png", tag: body });
     }
