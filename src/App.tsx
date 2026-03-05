@@ -69,6 +69,8 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useCacheCleanup();
+
   return (
     <ThemeProvider>
       <AuthProvider>
