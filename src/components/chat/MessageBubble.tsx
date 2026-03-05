@@ -406,24 +406,47 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
   };
 
   const renderFormattedText = (text: string, keyPrefix: string = "f"): (string | JSX.Element)[] => {
-    const boldRegex = /\*\*(.+?)\*\*/g;
-    const parts: (string | JSX.Element)[] = [];
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
+    // First split by emails, then handle bold within each segment
+    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+    const segments = text.split(emailRegex);
+    const result: (string | JSX.Element)[] = [];
     let key = 0;
-    while ((match = boldRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
+
+    segments.forEach((segment, i) => {
+      if (emailRegex.test(segment)) {
+        // Reset regex lastIndex
+        emailRegex.lastIndex = 0;
+        result.push(
+          <a
+            key={`${keyPrefix}-email-${key++}`}
+            href={`mailto:${segment}`}
+            onClick={(e) => e.stopPropagation()}
+            className="underline text-primary break-all"
+          >
+            {segment}
+          </a>
+        );
+      } else {
+        // Apply bold formatting to non-email segments
+        const boldRegex = /\*\*(.+?)\*\*/g;
+        let lastIndex = 0;
+        let match: RegExpExecArray | null;
+        while ((match = boldRegex.exec(segment)) !== null) {
+          if (match.index > lastIndex) {
+            result.push(segment.slice(lastIndex, match.index));
+          }
+          result.push(
+            <strong key={`${keyPrefix}-b-${key++}`} className="font-bold">{match[1]}</strong>
+          );
+          lastIndex = match.index + match[0].length;
+        }
+        if (lastIndex < segment.length) {
+          result.push(segment.slice(lastIndex));
+        }
       }
-      parts.push(
-        <strong key={`${keyPrefix}-${key++}`} className="font-bold">{match[1]}</strong>
-      );
-      lastIndex = match.index + match[0].length;
-    }
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
-    }
-    return parts.length > 0 ? parts : [text];
+    });
+
+    return result.length > 0 ? result : [text];
   };
 
   const renderContentWithMentions = (content: string) => {
