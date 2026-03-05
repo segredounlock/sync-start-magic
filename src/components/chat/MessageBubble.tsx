@@ -546,9 +546,9 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
                   onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
                 >
                   {message.sender?.avatar_url ? (
-                    <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-11 h-11 rounded-full object-cover border border-white/20" />
+                    <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-full object-cover border-2 border-white/20" />
                   ) : (
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm border ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-base border-2 ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
                       {(senderName[0] || "U").toUpperCase()}
                     </div>
                   )}
@@ -556,7 +556,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               )}
               <div className="flex items-center gap-1 min-w-0">
                 <span
-                  className={`text-[11px] font-bold uppercase tracking-wide truncate ${(isAdmin || !!message.sender?.verification_badge) ? "shimmer-letters" : isOwn ? "text-white/80" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
+                  className={`text-[13px] font-bold uppercase tracking-wide truncate ${(isAdmin || !!message.sender?.verification_badge) ? "shimmer-letters" : isOwn ? "text-white/80" : "text-primary"} ${isCurrentUserAdmin && !isOwn ? "cursor-pointer hover:underline" : ""}`}
                   onPointerDown={(e) => { if (isCurrentUserAdmin && !isOwn) e.stopPropagation(); }}
                   onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
                 >{senderName}</span>
