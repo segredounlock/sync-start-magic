@@ -3657,7 +3657,78 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Broadcast Modal */}
+            {/* Lucro por Operadora Modal */}
+            <AnimatePresence>
+            {showLucroModal && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLucroModal(false)} />
+                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                  className="relative w-full max-w-md max-h-[85vh] overflow-y-auto glass-modal rounded-2xl p-5 z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center">
+                        <TrendingUp className="h-4 w-4 text-success" />
+                      </div>
+                      <h3 className="text-sm font-bold text-foreground">Lucro por Operadora</h3>
+                    </div>
+                    <button onClick={() => setShowLucroModal(false)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+
+                  {/* Total summary */}
+                  <div className={`p-3 rounded-xl mb-4 ${analytics.lucro >= 0 ? "bg-success/10 border border-success/20" : "bg-destructive/10 border border-destructive/20"}`}>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro Total do Período</p>
+                    <p className={`text-xl font-extrabold ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
+                      {analytics.lucro >= 0 ? "+" : ""}R$ {analytics.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+
+                  {/* Per-operadora breakdown */}
+                  <div className="space-y-2">
+                    {analytics.lucroPorOperadora.map((op, i) => {
+                      const maxLucro = Math.max(...analytics.lucroPorOperadora.map(o => Math.abs(o.lucro)), 1);
+                      const pct = (Math.abs(op.lucro) / maxLucro) * 100;
+                      const colors: Record<string, { bg: string; text: string }> = {
+                        TIM: { bg: "bg-blue-500", text: "text-blue-400" },
+                        VIVO: { bg: "bg-purple-500", text: "text-purple-400" },
+                        CLARO: { bg: "bg-red-500", text: "text-red-400" },
+                        OI: { bg: "bg-amber-500", text: "text-amber-400" },
+                      };
+                      const c = colors[op.operadora] || { bg: "bg-muted-foreground", text: "text-muted-foreground" };
+                      return (
+                        <motion.div key={op.operadora} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                          className="glass-card rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
+                              <span className="text-xs font-bold text-foreground">{op.operadora}</span>
+                              <span className="text-[10px] text-muted-foreground">{op.count} recargas</span>
+                            </div>
+                            <span className={`text-xs font-bold ${op.lucro >= 0 ? "text-success" : "text-destructive"}`}>
+                              {op.lucro >= 0 ? "+" : ""}R$ {op.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div className="flex gap-3 text-[10px] text-muted-foreground mb-1.5">
+                            <span>Cobrado: R$ {op.cobrado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            <span>API: R$ {op.custoApi.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.1 + i * 0.05 }}
+                              className={`h-full rounded-full ${op.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                    {analytics.lucroPorOperadora.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-4">Sem dados de recargas no período selecionado</p>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+            </AnimatePresence>
+
             {showBroadcastModal && (
               <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !broadcastSending && setShowBroadcastModal(false)} />
