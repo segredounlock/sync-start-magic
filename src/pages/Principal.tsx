@@ -2170,7 +2170,7 @@ export default function Principal() {
                       <div className="md:hidden space-y-2">
                         {revTransactions.slice(0, 20).map((t, i) => {
                           const isDeposit = t.type === "deposit" || t.type === "deposito";
-                          const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
+                          const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status;
                           const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                           return (
                             <div key={i} className="rounded-lg border border-border p-3">
@@ -2201,13 +2201,13 @@ export default function Principal() {
                             {revTransactions.slice(0, 20).map((t, i) => (
                               <tr key={i} className="border-b border-border last:border-0">
                                 <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
-                                <td className="px-3 py-2 text-foreground capitalize">{t.type}</td>
+                                <td className="px-3 py-2 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
                                 <td className="px-3 py-2 text-right font-mono font-medium text-foreground">{fmt(t.amount)}</td>
                                 <td className="px-3 py-2 text-center">
                                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                     (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" :
                                     t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                                  }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status}</span>
+                                  }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status}</span>
                                 </td>
                               </tr>
                             ))}

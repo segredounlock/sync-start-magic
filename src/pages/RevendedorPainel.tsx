@@ -1806,7 +1806,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       <motion.tr key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                         className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
-                        <td className="px-4 py-3 text-foreground capitalize">{t.type}</td>
+                        <td className="px-4 py-3 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
                         <td className="px-4 py-3 text-foreground">PIX</td>
                         <td className={`px-4 py-3 text-right font-mono font-medium ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
                           {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
@@ -1814,7 +1814,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         <td className="px-4 py-3 text-center">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                             (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                            {(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status}
+                            {(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status}
                           </span>
                         </td>
                       </motion.tr>

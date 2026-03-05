@@ -2222,7 +2222,7 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-3">
                         <div>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tipo</p>
-                          <p className="text-sm font-medium text-foreground capitalize">{t.type === "deposito" ? "Depósito" : t.type}</p>
+                          <p className="text-sm font-medium text-foreground capitalize">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</p>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Método</p>
@@ -2271,7 +2271,7 @@ export default function AdminDashboard() {
                     <tr key={t.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedDeposit(t)}>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
                       <td className="px-4 py-3 text-foreground">{t.user_nome || t.user_email || "—"}</td>
-                      <td className="px-4 py-3 text-foreground capitalize">{t.type === "deposito" ? "Depósito" : t.type}</td>
+                      <td className="px-4 py-3 text-foreground capitalize">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
                       <td className="px-4 py-3 text-foreground">PIX</td>
                       <td className={`px-4 py-3 text-right font-mono font-medium ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
                         {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}

@@ -105,7 +105,7 @@ export function BroadcastProgress({ progressId, notificationTitle, onComplete, o
         </div>
         <div className="flex items-center gap-2">
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[progress.status] || ''}`}>
-            {progress.status}
+            {progress.status === "pending" ? "Aguardando" : progress.status === "running" ? "Enviando" : progress.status === "completed" ? "Concluído" : progress.status === "failed" ? "Falhou" : progress.status === "cancelled" ? "Cancelado" : progress.status}
           </span>
           {canResume && onResume && (
             <button
