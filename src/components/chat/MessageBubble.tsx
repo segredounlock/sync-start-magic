@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
@@ -665,11 +666,30 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               )}
             </AnimatePresence>
 
-            {message.type === "text" && (
-              <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
-                {renderContentWithMentions(message.content || "")}
-              </p>
-            )}
+            {message.type === "text" && (() => {
+              const raw = message.content || "";
+              const btnRegex = /\[btn:(.+?):(.+?)\]/g;
+              const buttons: { label: string; path: string }[] = [];
+              let btnMatch: RegExpExecArray | null;
+              while ((btnMatch = btnRegex.exec(raw)) !== null) {
+                buttons.push({ label: btnMatch[1], path: btnMatch[2] });
+              }
+              const textContent = raw.replace(/\[btn:.+?:.+?\]/g, "").trimEnd();
+              return (
+                <>
+                  <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
+                    {renderContentWithMentions(textContent)}
+                  </p>
+                  {buttons.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {buttons.map((btn, i) => (
+                        <InlineLinkButton key={i} label={btn.label} path={btn.path} isOwn={isOwn} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Audio content */}
             {message.type === "audio" && message.audio_url && (
