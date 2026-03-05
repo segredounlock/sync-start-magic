@@ -1772,7 +1772,7 @@ export default function Principal() {
                                 </button>
                               </div>
                             </td>
-                          </tr>
+                          </motion.tr>
                         );
                       });
                     })()}
