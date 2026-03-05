@@ -68,6 +68,7 @@ export default function AdminDashboard() {
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [showLucroModal, setShowLucroModal] = useState(false);
 
   // All recargas for analytics
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
@@ -584,7 +585,6 @@ export default function AdminDashboard() {
     const totalVendas = filteredRecargas.reduce((s, r) => s + r.valor, 0);
     const totalCobrado = filteredRecargas.reduce((s, r) => s + r.custo, 0);
     const totalCustoApi = filteredRecargas.reduce((s, r) => s + (Number((r as any).custo_api) || 0), 0);
-    // Lucro real = o que foi cobrado dos revendedores - custo real da API
     const lucro = totalCobrado - totalCustoApi;
     const totalDeposited = filteredTransactions.filter(t => (t.status === "completed" || t.status === "confirmado") && (t.type === "deposit" || t.type === "deposito")).reduce((s, t) => s + t.amount, 0);
     const txCount = filteredTransactions.length;
@@ -594,7 +594,21 @@ export default function AdminDashboard() {
     const pendingRec = filteredRecargas.filter(r => r.status === "pending" || r.status === "pendente").length;
     const ticketMedio = totalRec > 0 ? totalVendas / totalRec : 0;
 
-    return { totalVendas, totalCobrado, totalCustoApi, lucro, totalDeposited, txCount, saldoCarteiras, totalRec, successRec, pendingRec, ticketMedio };
+    // Lucro por operadora breakdown
+    const lucroPorOperadora: { operadora: string; cobrado: number; custoApi: number; lucro: number; count: number }[] = [];
+    const opMap: Record<string, { cobrado: number; custoApi: number; count: number }> = {};
+    filteredRecargas.forEach(r => {
+      const op = (r.operadora || "Outros").toUpperCase();
+      if (!opMap[op]) opMap[op] = { cobrado: 0, custoApi: 0, count: 0 };
+      opMap[op].cobrado += r.custo;
+      opMap[op].custoApi += Number((r as any).custo_api) || 0;
+      opMap[op].count += 1;
+    });
+    Object.entries(opMap).sort((a, b) => (b[1].cobrado - b[1].custoApi) - (a[1].cobrado - a[1].custoApi)).forEach(([op, v]) => {
+      lucroPorOperadora.push({ operadora: op, cobrado: v.cobrado, custoApi: v.custoApi, lucro: v.cobrado - v.custoApi, count: v.count });
+    });
+
+    return { totalVendas, totalCobrado, totalCustoApi, lucro, totalDeposited, txCount, saldoCarteiras, totalRec, successRec, pendingRec, ticketMedio, lucroPorOperadora };
   }, [filteredRecargas, filteredTransactions, revendedores]);
 
   // Helper: data local YYYY-MM-DD (sem problemas de fuso UTC)
@@ -1102,7 +1116,8 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {/* Lucro do Período - Premium Card */}
               <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.05, type: "spring", stiffness: 200, damping: 20 }}
-                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden sm:col-span-2 lg:col-span-1 group">
+                onClick={() => role === "admin" && setShowLucroModal(true)}
+                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden sm:col-span-2 lg:col-span-1 group cursor-pointer">
                 {/* Glow background effect */}
                 <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-20 transition-opacity duration-500 group-hover:opacity-35 ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
                 <div className={`absolute -bottom-8 -left-8 w-24 h-24 rounded-full blur-2xl opacity-10 ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
@@ -1164,36 +1179,68 @@ export default function AdminDashboard() {
                     </p>
                   </motion.div>
                 </div>
+                {role === "admin" && <p className="text-[9px] text-muted-foreground/60 text-center mt-2 relative z-10">Toque para detalhes por operadora</p>}
               </motion.div>
 
-              {/* Depósitos Recebidos */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                    <AnimatedIcon icon={CreditCard} className="h-4 w-4 text-primary" animation="pulse" delay={0.1} />
+              {/* Depósitos Recebidos - Premium Card */}
+              <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
+                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden group">
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-15 bg-primary transition-opacity duration-500 group-hover:opacity-25" />
+
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className="flex items-center gap-2.5">
+                    <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/15 flex items-center justify-center shadow-[0_0_12px_hsl(var(--primary)/0.2)]">
+                      <AnimatedIcon icon={CreditCard} className="h-4 w-4 sm:h-5 sm:w-5 text-primary" animation="pulse" delay={0.1} />
+                    </motion.div>
+                    <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Depósitos Recebidos</span>
                   </div>
-                  <span className="ml-auto text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">{analytics.txCount} txs</span>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.35, type: "spring" }}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                    {analytics.txCount} txs
+                  </motion.div>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Depósitos Recebidos</span>
-                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
-                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, delay: 0.1 }}
-                    className="h-full rounded-full bg-primary" />
+
+                <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+                  className="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight text-foreground relative z-10">
+                  <AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" />
+                </motion.p>
+
+                <div className="mt-3 h-1.5 rounded-full bg-muted/40 overflow-hidden relative z-10">
+                  <motion.div initial={{ width: 0 }} animate={{ width: "100%" }}
+                    transition={{ duration: 1, delay: 0.25, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]" />
                 </div>
               </motion.div>
 
-              {/* Saldo dos Revendedores */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center">
-                    <AnimatedIcon icon={Wallet} className="h-4 w-4 text-warning" animation="wiggle" delay={0.15} />
+              {/* Saldo dos Revendedores - Premium Card */}
+              <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
+                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden group">
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-15 bg-warning transition-opacity duration-500 group-hover:opacity-25" />
+
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className="flex items-center gap-2.5">
+                    <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-warning/15 flex items-center justify-center shadow-[0_0_12px_hsl(var(--warning)/0.2)]">
+                      <AnimatedIcon icon={Wallet} className="h-4 w-4 sm:h-5 sm:w-5 text-warning" animation="wiggle" delay={0.15} />
+                    </motion.div>
+                    <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Saldo Revendedores</span>
                   </div>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring" }}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
+                    {analytics.totalDeposited > 0 ? ((analytics.saldoCarteiras / analytics.totalDeposited) * 100).toFixed(0) : "0"}%
+                  </motion.div>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Saldo Revendedores</span>
-                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
-                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((analytics.saldoCarteiras / Math.max(analytics.totalDeposited, 1)) * 100, 100)}%` }} transition={{ duration: 0.8, delay: 0.15 }}
-                    className="h-full rounded-full bg-warning" />
+
+                <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}
+                  className="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight text-foreground relative z-10">
+                  <AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" />
+                </motion.p>
+
+                <div className="mt-3 h-1.5 rounded-full bg-muted/40 overflow-hidden relative z-10">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((analytics.saldoCarteiras / Math.max(analytics.totalDeposited, 1)) * 100, 100)}%` }}
+                    transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-warning/70 to-warning shadow-[0_0_8px_hsl(var(--warning)/0.4)]" />
                 </div>
               </motion.div>
             </div>
@@ -3610,7 +3657,78 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Broadcast Modal */}
+            {/* Lucro por Operadora Modal */}
+            <AnimatePresence>
+            {showLucroModal && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLucroModal(false)} />
+                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                  className="relative w-full max-w-md max-h-[85vh] overflow-y-auto glass-modal rounded-2xl p-5 z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center">
+                        <TrendingUp className="h-4 w-4 text-success" />
+                      </div>
+                      <h3 className="text-sm font-bold text-foreground">Lucro por Operadora</h3>
+                    </div>
+                    <button onClick={() => setShowLucroModal(false)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+
+                  {/* Total summary */}
+                  <div className={`p-3 rounded-xl mb-4 ${analytics.lucro >= 0 ? "bg-success/10 border border-success/20" : "bg-destructive/10 border border-destructive/20"}`}>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro Total do Período</p>
+                    <p className={`text-xl font-extrabold ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
+                      {analytics.lucro >= 0 ? "+" : ""}R$ {analytics.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+
+                  {/* Per-operadora breakdown */}
+                  <div className="space-y-2">
+                    {analytics.lucroPorOperadora.map((op, i) => {
+                      const maxLucro = Math.max(...analytics.lucroPorOperadora.map(o => Math.abs(o.lucro)), 1);
+                      const pct = (Math.abs(op.lucro) / maxLucro) * 100;
+                      const colors: Record<string, { bg: string; text: string }> = {
+                        TIM: { bg: "bg-blue-500", text: "text-blue-400" },
+                        VIVO: { bg: "bg-purple-500", text: "text-purple-400" },
+                        CLARO: { bg: "bg-red-500", text: "text-red-400" },
+                        OI: { bg: "bg-amber-500", text: "text-amber-400" },
+                      };
+                      const c = colors[op.operadora] || { bg: "bg-muted-foreground", text: "text-muted-foreground" };
+                      return (
+                        <motion.div key={op.operadora} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                          className="glass-card rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
+                              <span className="text-xs font-bold text-foreground">{op.operadora}</span>
+                              <span className="text-[10px] text-muted-foreground">{op.count} recargas</span>
+                            </div>
+                            <span className={`text-xs font-bold ${op.lucro >= 0 ? "text-success" : "text-destructive"}`}>
+                              {op.lucro >= 0 ? "+" : ""}R$ {op.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div className="flex gap-3 text-[10px] text-muted-foreground mb-1.5">
+                            <span>Cobrado: R$ {op.cobrado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            <span>API: R$ {op.custoApi.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.1 + i * 0.05 }}
+                              className={`h-full rounded-full ${op.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                    {analytics.lucroPorOperadora.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-4">Sem dados de recargas no período selecionado</p>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+            </AnimatePresence>
+
             {showBroadcastModal && (
               <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !broadcastSending && setShowBroadcastModal(false)} />

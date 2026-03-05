@@ -157,7 +157,10 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
           }, async (payload) => {
             const newRow = payload.new as any;
             const oldRow = payload.old as any;
+            // Only fire when status transitions TO completed (not if already completed)
             if (newRow.status === "completed" && oldRow?.status !== "completed") {
+              // Deduplicate: skip if already known
+              if (knownIds.current.has(newRow.id)) return;
               const profile = await getProfile(newRow.user_id);
               addNotification({
                 id: newRow.id,
@@ -337,9 +340,12 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             const row = payload.new as any;
             const old = payload.old as any;
             if (!row?.is_registered || old?.is_registered === row.is_registered) return;
+            // Use same ID as INSERT to deduplicate (tg- prefix)
+            const dedupeId = `tg-${row.id}`;
+            if (knownIds.current.has(dedupeId)) return;
             const label = row.username?.trim() ? `@${row.username}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
             addNotification({
-              id: `tg-upd-${row.id}`,
+              id: dedupeId,
               type: "new_user_telegram",
               message: `Novo cadastro Telegram: ${label}`,
               amount: 0,
