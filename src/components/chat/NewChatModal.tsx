@@ -40,12 +40,15 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
       if (!user) return;
       setLoading(true);
+      setFetchError(false);
 
+      try {
       // 1. Load filter config
       const { data: filterData } = await supabase.rpc("get_chat_new_conv_filter" as any);
       const filter: string = (filterData as string) || "admin_badge";
@@ -123,8 +126,12 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
       }
 
       setUsers(Array.from(userMap.values()));
-      setLoading(false);
-    };
+      } catch (err) {
+        console.error("Erro ao buscar usuários:", err);
+        setFetchError(true);
+      } finally {
+        setLoading(false);
+      }
     fetchUsers();
   }, [user, search]);
 
@@ -173,6 +180,17 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : fetchError ? (
+            <div className="flex flex-col items-center py-8 gap-3">
+              <p className="text-sm text-destructive">Erro ao carregar usuários</p>
+              <button
+                onClick={() => { setFetchError(false); setLoading(true); }}
+                className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
+                style={{ touchAction: "manipulation" }}
+              >
+                Tentar novamente
+              </button>
             </div>
           ) : users.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-8">Nenhum usuário encontrado</p>
