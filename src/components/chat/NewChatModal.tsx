@@ -132,8 +132,9 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
       } finally {
         setLoading(false);
       }
+    };
     fetchUsers();
-  }, [user, search]);
+  }, [user, search, fetchError]);
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={onClose}>
