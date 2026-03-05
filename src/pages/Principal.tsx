@@ -1491,57 +1491,66 @@ export default function Principal() {
             <>
                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { icon: Users, label: "Total Usuários", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10" },
-                  { icon: UserCheck, label: "Ativos", value: String(activeCount), color: "text-success", bgColor: "bg-success/10" },
-                  { icon: UserX, label: "Inativos", value: String(inactiveCount), color: "text-destructive", bgColor: "bg-destructive/10" },
-                  { icon: Wallet, label: "Saldo dos Revendedores", value: fmt(totalSaldo), color: "text-warning", bgColor: "bg-warning/10", highlight: true },
+                  { icon: Users, label: "Total Usuários", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10", glowColor: "shadow-primary/5" },
+                  { icon: UserCheck, label: "Ativos", value: String(activeCount), color: "text-success", bgColor: "bg-success/10", glowColor: "shadow-success/5" },
+                  { icon: UserX, label: "Inativos", value: String(inactiveCount), color: "text-destructive", bgColor: "bg-destructive/10", glowColor: "shadow-destructive/5" },
+                  { icon: Wallet, label: "Saldo dos Revendedores", value: fmt(totalSaldo), color: "text-primary", bgColor: "bg-primary/10", highlight: true, glowColor: "shadow-primary/10" },
                 ].map((c, i) => (
-                  <div key={c.label} className={`glass-card rounded-xl p-3 flex items-center gap-3 ${c.highlight ? "border-primary/20 ring-1 ring-primary/10" : ""}`}>
-                    <div className={`w-9 h-9 rounded-lg ${c.bgColor} flex items-center justify-center shrink-0`}>
-                      <c.icon className={`h-4 w-4 ${c.color}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{c.label}</p>
-                      <p className={`text-lg font-bold text-foreground ${c.highlight ? "text-success" : ""}`}>{c.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Buscar por nome ou e-mail..."
-                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-                />
-              </div>
-
-              {/* Role Filter */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {([
-                  { key: "todos", label: "Todos", count: revendedores.length },
-                  { key: "admin", label: "Admin", count: revendedores.filter(r => r.role === "admin").length },
-                  { key: "revendedor", label: "Revendedor", count: revendedores.filter(r => r.role === "revendedor").length },
-                  { key: "usuario", label: "Usuário", count: revendedores.filter(r => r.role === "usuario").length },
-                  { key: "cliente", label: "Cliente", count: revendedores.filter(r => r.role === "cliente").length },
-                  { key: "sem_role", label: "Sem função", count: revendedores.filter(r => r.role === "sem_role").length },
-                ] as const).filter(f => ["todos", "admin", "revendedor", "usuario", "cliente"].includes(f.key) || f.count > 0).map(f => (
-                  <button
-                    key={f.key}
-                    onClick={() => setRoleFilter(f.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      roleFilter === f.key
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted/60 text-muted-foreground hover:bg-muted"
-                    }`}
+                  <motion.div
+                    key={c.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06, type: "spring", stiffness: 300, damping: 24 }}
+                    className={`relative glass-card rounded-2xl p-4 flex items-center gap-3.5 overflow-hidden group hover:scale-[1.02] transition-transform ${c.highlight ? "border-primary/30 ring-1 ring-primary/15 shadow-lg " + c.glowColor : "shadow-md " + c.glowColor}`}
                   >
-                    {f.label} ({f.count})
-                  </button>
+                    {c.highlight && <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />}
+                    <div className={`relative w-11 h-11 rounded-xl ${c.bgColor} flex items-center justify-center shrink-0 backdrop-blur-sm`}>
+                      <c.icon className={`h-5 w-5 ${c.color}`} />
+                    </div>
+                    <div className="min-w-0 relative">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">{c.label}</p>
+                      <p className={`text-xl font-extrabold tracking-tight ${c.highlight ? "text-primary" : "text-foreground"}`}>{c.value}</p>
+                    </div>
+                  </motion.div>
                 ))}
+              </div>
+
+              {/* Search + Filters */}
+              <div className="space-y-3">
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Buscar por nome ou e-mail..."
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground/60 transition-all shadow-sm"
+                  />
+                </div>
+
+                {/* Role Filter */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {([
+                    { key: "todos", label: "Todos", count: revendedores.length },
+                    { key: "admin", label: "Admin", count: revendedores.filter(r => r.role === "admin").length },
+                    { key: "revendedor", label: "Revendedor", count: revendedores.filter(r => r.role === "revendedor").length },
+                    { key: "usuario", label: "Usuário", count: revendedores.filter(r => r.role === "usuario").length },
+                    { key: "cliente", label: "Cliente", count: revendedores.filter(r => r.role === "cliente").length },
+                    { key: "sem_role", label: "Sem função", count: revendedores.filter(r => r.role === "sem_role").length },
+                  ] as const).filter(f => ["todos", "admin", "revendedor", "usuario", "cliente"].includes(f.key) || f.count > 0).map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setRoleFilter(f.key)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                        roleFilter === f.key
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 border-primary/50 scale-105"
+                          : "bg-card/60 text-muted-foreground hover:bg-muted/80 border-border/40 hover:border-border"
+                      }`}
+                    >
+                      {f.label} <span className="opacity-70 ml-0.5">({f.count})</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Mobile: User Cards */}
