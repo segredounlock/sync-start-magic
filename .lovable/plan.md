@@ -1,41 +1,40 @@
 
 
-## Redesenho da Landing Page
+## Diagnóstico e Correção
 
-A Landing Page atual já tem uma base sólida (glassmorphism, partículas, typed text, mock dashboard). O redesenho manterá o estilo **dark premium** e focará em polir o visual e layout.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### Mudancas planejadas
+### Plano
 
-**1. Hero Section**
-- Reorganizar para layout mais impactante: badge animado no topo, headline maior com gradiente mais rico, subtítulo com opacidade progressiva
-- Substituir o mock dashboard por um "phone frame" estilizado contendo as mesmas métricas -- mais moderno e contextual para um app de recargas
-- CTAs com efeito de borda animada (RGB sutil) e micro-interações mais refinadas
+**1. Corrigir o mapeamento de status na sync function**
 
-**2. Stats Strip**
-- Transformar de grid simples para cards individuais com bordas glassmorphism e ícones com glow animado
-- Adicionar separadores verticais entre stats no desktop
-- Animação de contagem nos números ao entrar no viewport
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-**3. Features Section**
-- Trocar de lista vertical para grid 2x3 com cards maiores
-- Cada card com ícone grande, gradiente de fundo sutil, e hover com elevação + borda primary
-- Remover as setas laterais, usar layout centrado
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-**4. CTA Section**
-- Fundo com gradiente mesh mais elaborado
-- Counter "10k+" com animação de contagem real
-- Adicionar depoimentos/trust badges (ícones de operadoras: Vivo, Claro, Tim, Oi)
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-**5. Footer**
-- Mais completo: logo, links, redes sociais placeholder
-- Divisor com gradiente sutil
+**2. Corrigir manualmente o pedido preso**
 
-### Arquivo a editar
-- `src/pages/LandingPage.tsx` -- reescrita completa do componente mantendo as mesmas dependências (framer-motion, lucide-react, ThemeToggle)
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-### Detalhes técnicos
-- Manter todas as classes CSS existentes (`glass`, `glass-card`, `glow-primary`, `shimmer-letters`)
-- Usar `whileInView` do framer-motion para animações ao scroll
-- Manter navegação para `/login` nos CTAs
-- Sem novas dependências
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
