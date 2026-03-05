@@ -1994,7 +1994,7 @@ export default function AdminDashboard() {
                                 className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Ver">
                                 <Eye className="h-3.5 w-3.5" />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); }}
+                              <button onClick={(e) => { e.stopPropagation(); setClientHistoryModal({ id: r.id, nome: r.nome, email: r.email }); fetchClientRecargas(r.id); }}
                                 className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Histórico">
                                 <History className="h-3.5 w-3.5" />
                               </button>
