@@ -205,42 +205,26 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const fetchStatus = useCallback(async () => {
     try {
-      const now24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: opsCount }, { count: recTotal }, { data: lastRec }, { data: completed24h }] = await Promise.all([
+      const [{ count: opsCount }, { count: recTotal }, { data: lastRec }, { data: rpcStats }] = await Promise.all([
         supabase.from("operadoras").select("*", { count: "exact", head: true }).eq("ativo", true),
         supabase.from("recargas").select("*", { count: "exact", head: true }),
         supabase.from("recargas").select("created_at").order("created_at", { ascending: false }).limit(1),
-        supabase.from("recargas").select("operadora, created_at, completed_at").eq("status", "completed").not("completed_at", "is", null).gte("created_at", now24h),
+        supabase.rpc("get_operator_stats" as any),
       ]);
 
-      // Calculate per-operator processing times using completed_at
-      const opMap = new Map<string, number[]>();
-      (completed24h || []).forEach((r: any) => {
-        if (!r.operadora || !r.created_at || !r.completed_at) return;
-        const diffMs = new Date(r.completed_at).getTime() - new Date(r.created_at).getTime();
-        if (diffMs <= 0 || diffMs > 24 * 60 * 60 * 1000) return;
-        // Normaliza nome: primeira letra maiúscula, resto minúsculo
-        const raw = r.operadora.trim();
-        const name = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-        if (!opMap.has(name)) opMap.set(name, []);
-        opMap.get(name)!.push(diffMs / 1000);
-      });
-
-      const operatorStats = Array.from(opMap.entries()).map(([operadora, times]) => {
-        const sorted = [...times].sort((a, b) => a - b);
-        const recent = sorted.slice(-3); // last 3
-        return {
-          operadora,
-          avgRecent: recent.reduce((a, b) => a + b, 0) / recent.length,
-          min24h: sorted[0],
-          avg24h: sorted.reduce((a, b) => a + b, 0) / sorted.length,
-          max24h: sorted[sorted.length - 1],
-          recentCount: recent.length,
-        };
-      });
+      // Map RPC results to expected format
+      const operatorStats: { operadora: string; avgRecent: number; min24h: number; avg24h: number; max24h: number; recentCount: number }[] = 
+        (Array.isArray(rpcStats) ? rpcStats : []).map((s: any) => ({
+          operadora: s.operadora || "",
+          avgRecent: Number(s.avg_recent) || 0,
+          min24h: Number(s.min_24h) || 0,
+          avg24h: Number(s.avg_24h) || 0,
+          max24h: Number(s.max_24h) || 0,
+          recentCount: Number(s.recent_count) || 0,
+        }));
 
       // Ensure all active operators appear
-      const activeOps = ["Claro", "TIM", "Vivo"];
+      const activeOps = ["Claro", "Tim", "Vivo"];
       activeOps.forEach(op => {
         if (!operatorStats.find(s => s.operadora.toLowerCase() === op.toLowerCase())) {
           operatorStats.push({ operadora: op, avgRecent: 0, min24h: 0, avg24h: 0, max24h: 0, recentCount: 0 });
