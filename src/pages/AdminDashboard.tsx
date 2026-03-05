@@ -1436,130 +1436,138 @@ export default function AdminDashboard() {
         {/* ===== HISTÓRICO ===== */}
         {tab === "historico" && (
           <>
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-               <input type="text" value={recargaSearch} onChange={e => { setRecargaSearch(e.target.value); setRecargaPage(1); }} placeholder="Buscar por telefone, revendedor ou operadora..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm" />
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input type="text" value={recargaSearch} onChange={e => { setRecargaSearch(e.target.value); setRecargaPage(1); }} placeholder="Buscar por telefone, revendedor ou operadora..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-[13px]" />
             </div>
+
+            {/* Stats compactos */}
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              {[
+                { label: "Total", value: filteredRecargasHistorico.length, color: "text-foreground" },
+                { label: "Concluídas", value: filteredRecargasHistorico.filter(r => r.status === "completed" || r.status === "concluida").length, color: "text-success" },
+                { label: "Pendentes", value: filteredRecargasHistorico.filter(r => r.status === "pending").length, color: "text-warning" },
+                { label: "Falhas", value: filteredRecargasHistorico.filter(r => r.status === "falha" || r.status === "failed").length, color: "text-destructive" },
+              ].map((s, i) => (
+                <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card rounded-lg p-2.5 text-center">
+                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{s.label}</p>
+                  <p className={`text-lg font-bold mt-0.5 ${s.color}`}><AnimatedInt value={s.value} /></p>
+                </motion.div>
+              ))}
+            </div>
+
             {/* Mobile: Card Layout */}
-            <div className="md:hidden space-y-3">
+            <div className="md:hidden space-y-2">
               {recargasLoading ? (
                 <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : paginatedRecargas.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</p>
-              ) : paginatedRecargas.map(r => {
+                <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma recarga encontrada</p>
+              ) : paginatedRecargas.map((r, idx) => {
                 const initials = (r.user_nome || r.user_email || "?").slice(0, 2).toUpperCase();
                 const avatarColors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                 const colorIdx = (r.user_id || "").charCodeAt(0) % avatarColors.length;
                 const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
                 const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                 return (
-                  <div key={r.id} className="glass-card rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`flex-shrink-0 w-10 h-10 rounded-full ${avatarColors[colorIdx]} flex items-center justify-center text-xs font-bold text-primary-foreground`}>
+                  <motion.div key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full ${avatarColors[colorIdx]} ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-primary-foreground`}>
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-foreground text-sm truncate">{r.user_nome || "—"}</p>
-                          <p className="text-xs text-muted-foreground truncate">{r.user_email || "—"}</p>
+                          <p className="font-semibold text-foreground text-[13px] truncate">{r.user_nome || "—"}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{r.user_email || "—"}</p>
                         </div>
                       </div>
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${statusClass}`}>{statusLabel}</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${statusClass}`}>{statusLabel}</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
+                    <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border/50">
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Operadora</p>
-                        <p className="text-sm font-semibold text-foreground">{r.operadora || "—"}</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Operadora</p>
+                        <p className="text-[12px] font-semibold text-foreground">{r.operadora || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Telefone</p>
-                        <p className="text-sm font-mono text-foreground">{r.telefone}</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Telefone</p>
+                        <p className="text-[12px] font-mono text-foreground">{r.telefone}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Valor</p>
-                        <p className="text-sm font-bold text-foreground">{fmt(r.valor)}</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
+                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums">{fmt(r.valor)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Lucro</p>
+                        <p className="text-[12px] font-bold font-mono text-success tabular-nums">
+                          {(r.status === "completed" || r.status === "concluida") ? `+${fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}` : "—"}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                      <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
-                      {role === "admin" && (
-                        <span className="text-[10px] text-muted-foreground">
-                          Custo: {fmt(r.custo)}
-                          {(r.status === "completed" || r.status === "concluida") && (
-                            <>
-                              {" "}
-                              <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
-                            </>
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                    <p className="text-[10px] text-muted-foreground mt-1.5">{fmtDate(r.created_at)}</p>
+                  </motion.div>
                 );
               })}
             </div>
 
             {/* Desktop: Table Layout */}
             <div className="hidden md:block glass-card rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full" style={{ fontSize: "13px" }}>
                 <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Usuário</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Detalhes</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <tr className="border-b border-border/60">
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Usuário</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Detalhes</th>
+                    <th className="text-right px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Valor</th>
+                    <th className="text-right px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Lucro</th>
+                    <th className="text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recargasLoading ? (
-                    <tr><td colSpan={5} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
+                    <tr><td colSpan={6} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                   ) : paginatedRecargas.length === 0 ? (
-                    <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
-                  ) : paginatedRecargas.map(r => {
+                    <tr><td colSpan={6} className="text-center py-8 text-muted-foreground text-sm">Nenhuma recarga encontrada</td></tr>
+                  ) : paginatedRecargas.map((r, idx) => {
                     const initials = (r.user_nome || r.user_email || "?").slice(0, 2).toUpperCase();
                     const avatarColors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                     const colorIdx = (r.user_id || "").charCodeAt(0) % avatarColors.length;
+                    const lucro = (r.status === "completed" || r.status === "concluida") ? (Number(r.custo) || 0) - (Number((r as any).custo_api) || 0) : 0;
                     return (
-                      <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">{fmtDate(r.created_at)}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`flex-shrink-0 w-9 h-9 rounded-full ${avatarColors[colorIdx]} flex items-center justify-center text-xs font-bold text-primary-foreground`}>
+                      <motion.tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-primary/[0.04] transition-colors group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }}>
+                        <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap text-[11px]">{fmtDate(r.created_at)}</td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`flex-shrink-0 w-8 h-8 rounded-full ${avatarColors[colorIdx]} ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-primary-foreground`}>
                               {initials}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-foreground text-sm truncate">{r.user_nome || "—"}</p>
-                              <p className="text-xs text-muted-foreground truncate">{r.user_email || "—"}</p>
+                              <p className="font-semibold text-foreground text-[13px] truncate">{r.user_nome || "—"}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">{r.user_email || "—"}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <p className="text-foreground text-sm font-medium">{r.operadora || "—"}</p>
-                          <p className="font-mono text-muted-foreground text-xs">{r.telefone}</p>
+                        <td className="px-4 py-2.5">
+                          <p className="text-foreground text-[13px] font-medium">{r.operadora || "—"}</p>
+                          <p className="font-mono text-muted-foreground text-[11px]">{r.telefone}</p>
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <p className="font-mono font-bold text-foreground">{fmt(r.valor)}</p>
-                          {role === "admin" && (
-                            <p className="text-xs text-muted-foreground">
-                              Custo: {fmt(r.custo)}
-                              {(r.status === "completed" || r.status === "concluida") && (
-                                <>
-                                  {" "}
-                                  <span className="text-success font-semibold">+{fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}</span>
-                                </>
-                              )}
-                            </p>
+                        <td className="px-4 py-2.5 text-right">
+                          <p className="font-mono font-bold text-foreground tabular-nums">{fmt(r.valor)}</p>
+                          {role === "admin" && <p className="text-[11px] text-muted-foreground font-mono tabular-nums">Custo: {fmt(r.custo)}</p>}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          {(r.status === "completed" || r.status === "concluida") ? (
+                            <span className="font-mono font-bold text-success tabular-nums">+{fmt(lucro)}</span>
+                          ) : (
+                            <span className="text-muted-foreground text-[11px]">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                             (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
                             r.status === "pending" ? "bg-warning/15 text-warning" :
                             "bg-destructive/15 text-destructive"
                           }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}</span>
                         </td>
-                      </tr>
+                      </motion.tr>
                     );
                   })}
                 </tbody>
@@ -1567,15 +1575,15 @@ export default function AdminDashboard() {
             </div>
             {/* Pagination */}
             {recargaTotalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 px-1">
-                <span className="text-xs text-muted-foreground">
-                  {filteredRecargasHistorico.length} resultado{filteredRecargasHistorico.length !== 1 ? 's' : ''} · Página {recargaPage} de {recargaTotalPages}
+              <div className="flex items-center justify-between mt-3 px-1">
+                <span className="text-[11px] text-muted-foreground">
+                  {filteredRecargasHistorico.length} resultado{filteredRecargasHistorico.length !== 1 ? 's' : ''} · Pág. {recargaPage}/{recargaTotalPages}
                 </span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setRecargaPage(p => Math.max(1, p - 1))}
                     disabled={recargaPage <= 1}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     Anterior
                   </button>
@@ -1594,7 +1602,7 @@ export default function AdminDashboard() {
                       <button
                         key={page}
                         onClick={() => setRecargaPage(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
+                        className={`w-7 h-7 rounded-md text-[11px] font-medium transition-colors ${
                           recargaPage === page ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-foreground hover:bg-muted'
                         }`}
                       >
@@ -1605,7 +1613,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={() => setRecargaPage(p => Math.min(recargaTotalPages, p + 1))}
                     disabled={recargaPage >= recargaTotalPages}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-muted/50 text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     Próxima
                   </button>
@@ -2219,33 +2227,35 @@ export default function AdminDashboard() {
 
         {/* ===== DEPÓSITOS ===== */}
         {tab === "depositos" && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <h2 className="font-display text-2xl font-bold text-foreground">Depósitos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-              <div className="glass-card rounded-xl p-5">
-                <p className="text-xs text-muted-foreground">Depósitos Recebidos</p>
-                <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
-              </div>
-              <div className="glass-card rounded-xl p-5">
-                <p className="text-xs text-muted-foreground">Transações</p>
-                <p className="text-2xl font-bold text-foreground"><AnimatedInt value={analytics.txCount} /></p>
-              </div>
-              <div className="glass-card rounded-xl p-5">
-                <p className="text-xs text-muted-foreground">Saldo em Carteiras</p>
-                <p className="text-2xl font-bold text-warning"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
-              </div>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            {/* Stats compactos */}
+            <div className="grid grid-cols-3 gap-2 mb-1">
+              {[
+                { label: "Recebidos", value: analytics.totalDeposited, prefix: "R$ ", color: "text-foreground" },
+                { label: "Transações", value: analytics.txCount, prefix: "", color: "text-foreground" },
+                { label: "Carteiras", value: analytics.saldoCarteiras, prefix: "R$ ", color: "text-warning" },
+              ].map((s, i) => (
+                <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card rounded-lg p-2.5 text-center">
+                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{s.label}</p>
+                  <p className={`text-lg font-bold mt-0.5 font-mono tabular-nums ${s.color}`}>
+                    {s.prefix ? <AnimatedCounter value={s.value as number} prefix={s.prefix} /> : <AnimatedInt value={s.value as number} />}
+                  </p>
+                </motion.div>
+              ))}
             </div>
-            <div className="glass-card rounded-xl p-5 mb-4">
-              <h4 className="font-semibold text-foreground mb-4">Volume de Depósitos por Dia</h4>
-              <div className="h-64">
+
+            {/* Gráfico compacto */}
+            <div className="glass-card rounded-lg p-4 mb-1">
+              <h4 className="font-semibold text-foreground text-sm mb-3">Volume de Depósitos</h4>
+              <div className="h-48">
                 {depositosPorDia.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={depositosPorDia}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => `R$ ${v}`} />
-                      <Tooltip formatter={(v: any) => [fmt(Number(v)), "Depósitos"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                      <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", r: 3 }} />
+                      <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => `R$ ${v}`} />
+                      <Tooltip formatter={(v: any) => [fmt(Number(v)), "Depósitos"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                      <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", r: 2.5 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -2253,13 +2263,15 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
-            {/* Deposit transactions table */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" value={depositSearch} onChange={e => setDepositSearch(e.target.value)} placeholder="Buscar por revendedor, módulo..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm" />
+
+            {/* Busca */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input type="text" value={depositSearch} onChange={e => setDepositSearch(e.target.value)} placeholder="Buscar por revendedor, módulo..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-[13px]" />
             </div>
+
             {/* Mobile: Card Layout */}
-            <div className="md:hidden space-y-3">
+            <div className="md:hidden space-y-2">
               {depositLoading ? (
                 <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : depositTransactions.filter(t =>
@@ -2267,63 +2279,61 @@ export default function AdminDashboard() {
                 (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                 (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
               ).length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</p>
+                <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma transação encontrada</p>
               ) : depositTransactions.filter(t =>
                 (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                 (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                 (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
-              ).map(t => {
+              ).map((t, idx) => {
                 const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                 const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status;
                 const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                 return (
-                  <div key={t.id} className="glass-card rounded-xl p-4 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                  <motion.div key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-primary">
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-foreground text-sm truncate">{t.user_nome || "—"}</p>
-                          <p className="text-xs text-muted-foreground">{fmtDate(t.created_at)}</p>
+                          <p className="font-semibold text-foreground text-[13px] truncate">{t.user_nome || "—"}</p>
+                          <p className="text-[11px] text-muted-foreground">{fmtDate(t.created_at)}</p>
                         </div>
                       </div>
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${statusClass}`}>{statusLabel}</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${statusClass}`}>{statusLabel}</span>
                     </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tipo</p>
-                          <p className="text-sm font-medium text-foreground capitalize">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Método</p>
-                          <p className="text-sm font-medium text-foreground uppercase">PIX</p>
-                        </div>
+                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/50">
+                      <div>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Tipo</p>
+                        <p className="text-[12px] font-medium text-foreground capitalize">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Método</p>
+                        <p className="text-[12px] font-medium text-foreground uppercase">PIX</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Valor</p>
-                        <p className={`text-base font-bold font-mono ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
+                        <p className={`text-[13px] font-bold font-mono tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
                           {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
 
             {/* Desktop: Table Layout */}
             <div className="hidden md:block glass-card rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full" style={{ fontSize: "13px" }}>
                 <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Revendedor</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tipo</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Módulo</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <tr className="border-b border-border/60">
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Revendedor</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Método</th>
+                    <th className="text-right px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Valor</th>
+                    <th className="text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2334,27 +2344,40 @@ export default function AdminDashboard() {
                     (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
                   ).length === 0 ? (
-                    <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</td></tr>
+                    <tr><td colSpan={6} className="text-center py-8 text-muted-foreground text-sm">Nenhuma transação encontrada</td></tr>
                   ) : depositTransactions.filter(t =>
                     (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
-                  ).map(t => (
-                    <tr key={t.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedDeposit(t)}>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
-                      <td className="px-4 py-3 text-foreground">{t.user_nome || t.user_email || "—"}</td>
-                      <td className="px-4 py-3 text-foreground capitalize">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
-                      <td className="px-4 py-3 text-foreground">PIX</td>
-                      <td className={`px-4 py-3 text-right font-mono font-medium ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                        {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                          (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                        }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status}</span>
-                      </td>
-                    </tr>
-                  ))}
+                  ).map((t, idx) => {
+                    const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
+                    return (
+                      <motion.tr key={t.id} className="border-b border-border/50 last:border-0 hover:bg-primary/[0.04] transition-colors cursor-pointer group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} onClick={() => setSelectedDeposit(t)}>
+                        <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap text-[11px]">{fmtDate(t.created_at)}</td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-primary">
+                              {initials}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-foreground text-[13px] truncate">{t.user_nome || "—"}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">{t.user_email || "—"}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 text-foreground capitalize text-[13px]">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
+                        <td className="px-4 py-2.5 text-foreground text-[13px]">PIX</td>
+                        <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
+                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
+                          }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status}</span>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
