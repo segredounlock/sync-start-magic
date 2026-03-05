@@ -231,29 +231,41 @@ serve(async (req) => {
     const { publicKey, privateKey } = await importVapidKeys(configMap.vapid_public_key, configMap.vapid_private_key);
     const payload = { title, body: msgBody, icon: icon || "/favicon.png" };
 
+    console.log(`[Push] Sending to ${subs.length} subscriptions for ${targetIds.length} users`);
+
     let sent = 0, failed = 0;
     const expiredEndpoints: string[] = [];
 
-    for (const sub of subs) {
-      try {
-        const res = await sendPush(
-          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-          payload, publicKey, privateKey, "mailto:admin@recargasbrasill.com"
-        );
-        if (res.status === 201 || res.status === 200) {
-          sent++;
-        } else if (res.status === 404 || res.status === 410) {
-          expiredEndpoints.push(sub.endpoint);
-          failed++;
-        } else {
-          const errText = await res.text().catch(() => "");
-          console.error(`[Push] Failed ${res.status} for ${sub.endpoint}: ${errText}`);
-          failed++;
+    // Send in parallel for speed
+    const results = await Promise.allSettled(
+      subs.map(async (sub: any) => {
+        try {
+          const res = await sendPush(
+            { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+            payload, publicKey, privateKey, "mailto:admin@recargasbrasill.com"
+          );
+          if (res.status === 201 || res.status === 200) {
+            console.log(`[Push] ✅ Sent to user=${sub.user_id} endpoint=${sub.endpoint.slice(-20)}`);
+            return "sent";
+          } else if (res.status === 404 || res.status === 410) {
+            console.warn(`[Push] ❌ Expired (${res.status}) user=${sub.user_id}`);
+            expiredEndpoints.push(sub.endpoint);
+            return "expired";
+          } else {
+            const errText = await res.text().catch(() => "");
+            console.error(`[Push] ❌ Failed ${res.status} user=${sub.user_id}: ${errText}`);
+            return "failed";
+          }
+        } catch (e) {
+          console.error(`[Push] ❌ Error user=${sub.user_id}:`, e);
+          return "failed";
         }
-      } catch (e) {
-        console.error("[Push] Error:", e);
-        failed++;
-      }
+      })
+    );
+
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value === "sent") sent++;
+      else failed++;
     }
 
     if (expiredEndpoints.length > 0) {
