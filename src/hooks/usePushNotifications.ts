@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Hook that auto-generates VAPID keys (if needed) and registers
  * a Web Push subscription for the current user.
- * No manual secrets required — everything is stored in system_config.
+ * Re-subscribes every session to keep push tokens fresh.
  */
 export function usePushNotifications(userId: string | undefined) {
   const registeredRef = useRef(false);
@@ -48,9 +48,25 @@ export function usePushNotifications(userId: string | undefined) {
         return;
       }
 
-      // 4. Subscribe to push
-      // 5. Subscribe to push
-      const subscription = await (registration as any).pushManager.subscribe({
+      // 4. Check existing subscription - unsubscribe if keys changed
+      const existingSub = await registration.pushManager.getSubscription();
+      if (existingSub) {
+        const existingKey = existingSub.options?.applicationServerKey;
+        const newKeyArray = urlBase64ToUint8Array(vapidPublicKey);
+        const existingKeyArray = existingKey ? new Uint8Array(existingKey as ArrayBuffer) : null;
+        
+        const keysMatch = existingKeyArray && 
+          existingKeyArray.length === newKeyArray.length &&
+          existingKeyArray.every((v, i) => v === newKeyArray[i]);
+        
+        if (!keysMatch) {
+          console.log("[Push] VAPID key changed, re-subscribing...");
+          await existingSub.unsubscribe();
+        }
+      }
+
+      // 5. Subscribe to push (reuses existing if valid, creates new if needed)
+      const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
       });
@@ -58,13 +74,18 @@ export function usePushNotifications(userId: string | undefined) {
       const json = subscription.toJSON();
       if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
 
-      // 5. Save to database
-      await (supabase.from("push_subscriptions" as any) as any).upsert({
+      // 6. Save/update subscription in database
+      const { error: upsertError } = await (supabase.from("push_subscriptions" as any) as any).upsert({
         user_id: userId,
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
       }, { onConflict: "user_id,endpoint" });
+
+      if (upsertError) {
+        console.error("[Push] Failed to save subscription:", upsertError);
+        return;
+      }
 
       registeredRef.current = true;
       console.log("[Push] Subscription registered successfully");
