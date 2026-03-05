@@ -81,7 +81,7 @@ serve(async (req) => {
           "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
           "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
           "admin_notifications", "banners", "polls", "poll_votes",
-          "chat_conversations", "chat_messages", "chat_message_reads", "chat_reactions",
+          "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
           "push_subscriptions", "update_history",
         ];
         for (const t of candidateTables) {
