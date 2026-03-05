@@ -13,11 +13,22 @@ function requestNotifPermission() {
   }
 }
 
-function showSystemNotification(title: string, body: string) {
+async function showSystemNotification(title: string, body: string) {
   try {
     if (typeof Notification === "undefined" || _notifPermission !== "granted") return;
-    if (document.visibilityState === "visible") {
-      // Page is visible — system notification with silent tag plays device sound
+    // Use ServiceWorker showNotification for background support
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      (reg as any).showNotification(title, {
+        body,
+        icon: "/favicon.png",
+        badge: "/favicon.png",
+        tag: `notif-${Date.now()}`,
+        renotify: true,
+        vibrate: [200, 100, 200],
+        requireInteraction: false,
+      } as any);
+    } else {
       new Notification(title, { body, icon: "/favicon.png", tag: body });
     }
   } catch { /* ignore */ }
