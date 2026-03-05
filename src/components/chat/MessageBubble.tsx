@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { ChatMessage } from "@/hooks/useChat";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
@@ -25,6 +26,22 @@ interface MessageBubbleProps {
 const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 50;
 const SWIPE_LOCK_ANGLE = 30; // degrees - lock horizontal after this angle
+
+function InlineLinkButton({ label, path, isOwn }: { label: string; path: string; isOwn: boolean }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); navigate(path); }}
+      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation ${
+        isOwn
+          ? "bg-white/20 hover:bg-white/30 text-white border border-white/20"
+          : "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/20"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
 
 function CustomAudioPlayer({ src, isOwn, senderAvatar, senderName }: { src: string; isOwn: boolean; senderAvatar?: string | null; senderName?: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -665,11 +682,30 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               )}
             </AnimatePresence>
 
-            {message.type === "text" && (
-              <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
-                {renderContentWithMentions(message.content || "")}
-              </p>
-            )}
+            {message.type === "text" && (() => {
+              const raw = message.content || "";
+              const btnRegex = /\[btn:(.+?):(.+?)\]/g;
+              const buttons: { label: string; path: string }[] = [];
+              let btnMatch: RegExpExecArray | null;
+              while ((btnMatch = btnRegex.exec(raw)) !== null) {
+                buttons.push({ label: btnMatch[1], path: btnMatch[2] });
+              }
+              const textContent = raw.replace(/\[btn:.+?:.+?\]/g, "").trimEnd();
+              return (
+                <>
+                  <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
+                    {renderContentWithMentions(textContent)}
+                  </p>
+                  {buttons.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {buttons.map((btn, i) => (
+                        <InlineLinkButton key={i} label={btn.label} path={btn.path} isOwn={isOwn} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Audio content */}
             {message.type === "audio" && message.audio_url && (
