@@ -407,6 +407,19 @@ Deno.serve(async (req) => {
 
       // Fallback: text only
       message = caption;
+    } else if (type === "recarga_failed") {
+      message = [
+        "❌ <b>Recarga Falhou!</b>",
+        "",
+        `📞 Telefone: <code>${data.telefone}</code>`,
+        data.operadora ? `📡 Operadora: ${data.operadora}` : "",
+        `📱 Valor: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
+        "",
+        "💰 <b>Saldo estornado automaticamente</b>",
+        `💳 Novo saldo: <b>${fmt(data.novo_saldo)}</b>`,
+        "",
+        "📱 Tente novamente com /recarga",
+      ].filter(Boolean).join("\n");
     } else if (type === "saldo_added") {
       message = [
         "💰 <b>Saldo Adicionado!</b>",

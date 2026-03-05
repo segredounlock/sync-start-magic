@@ -111,10 +111,13 @@ Deno.serve(async (req) => {
             updated++;
             console.log(`sync-pending: ${recarga.id} → ${newStatus} (API: ${apiStatus})`);
 
-            // Send Telegram notification for completed recargas
+            const baseUrl = Deno.env.get("SUPABASE_URL")!;
+            const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            const authHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
+
+            // Send Telegram + Push notification for completed recargas
             if (newStatus === "completed") {
               try {
-                // Get user balance
                 const { data: saldoData } = await adminClient
                   .from("saldos")
                   .select("valor")
@@ -122,30 +125,34 @@ Deno.serve(async (req) => {
                   .eq("tipo", "revenda")
                   .single();
 
-                const notifyUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/telegram-notify`;
-                await fetch(notifyUrl, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-                  },
+                const notifyPayload = {
+                  telefone: recarga.telefone,
+                  operadora: recarga.operadora,
+                  valor_recarga: recarga.valor,
+                  custo: recarga.custo,
+                  novo_saldo: Number(saldoData?.valor) || 0,
+                  recarga_id: recarga.id,
+                };
+
+                // Telegram notification
+                fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+                  method: "POST", headers: authHeaders,
+                  body: JSON.stringify({ type: "recarga_completed", user_id: recarga.user_id, data: notifyPayload }),
+                }).catch(() => {});
+
+                // Push notification (PWA)
+                fetch(`${baseUrl}/functions/v1/send-push`, {
+                  method: "POST", headers: authHeaders,
                   body: JSON.stringify({
-                    type: "recarga_completed",
-                    user_id: recarga.user_id,
-                    data: {
-                      telefone: recarga.telefone,
-                      operadora: recarga.operadora,
-                      valor_recarga: recarga.valor,
-                      custo: recarga.custo,
-                      novo_saldo: Number(saldoData?.valor) || 0,
-                      recarga_id: recarga.id,
-                    },
+                    title: "✅ Recarga Concluída!",
+                    body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} foi realizada com sucesso.`,
+                    user_ids: [recarga.user_id],
                   }),
-                });
+                }).catch(() => {});
               } catch { /* ignore notification errors */ }
             }
 
-            // Refund balance for failed recargas
+            // Refund balance + Telegram + Push for failed recargas
             if (newStatus === "falha") {
               try {
                 const { data: saldoData } = await adminClient
@@ -155,8 +162,9 @@ Deno.serve(async (req) => {
                   .eq("tipo", "revenda")
                   .single();
 
+                let newBalance = Number(saldoData?.valor) || 0;
                 if (saldoData) {
-                  const newBalance = Number(saldoData.valor) + Number(recarga.custo);
+                  newBalance = Number(saldoData.valor) + Number(recarga.custo);
                   await adminClient
                     .from("saldos")
                     .update({ valor: newBalance })
@@ -164,7 +172,34 @@ Deno.serve(async (req) => {
                     .eq("tipo", "revenda");
                   console.log(`sync-pending: refunded ${recarga.custo} to user ${recarga.user_id}`);
                 }
-              } catch { /* ignore refund errors */ }
+
+                // Telegram notification for failure
+                fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+                  method: "POST", headers: authHeaders,
+                  body: JSON.stringify({
+                    type: "recarga_failed",
+                    user_id: recarga.user_id,
+                    data: {
+                      telefone: recarga.telefone,
+                      operadora: recarga.operadora,
+                      valor_recarga: recarga.valor,
+                      custo: recarga.custo,
+                      novo_saldo: newBalance,
+                      recarga_id: recarga.id,
+                    },
+                  }),
+                }).catch(() => {});
+
+                // Push notification for failure (PWA)
+                fetch(`${baseUrl}/functions/v1/send-push`, {
+                  method: "POST", headers: authHeaders,
+                  body: JSON.stringify({
+                    title: "❌ Recarga Falhou",
+                    body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} falhou. Saldo estornado automaticamente.`,
+                    user_ids: [recarga.user_id],
+                  }),
+                }).catch(() => {});
+              } catch { /* ignore refund/notification errors */ }
             }
           } else {
             failed++;
