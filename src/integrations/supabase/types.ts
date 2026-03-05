@@ -1035,6 +1035,7 @@ export type Database = {
       get_chat_new_conv_filter: { Args: never; Returns: string }
       get_maintenance_mode: { Args: never; Returns: boolean }
       get_notif_config: { Args: { _key: string }; Returns: string }
+      get_operator_stats: { Args: never; Returns: Json }
       get_public_tables: {
         Args: never
         Returns: {
