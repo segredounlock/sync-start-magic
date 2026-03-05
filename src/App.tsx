@@ -15,6 +15,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import MaintenancePage from "@/pages/MaintenancePage";
 import InstallApp from "@/pages/InstallApp";
 import SeasonalEffects from "@/components/SeasonalEffects";
+import PullToRefresh from "@/components/PullToRefresh";
 
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
@@ -71,6 +72,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <SeasonalEffects />
+        <PullToRefresh />
         <MaintenanceGuard>
           <Routes>
             <Route path="/" element={<LandingPage />} />

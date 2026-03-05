@@ -1,24 +1,40 @@
 
 
-## Pull-to-Refresh apenas no PWA instalado
+## Diagnóstico e Correção
 
-### O que será feito
-Implementar pull-to-refresh que funciona **apenas quando o app está instalado como PWA** (modo standalone), ignorando o gesto no navegador normal.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### Implementação
+### Plano
 
-1. **Criar `src/components/PullToRefresh.tsx`**
-   - Detectar modo standalone via `window.matchMedia('(display-mode: standalone)')` ou `navigator.standalone` (iOS)
-   - Se não for standalone, o componente não faz nada
-   - Escutar `touchstart`, `touchmove`, `touchend`
-   - Ativar apenas quando `scrollY === 0` e arraste > 80px
-   - Mostrar indicador visual (spinner com ícone de refresh) durante o gesto
-   - Ao soltar, executar `window.location.reload()`
-   - CSS: `overscroll-behavior-y: none` apenas no modo standalone
+**1. Corrigir o mapeamento de status na sync function**
 
-2. **Adicionar no `App.tsx`**
-   - Inserir `<PullToRefresh />` dentro do layout principal, antes das rotas
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-3. **CSS em `index.css`**
-   - Media query `@media (display-mode: standalone)` para aplicar `overscroll-behavior-y: none` no body, evitando conflito com o comportamento nativo do Chrome
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
