@@ -1,16 +1,40 @@
 
 
-## Problema
+## Diagnóstico e Correção
 
-O PullToRefresh usa `window.scrollY > 0` para decidir se ativa o gesto, mas no chat a rolagem acontece dentro de um container interno (div com overflow-y), não na janela. Resultado: `window.scrollY` fica sempre 0 dentro do chat, e qualquer deslizar para baixo aciona o pull-to-refresh por engano, recarregando a página.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Solução
+### Plano
 
-Desativar o PullToRefresh quando o usuário está na rota `/chat`. Duas mudanças:
+**1. Corrigir o mapeamento de status na sync function**
 
-1. **`src/components/PullToRefresh.tsx`** — Usar `useLocation()` do react-router e retornar `null` se a rota atual começa com `/chat`. Isso elimina completamente o conflito sem precisar mexer na lógica do chat.
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-2. **Alternativa complementar** (mais robusta): No `onTouchStart`, além de checar `window.scrollY`, verificar se o toque originou dentro de um container scrollável que não está no topo. Isso protege qualquer outra página com containers internos de scroll.
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-A abordagem principal (rota `/chat`) é simples e resolve o problema imediatamente.
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

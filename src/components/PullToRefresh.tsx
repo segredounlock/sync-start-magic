@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 
 function isStandalone(): boolean {
@@ -13,12 +14,16 @@ function isStandalone(): boolean {
 const THRESHOLD = 80;
 
 export default function PullToRefresh() {
+  const location = useLocation();
   const [pulling, setPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
   const active = useRef(false);
   const vibratedRef = useRef(false);
+
+  // Disable on chat route
+  const disabled = location.pathname.startsWith("/chat");
 
   const vibrate = useCallback((pattern: number | number[]) => {
     try { navigator.vibrate?.(pattern); } catch {}
@@ -64,7 +69,7 @@ export default function PullToRefresh() {
   }, [pullDistance, refreshing]);
 
   useEffect(() => {
-    if (!isStandalone()) return;
+    if (!isStandalone() || disabled) return;
 
     document.addEventListener("touchstart", onTouchStart, { passive: true });
     document.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -75,10 +80,9 @@ export default function PullToRefresh() {
       document.removeEventListener("touchmove", onTouchMove);
       document.removeEventListener("touchend", onTouchEnd);
     };
-  }, [onTouchStart, onTouchMove, onTouchEnd]);
+  }, [onTouchStart, onTouchMove, onTouchEnd, disabled]);
 
-  // Don't render anything if not standalone
-  if (typeof window !== "undefined" && !isStandalone()) return null;
+  if (typeof window !== "undefined" && (!isStandalone() || disabled)) return null;
 
   const progress = Math.min(pullDistance / THRESHOLD, 1);
   const ready = progress >= 1;
