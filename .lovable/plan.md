@@ -1,40 +1,37 @@
 
 
-## Diagnóstico e Correção
+## Plano: Adicionar animações aos ícones de operadoras (Smartphone)
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### O que será feito
+Adicionar animações nos ícones `Smartphone` dentro dos cards de operadoras (Claro, Tim, Vivo) na aba "Status do Sistema", usando `motion.div` do Framer Motion — cada operadora com uma animação diferente para dar vida ao painel.
 
-### Plano
+### Alteração
 
-**1. Corrigir o mapeamento de status na sync function**
+**`src/pages/RevendedorPainel.tsx`** (linhas ~1993-1994)
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+Envolver o ícone `<Smartphone>` em um `<motion.div>` com animação distinta por operadora:
+- **Claro** → pulso (scale)
+- **Tim** → flutuação (float y)  
+- **Vivo** → balanço (wiggle/rotate)
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+Trocar:
+```tsx
+<Smartphone className={`h-5 w-5 ${opColor}`} />
 ```
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+Por:
+```tsx
+<motion.div
+  animate={
+    opName === "CLARO" ? { scale: [1, 1.15, 1] } :
+    opName === "TIM"   ? { y: [0, -3, 0] } :
+                         { rotate: [0, 8, -8, 0] }
+  }
+  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut", delay: i * 0.15 }}
+>
+  <Smartphone className={`h-5 w-5 ${opColor}`} />
+</motion.div>
 ```
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Isso mantém o mesmo padrão de animações já usado nos indicadores de saúde do sistema (linhas 2029-2036) e nos outros componentes do projeto.
 
