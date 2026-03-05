@@ -1696,7 +1696,7 @@ export default function Principal() {
                         const ultimaRec = userRecs[0];
                         const saldoBaixo = r.saldo > 0 && r.saldo < 50;
                         return (
-                          <tr key={r.id} className="hover:bg-primary/[0.06] transition-all duration-200 cursor-pointer group" onClick={() => openRevDetail(r)}>
+                          <motion.tr key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03, duration: 0.25, ease: "easeOut" }} className="hover:bg-primary/[0.06] transition-all duration-200 cursor-pointer group" onClick={() => openRevDetail(r)}>
                             <td className="px-4 lg:px-5 py-3.5">
                               <div className="flex items-center gap-3">
                                 {r.avatar_url ? (
