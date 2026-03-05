@@ -352,6 +352,25 @@ Deno.serve(async (req) => {
         } catch (notifyErr) {
           console.error("Telegram notification error (will retry on next interaction):", notifyErr);
         }
+        // ===== PUSH NOTIFICATION (PWA) =====
+        try {
+          const baseUrl = Deno.env.get("SUPABASE_URL")!;
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          fetch(`${baseUrl}/functions/v1/send-push`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({
+              title: "✅ Depósito Confirmado",
+              body: `Depósito de R$ ${Number(tx.amount).toFixed(2).replace(".", ",")} confirmado! Saldo atualizado.`,
+              user_ids: [tx.user_id],
+            }),
+          }).catch(() => {});
+        } catch (pushErr) {
+          console.warn("Push notification error:", pushErr);
+        }
       } else {
         console.warn(`No pending transaction found for payment_id=${paymentId}`);
       }
