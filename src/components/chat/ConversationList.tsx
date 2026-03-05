@@ -18,7 +18,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
       <div className="flex-1 p-4 space-y-3">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex items-center gap-3 animate-pulse">
-            <div className="w-12 h-12 rounded-full bg-muted" />
+            <div className="w-14 h-14 rounded-full bg-muted" />
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-muted rounded w-1/2" />
               <div className="h-3 bg-muted rounded w-3/4" />
@@ -58,39 +58,39 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
         layout
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         onClick={() => onSelect(conv.id)}
-        className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left hover:bg-muted/50 ${isActive ? "bg-primary/10 border-r-2 border-primary" : ""}`}
+        className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left hover:bg-muted/50 ${isActive ? "bg-primary/10 border-r-2 border-primary" : ""}`}
       >
         {isGroup ? (
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             {conv.icon && conv.icon.startsWith("http") ? (
-              <img src={conv.icon} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
+              <img src={conv.icon} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-full object-cover border-2 border-primary/20" />
             ) : (
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${isGeneral ? "bg-primary/15 border-primary/30" : "bg-accent/15 border-accent/30"}`}>
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center border ${isGeneral ? "bg-primary/15 border-primary/30" : "bg-accent/15 border-accent/30"}`}>
                 {conv.icon && !conv.icon.startsWith("http") ? (
-                  <span className="text-xl">{conv.icon}</span>
+                  <span className="text-2xl">{conv.icon}</span>
                 ) : (
-                  <Users className={`h-5 w-5 ${isGeneral ? "text-primary" : "text-accent"}`} />
+                  <Users className={`h-6 w-6 ${isGeneral ? "text-primary" : "text-accent"}`} />
                 )}
               </div>
             )}
             {(conv.unread_count || 0) > 0 && (
-              <div className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
-                <span className="text-[9px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
+              <div className="absolute -top-0.5 -left-0.5 min-w-[20px] h-[20px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
+                <span className="text-[10px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
               </div>
             )}
           </div>
         ) : (
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             {conv.other_user?.avatar_url ? (
-              <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+              <img src={conv.other_user.avatar_url} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-full object-cover border-2 border-border" />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+              <div className="w-14 h-14 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-base">
                 {initial}
               </div>
             )}
             {(conv.unread_count || 0) > 0 && (
-              <div className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
-                <span className="text-[9px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
+              <div className="absolute -top-0.5 -left-0.5 min-w-[20px] h-[20px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
+                <span className="text-[10px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
               </div>
             )}
           </div>
