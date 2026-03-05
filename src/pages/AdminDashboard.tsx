@@ -1116,7 +1116,8 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {/* Lucro do Período - Premium Card */}
               <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.05, type: "spring", stiffness: 200, damping: 20 }}
-                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden sm:col-span-2 lg:col-span-1 group">
+                onClick={() => role === "admin" && setShowLucroModal(true)}
+                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden sm:col-span-2 lg:col-span-1 group cursor-pointer">
                 {/* Glow background effect */}
                 <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-20 transition-opacity duration-500 group-hover:opacity-35 ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
                 <div className={`absolute -bottom-8 -left-8 w-24 h-24 rounded-full blur-2xl opacity-10 ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
@@ -1178,36 +1179,68 @@ export default function AdminDashboard() {
                     </p>
                   </motion.div>
                 </div>
+                {role === "admin" && <p className="text-[9px] text-muted-foreground/60 text-center mt-2 relative z-10">Toque para detalhes por operadora</p>}
               </motion.div>
 
-              {/* Depósitos Recebidos */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                    <AnimatedIcon icon={CreditCard} className="h-4 w-4 text-primary" animation="pulse" delay={0.1} />
+              {/* Depósitos Recebidos - Premium Card */}
+              <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
+                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden group">
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-15 bg-primary transition-opacity duration-500 group-hover:opacity-25" />
+
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className="flex items-center gap-2.5">
+                    <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/15 flex items-center justify-center shadow-[0_0_12px_hsl(var(--primary)/0.2)]">
+                      <AnimatedIcon icon={CreditCard} className="h-4 w-4 sm:h-5 sm:w-5 text-primary" animation="pulse" delay={0.1} />
+                    </motion.div>
+                    <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Depósitos Recebidos</span>
                   </div>
-                  <span className="ml-auto text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">{analytics.txCount} txs</span>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.35, type: "spring" }}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                    {analytics.txCount} txs
+                  </motion.div>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Depósitos Recebidos</span>
-                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" /></p>
-                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, delay: 0.1 }}
-                    className="h-full rounded-full bg-primary" />
+
+                <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+                  className="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight text-foreground relative z-10">
+                  <AnimatedCounter value={analytics.totalDeposited} prefix="R$&nbsp;" />
+                </motion.p>
+
+                <div className="mt-3 h-1.5 rounded-full bg-muted/40 overflow-hidden relative z-10">
+                  <motion.div initial={{ width: 0 }} animate={{ width: "100%" }}
+                    transition={{ duration: 1, delay: 0.25, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]" />
                 </div>
               </motion.div>
 
-              {/* Saldo dos Revendedores */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center">
-                    <AnimatedIcon icon={Wallet} className="h-4 w-4 text-warning" animation="wiggle" delay={0.15} />
+              {/* Saldo dos Revendedores - Premium Card */}
+              <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
+                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden group">
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-15 bg-warning transition-opacity duration-500 group-hover:opacity-25" />
+
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className="flex items-center gap-2.5">
+                    <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-warning/15 flex items-center justify-center shadow-[0_0_12px_hsl(var(--warning)/0.2)]">
+                      <AnimatedIcon icon={Wallet} className="h-4 w-4 sm:h-5 sm:w-5 text-warning" animation="wiggle" delay={0.15} />
+                    </motion.div>
+                    <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Saldo Revendedores</span>
                   </div>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring" }}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
+                    {analytics.totalDeposited > 0 ? ((analytics.saldoCarteiras / analytics.totalDeposited) * 100).toFixed(0) : "0"}%
+                  </motion.div>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Saldo Revendedores</span>
-                <p className="text-2xl font-bold text-foreground mt-0.5"><AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" /></p>
-                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((analytics.saldoCarteiras / Math.max(analytics.totalDeposited, 1)) * 100, 100)}%` }} transition={{ duration: 0.8, delay: 0.15 }}
-                    className="h-full rounded-full bg-warning" />
+
+                <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}
+                  className="text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight text-foreground relative z-10">
+                  <AnimatedCounter value={analytics.saldoCarteiras} prefix="R$&nbsp;" />
+                </motion.p>
+
+                <div className="mt-3 h-1.5 rounded-full bg-muted/40 overflow-hidden relative z-10">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((analytics.saldoCarteiras / Math.max(analytics.totalDeposited, 1)) * 100, 100)}%` }}
+                    transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-warning/70 to-warning shadow-[0_0_8px_hsl(var(--warning)/0.4)]" />
                 </div>
               </motion.div>
             </div>
