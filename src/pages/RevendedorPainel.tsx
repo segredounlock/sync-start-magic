@@ -694,6 +694,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   };
 
   const [avatarError, setAvatarError] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
 
   // Reset error when URL changes
   useEffect(() => { setAvatarError(false); }, [avatarUrl]);
