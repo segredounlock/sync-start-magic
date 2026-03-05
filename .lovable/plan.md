@@ -1,22 +1,40 @@
 
 
-## Plano: Corrigir botão "+" de nova conversa no mobile
+## Diagnóstico e Correção
 
-### Problema identificado
-O botão "+" para iniciar nova conversa no chat mobile pode estar com problemas de responsividade ao toque. Possíveis causas:
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-1. **Área de toque pequena** — o botão atual tem apenas `p-2.5` (~40x40px), que pode ser difícil de acertar em telas menores
-2. **Possível conflito de eventos** — o handler `preventZoom` (touchmove) e `touchAction: "pan-y"` podem estar interferindo em alguns dispositivos
-3. **Modal sem feedback de erro** — se a lista de usuários falha ao carregar, o usuário não vê nenhum erro
+### Plano
 
-### Alterações
+**1. Corrigir o mapeamento de status na sync function**
 
-**1. `src/pages/ChatApp.tsx`** — Aumentar área de toque do botão "+" no mobile
-- Linha 113: Aumentar padding do botão de `p-2.5` para `p-3` e adicionar `min-w-[44px] min-h-[44px]` para garantir área mínima de 44x44px (padrão Apple de acessibilidade)
-- Adicionar `touch-action: manipulation` no botão para evitar delay de 300ms em mobile
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-**2. `src/components/chat/NewChatModal.tsx`** — Melhorar feedback de erro
-- Adicionar tratamento de erro no `fetchUsers` para mostrar mensagem ao usuário caso a consulta falhe
-- Adicionar um botão "Tentar novamente" se a lista não carregar
-- Garantir que o modal feche corretamente ao tocar fora
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
