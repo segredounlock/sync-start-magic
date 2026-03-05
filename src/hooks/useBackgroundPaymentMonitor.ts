@@ -23,6 +23,10 @@ export function useBackgroundPaymentMonitor(
   useEffect(() => {
     if (!userId) return;
 
+    let isActive = true;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    let lastPollAt = new Date().toISOString();
+
     // Auto-expire old pending deposits (>30 min) on mount
     const expireOldDeposits = async () => {
       const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
@@ -36,48 +40,95 @@ export function useBackgroundPaymentMonitor(
     };
     expireOldDeposits();
 
-    // Subscribe to realtime changes on the transactions table for this user
-    const channel = supabase
-      .channel(`bg-payment-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "transactions",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const row = payload.new as {
-            id: string;
-            status: string;
-            type: string;
-            amount: number;
-          };
+    const handleCompletedDeposit = (row: { id: string; status: string; type: string; amount: number }) => {
+      if (
+        row.type === "deposit" &&
+        row.status === "completed" &&
+        !knownCompletedRef.current.has(row.id)
+      ) {
+        knownCompletedRef.current.add(row.id);
+        if (playSound) { try { playCashRegisterSound(); } catch {} }
+        if (showToast) {
+          appToast.depositConfirmed(
+            `✅ Depósito de R$ ${Number(row.amount).toFixed(2)} confirmado! Saldo atualizado.`,
+            { id: `deposit-${row.id}` }
+          );
+        }
+        onBalanceUpdated();
+      }
+    };
 
-          if (
-            row.type === "deposit" &&
-            row.status === "completed" &&
-            !knownCompletedRef.current.has(row.id)
-          ) {
-            knownCompletedRef.current.add(row.id);
-            // Sound only if not handled by another hook (e.g. useNotifications)
-            if (playSound) { try { playCashRegisterSound(); } catch {} }
-            // Toast only if allowed by config
-            if (showToast) {
-              appToast.depositConfirmed(
-                `✅ Depósito de R$ ${Number(row.amount).toFixed(2)} confirmado! Saldo atualizado.`,
-                { id: `deposit-${row.id}` }
-              );
-            }
-            onBalanceUpdated();
+    // Setup realtime channel with reconnection
+    let channel: ReturnType<typeof supabase.channel>;
+
+    const setupChannel = () => {
+      if (channel) {
+        try { supabase.removeChannel(channel); } catch {}
+      }
+      channel = supabase
+        .channel(`bg-payment-${userId}-${Date.now()}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "transactions",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            handleCompletedDeposit(payload.new as any);
+          }
+        )
+        .subscribe((status) => {
+          console.log("[BgPayment] channel:", status);
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            setTimeout(() => { if (isActive) setupChannel(); }, 3000);
+          }
+        });
+    };
+
+    // Fallback polling every 10s
+    const pollForCompleted = async () => {
+      if (!isActive) return;
+      try {
+        const { data } = await supabase
+          .from("transactions")
+          .select("id, amount, status, type")
+          .eq("user_id", userId)
+          .eq("status", "completed")
+          .eq("type", "deposit")
+          .gt("updated_at", lastPollAt)
+          .limit(5);
+
+        lastPollAt = new Date().toISOString();
+
+        if (data) {
+          for (const row of data) {
+            handleCompletedDeposit(row);
           }
         }
-      )
-      .subscribe();
+      } catch {}
+      if (isActive) pollTimer = setTimeout(pollForCompleted, 10000);
+    };
+
+    // Reconnect on tab visibility change
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && isActive) {
+        console.log("[BgPayment] Tab visible, reconnecting...");
+        setupChannel();
+        pollForCompleted();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    setupChannel();
+    pollTimer = setTimeout(pollForCompleted, 10000);
 
     return () => {
-      supabase.removeChannel(channel);
+      isActive = false;
+      document.removeEventListener("visibilitychange", handleVisibility);
+      if (pollTimer) clearTimeout(pollTimer);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [userId, onBalanceUpdated, showToast, playSound]);
 }

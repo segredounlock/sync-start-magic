@@ -138,203 +138,325 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
     persistNotification(notif);
   }, []);
 
-  // Realtime subscriptions
+  // Realtime subscriptions with auto-reconnect and fallback polling
   useEffect(() => {
-    const channels: ReturnType<typeof supabase.channel>[] = [];
+    let channels: ReturnType<typeof supabase.channel>[] = [];
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    let isActive = true;
+    let lastPollAt = new Date().toISOString();
 
-    if (listenTo.includes("deposit")) {
-      const ch = supabase.channel("notif-deposits")
-        .on("postgres_changes", {
-          event: "UPDATE", schema: "public", table: "transactions",
-        }, async (payload) => {
-          const newRow = payload.new as any;
-          const oldRow = payload.old as any;
-          if (newRow.status === "completed" && oldRow?.status !== "completed") {
-            const profile = await getProfile(newRow.user_id);
-            addNotification({
-              id: newRow.id,
-              type: "deposit",
-              message: `Depósito R$ ${Number(newRow.amount).toFixed(2)} confirmado`,
-              amount: Number(newRow.amount),
-              user_id: newRow.user_id,
-              user_nome: profile.nome || undefined,
-              user_email: profile.email || undefined,
-              status: newRow.status,
-              created_at: newRow.updated_at || newRow.created_at,
-              is_read: false,
-            });
-            try { playCashRegisterSound(); } catch {}
-            if (showDeposit) {
-              showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
-              appToast.depositConfirmed(`Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
-            }
-          }
-        })
-        .subscribe();
-      channels.push(ch);
-    }
+    const setupChannels = () => {
+      // Clean up old channels first
+      channels.forEach(ch => supabase.removeChannel(ch));
+      channels = [];
 
-    if (listenTo.includes("recarga")) {
-      const ch = supabase.channel("notif-recargas")
-        .on("postgres_changes", {
-          event: "INSERT", schema: "public", table: "recargas",
-        }, async (payload) => {
-          const r = payload.new as any;
-          const profile = await getProfile(r.user_id);
-          const insertStatusMap: Record<string, string> = {
-            completed: "Concluída", concluida: "Concluída",
-            falha: "Falhou", pending: "Processando", pendente: "Processando",
-            processing: "Processando", cancelled: "Cancelada",
-          };
-          const insertLabel = insertStatusMap[r.status] || r.status;
-          addNotification({
-            id: r.id,
-            type: "recarga",
-            message: `Recarga ${insertLabel} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
-            amount: Number(r.valor),
-            user_id: r.user_id,
-            user_nome: profile.nome || undefined,
-            user_email: profile.email || undefined,
-            status: r.status,
-            created_at: r.created_at,
-            is_read: false,
-          });
-          if (showRecarga) {
-            showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
-            appToast.recargaProcessing(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
-          }
-        })
-        .on("postgres_changes", {
-          event: "UPDATE", schema: "public", table: "recargas",
-        }, async (payload) => {
-          const r = payload.new as any;
-          const old = payload.old as any;
-          if (r.status !== old?.status) {
-            const profile = await getProfile(r.user_id);
-            const statusMap: Record<string, string> = {
-              completed: "✅ Concluída",
-              concluida: "✅ Concluída",
-              falha: "❌ Falhou",
-              pending: "⏳ Processando",
-              pendente: "⏳ Processando",
-              processing: "⚙️ Processando",
-              cancelled: "🚫 Cancelada",
-            };
-            const label = statusMap[r.status] || r.status;
-            const updatedMsg = `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`;
-            const originalTime = r.created_at; // Always use the recharge creation time
-
-            // Update the existing INSERT notification in-place instead of creating a duplicate
-            const originalId = r.id;
-            if (knownIds.current.has(originalId)) {
-              setNotifications(prev => prev.map(n =>
-                n.id === originalId
-                  ? { ...n, message: updatedMsg, status: r.status, created_at: originalTime }
-                  : n
-              ));
-              // Also update in the database
-              supabase.from("admin_notifications" as any)
-                .update({ message: updatedMsg, status: r.status, created_at: originalTime } as any)
-                .eq("id", originalId)
-                .then(() => {});
-            } else {
+      if (listenTo.includes("deposit")) {
+        const ch = supabase.channel(`notif-deposits-${Date.now()}`)
+          .on("postgres_changes", {
+            event: "UPDATE", schema: "public", table: "transactions",
+          }, async (payload) => {
+            const newRow = payload.new as any;
+            const oldRow = payload.old as any;
+            if (newRow.status === "completed" && oldRow?.status !== "completed") {
+              const profile = await getProfile(newRow.user_id);
               addNotification({
-                id: originalId,
-                type: "recarga",
-                message: updatedMsg,
-                amount: Number(r.valor),
-                user_id: r.user_id,
+                id: newRow.id,
+                type: "deposit",
+                message: `Depósito R$ ${Number(newRow.amount).toFixed(2)} confirmado`,
+                amount: Number(newRow.amount),
+                user_id: newRow.user_id,
                 user_nome: profile.nome || undefined,
                 user_email: profile.email || undefined,
-                status: r.status,
-                created_at: originalTime,
+                status: newRow.status,
+                created_at: newRow.updated_at || newRow.created_at,
                 is_read: false,
               });
+              try { playCashRegisterSound(); } catch {}
+              if (showDeposit) {
+                showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
+                appToast.depositConfirmed(`Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
+              }
+            }
+          })
+          .subscribe((status) => {
+            console.log("[Notif] deposit channel:", status);
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => { if (isActive) setupChannels(); }, 3000);
+            }
+          });
+        channels.push(ch);
+      }
+
+      if (listenTo.includes("recarga")) {
+        const ch = supabase.channel(`notif-recargas-${Date.now()}`)
+          .on("postgres_changes", {
+            event: "INSERT", schema: "public", table: "recargas",
+          }, async (payload) => {
+            const r = payload.new as any;
+            const profile = await getProfile(r.user_id);
+            const insertStatusMap: Record<string, string> = {
+              completed: "Concluída", concluida: "Concluída",
+              falha: "Falhou", pending: "Processando", pendente: "Processando",
+              processing: "Processando", cancelled: "Cancelada",
+            };
+            const insertLabel = insertStatusMap[r.status] || r.status;
+            addNotification({
+              id: r.id,
+              type: "recarga",
+              message: `Recarga ${insertLabel} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
+              amount: Number(r.valor),
+              user_id: r.user_id,
+              user_nome: profile.nome || undefined,
+              user_email: profile.email || undefined,
+              status: r.status,
+              created_at: r.created_at,
+              is_read: false,
+            });
+            if (showRecarga) {
+              showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
+              appToast.recargaProcessing(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+            }
+          })
+          .on("postgres_changes", {
+            event: "UPDATE", schema: "public", table: "recargas",
+          }, async (payload) => {
+            const r = payload.new as any;
+            const old = payload.old as any;
+            if (r.status !== old?.status) {
+              const profile = await getProfile(r.user_id);
+              const statusMap: Record<string, string> = {
+                completed: "✅ Concluída",
+                concluida: "✅ Concluída",
+                falha: "❌ Falhou",
+                pending: "⏳ Processando",
+                pendente: "⏳ Processando",
+                processing: "⚙️ Processando",
+                cancelled: "🚫 Cancelada",
+              };
+              const label = statusMap[r.status] || r.status;
+              const updatedMsg = `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`;
+              const originalTime = r.created_at;
+
+              const originalId = r.id;
+              if (knownIds.current.has(originalId)) {
+                setNotifications(prev => prev.map(n =>
+                  n.id === originalId
+                    ? { ...n, message: updatedMsg, status: r.status, created_at: originalTime }
+                    : n
+                ));
+                supabase.from("admin_notifications" as any)
+                  .update({ message: updatedMsg, status: r.status, created_at: originalTime } as any)
+                  .eq("id", originalId)
+                  .then(() => {});
+              } else {
+                addNotification({
+                  id: originalId,
+                  type: "recarga",
+                  message: updatedMsg,
+                  amount: Number(r.valor),
+                  user_id: r.user_id,
+                  user_nome: profile.nome || undefined,
+                  user_email: profile.email || undefined,
+                  status: r.status,
+                  created_at: originalTime,
+                  is_read: false,
+                });
+              }
+            }
+          })
+          .subscribe((status) => {
+            console.log("[Notif] recarga channel:", status);
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => { if (isActive) setupChannels(); }, 3000);
+            }
+          });
+        channels.push(ch);
+      }
+
+      if (listenTo.includes("new_user")) {
+        const ch = supabase.channel(`notif-new-users-all-${Date.now()}`)
+          .on("postgres_changes", {
+            event: "INSERT", schema: "public", table: "profiles",
+          }, (payload) => {
+            const row = payload.new as any;
+            if (!row?.id) return;
+            const label = row.nome?.trim() || row.email?.trim() || "Usuário";
+            addNotification({
+              id: `web-${row.id}`,
+              type: "new_user_web",
+              message: `Novo cadastro Web: ${label}`,
+              amount: 0,
+              user_id: row.id,
+              user_nome: row.nome || undefined,
+              user_email: row.email || undefined,
+              status: "new",
+              created_at: row.created_at,
+              is_read: false,
+            });
+            try { playWebSignupSound(); } catch {}
+            if (showNewUser) {
+              showSystemNotification("🆕 Novo cadastro", label);
+              appToast.newUserWeb(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
+            }
+          })
+          .on("postgres_changes", {
+            event: "INSERT", schema: "public", table: "telegram_users",
+          }, (payload) => {
+            const row = payload.new as any;
+            if (!row?.is_registered) return;
+            const label = row.username?.trim() ? `@${row.username}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
+            addNotification({
+              id: `tg-${row.id}`,
+              type: "new_user_telegram",
+              message: `Novo cadastro Telegram: ${label}`,
+              amount: 0,
+              user_id: row.id,
+              user_nome: label,
+              status: "new",
+              created_at: row.created_at,
+              is_read: false,
+            });
+            try { playTelegramSignupSound(); } catch {}
+            if (showNewUser) {
+              showSystemNotification("🤖 Novo Telegram", label);
+              appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
+            }
+          })
+          .on("postgres_changes", {
+            event: "UPDATE", schema: "public", table: "telegram_users",
+          }, (payload) => {
+            const row = payload.new as any;
+            const old = payload.old as any;
+            if (!row?.is_registered || old?.is_registered === row.is_registered) return;
+            const label = row.username?.trim() ? `@${row.username}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
+            addNotification({
+              id: `tg-upd-${row.id}`,
+              type: "new_user_telegram",
+              message: `Novo cadastro Telegram: ${label}`,
+              amount: 0,
+              user_id: row.id,
+              user_nome: label,
+              status: "new",
+              created_at: row.updated_at || row.created_at,
+              is_read: false,
+            });
+            try { playTelegramSignupSound(); } catch {}
+            if (showNewUser) {
+              showSystemNotification("🤖 Novo Telegram", label);
+              appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
+            }
+          })
+          .subscribe((status) => {
+            console.log("[Notif] new_user channel:", status);
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => { if (isActive) setupChannels(); }, 3000);
+            }
+          });
+        channels.push(ch);
+      }
+    };
+
+    // Fallback polling: catch events missed by realtime
+    const pollForMissedEvents = async () => {
+      if (!isActive) return;
+      try {
+        const since = lastPollAt;
+        lastPollAt = new Date().toISOString();
+
+        // Poll for recent completed deposits
+        if (listenTo.includes("deposit")) {
+          const { data: deposits } = await supabase
+            .from("transactions")
+            .select("id, amount, user_id, status, type, updated_at, created_at")
+            .eq("status", "completed")
+            .eq("type", "deposit")
+            .gt("updated_at", since)
+            .order("updated_at", { ascending: false })
+            .limit(10);
+
+          if (deposits) {
+            for (const dep of deposits) {
+              if (!knownIds.current.has(dep.id)) {
+                const profile = await getProfile(dep.user_id);
+                addNotification({
+                  id: dep.id,
+                  type: "deposit",
+                  message: `Depósito R$ ${Number(dep.amount).toFixed(2)} confirmado`,
+                  amount: Number(dep.amount),
+                  user_id: dep.user_id,
+                  user_nome: profile.nome || undefined,
+                  user_email: profile.email || undefined,
+                  status: dep.status,
+                  created_at: dep.updated_at || dep.created_at,
+                  is_read: false,
+                });
+              }
             }
           }
-        })
-        .subscribe();
-      channels.push(ch);
-    }
+        }
 
-    if (listenTo.includes("new_user")) {
-      const ch = supabase.channel("notif-new-users-all")
-        .on("postgres_changes", {
-          event: "INSERT", schema: "public", table: "profiles",
-        }, (payload) => {
-          const row = payload.new as any;
-          if (!row?.id) return;
-          const label = row.nome?.trim() || row.email?.trim() || "Usuário";
-          addNotification({
-            id: `web-${row.id}`,
-            type: "new_user_web",
-            message: `Novo cadastro Web: ${label}`,
-            amount: 0,
-            user_id: row.id,
-            user_nome: row.nome || undefined,
-            user_email: row.email || undefined,
-            status: "new",
-            created_at: row.created_at,
-            is_read: false,
-          });
-          try { playWebSignupSound(); } catch {}
-          if (showNewUser) {
-            showSystemNotification("🆕 Novo cadastro", label);
-            appToast.newUserWeb(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
+        // Poll for recent recargas
+        if (listenTo.includes("recarga")) {
+          const { data: recargas } = await supabase
+            .from("recargas")
+            .select("id, telefone, operadora, valor, custo, status, created_at, user_id, updated_at")
+            .gt("updated_at", since)
+            .order("updated_at", { ascending: false })
+            .limit(10);
+
+          if (recargas) {
+            for (const r of recargas) {
+              if (!knownIds.current.has(r.id)) {
+                const profile = await getProfile(r.user_id);
+                const statusMap: Record<string, string> = {
+                  completed: "✅ Concluída", concluida: "✅ Concluída",
+                  falha: "❌ Falhou", pending: "⏳ Processando",
+                };
+                const label = statusMap[r.status] || r.status;
+                addNotification({
+                  id: r.id,
+                  type: "recarga",
+                  message: `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
+                  amount: Number(r.valor),
+                  user_id: r.user_id,
+                  user_nome: profile.nome || undefined,
+                  user_email: profile.email || undefined,
+                  status: r.status,
+                  created_at: r.created_at,
+                  is_read: false,
+                });
+              }
+            }
           }
-        })
-        .on("postgres_changes", {
-          event: "INSERT", schema: "public", table: "telegram_users",
-        }, (payload) => {
-          const row = payload.new as any;
-          if (!row?.is_registered) return;
-          const label = row.username?.trim() ? `@${row.username}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
-          addNotification({
-            id: `tg-${row.id}`,
-            type: "new_user_telegram",
-            message: `Novo cadastro Telegram: ${label}`,
-            amount: 0,
-            user_id: row.id,
-            user_nome: label,
-            status: "new",
-            created_at: row.created_at,
-            is_read: false,
-          });
-          try { playTelegramSignupSound(); } catch {}
-          if (showNewUser) {
-            showSystemNotification("🤖 Novo Telegram", label);
-            appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
-          }
-        })
-        .on("postgres_changes", {
-          event: "UPDATE", schema: "public", table: "telegram_users",
-        }, (payload) => {
-          const row = payload.new as any;
-          const old = payload.old as any;
-          if (!row?.is_registered || old?.is_registered === row.is_registered) return;
-          const label = row.username?.trim() ? `@${row.username}` : row.first_name?.trim() || `ID ${row.telegram_id}`;
-          addNotification({
-            id: `tg-upd-${row.id}`,
-            type: "new_user_telegram",
-            message: `Novo cadastro Telegram: ${label}`,
-            amount: 0,
-            user_id: row.id,
-            user_nome: label,
-            status: "new",
-            created_at: row.updated_at || row.created_at,
-            is_read: false,
-          });
-          try { playTelegramSignupSound(); } catch {}
-          if (showNewUser) {
-            showSystemNotification("🤖 Novo Telegram", label);
-            appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
-          }
-        })
-        .subscribe();
-      channels.push(ch);
-    }
+        }
+      } catch (e) {
+        console.warn("[Notif] Poll fallback error:", e);
+      }
+
+      if (isActive) {
+        pollTimer = setTimeout(pollForMissedEvents, 15000); // Poll every 15s
+      }
+    };
+
+    // Reconnect when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && isActive) {
+        console.log("[Notif] Tab visible, reconnecting channels...");
+        setupChannels();
+        pollForMissedEvents(); // Immediate poll to catch missed events
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Initial setup
+    setupChannels();
+    pollTimer = setTimeout(pollForMissedEvents, 15000);
 
     return () => {
+      isActive = false;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (pollTimer) clearTimeout(pollTimer);
       channels.forEach(ch => supabase.removeChannel(ch));
     };
   }, [listenTo, addNotification, getProfile]);
