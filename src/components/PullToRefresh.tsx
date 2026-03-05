@@ -18,23 +18,36 @@ export default function PullToRefresh() {
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
   const active = useRef(false);
+  const vibratedRef = useRef(false);
+
+  const vibrate = useCallback((pattern: number | number[]) => {
+    try { navigator.vibrate?.(pattern); } catch {}
+  }, []);
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     if (window.scrollY > 0 || refreshing) return;
     startY.current = e.touches[0].clientY;
     active.current = true;
+    vibratedRef.current = false;
   }, [refreshing]);
 
   const onTouchMove = useCallback((e: TouchEvent) => {
     if (!active.current || refreshing) return;
     const dy = e.touches[0].clientY - startY.current;
     if (dy < 0) { setPullDistance(0); return; }
-    // Resist pull
     const dist = Math.min(dy * 0.5, 140);
     setPullDistance(dist);
     setPulling(dist > 0);
     if (dist > 10) e.preventDefault();
-  }, [refreshing]);
+
+    // Haptic feedback when crossing threshold
+    if (dist >= THRESHOLD && !vibratedRef.current) {
+      vibratedRef.current = true;
+      vibrate(15);
+    } else if (dist < THRESHOLD && vibratedRef.current) {
+      vibratedRef.current = false;
+    }
+  }, [refreshing, vibrate]);
 
   const onTouchEnd = useCallback(() => {
     if (!active.current) return;
@@ -42,6 +55,7 @@ export default function PullToRefresh() {
     if (pullDistance >= THRESHOLD && !refreshing) {
       setRefreshing(true);
       setPullDistance(THRESHOLD);
+      vibrate([10, 30, 10]); // Confirm vibration
       setTimeout(() => window.location.reload(), 400);
     } else {
       setPulling(false);
