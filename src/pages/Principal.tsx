@@ -1782,15 +1782,15 @@ export default function Principal() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between glass-card rounded-xl px-4 py-3">
-                  <p className="text-xs text-muted-foreground">
-                    Mostrando {(listPage - 1) * LIST_PAGE_SIZE + 1}–{Math.min(listPage * LIST_PAGE_SIZE, filtered.length)} de {filtered.length}
+                <div className="flex items-center justify-between glass-card rounded-2xl px-5 py-3.5 shadow-md border border-border/30">
+                  <p className="text-xs text-muted-foreground/80 font-medium">
+                    Mostrando <span className="text-foreground font-semibold">{(listPage - 1) * LIST_PAGE_SIZE + 1}–{Math.min(listPage * LIST_PAGE_SIZE, filtered.length)}</span> de <span className="text-foreground font-semibold">{filtered.length}</span>
                   </p>
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setListPage(p => Math.max(1, p - 1))}
                       disabled={listPage <= 1}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-card text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-border/40"
                     >
                       ← Anterior
                     </button>
@@ -1803,15 +1803,15 @@ export default function Principal() {
                       }, [])
                       .map((p, i) =>
                         typeof p === "string" ? (
-                          <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                          <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground/50">…</span>
                         ) : (
                           <button
                             key={p}
                             onClick={() => setListPage(p)}
-                            className={`min-w-[32px] h-8 rounded-lg text-xs font-semibold transition-all ${
+                            className={`min-w-[34px] h-9 rounded-xl text-xs font-bold transition-all ${
                               listPage === p
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-105"
+                                : "bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border/40"
                             }`}
                           >
                             {p}
@@ -1821,7 +1821,7 @@ export default function Principal() {
                     <button
                       onClick={() => setListPage(p => Math.min(totalPages, p + 1))}
                       disabled={listPage >= totalPages}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-card text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-border/40"
                     >
                       Próximo →
                     </button>
