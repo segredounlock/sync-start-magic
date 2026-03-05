@@ -1773,27 +1773,27 @@ export default function AdminDashboard() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="glass-card rounded-xl p-4">
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold text-foreground"><AnimatedInt value={revendedores.length} /></p>
-              </div>
-              <div className="glass-card rounded-xl p-4">
-                <p className="text-xs text-muted-foreground">Ativos</p>
-                <p className="text-2xl font-bold text-success"><AnimatedInt value={revendedores.filter(r => r.active).length} /></p>
-              </div>
-              <div className="glass-card rounded-xl p-4">
-                <p className="text-xs text-muted-foreground">Inativos</p>
-                <p className="text-2xl font-bold text-destructive"><AnimatedInt value={revendedores.filter(r => !r.active).length} /></p>
-              </div>
-              <div className="glass-card rounded-xl p-4">
-                <p className="text-xs text-muted-foreground">Saldo Total</p>
-                <p className="text-2xl font-bold text-warning"><AnimatedCounter value={revendedores.reduce((s, r) => s + r.saldo, 0)} prefix="R$&nbsp;" /></p>
-              </div>
+            <div className="grid grid-cols-4 gap-2">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card rounded-lg p-2.5 text-center">
+                <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Total</p>
+                <p className="text-lg font-bold text-foreground mt-0.5"><AnimatedInt value={revendedores.length} /></p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-lg p-2.5 text-center">
+                <p className="text-[9px] uppercase tracking-wider text-success font-semibold">Ativos</p>
+                <p className="text-lg font-bold text-success mt-0.5"><AnimatedInt value={revendedores.filter(r => r.active).length} /></p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-lg p-2.5 text-center">
+                <p className="text-[9px] uppercase tracking-wider text-destructive font-semibold">Inativos</p>
+                <p className="text-lg font-bold text-destructive mt-0.5"><AnimatedInt value={revendedores.filter(r => !r.active).length} /></p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-lg p-2.5 text-center">
+                <p className="text-[9px] uppercase tracking-wider text-warning font-semibold">Saldo</p>
+                <p className="text-lg font-bold text-warning mt-0.5 font-mono"><AnimatedCounter value={revendedores.reduce((s, r) => s + r.saldo, 0)} prefix="R$" /></p>
+              </motion.div>
             </div>
 
             {/* Mobile: User Cards */}
-            <div className="md:hidden space-y-3">
+            <div className="md:hidden space-y-2">
               {loading ? (
                 <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : (() => {
@@ -1806,81 +1806,76 @@ export default function AdminDashboard() {
                 const totalPages = Math.ceil(filtered.length / USERS_PER_PAGE);
                 const paged = filtered.slice((usersPage - 1) * USERS_PER_PAGE, usersPage * USERS_PER_PAGE);
                 const todayStr = getTodayLocalKey();
-                return <>{paged.map(r => {
+                return <>{paged.map((r, idx) => {
                   const initials = (r.nome || r.email || "?").slice(0, 1).toUpperCase();
                   const colors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                   const colorIdx = r.id.charCodeAt(0) % colors.length;
                   const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                   const recCount = userRecs.length;
-                  const recHoje = userRecs.filter(rc => toLocalDateKey(rc.created_at) === todayStr).length;
                   const completedRecs = userRecs.filter(rc => rc.status === "completed" || rc.status === "concluida");
                   const totalVendido = completedRecs.reduce((s, rc) => s + (Number(rc.custo) || 0), 0);
                   const totalLucro = completedRecs.reduce((s, rc) => s + ((Number(rc.custo) || 0) - (Number((rc as any).custo_api) || 0)), 0);
-                  const ultimaRec = userRecs[0];
+                  const roleBadge = r.role === "admin"
+                    ? { label: "ADM", cls: "bg-warning/20 text-warning" }
+                    : r.role === "revendedor"
+                    ? { label: "REV", cls: "bg-success/20 text-success" }
+                    : r.role === "cliente"
+                    ? { label: "CLI", cls: "bg-primary/20 text-primary" }
+                    : { label: "USR", cls: "bg-muted text-muted-foreground" };
                   return (
-                    <div key={r.id} className="glass-card rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`flex-shrink-0 w-10 h-10 rounded-full ${colors[colorIdx]} flex items-center justify-center text-sm font-bold text-primary-foreground`}>
-                            {initials}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-foreground text-sm truncate">{r.nome || "—"}</p>
-                            <p className="text-xs text-muted-foreground truncate">{r.email || "—"}</p>
-                          </div>
+                    <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}
+                      className="glass-card rounded-xl p-3">
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="relative shrink-0">
+                          {r.avatar_url ? (
+                            <img src={r.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-border" />
+                          ) : (
+                            <div className={`w-8 h-8 rounded-full ${colors[colorIdx]} flex items-center justify-center text-xs font-bold text-primary-foreground ring-2 ring-border`}>
+                              {initials}
+                            </div>
+                          )}
+                          <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${r.active ? "bg-success" : "bg-destructive"}`} />
                         </div>
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${r.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-                          {r.active ? "Ativo" : "Inativo"}
-                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground text-[13px] truncate leading-tight">{r.nome || "—"}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{r.email || "—"}</p>
+                        </div>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 ${roleBadge.cls}`}>{roleBadge.label}</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-3 border-t border-border">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Saldo</p>
-                          <p className="text-sm font-bold font-mono text-foreground"><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" /></p>
+                      <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-border/50">
+                        <div className="text-center">
+                          <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Saldo</p>
+                          <p className="text-[11px] font-bold font-mono text-foreground"><AnimatedCounter value={r.saldo} prefix="R$" decimals={0} /></p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Vendido</p>
-                          <p className="text-sm font-bold font-mono text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" /></p>
+                        <div className="text-center">
+                          <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Vendas</p>
+                          <p className="text-[11px] font-bold font-mono text-success">{fmt(totalVendido)}</p>
                         </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Recargas</p>
-                          <p className="text-sm font-bold text-foreground"><AnimatedInt value={recCount} /></p>
+                        <div className="text-center">
+                          <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Recs</p>
+                          <p className="text-[11px] font-bold text-foreground"><AnimatedInt value={recCount} /></p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Hoje</p>
-                          <p className="text-sm font-bold text-primary"><AnimatedInt value={recHoje} /></p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Lucro</p>
-                          <p className="text-sm font-bold font-mono text-success"><AnimatedCounter value={totalLucro} prefix="R$&nbsp;" /></p>
+                        <div className="text-center">
+                          <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro</p>
+                          <p className="text-[11px] font-bold font-mono text-success">{fmt(totalLucro)}</p>
                         </div>
                       </div>
-                      {ultimaRec && (
-                        <div className="mt-2 pt-2 border-t border-border/50">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Última Recarga</p>
-                          <p className="text-xs text-foreground">
-                            {ultimaRec.operadora || "—"} • {ultimaRec.telefone} • {fmt(ultimaRec.valor)}
-                            <span className="text-muted-foreground ml-1">({fmtDate(ultimaRec.created_at)})</span>
-                          </p>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/50">
                         <button onClick={() => { setEditSaldoUser(r); setEditSaldoValue(String(r.saldo)); }}
-                          className="flex-1 py-2 rounded-lg text-xs font-semibold bg-success/15 text-success hover:bg-success/25 transition-colors">Saldo</button>
+                          className="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-success/15 text-success hover:bg-success/25 transition-colors">Saldo</button>
                         <button onClick={() => navigate("/principal")}
-                          className="flex-1 py-2 rounded-lg text-xs font-semibold bg-muted/60 text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1">
-                          <Eye className="h-3.5 w-3.5" /> Ver
+                          className="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-muted/60 text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1">
+                          <Eye className="h-3 w-3" /> Ver
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
-                {/* Pagination mobile */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 pt-3">
-                    <button disabled={usersPage <= 1} onClick={() => setUsersPage(p => p - 1)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Anterior</button>
-                    <span className="text-xs text-muted-foreground">{usersPage} / {totalPages}</span>
-                    <button disabled={usersPage >= totalPages} onClick={() => setUsersPage(p => p + 1)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Próximo</button>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <button disabled={usersPage <= 1} onClick={() => setUsersPage(p => p - 1)} className="px-3 py-1 rounded-lg text-[10px] font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Anterior</button>
+                    <span className="text-[10px] text-muted-foreground">{usersPage} / {totalPages}</span>
+                    <button disabled={usersPage >= totalPages} onClick={() => setUsersPage(p => p + 1)} className="px-3 py-1 rounded-lg text-[10px] font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Próximo</button>
                   </div>
                 )}
                 </>;
@@ -1888,18 +1883,18 @@ export default function AdminDashboard() {
             </div>
 
             <div className="hidden md:block glass-card rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full" style={{ fontSize: "13px" }}>
                 <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Usuário</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Tipo</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Saldo</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Recargas</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Hoje</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Total Vendido</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Lucro</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Status</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground uppercase text-xs tracking-wider">Ações</th>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left px-4 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Usuário</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Tipo</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Saldo</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Recs</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Hoje</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Vendido</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Lucro</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Status</th>
+                    <th className="text-center px-2 py-2 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1915,7 +1910,7 @@ export default function AdminDashboard() {
                     const totalPagesD = Math.ceil(filtered.length / USERS_PER_PAGE);
                     const pagedD = filtered.slice((usersPage - 1) * USERS_PER_PAGE, usersPage * USERS_PER_PAGE);
                     const todayStr = getTodayLocalKey();
-                    return <>{pagedD.map(r => {
+                    return <>{pagedD.map((r, idx) => {
                       const initials = (r.nome || r.email || "?").slice(0, 1).toUpperCase();
                       const colors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                       const colorIdx = r.id.charCodeAt(0) % colors.length;
@@ -1929,80 +1924,83 @@ export default function AdminDashboard() {
                       const roleBadge = r.role === "admin"
                         ? { label: "ADMIN", cls: "bg-warning/20 text-warning" }
                         : r.role === "revendedor"
-                        ? { label: "REVENDEDOR", cls: "bg-success/20 text-success" }
+                        ? { label: "REVEND", cls: "bg-success/20 text-success" }
                         : r.role === "cliente"
                         ? { label: "CLIENTE", cls: "bg-primary/20 text-primary" }
                         : r.role === "usuario"
                         ? { label: "USUÁRIO", cls: "bg-accent/20 text-accent" }
-                        : { label: "SEM FUNÇÃO", cls: "bg-muted text-muted-foreground" };
+                        : { label: "SEM ROLE", cls: "bg-muted text-muted-foreground" };
                       return (
-                        <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              {r.avatar_url ? (
-                                <img src={r.avatar_url} alt="" className="flex-shrink-0 w-9 h-9 rounded-full object-cover" />
-                              ) : (
-                                <div className={`flex-shrink-0 w-9 h-9 rounded-full ${colors[colorIdx]} flex items-center justify-center text-sm font-bold text-primary-foreground`}>
-                                  {initials}
-                                </div>
-                              )}
+                        <motion.tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-primary/[0.04] transition-colors cursor-pointer group"
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }}>
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="relative shrink-0">
+                                {r.avatar_url ? (
+                                  <img src={r.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-border" />
+                                ) : (
+                                  <div className={`w-8 h-8 rounded-full ${colors[colorIdx]} flex items-center justify-center text-xs font-bold text-primary-foreground ring-2 ring-border`}>
+                                    {initials}
+                                  </div>
+                                )}
+                                <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${r.active ? "bg-success" : "bg-destructive"}`} />
+                              </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-foreground truncate">{r.nome || "—"}</p>
-                                <p className="text-xs text-muted-foreground truncate max-w-[180px]">{r.email || "—"}</p>
+                                <p className="font-semibold text-foreground truncate text-[13px] leading-tight">{r.nome || "—"}</p>
+                                <p className="text-[11px] text-muted-foreground truncate max-w-[160px]">{r.email || "—"}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${roleBadge.cls}`}>
+                          <td className="px-2 py-2.5 text-center">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${roleBadge.cls}`}>
                               {roleBadge.label}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`font-mono font-medium ${saldoBaixo ? "text-warning" : "text-foreground"}`}>
+                          <td className="px-2 py-2.5 text-center">
+                            <span className={`font-mono font-medium text-[13px] tabular-nums ${saldoBaixo ? "text-warning" : "text-foreground"}`}>
                               <AnimatedCounter value={r.saldo} prefix="R$&nbsp;" />
                             </span>
-                            {saldoBaixo && <p className="text-[10px] text-warning italic">Saldo baixo</p>}
+                            {saldoBaixo && <p className="text-[9px] text-warning italic leading-tight">Baixo</p>}
                           </td>
-                          <td className="px-4 py-3 text-center text-foreground"><AnimatedInt value={recCount} /></td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`font-medium ${recHoje > 0 ? "bg-primary/15 text-primary px-2 py-0.5 rounded-md" : "text-foreground"}`}>
+                          <td className="px-2 py-2.5 text-center text-[13px] text-foreground tabular-nums"><AnimatedInt value={recCount} /></td>
+                          <td className="px-2 py-2.5 text-center">
+                            <span className={`font-medium text-[13px] tabular-nums ${recHoje > 0 ? "bg-primary/15 text-primary px-1.5 py-0.5 rounded" : "text-foreground"}`}>
                               <AnimatedInt value={recHoje} />
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center font-mono font-medium text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" /></td>
-                          <td className="px-4 py-3 text-center font-mono font-medium text-success"><AnimatedCounter value={totalLucro} prefix="R$&nbsp;" /></td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${r.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                          <td className="px-2 py-2.5 text-center font-mono font-medium text-[13px] text-success tabular-nums"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" /></td>
+                          <td className="px-2 py-2.5 text-center font-mono font-medium text-[13px] text-success tabular-nums"><AnimatedCounter value={totalLucro} prefix="R$&nbsp;" /></td>
+                          <td className="px-2 py-2.5 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${r.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-success" : "bg-destructive"}`} />
-                              {r.active ? "Ativo" : "Inativo"}
+                              {r.active ? "Ativo" : "Off"}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-1.5">
+                          <td className="px-2 py-2.5">
+                            <div className="flex items-center justify-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                               <button onClick={(e) => { e.stopPropagation(); setEditSaldoUser(r); setEditSaldoValue(String(r.saldo)); }}
-                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-success/15 text-success hover:bg-success/25 transition-colors flex items-center gap-1">
-                                <DollarSign className="h-3.5 w-3.5" /> Saldo
+                                className="px-2 py-1 rounded-lg text-[10px] font-bold bg-success/15 text-success hover:bg-success/25 transition-colors flex items-center gap-0.5">
+                                <DollarSign className="h-3 w-3" /> Saldo
                               </button>
                               <button onClick={(e) => { e.stopPropagation(); navigate("/principal"); }}
-                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Ver detalhes">
-                                <Eye className="h-4 w-4" />
+                                className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Ver">
+                                <Eye className="h-3.5 w-3.5" />
                               </button>
                               <button onClick={(e) => { e.stopPropagation(); }}
-                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Histórico">
-                                <History className="h-4 w-4" />
+                                className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Histórico">
+                                <History className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           </td>
-                        </tr>
+                        </motion.tr>
                       );
                     })}
-                    {/* Pagination row */}
                     {totalPagesD > 1 && (
-                      <tr><td colSpan={9} className="py-3">
+                      <tr><td colSpan={9} className="py-2">
                         <div className="flex items-center justify-center gap-2">
-                          <button disabled={usersPage <= 1} onClick={() => setUsersPage(p => p - 1)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Anterior</button>
-                          <span className="text-xs text-muted-foreground">{usersPage} / {totalPagesD}</span>
-                          <button disabled={usersPage >= totalPagesD} onClick={() => setUsersPage(p => p + 1)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Próximo</button>
+                          <button disabled={usersPage <= 1} onClick={() => setUsersPage(p => p - 1)} className="px-3 py-1 rounded-lg text-[10px] font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Anterior</button>
+                          <span className="text-[10px] text-muted-foreground">{usersPage} / {totalPagesD}</span>
+                          <button disabled={usersPage >= totalPagesD} onClick={() => setUsersPage(p => p + 1)} className="px-3 py-1 rounded-lg text-[10px] font-semibold bg-muted/60 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Próximo</button>
                         </div>
                       </td></tr>
                     )}
