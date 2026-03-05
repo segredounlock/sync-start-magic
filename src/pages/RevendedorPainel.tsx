@@ -1991,7 +1991,16 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       className="glass-card rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <Smartphone className={`h-5 w-5 ${opColor}`} />
+                          <motion.div
+                            animate={
+                              opName === "CLARO" ? { scale: [1, 1.15, 1] } :
+                              opName === "TIM"   ? { y: [0, -3, 0] } :
+                                                   { rotate: [0, 8, -8, 0] }
+                            }
+                            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut", delay: i * 0.15 }}
+                          >
+                            <Smartphone className={`h-5 w-5 ${opColor}`} />
+                          </motion.div>
                         </div>
                         <div>
                           <p className={`font-bold text-base ${opColor}`}>{op.operadora}</p>
