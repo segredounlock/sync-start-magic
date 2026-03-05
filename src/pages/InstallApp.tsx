@@ -163,15 +163,32 @@ export default function InstallApp() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <Step number={1} icon={<Share className="w-4 h-4" />}>
-                Toque no botão <strong>Compartilhar</strong> <span className="inline-block w-5 h-5 bg-muted rounded text-center leading-5 text-xs align-middle">⬆</span> na barra inferior do Safari
+                <span>Na barra inferior do Safari, toque no botão:</span>
+                <span className="inline-flex items-center justify-center w-10 h-10 bg-[#007AFF] rounded-xl mx-1 align-middle shadow-md">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                </span>
+                <span className="text-xs text-muted-foreground block mt-1">(ícone de compartilhar do Safari)</span>
               </Step>
               <Step number={2} icon={<Plus className="w-4 h-4" />}>
-                Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>
+                <span>Role o menu para baixo e toque em:</span>
+                <span className="flex items-center gap-2 mt-2 bg-muted/60 border border-border/50 rounded-xl px-3 py-2.5 text-foreground text-sm font-medium">
+                  <span className="inline-flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
+                    <Plus className="w-4 h-4" />
+                  </span>
+                  Adicionar à Tela de Início
+                </span>
               </Step>
               <Step number={3} icon={<Check className="w-4 h-4" />}>
-                Toque em <strong>"Adicionar"</strong> no canto superior direito
+                <span>No canto superior direito, toque em:</span>
+                <span className="inline-flex items-center justify-center mt-2 bg-[#007AFF] text-white text-sm font-semibold rounded-lg px-4 py-1.5 shadow-sm">
+                  Adicionar
+                </span>
               </Step>
             </div>
 
