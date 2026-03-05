@@ -222,46 +222,55 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
           }, async (payload) => {
             const r = payload.new as any;
             const old = payload.old as any;
-            if (r.status !== old?.status) {
-              const profile = await getProfile(r.user_id);
-              const statusMap: Record<string, string> = {
-                completed: "✅ Concluída",
-                concluida: "✅ Concluída",
-                falha: "❌ Falhou",
-                pending: "⏳ Processando",
-                pendente: "⏳ Processando",
-                processing: "⚙️ Processando",
-                cancelled: "🚫 Cancelada",
-              };
-              const label = statusMap[r.status] || r.status;
-              const updatedMsg = `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`;
-              const originalTime = r.created_at;
+            // Guard: only process if status actually changed and we have valid data
+            if (!r?.id || !r?.status || r.status === old?.status) return;
+            
+            const profile = await getProfile(r.user_id);
+            const statusMap: Record<string, string> = {
+              completed: "✅ Concluída",
+              concluida: "✅ Concluída",
+              falha: "❌ Falhou",
+              pending: "⏳ Processando",
+              pendente: "⏳ Processando",
+              processing: "⚙️ Processando",
+              cancelled: "🚫 Cancelada",
+            };
+            const label = statusMap[r.status] || r.status;
+            const operadora = r.operadora || "";
+            const valor = Number(r.valor || 0).toFixed(2);
+            const updatedMsg = `Recarga ${label} — ${operadora} R$ ${valor}`;
+            const originalTime = r.created_at;
 
-              const originalId = r.id;
-              if (knownIds.current.has(originalId)) {
-                setNotifications(prev => prev.map(n =>
-                  n.id === originalId
-                    ? { ...n, message: updatedMsg, status: r.status, created_at: originalTime }
-                    : n
-                ));
-                supabase.from("admin_notifications" as any)
-                  .update({ message: updatedMsg, status: r.status, created_at: originalTime } as any)
-                  .eq("id", originalId)
-                  .then(() => {});
-              } else {
-                addNotification({
-                  id: originalId,
-                  type: "recarga",
-                  message: updatedMsg,
-                  amount: Number(r.valor),
-                  user_id: r.user_id,
-                  user_nome: profile.nome || undefined,
-                  user_email: profile.email || undefined,
-                  status: r.status,
-                  created_at: originalTime,
-                  is_read: false,
-                });
-              }
+            // Validate message is not empty before proceeding
+            if (!updatedMsg || updatedMsg.trim().length === 0) {
+              console.warn("[Notif] Skipping recarga update with empty message", r);
+              return;
+            }
+
+            const originalId = r.id;
+            if (knownIds.current.has(originalId)) {
+              setNotifications(prev => prev.map(n =>
+                n.id === originalId
+                  ? { ...n, message: updatedMsg, status: r.status, created_at: originalTime }
+                  : n
+              ));
+              supabase.from("admin_notifications" as any)
+                .update({ message: updatedMsg, status: r.status, created_at: originalTime } as any)
+                .eq("id", originalId)
+                .then(() => {});
+            } else {
+              addNotification({
+                id: originalId,
+                type: "recarga",
+                message: updatedMsg,
+                amount: Number(r.valor || 0),
+                user_id: r.user_id,
+                user_nome: profile.nome || undefined,
+                user_email: profile.email || undefined,
+                status: r.status,
+                created_at: originalTime,
+                is_read: false,
+              });
             }
           })
           .subscribe((status) => {
