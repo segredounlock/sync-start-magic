@@ -1,40 +1,42 @@
 
 
-## Diagnóstico e Correção
+## Analysis
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+The deposit confirmation happens in `supabase/functions/pix-webhook/index.ts`. When a PIX payment is confirmed (status "paid"), the webhook:
+1. Updates the transaction to "completed"
+2. Credits the user's balance
+3. Sends a Telegram notification
 
-### Plano
+But it does **not** send a PWA push notification. The `send-push` function already exists and is used in `sync-pending-recargas` for recharges. We just need to add the same pattern to the pix-webhook.
 
-**1. Corrigir o mapeamento de status na sync function**
+## Plan
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### 1. Add push notification to `pix-webhook/index.ts`
+
+After the Telegram notification block (around line 354), add a fire-and-forget call to `send-push` with:
+- **Title**: `✅ Depósito Confirmado`
+- **Body**: `Depósito de R$ XX,XX confirmado! Saldo atualizado.`
+- **user_ids**: `[tx.user_id]`
+
+This follows the exact same pattern already used in `sync-pending-recargas/index.ts` for recharge notifications:
 
 ```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+// Push notification (PWA) for deposit confirmed
+const baseUrl = Deno.env.get("SUPABASE_URL")!;
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+fetch(`${baseUrl}/functions/v1/send-push`, {
+  method: "POST",
+  headers: { 
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${serviceKey}` 
+  },
+  body: JSON.stringify({
+    title: "✅ Depósito Confirmado",
+    body: `Depósito de R$ ${Number(tx.amount).toFixed(2).replace(".", ",")} confirmado! Saldo atualizado.`,
+    user_ids: [tx.user_id],
+  }),
+}).catch(() => {});
 ```
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+This is a single-file change -- only `supabase/functions/pix-webhook/index.ts` needs to be edited.
 
