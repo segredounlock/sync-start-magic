@@ -584,7 +584,6 @@ export default function AdminDashboard() {
     const totalVendas = filteredRecargas.reduce((s, r) => s + r.valor, 0);
     const totalCobrado = filteredRecargas.reduce((s, r) => s + r.custo, 0);
     const totalCustoApi = filteredRecargas.reduce((s, r) => s + (Number((r as any).custo_api) || 0), 0);
-    // Lucro real = o que foi cobrado dos revendedores - custo real da API
     const lucro = totalCobrado - totalCustoApi;
     const totalDeposited = filteredTransactions.filter(t => (t.status === "completed" || t.status === "confirmado") && (t.type === "deposit" || t.type === "deposito")).reduce((s, t) => s + t.amount, 0);
     const txCount = filteredTransactions.length;
@@ -594,7 +593,21 @@ export default function AdminDashboard() {
     const pendingRec = filteredRecargas.filter(r => r.status === "pending" || r.status === "pendente").length;
     const ticketMedio = totalRec > 0 ? totalVendas / totalRec : 0;
 
-    return { totalVendas, totalCobrado, totalCustoApi, lucro, totalDeposited, txCount, saldoCarteiras, totalRec, successRec, pendingRec, ticketMedio };
+    // Lucro por operadora breakdown
+    const lucroPorOperadora: { operadora: string; cobrado: number; custoApi: number; lucro: number; count: number }[] = [];
+    const opMap: Record<string, { cobrado: number; custoApi: number; count: number }> = {};
+    filteredRecargas.forEach(r => {
+      const op = (r.operadora || "Outros").toUpperCase();
+      if (!opMap[op]) opMap[op] = { cobrado: 0, custoApi: 0, count: 0 };
+      opMap[op].cobrado += r.custo;
+      opMap[op].custoApi += Number((r as any).custo_api) || 0;
+      opMap[op].count += 1;
+    });
+    Object.entries(opMap).sort((a, b) => (b[1].cobrado - b[1].custoApi) - (a[1].cobrado - a[1].custoApi)).forEach(([op, v]) => {
+      lucroPorOperadora.push({ operadora: op, cobrado: v.cobrado, custoApi: v.custoApi, lucro: v.cobrado - v.custoApi, count: v.count });
+    });
+
+    return { totalVendas, totalCobrado, totalCustoApi, lucro, totalDeposited, txCount, saldoCarteiras, totalRec, successRec, pendingRec, ticketMedio, lucroPorOperadora };
   }, [filteredRecargas, filteredTransactions, revendedores]);
 
   // Helper: data local YYYY-MM-DD (sem problemas de fuso UTC)

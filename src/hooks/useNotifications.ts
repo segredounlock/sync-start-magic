@@ -157,7 +157,10 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
           }, async (payload) => {
             const newRow = payload.new as any;
             const oldRow = payload.old as any;
+            // Only fire when status transitions TO completed (not if already completed)
             if (newRow.status === "completed" && oldRow?.status !== "completed") {
+              // Deduplicate: skip if already known
+              if (knownIds.current.has(newRow.id)) return;
               const profile = await getProfile(newRow.user_id);
               addNotification({
                 id: newRow.id,
