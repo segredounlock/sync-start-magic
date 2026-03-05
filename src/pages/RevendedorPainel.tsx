@@ -918,20 +918,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <CreditCard className="h-4 w-4" />
                 <span>{loading ? <SkeletonValue width="w-12" className="h-4" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</span>
               </button>
-              <div className="relative">
+              <div className="relative z-50">
                 <button onClick={() => setShowAvatarMenu(prev => !prev)} className="focus:outline-none">
                   <AvatarDisplay size="w-9 h-9" textSize="text-xs" />
                 </button>
                 <AnimatePresence>
                   {showAvatarMenu && (
                     <>
-                      <div className="fixed inset-0 z-30" onClick={() => setShowAvatarMenu(false)} />
+                      <div className="fixed inset-0 z-50" onClick={() => setShowAvatarMenu(false)} />
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: -4 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: -4 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-full mt-2 z-40 min-w-[160px] rounded-xl bg-card border border-border shadow-xl p-2"
+                        className="absolute right-0 top-full mt-2 z-[60] min-w-[160px] rounded-xl bg-card border border-border shadow-xl p-2"
                       >
                         <div className="px-3 py-2 border-b border-border mb-1">
                           <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
