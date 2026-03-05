@@ -525,9 +525,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                   <div key={m.id} className="flex items-center gap-2.5 py-1.5 rounded-lg">
                     <div className="relative flex-shrink-0">
                       {m.avatar_url ? (
-                        <img src={m.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
+                        <img src={m.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
+                        <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
                           {memberInitial}
                         </div>
                       )}
