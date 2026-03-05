@@ -66,9 +66,10 @@ export function usePushNotifications(userId: string | undefined) {
       }
 
       // 5. Subscribe to push (reuses existing if valid, creates new if needed)
+      const appServerKey = urlBase64ToUint8Array(vapidPublicKey);
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: appServerKey.buffer as ArrayBuffer,
       });
 
       const json = subscription.toJSON();
