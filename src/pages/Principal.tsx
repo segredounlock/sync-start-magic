@@ -1656,35 +1656,35 @@ export default function Principal() {
               </div>
 
               {/* Desktop: Table */}
-              <div className="hidden md:block glass-card rounded-xl overflow-x-auto">
+              <div className="hidden md:block glass-card rounded-2xl overflow-hidden shadow-xl shadow-black/10 border border-border/30">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border/60 bg-muted/30">
-                      <th className="text-left px-3 lg:px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Usuário</th>
-                      <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Tipo</th>
-                      <th className="text-right px-2 lg:px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Saldo</th>
-                      <th className="text-center px-2 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recargas</th>
-                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Hoje</th>
-                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Total Vendido</th>
-                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lucro</th>
-                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Ações</th>
+                    <tr className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20">
+                      <th className="text-left px-4 lg:px-5 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Usuário</th>
+                      <th className="text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Tipo</th>
+                      <th className="text-right px-2 lg:px-3 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Saldo</th>
+                      <th className="text-center px-2 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Recargas</th>
+                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Hoje</th>
+                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Total Vendido</th>
+                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Lucro</th>
+                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                      <th className="text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border/30">
+                  <tbody className="divide-y divide-border/20">
                     {loading ? (
                       <tr><td colSpan={9} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                     ) : filtered.length === 0 ? (
-                      <tr><td colSpan={9} className="text-center py-10">
-                        <Users className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-                        <p className="text-muted-foreground text-sm">Nenhum usuário encontrado</p>
-                        <button onClick={() => setShowCreateModal(true)} className="mt-3 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
-                          <Plus className="h-4 w-4 inline mr-1" /> Criar revendedor
+                      <tr><td colSpan={9} className="text-center py-12">
+                        <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                        <p className="text-muted-foreground text-sm font-medium">Nenhum usuário encontrado</p>
+                        <button onClick={() => setShowCreateModal(true)} className="mt-4 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 shadow-md shadow-primary/20 transition-all hover:scale-105">
+                          <Plus className="h-4 w-4 inline mr-1.5" /> Criar revendedor
                         </button>
                       </td></tr>
                     ) : (() => {
                       const todayStr = new Date().toISOString().slice(0, 10);
-                      return paginatedList.map(r => {
+                      return paginatedList.map((r, idx) => {
                         const initial = ((r.nome || r.email || "R")[0]).toUpperCase();
                         const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                         const recCount = userRecs.length;
@@ -1696,78 +1696,78 @@ export default function Principal() {
                         const ultimaRec = userRecs[0];
                         const saldoBaixo = r.saldo > 0 && r.saldo < 50;
                         return (
-                          <tr key={r.id} className="hover:bg-primary/[0.04] transition-all cursor-pointer group" onClick={() => openRevDetail(r)}>
-                            <td className="px-3 lg:px-5 py-3">
+                          <tr key={r.id} className="hover:bg-primary/[0.06] transition-all duration-200 cursor-pointer group" onClick={() => openRevDetail(r)}>
+                            <td className="px-4 lg:px-5 py-3.5">
                               <div className="flex items-center gap-3">
                                 {r.avatar_url ? (
-                                  <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).style.display = 'none'; }} className={`w-10 h-10 rounded-full object-cover shrink-0 ring-2 ${r.active ? "ring-success/30" : "ring-destructive/30"}`} />
+                                  <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).style.display = 'none'; }} className={`w-10 h-10 rounded-xl object-cover shrink-0 ring-2 shadow-sm ${r.active ? "ring-success/40" : "ring-destructive/40"}`} />
                                 ) : (
-                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ring-2 ${r.active ? "bg-success/15 text-success ring-success/30" : "bg-destructive/15 text-destructive ring-destructive/30"}`}>
+                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-sm ${r.active ? "bg-gradient-to-br from-success/20 to-success/10 text-success ring-1 ring-success/20" : "bg-gradient-to-br from-destructive/20 to-destructive/10 text-destructive ring-1 ring-destructive/20"}`}>
                                     {initial}
                                   </div>
                                 )}
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-foreground leading-tight text-sm flex items-center gap-1">{r.nome || "Sem nome"} <VerificationBadge badge={r.verification_badge as BadgeType} size="xs" /></p>
-                                  <p className="text-xs text-muted-foreground truncate max-w-[160px]">{r.email || "—"}</p>
+                                  <p className="font-semibold text-foreground leading-tight text-sm flex items-center gap-1.5 group-hover:text-primary transition-colors">{r.nome || "Sem nome"} <VerificationBadge badge={r.verification_badge as BadgeType} size="xs" /></p>
+                                  <p className="text-xs text-muted-foreground/70 truncate max-w-[180px] mt-0.5">{r.email || "—"}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-2 lg:px-4 py-3 text-center">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                                r.role === "admin" ? "bg-[hsl(280,70%,60%)]/15 text-[hsl(280,70%,60%)]" :
-                                r.role === "revendedor" ? "bg-primary/15 text-primary" :
-                                r.role === "usuario" ? "bg-[hsl(200,70%,50%)]/15 text-[hsl(200,70%,50%)]" :
-                                r.role === "cliente" ? "bg-accent/15 text-accent" :
-                                "bg-muted text-muted-foreground"
+                            <td className="px-2 lg:px-4 py-3.5 text-center">
+                              <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                r.role === "admin" ? "bg-[hsl(280,70%,60%)]/15 text-[hsl(280,70%,60%)] ring-1 ring-[hsl(280,70%,60%)]/20" :
+                                r.role === "revendedor" ? "bg-primary/15 text-primary ring-1 ring-primary/20" :
+                                r.role === "usuario" ? "bg-[hsl(200,70%,50%)]/15 text-[hsl(200,70%,50%)] ring-1 ring-[hsl(200,70%,50%)]/20" :
+                                r.role === "cliente" ? "bg-accent/15 text-accent ring-1 ring-accent/20" :
+                                "bg-muted text-muted-foreground ring-1 ring-border/30"
                               }`}>
                                 {r.role === "sem_role" ? "Sem função" : r.role === "usuario" ? "Usuário" : r.role}
                               </span>
                             </td>
-                            <td className="px-2 lg:px-3 py-3 text-right">
+                            <td className="px-2 lg:px-3 py-3.5 text-right">
                               <div>
                                 <span className={`font-mono font-bold tabular-nums text-sm ${saldoBaixo ? "text-warning" : "text-foreground"}`}>{fmt(r.saldo)}</span>
-                                {saldoBaixo && <p className="text-[10px] text-warning mt-0.5">Saldo baixo</p>}
+                                {saldoBaixo && <p className="text-[10px] text-warning mt-0.5 font-medium">Saldo baixo</p>}
                               </div>
                             </td>
-                            <td className="px-2 py-3 text-center">
+                            <td className="px-2 py-3.5 text-center">
                               <span className="font-mono font-semibold text-muted-foreground tabular-nums text-sm">{recCount}</span>
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-center">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-center">
                               {recHoje > 0 ? (
-                                <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full text-xs font-bold bg-primary/15 text-primary">
+                                <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2.5 rounded-lg text-xs font-bold bg-primary/15 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10">
                                   {recHoje}
                                 </span>
                               ) : (
-                                <span className="text-muted-foreground/50 text-xs">0</span>
+                                <span className="text-muted-foreground/40 text-xs">0</span>
                               )}
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-right">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-right">
                               <span className="font-mono font-bold text-success tabular-nums text-sm">{fmt(totalVendido)}</span>
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-right">
-                              <span className={`font-mono font-bold tabular-nums text-sm ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(lucroDesk)}</span>
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-right">
+                              <span className={`font-mono font-bold tabular-nums text-sm ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground/50"}`}>{fmt(lucroDesk)}</span>
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-center">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${r.active ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-center">
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold ${r.active ? "bg-success/10 text-success ring-1 ring-success/20" : "bg-destructive/10 text-destructive ring-1 ring-destructive/20"}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-success animate-pulse" : "bg-destructive"}`} />
                                 {r.active ? "Ativo" : "Inativo"}
                               </span>
                             </td>
-                            <td className="px-2 lg:px-4 py-3" onClick={e => e.stopPropagation()}>
-                              <div className="flex items-center justify-center gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => setShowSaldoModal(r)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Gerenciar saldo">
+                            <td className="px-2 lg:px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-all duration-200">
+                                <button onClick={() => setShowSaldoModal(r)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all hover:scale-105 ring-1 ring-primary/10" title="Gerenciar saldo">
                                   <DollarSign className="h-3.5 w-3.5 inline mr-0.5" />Saldo
                                 </button>
                                 <button onClick={() => toggleRevendedorRole(r)}
                                   title={r.isRevendedor ? "Remover função revendedor" : "Ativar função revendedor"}
-                                  className={`p-1.5 rounded-lg text-xs font-semibold transition-colors ${r.isRevendedor ? "bg-success/15 text-success hover:bg-success/25" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                                  className={`p-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-110 ${r.isRevendedor ? "bg-success/15 text-success hover:bg-success/25" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
                                 >
                                   {r.isRevendedor ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                                 </button>
-                                <button onClick={() => toggleActive(r)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground" title={r.active ? "Desativar" : "Ativar"}>
+                                <button onClick={() => toggleActive(r)} className="p-1.5 rounded-lg hover:bg-muted transition-all hover:scale-110 text-muted-foreground" title={r.active ? "Desativar" : "Ativar"}>
                                   {r.active ? <ToggleRight className="h-4 w-4 text-success" /> : <ToggleLeft className="h-4 w-4" />}
                                 </button>
-                                <button onClick={() => openRevDetail(r)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground group-hover:text-primary" title="Ver detalhes">
+                                <button onClick={() => openRevDetail(r)} className="p-1.5 rounded-lg hover:bg-muted transition-all hover:scale-110 text-muted-foreground group-hover:text-primary" title="Ver detalhes">
                                   <Eye className="h-4 w-4" />
                                 </button>
                               </div>
