@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 
 function isStandalone(): boolean {
