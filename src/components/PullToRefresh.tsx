@@ -55,6 +55,7 @@ export default function PullToRefresh() {
     if (pullDistance >= THRESHOLD && !refreshing) {
       setRefreshing(true);
       setPullDistance(THRESHOLD);
+      vibrate([10, 30, 10]); // Confirm vibration
       setTimeout(() => window.location.reload(), 400);
     } else {
       setPulling(false);
