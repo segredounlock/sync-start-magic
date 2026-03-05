@@ -32,7 +32,7 @@ import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalD
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
-import { operadoraColors } from "@/lib/utils";
+import { operadoraColors, safeValor } from "@/lib/utils";
 
 type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
 

@@ -5,6 +5,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR } from "@/lib/timezone";
 import html2canvas from "html2canvas";
 import { supabase } from "@/integrations/supabase/client";
+import { safeValor } from "@/lib/utils";
 
 interface Recarga {
   id: string;
@@ -39,7 +40,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
   const buildText = useCallback(() => {
-    return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(r.valor)}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
+    return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(safeValor(r))}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
   }, [r, storeName]);
 
   // Pre-generate the image when the modal opens so it's ready instantly on click
@@ -303,7 +304,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Valor da Recarga</p>
-                    <p className="text-lg font-mono font-bold text-success">{fmt(r.valor)}</p>
+                    <p className="text-lg font-mono font-bold text-success">{fmt(safeValor(r))}</p>
                   </div>
                 </div>
 
