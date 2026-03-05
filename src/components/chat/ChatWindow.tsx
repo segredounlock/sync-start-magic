@@ -408,9 +408,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
         {isGroup ? (
           <div className="relative group/avatar">
             {currentGroupIcon && currentGroupIcon.startsWith("http") ? (
-              <img src={currentGroupIcon} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" />
+              <img src={currentGroupIcon} alt="" className="w-11 h-11 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" />
             ) : currentGroupIcon && !currentGroupIcon.startsWith("http") ? (
-              <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
                 <span className="text-xl">{currentGroupIcon}</span>
               </div>
             ) : (
@@ -433,9 +433,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
             )}
           </div>
         ) : otherUser?.avatar_url ? (
-          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
+          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" className="w-11 h-11 rounded-full object-cover border-2 border-border" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+          <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
             {initial}
           </div>
         )}
@@ -525,9 +525,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                   <div key={m.id} className="flex items-center gap-2.5 py-1.5 rounded-lg">
                     <div className="relative flex-shrink-0">
                       {m.avatar_url ? (
-                        <img src={m.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
+                        <img src={m.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
+                        <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
                           {memberInitial}
                         </div>
                       )}
