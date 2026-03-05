@@ -27,6 +27,22 @@ const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 50;
 const SWIPE_LOCK_ANGLE = 30; // degrees - lock horizontal after this angle
 
+function InlineLinkButton({ label, path, isOwn }: { label: string; path: string; isOwn: boolean }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); navigate(path); }}
+      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation ${
+        isOwn
+          ? "bg-white/20 hover:bg-white/30 text-white border border-white/20"
+          : "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/20"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 function CustomAudioPlayer({ src, isOwn, senderAvatar, senderName }: { src: string; isOwn: boolean; senderAvatar?: string | null; senderName?: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
