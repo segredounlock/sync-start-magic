@@ -408,9 +408,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
         {isGroup ? (
           <div className="relative group/avatar">
             {currentGroupIcon && currentGroupIcon.startsWith("http") ? (
-              <img src={currentGroupIcon} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" />
+              <img src={currentGroupIcon} alt="" className="w-11 h-11 rounded-full object-cover border-2 border-primary/20" referrerPolicy="no-referrer" />
             ) : currentGroupIcon && !currentGroupIcon.startsWith("http") ? (
-              <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center">
                 <span className="text-xl">{currentGroupIcon}</span>
               </div>
             ) : (
@@ -433,9 +433,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
             )}
           </div>
         ) : otherUser?.avatar_url ? (
-          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover border-2 border-border" />
+          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" className="w-11 h-11 rounded-full object-cover border-2 border-border" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+          <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
             {initial}
           </div>
         )}

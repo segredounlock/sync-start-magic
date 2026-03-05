@@ -27,18 +27,32 @@ const QUICK_EMOJIS = ["👍", "❤️", "🤩", "🥳", "😮", "👏", "😊"];
 const SWIPE_THRESHOLD = 50;
 const SWIPE_LOCK_ANGLE = 30; // degrees - lock horizontal after this angle
 
-function InlineLinkButton({ label, path, isOwn }: { label: string; path: string; isOwn: boolean }) {
+// Inline button types: [btn:Label:/path] [link:Label:https://url] [action:Label:actionId]
+function InlineLinkButton({ label, path, isOwn, type = "btn" }: { label: string; path: string; isOwn: boolean; type?: "btn" | "link" | "action" }) {
   const navigate = useNavigate();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (type === "link") {
+      window.open(path, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(path);
+    }
+  };
+
+  const isExternal = type === "link";
+
   return (
     <button
-      onClick={(e) => { e.stopPropagation(); navigate(path); }}
-      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation ${
+      onClick={handleClick}
+      className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-all touch-manipulation flex items-center justify-center gap-2 ${
         isOwn
-          ? "bg-white/20 hover:bg-white/30 text-white border border-white/20"
-          : "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/20"
+          ? "bg-white/20 hover:bg-white/30 text-white border border-white/25"
+          : "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/25"
       }`}
     >
       {label}
+      {isExternal && <span className="text-xs opacity-60">↗</span>}
     </button>
   );
 }
@@ -532,9 +546,9 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
                   onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
                 >
                   {message.sender?.avatar_url ? (
-                    <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover border border-white/20" />
+                    <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover border border-white/20" />
                   ) : (
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm border ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
                       {(senderName[0] || "U").toUpperCase()}
                     </div>
                   )}
@@ -684,22 +698,23 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
 
             {message.type === "text" && (() => {
               const raw = message.content || "";
-              const btnRegex = /\[btn:(.+?):(.+?)\]/g;
-              const buttons: { label: string; path: string }[] = [];
+              // Support: [btn:Label:/path] [link:Label:https://url] [action:Label:id]
+              const inlineRegex = /\[(btn|link|action):([^\]]+?):([^\]]+?)\]/g;
+              const buttons: { type: "btn" | "link" | "action"; label: string; path: string }[] = [];
               let btnMatch: RegExpExecArray | null;
-              while ((btnMatch = btnRegex.exec(raw)) !== null) {
-                buttons.push({ label: btnMatch[1], path: btnMatch[2] });
+              while ((btnMatch = inlineRegex.exec(raw)) !== null) {
+                buttons.push({ type: btnMatch[1] as any, label: btnMatch[2], path: btnMatch[3] });
               }
-              const textContent = raw.replace(/\[btn:.+?:.+?\]/g, "").trimEnd();
+              const textContent = raw.replace(/\[(btn|link|action):[^\]]+?:[^\]]+?\]/g, "").trimEnd();
               return (
                 <>
                   <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
                     {renderContentWithMentions(textContent)}
                   </p>
                   {buttons.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-2.5 flex flex-col gap-1.5">
                       {buttons.map((btn, i) => (
-                        <InlineLinkButton key={i} label={btn.label} path={btn.path} isOwn={isOwn} />
+                        <InlineLinkButton key={i} label={btn.label} path={btn.path} isOwn={isOwn} type={btn.type} />
                       ))}
                     </div>
                   )}
