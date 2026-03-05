@@ -68,6 +68,7 @@ export default function AdminDashboard() {
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [showLucroModal, setShowLucroModal] = useState(false);
 
   // All recargas for analytics
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
