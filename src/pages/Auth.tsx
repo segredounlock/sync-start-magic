@@ -360,25 +360,29 @@ export default function Auth() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-            className="mt-5 text-center"
+            className="mt-4"
           >
             <Link
               to="/instalar"
-              className="group relative inline-flex items-center gap-2.5 text-sm font-semibold py-3 px-6 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border border-primary/20 hover:border-primary/40 text-primary hover:text-primary transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-lg hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.98]"
             >
-              <motion.div
-                animate={{ y: [0, -3, 0] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              >
-                <Smartphone className="w-4.5 h-4.5" />
-              </motion.div>
-              <span>Instalar App no celular</span>
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <motion.div
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                >
+                  <Smartphone className="w-5 h-5 text-primary" />
+                </motion.div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Instalar App no celular</p>
+                <p className="text-[11px] text-muted-foreground">Acesse mais rápido direto da tela inicial</p>
+              </div>
               <motion.div
                 animate={{ x: [0, 3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut", delay: 0.3 }}
-                className="opacity-60"
+                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-4 h-4 text-muted-foreground" />
               </motion.div>
             </Link>
           </motion.div>
