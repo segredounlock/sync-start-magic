@@ -1100,42 +1100,69 @@ export default function AdminDashboard() {
             {/* Performance Financeira */}
             <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Performance Financeira & Operacional</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              {/* Lucro do Período */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card rounded-xl p-4 relative overflow-hidden">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center">
-                    <AnimatedIcon icon={TrendingUp} className="h-4 w-4 text-success" animation="bounce" delay={0.05} />
+              {/* Lucro do Período - Premium Card */}
+              <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.05, type: "spring", stiffness: 200, damping: 20 }}
+                className="glass-card rounded-2xl p-4 sm:p-5 relative overflow-hidden sm:col-span-2 lg:col-span-1 group">
+                {/* Glow background effect */}
+                <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-20 transition-opacity duration-500 group-hover:opacity-35 ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
+                <div className={`absolute -bottom-8 -left-8 w-24 h-24 rounded-full blur-2xl opacity-10 ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
+
+                {/* Header */}
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className="flex items-center gap-2.5">
+                    <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}
+                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${analytics.lucro >= 0 ? "bg-success/15 shadow-[0_0_12px_hsl(var(--success)/0.2)]" : "bg-destructive/15 shadow-[0_0_12px_hsl(var(--destructive)/0.2)]"}`}>
+                      <AnimatedIcon icon={TrendingUp} className={`h-4 w-4 sm:h-5 sm:w-5 ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`} animation="bounce" delay={0.05} />
+                    </motion.div>
+                    <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro do Período</span>
                   </div>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring" }}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${analytics.lucro >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                    {analytics.lucro >= 0 ? "↑" : "↓"} {analytics.totalCobrado > 0 ? ((analytics.lucro / analytics.totalCobrado) * 100).toFixed(1) : "0"}%
+                  </motion.div>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro do Período</span>
-                <p className={`text-2xl font-bold mt-0.5 ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}><AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" /></p>
-                <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((Math.abs(analytics.lucro) / Math.max(analytics.totalCobrado, 1)) * 100, 100)}%` }} transition={{ duration: 0.8 }}
-                    className={`h-full rounded-full ${analytics.lucro >= 0 ? "bg-success" : "bg-destructive"}`} />
+
+                {/* Main value */}
+                <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
+                  className={`text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight relative z-10 ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
+                  <AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" />
+                </motion.p>
+
+                {/* Progress bar */}
+                <div className="mt-3 h-1.5 rounded-full bg-muted/40 overflow-hidden relative z-10">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((Math.abs(analytics.lucro) / Math.max(analytics.totalCobrado, 1)) * 100, 100)}%` }}
+                    transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+                    className={`h-full rounded-full ${analytics.lucro >= 0 ? "bg-gradient-to-r from-success/70 to-success shadow-[0_0_8px_hsl(var(--success)/0.4)]" : "bg-gradient-to-r from-destructive/70 to-destructive shadow-[0_0_8px_hsl(var(--destructive)/0.4)]"}`} />
                 </div>
-                <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
-                  <div className="text-center p-1.5 rounded-lg bg-muted/50">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Cobrado</p>
-                    <p className="text-sm font-bold text-foreground"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
-                  </div>
+
+                {/* Breakdown pills */}
+                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/50 relative z-10">
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+                    className="flex-1 min-w-[80px] text-center py-2 px-2 rounded-xl bg-muted/40 backdrop-blur-sm">
+                    <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">Cobrado</p>
+                    <p className="text-xs sm:text-sm font-bold text-foreground"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
+                  </motion.div>
                   {role === "admin" && (
-                  <div className="text-center p-1.5 rounded-lg bg-destructive/10">
-                    <p className="text-[10px] uppercase tracking-wider text-destructive font-medium">Custo API</p>
-                    <p className="text-sm font-bold text-destructive"><AnimatedCounter value={analytics.totalCustoApi} prefix="R$&nbsp;" /></p>
-                  </div>
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="flex-1 min-w-[80px] text-center py-2 px-2 rounded-xl bg-destructive/8 backdrop-blur-sm border border-destructive/10">
+                    <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-destructive/80 font-semibold mb-0.5">Custo API</p>
+                    <p className="text-xs sm:text-sm font-bold text-destructive"><AnimatedCounter value={analytics.totalCustoApi} prefix="R$&nbsp;" /></p>
+                  </motion.div>
                   )}
                   {role === "revendedor" && (
-                  <div className="text-center p-1.5 rounded-lg bg-destructive/10">
-                    <p className="text-[10px] uppercase tracking-wider text-destructive font-medium">Meu Custo</p>
-                    <p className="text-sm font-bold text-destructive"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
-                  </div>
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="flex-1 min-w-[80px] text-center py-2 px-2 rounded-xl bg-destructive/8 backdrop-blur-sm border border-destructive/10">
+                    <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-destructive/80 font-semibold mb-0.5">Meu Custo</p>
+                    <p className="text-xs sm:text-sm font-bold text-destructive"><AnimatedCounter value={analytics.totalCobrado} prefix="R$&nbsp;" /></p>
+                  </motion.div>
                   )}
-                  <div className={`text-center p-1.5 rounded-lg ${analytics.lucro >= 0 ? "bg-success/10" : "bg-destructive/10"}`}>
-                    <p className={`text-[10px] uppercase tracking-wider font-medium ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>Lucro</p>
-                    <p className={`text-sm font-bold ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+                    className={`flex-1 min-w-[80px] text-center py-2 px-2 rounded-xl backdrop-blur-sm border ${analytics.lucro >= 0 ? "bg-success/8 border-success/15" : "bg-destructive/8 border-destructive/15"}`}>
+                    <p className={`text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${analytics.lucro >= 0 ? "text-success/80" : "text-destructive/80"}`}>Lucro</p>
+                    <p className={`text-xs sm:text-sm font-bold ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
                       {analytics.lucro >= 0 ? "+" : ""}<AnimatedCounter value={analytics.lucro} prefix="R$&nbsp;" />
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
 
