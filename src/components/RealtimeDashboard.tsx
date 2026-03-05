@@ -9,6 +9,7 @@ import {
   TrendingUp, Activity, Zap, RefreshCw,
 } from "lucide-react";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
+import { safeValor } from "@/lib/utils";
 
 interface Recarga {
   id: string;
@@ -106,7 +107,7 @@ function CreditsFeed({
             </div>
           </div>
           <div className="text-right shrink-0">
-            <p className="font-bold text-sm text-foreground">{fmt(r.valor)}</p>
+            <p className="font-bold text-sm text-foreground">{fmt(safeValor(r))}</p>
             <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusClass(r.status)}`}>
               {statusLabel(r.status)}
             </span>

@@ -32,7 +32,7 @@ import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalD
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
-import { operadoraColors } from "@/lib/utils";
+import { operadoraColors, safeValor } from "@/lib/utils";
 
 type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
 
@@ -1111,7 +1111,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <>
                               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                                 <span className="text-xs text-muted-foreground">Valor da Recarga</span>
-                                <span className="text-xs font-bold text-foreground">{fmt(trackingStatus.localRecarga.valor)}</span>
+                                <span className="text-xs font-bold text-foreground">{fmt(safeValor(trackingStatus.localRecarga))}</span>
                               </div>
                               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                                 <span className="text-xs text-muted-foreground">Custo (debitado)</span>
@@ -1481,7 +1481,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="font-bold text-foreground">{fmt(r.valor)}</p>
+                            <p className="font-bold text-foreground">{fmt(safeValor(r))}</p>
                             <span className={`text-xs font-medium ${(r.status === "completed" || r.status === "concluida") ? "text-success" : r.status === "pending" ? "text-warning" : r.status === "falha" ? "text-destructive" : "text-muted-foreground"}`}>
                               {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}
                             </span>
@@ -1621,7 +1621,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                         <FileText className="h-3 w-3" /> Comprovante
                                       </button>
                                     )}
-                                    <span className="font-bold font-mono text-foreground">{fmt(r.valor)}</span>
+                                    <span className="font-bold font-mono text-foreground">{fmt(safeValor(r))}</span>
                                   </div>
                                 </div>
                               </motion.div>
@@ -1652,7 +1652,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span></td>
-                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground">{fmt(r.valor)}</td>
+                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground">{fmt(safeValor(r))}</td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                   (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
@@ -1714,7 +1714,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Valor da Recarga</span>
-                            <span className="text-sm font-mono font-bold text-foreground">{fmt(r.valor)}</span>
+                            <span className="text-sm font-mono font-bold text-foreground">{fmt(safeValor(r))}</span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Custo (debitado)</span>

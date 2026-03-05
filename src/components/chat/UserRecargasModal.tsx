@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateShortBR, formatTimeBR } from "@/lib/timezone";
-import { operadoraColors } from "@/lib/utils";
+import { operadoraColors, safeValor } from "@/lib/utils";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface UserRecargasModalProps {
@@ -419,7 +419,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-xs font-bold text-foreground">{formatCurrency(r.valor)}</p>
+                      <p className="text-xs font-bold text-foreground">{formatCurrency(safeValor(r))}</p>
                       <p className="text-[9px] text-muted-foreground">{st.label}</p>
                     </div>
                   </div>
@@ -470,8 +470,8 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                         <span className="text-xs font-semibold text-foreground">{r.operadora || "—"}</span>
                       </div>
                       <div className="flex justify-between items-center py-1.5 border-b border-border">
-                        <span className="text-xs text-muted-foreground">Valor (facial)</span>
-                        <span className="text-xs font-mono font-bold text-foreground">{formatCurrency(r.valor)}</span>
+                        <span className="text-xs text-muted-foreground">Valor da Recarga</span>
+                        <span className="text-xs font-mono font-bold text-foreground">{formatCurrency(safeValor(r))}</span>
                       </div>
                       <div className="flex justify-between items-center py-1.5 border-b border-border">
                         <span className="text-xs text-muted-foreground">Custo (debitado)</span>

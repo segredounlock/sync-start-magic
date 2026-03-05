@@ -43,6 +43,7 @@ import type { Revendedor, RecargaHistorico, PricingRule } from "@/types";
 import { useResilientFetch } from "@/hooks/useAsync";
 import { useCrud } from "@/hooks/useCrud";
 import { confirm } from "@/lib/confirm";
+import { safeValor } from "@/lib/utils";
 
 type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo";
 
@@ -1365,7 +1366,7 @@ export default function Principal() {
                               </p>
                               <p className="text-[10px] text-muted-foreground">{r.telefone} • {fmtDate(r.created_at)}</p>
                             </div>
-                            <span className="text-sm font-bold font-mono text-foreground shrink-0">{fmt(r.valor)}</span>
+                            <span className="text-sm font-bold font-mono text-foreground shrink-0">{fmt(safeValor(r))}</span>
                           </div>
                         );
                       })}
@@ -1628,7 +1629,7 @@ export default function Principal() {
                           <div className="mt-2 pt-2 border-t border-border/50">
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Última Recarga</p>
                             <p className="text-xs text-foreground">
-                              {ultimaRec.operadora || "—"} • {ultimaRec.telefone} • {fmt(ultimaRec.valor)}
+                              {ultimaRec.operadora || "—"} • {ultimaRec.telefone} • {fmt(safeValor(ultimaRec))}
                               <span className="text-muted-foreground ml-1">({fmtDate(ultimaRec.created_at)})</span>
                             </p>
                           </div>
@@ -2119,7 +2120,7 @@ export default function Principal() {
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                   <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
-                                  <span className="font-bold font-mono text-sm text-foreground">{fmt(r.valor)}</span>
+                                  <span className="font-bold font-mono text-sm text-foreground">{fmt(safeValor(r))}</span>
                                 </div>
                               </div>
                             );
@@ -2143,7 +2144,7 @@ export default function Principal() {
                                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground">{fmt(r.valor)}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground">{fmt(safeValor(r))}</td>
                                   <td className="px-3 py-2 text-center">
                                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                       (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :

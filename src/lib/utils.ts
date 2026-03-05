@@ -5,6 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Retorna valor seguro para exibição: usa custo como fallback se valor for nulo/zero */
+export function safeValor(r: { valor: number; custo: number }): number {
+  return (r.valor > 0 ? r.valor : r.custo) || 0;
+}
+
 /** Returns Tailwind classes for operadora badge (bg + text + border) */
 export function operadoraColors(name: string | null | undefined): { bg: string; text: string; border: string } {
   switch ((name || "").toUpperCase()) {
