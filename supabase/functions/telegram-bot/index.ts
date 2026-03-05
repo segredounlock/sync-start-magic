@@ -304,6 +304,21 @@ async function fetchCatalog(supabase: any): Promise<any[]> {
   return result.data;
 }
 
+// Robust value resolution — mirrors site & Mini App logic (global scope)
+function resolveValue(v: any): number {
+  return (Number(v?.value) > 0 ? Number(v.value) : 0) ||
+    (Number(v?.faceValue) > 0 ? Number(v.faceValue) : 0) ||
+    (Number(v?.amount) > 0 ? Number(v.amount) : 0) ||
+    (Number(v?.rechargeValue) > 0 ? Number(v.rechargeValue) : 0) ||
+    (() => {
+      const label = String(v?.label || "").replace(/,/g, ".");
+      const nums = label.match(/\d+(?:\.\d{1,2})?/g);
+      if (!nums?.length) return Number(v?.cost) || 0;
+      const parsed = Number(nums[nums.length - 1]);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(v?.cost) || 0;
+    })();
+}
+
 async function findUserByTelegram(supabase: any, telegramId: string) {
   const { data } = await supabase
     .from("profiles")
@@ -1077,20 +1092,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       pricingRules = globalRules || [];
     }
 
-    // Robust value resolution — mirrors site & Mini App logic
-    function resolveValue(v: any): number {
-      return (Number(v?.value) > 0 ? Number(v.value) : 0) ||
-        (Number(v?.faceValue) > 0 ? Number(v.faceValue) : 0) ||
-        (Number(v?.amount) > 0 ? Number(v.amount) : 0) ||
-        (Number(v?.rechargeValue) > 0 ? Number(v.rechargeValue) : 0) ||
-        (() => {
-          const label = String(v?.label || "").replace(/,/g, ".");
-          const nums = label.match(/\d+(?:\.\d{1,2})?/g);
-          if (!nums?.length) return Number(v?.cost) || 0;
-          const parsed = Number(nums[nums.length - 1]);
-          return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(v?.cost) || 0;
-        })();
-    }
+    // resolveValue is now global — defined before handleCallback
 
     // Calculate user cost for each value
     const vals = carrier.values.sort((a: any, b: any) => resolveValue(a) - resolveValue(b));
@@ -1151,7 +1153,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     const carrierName = carrier?.name || carrierId;
     const valueObj = carrier?.values?.find((v: any) => v.valueId === valueId);
     const apiCost = Number(valueObj?.cost || 0);
-    const valorFacial = Number(valueObj?.maxValue || valueObj?.minValue || 0);
+    const valorFacial = resolveValue(valueObj);
 
     const user = await findUserByTelegram(supabase, telegramId);
     if (!user) return;

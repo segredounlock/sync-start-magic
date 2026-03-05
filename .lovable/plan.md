@@ -1,35 +1,40 @@
 
 
-## Plano: Padronizar resolução de `valor_facial` no Bot do Telegram
+## Diagnóstico e Correção
 
-### Problema encontrado
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-Na linha 1154 do bot, ao selecionar um valor de recarga (`rec_val_`), o `valorFacial` é calculado com:
+### Plano
+
+**1. Corrigir o mapeamento de status na sync function**
+
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+
 ```typescript
-const valorFacial = Number(valueObj?.maxValue || valueObj?.minValue || 0);
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-Isso **não usa** a função `resolveValue()` que já existe no bot (linha 1081). Se `maxValue` e `minValue` forem `0` ou ausentes, o `valorFacial` salvo na sessão fica errado, e isso afeta:
-- A tela de confirmação (linha 1428): exibe valor facial incorreto
-- O registro da recarga no banco (linha 1296/1303): salva `valor` errado na tabela `recargas`
+**2. Corrigir manualmente o pedido preso**
 
-### Alteração
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-**`supabase/functions/telegram-bot/index.ts`**
-
-1. **Linha 1154**: Substituir `Number(valueObj?.maxValue || valueObj?.minValue || 0)` por `resolveValue(valueObj)` — mas `resolveValue` está definida dentro do escopo do `rec_op_` handler. Precisa extrair para escopo global ou redefinir inline.
-
-   Solução: Extrair `resolveValue` para fora do handler `rec_op_` (mover da linha 1081 para o escopo do arquivo, antes de `handleCallback`), e usá-la na linha 1154.
-
-2. **Linha 1081-1093**: Mover a função `resolveValue` para escopo global do arquivo (antes da função `handleCallback`, por volta da linha 305).
-
-3. **Linha 1154**: Alterar para:
-```typescript
-const valorFacial = resolveValue(valueObj);
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
 ```
 
-### O que já está OK
-- A exibição de preços no catálogo (`rec_op_`) já usa `resolveValue` corretamente
-- O cálculo de `getUserCost` já usa `resolveValue` corretamente
-- O handler legado `confirm_` (linhas 1341-1381) é legado e não usa API catalog — funciona diferente mas é só para compatibilidade retroativa
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
