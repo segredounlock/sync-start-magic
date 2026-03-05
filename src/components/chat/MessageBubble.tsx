@@ -546,9 +546,9 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
                   onClick={(e) => { e.stopPropagation(); if (isCurrentUserAdmin && !isOwn && message.sender_id) setShowUserRecargas(true); }}
                 >
                   {message.sender?.avatar_url ? (
-                    <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover border border-white/20" />
+                    <img src={message.sender.avatar_url} alt="" referrerPolicy="no-referrer" className="w-11 h-11 rounded-full object-cover border border-white/20" />
                   ) : (
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm border ${isOwn ? "bg-white/15 border-white/20 text-white" : "bg-primary/15 border-primary/20 text-primary"}`}>
                       {(senderName[0] || "U").toUpperCase()}
                     </div>
                   )}
