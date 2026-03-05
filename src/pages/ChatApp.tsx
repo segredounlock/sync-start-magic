@@ -110,7 +110,7 @@ export default function ChatApp() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => setShowNewChat(true)} className="p-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors">
+                <button onClick={() => setShowNewChat(true)} className="p-3 min-w-[44px] min-h-[44px] rounded-xl bg-primary/10 hover:bg-primary/20 active:bg-primary/30 transition-colors flex items-center justify-center" style={{ touchAction: "manipulation" }}>
                   <Plus className="h-5 w-5 text-primary" />
                 </button>
               </div>
