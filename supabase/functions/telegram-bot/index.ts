@@ -1077,8 +1077,23 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       pricingRules = globalRules || [];
     }
 
+    // Robust value resolution — mirrors site & Mini App logic
+    function resolveValue(v: any): number {
+      return (Number(v?.value) > 0 ? Number(v.value) : 0) ||
+        (Number(v?.faceValue) > 0 ? Number(v.faceValue) : 0) ||
+        (Number(v?.amount) > 0 ? Number(v.amount) : 0) ||
+        (Number(v?.rechargeValue) > 0 ? Number(v.rechargeValue) : 0) ||
+        (() => {
+          const label = String(v?.label || "").replace(/,/g, ".");
+          const nums = label.match(/\d+(?:\.\d{1,2})?/g);
+          if (!nums?.length) return Number(v?.cost) || 0;
+          const parsed = Number(nums[nums.length - 1]);
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(v?.cost) || 0;
+        })();
+    }
+
     // Calculate user cost for each value
-    const vals = carrier.values.sort((a: any, b: any) => (a.value || a.cost) - (b.value || b.cost));
+    const vals = carrier.values.sort((a: any, b: any) => resolveValue(a) - resolveValue(b));
 
     function getUserCost(apiCost: number, faceValue: number): number {
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
@@ -1093,7 +1108,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     // Build description — two lines per value, aligned vertically
     let msgText = `📱 <b>${carrier.name}</b>\n\nEscolha um dos valores abaixo:\n\n`;
     for (const v of vals) {
-      const faceValue = v.value || v.cost;
+      const faceValue = resolveValue(v);
       const userCost = getUserCost(v.cost, faceValue);
       const faceStr = Number(faceValue).toFixed(2).replace(".", ",");
       const costStr = Number(userCost).toFixed(2).replace(".", ",");
@@ -1107,7 +1122,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     const valButtons: any[][] = [];
     for (let i = 0; i < vals.length; i += 2) {
       const row = vals.slice(i, i + 2).map((v: any) => {
-        const faceValue = v.value || v.cost;
+        const faceValue = resolveValue(v);
         const userCost = getUserCost(v.cost, faceValue);
         return {
           text: `R$ ${Number(faceValue).toFixed(2).replace(".", ",")}`,

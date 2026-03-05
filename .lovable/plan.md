@@ -1,42 +1,40 @@
 
 
-## Plano: Corrigir preços personalizados no Bot do Telegram e Mini App
+## Diagnóstico e Correção
 
-### Problema
-O bot do Telegram usa uma resolução simplificada de valores (`v.value || v.cost`) ao buscar o catálogo da API, enquanto o site e o Mini App usam uma lógica mais robusta que tenta múltiplos campos (`value`, `faceValue`, `amount`, `rechargeValue`, e até parsing de `label`). Quando `v.value` é `0` ou ausente, o bot usa `v.cost` como face value, que **não corresponde** ao `valor_recarga` salvo nas `pricing_rules` / `reseller_pricing_rules`. Resultado: a regra personalizada não é encontrada e o preço fica no valor padrão da API.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### Causa raiz
-- **Bot** (linha 1096): `const faceValue = v.value || v.cost;` — simplificado demais
-- **Mini App** (telegram-miniapp): tem lógica robusta com fallback chain (`value → faceValue → amount → rechargeValue → label parsing`)
-- **Site** (RevendedorPainel/Principal): mesma lógica robusta
+### Plano
 
-O `valor_recarga` salvo na tabela de pricing é baseado no valor resolvido pela lógica robusta do site. Quando o bot usa uma lógica diferente, o `find()` na linha 1084 falha.
+**1. Corrigir o mapeamento de status na sync function**
 
-### Alteração
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-**`supabase/functions/telegram-bot/index.ts`**
-
-1. Adicionar uma função helper `resolveValue(v)` que replique a mesma lógica de resolução do Mini App:
 ```typescript
-function resolveValue(v: any): number {
-  return (Number(v?.value) > 0 ? Number(v.value) : 0) ||
-    (Number(v?.faceValue) > 0 ? Number(v.faceValue) : 0) ||
-    (Number(v?.amount) > 0 ? Number(v.amount) : 0) ||
-    (Number(v?.rechargeValue) > 0 ? Number(v.rechargeValue) : 0) ||
-    (() => {
-      const label = String(v?.label || "").replace(/,/g, ".");
-      const nums = label.match(/\d+(?:\.\d{1,2})?/g);
-      if (!nums?.length) return Number(v?.cost) || 0;
-      const parsed = Number(nums[nums.length - 1]);
-      return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(v?.cost) || 0;
-    })();
-}
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-2. Substituir todas as ocorrências de `v.value || v.cost` por `resolveValue(v)` no fluxo de recarga (linhas ~1081, 1096, 1110).
+**2. Corrigir manualmente o pedido preso**
 
-O Mini App (`telegram-miniapp`) **já tem** a lógica correta implementada, então não precisa de alteração.
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-### Resultado esperado
-Claro exibirá R$ 15,50 no bot (igual ao site), pois a regra personalizada da `ericaferreiradutra` será encontrada corretamente pelo `valor_recarga` correspondente.
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
