@@ -1491,57 +1491,66 @@ export default function Principal() {
             <>
                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { icon: Users, label: "Total Usuários", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10" },
-                  { icon: UserCheck, label: "Ativos", value: String(activeCount), color: "text-success", bgColor: "bg-success/10" },
-                  { icon: UserX, label: "Inativos", value: String(inactiveCount), color: "text-destructive", bgColor: "bg-destructive/10" },
-                  { icon: Wallet, label: "Saldo dos Revendedores", value: fmt(totalSaldo), color: "text-warning", bgColor: "bg-warning/10", highlight: true },
+                  { icon: Users, label: "Total Usuários", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10", glowColor: "shadow-primary/5" },
+                  { icon: UserCheck, label: "Ativos", value: String(activeCount), color: "text-success", bgColor: "bg-success/10", glowColor: "shadow-success/5" },
+                  { icon: UserX, label: "Inativos", value: String(inactiveCount), color: "text-destructive", bgColor: "bg-destructive/10", glowColor: "shadow-destructive/5" },
+                  { icon: Wallet, label: "Saldo dos Revendedores", value: fmt(totalSaldo), color: "text-primary", bgColor: "bg-primary/10", highlight: true, glowColor: "shadow-primary/10" },
                 ].map((c, i) => (
-                  <div key={c.label} className={`glass-card rounded-xl p-3 flex items-center gap-3 ${c.highlight ? "border-primary/20 ring-1 ring-primary/10" : ""}`}>
-                    <div className={`w-9 h-9 rounded-lg ${c.bgColor} flex items-center justify-center shrink-0`}>
-                      <c.icon className={`h-4 w-4 ${c.color}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{c.label}</p>
-                      <p className={`text-lg font-bold text-foreground ${c.highlight ? "text-success" : ""}`}>{c.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Buscar por nome ou e-mail..."
-                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-                />
-              </div>
-
-              {/* Role Filter */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {([
-                  { key: "todos", label: "Todos", count: revendedores.length },
-                  { key: "admin", label: "Admin", count: revendedores.filter(r => r.role === "admin").length },
-                  { key: "revendedor", label: "Revendedor", count: revendedores.filter(r => r.role === "revendedor").length },
-                  { key: "usuario", label: "Usuário", count: revendedores.filter(r => r.role === "usuario").length },
-                  { key: "cliente", label: "Cliente", count: revendedores.filter(r => r.role === "cliente").length },
-                  { key: "sem_role", label: "Sem função", count: revendedores.filter(r => r.role === "sem_role").length },
-                ] as const).filter(f => ["todos", "admin", "revendedor", "usuario", "cliente"].includes(f.key) || f.count > 0).map(f => (
-                  <button
-                    key={f.key}
-                    onClick={() => setRoleFilter(f.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      roleFilter === f.key
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted/60 text-muted-foreground hover:bg-muted"
-                    }`}
+                  <motion.div
+                    key={c.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06, type: "spring", stiffness: 300, damping: 24 }}
+                    className={`relative glass-card rounded-2xl p-4 flex items-center gap-3.5 overflow-hidden group hover:scale-[1.02] transition-transform ${c.highlight ? "border-primary/30 ring-1 ring-primary/15 shadow-lg " + c.glowColor : "shadow-md " + c.glowColor}`}
                   >
-                    {f.label} ({f.count})
-                  </button>
+                    {c.highlight && <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />}
+                    <div className={`relative w-11 h-11 rounded-xl ${c.bgColor} flex items-center justify-center shrink-0 backdrop-blur-sm`}>
+                      <c.icon className={`h-5 w-5 ${c.color}`} />
+                    </div>
+                    <div className="min-w-0 relative">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">{c.label}</p>
+                      <p className={`text-xl font-extrabold tracking-tight ${c.highlight ? "text-primary" : "text-foreground"}`}>{c.value}</p>
+                    </div>
+                  </motion.div>
                 ))}
+              </div>
+
+              {/* Search + Filters */}
+              <div className="space-y-3">
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Buscar por nome ou e-mail..."
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground/60 transition-all shadow-sm"
+                  />
+                </div>
+
+                {/* Role Filter */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {([
+                    { key: "todos", label: "Todos", count: revendedores.length },
+                    { key: "admin", label: "Admin", count: revendedores.filter(r => r.role === "admin").length },
+                    { key: "revendedor", label: "Revendedor", count: revendedores.filter(r => r.role === "revendedor").length },
+                    { key: "usuario", label: "Usuário", count: revendedores.filter(r => r.role === "usuario").length },
+                    { key: "cliente", label: "Cliente", count: revendedores.filter(r => r.role === "cliente").length },
+                    { key: "sem_role", label: "Sem função", count: revendedores.filter(r => r.role === "sem_role").length },
+                  ] as const).filter(f => ["todos", "admin", "revendedor", "usuario", "cliente"].includes(f.key) || f.count > 0).map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setRoleFilter(f.key)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                        roleFilter === f.key
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 border-primary/50 scale-105"
+                          : "bg-card/60 text-muted-foreground hover:bg-muted/80 border-border/40 hover:border-border"
+                      }`}
+                    >
+                      {f.label} <span className="opacity-70 ml-0.5">({f.count})</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Mobile: User Cards */}
@@ -1647,35 +1656,35 @@ export default function Principal() {
               </div>
 
               {/* Desktop: Table */}
-              <div className="hidden md:block glass-card rounded-xl overflow-x-auto">
+              <div className="hidden md:block glass-card rounded-2xl overflow-hidden shadow-xl shadow-black/10 border border-border/30">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border/60 bg-muted/30">
-                      <th className="text-left px-3 lg:px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Usuário</th>
-                      <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Tipo</th>
-                      <th className="text-right px-2 lg:px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Saldo</th>
-                      <th className="text-center px-2 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recargas</th>
-                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Hoje</th>
-                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Total Vendido</th>
-                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lucro</th>
-                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th className="text-center px-2 lg:px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Ações</th>
+                    <tr className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20">
+                      <th className="text-left px-4 lg:px-5 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Usuário</th>
+                      <th className="text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Tipo</th>
+                      <th className="text-right px-2 lg:px-3 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Saldo</th>
+                      <th className="text-center px-2 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Recargas</th>
+                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Hoje</th>
+                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Total Vendido</th>
+                      <th className="hidden lg:table-cell text-right px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Lucro</th>
+                      <th className="hidden lg:table-cell text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                      <th className="text-center px-2 lg:px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border/30">
+                  <tbody className="divide-y divide-border/20">
                     {loading ? (
                       <tr><td colSpan={9} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
                     ) : filtered.length === 0 ? (
-                      <tr><td colSpan={9} className="text-center py-10">
-                        <Users className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-                        <p className="text-muted-foreground text-sm">Nenhum usuário encontrado</p>
-                        <button onClick={() => setShowCreateModal(true)} className="mt-3 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
-                          <Plus className="h-4 w-4 inline mr-1" /> Criar revendedor
+                      <tr><td colSpan={9} className="text-center py-12">
+                        <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                        <p className="text-muted-foreground text-sm font-medium">Nenhum usuário encontrado</p>
+                        <button onClick={() => setShowCreateModal(true)} className="mt-4 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 shadow-md shadow-primary/20 transition-all hover:scale-105">
+                          <Plus className="h-4 w-4 inline mr-1.5" /> Criar revendedor
                         </button>
                       </td></tr>
                     ) : (() => {
                       const todayStr = new Date().toISOString().slice(0, 10);
-                      return paginatedList.map(r => {
+                      return paginatedList.map((r, idx) => {
                         const initial = ((r.nome || r.email || "R")[0]).toUpperCase();
                         const userRecs = allRecargas.filter(rc => rc.user_id === r.id);
                         const recCount = userRecs.length;
@@ -1687,78 +1696,78 @@ export default function Principal() {
                         const ultimaRec = userRecs[0];
                         const saldoBaixo = r.saldo > 0 && r.saldo < 50;
                         return (
-                          <tr key={r.id} className="hover:bg-primary/[0.04] transition-all cursor-pointer group" onClick={() => openRevDetail(r)}>
-                            <td className="px-3 lg:px-5 py-3">
+                          <tr key={r.id} className="hover:bg-primary/[0.06] transition-all duration-200 cursor-pointer group" onClick={() => openRevDetail(r)}>
+                            <td className="px-4 lg:px-5 py-3.5">
                               <div className="flex items-center gap-3">
                                 {r.avatar_url ? (
-                                  <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).style.display = 'none'; }} className={`w-10 h-10 rounded-full object-cover shrink-0 ring-2 ${r.active ? "ring-success/30" : "ring-destructive/30"}`} />
+                                  <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).style.display = 'none'; }} className={`w-10 h-10 rounded-xl object-cover shrink-0 ring-2 shadow-sm ${r.active ? "ring-success/40" : "ring-destructive/40"}`} />
                                 ) : (
-                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ring-2 ${r.active ? "bg-success/15 text-success ring-success/30" : "bg-destructive/15 text-destructive ring-destructive/30"}`}>
+                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-sm ${r.active ? "bg-gradient-to-br from-success/20 to-success/10 text-success ring-1 ring-success/20" : "bg-gradient-to-br from-destructive/20 to-destructive/10 text-destructive ring-1 ring-destructive/20"}`}>
                                     {initial}
                                   </div>
                                 )}
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-foreground leading-tight text-sm flex items-center gap-1">{r.nome || "Sem nome"} <VerificationBadge badge={r.verification_badge as BadgeType} size="xs" /></p>
-                                  <p className="text-xs text-muted-foreground truncate max-w-[160px]">{r.email || "—"}</p>
+                                  <p className="font-semibold text-foreground leading-tight text-sm flex items-center gap-1.5 group-hover:text-primary transition-colors">{r.nome || "Sem nome"} <VerificationBadge badge={r.verification_badge as BadgeType} size="xs" /></p>
+                                  <p className="text-xs text-muted-foreground/70 truncate max-w-[180px] mt-0.5">{r.email || "—"}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-2 lg:px-4 py-3 text-center">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                                r.role === "admin" ? "bg-[hsl(280,70%,60%)]/15 text-[hsl(280,70%,60%)]" :
-                                r.role === "revendedor" ? "bg-primary/15 text-primary" :
-                                r.role === "usuario" ? "bg-[hsl(200,70%,50%)]/15 text-[hsl(200,70%,50%)]" :
-                                r.role === "cliente" ? "bg-accent/15 text-accent" :
-                                "bg-muted text-muted-foreground"
+                            <td className="px-2 lg:px-4 py-3.5 text-center">
+                              <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                r.role === "admin" ? "bg-[hsl(280,70%,60%)]/15 text-[hsl(280,70%,60%)] ring-1 ring-[hsl(280,70%,60%)]/20" :
+                                r.role === "revendedor" ? "bg-primary/15 text-primary ring-1 ring-primary/20" :
+                                r.role === "usuario" ? "bg-[hsl(200,70%,50%)]/15 text-[hsl(200,70%,50%)] ring-1 ring-[hsl(200,70%,50%)]/20" :
+                                r.role === "cliente" ? "bg-accent/15 text-accent ring-1 ring-accent/20" :
+                                "bg-muted text-muted-foreground ring-1 ring-border/30"
                               }`}>
                                 {r.role === "sem_role" ? "Sem função" : r.role === "usuario" ? "Usuário" : r.role}
                               </span>
                             </td>
-                            <td className="px-2 lg:px-3 py-3 text-right">
+                            <td className="px-2 lg:px-3 py-3.5 text-right">
                               <div>
                                 <span className={`font-mono font-bold tabular-nums text-sm ${saldoBaixo ? "text-warning" : "text-foreground"}`}>{fmt(r.saldo)}</span>
-                                {saldoBaixo && <p className="text-[10px] text-warning mt-0.5">Saldo baixo</p>}
+                                {saldoBaixo && <p className="text-[10px] text-warning mt-0.5 font-medium">Saldo baixo</p>}
                               </div>
                             </td>
-                            <td className="px-2 py-3 text-center">
+                            <td className="px-2 py-3.5 text-center">
                               <span className="font-mono font-semibold text-muted-foreground tabular-nums text-sm">{recCount}</span>
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-center">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-center">
                               {recHoje > 0 ? (
-                                <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full text-xs font-bold bg-primary/15 text-primary">
+                                <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2.5 rounded-lg text-xs font-bold bg-primary/15 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10">
                                   {recHoje}
                                 </span>
                               ) : (
-                                <span className="text-muted-foreground/50 text-xs">0</span>
+                                <span className="text-muted-foreground/40 text-xs">0</span>
                               )}
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-right">
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-right">
                               <span className="font-mono font-bold text-success tabular-nums text-sm">{fmt(totalVendido)}</span>
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-right">
-                              <span className={`font-mono font-bold tabular-nums text-sm ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(lucroDesk)}</span>
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-right">
+                              <span className={`font-mono font-bold tabular-nums text-sm ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground/50"}`}>{fmt(lucroDesk)}</span>
                             </td>
-                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3 text-center">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${r.active ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                            <td className="hidden lg:table-cell px-2 lg:px-4 py-3.5 text-center">
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold ${r.active ? "bg-success/10 text-success ring-1 ring-success/20" : "bg-destructive/10 text-destructive ring-1 ring-destructive/20"}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-success animate-pulse" : "bg-destructive"}`} />
                                 {r.active ? "Ativo" : "Inativo"}
                               </span>
                             </td>
-                            <td className="px-2 lg:px-4 py-3" onClick={e => e.stopPropagation()}>
-                              <div className="flex items-center justify-center gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => setShowSaldoModal(r)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Gerenciar saldo">
+                            <td className="px-2 lg:px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-all duration-200">
+                                <button onClick={() => setShowSaldoModal(r)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all hover:scale-105 ring-1 ring-primary/10" title="Gerenciar saldo">
                                   <DollarSign className="h-3.5 w-3.5 inline mr-0.5" />Saldo
                                 </button>
                                 <button onClick={() => toggleRevendedorRole(r)}
                                   title={r.isRevendedor ? "Remover função revendedor" : "Ativar função revendedor"}
-                                  className={`p-1.5 rounded-lg text-xs font-semibold transition-colors ${r.isRevendedor ? "bg-success/15 text-success hover:bg-success/25" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                                  className={`p-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-110 ${r.isRevendedor ? "bg-success/15 text-success hover:bg-success/25" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
                                 >
                                   {r.isRevendedor ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                                 </button>
-                                <button onClick={() => toggleActive(r)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground" title={r.active ? "Desativar" : "Ativar"}>
+                                <button onClick={() => toggleActive(r)} className="p-1.5 rounded-lg hover:bg-muted transition-all hover:scale-110 text-muted-foreground" title={r.active ? "Desativar" : "Ativar"}>
                                   {r.active ? <ToggleRight className="h-4 w-4 text-success" /> : <ToggleLeft className="h-4 w-4" />}
                                 </button>
-                                <button onClick={() => openRevDetail(r)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground group-hover:text-primary" title="Ver detalhes">
+                                <button onClick={() => openRevDetail(r)} className="p-1.5 rounded-lg hover:bg-muted transition-all hover:scale-110 text-muted-foreground group-hover:text-primary" title="Ver detalhes">
                                   <Eye className="h-4 w-4" />
                                 </button>
                               </div>
@@ -1773,15 +1782,15 @@ export default function Principal() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between glass-card rounded-xl px-4 py-3">
-                  <p className="text-xs text-muted-foreground">
-                    Mostrando {(listPage - 1) * LIST_PAGE_SIZE + 1}–{Math.min(listPage * LIST_PAGE_SIZE, filtered.length)} de {filtered.length}
+                <div className="flex items-center justify-between glass-card rounded-2xl px-5 py-3.5 shadow-md border border-border/30">
+                  <p className="text-xs text-muted-foreground/80 font-medium">
+                    Mostrando <span className="text-foreground font-semibold">{(listPage - 1) * LIST_PAGE_SIZE + 1}–{Math.min(listPage * LIST_PAGE_SIZE, filtered.length)}</span> de <span className="text-foreground font-semibold">{filtered.length}</span>
                   </p>
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setListPage(p => Math.max(1, p - 1))}
                       disabled={listPage <= 1}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-card text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-border/40"
                     >
                       ← Anterior
                     </button>
@@ -1794,15 +1803,15 @@ export default function Principal() {
                       }, [])
                       .map((p, i) =>
                         typeof p === "string" ? (
-                          <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                          <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground/50">…</span>
                         ) : (
                           <button
                             key={p}
                             onClick={() => setListPage(p)}
-                            className={`min-w-[32px] h-8 rounded-lg text-xs font-semibold transition-all ${
+                            className={`min-w-[34px] h-9 rounded-xl text-xs font-bold transition-all ${
                               listPage === p
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-105"
+                                : "bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border/40"
                             }`}
                           >
                             {p}
@@ -1812,7 +1821,7 @@ export default function Principal() {
                     <button
                       onClick={() => setListPage(p => Math.min(totalPages, p + 1))}
                       disabled={listPage >= totalPages}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-card text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-border/40"
                     >
                       Próximo →
                     </button>
