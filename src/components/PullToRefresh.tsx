@@ -80,10 +80,9 @@ export default function PullToRefresh() {
       document.removeEventListener("touchmove", onTouchMove);
       document.removeEventListener("touchend", onTouchEnd);
     };
-  }, [onTouchStart, onTouchMove, onTouchEnd]);
+  }, [onTouchStart, onTouchMove, onTouchEnd, disabled]);
 
-  // Don't render anything if not standalone
-  if (typeof window !== "undefined" && !isStandalone()) return null;
+  if (typeof window !== "undefined" && (!isStandalone() || disabled)) return null;
 
   const progress = Math.min(pullDistance / THRESHOLD, 1);
   const ready = progress >= 1;
