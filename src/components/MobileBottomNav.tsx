@@ -60,14 +60,14 @@ export function MobileBottomNav({
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-xl border-t border-border/50 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-14">
+        <div className="flex items-center justify-around h-16">
           {mainItems.map((item) => {
             const isActive = activeKey === item.key;
             return (
               <motion.button
                 key={item.key}
                 onClick={() => handleSelect(item.key)}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-[56px] touch-manipulation transition-colors ${
                   isActive ? "" : "opacity-50"
                 }`}
                 whileTap={{ scale: 0.9 }}
@@ -76,14 +76,14 @@ export function MobileBottomNav({
                   animate={{ y: [0, -2, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <item.icon className={`h-5 w-5 ${item.color || "text-primary"}`} />
+                  <item.icon className={`h-6 w-6 ${item.color || "text-primary"}`} />
                 </motion.div>
-                <span className={`text-[10px] font-semibold ${item.color || "text-primary"}`}>
+                <span className={`text-xs font-semibold ${item.color || "text-primary"}`}>
                   {item.label}
                 </span>
                 {isActive && (
                   <motion.div
-                    className="w-1 h-1 rounded-full bg-primary mt-0.5"
+                    className="w-1.5 h-1.5 rounded-full bg-primary"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     layoutId="nav-dot"
@@ -96,12 +96,12 @@ export function MobileBottomNav({
           {hasMore && (
             <button
               onClick={() => setMoreOpen(true)}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-[56px] touch-manipulation transition-colors ${
                 isActiveInMore ? "" : "opacity-50"
               }`}
             >
-              <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
-              <span className="text-[10px] font-semibold text-muted-foreground">Mais</span>
+              <MoreHorizontal className="h-6 w-6 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground">Mais</span>
             </button>
           )}
         </div>
