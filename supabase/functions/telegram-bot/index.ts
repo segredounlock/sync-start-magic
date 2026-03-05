@@ -1122,7 +1122,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     const valButtons: any[][] = [];
     for (let i = 0; i < vals.length; i += 2) {
       const row = vals.slice(i, i + 2).map((v: any) => {
-        const faceValue = v.value || v.cost;
+        const faceValue = resolveValue(v);
         const userCost = getUserCost(v.cost, faceValue);
         return {
           text: `R$ ${Number(faceValue).toFixed(2).replace(".", ",")}`,
