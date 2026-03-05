@@ -317,8 +317,12 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
     }
   }, []);
 
-  // Detect URLs/links in text
-  const containsLink = (str: string) => /https?:\/\/|www\.|[a-zA-Z0-9-]+\.(com|net|org|br|io|me|co|app|dev|info|link|xyz|site|online|store|shop|ly|bit|goo|tinyurl)\b/i.test(str);
+  // Detect URLs/links in text (but allow email addresses)
+  const containsLink = (str: string) => {
+    // Remove email addresses first so they don't trigger false positives
+    const withoutEmails = str.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "");
+    return /https?:\/\/|www\.|[a-zA-Z0-9-]+\.(com|net|org|br|io|me|co|app|dev|info|link|xyz|site|online|store|shop|ly|bit|goo|tinyurl)\b/i.test(withoutEmails);
+  };
 
   const handleSend = async () => {
     if (!text.trim() || sending) return;
