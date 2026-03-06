@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Clock, XCircle, Smartphone } from "lucide-react";
 import { formatTimeBR } from "@/lib/timezone";
@@ -24,6 +25,7 @@ async function fetchAllRecargas(): Promise<TickerRecarga[]> {
 }
 
 export default function RecargasTicker() {
+  const navigate = useNavigate();
   const [recargas, setRecargas] = useState<TickerRecarga[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const nameCache = useRef<Map<string, string>>(new Map());
@@ -156,7 +158,12 @@ export default function RecargasTicker() {
 
   const renderItem = (r: TickerRecarga, suffix = "") => (
     <span key={r.id + suffix} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
-      <span className="text-xs font-semibold text-primary">{r.userName} recarregou</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); isPaused.current = false; navigate(`/perfil/${r.user_id}`); }}
+        className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+      >
+        {r.userName} recarregou
+      </button>
       {statusIcon(r.status)}
       <span className={`font-semibold text-xs ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
       <span className="text-xs text-muted-foreground font-mono">{r.telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")}</span>
