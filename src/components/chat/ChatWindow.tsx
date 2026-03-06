@@ -34,6 +34,11 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
   const isUserAdmin = role === "admin";
   const [myBadge, setMyBadge] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(!!initialBlocked);
+
+  // Sync blocked state when switching conversations
+  useEffect(() => {
+    setIsBlocked(!!initialBlocked);
+  }, [conversationId, initialBlocked]);
   const isUserModerator = isUserAdmin || !!myBadge; // badge holders have mod powers
   const { isOnline, lastSeen } = useUserPresence(isGroup ? undefined : otherUser?.id);
   const { onlineUsers, onlineCount } = useGroupPresence();
