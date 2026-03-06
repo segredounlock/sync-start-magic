@@ -954,7 +954,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         </div>
 
         <main className="max-w-5xl mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-5">
-          {/* Stats */}
+          {/* Stats - hidden on profile tab */}
+          {tab !== "contatos" && (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {[
               { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", bgColor: "bg-primary/10", anim: "float" as const },
@@ -973,6 +974,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               </motion.div>
             ))}
           </div>
+          )}
 
           {/* Banners Promocionais */}
           {bannersList.filter(b => b.enabled && b.type !== "popup" && !dismissedBanners.has(b.position)).map(b => (
