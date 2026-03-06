@@ -16,6 +16,7 @@ import { FloatingPoll } from "@/components/FloatingPoll";
 import { SkeletonValue, SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import { ImageCropper } from "@/components/ImageCropper";
 import { RecargaReceipt } from "@/components/RecargaReceipt";
+import { ProfileTab } from "@/components/ProfileTab";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Wallet, Smartphone, History, Send, Clock, MessageCircle,
