@@ -1878,6 +1878,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               uploadingAvatar={uploadingAvatar}
               handleAvatarUpload={handleAvatarUpload}
               recargas={recargas}
+              recargasHoje={recargasHoje}
+              totalRecargas={recargas.length}
               selectTab={selectTab}
               navigate={navigate}
             />
