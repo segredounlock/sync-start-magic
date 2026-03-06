@@ -247,7 +247,7 @@ export default function UserProfile() {
         {/* Name + badge */}
         <div className="flex flex-col items-center mt-3">
           <div className="flex items-center gap-1.5">
-            <h1 className="font-display text-xl font-bold uppercase shimmer-letters">
+            <h1 className={`font-display text-xl font-bold uppercase ${profileRole === "admin" || profile.verification_badge ? "shimmer-letters" : "text-foreground"}`}>
               {profile.nome || "Usuário"}
             </h1>
             <VerificationBadge badge={profile.verification_badge as BadgeType} size="md" />
