@@ -4,7 +4,7 @@ import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, History, Send, Landmark, Smartphone, Shield, Activity,
-  CheckCircle2, Loader2, Camera, Pencil, Calendar,
+  CheckCircle2, Loader2, Camera, Pencil, Calendar, Clock,
   X, Check, ChevronDown, ChevronUp, Lock, LogOut,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
@@ -29,6 +29,8 @@ interface ProfileTabProps {
   uploadingAvatar: boolean;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   recargas: Recarga[];
+  recargasHoje: number;
+  totalRecargas: number;
   selectTab: (tab: any) => void;
   navigate: (path: string) => void;
 }
@@ -37,7 +39,7 @@ export function ProfileTab({
   user, role, avatarUrl, avatarError, setAvatarError, userLabel, userInitial,
   profileNome, setProfileNome, saldo, loading, fmt, telegramLinked,
   telegramUsername, whatsappNumber, uploadingAvatar, handleAvatarUpload,
-  recargas, selectTab, navigate,
+  recargas, recargasHoje, totalRecargas, selectTab, navigate,
 }: ProfileTabProps) {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -364,7 +366,28 @@ export function ProfileTab({
         </AnimatePresence>
       </div>
 
-      {/* Followers/Following Modal */}
+      {/* Stats cards */}
+      <div className="grid grid-cols-2 gap-2 mx-1 mt-3">
+        <div className="glass-card rounded-xl p-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Smartphone className="h-4 w-4 text-primary" />
+            </div>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Recargas Hoje</span>
+          </div>
+          <p className="text-xl font-bold text-primary tabular-nums">{recargasHoje}</p>
+        </div>
+        <div className="glass-card rounded-xl p-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-accent" />
+            </div>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total</span>
+          </div>
+          <p className="text-xl font-bold text-accent tabular-nums">{totalRecargas}</p>
+        </div>
+      </div>
+
       <AnimatePresence>
         {(showFollowers || showFollowing) && (
           <motion.div
