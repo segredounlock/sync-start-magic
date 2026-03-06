@@ -638,13 +638,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "addSaldo", label: "Adicionar Saldo", icon: CreditCard, dashed: true },
     { key: "historico", label: "Histórico de Pedidos", icon: History },
     { key: "extrato", label: "Extrato de Depósitos", icon: Landmark },
-    { key: "contatos", label: "Minha Conta", icon: User },
+    { key: "contatos", label: "Meu Perfil", icon: User },
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
 
   const tabTitle: Record<PainelTab, string> = {
     recarga: "Nova Recarga", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
-    extrato: "Extrato de Depósitos", contatos: "Minha Conta", status: "Status do Sistema",
+    extrato: "Extrato de Depósitos", contatos: "Meu Perfil", status: "Status do Sistema",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
@@ -2008,7 +2008,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse", highlighted: true },
           { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
-          { key: "contatos", label: "Conta", icon: User, color: "text-accent", animation: "float" },
+          { key: "contatos", label: "Perfil", icon: User, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
         ] as NavItem[]}
