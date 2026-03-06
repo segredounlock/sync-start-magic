@@ -126,6 +126,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/perfil/:userId"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<SplashScreen />}>
+                    <UserProfile />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MaintenanceGuard>
