@@ -22,6 +22,7 @@ const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
 const Principal = lazy(() => import("@/pages/Principal"));
 const ChatApp = lazy(() => import("@/pages/ChatApp"));
+const UserProfile = lazy(() => import("@/pages/UserProfile"));
 
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const { user, role } = useAuth();
