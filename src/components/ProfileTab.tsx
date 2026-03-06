@@ -1,14 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, History, Send, Landmark, Smartphone, Shield, Activity,
-  CheckCircle2, Loader2, Save, Camera, Pencil, Calendar,
-  UserPlus, UserMinus, X, Check, ExternalLink,
+  CheckCircle2, Loader2, Camera, Pencil, Calendar,
+  X, Check, ChevronDown, ChevronUp, Lock, LogOut,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
-import { formatDateTimeBR } from "@/lib/timezone";
 import type { Recarga } from "@/types";
 
 interface ProfileTabProps {
@@ -48,13 +47,12 @@ export function ProfileTab({
   const [savingBio, setSavingBio] = useState(false);
   const [editingNome, setEditingNome] = useState(false);
   const [badge, setBadge] = useState<BadgeType>(null);
-
-  // Follower/following lists
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
   const [followersList, setFollowersList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
   const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
   const [listLoading, setListLoading] = useState(false);
+  const [showExtras, setShowExtras] = useState(false);
 
   const recargasCompleted = recargas.filter((r) => r.status === "completed").length;
 
@@ -127,41 +125,43 @@ export function ProfileTab({
   };
 
   const roleLabel = role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário";
+  const roleColor = role === "admin" ? "bg-primary/15 text-primary" : role === "revendedor" ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-0">
-      {/* Cover gradient */}
-      <div className="h-24 rounded-t-2xl bg-gradient-to-br from-primary/30 via-primary/10 to-transparent relative -mx-1" />
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-0 pb-4">
+      {/* Cover gradient - more dramatic */}
+      <div className="h-28 rounded-t-2xl bg-gradient-to-br from-primary/40 via-primary/15 to-transparent relative -mx-1 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.2),transparent_70%)]" />
+      </div>
 
-      {/* Avatar centered */}
-      <div className="flex flex-col items-center -mt-14 relative z-10">
+      {/* Profile header */}
+      <div className="flex flex-col items-center -mt-16 relative z-10 px-4">
+        {/* Avatar */}
         <label className="relative cursor-pointer group">
           {avatarUrl && !avatarError ? (
             <img
               src={avatarUrl}
               alt="Avatar"
-              className="w-28 h-28 rounded-full object-cover ring-4 ring-background shadow-xl"
+              className="w-[104px] h-[104px] rounded-full object-cover ring-[3px] ring-background shadow-2xl"
               referrerPolicy="no-referrer"
               crossOrigin="anonymous"
               onError={() => setAvatarError(true)}
             />
           ) : (
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground flex items-center justify-center font-bold text-4xl ring-4 ring-background shadow-xl">
+            <div className="w-[104px] h-[104px] rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground flex items-center justify-center font-bold text-3xl ring-[3px] ring-background shadow-2xl">
               {userInitial}
             </div>
           )}
-          {/* Camera overlay on hover */}
           <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            {uploadingAvatar ? <Loader2 className="h-6 w-6 text-white animate-spin" /> : <Camera className="h-6 w-6 text-white" />}
+            {uploadingAvatar ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
           </div>
-          {/* Camera badge */}
           <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg border-2 border-background">
-            <Camera className="h-3.5 w-3.5" />
+            <Camera className="h-3 w-3" />
           </div>
           <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
         </label>
 
-        {/* Name + badge + role */}
+        {/* Name + badge */}
         <div className="flex items-center gap-1.5 mt-3">
           {editingNome ? (
             <div className="flex items-center gap-2">
@@ -172,18 +172,12 @@ export function ProfileTab({
                 maxLength={100}
                 autoFocus
               />
-              <button onClick={handleSaveNome} className="p-1.5 rounded-lg bg-primary text-primary-foreground">
-                <Check className="h-4 w-4" />
-              </button>
-              <button onClick={() => setEditingNome(false)} className="p-1.5 rounded-lg bg-muted text-muted-foreground">
-                <X className="h-4 w-4" />
-              </button>
+              <button onClick={handleSaveNome} className="p-1.5 rounded-lg bg-primary text-primary-foreground"><Check className="h-4 w-4" /></button>
+              <button onClick={() => setEditingNome(false)} className="p-1.5 rounded-lg bg-muted text-muted-foreground"><X className="h-4 w-4" /></button>
             </div>
           ) : (
             <button onClick={() => setEditingNome(true)} className="flex items-center gap-1.5 group">
-              <h1 className="font-display text-xl font-bold text-foreground uppercase">
-                {userLabel}
-              </h1>
+              <h1 className="font-display text-xl font-bold text-foreground uppercase">{userLabel}</h1>
               <VerificationBadge badge={badge} size="md" />
               {role === "admin" && (
                 <svg className="h-5 w-5 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor">
@@ -196,14 +190,14 @@ export function ProfileTab({
           )}
         </div>
 
-        {/* Email + role badge */}
-        <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
-        <span className="inline-block mt-1 px-3 py-0.5 rounded-full bg-primary/15 text-primary text-xs font-semibold">
+        {/* Email + role */}
+        <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
+        <span className={`inline-block mt-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${roleColor}`}>
           {roleLabel}
         </span>
 
         {/* Bio */}
-        <div className="mt-2 px-6 text-center w-full max-w-sm">
+        <div className="mt-2 px-4 text-center w-full max-w-xs">
           {editingBio ? (
             <div className="flex items-center gap-2">
               <input
@@ -211,123 +205,163 @@ export function ProfileTab({
                 onChange={(e) => setBioText(e.target.value)}
                 maxLength={160}
                 placeholder="Escreva sua bio..."
-                className="flex-1 px-3 py-1.5 rounded-lg glass-input text-sm text-foreground border border-border text-center"
+                className="flex-1 px-3 py-1.5 rounded-lg glass-input text-xs text-foreground border border-border text-center"
                 autoFocus
               />
               <button onClick={handleSaveBio} disabled={savingBio} className="p-1.5 rounded-lg bg-primary text-primary-foreground">
-                {savingBio ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {savingBio ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
               </button>
               <button onClick={() => { setEditingBio(false); setBioText(bio); }} className="p-1.5 rounded-lg bg-muted text-muted-foreground">
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
             <p
-              className={`text-sm cursor-pointer hover:text-foreground transition-colors ${bio ? "text-muted-foreground" : "text-muted-foreground/50 italic"}`}
+              className={`text-xs cursor-pointer hover:text-foreground transition-colors ${bio ? "text-muted-foreground" : "text-muted-foreground/40 italic"}`}
               onClick={() => setEditingBio(true)}
             >
               {bio || "Toque para adicionar bio"}
-              <Pencil className="h-3 w-3 inline ml-1 opacity-50" />
+              <Pencil className="h-2.5 w-2.5 inline ml-1 opacity-40" />
             </p>
           )}
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center gap-6 mt-5 w-full justify-center">
-          <button onClick={loadFollowersList} className="flex flex-col items-center hover:opacity-80 transition-opacity">
-            <span className="font-display text-xl font-bold text-foreground">{followersCount}</span>
-            <span className="text-[11px] text-muted-foreground">Seguidores</span>
+        <div className="flex items-center gap-0 mt-5 w-full max-w-xs">
+          <button onClick={loadFollowersList} className="flex-1 flex flex-col items-center py-2 rounded-l-xl hover:bg-muted/30 transition-colors border border-border/50">
+            <span className="font-display text-lg font-bold text-foreground tabular-nums">{followersCount}</span>
+            <span className="text-[10px] text-muted-foreground font-medium">Seguidores</span>
           </button>
-          <div className="flex flex-col items-center">
-            <span className="font-display text-xl font-bold text-foreground">{recargasCompleted}</span>
-            <span className="text-[11px] text-muted-foreground">Recargas</span>
+          <div className="flex-1 flex flex-col items-center py-2 border-y border-border/50">
+            <span className="font-display text-lg font-bold text-foreground tabular-nums">{recargasCompleted}</span>
+            <span className="text-[10px] text-muted-foreground font-medium">Recargas</span>
           </div>
-          <button onClick={loadFollowingList} className="flex flex-col items-center hover:opacity-80 transition-opacity">
-            <span className="font-display text-xl font-bold text-foreground">{followingCount}</span>
-            <span className="text-[11px] text-muted-foreground">Seguindo</span>
+          <button onClick={loadFollowingList} className="flex-1 flex flex-col items-center py-2 rounded-r-xl hover:bg-muted/30 transition-colors border border-border/50">
+            <span className="font-display text-lg font-bold text-foreground tabular-nums">{followingCount}</span>
+            <span className="text-[10px] text-muted-foreground font-medium">Seguindo</span>
           </button>
         </div>
-
       </div>
 
-      {/* Cards section */}
-      <div className="space-y-3 mt-6">
-        {/* Saldo */}
-        <div className="glass-card rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Saldo Atual</span>
+      {/* Quick action cards */}
+      <div className="grid grid-cols-3 gap-2 mt-5 px-1">
+        <button onClick={() => selectTab("historico")} className="glass-card rounded-xl p-3 flex flex-col items-center gap-1.5 hover:bg-muted/40 transition-colors">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <History className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-2xl font-bold text-foreground">{loading ? "..." : fmt(saldo)}</p>
-        </div>
-
-        {/* Integrations */}
-        <div className="glass-card rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Activity className="h-4 w-4 text-muted-foreground" />
-            <h4 className="font-bold text-foreground text-sm">Integrações</h4>
+          <span className="text-[11px] font-semibold text-foreground">Histórico</span>
+        </button>
+        <button onClick={() => selectTab("extrato")} className="glass-card rounded-xl p-3 flex flex-col items-center gap-1.5 hover:bg-muted/40 transition-colors">
+          <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
+            <Landmark className="h-4 w-4 text-success" />
           </div>
-          <div className="glass-card rounded-xl p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0088cc, #0077b5)" }}>
-              <Send className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-foreground text-sm">Telegram</p>
-              <p className="text-xs text-muted-foreground">{telegramLinked ? "Conta vinculada" : "Não configurado"}</p>
-            </div>
-            <span className={`flex items-center gap-1 text-xs font-semibold ${telegramLinked ? "text-success" : "text-muted-foreground"}`}>
-              {telegramLinked ? <><CheckCircle2 className="h-3.5 w-3.5" /> Ativo</> : "Inativo"}
-            </span>
+          <span className="text-[11px] font-semibold text-foreground">Depósitos</span>
+        </button>
+        <button onClick={() => selectTab("addSaldo")} className="glass-card rounded-xl p-3 flex flex-col items-center gap-1.5 hover:bg-muted/40 transition-colors">
+          <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+            <Wallet className="h-4 w-4 text-accent" />
           </div>
-          {(telegramUsername || whatsappNumber) && (
-            <div className="mt-2 space-y-1">
-              {telegramUsername && (
-                <a href={`https://t.me/${telegramUsername}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/30 transition-colors">
-                  <Send className="h-3 w-3" /> @{telegramUsername}
-                </a>
-              )}
-              {whatsappNumber && (
-                <a href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/30 transition-colors">
-                  <Smartphone className="h-3 w-3" /> {whatsappNumber}
-                </a>
-              )}
-            </div>
-          )}
-        </div>
+          <span className="text-[11px] font-semibold text-foreground">Saldo</span>
+        </button>
+      </div>
 
-        {/* Quick links */}
-        <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => selectTab("historico")} className="glass-card rounded-2xl p-4 text-left hover:bg-muted/40 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
-              <History className="h-5 w-5 text-primary" />
-            </div>
-            <p className="font-bold text-foreground text-sm mt-2">Histórico</p>
-            <p className="text-xs text-muted-foreground">Ver recargas</p>
-          </button>
-          <button onClick={() => selectTab("extrato")} className="glass-card rounded-2xl p-4 text-left hover:bg-muted/40 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-              <Landmark className="h-5 w-5 text-success" />
-            </div>
-            <p className="font-bold text-foreground text-sm mt-2">Depósitos</p>
-            <p className="text-xs text-muted-foreground">Ver entradas</p>
-          </button>
+      {/* Saldo card - compact */}
+      <div className="glass-card rounded-xl p-3.5 mx-1 mt-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Wallet className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Saldo Disponível</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{loading ? "..." : fmt(saldo)}</p>
+          </div>
         </div>
+        <button onClick={() => selectTab("addSaldo")} className="px-3 py-1.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold hover:bg-primary/25 transition-colors">
+          Depositar
+        </button>
+      </div>
 
-        {/* Security */}
-        <div className="glass-card rounded-2xl p-4 flex items-center justify-between">
+      {/* Collapsible extras */}
+      <div className="mx-1 mt-3">
+        <button
+          onClick={() => setShowExtras(!showExtras)}
+          className="w-full glass-card rounded-xl p-3 flex items-center justify-between hover:bg-muted/30 transition-colors"
+        >
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-muted-foreground" />
-            <h4 className="font-bold text-foreground text-sm">Segurança</h4>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-semibold text-foreground">Configurações & Integrações</span>
           </div>
-          <button onClick={async () => {
-            if (!user?.email) return;
-            const { error } = await supabase.auth.resetPasswordForEmail(user.email);
-            if (error) toast.error("Erro ao enviar e-mail");
-            else toast.success("E-mail de redefinição enviado!");
-          }} className="text-sm font-semibold text-primary hover:underline">
-            Alterar Senha
-          </button>
-        </div>
+          {showExtras ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </button>
+
+        <AnimatePresence>
+          {showExtras && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-2 pt-2">
+                {/* Telegram integration */}
+                <div className="glass-card rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0088cc, #0077b5)" }}>
+                    <Send className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground text-xs">Telegram</p>
+                    <p className="text-[10px] text-muted-foreground">{telegramLinked ? "Conta vinculada" : "Não configurado"}</p>
+                  </div>
+                  <span className={`flex items-center gap-1 text-[10px] font-bold ${telegramLinked ? "text-success" : "text-muted-foreground"}`}>
+                    {telegramLinked ? <><CheckCircle2 className="h-3 w-3" /> Ativo</> : "Inativo"}
+                  </span>
+                </div>
+
+                {/* Contact links */}
+                {(telegramUsername || whatsappNumber) && (
+                  <div className="glass-card rounded-xl p-2.5 space-y-1">
+                    {telegramUsername && (
+                      <a href={`https://t.me/${telegramUsername}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/30 transition-colors">
+                        <Send className="h-3 w-3" /> @{telegramUsername}
+                      </a>
+                    )}
+                    {whatsappNumber && (
+                      <a href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/30 transition-colors">
+                        <Smartphone className="h-3 w-3" /> {whatsappNumber}
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Security */}
+                <div className="glass-card rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-foreground">Segurança</span>
+                  </div>
+                  <button onClick={async () => {
+                    if (!user?.email) return;
+                    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+                    if (error) toast.error("Erro ao enviar e-mail");
+                    else toast.success("E-mail de redefinição enviado!");
+                  }} className="text-[11px] font-semibold text-primary hover:underline">
+                    Alterar Senha
+                  </button>
+                </div>
+
+                {/* Logout */}
+                <button
+                  onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
+                  className="w-full glass-card rounded-xl p-3 flex items-center gap-2 hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="h-3.5 w-3.5 text-destructive" />
+                  <span className="text-xs font-semibold text-destructive">Sair da conta</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Followers/Following Modal */}
@@ -348,7 +382,7 @@ export function ProfileTab({
               className="w-full max-w-md max-h-[70vh] bg-background rounded-t-2xl sm:rounded-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between p-4 border-b border-border">
-                <h3 className="font-bold text-foreground">{showFollowers ? "Seguidores" : "Seguindo"}</h3>
+                <h3 className="font-bold text-foreground text-sm">{showFollowers ? "Seguidores" : "Seguindo"}</h3>
                 <button onClick={() => { setShowFollowers(false); setShowFollowing(false); }} className="p-1.5 rounded-lg hover:bg-muted/50">
                   <X className="h-5 w-5 text-muted-foreground" />
                 </button>
