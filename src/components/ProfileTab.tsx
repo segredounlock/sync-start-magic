@@ -177,7 +177,7 @@ export function ProfileTab({
             </div>
           ) : (
             <button onClick={() => setEditingNome(true)} className="flex items-center gap-1.5 group">
-              <h1 className="font-display text-xl font-bold text-foreground uppercase">{userLabel}</h1>
+              <h1 className="font-display text-xl font-bold uppercase shimmer-letters">{userLabel}</h1>
               <VerificationBadge badge={badge} size="md" />
               {role === "admin" && (
                 <svg className="h-5 w-5 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor">
