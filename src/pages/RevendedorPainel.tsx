@@ -906,8 +906,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
       {/* Main */}
       <div className="flex-1 min-w-0">
-        <div className="sticky top-0 z-20">
-          <header className="glass-header px-4 md:px-6 py-4 flex items-center justify-between relative">
+        <div className="sticky top-0 z-[70]">
+          <header className="glass-header px-4 md:px-6 py-4 flex items-center justify-between relative z-[100] overflow-visible">
             {/* Header gradient accent */}
             <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-center gap-3">
@@ -926,13 +926,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <AnimatePresence>
                   {showAvatarMenu && (
                     <>
-                      <div className="fixed inset-0 z-[89]" onClick={() => setShowAvatarMenu(false)} />
+                      <div className="fixed inset-0 z-[119]" onClick={() => setShowAvatarMenu(false)} />
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: -4 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: -4 }}
                         transition={{ duration: 0.15 }}
-                        className="fixed right-4 md:right-6 top-[4.25rem] md:top-[4.5rem] z-[90] min-w-[160px] rounded-xl bg-card border border-border shadow-xl p-2"
+                        className="fixed right-4 md:right-6 top-[4.25rem] md:top-[4.5rem] z-[120] min-w-[160px] rounded-xl bg-card border border-border shadow-xl p-2"
                       >
                         <div className="px-3 py-2 border-b border-border mb-1">
                           <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
@@ -950,7 +950,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               </div>
             </div>
           </header>
-          <RecargasTicker />
+          <div className="relative z-10"><RecargasTicker /></div>
         </div>
 
         <main className="max-w-5xl mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-5">
