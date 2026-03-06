@@ -59,7 +59,7 @@ export default function UserProfile() {
     if (!userId) return;
     setLoading(true);
     try {
-      const [{ data: profileData }, { data: counts }, { data: recargaData }, { data: followData }, { data: roleData }] = await Promise.all([
+      const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleData }] = await Promise.all([
         supabase.from("profiles").select("id, nome, email, avatar_url, bio, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", userId).single(),
         supabase.rpc("get_follow_counts", { _user_id: userId }),
         supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("status", "completed"),
@@ -77,9 +77,7 @@ export default function UserProfile() {
         setFollowersCount(Number(counts[0].followers_count) || 0);
         setFollowingCount(Number(counts[0].following_count) || 0);
       }
-      setRecargasCount(recargaData ? 0 : 0);
-      // Use count from head query
-      setRecargasCount(Number((recargaData as any)?.length) || 0);
+      setRecargasCount(Number(recargaResult.count) || 0);
       setIsFollowing(!!followData);
       if (roleData === true) setProfileRole("admin");
     } catch (e) {
