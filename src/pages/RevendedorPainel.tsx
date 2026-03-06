@@ -16,6 +16,7 @@ import { FloatingPoll } from "@/components/FloatingPoll";
 import { SkeletonValue, SkeletonRow, SkeletonCard } from "@/components/Skeleton";
 import { ImageCropper } from "@/components/ImageCropper";
 import { RecargaReceipt } from "@/components/RecargaReceipt";
+import { ProfileTab } from "@/components/ProfileTab";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Wallet, Smartphone, History, Send, Clock, MessageCircle,
@@ -1854,143 +1855,30 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </>
           )}
 
-          {/* ===== TAB: CONTATOS (Minha Conta) ===== */}
+          {/* ===== TAB: CONTATOS (Minha Conta) — Instagram-style ===== */}
           {tab === "contatos" && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <div>
-                <h3 className="font-display text-2xl font-bold text-foreground">Minha Conta</h3>
-                <p className="text-sm text-muted-foreground">Gerencie seus dados pessoais e preferências.</p>
-              </div>
-
-              <div className="glass-card rounded-2xl p-5 space-y-4">
-                <div className="flex items-center gap-4">
-                  <label className="relative cursor-pointer group">
-                    {avatarUrl && !avatarError ? (
-                      <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover shrink-0 ring-2 ring-primary/30" referrerPolicy="no-referrer" crossOrigin="anonymous" onError={() => setAvatarError(true)} />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-2xl shrink-0 ring-2 ring-warning/40">
-                        {userInitial}
-                      </div>
-                    )}
-                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      {uploadingAvatar ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
-                    </div>
-                    {/* Badge de câmera sempre visível */}
-                    <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1 shadow-lg border-2 border-background">
-                      <Camera className="h-3 w-3" />
-                    </div>
-                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
-                  </label>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <p className="font-bold text-lg text-foreground truncate uppercase">
-                        {userLabel}
-                      </p>
-                      {role === "admin" && (
-                        <svg className="h-5 w-5 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 2L14.09 8.26L21 9.27L16.18 13.14L17.64 20.02L12 16.77L6.36 20.02L7.82 13.14L3 9.27L9.91 8.26L12 2Z" />
-                          <path d="M9.5 12.5L11 14L14.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                        </svg>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
-                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-md bg-primary/15 text-primary text-xs font-semibold capitalize">
-                      {role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário"}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-muted-foreground">📷 Toque no avatar para adicionar sua foto • JPG, PNG, WebP ou GIF até 2MB</p>
-              </div>
-                <div className="glass-card rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Wallet className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Saldo Atual</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{loading ? "..." : fmt(saldo)}</p>
-                </div>
-              {/* Editar nome */}
-              <div className="glass-card rounded-2xl p-5 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Pencil className="h-5 w-5 text-muted-foreground" />
-                  <h4 className="font-bold text-foreground">Dados Pessoais</h4>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Nome</label>
-                  <input
-                    value={profileNome}
-                    onChange={(e) => setProfileNome(e.target.value)}
-                    placeholder="Seu nome"
-                    className="w-full px-3 py-2.5 rounded-xl glass-input text-foreground text-sm border border-border"
-                    maxLength={100}
-                  />
-                </div>
-                <button
-                  onClick={async () => {
-                    if (!user || !profileNome.trim()) { toast.error("Informe um nome válido"); return; }
-                    try {
-                      const { error } = await supabase.from("profiles").update({ nome: profileNome.trim() } as any).eq("id", user.id);
-                      if (error) throw error;
-                      toast.success("Nome atualizado!");
-                    } catch { toast.error("Erro ao salvar nome"); }
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                >
-                  <Save className="h-4 w-4" /> Salvar Nome
-                </button>
-              </div>
-
-              <div className="glass-card rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Activity className="h-5 w-5 text-muted-foreground" />
-                  <h4 className="font-bold text-foreground">Integrações</h4>
-                </div>
-                <div className="glass-card rounded-xl p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0088cc, #0077b5)" }}>
-                    <Send className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-foreground">Telegram</p>
-                    <p className="text-xs text-muted-foreground">{telegramLinked ? "Conta vinculada" : "Não configurado"}</p>
-                  </div>
-                  <span className={`flex items-center gap-1 text-xs font-semibold ${telegramLinked ? "text-success" : "text-muted-foreground"}`}>
-                    {telegramLinked ? <><CheckCircle2 className="h-4 w-4" /> Ativo</> : "Inativo"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => selectTab("historico")} className="glass-card rounded-2xl p-4 text-left hover:bg-muted/40 transition-colors group">
-                  <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
-                    <History className="h-5 w-5 text-primary" />
-                  </div>
-                  <p className="font-bold text-foreground text-sm mt-2">Histórico de Pedidos</p>
-                  <p className="text-xs text-muted-foreground">Ver todas as recargas</p>
-                </button>
-                <button onClick={() => selectTab("extrato")} className="glass-card rounded-2xl p-4 text-left hover:bg-muted/40 transition-colors group">
-                  <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                    <Landmark className="h-5 w-5 text-success" />
-                  </div>
-                  <p className="font-bold text-foreground text-sm mt-2">Histórico de Depósitos</p>
-                  <p className="text-xs text-muted-foreground">Ver entradas de saldo</p>
-                </button>
-              </div>
-
-              <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-muted-foreground" />
-                  <h4 className="font-bold text-foreground">Segurança</h4>
-                </div>
-                <button onClick={async () => {
-                  if (!user?.email) return;
-                  const { error } = await supabase.auth.resetPasswordForEmail(user.email);
-                  if (error) toast.error("Erro ao enviar e-mail");
-                  else toast.success("E-mail de redefinição enviado!");
-                }} className="text-sm font-semibold text-primary hover:underline">
-                  Alterar Senha
-                </button>
-              </div>
-
-            </motion.div>
+            <ProfileTab
+              user={user}
+              role={role}
+              avatarUrl={avatarUrl}
+              avatarError={avatarError}
+              setAvatarError={setAvatarError}
+              userLabel={userLabel}
+              userInitial={userInitial}
+              profileNome={profileNome}
+              setProfileNome={setProfileNome}
+              saldo={saldo}
+              loading={loading}
+              fmt={fmt}
+              telegramLinked={telegramLinked}
+              telegramUsername={telegramUsername}
+              whatsappNumber={whatsappNumber}
+              uploadingAvatar={uploadingAvatar}
+              handleAvatarUpload={handleAvatarUpload}
+              recargas={recargas}
+              selectTab={selectTab}
+              navigate={navigate}
+            />
           )}
 
 
