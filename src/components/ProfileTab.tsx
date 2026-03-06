@@ -4,7 +4,7 @@ import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, History, Send, Landmark, Smartphone, Shield, Activity,
-  CheckCircle2, Loader2, Camera, Pencil, Calendar,
+  CheckCircle2, Loader2, Camera, Pencil, Calendar, Clock,
   X, Check, ChevronDown, ChevronUp, Lock, LogOut,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
@@ -29,6 +29,8 @@ interface ProfileTabProps {
   uploadingAvatar: boolean;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   recargas: Recarga[];
+  recargasHoje: number;
+  totalRecargas: number;
   selectTab: (tab: any) => void;
   navigate: (path: string) => void;
 }
@@ -37,7 +39,7 @@ export function ProfileTab({
   user, role, avatarUrl, avatarError, setAvatarError, userLabel, userInitial,
   profileNome, setProfileNome, saldo, loading, fmt, telegramLinked,
   telegramUsername, whatsappNumber, uploadingAvatar, handleAvatarUpload,
-  recargas, selectTab, navigate,
+  recargas, recargasHoje, totalRecargas, selectTab, navigate,
 }: ProfileTabProps) {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
