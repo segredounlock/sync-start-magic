@@ -248,14 +248,6 @@ export function ProfileTab({
           </button>
         </div>
 
-        {/* View public profile button */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate(`/perfil/${user?.id}`)}
-          className="mt-4 px-5 py-2 rounded-xl glass-card text-foreground font-semibold text-sm flex items-center gap-2 border border-border hover:bg-muted/50 transition-colors"
-        >
-          <ExternalLink className="h-4 w-4" /> Ver Perfil Público
-        </motion.button>
       </div>
 
       {/* Cards section */}
