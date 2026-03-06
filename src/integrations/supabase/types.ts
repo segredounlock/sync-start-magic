@@ -403,6 +403,27 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           buttons: Json | null
@@ -588,6 +609,7 @@ export type Database = {
         Row: {
           active: boolean
           avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string | null
           id: string
@@ -610,6 +632,7 @@ export type Database = {
         Insert: {
           active?: boolean
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           id: string
@@ -632,6 +655,7 @@ export type Database = {
         Update: {
           active?: boolean
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -1033,6 +1057,13 @@ export type Database = {
     Functions: {
       get_chat_enabled: { Args: never; Returns: boolean }
       get_chat_new_conv_filter: { Args: never; Returns: string }
+      get_follow_counts: {
+        Args: { _user_id: string }
+        Returns: {
+          followers_count: number
+          following_count: number
+        }[]
+      }
       get_maintenance_mode: { Args: never; Returns: boolean }
       get_notif_config: { Args: { _key: string }; Returns: string }
       get_operator_stats: { Args: never; Returns: Json }
