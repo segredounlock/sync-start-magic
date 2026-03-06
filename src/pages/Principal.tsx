@@ -3341,7 +3341,7 @@ export default function Principal() {
                 const totalCusto = reportData.reduce((s, r) => s + r.totalCusto, 0);
                 const kpis = [
                   { label: "Revendedores", value: String(reportData.length), icon: Users, color: "text-primary", bgColor: "bg-primary/15" },
-                  { label: "Recarga", value: fmt(totalRecarga), icon: Smartphone, color: "text-foreground", bgColor: "bg-muted" },
+                  { label: "Créditos Entregues", value: fmt(totalRecarga), icon: Smartphone, color: "text-foreground", bgColor: "bg-muted" },
                   { label: "Custo API", value: fmt(totalCusto), icon: Wallet, color: "text-warning", bgColor: "bg-warning/15" },
                   { label: "Vendas", value: fmt(totalVendas), icon: TrendingUp, color: "text-success", bgColor: "bg-success/15" },
                   { label: "Lucro", value: fmt(totalLucro), icon: DollarSign, color: totalLucro >= 0 ? "text-success" : "text-destructive", bgColor: totalLucro >= 0 ? "bg-success/15" : "bg-destructive/15" },
