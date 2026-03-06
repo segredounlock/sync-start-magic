@@ -207,30 +207,44 @@ export default function UserProfile() {
         {/* Cover gradient */}
         <div className="h-28 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent relative" />
 
-        {/* Avatar centered - overlapping cover */}
-        <div className="flex flex-col items-center -mt-14 relative z-10">
-          <div className="relative">
+        {/* Instagram-style: stats + avatar row */}
+        <div className="flex items-center justify-center gap-6 -mt-10 relative z-10 px-4">
+          {/* Followers - left */}
+          <button onClick={loadFollowersList} className="flex flex-col items-center hover:opacity-80 transition-opacity pt-8">
+            <span className="font-display text-xl font-bold text-foreground tabular-nums">{followersCount}</span>
+            <span className="text-[10px] text-muted-foreground font-medium">Seguidores</span>
+          </button>
+
+          {/* Avatar - center */}
+          <div className="relative flex-shrink-0">
             {profile.avatar_url && !avatarError ? (
               <img
                 src={profile.avatar_url}
                 alt="Avatar"
-                className="w-28 h-28 rounded-full object-cover ring-4 ring-background shadow-xl"
+                className="w-[104px] h-[104px] rounded-full object-cover ring-[3px] ring-background shadow-2xl"
                 referrerPolicy="no-referrer"
                 crossOrigin="anonymous"
                 onError={() => setAvatarError(true)}
               />
             ) : (
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground flex items-center justify-center font-bold text-4xl ring-4 ring-background shadow-xl">
+              <div className="w-[104px] h-[104px] rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground flex items-center justify-center font-bold text-3xl ring-[3px] ring-background shadow-2xl">
                 {userInitial}
               </div>
             )}
-            {/* Online indicator */}
-            <div className="absolute bottom-1 right-1 w-5 h-5 bg-success rounded-full ring-3 ring-background" />
+            <div className="absolute bottom-1 right-1 w-4 h-4 bg-success rounded-full ring-2 ring-background" />
           </div>
 
-          {/* Name + badge */}
-          <div className="flex items-center gap-1.5 mt-3">
-            <h1 className="font-display text-xl font-bold text-foreground uppercase">
+          {/* Following - right */}
+          <button onClick={loadFollowingList} className="flex flex-col items-center hover:opacity-80 transition-opacity pt-8">
+            <span className="font-display text-xl font-bold text-foreground tabular-nums">{followingCount}</span>
+            <span className="text-[10px] text-muted-foreground font-medium">Seguindo</span>
+          </button>
+        </div>
+
+        {/* Name + badge */}
+        <div className="flex flex-col items-center mt-3">
+          <div className="flex items-center gap-1.5">
+            <h1 className="font-display text-xl font-bold uppercase shimmer-letters">
               {profile.nome || "Usuário"}
             </h1>
             <VerificationBadge badge={profile.verification_badge as BadgeType} size="md" />
@@ -257,29 +271,22 @@ export default function UserProfile() {
               </div>
             ) : (
               <p
-                className={`text-sm ${profile.bio ? "text-muted-foreground" : "text-muted-foreground/50 italic"} ${isOwnProfile ? "cursor-pointer hover:text-foreground transition-colors" : ""}`}
+                className={`text-xs ${profile.bio ? "text-muted-foreground" : "text-muted-foreground/40 italic"} ${isOwnProfile ? "cursor-pointer hover:text-foreground transition-colors" : ""}`}
                 onClick={() => isOwnProfile && setEditingBio(true)}
               >
                 {profile.bio || (isOwnProfile ? "Toque para adicionar bio" : "Sem bio")}
-                {isOwnProfile && !editingBio && <Pencil className="h-3 w-3 inline ml-1 opacity-50" />}
+                {isOwnProfile && !editingBio && <Pencil className="h-2.5 w-2.5 inline ml-1 opacity-40" />}
               </p>
             )}
           </div>
 
-          {/* Stats row */}
-          <div className="flex items-center gap-8 mt-5">
-            <button onClick={loadFollowersList} className="flex flex-col items-center hover:opacity-80 transition-opacity">
-              <span className="font-display text-xl font-bold text-foreground">{followersCount}</span>
-              <span className="text-xs text-muted-foreground">Seguidores</span>
-            </button>
-            <div className="flex flex-col items-center">
-              <span className="font-display text-xl font-bold text-foreground">{recargasCount}</span>
-              <span className="text-xs text-muted-foreground">Recargas</span>
+          {/* Recargas count - below avatar */}
+          <div className="flex items-center justify-center mt-3">
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10">
+              <TrendingUp className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-bold text-primary tabular-nums">{recargasCount}</span>
+              <span className="text-[10px] text-muted-foreground">recargas</span>
             </div>
-            <button onClick={loadFollowingList} className="flex flex-col items-center hover:opacity-80 transition-opacity">
-              <span className="font-display text-xl font-bold text-foreground">{followingCount}</span>
-              <span className="text-xs text-muted-foreground">Seguindo</span>
-            </button>
           </div>
 
           {/* Action buttons */}
