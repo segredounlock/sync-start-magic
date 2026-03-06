@@ -926,13 +926,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <AnimatePresence>
                   {showAvatarMenu && (
                     <>
-                      <div className="fixed inset-0 z-[89]" onClick={() => setShowAvatarMenu(false)} />
+                      <div className="fixed inset-0 z-[119]" onClick={() => setShowAvatarMenu(false)} />
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: -4 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: -4 }}
                         transition={{ duration: 0.15 }}
-                        className="fixed right-4 md:right-6 top-[4.25rem] md:top-[4.5rem] z-[90] min-w-[160px] rounded-xl bg-card border border-border shadow-xl p-2"
+                        className="fixed right-4 md:right-6 top-[4.25rem] md:top-[4.5rem] z-[120] min-w-[160px] rounded-xl bg-card border border-border shadow-xl p-2"
                       >
                         <div className="px-3 py-2 border-b border-border mb-1">
                           <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
