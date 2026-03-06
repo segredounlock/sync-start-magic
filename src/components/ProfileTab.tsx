@@ -128,6 +128,7 @@ export function ProfileTab({
 
   const roleLabel = role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário";
   const roleColor = role === "admin" ? "bg-primary/15 text-primary" : role === "revendedor" ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground";
+  const hasGlow = role === "admin" || !!badge;
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-0 pb-4">
@@ -179,7 +180,7 @@ export function ProfileTab({
             </div>
           ) : (
             <button onClick={() => setEditingNome(true)} className="flex items-center gap-1.5 group">
-              <h1 className="font-display text-xl font-bold uppercase shimmer-letters">{userLabel}</h1>
+              <h1 className={`font-display text-xl font-bold uppercase ${hasGlow ? "shimmer-letters" : "text-foreground"}`}>{userLabel}</h1>
               <VerificationBadge badge={badge} size="md" />
               {role === "admin" && (
                 <svg className="h-5 w-5 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor">
