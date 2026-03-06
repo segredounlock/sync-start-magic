@@ -3302,113 +3302,113 @@ export default function Principal() {
 
           {/* ===== RELATÓRIOS ===== */}
           {view === "relatorios" && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              {/* Header */}
-              <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+              {/* Header compact */}
+              <div className="glass-card rounded-2xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-warning" />
+                  <div className="w-9 h-9 rounded-xl bg-warning/15 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-warning" />
                   </div>
                   <div>
-                    <h2 className="font-display text-xl font-bold text-foreground">Relatório de Lucro</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Lucro por revendedor baseado nos preços vs custo</p>
+                    <h2 className="font-display text-base font-bold text-foreground">Relatório de Lucro</h2>
+                    <p className="text-[11px] text-muted-foreground">Lucro por revendedor · preço vs custo</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={fetchReport} disabled={reportLoading} className="p-2.5 rounded-xl border border-border/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all active:scale-95">
-                    <RefreshCw className={`h-4 w-4 ${reportLoading ? "animate-spin" : ""}`} />
+                  <div className="flex rounded-xl overflow-hidden bg-muted/40 border border-border/40 p-0.5 gap-0.5">
+                    {([
+                      { key: "hoje" as ReportPeriod, label: "Hoje" },
+                      { key: "7dias" as ReportPeriod, label: "7d" },
+                      { key: "mes" as ReportPeriod, label: "Mês" },
+                      { key: "total" as ReportPeriod, label: "Total" },
+                    ]).map(p => (
+                      <button key={p.key} onClick={() => setReportPeriod(p.key)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${reportPeriod === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={fetchReport} disabled={reportLoading} className="p-2 rounded-xl border border-border/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all active:scale-95">
+                    <RefreshCw className={`h-3.5 w-3.5 ${reportLoading ? "animate-spin" : ""}`} />
                   </button>
                 </div>
               </div>
-              <div className="flex items-center justify-end">
-                <div className="flex rounded-2xl overflow-hidden bg-muted/40 border border-border/40 p-1 gap-0.5">
-                  {([
-                    { key: "hoje" as ReportPeriod, label: "Hoje" },
-                    { key: "7dias" as ReportPeriod, label: "7 Dias" },
-                    { key: "mes" as ReportPeriod, label: "Mês" },
-                    { key: "total" as ReportPeriod, label: "Total" },
-                  ]).map(p => (
-                    <button key={p.key} onClick={() => setReportPeriod(p.key)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${reportPeriod === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              {/* Summary cards */}
+              {/* Summary cards — compact */}
               {reportData.length > 0 && (() => {
                 const totalVendas = reportData.reduce((s, r) => s + r.totalVendas, 0);
                 const totalLucro = reportData.reduce((s, r) => s + r.lucro, 0);
                 const totalRecarga = reportData.reduce((s, r) => s + r.totalValor, 0);
                 const totalCusto = reportData.reduce((s, r) => s + r.totalCusto, 0);
-                const maxVal = Math.max(totalVendas, totalRecarga, totalCusto, Math.abs(totalLucro), 1);
                 const kpis = [
-                  { label: "Revendedores", value: String(reportData.length), icon: Users, color: "text-primary", bgColor: "bg-primary/15", pct: 100 },
-                  { label: "Total Recarga", value: fmt(totalRecarga), icon: Smartphone, color: "text-foreground", bgColor: "bg-muted", pct: (totalRecarga / maxVal) * 100 },
-                  { label: "Custo Operadora", value: fmt(totalCusto), icon: Wallet, color: "text-warning", bgColor: "bg-warning/15", pct: (totalCusto / maxVal) * 100 },
-                  { label: "Total Vendas", value: fmt(totalVendas), icon: TrendingUp, color: "text-success", bgColor: "bg-success/15", pct: (totalVendas / maxVal) * 100 },
-                  { label: "Lucro do Período", value: fmt(totalLucro), icon: DollarSign, color: totalLucro >= 0 ? "text-success" : "text-destructive", bgColor: totalLucro >= 0 ? "bg-success/15" : "bg-destructive/15", pct: (Math.abs(totalLucro) / maxVal) * 100 },
+                  { label: "Revendedores", value: String(reportData.length), icon: Users, color: "text-primary", bgColor: "bg-primary/15" },
+                  { label: "Recarga", value: fmt(totalRecarga), icon: Smartphone, color: "text-foreground", bgColor: "bg-muted" },
+                  { label: "Custo API", value: fmt(totalCusto), icon: Wallet, color: "text-warning", bgColor: "bg-warning/15" },
+                  { label: "Vendas", value: fmt(totalVendas), icon: TrendingUp, color: "text-success", bgColor: "bg-success/15" },
+                  { label: "Lucro", value: fmt(totalLucro), icon: DollarSign, color: totalLucro >= 0 ? "text-success" : "text-destructive", bgColor: totalLucro >= 0 ? "bg-success/15" : "bg-destructive/15" },
                 ];
                 return (
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     {kpis.map((card, i) => (
-                      <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        className="glass-card rounded-xl p-4 relative overflow-hidden">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-8 h-8 rounded-lg ${card.bgColor} flex items-center justify-center`}>
-                            <card.icon className={`h-4 w-4 ${card.color}`} />
+                      <motion.div key={card.label} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04, type: "spring", stiffness: 300, damping: 25 }}
+                        className="glass-card rounded-xl p-3 relative overflow-hidden group hover:border-primary/20 transition-colors">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className={`w-6 h-6 rounded-md ${card.bgColor} flex items-center justify-center`}>
+                            <card.icon className={`h-3 w-3 ${card.color}`} />
                           </div>
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium leading-none">{card.label}</span>
                         </div>
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{card.label}</span>
-                        <p className={`text-lg font-bold mt-0.5 ${card.label === "Lucro do Período" ? card.color : "text-foreground"}`}>{card.value}</p>
-                        <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(card.pct, 100)}%` }} transition={{ duration: 0.8, delay: i * 0.1 }}
-                            className={`h-full rounded-full ${card.label === "Lucro do Período" ? (totalLucro >= 0 ? "bg-success" : "bg-destructive") : card.label === "Custo Operadora" ? "bg-warning" : "bg-primary"}`} />
-                        </div>
+                        <p className={`text-sm font-bold tabular-nums font-mono ${card.label === "Lucro" ? card.color : "text-foreground"}`}>{card.value}</p>
                       </motion.div>
                     ))}
                   </div>
                 );
               })()}
 
-              {/* Ranking Leaderboard */}
+              {/* Ranking Leaderboard — compact */}
               {reportData.length > 0 && (() => {
                 const top15 = reportData.slice(0, 15);
                 const maxLucro = Math.max(...top15.map(r => Math.abs(r.lucro)), 1);
                 const medals = ["🥇", "🥈", "🥉"];
                 return (
-                  <div className="glass-card rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Trophy className="h-5 w-5 text-warning" />
-                      <h3 className="text-sm font-semibold text-foreground">Ranking de Lucro por Revendedor</h3>
+                  <div className="glass-card rounded-xl p-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Trophy className="h-4 w-4 text-warning" />
+                      <h3 className="text-xs font-semibold text-foreground">Ranking de Lucro</h3>
+                      <span className="text-[10px] text-muted-foreground ml-auto">Top {top15.length}</span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {top15.map((r, i) => {
                         const margem = r.totalVendas > 0 ? ((r.lucro / r.totalVendas) * 100) : 0;
                         const pct = (Math.abs(r.lucro) / maxLucro) * 100;
                         const isTop3 = i < 3;
                         return (
-                          <motion.div key={r.user_id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
-                            className={`flex items-center gap-3 rounded-xl p-3 transition-all hover:bg-muted/40 ${isTop3 ? "border border-primary/20 bg-primary/[0.04]" : "border border-transparent"}`}>
+                          <motion.div key={r.user_id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
+                            className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-all hover:bg-muted/40 ${isTop3 ? "border border-primary/15 bg-primary/[0.03]" : ""}`}>
                             {/* Position */}
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${isTop3 ? "bg-primary/15 text-primary" : "bg-muted/60 text-muted-foreground"}`}>
-                              {isTop3 ? <span className="text-lg">{medals[i]}</span> : <span>#{i + 1}</span>}
+                            <div className={`w-7 h-7 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${isTop3 ? "bg-primary/15 text-primary" : "bg-muted/60 text-muted-foreground"}`}>
+                              {isTop3 ? <span className="text-sm">{medals[i]}</span> : <span className="text-[10px]">#{i + 1}</span>}
                             </div>
                             {/* Name + bar */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <p className={`text-sm truncate ${isTop3 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{r.nome || "Sem nome"}</p>
-                                <div className="flex items-center gap-3 shrink-0">
-                                  <span className="hidden sm:inline text-right"><span className="text-[10px] text-muted-foreground block leading-tight">Vendas</span><span className="font-mono font-semibold text-xs text-foreground">{fmt(r.totalVendas)}</span></span>
-                                  <span className="text-right"><span className={`text-[10px] block leading-tight ${r.lucro > 0 ? "text-success/70" : r.lucro < 0 ? "text-destructive/70" : "text-muted-foreground"}`}>Lucro</span><span className={`text-sm font-bold font-mono ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(r.lucro)}</span></span>
-                                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${margem > 15 ? "bg-success/15 text-success" : margem > 0 ? "bg-primary/15 text-primary" : "bg-destructive/15 text-destructive"}`}>
+                              <div className="flex items-center justify-between gap-2 mb-0.5">
+                                <p className={`text-[13px] truncate ${isTop3 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{r.nome || "Sem nome"}</p>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="hidden sm:inline text-right">
+                                    <span className="text-[9px] text-muted-foreground block leading-tight">Vendas</span>
+                                    <span className="font-mono font-semibold text-[11px] tabular-nums text-foreground">{fmt(r.totalVendas)}</span>
+                                  </span>
+                                  <span className="text-right">
+                                    <span className={`text-[9px] block leading-tight ${r.lucro > 0 ? "text-success/70" : r.lucro < 0 ? "text-destructive/70" : "text-muted-foreground"}`}>Lucro</span>
+                                    <span className={`text-[13px] font-bold font-mono tabular-nums ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(r.lucro)}</span>
+                                  </span>
+                                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md ${margem > 15 ? "bg-success/15 text-success" : margem > 0 ? "bg-primary/15 text-primary" : "bg-destructive/15 text-destructive"}`}>
                                     {margem.toFixed(1)}%
                                   </span>
                                 </div>
                               </div>
-                              <div className="h-1.5 rounded-full bg-muted/60 overflow-hidden">
-                                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: i * 0.05 }}
+                              <div className="h-1 rounded-full bg-muted/60 overflow-hidden">
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5, delay: i * 0.04 }}
                                   className={`h-full rounded-full ${r.lucro > 0 ? "bg-primary" : "bg-destructive"}`} />
                               </div>
                             </div>
@@ -3420,34 +3420,34 @@ export default function Principal() {
                 );
               })()}
 
-              {/* Table */}
+              {/* Table — premium compact */}
               {reportLoading ? (
-                <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                <div className="space-y-1.5">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
               ) : reportData.length === 0 ? (
                 <div className="glass-card rounded-xl p-8 text-center">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Nenhuma recarga encontrada no período selecionado.</p>
+                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Nenhuma recarga no período.</p>
                 </div>
               ) : (
                 <div className="glass-card rounded-xl overflow-hidden">
                   {/* Search */}
-                  <div className="p-4 border-b border-border">
+                  <div className="px-3 py-2.5 border-b border-border/50">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input type="text" value={reportSearch} onChange={e => { setReportSearch(e.target.value); setReportPage(0); }} placeholder="Buscar revendedor..." className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-muted/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <input type="text" value={reportSearch} onChange={e => { setReportSearch(e.target.value); setReportPage(0); }} placeholder="Buscar revendedor..." className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-input bg-muted/50 text-foreground text-[13px] focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground" />
                     </div>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full">
                       <thead>
-                        <tr className="border-b border-border bg-muted/30">
-                          <th className="text-left px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Revendedor</th>
-                          <th className="text-center px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Qtd</th>
-                          <th className="hidden md:table-cell text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Recarga</th>
-                          <th className="hidden lg:table-cell text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Custo API</th>
-                          <th className="text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Vendas</th>
-                          <th className="text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Lucro</th>
-                          <th className="hidden md:table-cell text-right px-2 md:px-4 py-3 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Margem</th>
+                        <tr className="border-b border-border/60 bg-muted/20">
+                          <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Revendedor</th>
+                          <th className="text-center px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Qtd</th>
+                          <th className="hidden md:table-cell text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Recarga</th>
+                          <th className="hidden lg:table-cell text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Custo API</th>
+                          <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Vendas</th>
+                          <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Lucro</th>
+                          <th className="hidden md:table-cell text-right px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Margem</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3462,20 +3462,20 @@ export default function Principal() {
                           return paged.map((r, i) => {
                             const margem = r.totalVendas > 0 ? ((r.lucro / r.totalVendas) * 100) : 0;
                             return (
-                              <motion.tr key={r.user_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                                className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                                <td className="px-2 md:px-4 py-3">
-                                  <p className="font-medium text-foreground truncate max-w-[140px] md:max-w-none">{r.nome || "Sem nome"}</p>
-                                  <p className="text-xs text-muted-foreground truncate max-w-[140px] md:max-w-none">{r.email}</p>
+                              <motion.tr key={r.user_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
+                                className="border-b border-border/30 hover:bg-primary/[0.04] transition-colors">
+                                <td className="px-3 py-2">
+                                  <p className="font-medium text-[13px] text-foreground truncate max-w-[140px] md:max-w-none">{r.nome || "Sem nome"}</p>
+                                  <p className="text-[11px] text-muted-foreground truncate max-w-[140px] md:max-w-none">{r.email}</p>
                                 </td>
-                                <td className="px-2 md:px-4 py-3 text-center font-mono text-foreground">{r.totalRecargas}</td>
-                                <td className="hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalValor)}</td>
-                                <td className="hidden lg:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(r.totalCusto)}</td>
-                                <td className="px-2 md:px-4 py-3 text-right font-mono text-foreground">{fmt(r.totalVendas)}</td>
-                                <td className={`px-2 md:px-4 py-3 text-right font-mono font-bold ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                                <td className="px-2 py-2 text-center font-mono text-[13px] tabular-nums text-foreground">{r.totalRecargas}</td>
+                                <td className="hidden md:table-cell px-2 py-2 text-right font-mono text-[13px] tabular-nums text-muted-foreground">{fmt(r.totalValor)}</td>
+                                <td className="hidden lg:table-cell px-2 py-2 text-right font-mono text-[13px] tabular-nums text-muted-foreground">{fmt(r.totalCusto)}</td>
+                                <td className="px-2 py-2 text-right font-mono text-[13px] tabular-nums text-foreground">{fmt(r.totalVendas)}</td>
+                                <td className={`px-2 py-2 text-right font-mono text-[13px] tabular-nums font-bold ${r.lucro > 0 ? "text-success" : r.lucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                                   {fmt(r.lucro)}
                                 </td>
-                                <td className={`hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-sm ${margem > 0 ? "text-success" : margem < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                                <td className={`hidden md:table-cell px-3 py-2 text-right font-mono text-[12px] tabular-nums ${margem > 0 ? "text-success" : margem < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                                   {margem.toFixed(1)}%
                                 </td>
                               </motion.tr>
@@ -3493,13 +3493,13 @@ export default function Principal() {
                           const tMargem = tVendas > 0 ? ((tLucro / tVendas) * 100) : 0;
                           return (
                             <tr className="bg-primary/[0.06] border-t border-primary/20 font-bold">
-                              <td className="px-2 md:px-4 py-3 text-foreground">Total</td>
-                              <td className="px-2 md:px-4 py-3 text-center font-mono text-foreground">{tRec}</td>
-                              <td className="hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(tVal)}</td>
-                              <td className="hidden lg:table-cell px-2 md:px-4 py-3 text-right font-mono text-muted-foreground">{fmt(tCusto)}</td>
-                              <td className="px-2 md:px-4 py-3 text-right font-mono text-foreground">{fmt(tVendas)}</td>
-                              <td className={`px-2 md:px-4 py-3 text-right font-mono font-bold ${tLucro > 0 ? "text-success" : tLucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(tLucro)}</td>
-                              <td className={`hidden md:table-cell px-2 md:px-4 py-3 text-right font-mono ${tMargem > 0 ? "text-success" : tMargem < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                              <td className="px-3 py-2.5 text-[13px] text-foreground">Total</td>
+                              <td className="px-2 py-2.5 text-center font-mono text-[13px] tabular-nums text-foreground">{tRec}</td>
+                              <td className="hidden md:table-cell px-2 py-2.5 text-right font-mono text-[13px] tabular-nums text-muted-foreground">{fmt(tVal)}</td>
+                              <td className="hidden lg:table-cell px-2 py-2.5 text-right font-mono text-[13px] tabular-nums text-muted-foreground">{fmt(tCusto)}</td>
+                              <td className="px-2 py-2.5 text-right font-mono text-[13px] tabular-nums text-foreground">{fmt(tVendas)}</td>
+                              <td className={`px-2 py-2.5 text-right font-mono text-[13px] tabular-nums font-bold ${tLucro > 0 ? "text-success" : tLucro < 0 ? "text-destructive" : "text-muted-foreground"}`}>{fmt(tLucro)}</td>
+                              <td className={`hidden md:table-cell px-3 py-2.5 text-right font-mono text-[12px] tabular-nums ${tMargem > 0 ? "text-success" : tMargem < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                                 {tMargem !== 0 ? `${tMargem.toFixed(1)}%` : "—"}
                               </td>
                             </tr>
@@ -3518,18 +3518,18 @@ export default function Principal() {
                     const totalPages = Math.ceil(filtered.length / REPORT_PER_PAGE);
                     if (totalPages <= 1) return null;
                     return (
-                      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between px-3 py-2.5 border-t border-border/50">
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
                           {reportPage * REPORT_PER_PAGE + 1}–{Math.min((reportPage + 1) * REPORT_PER_PAGE, filtered.length)} de {filtered.length}
                         </span>
                         <div className="flex items-center gap-1">
                           <button disabled={reportPage === 0} onClick={() => setReportPage(p => p - 1)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">
                             Anterior
                           </button>
-                          <span className="text-xs text-muted-foreground px-2">{reportPage + 1}/{totalPages}</span>
+                          <span className="text-[11px] text-muted-foreground px-1.5 tabular-nums">{reportPage + 1}/{totalPages}</span>
                           <button disabled={reportPage >= totalPages - 1} onClick={() => setReportPage(p => p + 1)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">
                             Próximo
                           </button>
                         </div>
