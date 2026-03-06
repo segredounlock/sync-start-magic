@@ -950,7 +950,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               </div>
             </div>
           </header>
-          <RecargasTicker />
+          <div className="relative z-10"><RecargasTicker /></div>
         </div>
 
         <main className="max-w-5xl mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-5">
