@@ -1494,22 +1494,20 @@ export default function Principal() {
                   { icon: Users, label: "Total", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10" },
                   { icon: UserCheck, label: "Ativos", value: String(activeCount), color: "text-success", bgColor: "bg-success/10" },
                   { icon: UserX, label: "Inativos", value: String(inactiveCount), color: "text-destructive", bgColor: "bg-destructive/10" },
-                  { icon: Wallet, label: "Saldo Total", value: fmt(totalSaldo), color: "text-primary", bgColor: "bg-primary/10", highlight: true },
+                  { icon: Wallet, label: "Saldo", value: fmt(totalSaldo), color: "text-primary", bgColor: "bg-primary/10", highlight: true },
                 ].map((c, i) => (
                   <motion.div
                     key={c.label}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04, type: "spring", stiffness: 350, damping: 28 }}
-                    className={`glass-card rounded-xl px-3 py-2.5 flex items-center gap-2.5 ${c.highlight ? "border-primary/25 ring-1 ring-primary/10" : ""}`}
+                    className={`glass-card rounded-xl p-2.5 flex flex-col items-center text-center ${c.highlight ? "border-primary/25 ring-1 ring-primary/10" : ""}`}
                   >
-                    <div className={`w-8 h-8 rounded-lg ${c.bgColor} flex items-center justify-center shrink-0`}>
-                      <c.icon className={`h-4 w-4 ${c.color}`} />
+                    <div className={`w-9 h-9 rounded-xl ${c.bgColor} flex items-center justify-center shrink-0 mb-1.5`}>
+                      <c.icon className={`h-4.5 w-4.5 ${c.color}`} />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold leading-none">{c.label}</p>
-                      <p className={`text-base font-extrabold tracking-tight leading-tight mt-0.5 ${c.highlight ? "text-primary" : "text-foreground"}`}>{c.value}</p>
-                    </div>
+                    <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-bold leading-none">{c.label}</p>
+                    <p className={`text-sm font-extrabold tracking-tight leading-tight mt-1 tabular-nums ${c.highlight ? "text-primary" : "text-foreground"}`}>{c.value}</p>
                   </motion.div>
                 ))}
               </div>
