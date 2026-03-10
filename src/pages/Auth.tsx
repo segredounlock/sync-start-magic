@@ -38,7 +38,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
-  const [password, setPassword] = useState(() => localStorage.getItem("rememberedPass") || "");
+  const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
