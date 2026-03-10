@@ -413,7 +413,10 @@ export default function AdminDashboard() {
         // Admin: save to system_config (global, same as /principal)
         if (key === "telegramBotToken" && role === "revendedor") {
           if (user?.id) {
-            await supabase.from("profiles").update({ telegram_bot_token: value }).eq("id", user.id);
+            await supabase.from("reseller_config").upsert(
+              { user_id: user.id, key: "telegram_bot_token", value: value },
+              { onConflict: "user_id,key" }
+            );
           }
           continue;
         }

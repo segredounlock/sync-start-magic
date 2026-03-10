@@ -602,8 +602,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const handleSaveContacts = async () => {
     setSavingContacts(true);
     try {
-      const { error } = await supabase.from("profiles").update({ telegram_username: telegramUsername.trim() || null, whatsapp_number: whatsappNumber.trim() || null, telegram_bot_token: telegramBotToken.trim() || null } as any).eq("id", user!.id);
-      if (error) throw error;
+      const { error: profileError } = await supabase.from("profiles").update({ telegram_username: telegramUsername.trim() || null, whatsapp_number: whatsappNumber.trim() || null } as any).eq("id", user!.id);
+      if (profileError) throw profileError;
+      // Save telegram_bot_token to reseller_config (secure storage)
+      const tokenValue = telegramBotToken.trim() || null;
+      const { error: configError } = await supabase.from("reseller_config").upsert(
+        { user_id: user!.id, key: "telegram_bot_token", value: tokenValue },
+        { onConflict: "user_id,key" }
+      );
+      if (configError) throw configError;
       toast.success("Contatos salvos!");
     } catch (err: any) { toast.error(err.message || "Erro ao salvar"); }
     setSavingContacts(false);
