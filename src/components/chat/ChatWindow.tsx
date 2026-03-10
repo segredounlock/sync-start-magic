@@ -497,6 +497,14 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                   toast.error("Erro ao alterar status da sala.");
                 } else {
                   toast.success(newBlocked ? "Sala fechada" : "Sala aberta");
+                  // Insert system message
+                  const sysContent = newBlocked ? "🔒 Sala bloqueada por um administrador" : "🔓 Sala desbloqueada por um administrador";
+                  await supabase.from("chat_messages").insert({
+                    conversation_id: conversationId,
+                    sender_id: user!.id,
+                    content: sysContent,
+                    type: "system",
+                  });
                 }
               }}
               className={`p-2 rounded-xl transition-colors ${isBlocked ? "bg-destructive/15 hover:bg-destructive/25 text-destructive" : "hover:bg-muted/50 text-muted-foreground"}`}
@@ -623,7 +631,17 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                 <span className="text-[10px] text-muted-foreground font-medium" style={{ color: 'var(--tg-hint, hsl(var(--muted-foreground)))' }}>{group.date}</span>
                 <div className="flex-1 h-px bg-border" style={{ backgroundColor: 'var(--tg-hint, hsl(var(--border)))', opacity: 0.3 }} />
               </div>
-              {group.msgs.map(msg => (
+              {group.msgs.map(msg => {
+                if (msg.type === 'system') {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-2 px-4">
+                      <span className="text-[11px] text-muted-foreground bg-muted/60 border border-border/50 px-3 py-1 rounded-full">
+                        {msg.content}
+                      </span>
+                    </div>
+                  );
+                }
+                return (
                 <div
                   key={msg.id}
                   id={`msg-${msg.id}`}
@@ -643,7 +661,8 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                     onScrollToMessage={scrollToMessage}
                   />
                 </div>
-              ))}
+                );
+              })}
             </div>
           ))
         )}
