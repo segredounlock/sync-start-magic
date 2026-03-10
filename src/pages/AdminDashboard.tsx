@@ -6,6 +6,7 @@ import { SkeletonRow, SkeletonCard, SkeletonValue, SkeletonPricingGrid } from "@
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { Suspense, lazy } from "react";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { NotificationBell } from "@/components/NotificationBell";
 import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateTimeBR, formatDateFullBR } from "@/lib/timezone";
@@ -21,7 +22,7 @@ import {
   Save, Eye, EyeOff, Globe, Key, Bot, Zap, Menu, X,
   Wifi, WifiOff, Hash, AtSign, Trash2, AlertTriangle, CheckCircle2, ChevronDown, Link2, RotateCcw,
   Settings2, Store, Upload, Palette, Image, Copy, Loader2, QrCode, ExternalLink, Clock,
-  Megaphone, Send, Check,
+  Megaphone, Send, Check, Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -39,6 +40,7 @@ import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { useCrud } from "@/hooks/useCrud";
 import { confirm } from "@/lib/confirm";
 import { logAudit } from "@/lib/auditLog";
+const AuditTab = lazy(() => import("@/components/AuditTab"));
 
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
@@ -47,7 +49,7 @@ export default function AdminDashboard() {
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const { loading, runFetch } = useResilientFetch();
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
-  const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
+  const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast" | "auditoria">("visao");
   const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
   const [configSubTab, setConfigSubTab] = useState<"geral" | "pagamentos" | "depositos">("geral");
   const [period, setPeriod] = useState<Period>("7dias");
@@ -1052,6 +1054,7 @@ export default function AdminDashboard() {
               {tab === "loja" && "Personalize a aparência da sua loja."}
               {tab === "meusprecos" && "Defina seus próprios preços para sua loja."}
               {tab === "broadcast" && "Envie mensagens em massa para seus usuários do Telegram."}
+              {tab === "auditoria" && "Histórico de ações administrativas."}
               
             </p>
           </div>
@@ -3815,6 +3818,13 @@ export default function AdminDashboard() {
           </motion.div>
         )}
 
+        {/* ===== AUDITORIA ===== */}
+        {tab === "auditoria" && (
+          <Suspense fallback={<div className="h-40 rounded-xl bg-card border border-border animate-pulse" />}>
+            <AuditTab />
+          </Suspense>
+        )}
+
       </main>
       </div>
 
@@ -3837,7 +3847,8 @@ export default function AdminDashboard() {
           { key: "meusprecos", label: "Meus Preços", icon: DollarSign, color: "text-success", animation: "float" },
           { key: "bot", label: "Bot", icon: Bot, color: "text-accent", animation: "wiggle" },
           { key: "broadcast", label: "Broadcast", icon: Megaphone, color: "text-warning", animation: "pulse" },
-          { key: "configuracoes", label: "Config", icon: Settings, color: "text-muted-foreground", animation: "spin" },
+          ...(role === "admin" ? [{ key: "auditoria", label: "Auditoria", icon: Shield, color: "text-primary", animation: "pulse" as const }] : []),
+          { key: "configuracoes", label: "Config", icon: Settings, color: "text-muted-foreground", animation: "spin" as const },
         ]}
         activeKey={tab}
         onSelect={(key) => {
