@@ -1054,6 +1054,7 @@ export default function AdminDashboard() {
               {tab === "loja" && "Personalize a aparência da sua loja."}
               {tab === "meusprecos" && "Defina seus próprios preços para sua loja."}
               {tab === "broadcast" && "Envie mensagens em massa para seus usuários do Telegram."}
+              {tab === "auditoria" && "Histórico de ações administrativas."}
               
             </p>
           </div>
