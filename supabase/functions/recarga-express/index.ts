@@ -360,6 +360,8 @@ Deno.serve(async (req) => {
         // Determine the actual cost to charge the user based on their role's pricing rules
         // First try role-specific rules, then ALWAYS fallback to global pricing
         let chargedCost = apiCost; // default to API cost
+        let pricingSource = "api_default";
+        let pricingRuleDetails: { tipo_regra: string; regra_valor: number; custo: number } | null = null;
 
         // Helper: get global pricing rule
         const getGlobalRule = async () => {
@@ -372,7 +374,9 @@ Deno.serve(async (req) => {
           return globalRule;
         };
 
-        const applyRule = (rule: any) => {
+        const applyRule = (rule: any, source: string) => {
+          pricingSource = source;
+          pricingRuleDetails = { tipo_regra: rule.tipo_regra, regra_valor: Number(rule.regra_valor), custo: Number(rule.custo) };
           return rule.tipo_regra === "fixo"
             ? Number(rule.regra_valor)
             : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
@@ -380,7 +384,7 @@ Deno.serve(async (req) => {
 
         if (userRole === "admin") {
           const globalRule = await getGlobalRule();
-          if (globalRule) chargedCost = applyRule(globalRule);
+          if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules");
         } else if (userRole === "revendedor") {
           const { data: resellerRule } = await adminClient
             .from("reseller_pricing_rules")
@@ -390,10 +394,10 @@ Deno.serve(async (req) => {
             .eq("valor_recarga", catalogValue)
             .maybeSingle();
           if (resellerRule) {
-            chargedCost = applyRule(resellerRule);
+            chargedCost = applyRule(resellerRule, "reseller_pricing_rules");
           } else {
             const globalRule = await getGlobalRule();
-            if (globalRule) chargedCost = applyRule(globalRule);
+            if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
           }
         } else if (userRole === "cliente" && resellerId) {
           const { data: resellerRule } = await adminClient
@@ -404,18 +408,21 @@ Deno.serve(async (req) => {
             .eq("valor_recarga", catalogValue)
             .maybeSingle();
           if (resellerRule) {
-            chargedCost = applyRule(resellerRule);
+            chargedCost = applyRule(resellerRule, "reseller_pricing_rules(via_reseller)");
           } else {
             const globalRule = await getGlobalRule();
-            if (globalRule) chargedCost = applyRule(globalRule);
+            if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
           }
         } else {
           // User without role or cliente without reseller — use global pricing
           const globalRule = await getGlobalRule();
-          if (globalRule) chargedCost = applyRule(globalRule);
+          if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules");
         }
 
-        console.log(`pricing: role=${userRole} apiCost=${apiCost} chargedCost=${chargedCost} catalogValue=${catalogValue}`);
+        const ruleLog = pricingRuleDetails
+          ? `tipo=${(pricingRuleDetails as any).tipo_regra} | regra_valor=${(pricingRuleDetails as any).regra_valor} | custo_base=${(pricingRuleDetails as any).custo}`
+          : "nenhuma regra encontrada";
+        console.log(`pricing: role=${userRole} | source=${pricingSource} | ${ruleLog} | apiCost=${apiCost} | chargedCost=${chargedCost} | catalogValue=${catalogValue} | userId=${userId} | resellerId=${resellerId || "null"}`);
 
         if (userBalance < chargedCost) throw new Error("Saldo insuficiente");
 
