@@ -1087,13 +1087,18 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <span className={`text-xs font-bold px-2 py-1 rounded-full ${
                               trackingStatus.data.status === "feita" || trackingStatus.data.status === "completed"
                                 ? "bg-success/15 text-success"
+                                : trackingStatus.data.status === "andamento" || trackingStatus.data.status === "in_progress"
+                                ? "bg-blue-500/15 text-blue-400"
                                 : trackingStatus.data.status === "pendente" || trackingStatus.data.status === "pending"
                                 ? "bg-warning/15 text-warning"
+                                : trackingStatus.data.status === "falha" || trackingStatus.data.status === "failed"
+                                ? "bg-destructive/15 text-destructive"
                                 : "bg-muted text-muted-foreground"
                             }`}>
                               {trackingStatus.data.status === "feita" || trackingStatus.data.status === "completed" ? "✅ Concluída"
+                                : trackingStatus.data.status === "andamento" || trackingStatus.data.status === "in_progress" ? "🔄 Em andamento"
                                 : trackingStatus.data.status === "pendente" || trackingStatus.data.status === "pending" ? "⏳ Processando"
-                                : trackingStatus.data.status === "falha" ? "❌ Falhou"
+                                : trackingStatus.data.status === "falha" || trackingStatus.data.status === "failed" ? "❌ Falhou"
                                 : trackingStatus.data.status}
                             </span>
                           </div>
