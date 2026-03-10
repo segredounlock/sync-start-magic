@@ -1264,63 +1264,46 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     );
 
     try {
-      // Check balance
-      const { data: saldoData } = await supabase.from("saldos").select("valor").eq("user_id", userId).eq("tipo", "revenda").single();
-      const userBalance = Number(saldoData?.valor || 0);
-      if (cost > userBalance) throw new Error("Saldo insuficiente");
-
-      // Get API key
-      const { data: apiKeyRow } = await supabase.from("system_config").select("value").eq("key", "apiKey").single();
-      if (!apiKeyRow?.value) throw new Error("API Key não configurada");
-
-      // Call Recarga Express API directly
-      const rechargeResp = await fetch("https://express.poeki.dev/api/v1/recharges", {
-        method: "POST",
-        headers: { "X-API-Key": apiKeyRow.value, "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ carrierId, phoneNumber: telefone, valueId }),
-      });
+      // Call the unified recarga-express Edge Function instead of direct API call
+      const rechargeResp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/recarga-express`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            action: "recharge",
+            user_id: userId,
+            carrierId,
+            phoneNumber: telefone,
+            valueId,
+            saldo_tipo: "revenda",
+          }),
+        }
+      );
       const rechargeResult = await rechargeResp.json();
 
-      console.log("Telegram recarga API response:", JSON.stringify(rechargeResult));
+      console.log("Telegram recarga via edge function response:", JSON.stringify(rechargeResult));
 
       if (!rechargeResult?.success) {
-        throw new Error(rechargeResult?.message || rechargeResult?.error || "Erro ao processar recarga na API");
+        throw new Error(rechargeResult?.error || rechargeResult?.message || "Erro ao processar recarga");
       }
 
-      // Deduct balance
-      const newBalance = userBalance - cost;
-      await supabase.from("saldos").update({ valor: newBalance }).eq("user_id", userId).eq("tipo", "revenda");
-
-      // Save recarga locally
       const orderData = rechargeResult.data || {};
+      const newBalance = orderData.localBalance ?? 0;
+      const chargedCost = orderData.cost ?? cost;
       const externalId = orderData._id || orderData.id || orderData.orderId || null;
-      const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
-      const valorFacial = Number(valorFacialFromSession || orderData.value || orderData.valor || cost);
-      const custoApi = Number(apiCostFromSession || orderData.cost || 0);
-
-      const { error: insertError } = await supabase.from("recargas").insert({
-        user_id: userId,
-        telefone,
-        operadora: orderData.carrier?.name || carrierId,
-        valor: valorFacial,
-        custo: cost,
-        custo_api: custoApi,
-        status: isCompleted ? "completed" : "pending",
-        external_id: externalId,
-        completed_at: isCompleted ? new Date().toISOString() : null,
-      });
-
-      if (insertError) {
-        console.error("Telegram recarga insert error:", JSON.stringify(insertError));
-      }
-
       const operadoraNome = orderData.carrier?.name || carrierId;
+      const valorFacial = Number(valorFacialFromSession || orderData.value || orderData.valor || cost);
+
       const horario = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
       const formattedPhone = telefone.length === 11
         ? `(${telefone.slice(0,2)}) ${telefone.slice(2,7)}-${telefone.slice(7)}`
         : `(${telefone.slice(0,2)}) ${telefone.slice(2,6)}-${telefone.slice(6)}`;
 
-      let msgSucesso = `✅ <b>Recarga realizada!</b>\n\n📡 Operadora: <b>${operadoraNome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor da Recarga: <b>R$ ${valorFacial.toFixed(2).replace(".", ",")}</b>\n💵 Custo: <b>R$ ${cost.toFixed(2).replace(".", ",")}</b>\n💳 Novo saldo: <b>R$ ${Number(newBalance).toFixed(2).replace(".", ",")}</b>\n🕐 Horário: ${horario}`;
+      let msgSucesso = `✅ <b>Recarga realizada!</b>\n\n📡 Operadora: <b>${operadoraNome}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor da Recarga: <b>R$ ${valorFacial.toFixed(2).replace(".", ",")}</b>\n💵 Custo: <b>R$ ${Number(chargedCost).toFixed(2).replace(".", ",")}</b>\n💳 Novo saldo: <b>R$ ${Number(newBalance).toFixed(2).replace(".", ",")}</b>\n🕐 Horário: ${horario}`;
       if (externalId) msgSucesso += `\n🔖 Pedido: <code>${externalId}</code>`;
 
       await editMessageWithKeyboard(token, chatId, msgId,
@@ -1338,50 +1321,6 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       );
     }
   }
-
-  // Legacy confirm handler (kept for backward compatibility)
-  if (data.startsWith("confirm_")) {
-    const parts = data.split("_");
-    const telefone = parts[1];
-    const valor = parseFloat(parts[2]);
-    const userId = parts[3];
-
-    const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", userId).eq("tipo", "revenda").maybeSingle();
-    const saldoAtual = Number(saldo?.valor || 0);
-
-    if (valor > saldoAtual) {
-      await editMessageWithKeyboard(token, chatId, msgId,
-        "❌ Saldo insuficiente. A recarga foi cancelada.",
-        [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
-      );
-      return;
-    }
-
-    const { error: recError } = await supabase.from("recargas").insert({
-      user_id: userId, telefone, valor, custo: valor, status: "completed",
-    });
-
-    if (recError) {
-      console.error("Recarga insert error:", recError);
-      await editMessageWithKeyboard(token, chatId, msgId,
-        "❌ Erro ao processar recarga. Tente novamente.",
-        [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
-      );
-      return;
-    }
-
-    const newSaldo = saldoAtual - valor;
-    await supabase.from("saldos").update({ valor: newSaldo }).eq("user_id", userId).eq("tipo", "revenda");
-
-    await editMessageWithKeyboard(token, chatId, msgId,
-      `✅ <b>Recarga realizada!</b>\n\n📞 ${telefone}\n💰 R$ ${valor.toFixed(2).replace(".", ",")}\n💳 Novo saldo: <b>R$ ${newSaldo.toFixed(2).replace(".", ",")}</b>`,
-      [[
-        { text: "📱 Nova Recarga", callback_data: "menu_recarga" },
-        { text: "📖 Menu", callback_data: "menu_main" },
-      ]]
-    );
-  }
-}
 
 // ===== RECARGA PHONE HANDLER =====
 

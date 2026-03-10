@@ -1,92 +1,40 @@
 
 
-# Plano: Unificar lógica de recarga do bot via Edge Function `recarga-express`
+## Diagnóstico e Correção
 
-## Problema atual
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-O bot Telegram (linhas 1266-1339) chama a API Recarga Express **diretamente** (`fetch("https://express.poeki.dev/api/v1/recharges")`), duplicando toda a lógica que já existe na Edge Function `recarga-express`. Isso causa:
+### Plano
 
-- **Sem polling de status** no bot (o site faz até 3 tentativas de 5s)
-- **Sem notificação Telegram** pós-recarga (a Edge Function envia, o bot não)
-- **Lógica de pricing duplicada** (ambos calculam custos com regras diferentes)
-- **Risco de divergência** futura quando uma lógica for atualizada e a outra não
+**1. Corrigir o mapeamento de status na sync function**
 
-## Solução
-
-Substituir a chamada direta à API externa no handler `rconfirm_yes` por uma chamada interna à Edge Function `recarga-express` (action: `recharge`). A Edge Function já faz tudo: resolve IDs, aplica pricing, debita saldo, salva recarga, faz polling e notifica.
-
-## Alterações
-
-### 1. `supabase/functions/telegram-bot/index.ts` — Handler `rconfirm_yes` (linhas 1251-1340)
-
-Substituir todo o bloco de processamento de recarga por:
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
 ```typescript
-// Em vez de chamar a API diretamente, chamar a Edge Function recarga-express
-const rechargeResp = await fetch(
-  `${Deno.env.get("SUPABASE_URL")}/functions/v1/recarga-express`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-    },
-    body: JSON.stringify({
-      action: "recharge",
-      carrierId,
-      phoneNumber: telefone,
-      valueId,
-      saldo_tipo: "revenda",
-    }),
-  }
-);
-const rechargeResult = await rechargeResp.json();
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-**O que muda no handler:**
-- Remove: busca manual de API Key, `fetch` direto à Poeki, dedução de saldo, insert em `recargas`
-- Mantém: leitura da session, mensagem de "processando", formatação da resposta de sucesso/erro
-- A Edge Function já retorna `localBalance`, `cost`, e dados do pedido — basta usar esses valores na mensagem
+**2. Corrigir manualmente o pedido preso**
 
-### 2. Autenticação na chamada interna
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-A Edge Function `recarga-express` valida o token via `getClaims` para extrair o `userId`. Como o bot não tem um token de usuário, usaremos o **service role key** e precisaremos passar o `userId` explicitamente.
-
-**Adicionar suporte a `user_id` override na Edge Function** quando chamado com service role:
-- Se o header Authorization contém o service role key, aceitar um campo `user_id` no body
-- Caso contrário, continuar usando o `userId` extraído do token
-
-### 3. `supabase/functions/recarga-express/index.ts` — Suporte a service role
-
-Adicionar no início da função (após validação de auth):
-
-```typescript
-// Se chamado com service role, aceitar user_id do body
-let userId: string;
-if (token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
-  const body = await req.json();
-  userId = body.user_id;
-  if (!userId) throw new Error("user_id obrigatório para service role");
-} else {
-  // Fluxo normal via getClaims
-}
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
 ```
 
-### 4. Limpeza do código legado no bot
+**3. Verificar se há outros pedidos presos**
 
-- Remover handler `confirm_` legado (linhas 1342-1383) — usa lógica antiga sem API
-- Manter `fetchCatalog()` pois é usado para listar operadoras e valores no menu
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
 
-## Resumo dos benefícios
-
-- **Comportamento idêntico**: polling de status, pricing, notificações — tudo centralizado
-- **Menos código no bot**: ~80 linhas removidas
-- **Manutenção única**: qualquer mudança na lógica de recarga só precisa ser feita na Edge Function
-
-## Arquivos alterados
-
-| Arquivo | Tipo |
-|---|---|
-| `supabase/functions/telegram-bot/index.ts` | Simplificar handler `rconfirm_yes`, remover handler `confirm_` legado |
-| `supabase/functions/recarga-express/index.ts` | Adicionar suporte a chamada via service role com `user_id` no body |
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
