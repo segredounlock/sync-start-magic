@@ -2043,6 +2043,7 @@ export default function AdminDashboard() {
                           const newVal = parseFloat(editSaldoValue) || 0;
                           const { error } = await supabase.from("saldos").update({ valor: newVal }).eq("user_id", editSaldoUser.id).eq("tipo", "revenda");
                           if (error) throw error;
+                          logAudit("set_saldo", "saldo", editSaldoUser.id, { anterior: editSaldoUser.saldo, novo: newVal, nome: editSaldoUser.nome || editSaldoUser.email });
                           supabase.functions.invoke("telegram-notify", {
                             body: { type: "saldo_set", user_id: editSaldoUser.id, data: { novo_saldo: newVal } },
                           }).catch(() => {});
