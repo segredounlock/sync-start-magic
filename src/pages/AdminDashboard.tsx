@@ -3847,8 +3847,8 @@ export default function AdminDashboard() {
           { key: "meusprecos", label: "Meus Preços", icon: DollarSign, color: "text-success", animation: "float" },
           { key: "bot", label: "Bot", icon: Bot, color: "text-accent", animation: "wiggle" },
           { key: "broadcast", label: "Broadcast", icon: Megaphone, color: "text-warning", animation: "pulse" },
-          ...(role === "admin" ? [{ key: "auditoria", label: "Auditoria", icon: Shield, color: "text-primary", animation: "pulse" }] : []),
-          { key: "configuracoes", label: "Config", icon: Settings, color: "text-muted-foreground", animation: "spin" },
+          ...(role === "admin" ? [{ key: "auditoria", label: "Auditoria", icon: Shield, color: "text-primary", animation: "pulse" as const }] : []),
+          { key: "configuracoes", label: "Config", icon: Settings, color: "text-muted-foreground", animation: "spin" as const },
         ]}
         activeKey={tab}
         onSelect={(key) => {
