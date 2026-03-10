@@ -1,37 +1,40 @@
 
 
-# Proteção do campo `is_blocked` no banco de dados
+## Diagnóstico e Correção
 
-## Problema
-A policy "Users can update own conversations" permite que qualquer participante altere **qualquer coluna**, incluindo `is_blocked`. Um usuário comum poderia chamar a API diretamente e bloquear/desbloquear salas.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Solução
-Adicionar um `WITH CHECK` na policy de UPDATE para usuários comuns que garanta que o valor de `is_blocked` não foi alterado. Apenas a policy de admin (que já existe) permitirá alterar esse campo.
+### Plano
 
-## Implementação
+**1. Corrigir o mapeamento de status na sync function**
 
-**1 migration SQL:**
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-```sql
-DROP POLICY IF EXISTS "Users can update own conversations" ON public.chat_conversations;
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-CREATE POLICY "Users can update own conversations"
-ON public.chat_conversations
-FOR UPDATE
-TO authenticated
-USING (
-  (type = 'direct' AND (auth.uid() = participant_1 OR auth.uid() = participant_2))
-  OR
-  (type = 'group' AND is_chat_member(id, auth.uid()))
-)
-WITH CHECK (
-  NOT (is_blocked IS DISTINCT FROM (
-    SELECT c.is_blocked FROM public.chat_conversations c WHERE c.id = chat_conversations.id
-  ))
-);
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-Isso compara o novo valor de `is_blocked` com o valor atual. Se for diferente, o UPDATE é rejeitado — a menos que passe pela policy de admin (`has_role(auth.uid(), 'admin')`), que não tem essa restrição.
+**2. Corrigir manualmente o pedido preso**
 
-**Nenhuma alteração de código frontend necessária** — o botão de cadeado já é exibido apenas para admins.
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
