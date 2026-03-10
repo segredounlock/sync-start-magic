@@ -173,10 +173,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const fetchData = useCallback(async () => {
     if (!user) return;
     await runFetch(async () => {
-      const [{ data: saldoData }, { data: recargasData }, { data: profile }] = await Promise.all([
+      const [{ data: saldoData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
-        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_bot_token, telegram_id, slug, avatar_url").eq("id", user.id).single(),
+        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url").eq("id", user.id).single(),
+        supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle(),
       ]);
       setSaldo(Number(saldoData?.valor) || 0);
       setRecargas(recargasData || []);
@@ -184,7 +185,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setProfileNome(p?.nome || "");
       setTelegramUsername(p?.telegram_username || "");
       setWhatsappNumber(p?.whatsapp_number || "");
-      setTelegramBotToken(p?.telegram_bot_token || "");
+      setTelegramBotToken(botTokenConfig?.value || "");
       setTelegramLinked(!!p?.telegram_id);
       setProfileSlug(p?.slug || "");
       setAvatarUrl(p?.avatar_url || null);
