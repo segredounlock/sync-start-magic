@@ -161,6 +161,8 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
         .update({ is_private: !room.is_private } as any)
         .eq("id", room.id);
       if (error) throw error;
+      const { logAudit } = await import("@/lib/auditLog");
+      logAudit(room.is_private ? "set_room_public" : "set_room_private", "chat_conversation", room.id, { room_name: room.name });
       toast.success(room.is_private ? "Sala pública!" : "Sala privada!");
       await fetchRooms();
     } catch (err: any) {
