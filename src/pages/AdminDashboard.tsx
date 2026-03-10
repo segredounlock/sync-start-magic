@@ -2081,6 +2081,7 @@ export default function AdminDashboard() {
                             body: { user_id: confirmRoleRemove.id, role: "revendedor", action: "remove" },
                           });
                           if (res.error || res.data?.error) throw new Error(res.data?.error || res.error?.message);
+                          logAudit("remove_role", "user_role", confirmRoleRemove.id, { role: "revendedor", nome: confirmRoleRemove.nome || confirmRoleRemove.email });
                           toast.success("Role removida!");
                           setConfirmRoleRemove(null);
                           fetchData();

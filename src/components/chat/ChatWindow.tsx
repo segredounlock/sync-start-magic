@@ -497,6 +497,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                   toast.error("Erro ao alterar status da sala.");
                 } else {
                   toast.success(newBlocked ? "Sala fechada" : "Sala aberta");
+                  // Audit log
+                  const { logAudit } = await import("@/lib/auditLog");
+                  logAudit(newBlocked ? "block_room" : "unblock_room", "chat_conversation", conversationId, { group_name: groupName });
                   // Insert system message
                   const sysContent = newBlocked ? "🔒 Sala bloqueada por um administrador" : "🔓 Sala desbloqueada por um administrador";
                   await supabase.from("chat_messages").insert({

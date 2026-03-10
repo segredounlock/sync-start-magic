@@ -178,6 +178,9 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
         });
       }
 
+      const { logAudit } = await import("@/lib/auditLog");
+      logAudit("saldo_" + activeAction, "saldo", userId, { anterior: saldoAtual, novo: novoValor, valor, userName });
+
       setSaldo(novoValor);
       setActionValue("");
       setActiveAction(null);
