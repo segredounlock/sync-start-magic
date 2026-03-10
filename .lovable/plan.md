@@ -1,38 +1,40 @@
 
 
-## Plano: Corrigir saldo no Mini App do Telegram
+## Diagnóstico e Correção
 
-### Problema Identificado
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-A subscrição Realtime na tabela `saldos` filtra apenas por `user_id`, mas cada usuário tem **dois registros**: um `revenda` e um `pessoal`. Quando qualquer um dos dois muda, o Realtime dispara e o Mini App pega o valor que chegar — que pode ser o saldo `pessoal` (R$ 0,00), sobrescrevendo o saldo correto de `revenda`.
+### Plano
 
-A busca inicial via Edge Function está correta (filtra `tipo = 'revenda'`), por isso o saldo aparece certo no primeiro carregamento, mas pode "zerar" depois via Realtime.
+**1. Corrigir o mapeamento de status na sync function**
 
-### Correção
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-**Arquivo**: `src/pages/TelegramMiniApp.tsx` (linha ~456-461)
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-Adicionar verificação do campo `tipo` no payload do Realtime antes de atualizar o saldo:
-
-```tsx
-// De:
-(payload) => {
-  const newVal = (payload.new as any)?.valor;
-  if (newVal !== undefined) {
-    setSaldo(Number(newVal));
-    tgWebApp?.HapticFeedback?.impactOccurred("light");
-  }
-}
-
-// Para:
-(payload) => {
-  const row = payload.new as any;
-  if (row?.tipo === "revenda" && row?.valor !== undefined) {
-    setSaldo(Number(row.valor));
-    tgWebApp?.HapticFeedback?.impactOccurred("light");
-  }
-}
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-Alteração de uma única linha de lógica. Nenhuma mudança no backend ou banco de dados necessária.
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
