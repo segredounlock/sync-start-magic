@@ -396,8 +396,8 @@ export default function AdminDashboard() {
       // Revendedor: load bot token from own profile (isolated)
       // Admin: keeps system_config token (same as /principal)
       if (role === "revendedor" && user?.id) {
-        const { data: profile } = await supabase.from("profiles").select("telegram_bot_token").eq("id", user.id).maybeSingle();
-        map.telegramBotToken = profile?.telegram_bot_token || "";
+        const { data: tokenConfig } = await supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle();
+        map.telegramBotToken = tokenConfig?.value || "";
       }
 
       setConfigData(map);
