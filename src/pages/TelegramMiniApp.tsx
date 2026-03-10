@@ -454,9 +454,9 @@ export default function TelegramMiniApp() {
         "postgres_changes",
         { event: "*", schema: "public", table: "saldos", filter: `user_id=eq.${userId}` },
         (payload) => {
-          const newVal = (payload.new as any)?.valor;
-          if (newVal !== undefined) {
-            setSaldo(Number(newVal));
+          const row = payload.new as any;
+          if (row?.tipo === "revenda" && row?.valor !== undefined) {
+            setSaldo(Number(row.valor));
             tgWebApp?.HapticFeedback?.impactOccurred("light");
           }
         }
