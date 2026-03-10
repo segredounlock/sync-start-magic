@@ -454,7 +454,9 @@ Deno.serve(async (req) => {
         console.log("recharge API full response:", JSON.stringify(rechargeResult));
 
         if (!rechargeResult?.success) {
-          throw new Error(rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API");
+          const errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
+          console.error(`recharge FAILED: userId=${userId} phone=${phoneNumber} carrier=${carrierId} value=${catalogValue} cost=${chargedCost} error="${errMsg}"`);
+          throw new Error(errMsg);
         }
 
         // Server-side polling: try to get final status before returning
