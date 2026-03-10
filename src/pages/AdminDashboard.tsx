@@ -47,7 +47,7 @@ export default function AdminDashboard() {
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const { loading, runFetch } = useResilientFetch();
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
-  const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast">("visao");
+  const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast" | "auditoria">("visao");
   const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
   const [configSubTab, setConfigSubTab] = useState<"geral" | "pagamentos" | "depositos">("geral");
   const [period, setPeriod] = useState<Period>("7dias");
