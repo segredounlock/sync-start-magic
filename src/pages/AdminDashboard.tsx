@@ -3426,10 +3426,10 @@ export default function AdminDashboard() {
                                 const resp = await fetch(`https://api.telegram.org/bot${token}/getMe`);
                                 const data = await resp.json();
                                 if (data.ok) {
-                                  // Revendedor: save to profiles (isolated). Admin: save to system_config (global)
+                                  // Revendedor: save to reseller_config (isolated). Admin: save to system_config (global)
                                   if (!user?.id) { toast.error("Sessão inválida. Faça login novamente."); return; }
                                   if (role === "revendedor") {
-                                    await supabase.from("profiles").update({ telegram_bot_token: token }).eq("id", user.id);
+                                    await supabase.from("reseller_config").upsert({ user_id: user.id, key: "telegram_bot_token", value: token }, { onConflict: "user_id,key" });
                                   } else {
                                     await supabase.from("system_config").upsert({ key: "telegramBotToken", value: token }, { onConflict: "key" });
                                   }
