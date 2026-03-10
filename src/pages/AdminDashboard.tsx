@@ -38,6 +38,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { useCrud } from "@/hooks/useCrud";
 import { confirm } from "@/lib/confirm";
+import { logAudit } from "@/lib/auditLog";
 
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
@@ -1756,6 +1757,7 @@ export default function AdminDashboard() {
                             body: { email: newUserData.email, password: newUserData.password, nome: newUserData.nome, role: newUserData.role, saldo: parseFloat(newUserData.saldo) || 0 },
                           });
                           if (res.error || res.data?.error) throw new Error(res.data?.error || res.error?.message);
+                          logAudit("create_user", "user", res.data?.user_id, { email: newUserData.email, nome: newUserData.nome, role: newUserData.role, saldo: parseFloat(newUserData.saldo) || 0 });
                           toast.success("Usuário criado com sucesso!");
                           setShowCreateUser(false);
                           setNewUserData({ email: "", password: "", nome: "", saldo: "0", role: "revendedor" });
@@ -2041,6 +2043,7 @@ export default function AdminDashboard() {
                           const newVal = parseFloat(editSaldoValue) || 0;
                           const { error } = await supabase.from("saldos").update({ valor: newVal }).eq("user_id", editSaldoUser.id).eq("tipo", "revenda");
                           if (error) throw error;
+                          logAudit("set_saldo", "saldo", editSaldoUser.id, { anterior: editSaldoUser.saldo, novo: newVal, nome: editSaldoUser.nome || editSaldoUser.email });
                           supabase.functions.invoke("telegram-notify", {
                             body: { type: "saldo_set", user_id: editSaldoUser.id, data: { novo_saldo: newVal } },
                           }).catch(() => {});
@@ -2078,6 +2081,7 @@ export default function AdminDashboard() {
                             body: { user_id: confirmRoleRemove.id, role: "revendedor", action: "remove" },
                           });
                           if (res.error || res.data?.error) throw new Error(res.data?.error || res.error?.message);
+                          logAudit("remove_role", "user_role", confirmRoleRemove.id, { role: "revendedor", nome: confirmRoleRemove.nome || confirmRoleRemove.email });
                           toast.success("Role removida!");
                           setConfirmRoleRemove(null);
                           fetchData();

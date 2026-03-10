@@ -131,6 +131,8 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
         .update({ is_blocked: newBlocked } as any)
         .eq("id", room.id);
       if (error) throw error;
+      const { logAudit } = await import("@/lib/auditLog");
+      logAudit(newBlocked ? "block_room" : "unblock_room", "chat_conversation", room.id, { room_name: room.name });
       toast.success(newBlocked ? "Sala bloqueada!" : "Sala desbloqueada!");
       // Insert system message
       const { data: { user } } = await supabase.auth.getUser();
@@ -159,6 +161,8 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
         .update({ is_private: !room.is_private } as any)
         .eq("id", room.id);
       if (error) throw error;
+      const { logAudit } = await import("@/lib/auditLog");
+      logAudit(room.is_private ? "set_room_public" : "set_room_private", "chat_conversation", room.id, { room_name: room.name });
       toast.success(room.is_private ? "Sala pública!" : "Sala privada!");
       await fetchRooms();
     } catch (err: any) {
