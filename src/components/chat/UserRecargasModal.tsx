@@ -102,6 +102,8 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
         .update({ verification_badge: badge })
         .eq("id", userId);
       if (error) throw error;
+      const { logAudit } = await import("@/lib/auditLog");
+      logAudit(badge ? "set_badge" : "remove_badge", "profile", userId, { badge, userName });
       setUserBadge(badge);
       setShowBadgePicker(false);
       toast.success(badge ? `Selo ${badge} atribuído` : "Selo removido");
