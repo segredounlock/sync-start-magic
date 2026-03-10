@@ -1757,6 +1757,7 @@ export default function AdminDashboard() {
                             body: { email: newUserData.email, password: newUserData.password, nome: newUserData.nome, role: newUserData.role, saldo: parseFloat(newUserData.saldo) || 0 },
                           });
                           if (res.error || res.data?.error) throw new Error(res.data?.error || res.error?.message);
+                          logAudit("create_user", "user", res.data?.user_id, { email: newUserData.email, nome: newUserData.nome, role: newUserData.role, saldo: parseFloat(newUserData.saldo) || 0 });
                           toast.success("Usuário criado com sucesso!");
                           setShowCreateUser(false);
                           setNewUserData({ email: "", password: "", nome: "", saldo: "0", role: "revendedor" });
