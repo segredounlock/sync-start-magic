@@ -497,6 +497,14 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                   toast.error("Erro ao alterar status da sala.");
                 } else {
                   toast.success(newBlocked ? "Sala fechada" : "Sala aberta");
+                  // Insert system message
+                  const sysContent = newBlocked ? "🔒 Sala bloqueada por um administrador" : "🔓 Sala desbloqueada por um administrador";
+                  await supabase.from("chat_messages").insert({
+                    conversation_id: conversationId,
+                    sender_id: user!.id,
+                    content: sysContent,
+                    type: "system",
+                  });
                 }
               }}
               className={`p-2 rounded-xl transition-colors ${isBlocked ? "bg-destructive/15 hover:bg-destructive/25 text-destructive" : "hover:bg-muted/50 text-muted-foreground"}`}

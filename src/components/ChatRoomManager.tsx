@@ -125,12 +125,24 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
   const toggleBlock = async (room: ChatRoom) => {
     setActionLoading(room.id);
     try {
+      const newBlocked = !room.is_blocked;
       const { error } = await supabase
         .from("chat_conversations")
-        .update({ is_blocked: !room.is_blocked } as any)
+        .update({ is_blocked: newBlocked } as any)
         .eq("id", room.id);
       if (error) throw error;
-      toast.success(room.is_blocked ? "Sala desbloqueada!" : "Sala bloqueada!");
+      toast.success(newBlocked ? "Sala bloqueada!" : "Sala desbloqueada!");
+      // Insert system message
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const sysContent = newBlocked ? "🔒 Sala bloqueada por um administrador" : "🔓 Sala desbloqueada por um administrador";
+        await supabase.from("chat_messages").insert({
+          conversation_id: room.id,
+          sender_id: user.id,
+          content: sysContent,
+          type: "system",
+        } as any);
+      }
       await fetchRooms();
     } catch (err: any) {
       toast.error(err.message || "Erro");
