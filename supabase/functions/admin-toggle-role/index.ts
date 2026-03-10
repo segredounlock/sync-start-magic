@@ -35,13 +35,26 @@ serve(async (req) => {
     if (action === "remove") {
       const { error } = await adminClient.from("user_roles").delete().eq("user_id", user_id).eq("role", role);
       if (error) throw error;
+      await adminClient.from("audit_logs").insert({
+        admin_id: caller.id,
+        action: "remove_role",
+        target_type: "role",
+        target_id: user_id,
+        details: { role },
+      });
       return new Response(JSON.stringify({ success: true, action: "removed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      // Add role (upsert)
       const { error } = await adminClient.from("user_roles").upsert({ user_id, role }, { onConflict: "user_id,role" });
       if (error) throw error;
+      await adminClient.from("audit_logs").insert({
+        admin_id: caller.id,
+        action: "add_role",
+        target_type: "role",
+        target_id: user_id,
+        details: { role },
+      });
       return new Response(JSON.stringify({ success: true, action: "added" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
