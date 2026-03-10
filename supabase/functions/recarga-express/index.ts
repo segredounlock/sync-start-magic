@@ -19,14 +19,22 @@ async function getApiKey(adminClient: any): Promise<string> {
 }
 
 async function proxyGet(apiKey: string, path: string) {
-  const resp = await fetch(`${API_BASE}${path}`, {
+  const url = `${API_BASE}${path}`;
+  const resp = await fetch(url, {
     headers: { "X-API-Key": apiKey, Accept: "application/json" },
   });
-  return resp.json();
+  const text = await resp.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error(`proxyGet ${path} status=${resp.status} non-JSON response (${text.length} bytes): ${text.slice(0, 500)}`);
+    throw new Error(`API retornou resposta inválida (status ${resp.status})`);
+  }
 }
 
 async function proxyPost(apiKey: string, path: string, body: unknown) {
-  const resp = await fetch(`${API_BASE}${path}`, {
+  const url = `${API_BASE}${path}`;
+  const resp = await fetch(url, {
     method: "POST",
     headers: {
       "X-API-Key": apiKey,
@@ -35,7 +43,13 @@ async function proxyPost(apiKey: string, path: string, body: unknown) {
     },
     body: JSON.stringify(body),
   });
-  return resp.json();
+  const text = await resp.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error(`proxyPost ${path} status=${resp.status} non-JSON response (${text.length} bytes): ${text.slice(0, 500)}`);
+    throw new Error(`API retornou resposta inválida (status ${resp.status})`);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -440,7 +454,9 @@ Deno.serve(async (req) => {
         console.log("recharge API full response:", JSON.stringify(rechargeResult));
 
         if (!rechargeResult?.success) {
-          throw new Error(rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API");
+          const errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
+          console.error(`recharge FAILED: userId=${userId} phone=${phoneNumber} carrier=${carrierId} value=${catalogValue} cost=${chargedCost} error="${errMsg}"`);
+          throw new Error(errMsg);
         }
 
         // Server-side polling: try to get final status before returning
