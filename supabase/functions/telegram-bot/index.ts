@@ -1321,6 +1321,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       );
     }
   }
+}
 
 // ===== RECARGA PHONE HANDLER =====
 
