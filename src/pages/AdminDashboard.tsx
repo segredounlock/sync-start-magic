@@ -3818,6 +3818,13 @@ export default function AdminDashboard() {
           </motion.div>
         )}
 
+        {/* ===== AUDITORIA ===== */}
+        {tab === "auditoria" && (
+          <Suspense fallback={<div className="h-40 rounded-xl bg-card border border-border animate-pulse" />}>
+            <AuditTab />
+          </Suspense>
+        )}
+
       </main>
       </div>
 
