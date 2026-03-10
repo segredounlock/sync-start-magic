@@ -114,14 +114,15 @@ async function resolveBotToken(supabase: any, botId?: string): Promise<string> {
     return envToken;
   }
 
-  // 3. profiles (reseller tokens)
+  // 3. reseller_config (reseller tokens)
   if (botId) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("telegram_bot_token")
-      .like("telegram_bot_token", `${botId}:%`);
-    if (profiles?.length) {
-      const tkn = (profiles[0].telegram_bot_token || "").trim();
+    const { data: configs } = await supabase
+      .from("reseller_config")
+      .select("value")
+      .eq("key", "telegram_bot_token")
+      .like("value", `${botId}:%`);
+    if (configs?.length) {
+      const tkn = (configs[0].value || "").trim();
       if (tkn) {
         tokenCache.set(cacheKey, { token: tkn, time: Date.now() });
         return tkn;

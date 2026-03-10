@@ -396,8 +396,8 @@ export default function AdminDashboard() {
       // Revendedor: load bot token from own profile (isolated)
       // Admin: keeps system_config token (same as /principal)
       if (role === "revendedor" && user?.id) {
-        const { data: profile } = await supabase.from("profiles").select("telegram_bot_token").eq("id", user.id).maybeSingle();
-        map.telegramBotToken = profile?.telegram_bot_token || "";
+        const { data: tokenConfig } = await supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle();
+        map.telegramBotToken = tokenConfig?.value || "";
       }
 
       setConfigData(map);
@@ -413,7 +413,10 @@ export default function AdminDashboard() {
         // Admin: save to system_config (global, same as /principal)
         if (key === "telegramBotToken" && role === "revendedor") {
           if (user?.id) {
-            await supabase.from("profiles").update({ telegram_bot_token: value }).eq("id", user.id);
+            await supabase.from("reseller_config").upsert(
+              { user_id: user.id, key: "telegram_bot_token", value: value },
+              { onConflict: "user_id,key" }
+            );
           }
           continue;
         }
@@ -3423,10 +3426,10 @@ export default function AdminDashboard() {
                                 const resp = await fetch(`https://api.telegram.org/bot${token}/getMe`);
                                 const data = await resp.json();
                                 if (data.ok) {
-                                  // Revendedor: save to profiles (isolated). Admin: save to system_config (global)
+                                  // Revendedor: save to reseller_config (isolated). Admin: save to system_config (global)
                                   if (!user?.id) { toast.error("Sessão inválida. Faça login novamente."); return; }
                                   if (role === "revendedor") {
-                                    await supabase.from("profiles").update({ telegram_bot_token: token }).eq("id", user.id);
+                                    await supabase.from("reseller_config").upsert({ user_id: user.id, key: "telegram_bot_token", value: token }, { onConflict: "user_id,key" });
                                   } else {
                                     await supabase.from("system_config").upsert({ key: "telegramBotToken", value: token }, { onConflict: "key" });
                                   }

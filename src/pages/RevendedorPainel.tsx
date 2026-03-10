@@ -173,10 +173,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const fetchData = useCallback(async () => {
     if (!user) return;
     await runFetch(async () => {
-      const [{ data: saldoData }, { data: recargasData }, { data: profile }] = await Promise.all([
+      const [{ data: saldoData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
-        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_bot_token, telegram_id, slug, avatar_url").eq("id", user.id).single(),
+        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url").eq("id", user.id).single(),
+        supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle(),
       ]);
       setSaldo(Number(saldoData?.valor) || 0);
       setRecargas(recargasData || []);
@@ -184,7 +185,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setProfileNome(p?.nome || "");
       setTelegramUsername(p?.telegram_username || "");
       setWhatsappNumber(p?.whatsapp_number || "");
-      setTelegramBotToken(p?.telegram_bot_token || "");
+      setTelegramBotToken(botTokenConfig?.value || "");
       setTelegramLinked(!!p?.telegram_id);
       setProfileSlug(p?.slug || "");
       setAvatarUrl(p?.avatar_url || null);
@@ -601,8 +602,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const handleSaveContacts = async () => {
     setSavingContacts(true);
     try {
-      const { error } = await supabase.from("profiles").update({ telegram_username: telegramUsername.trim() || null, whatsapp_number: whatsappNumber.trim() || null, telegram_bot_token: telegramBotToken.trim() || null } as any).eq("id", user!.id);
-      if (error) throw error;
+      const { error: profileError } = await supabase.from("profiles").update({ telegram_username: telegramUsername.trim() || null, whatsapp_number: whatsappNumber.trim() || null } as any).eq("id", user!.id);
+      if (profileError) throw profileError;
+      // Save telegram_bot_token to reseller_config (secure storage)
+      const tokenValue = telegramBotToken.trim() || null;
+      const { error: configError } = await supabase.from("reseller_config").upsert(
+        { user_id: user!.id, key: "telegram_bot_token", value: tokenValue },
+        { onConflict: "user_id,key" }
+      );
+      if (configError) throw configError;
       toast.success("Contatos salvos!");
     } catch (err: any) { toast.error(err.message || "Erro ao salvar"); }
     setSavingContacts(false);

@@ -38,7 +38,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
-  const [password, setPassword] = useState(() => localStorage.getItem("rememberedPass") || "");
+  const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
@@ -135,16 +135,16 @@ export default function Auth() {
           throw error;
         }
         setFailedAttempts(0);
-        // Save or clear remembered credentials
+        // Save or clear remembered email
         if (rememberMe) {
           localStorage.setItem("rememberMe", "true");
           localStorage.setItem("rememberedEmail", email);
-          localStorage.setItem("rememberedPass", password);
         } else {
           localStorage.removeItem("rememberMe");
           localStorage.removeItem("rememberedEmail");
-          localStorage.removeItem("rememberedPass");
         }
+        // Clean up any legacy stored password
+        localStorage.removeItem("rememberedPass");
         const { data: { session: freshSession } } = await supabase.auth.getSession();
         const userId = freshSession?.user?.id || "";
         if (!userId) { appToast.error("Erro ao obter sessão"); setSubmitting(false); return; }

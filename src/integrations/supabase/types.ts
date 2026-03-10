@@ -683,6 +683,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       push_subscriptions: {
@@ -1052,7 +1059,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          active: boolean | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string | null
+          last_seen_at: string | null
+          nome: string | null
+          slug: string | null
+          store_logo_url: string | null
+          store_name: string | null
+          store_primary_color: string | null
+          store_secondary_color: string | null
+          verification_badge: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          last_seen_at?: string | null
+          nome?: string | null
+          slug?: string | null
+          store_logo_url?: string | null
+          store_name?: string | null
+          store_primary_color?: string | null
+          store_secondary_color?: string | null
+          verification_badge?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          last_seen_at?: string | null
+          nome?: string | null
+          slug?: string | null
+          store_logo_url?: string | null
+          store_name?: string | null
+          store_primary_color?: string | null
+          store_secondary_color?: string | null
+          verification_badge?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_chat_enabled: { Args: never; Returns: boolean }
