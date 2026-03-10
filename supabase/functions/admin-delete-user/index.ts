@@ -65,6 +65,9 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fetch target info for audit
+    const { data: targetProfile } = await adminClient.from("profiles").select("nome, email").eq("id", user_id).maybeSingle();
+
     // Delete related data first (order matters for foreign keys)
     await adminClient.from("reseller_pricing_rules").delete().eq("user_id", user_id);
     await adminClient.from("reseller_config").delete().eq("user_id", user_id);
@@ -77,6 +80,15 @@ Deno.serve(async (req) => {
     // Delete auth user
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user_id);
     if (deleteError) throw deleteError;
+
+    // Audit log
+    await adminClient.from("audit_logs").insert({
+      admin_id: user.id,
+      action: "delete_user",
+      target_type: "user",
+      target_id: user_id,
+      details: { nome: targetProfile?.nome, email: targetProfile?.email },
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
