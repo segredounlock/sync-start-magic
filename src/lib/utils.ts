@@ -19,8 +19,6 @@ export function operadoraColors(name: string | null | undefined): { bg: string; 
       return { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/30" };
     case "CLARO":
       return { bg: "bg-red-500/15", text: "text-red-400", border: "border-red-500/30" };
-    case "OI":
-      return { bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30" };
     default:
       return { bg: "bg-muted/50", text: "text-muted-foreground", border: "border-border" };
   }
