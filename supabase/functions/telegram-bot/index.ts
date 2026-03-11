@@ -1092,10 +1092,23 @@ async function handleCallback(supabase: any, token: string, callback: any) {
         pricingRules.push(resellerMap.get(v) || globalMap.get(v));
       }
     } else {
-      // "usuario" or unknown role — use global pricing rules
-      const { data: globalRules } = await supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId);
-      pricingRules = globalRules || [];
-      console.log(`[PRICING] role=${userRole}: loaded ${pricingRules.length} global rules (fallback)`);
+      // "usuario" or unknown role — check for own reseller rules first, then global fallback
+      const [{ data: ownRules }, { data: globalRules }] = await Promise.all([
+        supabase.from("reseller_pricing_rules").select("*").eq("user_id", user.id).eq("operadora_id", operadoraId),
+        supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId),
+      ]);
+      if (ownRules && ownRules.length > 0) {
+        const ownMap = new Map((ownRules).map((r: any) => [Number(r.valor_recarga), r]));
+        const gMap = new Map((globalRules || []).map((r: any) => [Number(r.valor_recarga), r]));
+        const allValues = new Set([...ownMap.keys(), ...gMap.keys()]);
+        for (const v of allValues) {
+          pricingRules.push(ownMap.get(v) || gMap.get(v));
+        }
+        console.log(`[PRICING] role=${userRole}: found ${ownRules.length} own reseller rules + ${(globalRules||[]).length} global (merged)`);
+      } else {
+        pricingRules = globalRules || [];
+        console.log(`[PRICING] role=${userRole}: loaded ${pricingRules.length} global rules (fallback)`);
+      }
     }
 
     console.log(`[PRICING] final rules count=${pricingRules.length} values=[${pricingRules.map((r:any) => `${r.valor_recarga}→${r.tipo_regra==='fixo'?r.regra_valor:r.custo+'*'+r.regra_valor+'%'}`).join(', ')}]`);
