@@ -196,13 +196,12 @@ serve(async (req) => {
             globalRules = gRules || [];
 
             const pricingUserId = (userRole === "cliente" && resellerId) ? resellerId : user_id;
-            if (userRole === "revendedor" || userRole === "admin" || (userRole === "cliente" && resellerId)) {
-              const { data: rRules } = await supabase
-                .from("reseller_pricing_rules")
-                .select("*")
-                .eq("user_id", pricingUserId);
-              resellerRules = rRules || [];
-            }
+            // Always check for reseller pricing rules (user may have own rules regardless of role)
+            const { data: rRules } = await supabase
+              .from("reseller_pricing_rules")
+              .select("*")
+              .eq("user_id", pricingUserId);
+            resellerRules = rRules || [];
           }
 
           // Load local operadoras to map carrier names to UUIDs

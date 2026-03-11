@@ -428,9 +428,20 @@ Deno.serve(async (req) => {
             if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
           }
         } else {
-          // User without role or cliente without reseller — use global pricing
-          const globalRule = await getGlobalRule();
-          if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules");
+          // User without specific role or cliente without reseller — check own reseller rules first
+          const { data: ownRule } = await adminClient
+            .from("reseller_pricing_rules")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("operadora_id", operadoraId)
+            .eq("valor_recarga", catalogValue)
+            .maybeSingle();
+          if (ownRule) {
+            chargedCost = applyRule(ownRule, "reseller_pricing_rules(own)");
+          } else {
+            const globalRule = await getGlobalRule();
+            if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules");
+          }
         }
 
         const ruleLog = pricingRuleDetails
