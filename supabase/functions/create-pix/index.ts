@@ -45,7 +45,7 @@ async function createMercadoPago(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("MercadoPago error:", data);
+    console.error(`[create-pix][mercadopago] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || `MercadoPago error ${resp.status}`);
   }
 
