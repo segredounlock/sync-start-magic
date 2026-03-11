@@ -1151,6 +1151,13 @@ export type Database = {
       get_maintenance_mode: { Args: never; Returns: boolean }
       get_notif_config: { Args: { _key: string }; Returns: string }
       get_operator_stats: { Args: never; Returns: Json }
+      get_poll_vote_counts: {
+        Args: { _poll_id: string }
+        Returns: {
+          option_index: number
+          vote_count: number
+        }[]
+      }
       get_public_tables: {
         Args: never
         Returns: {
