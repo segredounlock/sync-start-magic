@@ -302,7 +302,7 @@ async function createPixGo(
 
   const data = await resp.json();
   if (!resp.ok || !data.success) {
-    console.error("PixGo error:", data);
+    console.error(`[create-pix][pixgo] HTTP ${resp.status} success=${data.success} response:`, JSON.stringify(data));
     throw new Error(data.message || data.error || `PixGo error ${resp.status}`);
   }
 
