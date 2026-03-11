@@ -1071,16 +1071,19 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     console.log(`[PRICING] role=${userRole} userId=${user.id} carrier=${carrier.name} carrierId=${carrierId} operadoraId=${operadoraId}`);
 
     if (!operadoraId) {
+      console.log(`[PRICING] No operadoraId found — no pricing rules will be applied`);
       pricingRules = [];
     } else if (userRole === "admin") {
       const { data: rules } = await supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId);
       pricingRules = rules || [];
+      console.log(`[PRICING] admin: loaded ${pricingRules.length} global rules`);
     } else if (userRole === "revendedor" || (userRole === "cliente" && resellerId)) {
       const ruleUserId = userRole === "revendedor" ? user.id : resellerId;
       const [{ data: resellerRules }, { data: globalRules }] = await Promise.all([
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", ruleUserId).eq("operadora_id", operadoraId),
         supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId),
       ]);
+      console.log(`[PRICING] reseller/cliente: ruleUserId=${ruleUserId} resellerRules=${(resellerRules||[]).length} globalRules=${(globalRules||[]).length}`);
       // Merge: use reseller rule if exists for that value, otherwise global
       const resellerMap = new Map((resellerRules || []).map((r: any) => [Number(r.valor_recarga), r]));
       const globalMap = new Map((globalRules || []).map((r: any) => [Number(r.valor_recarga), r]));
@@ -1089,9 +1092,13 @@ async function handleCallback(supabase: any, token: string, callback: any) {
         pricingRules.push(resellerMap.get(v) || globalMap.get(v));
       }
     } else {
+      // "usuario" or unknown role — use global pricing rules
       const { data: globalRules } = await supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId);
       pricingRules = globalRules || [];
+      console.log(`[PRICING] role=${userRole}: loaded ${pricingRules.length} global rules (fallback)`);
     }
+
+    console.log(`[PRICING] final rules count=${pricingRules.length} values=[${pricingRules.map((r:any) => `${r.valor_recarga}→${r.tipo_regra==='fixo'?r.regra_valor:r.custo+'*'+r.regra_valor+'%'}`).join(', ')}]`);
 
     // resolveValue is now global — defined before handleCallback
 
@@ -1101,10 +1108,13 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     function getUserCost(apiCost: number, faceValue: number): number {
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
       if (rule) {
-        return rule.tipo_regra === "fixo"
+        const cost = rule.tipo_regra === "fixo"
           ? Number(rule.regra_valor)
           : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
+        console.log(`[PRICING] getUserCost: faceValue=${faceValue} matched rule tipo=${rule.tipo_regra} → cost=${cost}`);
+        return cost;
       }
+      console.log(`[PRICING] getUserCost: faceValue=${faceValue} NO RULE MATCH → using apiCost=${apiCost}`);
       return apiCost;
     }
 
