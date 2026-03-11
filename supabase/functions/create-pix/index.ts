@@ -347,7 +347,7 @@ async function createMisticPay(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("MisticPay error:", data);
+    console.error(`[create-pix][misticpay] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || `MisticPay error ${resp.status}`);
   }
 
