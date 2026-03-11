@@ -472,20 +472,31 @@ Deno.serve(async (req) => {
                 amount: catalogValue,
               });
 
-              // Notify admins via Telegram
+              // Notify master admin via Telegram + Push
               const baseUrl = Deno.env.get("SUPABASE_URL")!;
               const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
               const authH = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
 
+              const MASTER_TELEGRAM_ID = 1901426549;
+              const alertMsg = `⚠️ <b>ALERTA CRÍTICO</b>\n\nSaldo na API de recargas baixo/esgotado.\n\n<b>Erro:</b> ${errMsg}\n\nRecarregue o saldo no provedor para evitar falhas nas recargas.`;
+
+              // Telegram notification to master admin
+              fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+                method: "POST", headers: authH,
+                body: JSON.stringify({
+                  type: "admin_alert",
+                  telegram_id: MASTER_TELEGRAM_ID,
+                  data: { message: alertMsg },
+                }),
+              }).catch(() => {});
+
+              // Push notification to all admins (PWA)
               const { data: adminUsers } = await adminClient
                 .from("user_roles")
                 .select("user_id")
                 .eq("role", "admin");
-
               const adminIds = (adminUsers || []).map((r: any) => r.user_id);
-
               if (adminIds.length > 0) {
-                // Push notification to all admins
                 fetch(`${baseUrl}/functions/v1/send-push`, {
                   method: "POST", headers: authH,
                   body: JSON.stringify({
@@ -494,28 +505,6 @@ Deno.serve(async (req) => {
                     user_ids: adminIds,
                   }),
                 }).catch(() => {});
-
-                // Fetch telegram_ids for all admins
-                const { data: adminProfiles } = await adminClient
-                  .from("profiles")
-                  .select("id, telegram_id")
-                  .in("id", adminIds);
-
-                const alertMsg = `⚠️ <b>ALERTA CRÍTICO</b>\n\nSaldo na API de recargas baixo/esgotado.\n\n<b>Erro:</b> ${errMsg}\n\nRecarregue o saldo no provedor para evitar falhas nas recargas.`;
-
-                // Send Telegram notification to each admin that has telegram_id
-                for (const admin of (adminProfiles || [])) {
-                  if (admin.telegram_id) {
-                    fetch(`${baseUrl}/functions/v1/telegram-notify`, {
-                      method: "POST", headers: authH,
-                      body: JSON.stringify({
-                        type: "admin_alert",
-                        telegram_id: admin.telegram_id,
-                        data: { message: alertMsg },
-                      }),
-                    }).catch(() => {});
-                  }
-                }
               }
             } catch (notifErr) {
               console.error("Failed to send credit limit alert:", notifErr);
