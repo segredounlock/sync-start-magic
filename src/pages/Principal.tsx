@@ -1267,7 +1267,7 @@ export default function Principal() {
                 {[
                   { icon: Smartphone, label: "Recargas Hoje", rawValue: dashboardMetrics.recargasHoje, isInt: true, sub: `${dashboardMetrics.completedHoje} concluídas de ${dashboardMetrics.recargasHoje} solicitadas`, color: "text-primary", bgColor: "bg-primary/10" },
                   { icon: TrendingUp, label: "Vendas Hoje (Cobrado)", rawValue: dashboardMetrics.receitaHoje, isInt: false, sub: "Valor cobrado dos revendedores hoje", color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Wallet, label: "Saldo dos Revendedores", rawValue: totalSaldo, isInt: false, sub: `${activeCount} revendedores ativos`, color: "text-warning", bgColor: "bg-warning/10" },
+                  { icon: Wallet, label: "Saldo dos Revendedores", rawValue: totalSaldo, isInt: false, sub: `Soma dos saldos de revenda de todos os ${allUsers.length} usuários`, color: "text-warning", bgColor: "bg-warning/10" },
                   { icon: DollarSign, label: "Vendas do Mês (Cobrado)", rawValue: dashboardMetrics.receitaMes, isInt: false, sub: "Cobrado dos revendedores neste mês", color: "text-accent", bgColor: "bg-accent/10" },
                   { icon: BarChart3, label: "Lucro Total (Histórico)", rawValue: dashboardMetrics.lucroTotal, isInt: false, sub: "Vendas - Custo API de todas as recargas", color: "text-success", bgColor: "bg-success/10" },
                   { icon: Activity, label: "Faturamento Total (Cobrado)", rawValue: dashboardMetrics.receitaTotal, isInt: false, sub: "Total cobrado de todos os tempos", color: "text-primary", bgColor: "bg-primary/10" },
