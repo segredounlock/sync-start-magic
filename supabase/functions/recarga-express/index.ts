@@ -490,22 +490,16 @@ Deno.serve(async (req) => {
                 }),
               }).catch(() => {});
 
-              // Push notification to all admins (PWA)
-              const { data: adminUsers } = await adminClient
-                .from("user_roles")
-                .select("user_id")
-                .eq("role", "admin");
-              const adminIds = (adminUsers || []).map((r: any) => r.user_id);
-              if (adminIds.length > 0) {
-                fetch(`${baseUrl}/functions/v1/send-push`, {
-                  method: "POST", headers: authH,
-                  body: JSON.stringify({
-                    title: "⚠️ Saldo API Baixo!",
-                    body: `O provedor de recargas retornou "${errMsg}". Recarregue o saldo na API externa.`,
-                    user_ids: adminIds,
-                  }),
-                }).catch(() => {});
-              }
+              // Push notification only to master admin (PWA)
+              const MASTER_ADMIN_ID = "f5501acc-79f3-460f-bc3e-493280ea84f0";
+              fetch(`${baseUrl}/functions/v1/send-push`, {
+                method: "POST", headers: authH,
+                body: JSON.stringify({
+                  title: "⚠️ Saldo API Baixo!",
+                  body: `O provedor de recargas retornou "${errMsg}". Recarregue o saldo na API externa.`,
+                  user_ids: [MASTER_ADMIN_ID],
+                }),
+              }).catch(() => {});
             } catch (notifErr) {
               console.error("Failed to send credit limit alert:", notifErr);
             }
