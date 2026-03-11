@@ -495,16 +495,26 @@ Deno.serve(async (req) => {
                   }),
                 }).catch(() => {});
 
-                // Telegram notification to each admin
-                for (const adminId of adminIds) {
-                  fetch(`${baseUrl}/functions/v1/telegram-notify`, {
-                    method: "POST", headers: authH,
-                    body: JSON.stringify({
-                      type: "admin_alert",
-                      user_id: adminId,
-                      data: { message: `⚠️ ALERTA CRÍTICO: Saldo na API de recargas baixo/esgotado.\n\nErro: ${errMsg}\n\nRecarregue o saldo no provedor para evitar falhas.` },
-                    }),
-                  }).catch(() => {});
+                // Fetch telegram_ids for all admins
+                const { data: adminProfiles } = await adminClient
+                  .from("profiles")
+                  .select("id, telegram_id")
+                  .in("id", adminIds);
+
+                const alertMsg = `⚠️ <b>ALERTA CRÍTICO</b>\n\nSaldo na API de recargas baixo/esgotado.\n\n<b>Erro:</b> ${errMsg}\n\nRecarregue o saldo no provedor para evitar falhas nas recargas.`;
+
+                // Send Telegram notification to each admin that has telegram_id
+                for (const admin of (adminProfiles || [])) {
+                  if (admin.telegram_id) {
+                    fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+                      method: "POST", headers: authH,
+                      body: JSON.stringify({
+                        type: "admin_alert",
+                        telegram_id: admin.telegram_id,
+                        data: { message: alertMsg },
+                      }),
+                    }).catch(() => {});
+                  }
                 }
               }
             } catch (notifErr) {
