@@ -613,6 +613,8 @@ Deno.serve(async (req) => {
       metadata: { reference, gateway, qr_code: result.qr_code || null, saldo_tipo: saldoType },
     });
 
+    console.log(`[create-pix] OK user=${userId} gateway=${gateway} amount=${amount} payment_id=${result.payment_id}`);
+
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
