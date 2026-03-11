@@ -619,7 +619,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error creating PIX:", error);
+    console.error(`[create-pix] ERRO user=${_logUserId} gateway=${_logGateway} amount=${_logAmount} individual=${_logIndividual}`, error);
     const msg = error instanceof Error ? error.message : "Erro interno";
     return new Response(JSON.stringify({ success: false, error: msg }), {
       status: 500,
