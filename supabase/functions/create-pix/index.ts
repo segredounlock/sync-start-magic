@@ -570,7 +570,11 @@ Deno.serve(async (req) => {
     // Build webhook URL
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const webhookUrl = `${supabaseUrl}/functions/v1/pix-webhook`;
-    console.log(`Creating PIX via ${gateway} for user ${userId}, amount ${amount}, individual=${useIndividualGateway}`);
+    _logUserId = userId;
+    _logGateway = gateway;
+    _logAmount = amount;
+    _logIndividual = useIndividualGateway;
+    console.log(`[create-pix] START user=${userId} gateway=${gateway} amount=${amount} individual=${useIndividualGateway}`);
 
     let result;
     const meta = { email: email || "", name: name || "", reference, webhookUrl };
