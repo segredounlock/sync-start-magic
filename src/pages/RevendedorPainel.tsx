@@ -148,8 +148,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           const opResellerRules = (resellerRules || []).filter((r: any) => r.operadora_id === op.id);
           const valores = (op.valores as unknown as number[]) || [];
           const values: CatalogValue[] = valores.map((v: number) => {
-            const resellerRule = opResellerRules.find((r: any) => r.valor_recarga === v);
-            const globalRule = opGlobalRules.find((r) => r.valor_recarga === v);
+            const resellerRule = opResellerRules.find((r: any) => Number(r.valor_recarga) === v);
+            const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
             const rule = resellerRule || globalRule;
             const cost = rule
               ? rule.tipo_regra === "fixo"
