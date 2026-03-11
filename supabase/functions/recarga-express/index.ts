@@ -456,6 +456,62 @@ Deno.serve(async (req) => {
         if (!rechargeResult?.success) {
           const errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
           console.error(`recharge FAILED: userId=${userId} phone=${phoneNumber} carrier=${carrierId} value=${catalogValue} cost=${chargedCost} error="${errMsg}"`);
+
+          // Alert admins when external API credit limit is exceeded
+          const lowerErr = errMsg.toLowerCase();
+          if (lowerErr.includes("limite de crédito") || lowerErr.includes("credit limit") || lowerErr.includes("saldo insuficiente") || lowerErr.includes("insufficient balance")) {
+            console.warn("CRITICAL: External API credit limit exceeded — notifying admins");
+            try {
+              await adminClient.from("admin_notifications").insert({
+                type: "alert",
+                status: "critical",
+                message: `⚠️ ALERTA: Saldo na API de recargas está baixo ou esgotado. Erro: "${errMsg}". Recargas podem falhar até que o saldo seja recarregado no provedor.`,
+                user_id: userId,
+                user_nome: null,
+                user_email: null,
+                amount: catalogValue,
+              });
+
+              // Notify admins via Telegram
+              const baseUrl = Deno.env.get("SUPABASE_URL")!;
+              const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+              const authH = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
+
+              const { data: adminUsers } = await adminClient
+                .from("user_roles")
+                .select("user_id")
+                .eq("role", "admin");
+
+              const adminIds = (adminUsers || []).map((r: any) => r.user_id);
+
+              if (adminIds.length > 0) {
+                // Push notification to all admins
+                fetch(`${baseUrl}/functions/v1/send-push`, {
+                  method: "POST", headers: authH,
+                  body: JSON.stringify({
+                    title: "⚠️ Saldo API Baixo!",
+                    body: `O provedor de recargas retornou "${errMsg}". Recarregue o saldo na API externa.`,
+                    user_ids: adminIds,
+                  }),
+                }).catch(() => {});
+
+                // Telegram notification to each admin
+                for (const adminId of adminIds) {
+                  fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+                    method: "POST", headers: authH,
+                    body: JSON.stringify({
+                      type: "admin_alert",
+                      user_id: adminId,
+                      data: { message: `⚠️ ALERTA CRÍTICO: Saldo na API de recargas baixo/esgotado.\n\nErro: ${errMsg}\n\nRecarregue o saldo no provedor para evitar falhas.` },
+                    }),
+                  }).catch(() => {});
+                }
+              }
+            } catch (notifErr) {
+              console.error("Failed to send credit limit alert:", notifErr);
+            }
+          }
+
           throw new Error(errMsg);
         }
 
