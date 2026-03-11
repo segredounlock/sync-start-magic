@@ -439,6 +439,8 @@ Deno.serve(async (req) => {
       ].join("\n");
     } else if (type === "custom_message") {
       message = data.message || "Mensagem do sistema";
+    } else if (type === "admin_alert") {
+      message = data.message || "⚠️ Alerta do sistema";
     } else {
       return new Response(
         JSON.stringify({ success: false, reason: "unknown_type" }),
