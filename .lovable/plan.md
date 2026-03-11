@@ -1,40 +1,29 @@
 
 
-## Diagnóstico e Correção
+## Problema Identificado
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
-
-### Plano
-
-**1. Corrigir o mapeamento de status na sync function**
-
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+Na função `fetchCatalog` do `RevendedorPainel.tsx` (linhas 151-152), a comparação de regras de preço usa `===` entre `r.valor_recarga` (que pode vir como string do banco) e `v` (número do array `valores`):
 
 ```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+// ATUAL — pode falhar: "20" === 20 → false
+const resellerRule = opResellerRules.find((r: any) => r.valor_recarga === v);
+const globalRule = opGlobalRules.find((r) => r.valor_recarga === v);
 ```
 
-**2. Corrigir manualmente o pedido preso**
+Quando nenhuma regra é encontrada, o custo cai no fallback `: v` (linha 158), fazendo o "Paga" mostrar o mesmo valor da recarga.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+Comparando com `Principal.tsx` (linha 436), lá os dados são convertidos com `Number(r.valor_recarga)` antes do uso — mas no painel do revendedor isso não acontece.
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+## Correção
+
+**Arquivo:** `src/pages/RevendedorPainel.tsx`
+
+Alterar as comparações nas linhas 151-152 para usar `Number()`:
+
+```typescript
+const resellerRule = opResellerRules.find((r: any) => Number(r.valor_recarga) === v);
+const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
 ```
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Isso garante que a regra de preço customizada (reseller ou global) será corretamente localizada e aplicada, exibindo o valor correto no "Paga R$".
 
