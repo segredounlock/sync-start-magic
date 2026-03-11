@@ -89,7 +89,7 @@ async function createPushinPay(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("PushinPay error:", data);
+    console.error(`[create-pix][pushinpay] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || data.error || `PushinPay error ${resp.status}`);
   }
 
