@@ -126,7 +126,7 @@ async function createVirtualPay(
 
   const authData = await authResp.json();
   if (!authResp.ok || !authData.access_token) {
-    console.error("VirtualPay auth error:", authData);
+    console.error(`[create-pix][virtualpay] auth HTTP ${authResp.status} response:`, JSON.stringify(authData));
     throw new Error("Falha na autenticação VirtualPay");
   }
 
