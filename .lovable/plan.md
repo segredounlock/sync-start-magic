@@ -1,34 +1,40 @@
 
 
-## Plano: Adicionar logs detalhados na Edge Function create-pix
+## Diagnóstico e Correção
 
-### Problema
-Quando ocorre erro na geração de PIX, o log atual registra apenas "Error creating PIX" sem incluir o `userId`, gateway, valor ou detalhes do erro do gateway. Isso dificulta o diagnóstico.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### Alterações
+### Plano
 
-**Arquivo:** `supabase/functions/create-pix/index.ts`
+**1. Corrigir o mapeamento de status na sync function**
 
-1. **No catch principal (linha 611-613):** Incluir `userId`, `gateway` e `amount` no log de erro:
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+
 ```typescript
-console.error(`[create-pix] ERRO user=${userId} gateway=${gateway} amount=${amount} individual=${useIndividualGateway} error=`, error);
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-2. **Em cada função de gateway**, melhorar os logs de erro incluindo contexto:
-   - `createMercadoPago`: log com status HTTP e corpo completo da resposta
-   - `createPushinPay`: idem
-   - `createVirtualPay`: log no auth e no request
-   - `createEfiPay`: já tem bons logs, manter
-   - `createPixGo` (linha 304-306): adicionar status HTTP e response body completo
-   - `createMisticPay`: idem
+**2. Corrigir manualmente o pedido preso**
 
-3. **Adicionar log de sucesso** após salvar a transação (linha 606), incluindo `payment_id`:
-```typescript
-console.log(`[create-pix] OK user=${userId} gateway=${gateway} amount=${amount} payment_id=${result.payment_id}`);
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
 ```
 
-4. **Mover declaração de `userId`/`gateway`/`amount`** para escopo acessível no catch (declarar `let` antes do try).
+**3. Verificar se há outros pedidos presos**
 
-### Resultado
-Qualquer falha futura aparecerá nos logs com: usuário afetado, gateway usado, valor, se era individual ou global, e a resposta exata do gateway.
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

@@ -45,7 +45,7 @@ async function createMercadoPago(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("MercadoPago error:", data);
+    console.error(`[create-pix][mercadopago] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || `MercadoPago error ${resp.status}`);
   }
 
@@ -89,7 +89,7 @@ async function createPushinPay(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("PushinPay error:", data);
+    console.error(`[create-pix][pushinpay] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || data.error || `PushinPay error ${resp.status}`);
   }
 
@@ -126,7 +126,7 @@ async function createVirtualPay(
 
   const authData = await authResp.json();
   if (!authResp.ok || !authData.access_token) {
-    console.error("VirtualPay auth error:", authData);
+    console.error(`[create-pix][virtualpay] auth HTTP ${authResp.status} response:`, JSON.stringify(authData));
     throw new Error("Falha na autenticação VirtualPay");
   }
 
@@ -158,7 +158,7 @@ async function createVirtualPay(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("VirtualPay error:", data);
+    console.error(`[create-pix][virtualpay] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || `VirtualPay error ${resp.status}`);
   }
 
@@ -302,7 +302,7 @@ async function createPixGo(
 
   const data = await resp.json();
   if (!resp.ok || !data.success) {
-    console.error("PixGo error:", data);
+    console.error(`[create-pix][pixgo] HTTP ${resp.status} success=${data.success} response:`, JSON.stringify(data));
     throw new Error(data.message || data.error || `PixGo error ${resp.status}`);
   }
 
@@ -347,7 +347,7 @@ async function createMisticPay(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("MisticPay error:", data);
+    console.error(`[create-pix][misticpay] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || `MisticPay error ${resp.status}`);
   }
 
@@ -371,6 +371,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let _logUserId = "unknown";
+  let _logGateway = "unknown";
+  let _logAmount = 0;
+  let _logIndividual = false;
   try {
     // Auth
     const authHeader = req.headers.get("Authorization");
@@ -566,7 +570,11 @@ Deno.serve(async (req) => {
     // Build webhook URL
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const webhookUrl = `${supabaseUrl}/functions/v1/pix-webhook`;
-    console.log(`Creating PIX via ${gateway} for user ${userId}, amount ${amount}, individual=${useIndividualGateway}`);
+    _logUserId = userId;
+    _logGateway = gateway;
+    _logAmount = amount;
+    _logIndividual = useIndividualGateway;
+    console.log(`[create-pix] START user=${userId} gateway=${gateway} amount=${amount} individual=${useIndividualGateway}`);
 
     let result;
     const meta = { email: email || "", name: name || "", reference, webhookUrl };
@@ -605,11 +613,13 @@ Deno.serve(async (req) => {
       metadata: { reference, gateway, qr_code: result.qr_code || null, saldo_tipo: saldoType },
     });
 
+    console.log(`[create-pix] OK user=${userId} gateway=${gateway} amount=${amount} payment_id=${result.payment_id}`);
+
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error creating PIX:", error);
+    console.error(`[create-pix] ERRO user=${_logUserId} gateway=${_logGateway} amount=${_logAmount} individual=${_logIndividual}`, error);
     const msg = error instanceof Error ? error.message : "Erro interno";
     return new Response(JSON.stringify({ success: false, error: msg }), {
       status: 500,
