@@ -1306,7 +1306,7 @@ export default function Principal() {
                   ) : providerBalance.error ? (
                     <p className="text-xl md:text-2xl font-bold text-destructive mt-0.5">Erro</p>
                   ) : providerBalance.value !== null ? (
-                    <p className={`text-xl md:text-2xl font-bold mt-0.5 ${providerBalance.value < 50 ? "text-destructive" : "text-[hsl(280,70%,60%)]"}`}>
+                    <p className={`text-xl md:text-2xl font-bold mt-0.5 text-[hsl(280,70%,60%)]`}>
                       <AnimatedCounter value={providerBalance.value} prefix="R$&nbsp;" />
                     </p>
                   ) : (
