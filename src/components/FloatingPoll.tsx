@@ -38,17 +38,16 @@ export function FloatingPoll() {
       const p = data[0];
       const baseOptions = (p.options as any as PollOption[]) || [];
 
-      // Count real votes from poll_votes table
+      // Count real votes using security definer function (works for all users)
       const { data: voteCounts } = await supabase
-        .from("poll_votes")
-        .select("option_index")
-        .eq("poll_id", p.id);
+        .rpc("get_poll_vote_counts", { _poll_id: p.id });
 
       const counts: Record<number, number> = {};
+      let totalReal = 0;
       (voteCounts || []).forEach((v: any) => {
-        counts[v.option_index] = (counts[v.option_index] || 0) + 1;
+        counts[v.option_index] = Number(v.vote_count) || 0;
+        totalReal += Number(v.vote_count) || 0;
       });
-      const totalReal = voteCounts?.length || 0;
 
       const enrichedOptions = baseOptions.map((opt, i) => ({
         ...opt,
