@@ -158,7 +158,7 @@ async function createVirtualPay(
 
   const data = await resp.json();
   if (!resp.ok) {
-    console.error("VirtualPay error:", data);
+    console.error(`[create-pix][virtualpay] HTTP ${resp.status} response:`, JSON.stringify(data));
     throw new Error(data.message || `VirtualPay error ${resp.status}`);
   }
 
