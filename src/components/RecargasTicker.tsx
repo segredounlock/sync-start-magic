@@ -114,7 +114,7 @@ export default function RecargasTicker() {
     if (n.includes("claro")) return "text-red-400";
     if (n.includes("tim")) return "text-blue-400";
     if (n.includes("vivo")) return "text-purple-400";
-    if (n.includes("oi")) return "text-yellow-400";
+    
     return "text-primary";
   };
 

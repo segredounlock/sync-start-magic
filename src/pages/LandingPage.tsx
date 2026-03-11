@@ -18,7 +18,7 @@ const features = [
   { icon: Globe, title: "Universal", desc: "Desktop, tablet ou celular.", accent: "from-teal-400 to-green-500" },
 ];
 
-const operators = ["Vivo", "Claro", "Tim", "Oi"];
+const operators = ["Vivo", "Claro", "Tim"];
 
 /* ── Floating Particles ── */
 function FloatingParticles() {
