@@ -1,40 +1,38 @@
 
 
-## Diagnóstico e Correção
+## Problema
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
-
-### Plano
-
-**1. Corrigir o mapeamento de status na sync function**
-
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+A tabela `pricing_rules` possui apenas uma política RLS para admins:
+```
+policy: "Admins can manage pricing rules"
+qual: has_role(auth.uid(), 'admin')
 ```
 
-**2. Corrigir manualmente o pedido preso**
+Usuários não-admin consultam a tabela e recebem 0 linhas. O código faz fallback para `cost = valor_de_face`, exibindo "Paga R$ 20,00" em vez de "Paga R$ 12,00".
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+## Solução
+
+Adicionar uma política de **leitura (SELECT)** na tabela `pricing_rules` para todos os usuários autenticados. As regras globais de preço precisam ser visíveis para que o catálogo exiba os custos corretos.
+
+### Migration SQL
 
 ```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+CREATE POLICY "Authenticated users can read pricing rules"
+ON public.pricing_rules
+FOR SELECT
+TO authenticated
+USING (true);
 ```
 
-**3. Verificar se há outros pedidos presos**
+Isso resolve o problema em todas as plataformas que usam consulta direta ao banco (Site/RevendedorPainel). O Bot e Mini App já usam `service_role_key` nas Edge Functions, então não são afetados por RLS.
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+### Verificação na tabela `reseller_pricing_rules`
 
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Verificar se a mesma restrição existe, pois o site também consulta essa tabela para preços personalizados do usuário logado.
+
+### Impacto
+
+- Nenhuma alteração de código necessária
+- Apenas 1 migration SQL
+- Todos os usuários autenticados passarão a ver os preços corretos imediatamente
 
