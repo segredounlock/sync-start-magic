@@ -63,6 +63,7 @@ const SOURCE_PATHS = [
   // Edge Functions
   "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
   "supabase/functions/admin-toggle-role/index.ts",
+  "supabase/functions/auth-email-hook/index.ts",
   "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
   "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
   "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
