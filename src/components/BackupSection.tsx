@@ -662,7 +662,9 @@ export default function BackupSection() {
   const runIntegrityCheck = async () => {
     setIntegrityChecking(true);
     setIntegrityResult(null);
+    setShowChecksums(false);
     const knownPaths = getKnownPaths();
+    const fileHashes = getFileHashes();
 
     // Separate verifiable (src/, public/) from external (config, edge functions, supabase/)
     const verifiablePaths: string[] = [];
@@ -677,12 +679,28 @@ export default function BackupSection() {
 
     const missing: string[] = [];
     let found = 0;
+    const verifiedHashes: Record<string, string> = {};
     for (const filePath of verifiablePaths) {
-      if (knownPaths.includes(filePath)) { found++; } else { missing.push(filePath); }
+      if (knownPaths.includes(filePath)) {
+        found++;
+        verifiedHashes[filePath] = fileHashes[filePath] || "--------";
+      } else {
+        missing.push(filePath);
+      }
     }
-    setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length });
+
+    // Compute aggregate fingerprint from all hashes (sorted for determinism)
+    const sortedHashValues = Object.keys(verifiedHashes).sort().map(k => verifiedHashes[k]).join("");
+    let fp = 0x811c9dc5; // FNV-1a offset basis
+    for (let i = 0; i < sortedHashValues.length; i++) {
+      fp ^= sortedHashValues.charCodeAt(i);
+      fp = Math.imul(fp, 0x01000193);
+    }
+    const fingerprint = (fp >>> 0).toString(16).padStart(8, "0");
+
+    setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length, fingerprint, hashes: verifiedHashes });
     if (missing.length === 0) {
-      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} verificáveis OK + ${externalPaths.length} externos.`);
+      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} · Fingerprint: ${fingerprint}`);
     } else {
       toast.error(`⚠️ ${missing.length} arquivo(s) faltando no manifesto!`);
     }
