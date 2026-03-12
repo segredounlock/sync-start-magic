@@ -1,5 +1,4 @@
 import { useAuth } from "@/hooks/useAuth";
-import BankDashboard from "@/components/BankDashboard";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
