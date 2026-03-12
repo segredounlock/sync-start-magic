@@ -151,7 +151,7 @@ export default function AdminBankDashboard({
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
             <p className="text-lg font-bold text-foreground">
-              {loading ? <SkeletonValue width="w-20" className="h-5" /> : showBalance ? <AnimatedCounter value={meuSaldo} prefix="R$&nbsp;" /> : "R$&nbsp;••••"}
+              {loading ? <SkeletonValue width="w-20" className="h-5" /> : showBalance ? <AnimatedCounter value={meuSaldo} prefix={"R$\u00A0"} /> : `R$\u00A0••••`}
             </p>
           </div>
         </div>
