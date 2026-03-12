@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatFullDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { styledToast as toast } from "@/lib/toast";
 import JSZip from "jszip";
+import { getKnownPaths } from "@/lib/sourceManifest";
 
 // Tables are now discovered dynamically by the edge functions
 // This constant is only used for display fallback
@@ -17,7 +18,7 @@ const TABLES_LABEL = "dinâmico";
 
 const SOURCE_PATHS = [
   // Core
-  "src/App.tsx","src/main.tsx","src/index.css","src/vite-env.d.ts",
+  "src/App.tsx","src/AppRoot.tsx","src/main.tsx","src/index.css","src/styles/app.css","src/vite-env.d.ts",
   // Pages
   "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ChatApp.tsx",
   "src/pages/ClientePortal.tsx","src/pages/LandingPage.tsx","src/pages/NotFound.tsx",
@@ -652,19 +653,17 @@ export default function BackupSection() {
   const runIntegrityCheck = async () => {
     setIntegrityChecking(true);
     setIntegrityResult(null);
+    const knownPaths = getKnownPaths();
     const missing: string[] = [];
     let found = 0;
     for (const filePath of effectivePaths) {
-      try {
-        const r = await fetch(new URL(`/${filePath}`, window.location.origin).href, { method: "HEAD" });
-        if (r.ok) { found++; } else { missing.push(filePath); }
-      } catch { missing.push(filePath); }
+      if (knownPaths.includes(filePath)) { found++; } else { missing.push(filePath); }
     }
     setIntegrityResult({ missing, found, total: effectivePaths.length });
     if (missing.length === 0) {
       toast.success(`✅ Integridade OK! Todos os ${found} arquivos encontrados.`);
     } else {
-      toast.error(`⚠️ ${missing.length} arquivo(s) faltando no backup!`);
+      toast.error(`⚠️ ${missing.length} arquivo(s) faltando no manifesto!`);
     }
     setIntegrityChecking(false);
   };
