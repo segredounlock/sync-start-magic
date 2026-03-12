@@ -146,6 +146,10 @@ export default function BackupSection() {
   // Dynamic source paths manifest
   const [dynamicPaths, setDynamicPaths] = useState<string[] | null>(null);
 
+  // Integrity check
+  const [integrityChecking, setIntegrityChecking] = useState(false);
+  const [integrityResult, setIntegrityResult] = useState<{ missing: string[]; found: number; total: number } | null>(null);
+
   // Effective paths: dynamic from DB if available, otherwise hardcoded fallback
   const effectivePaths = dynamicPaths || SOURCE_PATHS;
 
