@@ -4,7 +4,7 @@ import {
   Download, Upload, Database, Loader2, CheckCircle2, AlertTriangle,
   Github, RefreshCw, FolderSync, ArrowDownToLine, ArrowUpFromLine,
   FileArchive, Shield, Clock, HardDrive, ChevronDown, ChevronRight, X,
-  Eye, EyeOff, Save, Code2, PackageCheck, UploadCloud, Info,
+  Eye, EyeOff, Save, Code2, PackageCheck, UploadCloud, Info, Fingerprint, Hash,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatFullDateTimeBR, formatDateFullBR } from "@/lib/timezone";
