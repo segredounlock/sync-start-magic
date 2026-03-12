@@ -207,9 +207,6 @@ async function handleWebhook(req: Request): Promise<Response> {
   // payload.type is the hook event type ("auth")
   const emailType = payload.data.action_type
   console.log('Received auth event', { emailType, email: payload.data.email, run_id })
-  console.log('Full payload keys:', JSON.stringify(Object.keys(payload)))
-  console.log('Payload callback_url:', payload.callback_url)
-  console.log('Payload data keys:', JSON.stringify(Object.keys(payload.data || {})))
 
   const EmailTemplate = EMAIL_TEMPLATES[emailType]
   if (!EmailTemplate) {
@@ -237,58 +234,52 @@ async function handleWebhook(req: Request): Promise<Response> {
     plainText: true,
   })
 
-  // Enqueue email for async processing by the dispatcher (process-email-queue).
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
-
-  const messageId = crypto.randomUUID()
-
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: emailType,
-    recipient_email: payload.data.email,
-    status: 'pending',
-  })
-
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'auth_emails',
-    payload: {
-      run_id,
-      message_id: messageId,
-      to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
-      html,
-      text,
-      purpose: 'transactional',
-      label: emailType,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqueueError) {
-    console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
+  // Send email directly via callback_url from payload.data
+  const callbackUrl = payload.data.callback_url
+  if (!callbackUrl) {
+    console.error('No callback_url in payload.data', { run_id })
+    return new Response(JSON.stringify({ error: 'No callback_url' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
-    return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
+  }
+
+  const emailPayload = {
+    to: payload.data.email,
+    from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+    sender_domain: SENDER_DOMAIN,
+    subject: EMAIL_SUBJECTS[emailType] || 'Notification',
+    html,
+    text,
+    purpose: 'transactional',
+    label: emailType,
+  }
+
+  console.log('Sending email via callback', { callbackUrl, to: payload.data.email, emailType, run_id })
+
+  const sendRes = await fetch(callbackUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(emailPayload),
+  })
+
+  const sendBody = await sendRes.text()
+
+  if (!sendRes.ok) {
+    console.error('Failed to send email via callback', { status: sendRes.status, body: sendBody, run_id, emailType })
+    return new Response(JSON.stringify({ error: 'Failed to send email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
+  console.log('Auth email sent successfully', { emailType, email: payload.data.email, run_id })
 
   return new Response(
-    JSON.stringify({ success: true, queued: true }),
+    JSON.stringify({ success: true }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
