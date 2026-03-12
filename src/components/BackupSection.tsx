@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatFullDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { styledToast as toast } from "@/lib/toast";
 import JSZip from "jszip";
+import { getKnownPaths } from "@/lib/sourceManifest";
 
 // Tables are now discovered dynamically by the edge functions
 // This constant is only used for display fallback
