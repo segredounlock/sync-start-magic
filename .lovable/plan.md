@@ -1,22 +1,40 @@
 
-# Plano: Restaurar App.tsx e index.css corrompidos
 
-## Problema
-Os arquivos `src/App.tsx` e `src/index.css` foram sobrescritos com a saída compilada do Vite (código transformado com HMR, `$RefreshReg$`, etc.) em vez do código-fonte original. Isso causa centenas de erros de build.
+## Diagnóstico e Correção
 
-## Solução
-Reconstruir ambos os arquivos a partir do código compilado, extraindo a lógica original:
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### 1. Restaurar `src/App.tsx`
-Baseado na versão compilada, o arquivo original contém:
-- Imports: `Routes`, `Route`, `AuthProvider`, `useAuth`, `ThemeProvider`, `ProtectedRoute`, `lazy`, `Suspense`, `useEffect`, `useState`, `SplashScreen`, `supabase`, e páginas (Auth, RecargaPublica, etc.)
-- Lazy loads: AdminDashboard, RevendedorPainel, Principal, ChatApp, UserProfile
-- `MaintenanceGuard` component (verifica modo manutenção via RPC + realtime)
-- `App` component com ThemeProvider > AuthProvider > SeasonalEffects + PullToRefresh + MaintenanceGuard > Routes
-- Rotas: `/`, `/login`, `/recarga`, `/reset-password`, `/loja/:slug`, `/miniapp`, `/instalar`, `/admin` (admin+revendedor), `/principal` (admin), `/painel`, `/chat`, `/perfil/:userId`, `*`
+### Plano
 
-### 2. Restaurar `src/index.css`
-Extrair o CSS original do conteúdo compilado — basicamente as variáveis de tema (light/dark), classes glass/glow/kpi, e diretivas Tailwind.
+**1. Corrigir o mapeamento de status na sync function**
 
-### Atualização do Backup
-Nenhuma tabela ou arquivo novo será adicionado — apenas restauração dos existentes.
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
+
