@@ -22,7 +22,7 @@ const SOURCE_PATHS = [
   "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ChatApp.tsx",
   "src/pages/ClientePortal.tsx","src/pages/LandingPage.tsx","src/pages/NotFound.tsx",
   "src/pages/Principal.tsx","src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/MaintenancePage.tsx",
-  "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx",
+  "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx","src/pages/UserProfile.tsx","src/pages/InstallApp.tsx",
   // Components
   "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
   "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
