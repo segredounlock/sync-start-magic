@@ -822,8 +822,13 @@ export default function BackupSection() {
             <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Verificação de Integridade</p>
+                  <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${integrityChecking ? "bg-primary/20" : "bg-muted/30"} transition-colors`}>
+                    <Shield className={`h-3.5 w-3.5 ${integrityChecking ? "text-primary animate-pulse" : "text-muted-foreground"} transition-colors`} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Verificação de Integridade</p>
+                    <p className="text-[10px] text-muted-foreground">Checksums SHA-256 de cada arquivo</p>
+                  </div>
                 </div>
                 <button onClick={runIntegrityCheck} disabled={integrityChecking}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all disabled:opacity-60">
@@ -831,66 +836,121 @@ export default function BackupSection() {
                   {integrityChecking ? "Verificando..." : "Verificar"}
                 </button>
               </div>
-              <p className="text-[11px] text-muted-foreground">Compara os arquivos do projeto com o SOURCE_PATHS para garantir que nenhum arquivo fique fora do backup.</p>
+
+              {/* Scanning progress bar */}
+              <AnimatePresence>
+                {integrityChecking && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                    className="space-y-1.5 overflow-hidden">
+                    <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                      <motion.div className="h-full bg-gradient-to-r from-primary via-emerald-400 to-primary rounded-full"
+                        initial={{ width: 0 }} animate={{ width: `${integrityProgress}%` }} transition={{ duration: 0.4, ease: "easeOut" }}
+                        style={{ backgroundSize: "200% 100%", animation: "shimmer 1.5s ease-in-out infinite" }} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] text-muted-foreground font-medium">{integrityStage}</p>
+                      <p className="text-[10px] font-mono text-primary">{integrityProgress}%</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <AnimatePresence>
                 {integrityResult && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                    className="space-y-2 overflow-hidden">
-                    <div className="flex items-center gap-2">
-                      {integrityResult.missing.length === 0 ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4 text-amber-400" />
-                      )}
-                      <p className="text-xs font-semibold text-foreground">
-                        {integrityResult.found}/{integrityResult.verifiable} verificáveis OK
-                        {integrityResult.missing.length > 0 && ` · ${integrityResult.missing.length} faltando`}
-                        {" · "}
-                        <span className="font-mono text-primary">Fingerprint: {integrityResult.fingerprint}</span>
-                      </p>
-                    </div>
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="space-y-2.5">
+
+                    {/* Summary card */}
+                    <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 25 }}
+                      className={`rounded-xl p-3 border ${integrityResult.missing.length === 0
+                        ? "bg-emerald-500/[0.08] border-emerald-500/20"
+                        : "bg-amber-500/[0.08] border-amber-500/20"}`}>
+                      <div className="flex items-center gap-2.5">
+                        <motion.div initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: 0.2, type: "spring", stiffness: 400, damping: 15 }}>
+                          {integrityResult.missing.length === 0 ? (
+                            <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                              <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400" />
+                            </div>
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                              <AlertTriangle className="h-4.5 w-4.5 text-amber-400" />
+                            </div>
+                          )}
+                        </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground">
+                            {integrityResult.found}/{integrityResult.verifiable} verificáveis OK
+                            {integrityResult.missing.length > 0 && (
+                              <span className="text-amber-400 ml-1">· {integrityResult.missing.length} faltando</span>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Fingerprint className="h-3 w-3 text-primary/70" />
+                            <p className="text-[10px] font-mono text-primary font-semibold tracking-wide">{integrityResult.fingerprint}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Missing files */}
                     {integrityResult.missing.length > 0 && (
-                      <div className="max-h-40 overflow-y-auto rounded-xl bg-red-500/[0.06] border border-red-500/20 p-2.5 space-y-1">
+                      <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}
+                        className="max-h-40 overflow-y-auto rounded-xl bg-red-500/[0.06] border border-red-500/20 p-2.5 space-y-1">
                         <p className="text-[10px] font-semibold text-red-400 uppercase tracking-wider mb-1">Arquivos faltantes:</p>
-                        {integrityResult.missing.map((f) => (
-                          <p key={f} className="text-[10px] font-mono text-red-300/80 truncate">❌ {f}</p>
+                        {integrityResult.missing.map((f, i) => (
+                          <motion.p key={f} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + i * 0.03 }}
+                            className="text-[10px] font-mono text-red-300/80 truncate">❌ {f}</motion.p>
                         ))}
-                      </div>
+                      </motion.div>
                     )}
-                    {integrityResult.missing.length === 0 && (
-                      <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 p-2.5">
-                        <p className="text-[10px] text-emerald-400 font-medium">✅ Todos os arquivos verificáveis estão presentes. Nenhum faltando.</p>
-                      </div>
-                    )}
+
                     {/* Expandable checksums */}
                     {Object.keys(integrityResult.hashes).length > 0 && (
-                      <div className="rounded-xl bg-white/[0.02] border border-white/10 overflow-hidden">
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                        className="rounded-xl bg-white/[0.02] border border-white/10 overflow-hidden">
                         <button onClick={() => setShowChecksums(!showChecksums)}
-                          className="w-full flex items-center gap-1.5 px-2.5 py-2 text-left hover:bg-white/[0.03] transition-colors">
-                          {showChecksums ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Ver checksums individuais ({Object.keys(integrityResult.hashes).length})
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors group">
+                          <Hash className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <motion.div animate={{ rotate: showChecksums ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                            <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                          </motion.div>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider group-hover:text-foreground transition-colors">
+                            Checksums individuais ({Object.keys(integrityResult.hashes).length})
                           </p>
                         </button>
                         <AnimatePresence>
                           {showChecksums && (
-                            <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
-                              <div className="max-h-60 overflow-y-auto px-2.5 pb-2.5 space-y-0.5">
-                                {Object.entries(integrityResult.hashes).sort(([a], [b]) => a.localeCompare(b)).map(([file, hash]) => (
-                                  <div key={file} className="flex items-center justify-between gap-2 py-0.5">
-                                    <p className="text-[10px] font-mono text-foreground/70 truncate flex-1">{file}</p>
-                                    <p className="text-[10px] font-mono text-primary/80 shrink-0">{hash}</p>
-                                  </div>
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }}
+                              className="overflow-hidden">
+                              <div className="max-h-60 overflow-y-auto px-3 pb-3 space-y-px">
+                                {Object.entries(integrityResult.hashes).sort(([a], [b]) => a.localeCompare(b)).map(([file, hash], i) => (
+                                  <motion.div key={file}
+                                    initial={{ opacity: 0, x: -4 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: Math.min(i * 0.012, 0.8) }}
+                                    className="flex items-center justify-between gap-2 py-1 px-1.5 rounded-md hover:bg-white/[0.03] transition-colors group/row">
+                                    <p className="text-[10px] font-mono text-foreground/60 group-hover/row:text-foreground/80 truncate flex-1 transition-colors">
+                                      {file.split("/").pop()}
+                                      <span className="text-foreground/30 ml-1 hidden sm:inline">{file.split("/").slice(0, -1).join("/")}/</span>
+                                    </p>
+                                    <p className="text-[10px] font-mono text-primary/70 group-hover/row:text-primary shrink-0 transition-colors">{hash}</p>
+                                  </motion.div>
                                 ))}
                               </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
-                      </div>
+                      </motion.div>
                     )}
+
+                    {/* External files */}
                     {integrityResult.external.length > 0 && (
-                      <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-2.5 space-y-1">
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
+                        className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-2.5 space-y-1">
                         <div className="flex items-center gap-1.5 mb-1">
                           <Info className="h-3 w-3 text-blue-400" />
                           <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-wider">
@@ -900,7 +960,7 @@ export default function BackupSection() {
                         <p className="text-[10px] text-blue-300/70">
                           Configs, Edge Functions e arquivos Supabase não são verificáveis no cliente, mas são incluídos normalmente no backup/sync.
                         </p>
-                      </div>
+                      </motion.div>
                     )}
                   </motion.div>
                 )}
