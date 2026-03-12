@@ -25,7 +25,7 @@ const SOURCE_PATHS = [
   "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx","src/pages/UserProfile.tsx","src/pages/InstallApp.tsx",
   // Components
   "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
-  "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
+  "src/components/AnimatedCounter.tsx","src/components/AuditTab.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
   "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
   "src/components/BannersManager.tsx","src/components/FloatingPoll.tsx",
   "src/components/ImageCropper.tsx","src/components/MobileBottomNav.tsx",
