@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader2 } from "lucide-react";
+import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader2, Clock, XCircle } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR } from "@/lib/timezone";
 import html2canvas from "html2canvas";
