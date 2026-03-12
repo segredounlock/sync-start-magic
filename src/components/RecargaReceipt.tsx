@@ -366,10 +366,10 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
             <div className="flex gap-3 mt-4 px-2">
               <button
                 onClick={handleShare}
-                disabled={sharing || preparingImage || !imageReady}
+                disabled={sharing || preparingImage || !imageReady || !isCompleted}
                 className="flex-1 py-3 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-60"
               >
-                {sharing || preparingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Compartilhando..." : preparingImage || !imageReady ? "Preparando imagem..." : "Compartilhar"}
+                {sharing || preparingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Compartilhando..." : !isCompleted ? "Aguardando conclusão" : preparingImage || !imageReady ? "Preparando imagem..." : "Compartilhar"}
               </button>
               <button
                 onClick={onClose}
