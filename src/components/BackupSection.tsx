@@ -45,7 +45,7 @@ const SOURCE_PATHS = [
   "src/components/ChatRoomManager.tsx",
   // Hooks
   "src/hooks/useAuth.tsx","src/hooks/useAsync.ts","src/hooks/useBackgroundPaymentMonitor.ts",
-  "src/hooks/useChat.ts","src/hooks/useCrud.ts","src/hooks/useNotifications.ts",
+  "src/hooks/useCacheCleanup.ts","src/hooks/useChat.ts","src/hooks/useCrud.ts","src/hooks/useNotifications.ts",
   "src/hooks/usePixDeposit.ts","src/hooks/usePresence.ts",
   "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
   // Libs
