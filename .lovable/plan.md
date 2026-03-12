@@ -1,37 +1,40 @@
 
 
-## Checksum de Integridade para Arquivos Verificáveis
+## Diagnóstico e Correção
 
-### Problema
-A verificação atual só confirma que o arquivo **existe** no manifesto. Não detecta se foi **modificado**.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### Abordagem
-Criar um **plugin Vite** que, durante o build, lê cada arquivo fonte, computa um hash curto (djb2) e gera um módulo virtual com o mapa `path → hash`. Isso evita incluir o conteúdo bruto dos arquivos no bundle (que adicionaria centenas de KB).
+### Plano
 
-### Alterações
+**1. Corrigir o mapeamento de status na sync function**
 
-**1. `vite.config.ts`** — Adicionar plugin `sourceHashPlugin`:
-- No `buildStart`, escaneia `src/**/*.{tsx,ts,css}` e `public/sw-push.js`
-- Computa hash djb2 de cada arquivo (8 chars hex)
-- Serve como módulo virtual `virtual:source-hashes` exportando o mapa `Record<string, string>`
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-**2. `src/lib/sourceManifest.ts`** — Importar hash map do módulo virtual:
-- Exportar `getFileHashes(): Record<string, string>` além do `getKnownPaths()` existente
-- Adicionar declaração de tipo para o módulo virtual
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-**3. `src/components/BackupSection.tsx`** — Atualizar `runIntegrityCheck`:
-- Importar `getFileHashes()`
-- No resultado, incluir os hashes por arquivo
-- Na UI, mostrar um resumo com o hash (ex: "85 arquivos · checksum global: a3f7b2c1")
-- Adicionar seção expansível mostrando cada arquivo com seu hash individual
-- Computar um hash agregado de todos os hashes para dar um "fingerprint" geral do build
-
-### Resultado na UI
-```text
-✅ 85/85 verificáveis OK · Fingerprint: a3f7b2c1
-  ▸ Ver checksums individuais
-    src/App.tsx .............. e4a2f1b3
-    src/main.tsx ............. 7c3d9e01
-    ...
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

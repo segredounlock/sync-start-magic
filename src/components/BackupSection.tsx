@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatFullDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { styledToast as toast } from "@/lib/toast";
 import JSZip from "jszip";
-import { getKnownPaths } from "@/lib/sourceManifest";
+import { getKnownPaths, getFileHashes } from "@/lib/sourceManifest";
 
 // Tables are now discovered dynamically by the edge functions
 // This constant is only used for display fallback
@@ -149,7 +149,16 @@ export default function BackupSection() {
 
   // Integrity check
   const [integrityChecking, setIntegrityChecking] = useState(false);
-  const [integrityResult, setIntegrityResult] = useState<{ missing: string[]; found: number; total: number; external: string[]; verifiable: number } | null>(null);
+  const [integrityResult, setIntegrityResult] = useState<{
+    missing: string[];
+    found: number;
+    total: number;
+    external: string[];
+    verifiable: number;
+    fingerprint: string;
+    hashes: Record<string, string>;
+  } | null>(null);
+  const [showChecksums, setShowChecksums] = useState(false);
 
   // Effective paths: dynamic from DB if available, otherwise hardcoded fallback
   const effectivePaths = dynamicPaths || SOURCE_PATHS;
@@ -653,7 +662,9 @@ export default function BackupSection() {
   const runIntegrityCheck = async () => {
     setIntegrityChecking(true);
     setIntegrityResult(null);
+    setShowChecksums(false);
     const knownPaths = getKnownPaths();
+    const fileHashes = getFileHashes();
 
     // Separate verifiable (src/, public/) from external (config, edge functions, supabase/)
     const verifiablePaths: string[] = [];
@@ -668,12 +679,28 @@ export default function BackupSection() {
 
     const missing: string[] = [];
     let found = 0;
+    const verifiedHashes: Record<string, string> = {};
     for (const filePath of verifiablePaths) {
-      if (knownPaths.includes(filePath)) { found++; } else { missing.push(filePath); }
+      if (knownPaths.includes(filePath)) {
+        found++;
+        verifiedHashes[filePath] = fileHashes[filePath] || "--------";
+      } else {
+        missing.push(filePath);
+      }
     }
-    setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length });
+
+    // Compute aggregate fingerprint from all hashes (sorted for determinism)
+    const sortedHashValues = Object.keys(verifiedHashes).sort().map(k => verifiedHashes[k]).join("");
+    let fp = 0x811c9dc5; // FNV-1a offset basis
+    for (let i = 0; i < sortedHashValues.length; i++) {
+      fp ^= sortedHashValues.charCodeAt(i);
+      fp = Math.imul(fp, 0x01000193);
+    }
+    const fingerprint = (fp >>> 0).toString(16).padStart(8, "0");
+
+    setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length, fingerprint, hashes: verifiedHashes });
     if (missing.length === 0) {
-      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} verificáveis OK + ${externalPaths.length} externos.`);
+      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} · Fingerprint: ${fingerprint}`);
     } else {
       toast.error(`⚠️ ${missing.length} arquivo(s) faltando no manifesto!`);
     }
@@ -791,6 +818,8 @@ export default function BackupSection() {
                       <p className="text-xs font-semibold text-foreground">
                         {integrityResult.found}/{integrityResult.verifiable} verificáveis OK
                         {integrityResult.missing.length > 0 && ` · ${integrityResult.missing.length} faltando`}
+                        {" · "}
+                        <span className="font-mono text-primary">Fingerprint: {integrityResult.fingerprint}</span>
                       </p>
                     </div>
                     {integrityResult.missing.length > 0 && (
@@ -804,6 +833,32 @@ export default function BackupSection() {
                     {integrityResult.missing.length === 0 && (
                       <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 p-2.5">
                         <p className="text-[10px] text-emerald-400 font-medium">✅ Todos os arquivos verificáveis estão presentes. Nenhum faltando.</p>
+                      </div>
+                    )}
+                    {/* Expandable checksums */}
+                    {Object.keys(integrityResult.hashes).length > 0 && (
+                      <div className="rounded-xl bg-white/[0.02] border border-white/10 overflow-hidden">
+                        <button onClick={() => setShowChecksums(!showChecksums)}
+                          className="w-full flex items-center gap-1.5 px-2.5 py-2 text-left hover:bg-white/[0.03] transition-colors">
+                          {showChecksums ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Ver checksums individuais ({Object.keys(integrityResult.hashes).length})
+                          </p>
+                        </button>
+                        <AnimatePresence>
+                          {showChecksums && (
+                            <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
+                              <div className="max-h-60 overflow-y-auto px-2.5 pb-2.5 space-y-0.5">
+                                {Object.entries(integrityResult.hashes).sort(([a], [b]) => a.localeCompare(b)).map(([file, hash]) => (
+                                  <div key={file} className="flex items-center justify-between gap-2 py-0.5">
+                                    <p className="text-[10px] font-mono text-foreground/70 truncate flex-1">{file}</p>
+                                    <p className="text-[10px] font-mono text-primary/80 shrink-0">{hash}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
                     {integrityResult.external.length > 0 && (

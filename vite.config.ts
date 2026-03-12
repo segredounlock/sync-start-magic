@@ -1,7 +1,61 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
+import fs from "fs";
+import { createHash } from "crypto";
+
+function sourceHashPlugin(): Plugin {
+  const virtualModuleId = "virtual:source-hashes";
+  const resolvedVirtualModuleId = "\0" + virtualModuleId;
+
+  function hashFile(filePath: string): string {
+    try {
+      const content = fs.readFileSync(filePath);
+      return createHash("sha256").update(content).digest("hex").slice(0, 8);
+    } catch {
+      return "00000000";
+    }
+  }
+
+  function collectHashes(rootDir: string): Record<string, string> {
+    const hashes: Record<string, string> = {};
+    const srcDir = path.join(rootDir, "src");
+    const swPush = path.join(rootDir, "public", "sw-push.js");
+
+    function walk(dir: string) {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+        } else if (/\.(tsx?|css)$/.test(entry.name)) {
+          const rel = path.relative(rootDir, full).replace(/\\/g, "/");
+          hashes[rel] = hashFile(full);
+        }
+      }
+    }
+
+    walk(srcDir);
+    if (fs.existsSync(swPush)) {
+      hashes["public/sw-push.js"] = hashFile(swPush);
+    }
+    return hashes;
+  }
+
+  return {
+    name: "source-hash-plugin",
+    resolveId(id) {
+      if (id === virtualModuleId) return resolvedVirtualModuleId;
+    },
+    load(id) {
+      if (id === resolvedVirtualModuleId) {
+        const hashes = collectHashes(process.cwd());
+        return `export default ${JSON.stringify(hashes)};`;
+      }
+    },
+  };
+}
 
 export default defineConfig({
   server: { host: "::", port: 8080 },
@@ -13,6 +67,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    sourceHashPlugin(),
     react(),
     VitePWA({
       registerType: "autoUpdate",
