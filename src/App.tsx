@@ -57,7 +57,7 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     return () => { mounted = false; clearTimeout(timeout); supabase.removeChannel(channel); };
   }, []);
 
-  // Still loading
+  // Loading maintenance status
   if (maintenance === null) return <SplashScreen />;
 
   // Maintenance ON but user is admin → let through

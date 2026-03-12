@@ -432,7 +432,7 @@ select option {
   animation-play-state: paused;
 }
 
-/* ── Telegram Mini App Chat Theme Override ── */
+/* ── Telegram Mini App Chat Theme Overrides ── */
 .tg-chat-theme {
   --background: var(--tg-bg, #17212b);
   --foreground: var(--tg-text, #f5f5f5);
