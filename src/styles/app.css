@@ -1,0 +1,552 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sonner toaster: centralizar verticalmente na tela */
+[data-sonner-toaster] {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Hide scrollbars for mini-app feel */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Star wobble animation */
+@keyframes spin-wobble {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(180deg) scale(1.2); }
+  50% { transform: rotate(0deg) scale(1); }
+  75% { transform: rotate(-180deg) scale(1.2); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Subtle RGB border animation */
+@keyframes rgb-border {
+  0% { border-color: hsl(0, 70%, 60%); }
+  16% { border-color: hsl(60, 70%, 55%); }
+  33% { border-color: hsl(120, 70%, 50%); }
+  50% { border-color: hsl(180, 70%, 50%); }
+  66% { border-color: hsl(240, 70%, 60%); }
+  83% { border-color: hsl(300, 70%, 55%); }
+  100% { border-color: hsl(360, 70%, 60%); }
+}
+
+.rgb-border {
+  border: 1.5px solid transparent;
+  animation: rgb-border 6s linear infinite;
+}
+
+/* Shimmer skeleton effect */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@layer base {
+  :root {
+    /* ─── Light Premium Theme ─── */
+    --background: 160 10% 96%;
+    --foreground: 160 30% 8%;
+    --card: 160 15% 99%;
+    --card-foreground: 160 30% 8%;
+    --popover: 160 15% 99%;
+    --popover-foreground: 160 30% 8%;
+    --primary: 152 70% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 160 12% 92%;
+    --secondary-foreground: 160 20% 18%;
+    --muted: 160 10% 93%;
+    --muted-foreground: 160 8% 45%;
+    --accent: 152 60% 44%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 63% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 160 12% 88%;
+    --input: 160 12% 90%;
+    --ring: 152 70% 38%;
+    --radius: 0.75rem;
+
+    --sidebar-background: 160 25% 8%;
+    --sidebar-foreground: 160 10% 92%;
+    --sidebar-primary: 152 70% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 18% 14%;
+    --sidebar-accent-foreground: 160 10% 92%;
+    --sidebar-border: 160 18% 16%;
+    --sidebar-ring: 152 70% 45%;
+
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --glass-blur: 20px;
+    --gradient-bg: linear-gradient(160deg, hsl(160 15% 96%), hsl(150 12% 94%), hsl(140 10% 95%));
+  }
+
+  .dark {
+    /* ─── Dark Premium Theme (inspired by reference) ─── */
+    --background: 160 30% 4%;
+    --foreground: 150 15% 92%;
+    --card: 160 25% 8%;
+    --card-foreground: 150 15% 92%;
+    --popover: 160 25% 7%;
+    --popover-foreground: 150 15% 92%;
+    --primary: 152 72% 46%;
+    --primary-foreground: 160 40% 4%;
+    --secondary: 160 20% 11%;
+    --secondary-foreground: 150 12% 85%;
+    --muted: 160 18% 10%;
+    --muted-foreground: 150 8% 50%;
+    --accent: 152 65% 50%;
+    --accent-foreground: 160 40% 4%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 65% 46%;
+    --success-foreground: 160 40% 4%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+    --border: 160 18% 14%;
+    --input: 160 18% 12%;
+    --ring: 152 72% 46%;
+
+    --sidebar-background: 160 30% 3%;
+    --sidebar-foreground: 150 12% 90%;
+    --sidebar-primary: 152 72% 46%;
+    --sidebar-primary-foreground: 160 40% 4%;
+    --sidebar-accent: 160 20% 8%;
+    --sidebar-accent-foreground: 150 12% 90%;
+    --sidebar-border: 160 20% 10%;
+    --sidebar-ring: 152 72% 46%;
+
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(34, 197, 94, 0.08);
+    --glass-shadow: 0 4px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --glass-blur: 24px;
+    --gradient-bg: linear-gradient(160deg, hsl(160 30% 4%), hsl(155 25% 5%), hsl(150 20% 4%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-foreground;
+    background: var(--gradient-bg);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* Smooth theme transition */
+  .glass,
+  .glass-card,
+  .glass-input,
+  .glass-header,
+  .glass-modal {
+    transition: background 0.4s ease, border-color 0.3s ease, box-shadow 0.4s ease, color 0.3s ease;
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card:hover {
+    border-color: hsl(152 72% 46% / 0.15);
+    box-shadow: var(--glass-shadow), 0 0 24px hsl(152 72% 46% / 0.04);
+  }
+
+  .glass-input {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .glass-input:focus {
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1), 0 0 16px hsl(var(--primary) / 0.05);
+  }
+
+  .glass-header {
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-modal {
+    background: hsl(var(--card));
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 16px hsl(var(--primary) / 0.25), 0 0 48px hsl(var(--primary) / 0.08);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 24px hsl(var(--primary) / 0.4);
+  }
+
+  /* Premium KPI card style */
+  .kpi-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.5), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .kpi-card:hover {
+    border-color: hsl(152 72% 46% / 0.2);
+    box-shadow: var(--glass-shadow), 0 0 32px hsl(152 72% 46% / 0.06);
+    transform: translateY(-2px);
+  }
+
+  .kpi-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Sidebar nav item active accent */
+  .nav-item-active {
+    position: relative;
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.25);
+    color: hsl(var(--primary));
+  }
+
+  .nav-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: hsl(var(--primary));
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.4);
+  }
+
+  /* Premium icon container */
+  .icon-container {
+    position: relative;
+  }
+
+  .icon-container::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.2), transparent);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .icon-container:hover::after {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.25) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.2);
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.4);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* PWA standalone: disable native pull-to-refresh */
+@media (display-mode: standalone) {
+  html, body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Fix select/option dark mode */
+select option {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Animated check draw loop */
+@keyframes draw-circle {
+  0% { stroke-dashoffset: 63; }
+  40% { stroke-dashoffset: 0; }
+  80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 63; }
+}
+
+@keyframes draw-tick {
+  0% { stroke-dashoffset: 20; }
+  30% { stroke-dashoffset: 20; }
+  60% { stroke-dashoffset: 0; }
+  80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 20; }
+}
+
+/* Shimmer: brilho verde passa pelas letras */
+@keyframes shimmer-letters {
+  0%, 100% { background-position: 200% center; }
+  40% { background-position: -200% center; }
+}
+
+/* Glow pulsante — funciona em qualquer WebView */
+@keyframes text-glow-pulse {
+  0%, 100% {
+    text-shadow: 0 0 4px hsl(152 72% 50% / 0.3), 0 0 8px hsl(152 72% 50% / 0.1);
+  }
+  50% {
+    text-shadow: 0 0 8px hsl(152 72% 50% / 0.6), 0 0 20px hsl(152 72% 50% / 0.3), 0 0 32px hsl(152 72% 50% / 0.1);
+  }
+}
+
+.shimmer-letters {
+  display: inline-block;
+  /* Glow fallback universal — funciona em qualquer WebView/browser */
+  color: hsl(152, 72%, 55%);
+  animation: text-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Progressive enhancement: gradient shimmer for browsers that support it */
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .shimmer-letters {
+    background: linear-gradient(
+      110deg,
+      hsl(var(--foreground)) 0%,
+      hsl(var(--foreground)) 38%,
+      hsl(152, 72%, 55%) 50%,
+      hsl(var(--foreground)) 62%,
+      hsl(var(--foreground)) 100%
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-letters 4s ease-in-out infinite;
+  }
+}
+
+.shimmer-letters .brasil-word {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary)) 38%,
+    hsl(152, 85%, 70%) 50%,
+    hsl(var(--primary)) 62%,
+    hsl(var(--primary)) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-letters 4s ease-in-out infinite;
+}
+
+/* Ticker scroll animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.ticker-scroll {
+  display: inline-flex;
+  animation: ticker-scroll 15s linear infinite;
+}
+.ticker-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* ── Telegram Mini App Chat Theme Overrides ── */
+.tg-chat-theme {
+  --background: var(--tg-bg, #17212b);
+  --foreground: var(--tg-text, #f5f5f5);
+  --card: var(--tg-secondary-bg, #232e3c);
+  --card-foreground: var(--tg-text, #f5f5f5);
+  --popover: var(--tg-secondary-bg, #232e3c);
+  --popover-foreground: var(--tg-text, #f5f5f5);
+  --muted: var(--tg-secondary-bg, #232e3c);
+  --muted-foreground: var(--tg-hint, #708499);
+  --border: color-mix(in srgb, var(--tg-hint, #708499) 25%, transparent);
+  --primary: var(--tg-btn, #5288c1);
+  --primary-foreground: var(--tg-btn-text, #ffffff);
+  --accent: var(--tg-accent, #6ab2f2);
+  --accent-foreground: var(--tg-text, #f5f5f5);
+  --destructive: var(--tg-destructive, #ec3942);
+  --secondary: var(--tg-secondary-bg, #232e3c);
+  --secondary-foreground: var(--tg-text, #f5f5f5);
+  color: var(--tg-text, #f5f5f5);
+  background-color: var(--tg-bg, #17212b);
+}
+
+.tg-chat-theme * {
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent);
+}
+
+.tg-chat-theme .bg-card,
+.tg-chat-theme .bg-card\/80,
+.tg-chat-theme .bg-card\/50 {
+  background-color: var(--tg-secondary-bg, #232e3c) !important;
+}
+
+.tg-chat-theme .bg-muted,
+.tg-chat-theme .bg-muted\/50,
+.tg-chat-theme .bg-muted\/60,
+.tg-chat-theme .bg-muted\/40,
+.tg-chat-theme .bg-muted\/30 {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 15%, var(--tg-bg, #17212b)) !important;
+}
+
+.tg-chat-theme .text-foreground {
+  color: var(--tg-text, #f5f5f5) !important;
+}
+
+.tg-chat-theme .text-muted-foreground {
+  color: var(--tg-hint, #708499) !important;
+}
+
+.tg-chat-theme .text-primary {
+  color: var(--tg-accent, #6ab2f2) !important;
+}
+
+.tg-chat-theme .bg-primary\/10,
+.tg-chat-theme .bg-primary\/15,
+.tg-chat-theme .bg-primary\/20 {
+  background-color: color-mix(in srgb, var(--tg-btn, #5288c1) 15%, transparent) !important;
+}
+
+.tg-chat-theme .border-border,
+.tg-chat-theme .border-border\/50 {
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent) !important;
+}
+
+/* Separador de seção nas conversas */
+.tg-chat-theme .bg-border {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 30%, transparent) !important;
+}
+
+.tg-chat-theme .hover\:bg-muted\/50:hover {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, var(--tg-bg, #17212b)) !important;
+}
+
+.tg-chat-theme input,
+.tg-chat-theme textarea {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 10%, var(--tg-bg, #17212b)) !important;
+  color: var(--tg-text, #f5f5f5) !important;
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 25%, transparent) !important;
+}
+
+.tg-chat-theme input::placeholder,
+.tg-chat-theme textarea::placeholder {
+  color: var(--tg-hint, #708499) !important;
+}
+
+/* Preserve shimmer effect in Telegram theme */
+.tg-chat-theme .shimmer-letters {
+  display: inline-block !important;
+  /* Glow verde universal — funciona em qualquer WebView */
+  color: #4ade80 !important;
+  -webkit-text-fill-color: #4ade80 !important;
+  text-shadow: 0 0 6px rgba(74, 222, 128, 0.4), 0 0 12px rgba(74, 222, 128, 0.15) !important;
+  animation: text-glow-pulse 3s ease-in-out infinite !important;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .tg-chat-theme .shimmer-letters {
+    background: linear-gradient(
+      110deg,
+      #4ade80 0%,
+      #4ade80 38%,
+      #f5f5f5 50%,
+      #4ade80 62%,
+      #4ade80 100%
+    ) !important;
+    background-size: 300% 100% !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+    animation: shimmer-letters 4s ease-in-out infinite !important;
+  }
+}
+
+@keyframes rec-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
