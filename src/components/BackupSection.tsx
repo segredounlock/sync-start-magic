@@ -49,7 +49,7 @@ const SOURCE_PATHS = [
   "src/hooks/usePixDeposit.ts","src/hooks/usePresence.ts",
   "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
   // Libs
-  "src/lib/confirm.tsx","src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts",
+  "src/lib/auditLog.ts","src/lib/confirm.tsx","src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts",
   "src/lib/timezone.ts","src/lib/toast.tsx","src/lib/utils.ts",
   // Types
   "src/types/index.ts",
