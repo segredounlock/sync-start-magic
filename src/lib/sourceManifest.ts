@@ -1,7 +1,5 @@
 const srcFiles = import.meta.glob([
   '/src/**/*.{tsx,ts,css}',
-  '/supabase/functions/**/*.{ts,tsx}',
-  '/supabase/functions/_shared/**/*.{ts,tsx}',
   '/public/sw-push.js',
 ], { eager: false });
 
