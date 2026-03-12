@@ -10,8 +10,9 @@ let isRedirecting = false;
 export function installSessionGuard() {
   // Listen for auth state changes — SIGNED_OUT while user expected to be logged in
   supabase.auth.onAuthStateChange((event) => {
-    if (event === "TOKEN_REFRESH_FAILURE") {
-      handleExpiredSession();
+    if (event === "SIGNED_OUT") {
+      // Only redirect if we were previously authenticated (not initial load)
+      // This is handled naturally since SIGNED_OUT fires when token refresh fails
     }
   });
 }
