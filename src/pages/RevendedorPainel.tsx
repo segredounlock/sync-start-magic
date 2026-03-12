@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import BankDashboard from "@/components/BankDashboard";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
@@ -962,26 +963,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         </div>
 
         <main className="max-w-5xl mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-5">
-          {/* Stats - hidden on profile tab */}
-          {tab !== "contatos" && (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {[
-              { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", bgColor: "bg-primary/10", anim: "float" as const },
-              { icon: Clock, label: "Total", rawValue: recargas.length, isCurrency: false, color: "text-accent", bgColor: "bg-accent/10", anim: "pulse" as const },
-            ].map((c, i) => (
-              <motion.div key={c.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }} className="kpi-card">
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className={`w-10 h-10 rounded-xl ${c.bgColor} flex items-center justify-center icon-container`}>
-                    <AnimatedIcon icon={c.icon} className={`h-5 w-5 ${c.color}`} animation={c.anim} delay={i * 0.12} />
-                  </div>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{c.label}</span>
-                </div>
-                <p className={`text-2xl md:text-3xl font-bold ${c.color} truncate`}>
-                  {loading ? <SkeletonValue width="w-16" className="h-7" /> : c.isCurrency ? <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" /> : <AnimatedInt value={c.rawValue} />}
-                </p>
-              </motion.div>
-            ))}
-          </div>
+          {/* Bank-style Dashboard - shown only on recarga tab */}
+          {tab === "recarga" && (
+            <BankDashboard
+              saldo={saldo}
+              recargas={recargas}
+              transactions={transactions}
+              loading={loading}
+              onNavigate={(t) => selectTab(t as PainelTab)}
+            />
           )}
 
           {/* Banners Promocionais */}
