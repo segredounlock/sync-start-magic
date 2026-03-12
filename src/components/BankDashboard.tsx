@@ -270,7 +270,8 @@ export default function BankDashboard({
           <div className="divide-y divide-border">
             {recentRecargas.map((rec, i) => {
               const opName = rec.operadora || "Operadora";
-              const opColor = operadoraColors[opName.toLowerCase()] || "bg-muted";
+              const opColors = operadoraColors(opName);
+              const opColor = opColors.bg;
               return (
                 <motion.div
                   key={rec.id}
