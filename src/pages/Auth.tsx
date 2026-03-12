@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { appToast } from "@/lib/toast";
 import { Navigate } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, User, Download, Smartphone } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Download, Smartphone, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
