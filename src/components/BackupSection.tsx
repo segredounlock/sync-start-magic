@@ -653,19 +653,17 @@ export default function BackupSection() {
   const runIntegrityCheck = async () => {
     setIntegrityChecking(true);
     setIntegrityResult(null);
+    const knownPaths = getKnownPaths();
     const missing: string[] = [];
     let found = 0;
     for (const filePath of effectivePaths) {
-      try {
-        const r = await fetch(new URL(`/${filePath}`, window.location.origin).href, { method: "HEAD" });
-        if (r.ok) { found++; } else { missing.push(filePath); }
-      } catch { missing.push(filePath); }
+      if (knownPaths.includes(filePath)) { found++; } else { missing.push(filePath); }
     }
     setIntegrityResult({ missing, found, total: effectivePaths.length });
     if (missing.length === 0) {
       toast.success(`✅ Integridade OK! Todos os ${found} arquivos encontrados.`);
     } else {
-      toast.error(`⚠️ ${missing.length} arquivo(s) faltando no backup!`);
+      toast.error(`⚠️ ${missing.length} arquivo(s) faltando no manifesto!`);
     }
     setIntegrityChecking(false);
   };
