@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { PinProtection } from "@/components/PinProtection";
+import AdminBankDashboard from "@/components/BankDashboard";
 import { SkeletonRow, SkeletonCard, SkeletonPricingGrid } from "@/components/Skeleton";
 import BackupSection from "@/components/BackupSection";
 import { BroadcastForm } from "@/components/BroadcastForm";
@@ -197,6 +198,10 @@ export default function Principal() {
   // All recargas for counting
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
   const [allUsers, setAllUsers] = useState<{ id: string; active: boolean; created_at: string }[]>([]);
+  const [meuSaldo, setMeuSaldo] = useState(0);
+  const [globalTxDeposited, setGlobalTxDeposited] = useState(0);
+  const [globalTxCount, setGlobalTxCount] = useState(0);
+  const [showLucroModal, setShowLucroModal] = useState(false);
 
   // Report state
   const [reportData, setReportData] = useState<{ user_id: string; nome: string | null; email: string | null; totalRecargas: number; totalValor: number; totalVendas: number; totalCusto: number; lucro: number }[]>([]);
@@ -603,8 +608,23 @@ export default function Principal() {
 
       setRevendedores(list);
       setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), custo_api: Number(r.custo_api || 0) })));
+
+      // Fetch meuSaldo (admin's own balance)
+      if (user?.id) {
+        const { data: mySaldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle();
+        setMeuSaldo(Number(mySaldo?.valor || 0));
+      }
+
+      // Fetch global deposit totals
+      const txRows = await fetchAllRows("transactions", {
+        select: "amount, status, type",
+        filters: (q: any) => q.eq("status", "completed").eq("type", "deposit"),
+      });
+      const deposited = (txRows || []).reduce((s: number, t: any) => s + Number(t.amount), 0);
+      setGlobalTxDeposited(deposited);
+      setGlobalTxCount((txRows || []).length);
     });
-  }, [runFetch]);
+  }, [runFetch, user?.id]);
 
   const fetchRevDetail = useCallback(async (rev: Revendedor) => {
     setRevLoading(true);
@@ -1262,82 +1282,69 @@ export default function Principal() {
           {/* ===== DASHBOARD ===== */}
           {view === "dashboard" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              {/* KPI Row */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                {[
-                  { icon: Smartphone, label: "Recargas Hoje", rawValue: dashboardMetrics.recargasHoje, isInt: true, sub: `${dashboardMetrics.completedHoje} concluídas de ${dashboardMetrics.recargasHoje} solicitadas`, color: "text-primary", bgColor: "bg-primary/10" },
-                  { icon: TrendingUp, label: "Vendas Hoje (Cobrado)", rawValue: dashboardMetrics.receitaHoje, isInt: false, sub: "Valor cobrado dos revendedores hoje", color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Wallet, label: "Saldo dos Revendedores", rawValue: totalSaldo, isInt: false, sub: `Soma dos saldos de revenda de todos os ${allUsers.length} usuários`, color: "text-warning", bgColor: "bg-warning/10" },
-                  { icon: DollarSign, label: "Vendas do Mês (Cobrado)", rawValue: dashboardMetrics.receitaMes, isInt: false, sub: "Cobrado dos revendedores neste mês", color: "text-accent", bgColor: "bg-accent/10" },
-                  { icon: BarChart3, label: "Lucro Total (Histórico)", rawValue: dashboardMetrics.lucroTotal, isInt: false, sub: "Vendas - Custo API de todas as recargas", color: "text-success", bgColor: "bg-success/10" },
-                  { icon: Activity, label: "Faturamento Total (Cobrado)", rawValue: dashboardMetrics.receitaTotal, isInt: false, sub: "Total cobrado de todos os tempos", color: "text-primary", bgColor: "bg-primary/10" },
-                ].map((c) => (
-              <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="kpi-card hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl ${c.bgColor} flex items-center justify-center shrink-0`}>
-                        <c.icon className={`h-5 w-5 ${c.color}`} />
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{c.label}</p>
-                    <p className={`text-xl md:text-2xl font-bold ${c.color} mt-1`}>
-                      {c.isInt ? (
-                        <AnimatedInt value={c.rawValue} />
-                      ) : (
-                        <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" />
-                      )}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{c.sub}</p>
-                  </motion.div>
-                ))}
-                {/* Saldo Provedor (API) */}
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="kpi-card col-span-2 lg:col-span-1 border border-[hsl(280,70%,60%)]/20 hover:shadow-lg hover:shadow-[hsl(280,70%,60%)]/5 hover:-translate-y-0.5 transition-all duration-200">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-11 h-11 rounded-2xl bg-[hsl(280,70%,60%)]/10 flex items-center justify-center shrink-0">
-                      <Server className="h-5 w-5 text-[hsl(280,70%,60%)]" />
-                    </div>
-                    <button onClick={fetchProviderBalance} disabled={providerBalance.loading}
-                      className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50">
-                      <RefreshCw className={`h-3.5 w-3.5 ${providerBalance.loading ? "animate-spin" : ""}`} />
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Saldo Provedor</p>
-                  {providerBalance.loading ? (
-                    <div className="mt-1"><SkeletonCard /></div>
-                  ) : providerBalance.error ? (
-                    <p className="text-xl md:text-2xl font-bold text-destructive mt-0.5">Erro</p>
-                  ) : providerBalance.value !== null ? (
-                    <p className={`text-xl md:text-2xl font-bold mt-0.5 text-[hsl(280,70%,60%)]`}>
-                      <AnimatedCounter value={providerBalance.value} prefix="R$&nbsp;" />
-                    </p>
-                  ) : (
-                    <p className="text-xl md:text-2xl font-bold text-muted-foreground mt-0.5">—</p>
-                  )}
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {providerBalance.error ? "Falha ao consultar API" : "API Recarga Express"}
-                  </p>
-                </motion.div>
-              </div>
+              {/* Bank-style Dashboard */}
+              {(() => {
+                const allCompleted = allRecargas.filter(r => r.status === "completed" || r.status === "concluida");
+                const totalCobrado = allCompleted.reduce((s, r) => s + r.custo, 0);
+                const totalCustoApi = allCompleted.reduce((s, r) => s + (r.custo_api || 0), 0);
+                const lucro = totalCobrado - totalCustoApi;
+                const totalRec = allRecargas.length;
+                const successRec = allCompleted.length;
+                const pendingRec = allRecargas.filter(r => r.status === "pending").length;
+                const ticketMedio = successRec > 0 ? totalCobrado / successRec : 0;
 
-              {/* Quick Actions */}
-              <div className="glass-card rounded-xl p-4 md:p-5">
-                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-primary" /> Ações Rápidas
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-r from-success/20 to-primary/20 text-success text-sm font-semibold hover:from-success/30 hover:to-primary/30 hover:shadow-md transition-all duration-200">
-                    <Plus className="h-4 w-4" /> Novo Revendedor
-                  </button>
-                  <button onClick={() => setView("lista")} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted hover:shadow-sm transition-all duration-200">
-                    <Users className="h-4 w-4 text-primary" /> Ver Revendedores
-                  </button>
-                  <button onClick={() => { setView("relatorios"); }} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted hover:shadow-sm transition-all duration-200">
-                    <FileText className="h-4 w-4 text-warning" /> Relatórios
-                  </button>
-                  <button onClick={() => { setView("config-api"); fetchApiConfig(); }} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/60 text-foreground text-sm font-medium hover:bg-muted hover:shadow-sm transition-all duration-200">
-                    <Settings className="h-4 w-4 text-[hsl(280,70%,60%)]" /> Configurar API
+                return (
+                  <AdminBankDashboard
+                    lucro={lucro}
+                    totalDeposited={globalTxDeposited}
+                    saldoCarteiras={totalSaldo}
+                    ticketMedio={ticketMedio}
+                    totalRec={totalRec}
+                    successRec={successRec}
+                    pendingRec={pendingRec}
+                    meuSaldo={meuSaldo}
+                    loading={loading}
+                    onAddSaldo={() => setShowCreateModal(true)}
+                    onNavigate={(key) => {
+                      if (key === "historico") setView("relatorios");
+                      else if (key === "usuarios") setView("lista");
+                      else if (key === "depositos") setView("depositos");
+                    }}
+                    onShowLucroModal={() => setShowLucroModal(true)}
+                    lucroPct={totalCobrado > 0 ? (lucro / totalCobrado) * 100 : 0}
+                    txCount={globalTxCount}
+                    totalCobrado={totalCobrado}
+                  />
+                );
+              })()}
+
+              {/* Saldo Provedor (API) */}
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="kpi-card border border-[hsl(280,70%,60%)]/20 hover:shadow-lg hover:shadow-[hsl(280,70%,60%)]/5 hover:-translate-y-0.5 transition-all duration-200">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-11 h-11 rounded-2xl bg-[hsl(280,70%,60%)]/10 flex items-center justify-center shrink-0">
+                    <Server className="h-5 w-5 text-[hsl(280,70%,60%)]" />
+                  </div>
+                  <button onClick={fetchProviderBalance} disabled={providerBalance.loading}
+                    className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50">
+                    <RefreshCw className={`h-3.5 w-3.5 ${providerBalance.loading ? "animate-spin" : ""}`} />
                   </button>
                 </div>
-              </div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Saldo Provedor</p>
+                {providerBalance.loading ? (
+                  <div className="mt-1"><SkeletonCard /></div>
+                ) : providerBalance.error ? (
+                  <p className="text-xl md:text-2xl font-bold text-destructive mt-0.5">Erro</p>
+                ) : providerBalance.value !== null ? (
+                  <p className="text-xl md:text-2xl font-bold mt-0.5 text-[hsl(280,70%,60%)]">
+                    <AnimatedCounter value={providerBalance.value} prefix={"R$\u00A0"} />
+                  </p>
+                ) : (
+                  <p className="text-xl md:text-2xl font-bold text-muted-foreground mt-0.5">—</p>
+                )}
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {providerBalance.error ? "Falha ao consultar API" : "API Recarga Express"}
+                </p>
+              </motion.div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 {/* Recent Activity */}
