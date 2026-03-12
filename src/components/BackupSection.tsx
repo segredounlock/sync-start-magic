@@ -818,6 +818,8 @@ export default function BackupSection() {
                       <p className="text-xs font-semibold text-foreground">
                         {integrityResult.found}/{integrityResult.verifiable} verificáveis OK
                         {integrityResult.missing.length > 0 && ` · ${integrityResult.missing.length} faltando`}
+                        {" · "}
+                        <span className="font-mono text-primary">Fingerprint: {integrityResult.fingerprint}</span>
                       </p>
                     </div>
                     {integrityResult.missing.length > 0 && (
@@ -831,6 +833,32 @@ export default function BackupSection() {
                     {integrityResult.missing.length === 0 && (
                       <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 p-2.5">
                         <p className="text-[10px] text-emerald-400 font-medium">✅ Todos os arquivos verificáveis estão presentes. Nenhum faltando.</p>
+                      </div>
+                    )}
+                    {/* Expandable checksums */}
+                    {Object.keys(integrityResult.hashes).length > 0 && (
+                      <div className="rounded-xl bg-white/[0.02] border border-white/10 overflow-hidden">
+                        <button onClick={() => setShowChecksums(!showChecksums)}
+                          className="w-full flex items-center gap-1.5 px-2.5 py-2 text-left hover:bg-white/[0.03] transition-colors">
+                          {showChecksums ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Ver checksums individuais ({Object.keys(integrityResult.hashes).length})
+                          </p>
+                        </button>
+                        <AnimatePresence>
+                          {showChecksums && (
+                            <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
+                              <div className="max-h-60 overflow-y-auto px-2.5 pb-2.5 space-y-0.5">
+                                {Object.entries(integrityResult.hashes).sort(([a], [b]) => a.localeCompare(b)).map(([file, hash]) => (
+                                  <div key={file} className="flex items-center justify-between gap-2 py-0.5">
+                                    <p className="text-[10px] font-mono text-foreground/70 truncate flex-1">{file}</p>
+                                    <p className="text-[10px] font-mono text-primary/80 shrink-0">{hash}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
                     {integrityResult.external.length > 0 && (
