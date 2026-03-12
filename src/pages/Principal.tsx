@@ -608,8 +608,23 @@ export default function Principal() {
 
       setRevendedores(list);
       setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), custo_api: Number(r.custo_api || 0) })));
+
+      // Fetch meuSaldo (admin's own balance)
+      if (user?.id) {
+        const { data: mySaldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle();
+        setMeuSaldo(Number(mySaldo?.valor || 0));
+      }
+
+      // Fetch global deposit totals
+      const txRows = await fetchAllRows("transactions", {
+        select: "amount, status, type",
+        filters: (q: any) => q.eq("status", "completed").eq("type", "deposit"),
+      });
+      const deposited = (txRows || []).reduce((s: number, t: any) => s + Number(t.amount), 0);
+      setGlobalTxDeposited(deposited);
+      setGlobalTxCount((txRows || []).length);
     });
-  }, [runFetch]);
+  }, [runFetch, user?.id]);
 
   const fetchRevDetail = useCallback(async (rev: Revendedor) => {
     setRevLoading(true);
