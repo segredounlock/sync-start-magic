@@ -149,7 +149,16 @@ export default function BackupSection() {
 
   // Integrity check
   const [integrityChecking, setIntegrityChecking] = useState(false);
-  const [integrityResult, setIntegrityResult] = useState<{ missing: string[]; found: number; total: number; external: string[]; verifiable: number } | null>(null);
+  const [integrityResult, setIntegrityResult] = useState<{
+    missing: string[];
+    found: number;
+    total: number;
+    external: string[];
+    verifiable: number;
+    fingerprint: string;
+    hashes: Record<string, string>;
+  } | null>(null);
+  const [showChecksums, setShowChecksums] = useState(false);
 
   // Effective paths: dynamic from DB if available, otherwise hardcoded fallback
   const effectivePaths = dynamicPaths || SOURCE_PATHS;
