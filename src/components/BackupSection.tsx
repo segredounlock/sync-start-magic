@@ -149,6 +149,8 @@ export default function BackupSection() {
 
   // Integrity check
   const [integrityChecking, setIntegrityChecking] = useState(false);
+  const [integrityProgress, setIntegrityProgress] = useState(0);
+  const [integrityStage, setIntegrityStage] = useState("");
   const [integrityResult, setIntegrityResult] = useState<{
     missing: string[];
     found: number;
