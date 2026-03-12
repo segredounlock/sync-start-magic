@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import AdminBankDashboard from "@/components/BankDashboard";
 // (removed duplicate toast hook)
 import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
