@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
-import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateFullBR, formatTimeBR } from "@/lib/timezone";
+import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateFullBR, formatTimeBR, formatFullDateTimeBR } from "@/lib/timezone";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { styledToast as toast } from "@/lib/toast";
@@ -3787,7 +3787,7 @@ export default function Principal() {
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
                             <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
                             <span className="text-xs text-muted-foreground">
-                              {new Date(h.created_at).toLocaleDateString('pt-BR')}, {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              {formatFullDateTimeBR(h.created_at)}
                             </span>
                             <button
                               onClick={async () => {
