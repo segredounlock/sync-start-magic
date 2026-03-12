@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { invokeWithSessionGuard } from "@/lib/sessionGuard";
 
 export type PixResult = {
   gateway: string;
@@ -11,7 +12,7 @@ export type PixResult = {
 };
 
 export async function createPixDeposit(amount: number, email?: string, name?: string, useGlobal?: boolean, resellerUserId?: string, saldoTipo?: string): Promise<PixResult> {
-  const { data, error } = await supabase.functions.invoke("create-pix", {
+  const { data, error } = await invokeWithSessionGuard("create-pix", {
     body: { amount, email, name, use_global: useGlobal || false, reseller_user_id: resellerUserId, saldo_tipo: saldoTipo || "revenda" },
   });
 
