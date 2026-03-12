@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader2 } from "lucide-react";
+import { X, Share2, CheckCircle2, Smartphone, Calendar, Hash, DollarSign, Loader2, Clock, XCircle } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR } from "@/lib/timezone";
 import html2canvas from "html2canvas";
@@ -35,13 +35,18 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
   const [preparingImage, setPreparingImage] = useState(false);
   const telegramSentRef = useRef(false);
   const r = recarga;
+  const isCompleted = r.status === "completed" || r.status === "concluida";
+  const isFailed = r.status === "failed" || r.status === "erro" || r.status === "falha";
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
+  const statusLabel = isCompleted ? "Recarga Concluída" : isFailed ? "Recarga Falhou" : "Em Processamento";
+  const statusEmoji = isCompleted ? "✅" : isFailed ? "❌" : "⏳";
+
   const buildText = useCallback(() => {
-    return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(safeValor(r))}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
-  }, [r, storeName]);
+    return `${statusEmoji} ${statusLabel}\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(safeValor(r))}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
+  }, [r, storeName, statusLabel, statusEmoji]);
 
   // Pre-generate the image when the modal opens so it's ready instantly on click
   useEffect(() => {
@@ -330,17 +335,29 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
 
                 {/* Status badge */}
                 <div className="flex items-center justify-center pt-2">
-                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-success/15 text-success text-xs font-bold border border-success/20">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Recarga Concluída
-                  </span>
+                  {isCompleted ? (
+                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-success/15 text-success text-xs font-bold border border-success/20">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Recarga Concluída
+                    </span>
+                  ) : isFailed ? (
+                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-destructive/15 text-destructive text-xs font-bold border border-destructive/20">
+                      <XCircle className="h-3.5 w-3.5" />
+                      Recarga Falhou
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-yellow-500/15 text-yellow-500 text-xs font-bold border border-yellow-500/20">
+                      <Clock className="h-3.5 w-3.5" />
+                      Em Processamento
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Footer */}
               <div className="px-6 pb-5 pt-2 border-t border-border">
                 <p className="text-center text-[10px] text-muted-foreground/60">
-                  Comprovante gerado em {formatDateTimeBR(new Date())}
+                  Comprovante gerado em {formatDateTimeBR(new Date().toISOString())}
                 </p>
               </div>
             </div>
@@ -349,10 +366,10 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
             <div className="flex gap-3 mt-4 px-2">
               <button
                 onClick={handleShare}
-                disabled={sharing || preparingImage || !imageReady}
+                disabled={sharing || preparingImage || !imageReady || !isCompleted}
                 className="flex-1 py-3 rounded-xl bg-card border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-60"
               >
-                {sharing || preparingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Compartilhando..." : preparingImage || !imageReady ? "Preparando imagem..." : "Compartilhar"}
+                {sharing || preparingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} {sharing ? "Compartilhando..." : !isCompleted ? "Aguardando conclusão" : preparingImage || !imageReady ? "Preparando imagem..." : "Compartilhar"}
               </button>
               <button
                 onClick={onClose}
