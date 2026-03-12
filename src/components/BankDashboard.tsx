@@ -3,83 +3,71 @@ import { AnimatedCounter, AnimatedInt } from "./AnimatedCounter";
 import { AnimatedIcon } from "./AnimatedIcon";
 import { SkeletonValue } from "./Skeleton";
 import {
-  Eye, EyeOff, Send, CreditCard, History, Landmark,
+  Eye, EyeOff, Plus, CreditCard, History, Users,
   TrendingUp, TrendingDown, Smartphone, ArrowUpRight, ArrowDownLeft,
-  Wallet, ChevronRight,
+  Wallet, ChevronRight, DollarSign, Landmark, Package,
 } from "lucide-react";
-import { useState, useMemo } from "react";
-import type { Recarga, Transaction } from "@/types";
-import { formatDateTimeBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
-import { operadoraColors, safeValor } from "@/lib/utils";
+import { useState } from "react";
 
-interface BankDashboardProps {
-  saldo: number;
-  recargas: Recarga[];
-  transactions: Transaction[];
+interface AdminBankDashboardProps {
+  lucro: number;
+  totalDeposited: number;
+  saldoCarteiras: number;
+  ticketMedio: number;
+  totalRec: number;
+  successRec: number;
+  pendingRec: number;
+  meuSaldo: number;
   loading: boolean;
+  onAddSaldo: () => void;
   onNavigate: (tab: string) => void;
+  onShowLucroModal?: () => void;
+  lucroPct: number;
+  txCount: number;
+  totalCobrado: number;
 }
 
 const fmt = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-export default function BankDashboard({
-  saldo,
-  recargas,
-  transactions,
+export default function AdminBankDashboard({
+  lucro,
+  totalDeposited,
+  saldoCarteiras,
+  ticketMedio,
+  totalRec,
+  successRec,
+  pendingRec,
+  meuSaldo,
   loading,
+  onAddSaldo,
   onNavigate,
-}: BankDashboardProps) {
+  onShowLucroModal,
+  lucroPct,
+  txCount,
+  totalCobrado,
+}: AdminBankDashboardProps) {
   const [showBalance, setShowBalance] = useState(true);
 
-  const todayKey = getTodayLocalKey();
-
-  const stats = useMemo(() => {
-    const recHoje = recargas.filter((r) => toLocalDateKey(r.created_at) === todayKey);
-    const totalGasto = recargas.reduce((s, r) => s + (Number(safeValor(r)) || 0), 0);
-    const totalDepositos = transactions
-      .filter((t) => t.status === "approved")
-      .reduce((s, t) => s + (Number(t.amount) || 0), 0);
-    const ticketMedio = recargas.length > 0 ? totalGasto / recargas.length : 0;
-
-    return { recHoje: recHoje.length, totalGasto, totalDepositos, ticketMedio };
-  }, [recargas, transactions, todayKey]);
-
-  const recentRecargas = useMemo(
-    () => recargas.slice(0, 5),
-    [recargas]
-  );
-
   const quickActions = [
-    { key: "recarga", label: "Recarga", icon: Send, color: "text-primary", bg: "bg-primary/10" },
     { key: "addSaldo", label: "Depositar", icon: CreditCard, color: "text-success", bg: "bg-success/10" },
-    { key: "historico", label: "Histórico", icon: History, color: "text-accent", bg: "bg-accent/10" },
-    { key: "extrato", label: "Extrato", icon: Landmark, color: "text-warning", bg: "bg-warning/10" },
+    { key: "historico", label: "Recargas", icon: Smartphone, color: "text-primary", bg: "bg-primary/10" },
+    { key: "usuarios", label: "Usuários", icon: Users, color: "text-accent", bg: "bg-accent/10" },
+    { key: "depositos", label: "Depósitos", icon: Landmark, color: "text-warning", bg: "bg-warning/10" },
   ];
-
-  const statusColor = (s: string) => {
-    if (s === "completed") return "text-success";
-    if (s === "pending") return "text-warning";
-    return "text-destructive";
-  };
-
-  const statusLabel = (s: string) => {
-    if (s === "completed") return "Concluída";
-    if (s === "pending") return "Pendente";
-    return "Falha";
-  };
 
   return (
     <div className="space-y-4">
-      {/* ── Balance Card ── */}
+      {/* ── Balance Card (Seu Lucro) ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5"
+        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 cursor-pointer"
+        onClick={onShowLucroModal}
       >
-        {/* Subtle top glow */}
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-primary/8 to-transparent pointer-events-none" />
+        {/* Top glow */}
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-success/8 to-transparent pointer-events-none" />
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-1">
@@ -87,7 +75,7 @@ export default function BankDashboard({
               Seu Lucro
             </span>
             <button
-              onClick={() => setShowBalance(!showBalance)}
+              onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }}
               className="w-8 h-8 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
               {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -103,12 +91,12 @@ export default function BankDashboard({
                   animate={{ opacity: 1, filter: "blur(0px)" }}
                   exit={{ opacity: 0, filter: "blur(8px)" }}
                   transition={{ duration: 0.25 }}
-                  className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
+                  className={`text-3xl sm:text-4xl font-bold tracking-tight ${lucro >= 0 ? "text-success" : "text-destructive"}`}
                 >
                   {loading ? (
                     <SkeletonValue width="w-36" className="h-9" />
                   ) : (
-                    <AnimatedCounter value={saldo} prefix="R$&nbsp;" />
+                    <AnimatedCounter value={lucro} prefix="R$&nbsp;" />
                   )}
                 </motion.p>
               ) : (
@@ -125,18 +113,54 @@ export default function BankDashboard({
             </AnimatePresence>
           </div>
 
+          {/* Lucro percentage badge */}
+          <div className="flex items-center gap-2 mt-2">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${lucro >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+              {lucro >= 0 ? "↑" : "↓"} {lucroPct.toFixed(1)}% margem
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              sobre {showBalance ? fmt(totalCobrado) : "••••"} cobrado
+            </span>
+          </div>
+
           {/* Deposit button */}
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigate("addSaldo")}
-            className="absolute right-5 bottom-5 w-11 h-11 rounded-full bg-success text-success-foreground flex items-center justify-center shadow-[0_0_20px_hsl(var(--success)/0.4)] hover:shadow-[0_0_28px_hsl(var(--success)/0.6)] transition-shadow"
+            onClick={(e) => { e.stopPropagation(); onAddSaldo(); }}
+            className="absolute right-5 top-5 w-11 h-11 rounded-full bg-success text-success-foreground flex items-center justify-center shadow-[0_0_20px_hsl(var(--success)/0.4)] hover:shadow-[0_0_28px_hsl(var(--success)/0.6)] transition-shadow"
           >
-            <CreditCard className="h-5 w-5" />
+            <Plus className="h-5 w-5" />
           </motion.button>
         </div>
 
-        {/* Rainbow gradient bar */}
+        {/* Rainbow bar */}
         <div className="rainbow-bar mt-4 h-1 rounded-full" />
+      </motion.div>
+
+      {/* ── Meu Saldo (compact) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05, type: "spring", stiffness: 200 }}
+        className="flex items-center justify-between rounded-xl bg-card border border-border px-4 py-3"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Wallet className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
+            <p className="text-lg font-bold text-foreground">
+              {loading ? <SkeletonValue width="w-20" className="h-5" /> : showBalance ? <AnimatedCounter value={meuSaldo} prefix="R$&nbsp;" /> : "R$&nbsp;••••"}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onAddSaldo}
+          className="h-8 px-3 rounded-lg bg-success text-success-foreground flex items-center gap-1.5 text-xs font-bold shadow-[0_0_12px_hsl(var(--success)/0.3)] hover:shadow-[0_0_20px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all"
+        >
+          <Plus className="h-3.5 w-3.5" /> Adicionar
+        </button>
       </motion.div>
 
       {/* ── Quick Actions ── */}
@@ -146,9 +170,9 @@ export default function BankDashboard({
             key={action.key}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.05, type: "spring", stiffness: 200 }}
+            transition={{ delay: 0.08 + i * 0.04, type: "spring", stiffness: 200 }}
             whileTap={{ scale: 0.93 }}
-            onClick={() => onNavigate(action.key)}
+            onClick={() => action.key === "addSaldo" ? onAddSaldo() : onNavigate(action.key)}
             className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border hover:border-primary/20 transition-all"
           >
             <div className={`w-11 h-11 rounded-xl ${action.bg} flex items-center justify-center`}>
@@ -165,47 +189,51 @@ export default function BankDashboard({
       <div className="grid grid-cols-2 gap-3">
         {[
           {
-            label: "Recargas Hoje",
-            value: stats.recHoje,
-            isCurrency: false,
-            icon: Smartphone,
+            label: "Total Depósitos",
+            value: totalDeposited,
+            isCurrency: true,
+            icon: ArrowDownLeft,
             color: "text-primary",
             bg: "bg-primary/10",
+            sub: `${txCount} transações`,
+            trend: "up" as const,
+          },
+          {
+            label: "Saldo Revendedores",
+            value: saldoCarteiras,
+            isCurrency: true,
+            icon: Wallet,
+            color: "text-warning",
+            bg: "bg-warning/10",
+            sub: "nas carteiras",
+            trend: null,
+          },
+          {
+            label: "Recargas",
+            value: totalRec,
+            isCurrency: false,
+            icon: Smartphone,
+            color: "text-success",
+            bg: "bg-success/10",
+            sub: `${successRec} OK · ${pendingRec} pendentes`,
             trend: null,
           },
           {
             label: "Ticket Médio",
-            value: stats.ticketMedio,
+            value: ticketMedio,
             isCurrency: true,
-            icon: Wallet,
+            icon: DollarSign,
             color: "text-accent",
             bg: "bg-accent/10",
+            sub: "por recarga",
             trend: null,
-          },
-          {
-            label: "Total Depósitos",
-            value: stats.totalDepositos,
-            isCurrency: true,
-            icon: ArrowDownLeft,
-            color: "text-success",
-            bg: "bg-success/10",
-            trend: "up" as const,
-          },
-          {
-            label: "Total Vendas",
-            value: stats.totalGasto,
-            isCurrency: true,
-            icon: ArrowUpRight,
-            color: "text-warning",
-            bg: "bg-warning/10",
-            trend: "down" as const,
           },
         ].map((card, i) => (
           <motion.div
             key={card.label}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 + i * 0.06, type: "spring", stiffness: 180 }}
+            transition={{ delay: 0.12 + i * 0.05, type: "spring", stiffness: 180 }}
             className="kpi-card"
           >
             <div className="flex items-center justify-between mb-2">
@@ -229,82 +257,17 @@ export default function BankDashboard({
                 <AnimatedInt value={card.value} />
               )}
             </p>
-            {card.trend && (
+            {card.sub && (
               <div className="flex items-center gap-1 mt-1.5">
-                {card.trend === "up" ? (
-                  <TrendingUp className="h-3 w-3 text-success" />
-                ) : (
-                  <TrendingDown className="h-3 w-3 text-warning" />
-                )}
-                <span className={`text-[10px] font-medium ${card.trend === "up" ? "text-success" : "text-warning"}`}>
-                  {card.trend === "up" ? "Entradas" : "Saídas"}
+                {card.trend === "up" && <TrendingUp className="h-3 w-3 text-success" />}
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  {card.sub}
                 </span>
               </div>
             )}
           </motion.div>
         ))}
       </div>
-
-      {/* ── Recent Transactions ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, type: "spring", stiffness: 160 }}
-        className="rounded-2xl bg-card border border-border overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <h3 className="text-sm font-bold text-foreground">Últimas Recargas</h3>
-          <button
-            onClick={() => onNavigate("historico")}
-            className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline"
-          >
-            ver mais <ChevronRight className="h-3 w-3" />
-          </button>
-        </div>
-
-        {recentRecargas.length === 0 ? (
-          <div className="px-4 pb-4 text-sm text-muted-foreground text-center py-6">
-            Nenhuma recarga realizada ainda
-          </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {recentRecargas.map((rec, i) => {
-              const opName = rec.operadora || "Operadora";
-              const opColors = operadoraColors(opName);
-              const opColor = opColors.bg;
-              return (
-                <motion.div
-                  key={rec.id}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + i * 0.04 }}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
-                >
-                  <div className={`w-9 h-9 rounded-xl ${opColor} flex items-center justify-center shrink-0`}>
-                    <Smartphone className="h-4 w-4 text-foreground/70" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {rec.telefone}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {opName} · {formatDateTimeBR(rec.created_at)}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-foreground">
-                      {showBalance ? fmt(Number(safeValor(rec)) || 0) : "••••"}
-                    </p>
-                    <p className={`text-[10px] font-medium ${statusColor(rec.status)}`}>
-                      {statusLabel(rec.status)}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </motion.div>
     </div>
   );
 }
