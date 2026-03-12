@@ -67,6 +67,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    sourceHashPlugin(),
     react(),
     VitePWA({
       registerType: "autoUpdate",
