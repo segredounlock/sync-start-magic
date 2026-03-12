@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Sonner toaster: centralizar verticalmente na tela */
+[data-sonner-toaster] {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Hide scrollbars for mini-app feel */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Star wobble animation */
+@keyframes spin-wobble {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(180deg) scale(1.2); }
+  50% { transform: rotate(0deg) scale(1); }
+  75% { transform: rotate(-180deg) scale(1.2); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Subtle RGB border animation */
+@keyframes rgb-border {
+  0% { border-color: hsl(0, 70%, 60%); }
+  16% { border-color: hsl(60, 70%, 55%); }
+  33% { border-color: hsl(120, 70%, 50%); }
+  50% { border-color: hsl(180, 70%, 50%); }
+  66% { border-color: hsl(240, 70%, 60%); }
+  83% { border-color: hsl(300, 70%, 55%); }
+  100% { border-color: hsl(360, 70%, 60%); }
+}
+
+.rgb-border {
+  border: 1.5px solid transparent;
+  animation: rgb-border 6s linear infinite;
+}
+
+/* Shimmer skeleton effect */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 @layer base {
   :root {
     /* ─── Light Premium Theme ─── */
@@ -87,23 +133,16 @@
     --glass-blur: 24px;
     --gradient-bg: linear-gradient(160deg, hsl(160 30% 4%), hsl(155 25% 5%), hsl(150 20% 4%));
   }
+}
 
+@layer base {
   * {
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
-
-  .tg-chat-theme * {
-    border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent);
-  }
-
   body {
-    color: hsl(var(--foreground));
+    @apply text-foreground;
     background: var(--gradient-bg);
     min-height: 100vh;
-  }
-
-  .tg-chat-theme body {
-    color: var(--tg-text, #f5f5f5);
   }
 }
 
@@ -251,4 +290,263 @@
   .icon-container:hover::after {
     opacity: 1;
   }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.25) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.2);
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.4);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* PWA standalone: disable native pull-to-refresh */
+@media (display-mode: standalone) {
+  html, body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Fix select/option dark mode */
+select option {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Animated check draw loop */
+@keyframes draw-circle {
+  0% { stroke-dashoffset: 63; }
+  40% { stroke-dashoffset: 0; }
+  80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 63; }
+}
+
+@keyframes draw-tick {
+  0% { stroke-dashoffset: 20; }
+  30% { stroke-dashoffset: 20; }
+  60% { stroke-dashoffset: 0; }
+  80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 20; }
+}
+
+/* Shimmer: brilho verde passa pelas letras */
+@keyframes shimmer-letters {
+  0%, 100% { background-position: 200% center; }
+  40% { background-position: -200% center; }
+}
+
+/* Glow pulsante — funciona em qualquer WebView */
+@keyframes text-glow-pulse {
+  0%, 100% {
+    text-shadow: 0 0 4px hsl(152 72% 50% / 0.3), 0 0 8px hsl(152 72% 50% / 0.1);
+  }
+  50% {
+    text-shadow: 0 0 8px hsl(152 72% 50% / 0.6), 0 0 20px hsl(152 72% 50% / 0.3), 0 0 32px hsl(152 72% 50% / 0.1);
+  }
+}
+
+.shimmer-letters {
+  display: inline-block;
+  /* Glow fallback universal — funciona em qualquer WebView/browser */
+  color: hsl(152, 72%, 55%);
+  animation: text-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Progressive enhancement: gradient shimmer for browsers that support it */
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .shimmer-letters {
+    background: linear-gradient(
+      110deg,
+      hsl(var(--foreground)) 0%,
+      hsl(var(--foreground)) 38%,
+      hsl(152, 72%, 55%) 50%,
+      hsl(var(--foreground)) 62%,
+      hsl(var(--foreground)) 100%
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-letters 4s ease-in-out infinite;
+  }
+}
+
+.shimmer-letters .brasil-word {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary)) 38%,
+    hsl(152, 85%, 70%) 50%,
+    hsl(var(--primary)) 62%,
+    hsl(var(--primary)) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-letters 4s ease-in-out infinite;
+}
+
+/* Ticker scroll animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.ticker-scroll {
+  display: inline-flex;
+  animation: ticker-scroll 15s linear infinite;
+}
+.ticker-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* ── Telegram Mini App Chat Theme Override ── */
+.tg-chat-theme {
+  --background: var(--tg-bg, #17212b);
+  --foreground: var(--tg-text, #f5f5f5);
+  --card: var(--tg-secondary-bg, #232e3c);
+  --card-foreground: var(--tg-text, #f5f5f5);
+  --popover: var(--tg-secondary-bg, #232e3c);
+  --popover-foreground: var(--tg-text, #f5f5f5);
+  --muted: var(--tg-secondary-bg, #232e3c);
+  --muted-foreground: var(--tg-hint, #708499);
+  --border: color-mix(in srgb, var(--tg-hint, #708499) 25%, transparent);
+  --primary: var(--tg-btn, #5288c1);
+  --primary-foreground: var(--tg-btn-text, #ffffff);
+  --accent: var(--tg-accent, #6ab2f2);
+  --accent-foreground: var(--tg-text, #f5f5f5);
+  --destructive: var(--tg-destructive, #ec3942);
+  --secondary: var(--tg-secondary-bg, #232e3c);
+  --secondary-foreground: var(--tg-text, #f5f5f5);
+  color: var(--tg-text, #f5f5f5);
+  background-color: var(--tg-bg, #17212b);
+}
+
+.tg-chat-theme * {
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent);
+}
+
+.tg-chat-theme .bg-card,
+.tg-chat-theme .bg-card\/80,
+.tg-chat-theme .bg-card\/50 {
+  background-color: var(--tg-secondary-bg, #232e3c) !important;
+}
+
+.tg-chat-theme .bg-muted,
+.tg-chat-theme .bg-muted\/50,
+.tg-chat-theme .bg-muted\/60,
+.tg-chat-theme .bg-muted\/40,
+.tg-chat-theme .bg-muted\/30 {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 15%, var(--tg-bg, #17212b)) !important;
+}
+
+.tg-chat-theme .text-foreground {
+  color: var(--tg-text, #f5f5f5) !important;
+}
+
+.tg-chat-theme .text-muted-foreground {
+  color: var(--tg-hint, #708499) !important;
+}
+
+.tg-chat-theme .text-primary {
+  color: var(--tg-accent, #6ab2f2) !important;
+}
+
+.tg-chat-theme .bg-primary\/10,
+.tg-chat-theme .bg-primary\/15,
+.tg-chat-theme .bg-primary\/20 {
+  background-color: color-mix(in srgb, var(--tg-btn, #5288c1) 15%, transparent) !important;
+}
+
+.tg-chat-theme .border-border,
+.tg-chat-theme .border-border\/50 {
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, transparent) !important;
+}
+
+/* Separador de seção nas conversas */
+.tg-chat-theme .bg-border {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 30%, transparent) !important;
+}
+
+.tg-chat-theme .hover\:bg-muted\/50:hover {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 20%, var(--tg-bg, #17212b)) !important;
+}
+
+.tg-chat-theme input,
+.tg-chat-theme textarea {
+  background-color: color-mix(in srgb, var(--tg-hint, #708499) 10%, var(--tg-bg, #17212b)) !important;
+  color: var(--tg-text, #f5f5f5) !important;
+  border-color: color-mix(in srgb, var(--tg-hint, #708499) 25%, transparent) !important;
+}
+
+.tg-chat-theme input::placeholder,
+.tg-chat-theme textarea::placeholder {
+  color: var(--tg-hint, #708499) !important;
+}
+
+/* Preserve shimmer effect in Telegram theme */
+.tg-chat-theme .shimmer-letters {
+  display: inline-block !important;
+  /* Glow verde universal — funciona em qualquer WebView */
+  color: #4ade80 !important;
+  -webkit-text-fill-color: #4ade80 !important;
+  text-shadow: 0 0 6px rgba(74, 222, 128, 0.4), 0 0 12px rgba(74, 222, 128, 0.15) !important;
+  animation: text-glow-pulse 3s ease-in-out infinite !important;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .tg-chat-theme .shimmer-letters {
+    background: linear-gradient(
+      110deg,
+      #4ade80 0%,
+      #4ade80 38%,
+      #f5f5f5 50%,
+      #4ade80 62%,
+      #4ade80 100%
+    ) !important;
+    background-size: 300% 100% !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+    animation: shimmer-letters 4s ease-in-out infinite !important;
+  }
+}
+
+@keyframes rec-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
 }

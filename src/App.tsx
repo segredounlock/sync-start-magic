@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -36,12 +36,9 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 
     const check = async () => {
       try {
-        const { data, error } = await supabase.rpc("get_maintenance_mode");
+        const { data, error } = await supabase.rpc("get_maintenance_mode" as any);
         if (!mounted) return;
-        if (error) {
-          setMaintenance(false);
-          return;
-        }
+        if (error) { setMaintenance(false); return; }
         setMaintenance(data === true);
       } catch {
         if (mounted) setMaintenance(false);
@@ -52,20 +49,12 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     // Listen for realtime changes
     const channel = supabase
       .channel("maintenance-mode")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "system_config", filter: "key=eq.maintenanceMode" },
-        (payload) => {
-          if (mounted) setMaintenance((payload.new as any)?.value === "true");
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.maintenanceMode" }, (payload: any) => {
+        if (mounted) setMaintenance(payload.new?.value === "true");
+      })
       .subscribe();
 
-    return () => {
-      mounted = false;
-      clearTimeout(timeout);
-      supabase.removeChannel(channel);
-    };
+    return () => { mounted = false; clearTimeout(timeout); supabase.removeChannel(channel); };
   }, []);
 
   // Still loading
