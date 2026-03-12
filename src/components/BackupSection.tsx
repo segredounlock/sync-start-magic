@@ -654,14 +654,26 @@ export default function BackupSection() {
     setIntegrityChecking(true);
     setIntegrityResult(null);
     const knownPaths = getKnownPaths();
+
+    // Separate verifiable (src/, public/) from external (config, edge functions, supabase/)
+    const verifiablePaths: string[] = [];
+    const externalPaths: string[] = [];
+    for (const filePath of effectivePaths) {
+      if (filePath.startsWith("src/") || filePath.startsWith("public/")) {
+        verifiablePaths.push(filePath);
+      } else {
+        externalPaths.push(filePath);
+      }
+    }
+
     const missing: string[] = [];
     let found = 0;
-    for (const filePath of effectivePaths) {
+    for (const filePath of verifiablePaths) {
       if (knownPaths.includes(filePath)) { found++; } else { missing.push(filePath); }
     }
-    setIntegrityResult({ missing, found, total: effectivePaths.length });
+    setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length });
     if (missing.length === 0) {
-      toast.success(`✅ Integridade OK! Todos os ${found} arquivos encontrados.`);
+      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} verificáveis OK + ${externalPaths.length} externos.`);
     } else {
       toast.error(`⚠️ ${missing.length} arquivo(s) faltando no manifesto!`);
     }
