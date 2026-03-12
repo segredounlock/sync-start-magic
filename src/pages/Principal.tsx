@@ -198,6 +198,10 @@ export default function Principal() {
   // All recargas for counting
   const [allRecargas, setAllRecargas] = useState<RecargaHistorico[]>([]);
   const [allUsers, setAllUsers] = useState<{ id: string; active: boolean; created_at: string }[]>([]);
+  const [meuSaldo, setMeuSaldo] = useState(0);
+  const [globalTxDeposited, setGlobalTxDeposited] = useState(0);
+  const [globalTxCount, setGlobalTxCount] = useState(0);
+  const [showLucroModal, setShowLucroModal] = useState(false);
 
   // Report state
   const [reportData, setReportData] = useState<{ user_id: string; nome: string | null; email: string | null; totalRecargas: number; totalValor: number; totalVendas: number; totalCusto: number; lucro: number }[]>([]);
