@@ -107,7 +107,7 @@ export default function AdminBankDashboard({
                   exit={{ opacity: 0 }}
                   className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
                 >
-                  R$&nbsp;••••••
+                  R${"\u00A0"}••••••
                 </motion.p>
               )}
             </AnimatePresence>
