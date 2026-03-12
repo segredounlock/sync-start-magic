@@ -5,6 +5,10 @@ import path from "path";
 
 export default defineConfig({
   server: { host: "::", port: 8080 },
+  // Exclude Deno edge functions from Vite processing
+  optimizeDeps: {
+    exclude: ['supabase/functions'],
+  },
   build: {
     rollupOptions: {
       input: {
