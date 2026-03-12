@@ -1,40 +1,24 @@
 
 
-## Diagnóstico e Correção
+## Diagnóstico
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+Na tela de "E-mail enviado com sucesso!", o ícone está aparecendo como um **círculo verde vazio** porque o código usa o emoji `✉️` dentro de um `<span>`, que não renderiza bem em todos os dispositivos/navegadores. No seu iPhone, o emoji não está sendo exibido corretamente dentro do container estilizado.
 
-### Plano
+## Correção
 
-**1. Corrigir o mapeamento de status na sync function**
+Substituir o emoji `✉️` pelo componente `CheckCircle` do Lucide React (já importado no projeto), que renderiza consistentemente em todos os dispositivos.
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### Arquivo: `src/pages/Auth.tsx`
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+**Linha 443** — trocar:
+```tsx
+<span className="text-2xl">✉️</span>
 ```
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+Por:
+```tsx
+<CheckCircle className="h-6 w-6 text-primary" />
 ```
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Isso garantirá um ícone vetorial SVG que funciona em qualquer dispositivo, com a cor verde primária do tema.
 
