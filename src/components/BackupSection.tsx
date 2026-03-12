@@ -74,6 +74,13 @@ const SOURCE_PATHS = [
   "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
   "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
   "supabase/functions/vapid-setup/index.ts",
+  // Email templates
+  "supabase/functions/_shared/email-templates/signup.tsx",
+  "supabase/functions/_shared/email-templates/recovery.tsx",
+  "supabase/functions/_shared/email-templates/magic-link.tsx",
+  "supabase/functions/_shared/email-templates/invite.tsx",
+  "supabase/functions/_shared/email-templates/email-change.tsx",
+  "supabase/functions/_shared/email-templates/reauthentication.tsx",
   // Supabase config
   "supabase/config.toml",
 ];
