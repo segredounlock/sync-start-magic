@@ -9,6 +9,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
   Text,
 } from 'npm:@react-email/components@0.0.22'
@@ -18,26 +19,32 @@ interface MagicLinkEmailProps {
   confirmationUrl: string
 }
 
+const LOGO_URL = 'https://xtkqyjruyuydlbvwduuy.supabase.co/storage/v1/object/public/email-assets/logo.jpeg'
+
 export const MagicLinkEmail = ({
   siteName,
   confirmationUrl,
 }: MagicLinkEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Your login link for {siteName}</Preview>
+    <Preview>Seu link de acesso — Recargas Brasil</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Your login link</Heading>
+        <div style={logoWrapper}>
+          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+        </div>
+        <Heading style={h1}>Seu link de acesso</Heading>
         <Text style={text}>
-          Click the button below to log in to {siteName}. This link will expire
-          shortly.
+          Clique no botão abaixo para acessar o <strong>Recargas Brasil</strong>. Este link expira em breve.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Log In
+          Acessar Agora
         </Button>
+        <Text style={divider}>━━━━━━━━━━━━━━━━━━━━━━━━━━━━</Text>
         <Text style={footer}>
-          If you didn't request this link, you can safely ignore this email.
+          Se você não solicitou este link, pode ignorar este e-mail com segurança.
         </Text>
+        <Text style={brand}>© Recargas Brasil</Text>
       </Container>
     </Body>
   </Html>
@@ -45,26 +52,13 @@ export const MagicLinkEmail = ({
 
 export default MagicLinkEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Segoe UI', Arial, sans-serif" }
+const container = { padding: '32px 28px', maxWidth: '480px', margin: '0 auto' }
+const logoWrapper = { textAlign: 'center' as const, marginBottom: '24px' }
+const logoStyle = { borderRadius: '14px', display: 'inline-block' as const }
+const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: '#1a1a1a', margin: '0 0 16px', textAlign: 'center' as const }
+const text = { fontSize: '15px', color: '#555555', lineHeight: '1.6', margin: '0 0 28px' }
+const button = { backgroundColor: '#1a9a5c', color: '#ffffff', fontSize: '15px', fontWeight: 'bold' as const, borderRadius: '12px', padding: '14px 28px', textDecoration: 'none', textAlign: 'center' as const, display: 'block' as const, width: '100%', boxSizing: 'border-box' as const }
+const divider = { fontSize: '8px', color: '#e0e0e0', textAlign: 'center' as const, margin: '28px 0 16px', letterSpacing: '2px' }
+const footer = { fontSize: '12px', color: '#999999', margin: '0 0 8px', textAlign: 'center' as const }
+const brand = { fontSize: '12px', color: '#1a9a5c', fontWeight: 'bold' as const, textAlign: 'center' as const, margin: '8px 0 0' }
