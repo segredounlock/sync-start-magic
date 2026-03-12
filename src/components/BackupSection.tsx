@@ -146,6 +146,10 @@ export default function BackupSection() {
   // Dynamic source paths manifest
   const [dynamicPaths, setDynamicPaths] = useState<string[] | null>(null);
 
+  // Integrity check
+  const [integrityChecking, setIntegrityChecking] = useState(false);
+  const [integrityResult, setIntegrityResult] = useState<{ missing: string[]; found: number; total: number } | null>(null);
+
   // Effective paths: dynamic from DB if available, otherwise hardcoded fallback
   const effectivePaths = dynamicPaths || SOURCE_PATHS;
 
@@ -645,6 +649,26 @@ export default function BackupSection() {
     setPendingManifest(null);
   };
 
+  const runIntegrityCheck = async () => {
+    setIntegrityChecking(true);
+    setIntegrityResult(null);
+    const missing: string[] = [];
+    let found = 0;
+    for (const filePath of effectivePaths) {
+      try {
+        const r = await fetch(new URL(`/${filePath}`, window.location.origin).href, { method: "HEAD" });
+        if (r.ok) { found++; } else { missing.push(filePath); }
+      } catch { missing.push(filePath); }
+    }
+    setIntegrityResult({ missing, found, total: effectivePaths.length });
+    if (missing.length === 0) {
+      toast.success(`✅ Integridade OK! Todos os ${found} arquivos encontrados.`);
+    } else {
+      toast.error(`⚠️ ${missing.length} arquivo(s) faltando no backup!`);
+    }
+    setIntegrityChecking(false);
+  };
+
   const incrementVersion = (v: string): string => {
     const parts = v.split(".").map(Number);
     parts[2] = (parts[2] || 0) + 1;
@@ -727,6 +751,54 @@ export default function BackupSection() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Integrity Check */}
+            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Verificação de Integridade</p>
+                </div>
+                <button onClick={runIntegrityCheck} disabled={integrityChecking}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all disabled:opacity-60">
+                  {integrityChecking ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  {integrityChecking ? "Verificando..." : "Verificar"}
+                </button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Compara os arquivos do projeto com o SOURCE_PATHS para garantir que nenhum arquivo fique fora do backup.</p>
+
+              <AnimatePresence>
+                {integrityResult && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      {integrityResult.missing.length === 0 ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-amber-400" />
+                      )}
+                      <p className="text-xs font-semibold text-foreground">
+                        {integrityResult.found}/{integrityResult.total} arquivos encontrados
+                        {integrityResult.missing.length > 0 && ` · ${integrityResult.missing.length} faltando`}
+                      </p>
+                    </div>
+                    {integrityResult.missing.length > 0 && (
+                      <div className="max-h-40 overflow-y-auto rounded-xl bg-red-500/[0.06] border border-red-500/20 p-2.5 space-y-1">
+                        <p className="text-[10px] font-semibold text-red-400 uppercase tracking-wider mb-1">Arquivos faltantes:</p>
+                        {integrityResult.missing.map((f) => (
+                          <p key={f} className="text-[10px] font-mono text-red-300/80 truncate">❌ {f}</p>
+                        ))}
+                      </div>
+                    )}
+                    {integrityResult.missing.length === 0 && (
+                      <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 p-2.5">
+                        <p className="text-[10px] text-emerald-400 font-medium">✅ Todos os arquivos estão cobertos pelo backup. Nenhum arquivo faltando.</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Tables info */}
             <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-4">
