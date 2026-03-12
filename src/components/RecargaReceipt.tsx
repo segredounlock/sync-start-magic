@@ -35,13 +35,18 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
   const [preparingImage, setPreparingImage] = useState(false);
   const telegramSentRef = useRef(false);
   const r = recarga;
+  const isCompleted = r.status === "completed" || r.status === "concluida";
+  const isFailed = r.status === "failed" || r.status === "erro" || r.status === "falha";
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
+  const statusLabel = isCompleted ? "Recarga Concluída" : isFailed ? "Recarga Falhou" : "Em Processamento";
+  const statusEmoji = isCompleted ? "✅" : isFailed ? "❌" : "⏳";
+
   const buildText = useCallback(() => {
-    return `✅ Comprovante de Recarga\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(safeValor(r))}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
-  }, [r, storeName]);
+    return `${statusEmoji} ${statusLabel}\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(safeValor(r))}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
+  }, [r, storeName, statusLabel, statusEmoji]);
 
   // Pre-generate the image when the modal opens so it's ready instantly on click
   useEffect(() => {
