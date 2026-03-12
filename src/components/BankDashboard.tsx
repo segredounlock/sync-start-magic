@@ -96,7 +96,7 @@ export default function AdminBankDashboard({
                   {loading ? (
                     <SkeletonValue width="w-36" className="h-9" />
                   ) : (
-                    <AnimatedCounter value={lucro} prefix="R$&nbsp;" />
+                    <AnimatedCounter value={lucro} prefix={"R$\u00A0"} />
                   )}
                 </motion.p>
               ) : (
