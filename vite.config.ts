@@ -4,12 +4,20 @@ import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 export default defineConfig({
-  server: { host: "::", port: 8080 },
+  server: {
+    host: "::",
+    port: 8080,
+    watch: {
+      ignored: ['**/supabase/functions/**'],
+    },
+  },
   build: {
     rollupOptions: {
       input: {
         main: "index.html",
       },
+      // Exclude edge functions from the build
+      external: (id) => id.startsWith('npm:'),
     },
   },
   plugins: [
