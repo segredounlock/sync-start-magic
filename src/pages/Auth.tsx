@@ -115,10 +115,19 @@ export default function Auth() {
     }
   };
 
+  const isValidEmail = (val: string): boolean => {
+    // Regex completa: user@domain.tld (TLD de 2-10 chars, sem caracteres extras)
+    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/.test(val.trim());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin && isLocked) {
       appToast.blocked(`Muitas tentativas. Aguarde ${cooldownRemaining}s`);
+      return;
+    }
+    if (!isValidEmail(email)) {
+      appToast.error("Digite um e-mail válido (ex: nome@email.com)");
       return;
     }
     setSubmitting(true);
