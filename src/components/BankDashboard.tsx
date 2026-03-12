@@ -96,7 +96,7 @@ export default function AdminBankDashboard({
                   {loading ? (
                     <SkeletonValue width="w-36" className="h-9" />
                   ) : (
-                    <AnimatedCounter value={lucro} prefix="R$&nbsp;" />
+                    <AnimatedCounter value={lucro} prefix={"R$\u00A0"} />
                   )}
                 </motion.p>
               ) : (
@@ -107,7 +107,7 @@ export default function AdminBankDashboard({
                   exit={{ opacity: 0 }}
                   className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
                 >
-                  R$&nbsp;••••••
+                  R${"\u00A0"}••••••
                 </motion.p>
               )}
             </AnimatePresence>
@@ -151,7 +151,7 @@ export default function AdminBankDashboard({
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
             <p className="text-lg font-bold text-foreground">
-              {loading ? <SkeletonValue width="w-20" className="h-5" /> : showBalance ? <AnimatedCounter value={meuSaldo} prefix="R$&nbsp;" /> : "R$&nbsp;••••"}
+              {loading ? <SkeletonValue width="w-20" className="h-5" /> : showBalance ? <AnimatedCounter value={meuSaldo} prefix={"R$\u00A0"} /> : `R$\u00A0••••`}
             </p>
           </div>
         </div>
@@ -249,9 +249,9 @@ export default function AdminBankDashboard({
                 <SkeletonValue width="w-20" className="h-7" />
               ) : card.isCurrency ? (
                 showBalance ? (
-                  <AnimatedCounter value={card.value} prefix="R$&nbsp;" />
+                  <AnimatedCounter value={card.value} prefix={"R$\u00A0"} />
                 ) : (
-                  "R$&nbsp;••••"
+                  `R$\u00A0••••`
                 )
               ) : (
                 <AnimatedInt value={card.value} />
