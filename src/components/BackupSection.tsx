@@ -149,7 +149,7 @@ export default function BackupSection() {
 
   // Integrity check
   const [integrityChecking, setIntegrityChecking] = useState(false);
-  const [integrityResult, setIntegrityResult] = useState<{ missing: string[]; found: number; total: number } | null>(null);
+  const [integrityResult, setIntegrityResult] = useState<{ missing: string[]; found: number; total: number; external: string[]; verifiable: number } | null>(null);
 
   // Effective paths: dynamic from DB if available, otherwise hardcoded fallback
   const effectivePaths = dynamicPaths || SOURCE_PATHS;
@@ -654,14 +654,26 @@ export default function BackupSection() {
     setIntegrityChecking(true);
     setIntegrityResult(null);
     const knownPaths = getKnownPaths();
+
+    // Separate verifiable (src/, public/) from external (config, edge functions, supabase/)
+    const verifiablePaths: string[] = [];
+    const externalPaths: string[] = [];
+    for (const filePath of effectivePaths) {
+      if (filePath.startsWith("src/") || filePath.startsWith("public/")) {
+        verifiablePaths.push(filePath);
+      } else {
+        externalPaths.push(filePath);
+      }
+    }
+
     const missing: string[] = [];
     let found = 0;
-    for (const filePath of effectivePaths) {
+    for (const filePath of verifiablePaths) {
       if (knownPaths.includes(filePath)) { found++; } else { missing.push(filePath); }
     }
-    setIntegrityResult({ missing, found, total: effectivePaths.length });
+    setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length });
     if (missing.length === 0) {
-      toast.success(`✅ Integridade OK! Todos os ${found} arquivos encontrados.`);
+      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} verificáveis OK + ${externalPaths.length} externos.`);
     } else {
       toast.error(`⚠️ ${missing.length} arquivo(s) faltando no manifesto!`);
     }
@@ -777,7 +789,7 @@ export default function BackupSection() {
                         <AlertTriangle className="h-4 w-4 text-amber-400" />
                       )}
                       <p className="text-xs font-semibold text-foreground">
-                        {integrityResult.found}/{integrityResult.total} arquivos encontrados
+                        {integrityResult.found}/{integrityResult.verifiable} verificáveis OK
                         {integrityResult.missing.length > 0 && ` · ${integrityResult.missing.length} faltando`}
                       </p>
                     </div>
@@ -791,7 +803,20 @@ export default function BackupSection() {
                     )}
                     {integrityResult.missing.length === 0 && (
                       <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 p-2.5">
-                        <p className="text-[10px] text-emerald-400 font-medium">✅ Todos os arquivos estão cobertos pelo backup. Nenhum arquivo faltando.</p>
+                        <p className="text-[10px] text-emerald-400 font-medium">✅ Todos os arquivos verificáveis estão presentes. Nenhum faltando.</p>
+                      </div>
+                    )}
+                    {integrityResult.external.length > 0 && (
+                      <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-2.5 space-y-1">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Info className="h-3 w-3 text-blue-400" />
+                          <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-wider">
+                            {integrityResult.external.length} arquivos externos (incluídos no backup)
+                          </p>
+                        </div>
+                        <p className="text-[10px] text-blue-300/70">
+                          Configs, Edge Functions e arquivos Supabase não são verificáveis no cliente, mas são incluídos normalmente no backup/sync.
+                        </p>
                       </div>
                     )}
                   </motion.div>

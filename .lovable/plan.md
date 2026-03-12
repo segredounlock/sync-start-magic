@@ -1,27 +1,40 @@
 
 
-## Problema
+## Diagnóstico e Correção
 
-A verificação de integridade compara `SOURCE_PATHS` (122 arquivos) contra `getKnownPaths()` (somente arquivos capturados por `import.meta.glob`). Mas o glob só captura `/src/**/*.{tsx,ts,css}` e `/public/sw-push.js` -- ele nao consegue incluir arquivos de configuracao na raiz (`tailwind.config.ts`, `vite.config.ts`, etc.), Edge Functions (imports Deno), nem `supabase/config.toml`.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-Resultado: 37 arquivos aparecem como "faltando" mesmo existindo no projeto.
+### Plano
 
-## Solucao
+**1. Corrigir o mapeamento de status na sync function**
 
-Separar os arquivos em duas categorias na verificacao de integridade:
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-1. **Verificaveis** (src/, public/sw-push.js) -- checados contra o glob
-2. **Externos** (config raiz, edge functions, supabase/) -- listados como "nao verificaveis no cliente" mas incluidos no backup
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-### Alteracoes
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-**`src/lib/sourceManifest.ts`** -- sem alteracao (manter como esta)
+**2. Corrigir manualmente o pedido preso**
 
-**`src/components/BackupSection.tsx`** -- ajustar `runIntegrityCheck`:
-- Dividir `effectivePaths` em dois grupos: os que comecam com `src/` ou `public/` (verificaveis via glob) e o resto (externos)
-- Checar somente os verificaveis contra `getKnownPaths()`
-- Exibir resultado separado: "X/Y arquivos verificados OK" + "Z arquivos externos (incluidos no backup, nao verificaveis no cliente)"
-- Na UI, mostrar os externos em uma secao informativa (cinza/azul) em vez de vermelho
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-Isso elimina os falsos negativos sem remover nenhum arquivo do backup.
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
