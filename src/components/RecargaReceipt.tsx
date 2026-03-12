@@ -357,7 +357,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
               {/* Footer */}
               <div className="px-6 pb-5 pt-2 border-t border-border">
                 <p className="text-center text-[10px] text-muted-foreground/60">
-                  Comprovante gerado em {formatDateTimeBR(new Date())}
+                  Comprovante gerado em {formatDateTimeBR(new Date().toISOString())}
                 </p>
               </div>
             </div>
