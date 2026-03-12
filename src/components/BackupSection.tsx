@@ -22,16 +22,16 @@ const SOURCE_PATHS = [
   "src/pages/AdminDashboard.tsx","src/pages/Auth.tsx","src/pages/ChatApp.tsx",
   "src/pages/ClientePortal.tsx","src/pages/LandingPage.tsx","src/pages/NotFound.tsx",
   "src/pages/Principal.tsx","src/pages/RecargaPublica.tsx","src/pages/RevendedorPainel.tsx","src/pages/MaintenancePage.tsx",
-  "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx",
+  "src/pages/ResetPassword.tsx","src/pages/TelegramMiniApp.tsx","src/pages/UserProfile.tsx","src/pages/InstallApp.tsx",
   // Components
   "src/components/AnimatedCheck.tsx","src/components/AnimatedIcon.tsx","src/components/AnimatedPage.tsx",
-  "src/components/AnimatedCounter.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
+  "src/components/AnimatedCounter.tsx","src/components/AuditTab.tsx","src/components/BackupSection.tsx","src/components/BrandedQRCode.tsx",
   "src/components/BroadcastForm.tsx","src/components/BroadcastProgress.tsx",
   "src/components/BannersManager.tsx","src/components/FloatingPoll.tsx",
   "src/components/ImageCropper.tsx","src/components/MobileBottomNav.tsx",
   "src/components/NotificationBell.tsx","src/components/PinProtection.tsx",
-  "src/components/PollManager.tsx","src/components/PopupBanner.tsx",
-  "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx",
+  "src/components/PollManager.tsx","src/components/PopupBanner.tsx","src/components/ProfileTab.tsx",
+  "src/components/PromoBanner.tsx","src/components/ProtectedRoute.tsx","src/components/PullToRefresh.tsx",
   "src/components/RealtimeDashboard.tsx","src/components/RecargaReceipt.tsx",
   "src/components/RecargasTicker.tsx","src/components/Skeleton.tsx",
   "src/components/SplashScreen.tsx","src/components/ThemeToggle.tsx",
@@ -45,11 +45,11 @@ const SOURCE_PATHS = [
   "src/components/ChatRoomManager.tsx",
   // Hooks
   "src/hooks/useAuth.tsx","src/hooks/useAsync.ts","src/hooks/useBackgroundPaymentMonitor.ts",
-  "src/hooks/useChat.ts","src/hooks/useCrud.ts","src/hooks/useNotifications.ts",
+  "src/hooks/useCacheCleanup.ts","src/hooks/useChat.ts","src/hooks/useCrud.ts","src/hooks/useNotifications.ts",
   "src/hooks/usePixDeposit.ts","src/hooks/usePresence.ts",
   "src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
   // Libs
-  "src/lib/confirm.tsx","src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts",
+  "src/lib/auditLog.ts","src/lib/confirm.tsx","src/lib/fetchAll.ts","src/lib/payment.ts","src/lib/sounds.ts",
   "src/lib/timezone.ts","src/lib/toast.tsx","src/lib/utils.ts",
   // Types
   "src/types/index.ts",
@@ -63,6 +63,7 @@ const SOURCE_PATHS = [
   // Edge Functions
   "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
   "supabase/functions/admin-toggle-role/index.ts",
+  "supabase/functions/auth-email-hook/index.ts",
   "supabase/functions/backup-export/index.ts","supabase/functions/backup-restore/index.ts",
   "supabase/functions/client-register/index.ts","supabase/functions/create-pix/index.ts",
   "supabase/functions/cleanup-stuck-broadcasts/index.ts","supabase/functions/efi-setup/index.ts",
@@ -73,6 +74,13 @@ const SOURCE_PATHS = [
   "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
   "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
   "supabase/functions/vapid-setup/index.ts",
+  // Email templates
+  "supabase/functions/_shared/email-templates/signup.tsx",
+  "supabase/functions/_shared/email-templates/recovery.tsx",
+  "supabase/functions/_shared/email-templates/magic-link.tsx",
+  "supabase/functions/_shared/email-templates/invite.tsx",
+  "supabase/functions/_shared/email-templates/email-change.tsx",
+  "supabase/functions/_shared/email-templates/reauthentication.tsx",
   // Supabase config
   "supabase/config.toml",
 ];
