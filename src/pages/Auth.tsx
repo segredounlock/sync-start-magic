@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { appToast } from "@/lib/toast";
 import { Navigate } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, User, Download, Smartphone } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Download, Smartphone, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
@@ -440,7 +440,7 @@ export default function Auth() {
                     transition={{ type: "spring", damping: 10 }}
                     className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center mx-auto mb-3"
                   >
-                    <span className="text-2xl">✉️</span>
+                    <CheckCircle className="h-6 w-6 text-primary" />
                   </motion.div>
                   <p className="text-sm text-muted-foreground">E-mail enviado com sucesso!</p>
                 </div>
