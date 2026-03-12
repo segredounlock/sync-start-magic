@@ -3787,7 +3787,7 @@ export default function Principal() {
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
                             <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
                             <span className="text-xs text-muted-foreground">
-                              {new Date(h.created_at).toLocaleDateString('pt-BR')}, {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              {formatFullDateTimeBR(h.created_at)}
                             </span>
                             <button
                               onClick={async () => {
