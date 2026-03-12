@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { PinProtection } from "@/components/PinProtection";
+import AdminBankDashboard from "@/components/BankDashboard";
 import { SkeletonRow, SkeletonCard, SkeletonPricingGrid } from "@/components/Skeleton";
 import BackupSection from "@/components/BackupSection";
 import { BroadcastForm } from "@/components/BroadcastForm";
