@@ -249,9 +249,9 @@ export default function AdminBankDashboard({
                 <SkeletonValue width="w-20" className="h-7" />
               ) : card.isCurrency ? (
                 showBalance ? (
-                  <AnimatedCounter value={card.value} prefix="R$&nbsp;" />
+                  <AnimatedCounter value={card.value} prefix={"R$\u00A0"} />
                 ) : (
-                  "R$&nbsp;••••"
+                  `R$\u00A0••••`
                 )
               ) : (
                 <AnimatedInt value={card.value} />
