@@ -665,10 +665,16 @@ export default function BackupSection() {
     setIntegrityChecking(true);
     setIntegrityResult(null);
     setShowChecksums(false);
+    setIntegrityProgress(0);
+    setIntegrityStage("Carregando manifesto...");
+
+    await new Promise(r => setTimeout(r, 300));
     const knownPaths = getKnownPaths();
     const fileHashes = getFileHashes();
+    setIntegrityProgress(10);
+    setIntegrityStage("Coletando hashes...");
 
-    // Separate verifiable (src/, public/) from external (config, edge functions, supabase/)
+    // Separate verifiable from external
     const verifiablePaths: string[] = [];
     const externalPaths: string[] = [];
     for (const filePath of effectivePaths) {
@@ -679,26 +685,46 @@ export default function BackupSection() {
       }
     }
 
+    await new Promise(r => setTimeout(r, 200));
+    setIntegrityProgress(30);
+    setIntegrityStage("Verificando arquivos...");
+
     const missing: string[] = [];
     let found = 0;
     const verifiedHashes: Record<string, string> = {};
-    for (const filePath of verifiablePaths) {
+    const step = 60 / Math.max(verifiablePaths.length, 1);
+    for (let i = 0; i < verifiablePaths.length; i++) {
+      const filePath = verifiablePaths[i];
       if (knownPaths.includes(filePath)) {
         found++;
         verifiedHashes[filePath] = fileHashes[filePath] || "--------";
       } else {
         missing.push(filePath);
       }
+      // throttled progress updates
+      if (i % 10 === 0 || i === verifiablePaths.length - 1) {
+        setIntegrityProgress(30 + Math.round(step * (i + 1)));
+        setIntegrityStage(`Verificando ${i + 1}/${verifiablePaths.length}...`);
+        await new Promise(r => setTimeout(r, 15));
+      }
     }
 
-    // Compute aggregate fingerprint from all hashes (sorted for determinism)
+    setIntegrityProgress(92);
+    setIntegrityStage("Calculando fingerprint...");
+    await new Promise(r => setTimeout(r, 250));
+
+    // Compute aggregate fingerprint
     const sortedHashValues = Object.keys(verifiedHashes).sort().map(k => verifiedHashes[k]).join("");
-    let fp = 0x811c9dc5; // FNV-1a offset basis
+    let fp = 0x811c9dc5;
     for (let i = 0; i < sortedHashValues.length; i++) {
       fp ^= sortedHashValues.charCodeAt(i);
       fp = Math.imul(fp, 0x01000193);
     }
     const fingerprint = (fp >>> 0).toString(16).padStart(8, "0");
+
+    setIntegrityProgress(100);
+    setIntegrityStage("Concluído!");
+    await new Promise(r => setTimeout(r, 200));
 
     setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length, fingerprint, hashes: verifiedHashes });
     if (missing.length === 0) {
