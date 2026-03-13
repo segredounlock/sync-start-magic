@@ -1409,7 +1409,7 @@ export default function Principal() {
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <History className="h-4 w-4 text-muted-foreground" /> Atividade Recente
                     </h3>
-                    <button onClick={() => setView("lista")} className="text-xs text-primary font-medium hover:underline">Ver tudo</button>
+                    <button onClick={() => setView("relatorios")} className="text-xs text-primary font-medium hover:underline">Ver tudo</button>
                   </div>
                   {dashboardMetrics.recentRecs.length === 0 ? (
                     <p className="text-center py-6 text-muted-foreground text-sm">Nenhuma recarga recente</p>
