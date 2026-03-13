@@ -100,11 +100,12 @@ function ensureSchema($pdo) {
     // Cada revendedor configura suas próprias credenciais no painel.
     // Admin pode configurar as dele se quiser (para cobrar revendedores).
 
-    // Configurações padrão da API de recargas (Recarga Express) se não existirem
+    // Configurações padrão da API de recargas (Recarga Express v2) se não existirem
     $apiBase = getConfig($pdo, 'adminApiBaseURL');
     if ($apiBase === null || trim((string)$apiBase) === '') {
         setConfig($pdo, 'adminApiBaseURL', 'https://express.poeki.dev/api');
     }
+    // Nota: os endpoints no api.js agora usam prefixo /v2/ ao invés de /v1/
     $apiKey = getConfig($pdo, 'adminApiKey');
     if ($apiKey === null || trim((string)$apiKey) === '') {
         // Mesmo valor do config.example.js (para ambiente de demonstração)
