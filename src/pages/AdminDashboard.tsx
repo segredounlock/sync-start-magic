@@ -290,15 +290,17 @@ export default function AdminDashboard() {
     return new Date(2020, 0, 1).toISOString();
   }, [period]);
 
+  // Tracks whether analytics (recargas+transactions) have been loaded
+  const analyticsLoaded = useRef(false);
+
+  // Light initial load: only profiles, roles, saldos (fast)
   const fetchData = useCallback(async () => {
     await runFetch(async () => {
       if (role === "revendedor") {
-        const [clientProfiles, ownSaldos, clientSaldos, recData, transData] = await Promise.all([
+        const [clientProfiles, ownSaldos, clientSaldos] = await Promise.all([
           fetchAllRows("profiles", { filters: (q: any) => q.eq("reseller_id", user?.id) }),
           fetchAllRows("saldos", { filters: (q: any) => q.eq("user_id", user?.id).eq("tipo", "revenda") }),
           fetchAllRows("saldos", { filters: (q: any) => q.eq("tipo", "revenda") }),
-          fetchAllRows("recargas", { orderBy: { column: "created_at", ascending: false } }),
-          fetchAllRows("transactions", { select: "amount, created_at, status, type, user_id", orderBy: { column: "created_at", ascending: false } }),
         ]);
 
         const clientIds = (clientProfiles || []).map((p: any) => p.id);
@@ -316,28 +318,14 @@ export default function AdminDashboard() {
         setRevendedores(list);
 
         setAllProfiles((clientProfiles || []).map((p: any) => ({ id: p.id, telegram_id: p.telegram_id, telegram_username: p.telegram_username, created_at: p.created_at })));
-
-        const allowedIds = new Set([...clientIds, user?.id]);
-        const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
-        (clientProfiles || []).forEach((p: any) => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
-
-        setAllRecargas((recData || []).filter((r: any) => allowedIds.has(r.user_id)).map((r: any) => ({
-          ...r, valor: Number(r.valor), custo: Number(r.custo),
-          user_nome: profileMap[r.user_id]?.nome || null,
-          user_email: profileMap[r.user_id]?.email || null,
-        })));
-        setAllTransactions((transData || []).filter((t: any) => allowedIds.has(t.user_id)).map((t: any) => ({ ...t, amount: Number(t.amount) })));
       } else {
-        const [allRoles, allProfilesData, allSaldos, recData, transData] = await Promise.all([
+        const [allRoles, allProfilesData, allSaldos] = await Promise.all([
           fetchAllRows("user_roles", { select: "user_id, role" }),
           fetchAllRows("profiles"),
           fetchAllRows("saldos", { filters: (q: any) => q.eq("tipo", "revenda") }),
-          fetchAllRows("recargas", { orderBy: { column: "created_at", ascending: false } }),
-          fetchAllRows("transactions", { select: "amount, created_at, status, type", orderBy: { column: "created_at", ascending: false } }),
         ]);
 
         setAllProfiles((allProfilesData || []).map(p => ({ id: p.id, telegram_id: p.telegram_id, telegram_username: p.telegram_username, created_at: p.created_at })));
-        setAllTransactions((transData || []).map(t => ({ ...t, amount: Number(t.amount) })));
 
         const roleMap: Record<string, string> = {};
         allRoles?.forEach(r => { roleMap[r.user_id] = r.role; });
@@ -362,18 +350,51 @@ export default function AdminDashboard() {
           };
         });
         setRevendedores(list);
+      }
+    });
+  }, [role, user?.id, runFetch]);
 
+  // Heavy analytics load: recargas + transactions (deferred, loaded once)
+  const fetchAnalytics = useCallback(async () => {
+    if (analyticsLoaded.current) return;
+    analyticsLoaded.current = true;
+    try {
+      if (role === "revendedor") {
+        const clientIds = revendedores.map(r => r.id);
+        const allowedIds = new Set([...clientIds, user?.id]);
+        const [recData, transData] = await Promise.all([
+          fetchAllRows("recargas", { orderBy: { column: "created_at", ascending: false } }),
+          fetchAllRows("transactions", { select: "amount, created_at, status, type, user_id", orderBy: { column: "created_at", ascending: false } }),
+        ]);
         const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
-        (allProfilesData || []).forEach((p: any) => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
+        revendedores.forEach(p => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
+
+        setAllRecargas((recData || []).filter((r: any) => allowedIds.has(r.user_id)).map((r: any) => ({
+          ...r, valor: Number(r.valor), custo: Number(r.custo),
+          user_nome: profileMap[r.user_id]?.nome || null,
+          user_email: profileMap[r.user_id]?.email || null,
+        })));
+        setAllTransactions((transData || []).filter((t: any) => allowedIds.has(t.user_id)).map((t: any) => ({ ...t, amount: Number(t.amount) })));
+      } else {
+        const [recData, transData] = await Promise.all([
+          fetchAllRows("recargas", { orderBy: { column: "created_at", ascending: false } }),
+          fetchAllRows("transactions", { select: "amount, created_at, status, type", orderBy: { column: "created_at", ascending: false } }),
+        ]);
+        const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
+        revendedores.forEach(p => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
 
         setAllRecargas((recData || []).map(r => ({
           ...r, valor: Number(r.valor), custo: Number(r.custo),
           user_nome: profileMap[r.user_id]?.nome || null,
           user_email: profileMap[r.user_id]?.email || null,
         })));
+        setAllTransactions((transData || []).map(t => ({ ...t, amount: Number(t.amount) })));
       }
-    });
-  }, [role, user?.id, runFetch]);
+    } catch (err) {
+      console.error("fetchAnalytics error:", err);
+      analyticsLoaded.current = false;
+    }
+  }, [role, user?.id, revendedores]);
 
   const fetchRecargas = useCallback(async () => {
     await guardedFetch(recargasLoaded, setRecargasLoading, async () => {
@@ -563,7 +584,7 @@ export default function AdminDashboard() {
     supabase.from("system_config").select("value").eq("key", "notif_admin_deposit").maybeSingle()
       .then(({ data }) => { if (data && data.value === "false") setAdminDepositToast(false); });
   }, []);
-  const handleBgPaymentConfirmed = useCallback(() => { fetchData(); }, [fetchData]);
+  const handleBgPaymentConfirmed = useCallback(() => { analyticsLoaded.current = false; fetchData(); }, [fetchData]);
   useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed, adminDepositToast, false);
 
   // Load current user's avatar
@@ -578,7 +599,9 @@ export default function AdminDashboard() {
   }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-   useEffect(() => { if (tab === "historico") fetchRecargas(); }, [tab, fetchRecargas]);
+  // Load analytics lazily when dashboard (visao) or usuarios tab is active and revendedores are loaded
+  useEffect(() => { if ((tab === "visao" || tab === "usuarios") && revendedores.length > 0) fetchAnalytics(); }, [tab, revendedores.length, fetchAnalytics]);
+  useEffect(() => { if (tab === "historico") fetchRecargas(); }, [tab, fetchRecargas]);
   useEffect(() => { if (tab === "operadoras" || tab === "precificacao" || tab === "meusprecos") { fetchOperadoras(); fetchPricingRules(); } }, [tab, fetchOperadoras, fetchPricingRules]);
   useEffect(() => { if (tab === "meusprecos") fetchResellerPricingRules(); }, [tab]);
   useEffect(() => { if (tab === "configuracoes" || tab === "bot") fetchConfig(); }, [tab, fetchConfig]);
