@@ -213,6 +213,7 @@ export default function TelegramMiniApp() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [refreshingExtrato, setRefreshingExtrato] = useState(false);
   const [refreshingRecargas, setRefreshingRecargas] = useState(false);
+  const [showPriceTable, setShowPriceTable] = useState(false);
 
   // Toast notifications
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info" }[]>([]);
@@ -1248,7 +1249,63 @@ export default function TelegramMiniApp() {
               )}
 
               {recargaStep === "phone" && (
-                <div className="space-y-2 pt-2">
+                <div className="space-y-3 pt-2">
+                  {/* Botão Ver Tabela de Valores */}
+                  <button
+                    onClick={() => { setShowPriceTable(!showPriceTable); if (operadoras.length === 0) loadOperadoras(); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                    className="w-full rounded-xl p-3 flex items-center justify-between transition-all active:scale-[0.98]"
+                    style={{ ...st.secondaryBg, border: st.borderSub }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)" }}>
+                        <FileText className="w-4 h-4" style={st.link} />
+                      </div>
+                      <span className="text-sm font-semibold" style={st.text}>Ver Tabela de Valores</span>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 transition-transform ${showPriceTable ? "rotate-90" : ""}`} style={st.hint} />
+                  </button>
+
+                  {/* Tabela de Valores expandida */}
+                  <AnimatePresence>
+                    {showPriceTable && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="rounded-xl overflow-hidden" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                          {operadoras.length === 0 ? (
+                            <div className="flex items-center justify-center py-6" style={st.hint}>
+                              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                              <span className="text-sm">Carregando...</span>
+                            </div>
+                          ) : operadoras.map((op, opIdx) => (
+                            <div key={op.id} style={opIdx > 0 ? { borderTop: st.borderSub } : undefined}>
+                              <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 8%, transparent)" }}>
+                                <Smartphone className="w-3.5 h-3.5" style={st.link} />
+                                <span className="text-xs font-bold uppercase tracking-wider" style={st.link}>{op.nome}</span>
+                              </div>
+                              <div className="px-3.5 py-2 grid grid-cols-3 gap-1.5">
+                                {op.valores
+                                  .sort((a: ValorItem, b: ValorItem) => (a.userCost ?? a.cost) - (b.userCost ?? b.cost))
+                                  .map(v => {
+                                    const displayCost = v.userCost ?? v.cost;
+                                    return (
+                                      <div key={v.valueId} className="rounded-lg px-2 py-1.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 8%, transparent)" }}>
+                                        <p className="text-xs font-bold" style={st.text}>R$ {displayCost.toFixed(2).replace(".", ",")}</p>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-sm" style={st.text}>Últimas Recargas</h3>
                     {recargas.length > 0 && (
