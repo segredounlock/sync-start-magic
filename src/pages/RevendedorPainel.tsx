@@ -418,7 +418,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
        setDetectingOperator(false);
      }, 500);
      return () => clearTimeout(timer);
-   }, [telefone, catalog]);
+   }, [telefone, catalog, callApi]);
 
   const formatPhoneDisplay = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 11);
