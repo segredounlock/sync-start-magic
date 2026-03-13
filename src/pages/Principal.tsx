@@ -3904,10 +3904,11 @@ export default function Principal() {
 }
 const fmtCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-function PricingCard({ valor, savedTipo, savedValor, savedCusto, onSave, onReset, label, highlight }: {
+function PricingCard({ valor, savedTipo, savedValor, savedCusto, onSave, onReset, label, highlight, disabled, onToggleDisabled }: {
   valor: number; savedTipo: string; savedValor: number; savedCusto: number;
   onSave: (data: { custo: number; tipo_regra: "fixo" | "margem"; regra_valor: number }) => void;
   onReset: () => void; label: string; highlight?: boolean;
+  disabled?: boolean; onToggleDisabled?: () => void;
 }) {
   const [tipo, setTipo] = useState<"fixo" | "margem">(savedTipo as "fixo" | "margem");
   const [regra, setRegra] = useState(savedValor);
@@ -3918,13 +3919,29 @@ function PricingCard({ valor, savedTipo, savedValor, savedCusto, onSave, onReset
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`glass-card rounded-2xl p-4 space-y-3 transition-all hover:shadow-lg ${highlight ? "border-2 border-primary/40 ring-1 ring-primary/10" : "border border-border/30"}`}
+      className={`glass-card rounded-2xl p-4 space-y-3 transition-all hover:shadow-lg relative ${disabled ? "opacity-60 border-2 border-destructive/40 ring-1 ring-destructive/10" : highlight ? "border-2 border-primary/40 ring-1 ring-primary/10" : "border border-border/30"}`}
     >
+      {/* Toggle ativar/desativar */}
+      {onToggleDisabled && (
+        <button
+          onClick={onToggleDisabled}
+          className={`absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${
+            disabled
+              ? "bg-destructive/15 text-destructive hover:bg-destructive/25"
+              : "bg-success/15 text-success hover:bg-success/25"
+          }`}
+          title={disabled ? "Clique para ativar este valor" : "Clique para desativar este valor"}
+        >
+          {disabled ? <ToggleLeft className="h-4 w-4" /> : <ToggleRight className="h-4 w-4" />}
+          {disabled ? "Off" : "On"}
+        </button>
+      )}
+
       {/* Top: Value vs Price */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mb-0.5">Recarga</p>
-          <p className="text-xl font-extrabold text-foreground tabular-nums">{fmtCurrency(valor)}</p>
+          <p className={`text-xl font-extrabold tabular-nums ${disabled ? "line-through text-muted-foreground" : "text-foreground"}`}>{fmtCurrency(valor)}</p>
         </div>
         <div className="text-right">
           <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold mb-0.5 px-2 py-0.5 rounded-lg ${highlight ? "bg-primary/15 text-primary" : "bg-muted/60 text-muted-foreground/70"}`}>
