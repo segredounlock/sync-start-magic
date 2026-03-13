@@ -1985,7 +1985,7 @@ export default function AdminDashboard() {
                                   <p className="text-xs text-muted-foreground truncate">{c.email}</p>
                                 </div>
                               </div>
-                              <p className="font-bold text-success text-sm">{fmt(c.saldo)}</p>
+                              <p className="font-bold text-success text-sm"><AnimatedCounter value={c.saldo} prefix="R$&nbsp;" duration={600} /></p>
                             </div>
                             <div className="flex items-center justify-between pt-3 border-t border-border">
                               <span className="text-xs text-muted-foreground">{formatDateFullBR(c.created_at)}</span>
