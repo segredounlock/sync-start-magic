@@ -977,7 +977,38 @@ export default function Principal() {
     setReportLoading(false);
   }, [reportPeriodStart]);
 
-  useEffect(() => { if (view === "relatorios") fetchReport(); }, [view, fetchReport]);
+  useEffect(() => { if (view === "relatorios") { fetchReport(); fetchAllRecargasList(); } }, [view, fetchReport]);
+
+  const fetchAllRecargasList = useCallback(async () => {
+    setAllRecargasLoading(true);
+    try {
+      let allData: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      while (true) {
+        let query = supabase.from("recargas").select("*")
+          .gte("created_at", reportPeriodStart)
+          .order("created_at", { ascending: false })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        const { data: batch } = await query;
+        if (!batch || batch.length === 0) break;
+        allData = allData.concat(batch);
+        if (batch.length < pageSize) break;
+        page++;
+      }
+      // Fetch user names
+      const userIds = [...new Set(allData.map(r => r.user_id))];
+      const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
+      for (let i = 0; i < userIds.length; i += 50) {
+        const batch = userIds.slice(i, i + 50);
+        const { data: profiles } = await supabase.from("profiles").select("id, nome, email").in("id", batch);
+        (profiles || []).forEach((p: any) => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
+      }
+      setAllRecargasList(allData.map(r => ({ ...r, user_nome: profileMap[r.user_id]?.nome || null, user_email: profileMap[r.user_id]?.email || null })));
+    } catch (err) { console.error(err); }
+    allRecargasLoaded.current = true;
+    setAllRecargasLoading(false);
+  }, [reportPeriodStart]);
   // Auto-refresh bot status when entering bot tab and token exists
   useEffect(() => {
     if (["dashboard", "configuracoes", "bot", "gateway", "store", "geral", "pagamentos", "depositos"].includes(view)) fetchGlobalConfig();
