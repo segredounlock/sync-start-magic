@@ -599,7 +599,9 @@ export default function AdminDashboard() {
   }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-   useEffect(() => { if (tab === "historico") fetchRecargas(); }, [tab, fetchRecargas]);
+  // Load analytics lazily when dashboard (visao) or usuarios tab is active and revendedores are loaded
+  useEffect(() => { if ((tab === "visao" || tab === "usuarios") && revendedores.length > 0) fetchAnalytics(); }, [tab, revendedores.length, fetchAnalytics]);
+  useEffect(() => { if (tab === "historico") fetchRecargas(); }, [tab, fetchRecargas]);
   useEffect(() => { if (tab === "operadoras" || tab === "precificacao" || tab === "meusprecos") { fetchOperadoras(); fetchPricingRules(); } }, [tab, fetchOperadoras, fetchPricingRules]);
   useEffect(() => { if (tab === "meusprecos") fetchResellerPricingRules(); }, [tab]);
   useEffect(() => { if (tab === "configuracoes" || tab === "bot") fetchConfig(); }, [tab, fetchConfig]);
