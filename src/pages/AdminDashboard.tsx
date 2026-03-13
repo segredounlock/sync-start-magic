@@ -1385,11 +1385,7 @@ export default function AdminDashboard() {
                           )}
                         </td>
                         <td className="px-4 py-2.5 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
-                            r.status === "pending" ? "bg-warning/15 text-warning" :
-                            "bg-destructive/15 text-destructive"
-                          }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}</span>
+                          <StatusBadge status={r.status} type="recarga" />
                         </td>
                       </motion.tr>
                     );
