@@ -2328,7 +2328,7 @@ export default function AdminDashboard() {
                             <button onClick={() => setSelectedDeposit(null)} className="p-1.5 rounded-lg hover:bg-destructive/15 transition-colors text-destructive"><X className="h-5 w-5" /></button>
                           </div>
                           <div className="text-center mb-5">
-                            <p className="text-3xl font-bold font-mono text-success">+{fmt(t.amount)}</p>
+                            <p className="text-3xl font-bold font-mono text-success">+<AnimatedCounter value={t.amount} prefix="R$&nbsp;" /></p>
                             <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
                           </div>
                           {/* Common info */}
