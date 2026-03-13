@@ -78,32 +78,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const token = authHeader.replace("Bearer ", "");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const isServiceRole = token === serviceRoleKey;
-
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       serviceRoleKey
     );
 
-    // Parse body first (needed for both service role and normal auth)
+    // Parse body first (needed for routing and auth decisions)
     const body = await req.json();
     const { action, ...params } = body;
 
-    let userId: string;
+    // Auth
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.replace("Bearer ", "") : null;
+    const isServiceRole = token === serviceRoleKey;
+    const isPublicRecharge = action === "public-recharge";
 
-    // Allow unauthenticated access for public-recharge action only
-    const isPublicRecharge = body.action === "public-recharge";
+    let userId: string;
 
     if (isPublicRecharge) {
       // Public recharge doesn't require JWT — uses reseller_id from body
@@ -114,8 +105,33 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      userId = resellerId; // Will be used as the recharge owner
-    } else if (!authHeader?.startsWith("Bearer ")) {
+      // Validate reseller exists and is active
+      const { data: resellerProfile } = await adminClient
+        .from("profiles")
+        .select("id, active")
+        .eq("id", resellerId)
+        .single();
+      if (!resellerProfile?.active) {
+        return new Response(JSON.stringify({ error: "Revendedor inativo ou não encontrado" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Validate reseller role
+      const { data: roleCheck } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", resellerId)
+        .in("role", ["revendedor", "admin"])
+        .maybeSingle();
+      if (!roleCheck) {
+        return new Response(JSON.stringify({ error: "Usuário não é revendedor" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = resellerId;
+    } else if (!token) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -132,7 +148,7 @@ Deno.serve(async (req) => {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
+        { global: { headers: { Authorization: authHeader! } } }
       );
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user?.id) {
