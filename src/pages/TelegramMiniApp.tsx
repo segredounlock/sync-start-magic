@@ -1252,57 +1252,71 @@ export default function TelegramMiniApp() {
                 <div className="space-y-3 pt-2">
                   {/* Botão Ver Tabela de Valores */}
                   <button
-                    onClick={() => { setShowPriceTable(!showPriceTable); if (operadoras.length === 0) loadOperadoras(); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
-                    className="w-full rounded-xl p-3 flex items-center justify-between transition-all active:scale-[0.98]"
+                    onClick={() => { setShowPriceTable(true); if (operadoras.length === 0) loadOperadoras(); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                    className="w-full rounded-xl p-3 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                     style={{ ...st.secondaryBg, border: st.borderSub }}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)" }}>
-                        <FileText className="w-4 h-4" style={st.link} />
-                      </div>
-                      <span className="text-sm font-semibold" style={st.text}>Ver Tabela de Valores</span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 transition-transform ${showPriceTable ? "rotate-90" : ""}`} style={st.hint} />
+                    <FileText className="w-4 h-4" style={st.link} />
+                    <span className="text-sm font-semibold" style={st.link}>Ver Tabela de Valores</span>
                   </button>
 
-                  {/* Tabela de Valores expandida */}
+                  {/* Modal Bottom Sheet - Tabela de Valores */}
                   <AnimatePresence>
                     {showPriceTable && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="rounded-xl overflow-hidden" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                          {operadoras.length === 0 ? (
-                            <div className="flex items-center justify-center py-6" style={st.hint}>
-                              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                              <span className="text-sm">Carregando...</span>
-                            </div>
-                          ) : operadoras.map((op, opIdx) => (
-                            <div key={op.id} style={opIdx > 0 ? { borderTop: st.borderSub } : undefined}>
-                              <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 8%, transparent)" }}>
-                                <Smartphone className="w-3.5 h-3.5" style={st.link} />
-                                <span className="text-xs font-bold uppercase tracking-wider" style={st.link}>{op.nome}</span>
+                      <>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-50"
+                          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                          onClick={() => setShowPriceTable(false)}
+                        />
+                        <motion.div
+                          initial={{ y: "100%" }}
+                          animate={{ y: 0 }}
+                          exit={{ y: "100%" }}
+                          transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                          className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl max-h-[80vh] flex flex-col"
+                          style={{ backgroundColor: "var(--tg-secondary-bg, #232e3c)", border: st.borderSub }}
+                        >
+                          {/* Header */}
+                          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: st.borderSub }}>
+                            <h3 className="text-base font-bold" style={st.text}>Valores e Operadoras Disponíveis</h3>
+                            <button onClick={() => setShowPriceTable(false)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 15%, transparent)" }}>
+                              <span className="text-sm" style={st.hint}>✕</span>
+                            </button>
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 overflow-y-auto pb-8">
+                            {operadoras.length === 0 ? (
+                              <div className="flex items-center justify-center py-10" style={st.hint}>
+                                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                                <span className="text-sm">Carregando...</span>
                               </div>
-                              <div className="px-3.5 py-2 grid grid-cols-3 gap-1.5">
-                                {op.valores
-                                  .sort((a: ValorItem, b: ValorItem) => (a.userCost ?? a.cost) - (b.userCost ?? b.cost))
-                                  .map(v => {
-                                    const displayCost = v.userCost ?? v.cost;
-                                    return (
-                                      <div key={v.valueId} className="rounded-lg px-2 py-1.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 8%, transparent)" }}>
-                                        <p className="text-xs font-bold" style={st.text}>R$ {displayCost.toFixed(2).replace(".", ",")}</p>
-                                      </div>
-                                    );
-                                  })}
+                            ) : operadoras.map((op, opIdx) => (
+                              <div key={op.id} style={opIdx > 0 ? { borderTop: st.borderSub } : undefined}>
+                                <div className="px-5 py-3 flex items-center gap-2">
+                                  <span className="text-sm font-bold" style={st.text}>{op.nome}</span>
+                                </div>
+                                <div className="px-5 pb-3 grid grid-cols-3 gap-2">
+                                  {op.valores
+                                    .sort((a: ValorItem, b: ValorItem) => (a.userCost ?? a.cost) - (b.userCost ?? b.cost))
+                                    .map(v => {
+                                      const displayCost = v.userCost ?? v.cost;
+                                      return (
+                                        <div key={v.valueId} className="rounded-lg px-2 py-2 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 10%, transparent)" }}>
+                                          <p className="text-xs font-bold" style={st.text}>R$ {displayCost.toFixed(2).replace(".", ",")}</p>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      </>
                     )}
                   </AnimatePresence>
 
