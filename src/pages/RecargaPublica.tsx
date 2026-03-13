@@ -138,44 +138,46 @@ export default function RecargaPublica() {
     if (!telefone.trim() || !selectedValor || !revendedor?.id) return;
     setSending(true);
     try {
-      const { data: saldoData } = await supabase.from("saldos").select("valor").eq("user_id", revendedor.id).eq("tipo", "revenda").single();
-      const saldo = Number(saldoData?.valor) || 0;
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const fnUrl = `https://${projectId}.supabase.co/functions/v1/recarga-express`;
 
-      if (saldo < selectedValor) {
-        if (revendedor?.whatsapp_number) {
-          setResultMsg("Saldo insuficiente do revendedor. Redirecionando para WhatsApp...");
-          setTimeout(() => window.open(revendedor.whatsapp_number!, "_blank"), 1500);
-        } else if (revendedor?.telegram_username) {
-          setResultMsg("Saldo insuficiente do revendedor. Redirecionando para Telegram...");
-          setTimeout(() => window.open(revendedor.telegram_username!, "_blank"), 1500);
+      const response = await fetch(fnUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": anonKey,
+        },
+        body: JSON.stringify({
+          action: "public-recharge",
+          reseller_id: revendedor.id,
+          operator: selectedOp || undefined,
+          phone: telefone.trim(),
+          amount: selectedValor,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data?.success) {
+        const errMsg = data?.error || "Erro ao processar recarga.";
+        if (errMsg.includes("Saldo insuficiente")) {
+          if (revendedor?.whatsapp_number) {
+            setResultMsg("Saldo insuficiente do revendedor. Redirecionando para WhatsApp...");
+            setTimeout(() => window.open(revendedor.whatsapp_number!, "_blank"), 1500);
+          } else if (revendedor?.telegram_username) {
+            setResultMsg("Saldo insuficiente do revendedor. Redirecionando para Telegram...");
+            setTimeout(() => window.open(revendedor.telegram_username!, "_blank"), 1500);
+          } else {
+            setResultMsg("Revendedor sem saldo disponível. Tente novamente mais tarde.");
+          }
         } else {
-          setResultMsg("Revendedor sem saldo disponível. Tente novamente mais tarde.");
+          setResultMsg(errMsg);
         }
         setStep("done");
         setSending(false);
         return;
       }
-
-      const { error: recError } = await supabase.from("recargas").insert({
-        user_id: revendedor.id,
-        telefone: telefone.trim(),
-        operadora: selectedOp || null,
-        valor: selectedValor,
-        custo: selectedValor,
-        status: "completed",
-      });
-      if (recError) throw recError;
-
-      const newSaldo = saldo - selectedValor;
-      await supabase.from("saldos").update({ valor: newSaldo }).eq("user_id", revendedor.id).eq("tipo", "revenda");
-
-      supabase.functions.invoke("telegram-notify", {
-        body: {
-          type: "recarga_completed",
-          user_id: revendedor.id,
-          data: { telefone: telefone.trim(), operadora: selectedOp || null, valor: selectedValor, novo_saldo: newSaldo },
-        },
-      }).catch(() => {});
 
       setResultMsg(`Recarga de ${fmt(selectedValor)} realizada com sucesso para ${telefone}!`);
       setStep("done");
