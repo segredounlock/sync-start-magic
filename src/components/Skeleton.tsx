@@ -5,9 +5,9 @@ interface SkeletonProps {
 }
 
 /** Base shimmer skeleton block */
-export function Skeleton({ className }: SkeletonProps) {
+export function Skeleton({ className, as: Tag = "div" }: SkeletonProps & { as?: "div" | "span" }) {
   return (
-    <div
+    <Tag
       className={cn(
         "rounded-lg bg-muted/60 relative overflow-hidden",
         "before:absolute before:inset-0 before:-translate-x-full",
@@ -119,7 +119,7 @@ export function SkeletonPricingGrid({ count = 6, className }: SkeletonProps & { 
 
 /** Inline skeleton for values like saldo (replaces "...") */
 export function SkeletonValue({ className, width = "w-16" }: SkeletonProps & { width?: string }) {
-  return <Skeleton className={cn("h-5 inline-block align-middle", width, className)} />;
+  return <Skeleton as="span" className={cn("h-5 inline-block align-middle", width, className)} />;
 }
 
 /** Skeleton for sidebar user card */
