@@ -6,23 +6,26 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { SplashScreen } from "@/components/SplashScreen";
 import { supabase } from "@/integrations/supabase/client";
 import Auth from "@/pages/Auth";
-import RecargaPublica from "@/pages/RecargaPublica";
-import TelegramMiniApp from "@/pages/TelegramMiniApp";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
-import ClientePortal from "@/pages/ClientePortal";
-import ResetPassword from "@/pages/ResetPassword";
-import MaintenancePage from "@/pages/MaintenancePage";
-import InstallApp from "@/pages/InstallApp";
-import SeasonalEffects from "@/components/SeasonalEffects";
-import PullToRefresh from "@/components/PullToRefresh";
 import { useCacheCleanup } from "@/hooks/useCacheCleanup";
 
+// Lazy load ALL pages that aren't the initial landing
+const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
+const TelegramMiniApp = lazy(() => import("@/pages/TelegramMiniApp"));
+const ClientePortal = lazy(() => import("@/pages/ClientePortal"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const MaintenancePage = lazy(() => import("@/pages/MaintenancePage"));
+const InstallApp = lazy(() => import("@/pages/InstallApp"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
 const Principal = lazy(() => import("@/pages/Principal"));
 const ChatApp = lazy(() => import("@/pages/ChatApp"));
 const UserProfile = lazy(() => import("@/pages/UserProfile"));
+
+// Lazy load non-critical global components (render after initial paint)
+const SeasonalEffects = lazy(() => import("@/components/SeasonalEffects"));
+const PullToRefresh = lazy(() => import("@/components/PullToRefresh"));
 
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const { user, role } = useAuth();
