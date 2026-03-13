@@ -745,6 +745,8 @@ export default function Principal() {
   }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  // Load analytics after profiles are ready (deferred)
+  useEffect(() => { if (revendedores.length > 0) fetchAnalytics(); }, [revendedores.length, fetchAnalytics]);
 
   // Realtime: atualiza usuários automaticamente
   useEffect(() => {
@@ -752,10 +754,10 @@ export default function Principal() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saldos' }, () => fetchData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, () => { analyticsLoaded.current = false; fetchAnalytics(); })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [fetchData]);
+  }, [fetchData, fetchAnalytics]);
 
   // Sincroniza selectedRev com a lista atualizada
   useEffect(() => {
