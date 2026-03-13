@@ -1537,7 +1537,7 @@ export default function Principal() {
                             <p className="text-sm font-medium text-foreground truncate">{r.nome}</p>
                             <p className="text-[10px] text-muted-foreground">{r.count} recargas</p>
                           </div>
-                          <span className="text-sm font-bold font-mono text-success shrink-0">{fmt(r.total)}</span>
+                          <span className="text-sm font-bold font-mono text-success shrink-0"><AnimatedCounter value={r.total} prefix="R$&nbsp;" duration={600} /></span>
                         </div>
                       ))}
                     </div>
