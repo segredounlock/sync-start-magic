@@ -241,16 +241,10 @@ export default function AdminBankDashboard({
               </div>
             </div>
             <p className={`text-xl sm:text-2xl font-bold ${card.color} truncate`}>
-              {loading ? (
-                <SkeletonValue width="w-20" className="h-7" />
-              ) : card.isCurrency ? (
-                showBalance ? (
-                  <AnimatedCounter value={card.value} prefix={"R$\u00A0"} />
-                ) : (
-                  `R$\u00A0••••`
-                )
+              {card.isCurrency ? (
+                <Currency value={card.value} loading={loading} hidden={!showBalance} skeletonWidth="w-20" skeletonHeight="h-7" />
               ) : (
-                <AnimatedInt value={card.value} />
+                <IntVal value={card.value} loading={loading} skeletonWidth="w-20" skeletonHeight="h-7" />
               )}
             </p>
             {card.sub && (
