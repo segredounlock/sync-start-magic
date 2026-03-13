@@ -2213,7 +2213,7 @@ export default function AdminDashboard() {
                         <td className="px-4 py-2.5 text-foreground capitalize text-[13px]">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
                         <td className="px-4 py-2.5 text-foreground text-[13px]">PIX</td>
                         <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
+                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}<AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} />
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
