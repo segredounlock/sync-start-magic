@@ -1,40 +1,32 @@
 
 
-## Diagnóstico e Correção
+# Adicionar toolbar de formatação no campo de mensagem do Broadcast
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Contexto
+O Telegram usa `parse_mode: "HTML"` nos broadcasts. Precisamos de uma toolbar flutuante (estilo WhatsApp) que aparece ao selecionar texto no textarea, permitindo aplicar formatação HTML.
 
-### Plano
+## Implementação
 
-**1. Corrigir o mapeamento de status na sync function**
+### Arquivo: `src/components/BroadcastForm.tsx`
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+1. **Toolbar flutuante**: Criar uma barra que aparece ao selecionar texto no textarea com os botões:
+   - **B** (Negrito) → envolve com `<b>...</b>`
+   - **I** (Itálico) → envolve com `<i>...</i>`
+   - **S** (Tachado) → envolve com `<s>...</s>`
+   - **<>** (Código) → envolve com `<code>...</code>`
+   - **" "** (Citação) → envolve com `<blockquote>...</blockquote>`
+   - **🔗** (Link) → envolve com `<a href="URL">...</a>` (prompt para URL)
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+2. **Lógica**:
+   - Detectar `onSelect` / `onMouseUp` no textarea para capturar `selectionStart` e `selectionEnd`
+   - Posicionar a toolbar acima da seleção usando coordenadas do textarea
+   - Ao clicar num botão, substituir o texto selecionado pela versão com tags HTML
+   - Esconder toolbar ao clicar fora ou quando não há seleção
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+3. **Preview**: A prévia do Telegram já exibe o texto — atualizar para renderizar as tags HTML visualmente (converter `<b>` em `<strong>`, etc.) usando `dangerouslySetInnerHTML` com sanitização básica (apenas tags permitidas pelo Telegram).
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Estilo
+- Toolbar escura com cantos arredondados (igual à imagem de referência)
+- Ícones brancos, hover com destaque
+- Posição `absolute` relativa ao container do textarea
 
