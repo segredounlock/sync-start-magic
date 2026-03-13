@@ -1860,7 +1860,7 @@ export default function Principal() {
                               )}
                             </td>
                             <td className="hidden lg:table-cell px-2 py-2.5 text-right">
-                              <span className="font-mono font-bold text-success tabular-nums">{fmt(totalVendido)}</span>
+                              <span className="font-mono font-bold text-success tabular-nums"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" duration={600} /></span>
                             </td>
                             <td className="hidden lg:table-cell px-2 py-2.5 text-right">
                               <span className={`font-mono font-bold tabular-nums ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>{fmt(lucroDesk)}</span>
