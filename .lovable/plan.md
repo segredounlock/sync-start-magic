@@ -1,40 +1,50 @@
 
 
-## Diagnóstico e Correção
+# Diagnóstico: Broadcast Travando ao Enviar
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Problema Identificado
 
-### Plano
+O broadcast **trava** porque a Edge Function é encerrada pelo servidor antes de terminar o envio. Nos logs, vemos `shutdown` logo após o `boot`, confirmando que o runtime mata a função enquanto o `sendBroadcastInBackground()` ainda está rodando.
 
-**1. Corrigir o mapeamento de status na sync function**
+A causa raiz: o código atual usa `.catch(console.error)` para disparar o envio em background, mas **não usa `EdgeRuntime.waitUntil()`** para manter a função viva. Sem isso, o Deno encerra a função assim que a Response é retornada.
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+## Diferenças entre o código atual e a documentação
 
+| Item | Documentação | Código Atual |
+|---|---|---|
+| **`EdgeRuntime.waitUntil()`** | Implícito (usa `beforeunload`) | Ausente - causa do travamento |
+| **Handler `beforeunload`** | Marca broadcasts como "cancelado" ao shutdown | Ausente |
+| **`activeBroadcasts` tracking** | Map para rastrear broadcasts ativos | Ausente |
+| **Rate limiting** | 5 broadcasts/hora | Ausente |
+| **Logs de debug** | `console.log` em pontos-chave | Ausente |
+
+## Plano de Correção
+
+### 1. Atualizar `supabase/functions/send-broadcast/index.ts`
+
+- Adicionar **`EdgeRuntime.waitUntil()`** ao disparar `sendBroadcastInBackground()` — isso mantém a função viva até o broadcast terminar
+- Adicionar handler **`beforeunload`** para marcar broadcasts ativos como "cancelado" quando o servidor reiniciar
+- Adicionar **`activeBroadcasts`** Map para rastrear broadcasts em andamento
+- Adicionar **logs de debug** (`console.log`) nos pontos-chave para diagnóstico futuro
+
+### 2. Habilitar Realtime na tabela `broadcast_progress`
+
+A documentação indica que `broadcast_progress` deve ter Realtime habilitado para atualizações ao vivo. Verificar e habilitar se necessário.
+
+### Detalhes Técnicos
+
+A mudança principal é trocar:
 ```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+// ANTES (atual) - função morre antes de terminar
+sendBroadcastInBackground(...).catch(console.error);
 ```
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+Por:
+```typescript
+// DEPOIS - mantém a função viva
+const promise = sendBroadcastInBackground(...);
+EdgeRuntime.waitUntil(promise);
 ```
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+E adicionar o handler de shutdown gracioso para não perder o estado quando o servidor reiniciar.
 
