@@ -220,25 +220,61 @@ Deno.serve(async (req) => {
       }
 
       case "query-operator": {
-        // v2: use native /detect-operator endpoint
+        // v2: use native /detect-operator endpoint with fallback
         const { phoneNumber: qPhone } = params;
         if (!qPhone) throw new Error("phoneNumber é obrigatório");
 
-        const detectResp = await proxyPost(apiKey, "/detect-operator", { phone: qPhone });
-        console.log("detect-operator response:", JSON.stringify(detectResp));
+        let detectedOperator: string | null = null;
+        let detectedEnabled = true;
 
-        if (detectResp?.success && detectResp.data) {
-          // Map to expected format for frontend compatibility
+        try {
+          const detectResp = await proxyPost(apiKey, "/detect-operator", { phone: qPhone });
+          console.log("detect-operator response:", JSON.stringify(detectResp));
+
+          if (detectResp?.success && detectResp.data?.operator) {
+            detectedOperator = detectResp.data.operator;
+            detectedEnabled = detectResp.data.enabled !== false;
+          } else {
+            console.warn("detect-operator returned no operator:", JSON.stringify(detectResp));
+          }
+        } catch (apiErr: any) {
+          console.error("detect-operator API failed:", apiErr.message);
+        }
+
+        // Local fallback using Brazilian mobile prefix rules
+        if (!detectedOperator) {
+          const digits = qPhone.replace(/\D/g, "");
+          const num = digits.length === 11 ? digits : digits.length === 13 ? digits.slice(2) : digits;
+          if (num.length === 11) {
+            const prefix = parseInt(num.substring(2, 6));
+            // ANATEL prefix ranges (approximate)
+            if ((prefix >= 9611 && prefix <= 9699) || (prefix >= 9100 && prefix <= 9199)) {
+              detectedOperator = "claro";
+            } else if ((prefix >= 9700 && prefix <= 9799) || (prefix >= 9800 && prefix <= 9899)) {
+              detectedOperator = "vivo";
+            } else if ((prefix >= 9900 && prefix <= 9999) || (prefix >= 9200 && prefix <= 9299)) {
+              detectedOperator = "tim";
+            } else if (prefix >= 9300 && prefix <= 9399) {
+              detectedOperator = "oi";
+            }
+            if (detectedOperator) {
+              console.log(`detect-operator local fallback: ${num} → ${detectedOperator}`);
+            }
+          }
+        }
+
+        if (detectedOperator) {
           result = {
             success: true,
             data: {
-              operator: detectResp.data.operator,
-              enabled: detectResp.data.enabled,
-              carrier: { name: detectResp.data.operator },
+              operator: detectedOperator,
+              enabled: detectedEnabled,
+              carrier: { name: detectedOperator },
+              source: detectedOperator ? "api" : "local",
             },
           };
         } else {
-          result = detectResp;
+          result = { success: false, error: "Não foi possível detectar a operadora" };
         }
         break;
       }
