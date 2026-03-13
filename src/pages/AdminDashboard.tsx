@@ -1317,7 +1317,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
-                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums">{fmt(r.valor)}</p>
+                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums"><AnimatedCounter value={r.valor} prefix="R$&nbsp;" duration={600} /></p>
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Lucro</p>
