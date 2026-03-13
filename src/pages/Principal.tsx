@@ -1510,7 +1510,7 @@ export default function Principal() {
                               </p>
                               <p className="text-[10px] text-muted-foreground">{r.telefone} • {fmtDate(r.created_at)}</p>
                             </div>
-                            <span className="text-sm font-bold font-mono text-foreground shrink-0">{fmt(safeValor(r))}</span>
+                            <span className="text-sm font-bold font-mono text-foreground shrink-0"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></span>
                           </div>
                         );
                       })}
@@ -1537,7 +1537,7 @@ export default function Principal() {
                             <p className="text-sm font-medium text-foreground truncate">{r.nome}</p>
                             <p className="text-[10px] text-muted-foreground">{r.count} recargas</p>
                           </div>
-                          <span className="text-sm font-bold font-mono text-success shrink-0">{fmt(r.total)}</span>
+                          <span className="text-sm font-bold font-mono text-success shrink-0"><AnimatedCounter value={r.total} prefix="R$&nbsp;" duration={600} /></span>
                         </div>
                       ))}
                     </div>
@@ -1566,7 +1566,7 @@ export default function Principal() {
                           <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
                           <p className="text-sm font-medium text-foreground truncate">{r.nome || r.email?.split("@")[0] || "—"}</p>
                         </div>
-                        <span className="text-sm font-bold font-mono text-warning shrink-0">{fmt(r.saldo)}</span>
+                        <span className="text-sm font-bold font-mono text-warning shrink-0"><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" duration={600} /></span>
                       </div>
                     ))}
                   </div>
@@ -1844,7 +1844,7 @@ export default function Principal() {
                               </span>
                             </td>
                             <td className="px-2 py-2.5 text-right">
-                              <span className={`font-mono font-bold tabular-nums text-[13px] ${saldoBaixo ? "text-warning" : "text-foreground"}`}>{fmt(r.saldo)}</span>
+                              <span className={`font-mono font-bold tabular-nums text-[13px] ${saldoBaixo ? "text-warning" : "text-foreground"}`}><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" duration={600} /></span>
                               {saldoBaixo && <p className="text-[9px] text-warning mt-0.5 font-medium leading-none">Baixo</p>}
                             </td>
                             <td className="px-2 py-2.5 text-center">
@@ -1860,10 +1860,10 @@ export default function Principal() {
                               )}
                             </td>
                             <td className="hidden lg:table-cell px-2 py-2.5 text-right">
-                              <span className="font-mono font-bold text-success tabular-nums">{fmt(totalVendido)}</span>
+                              <span className="font-mono font-bold text-success tabular-nums"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" duration={600} /></span>
                             </td>
                             <td className="hidden lg:table-cell px-2 py-2.5 text-right">
-                              <span className={`font-mono font-bold tabular-nums ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>{fmt(lucroDesk)}</span>
+                              <span className={`font-mono font-bold tabular-nums ${lucroDesk > 0 ? "text-success" : lucroDesk < 0 ? "text-destructive" : "text-muted-foreground/40"}`}><AnimatedCounter value={lucroDesk} prefix="R$&nbsp;" duration={600} /></span>
                             </td>
                             <td className="hidden lg:table-cell px-2 py-2.5 text-center">
                               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${r.active ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
@@ -2248,7 +2248,7 @@ export default function Principal() {
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                   <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-bold font-mono text-sm text-foreground">{fmt(safeValor(r))}</span>
+                                    <span className="font-bold font-mono text-sm text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></span>
                                     <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                   </div>
                                 </div>
@@ -2274,7 +2274,7 @@ export default function Principal() {
                                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground">{fmt(safeValor(r))}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></td>
                                   <td className="px-3 py-2 text-center">
                                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                       (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
@@ -2315,7 +2315,7 @@ export default function Principal() {
                               <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                 <span className="text-[10px] text-muted-foreground">{fmtDate(t.created_at)}</span>
                                 <div className="flex items-center gap-2">
-                                  <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}>{fmt(t.amount)}</span>
+                                  <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></span>
                                   <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${statusLabel}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                 </div>
                               </div>
@@ -2339,7 +2339,7 @@ export default function Principal() {
                               <tr key={i} className="border-b border-border last:border-0">
                                 <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
                                 <td className="px-3 py-2 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
-                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground">{fmt(t.amount)}</td>
+                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></td>
                                 <td className="px-3 py-2 text-center">
                                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                     (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" :

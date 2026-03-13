@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { createPixDeposit, type PixResult } from "@/lib/payment";
@@ -867,7 +868,7 @@ export default function TelegramMiniApp() {
         <div className="flex items-center gap-2">
           <div className="rounded-lg px-3 py-1.5" style={{ ...st.secondaryBg, border: st.borderSub }}>
             <p className="text-[10px] leading-none" style={st.hint}>Saldo</p>
-            <p className="text-xs font-bold leading-tight" style={st.green}>{formatCurrency(saldo)}</p>
+            <p className="text-xs font-bold leading-tight" style={st.green}><AnimatedCounter value={saldo} prefix="R$&nbsp;" /></p>
           </div>
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />

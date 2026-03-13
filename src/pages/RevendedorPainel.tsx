@@ -815,7 +815,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <AvatarDisplay />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{user?.email}</p>
-                  <p className="text-xs text-success font-medium">{loading ? <SkeletonValue width="w-14" className="h-3" /> : fmt(saldo)}</p>
+                  <p className="text-xs text-success font-medium">{loading ? <SkeletonValue width="w-14" className="h-3" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</p>
                 </div>
               </div>
             </div>
@@ -1563,7 +1563,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="font-bold text-foreground">{fmt(safeValor(r))}</p>
+                            <p className="font-bold text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></p>
                             <span className={`text-xs font-medium ${(r.status === "completed" || r.status === "concluida") ? "text-success" : r.status === "pending" ? "text-warning" : r.status === "falha" ? "text-destructive" : "text-muted-foreground"}`}>
                               {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}
                             </span>

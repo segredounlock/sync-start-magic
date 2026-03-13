@@ -1317,12 +1317,12 @@ export default function AdminDashboard() {
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
-                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums">{fmt(r.valor)}</p>
+                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums"><AnimatedCounter value={r.valor} prefix="R$&nbsp;" duration={600} /></p>
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Lucro</p>
                         <p className="text-[12px] font-bold font-mono text-success tabular-nums">
-                          {(r.status === "completed" || r.status === "concluida") ? `+${fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}` : "—"}
+                          {(r.status === "completed" || r.status === "concluida") ? <><span>+</span><AnimatedCounter value={(Number(r.custo) || 0) - (Number((r as any).custo_api) || 0)} prefix="R$&nbsp;" duration={600} /></> : "—"}
                         </p>
                       </div>
                     </div>
@@ -1374,12 +1374,12 @@ export default function AdminDashboard() {
                           <p className="font-mono text-muted-foreground text-[11px]">{r.telefone}</p>
                         </td>
                         <td className="px-4 py-2.5 text-right">
-                          <p className="font-mono font-bold text-foreground tabular-nums">{fmt(r.valor)}</p>
-                          {role === "admin" && <p className="text-[11px] text-muted-foreground font-mono tabular-nums">Custo: {fmt(r.custo)}</p>}
+                          <p className="font-mono font-bold text-foreground tabular-nums"><AnimatedCounter value={r.valor} prefix="R$&nbsp;" duration={600} /></p>
+                          {role === "admin" && <p className="text-[11px] text-muted-foreground font-mono tabular-nums">Custo: <AnimatedCounter value={r.custo} prefix="R$&nbsp;" duration={600} /></p>}
                         </td>
                         <td className="px-4 py-2.5 text-right">
                           {(r.status === "completed" || r.status === "concluida") ? (
-                            <span className="font-mono font-bold text-success tabular-nums">+{fmt(lucro)}</span>
+                            <span className="font-mono font-bold text-success tabular-nums">+<AnimatedCounter value={lucro} prefix="R$&nbsp;" duration={600} /></span>
                           ) : (
                             <span className="text-muted-foreground text-[11px]">—</span>
                           )}
@@ -1700,7 +1700,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-center">
                           <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Vendas</p>
-                          <p className="text-[11px] font-bold font-mono text-success">{fmt(totalVendido)}</p>
+                          <p className="text-[11px] font-bold font-mono text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" duration={600} /></p>
                         </div>
                         <div className="text-center">
                           <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Recs</p>
@@ -1708,7 +1708,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-center">
                           <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro</p>
-                          <p className="text-[11px] font-bold font-mono text-success">{fmt(totalLucro)}</p>
+                          <p className="text-[11px] font-bold font-mono text-success"><AnimatedCounter value={totalLucro} prefix="R$&nbsp;" duration={600} /></p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/50">
@@ -1985,7 +1985,7 @@ export default function AdminDashboard() {
                                   <p className="text-xs text-muted-foreground truncate">{c.email}</p>
                                 </div>
                               </div>
-                              <p className="font-bold text-success text-sm">{fmt(c.saldo)}</p>
+                              <p className="font-bold text-success text-sm"><AnimatedCounter value={c.saldo} prefix="R$&nbsp;" duration={600} /></p>
                             </div>
                             <div className="flex items-center justify-between pt-3 border-t border-border">
                               <span className="text-xs text-muted-foreground">{formatDateFullBR(c.created_at)}</span>
@@ -2033,7 +2033,7 @@ export default function AdminDashboard() {
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
-                                <td className="px-4 py-3 text-right font-bold text-success">{fmt(c.saldo)}</td>
+                                <td className="px-4 py-3 text-right font-bold text-success"><AnimatedCounter value={c.saldo} prefix="R$&nbsp;" duration={600} /></td>
                                 <td className="px-4 py-3 text-muted-foreground">{formatDateFullBR(c.created_at)}</td>
                                 <td className="px-4 py-3 text-center">
                                   <div className="flex items-center justify-center gap-2">
@@ -2159,7 +2159,7 @@ export default function AdminDashboard() {
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
                         <p className={`text-[13px] font-bold font-mono tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
+                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}<AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} />
                         </p>
                       </div>
                     </div>
@@ -2213,7 +2213,7 @@ export default function AdminDashboard() {
                         <td className="px-4 py-2.5 text-foreground capitalize text-[13px]">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
                         <td className="px-4 py-2.5 text-foreground text-[13px]">PIX</td>
                         <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
+                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}<AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} />
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
@@ -2328,7 +2328,7 @@ export default function AdminDashboard() {
                             <button onClick={() => setSelectedDeposit(null)} className="p-1.5 rounded-lg hover:bg-destructive/15 transition-colors text-destructive"><X className="h-5 w-5" /></button>
                           </div>
                           <div className="text-center mb-5">
-                            <p className="text-3xl font-bold font-mono text-success">+{fmt(t.amount)}</p>
+                            <p className="text-3xl font-bold font-mono text-success">+<AnimatedCounter value={t.amount} prefix="R$&nbsp;" /></p>
                             <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
                           </div>
                           {/* Common info */}
@@ -3636,7 +3636,7 @@ export default function AdminDashboard() {
                   <div className={`p-3 rounded-xl mb-4 ${analytics.lucro >= 0 ? "bg-success/10 border border-success/20" : "bg-destructive/10 border border-destructive/20"}`}>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro Total do Período</p>
                     <p className={`text-xl font-extrabold ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
-                      {analytics.lucro >= 0 ? "+" : ""}R$ {analytics.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      {analytics.lucro >= 0 ? "+" : ""}<AnimatedCounter value={Math.abs(analytics.lucro)} prefix="R$&nbsp;" />
                     </p>
                   </div>
 
@@ -3662,12 +3662,12 @@ export default function AdminDashboard() {
                               <span className="text-[10px] text-muted-foreground">{op.count} recargas</span>
                             </div>
                             <span className={`text-xs font-bold ${op.lucro >= 0 ? "text-success" : "text-destructive"}`}>
-                              {op.lucro >= 0 ? "+" : ""}R$ {op.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              {op.lucro >= 0 ? "+" : ""}<AnimatedCounter value={Math.abs(op.lucro)} prefix="R$&nbsp;" />
                             </span>
                           </div>
                           <div className="flex gap-3 text-[10px] text-muted-foreground mb-1.5">
-                            <span>Cobrado: R$ {op.cobrado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            <span>API: R$ {op.custoApi.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            <span>Cobrado: <AnimatedCounter value={op.cobrado} prefix="R$&nbsp;" /></span>
+                            <span>API: <AnimatedCounter value={op.custoApi} prefix="R$&nbsp;" /></span>
                           </div>
                           <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
                             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.1 + i * 0.05 }}
