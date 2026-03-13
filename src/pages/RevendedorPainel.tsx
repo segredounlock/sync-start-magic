@@ -388,7 +388,37 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     return () => { cancelled = true; clearTimeout(timer); };
   }, [tab, telefone]);
 
-   // Auto-detect removed — user selects operator manually, then clicks "Verificar"
+   // Auto-detect operator when phone has 11 digits
+   useEffect(() => {
+     const digits = telefone.replace(/\D/g, "");
+     if (digits.length !== 11 || !catalog.length) return;
+     if (lastDetectedPhoneRef.current === digits) return;
+     
+     const timer = setTimeout(async () => {
+       if (lastDetectedPhoneRef.current === digits) return;
+       lastDetectedPhoneRef.current = digits;
+       setDetectingOperator(true);
+       try {
+         const queryResp = await callApi("query-operator", { phoneNumber: digits });
+         if (queryResp?.success && queryResp.data) {
+           const operatorName = queryResp.data.carrier?.name || queryResp.data.operator || "";
+           if (operatorName) {
+             const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+             const matched = catalog.find(c => norm(c.name).includes(norm(operatorName)) || norm(operatorName).includes(norm(c.name)));
+             if (matched) {
+               setSelectedCarrier(matched);
+               setDetectedOperatorName(matched.name);
+               appToast.success(`Operadora detectada: ${matched.name}`);
+             }
+           }
+         }
+       } catch (err: any) {
+         console.warn("Auto-detect operator failed:", err.message);
+       }
+       setDetectingOperator(false);
+     }, 500);
+     return () => clearTimeout(timer);
+   }, [telefone, catalog, callApi]);
 
   const formatPhoneDisplay = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 11);
@@ -1309,12 +1339,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
                       {/* Operadora */}
                       <div>
-                        <label className="block text-sm font-semibold text-foreground mb-1.5">Operadora</label>
+                        <label className="block text-sm font-semibold text-foreground mb-1.5">
+                          Operadora
+                          {detectingOperator && <span className="ml-2 text-xs text-primary animate-pulse">Detectando...</span>}
+                          {detectedOperatorName && !detectingOperator && <span className="ml-2 text-xs text-success">✓ {detectedOperatorName}</span>}
+                        </label>
                         <select
                           value={selectedCarrier?.carrierId || ""}
                           onChange={(e) => {
                             const c = catalog.find((c) => c.carrierId === e.target.value);
                             setSelectedCarrier(c || null);
+                            if (c) setDetectedOperatorName(c.name);
                           }}
                           className="w-full px-5 py-3.5 rounded-xl glass-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all appearance-none bg-[length:16px] bg-[right_16px_center] bg-no-repeat"
                           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2388888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 15 5 5 5-5'/%3E%3Cpath d='m7 9 5-5 5 5'/%3E%3C/svg%3E")` }}
