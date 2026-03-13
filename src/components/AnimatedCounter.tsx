@@ -23,15 +23,15 @@ export function AnimatedCounter({
   const mountedRef = useRef(false);
 
   useEffect(() => {
-    const from = mountedRef.current ? prevValue.current : 0;
-    mountedRef.current = true;
     const to = value;
-    prevValue.current = value;
 
-    if (from === to) {
-      setDisplay(to);
+    if (to === 0) {
+      setDisplay(0);
       return;
     }
+
+    // Always animate from 0 for the "rolling counter" effect
+    const from = 0;
 
     const startTime = performance.now();
 
