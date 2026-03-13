@@ -1179,7 +1179,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
         const userCost = getUserCost(v.cost, faceValue);
         return {
           text: `R$ ${Number(faceValue).toFixed(2).replace(".", ",")}`,
-          callback_data: `rec_val_${carrierId}_${v.valueId}_${userCost.toFixed(2)}`,
+          callback_data: `rec_val_${carrierId}_${v.valueId}|${userCost.toFixed(2)}`,
         };
       });
       valButtons.push(row);
