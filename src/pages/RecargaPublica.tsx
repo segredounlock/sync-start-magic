@@ -33,6 +33,7 @@ export default function RecargaPublica() {
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
   const refParam = searchParams.get("ref") || searchParams.get("revendedor");
+  const { filterValores } = useDisabledValues();
 
   const [revendedor, setRevendedor] = useState<RevendedorInfo | null>(null);
   const [operadoras, setOperadoras] = useState<Operadora[]>([]);
