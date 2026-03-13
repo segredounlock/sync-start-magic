@@ -1374,8 +1374,8 @@ export default function AdminDashboard() {
                           <p className="font-mono text-muted-foreground text-[11px]">{r.telefone}</p>
                         </td>
                         <td className="px-4 py-2.5 text-right">
-                          <p className="font-mono font-bold text-foreground tabular-nums">{fmt(r.valor)}</p>
-                          {role === "admin" && <p className="text-[11px] text-muted-foreground font-mono tabular-nums">Custo: {fmt(r.custo)}</p>}
+                          <p className="font-mono font-bold text-foreground tabular-nums"><AnimatedCounter value={r.valor} prefix="R$&nbsp;" duration={600} /></p>
+                          {role === "admin" && <p className="text-[11px] text-muted-foreground font-mono tabular-nums">Custo: <AnimatedCounter value={r.custo} prefix="R$&nbsp;" duration={600} /></p>}
                         </td>
                         <td className="px-4 py-2.5 text-right">
                           {(r.status === "completed" || r.status === "concluida") ? (
