@@ -1,40 +1,42 @@
 
+Sim — faz sentido. Hoje o “Relatórios” está focado em lucro por revendedor e, na prática, ele filtra apenas recargas concluídas; por isso pendentes/falhas podem “sumir” e parecer que não há nada.
 
-## Diagnóstico e Correção
+## Plano (conciso)
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### 1) Ajustar o conceito da tela de Relatórios
+- Manter o bloco atual de **lucro por revendedor** (porque é financeiro).
+- Criar um bloco/seção específica de **“Todas as Recargas”** dentro de Relatórios (local fixo para você ver tudo).
 
-### Plano
+### 2) Garantir que “Todas as Recargas” mostre de verdade tudo
+- Incluir no dataset da seção:
+  - `completed/concluida`
+  - `pending`
+  - `falha`
+- Aplicar período (Hoje/7d/Mês/Total), mas sem esconder por status.
+- Ordenar por data mais recente primeiro.
 
-**1. Corrigir o mapeamento de status na sync function**
+### 3) Filtros úteis na seção de recargas
+- Filtro por status: **Todas | Concluídas | Pendentes | Falhas**.
+- Busca por **telefone, operadora, nome/email do usuário**.
+- Paginação para volume alto (sem travar a tela).
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### 4) UX no mobile e desktop
+- **Desktop:** tabela completa com Data, Usuário, Telefone, Operadora, Valor, Status.
+- **Mobile (430x660):** cards compactos com os mesmos dados essenciais.
+- Mensagem de vazio mais clara: “Sem recargas para os filtros selecionados”.
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+### 5) Validar fluxo esperado
+- Clicar em “Ver tudo” → Relatórios → seção “Todas as Recargas” com dados.
+- Mesmo quando não houver concluídas, pendentes/falhas continuam visíveis na seção de recargas.
+- Bloco de lucro continua correto e separado.
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+## Arquivo principal impactado
+- `src/pages/Principal.tsx` (fetch + render da view `relatorios`).
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
-
+## Detalhes técnicos
+- Problema atual identificado: query do relatório usa filtro de status apenas concluído (`in("status", ["completed", "concluida"])`), o que exclui pendentes/falhas.
+- Implementação proposta:
+  - Separar dataset de **lucro** (concluídas) do dataset de **listagem operacional** (todas).
+  - Reaproveitar padrões já existentes de status/cores/formatação.
+  - Manter paginação e busca no cliente para a nova lista.
+- Sem alteração de banco, sem migração, sem mudança de permissão.
