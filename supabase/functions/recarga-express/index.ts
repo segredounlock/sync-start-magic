@@ -794,6 +794,7 @@ Deno.serve(async (req) => {
         // Server-side polling
         const prOrderData0 = prRechargeResult.data || {};
         const prExtId = prOrderData0.id || prOrderData0._id || prOrderData0.orderId || null;
+        let prPolledFailed = false;
         if (prExtId && prOrderData0.status !== "feita" && prOrderData0.status !== "completed") {
           const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
           for (let attempt = 0; attempt < 3; attempt++) {
@@ -809,6 +810,7 @@ Deno.serve(async (req) => {
                 }
                 if (found && (found.status === "falha" || found.status === "cancelada" || found.status === "expirada")) {
                   prRechargeResult = { ...prRechargeResult, data: { ...prRechargeResult.data, ...found } };
+                  prPolledFailed = true;
                   break;
                 }
               }
@@ -816,15 +818,23 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Deduct balance
-        const prNewBalance = prBalance - prChargedCost;
-        await adminClient.from("saldos").update({ valor: prNewBalance }).eq("user_id", userId).eq("tipo", "revenda");
-
         // Save recarga
         const prOrderData = prRechargeResult.data || {};
         const prExternalId = prOrderData.id || prOrderData._id || prOrderData.orderId || null;
         const prOperadoraName = prOrderData.operator || prResolvedOperator;
-        const prIsCompleted = (prOrderData.status === "feita" || prOrderData.status === "concluida" || prOrderData.status === "completed");
+        const prIsFailed = prPolledFailed || prOrderData.status === "falha" || prOrderData.status === "cancelada" || prOrderData.status === "expirada";
+        const prIsCompleted = !prIsFailed && (prOrderData.status === "feita" || prOrderData.status === "concluida" || prOrderData.status === "completed");
+        const prFinalStatus = prIsFailed ? "falha" : (prIsCompleted ? "completed" : "pending");
+
+        // Only deduct balance if NOT failed
+        let prNewBalance = prBalance;
+        if (!prIsFailed) {
+          prNewBalance = prBalance - prChargedCost;
+          await adminClient.from("saldos").update({ valor: prNewBalance }).eq("user_id", userId).eq("tipo", "revenda");
+        } else {
+          console.log(`public-recharge: NOT deducting balance — recharge failed. reseller=${userId} chargedCost=${prChargedCost}`);
+        }
+
         await adminClient.from("recargas").insert({
           user_id: userId,
           telefone: prPhone,
@@ -832,7 +842,7 @@ Deno.serve(async (req) => {
           valor: prAmount,
           custo: prChargedCost,
           custo_api: prApiCost,
-          status: prIsCompleted ? "completed" : "pending",
+          status: prFinalStatus,
           external_id: prExternalId,
           completed_at: prIsCompleted ? new Date().toISOString() : null,
         });
