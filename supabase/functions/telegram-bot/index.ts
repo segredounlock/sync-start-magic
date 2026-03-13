@@ -502,13 +502,20 @@ serve(async (req) => {
           return;
         }
 
-        // Linked user commands
-        if (session?.step === "awaiting_deposit_amount") {
+        // Commands always take priority over active sessions
+        const isCommand = text.startsWith("/");
+        if (isCommand) {
+          // Clear any active session when user sends a command
+          clearSession(supabase, chatIdStr);
+        }
+
+        // Linked user session flows (only if NOT a command)
+        if (!isCommand && session?.step === "awaiting_deposit_amount") {
           await handleDepositAmount(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
           return;
         }
 
-        if (session?.step === "awaiting_recarga_phone") {
+        if (!isCommand && session?.step === "awaiting_recarga_phone") {
           await handleRecargaPhone(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
           return;
         }
