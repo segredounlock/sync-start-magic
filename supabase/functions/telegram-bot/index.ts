@@ -1115,8 +1115,26 @@ async function handleCallback(supabase: any, token: string, callback: any) {
 
     // resolveValue is now global — defined before handleCallback
 
+    // Filter out disabled values
+    let filteredValues = carrier.values;
+    if (operadoraId) {
+      const { data: disabledRows } = await supabase.from("disabled_recharge_values").select("valor").eq("operadora_id", operadoraId);
+      if (disabledRows?.length) {
+        const disabledSet = new Set(disabledRows.map((d: any) => Number(d.valor)));
+        filteredValues = carrier.values.filter((v: any) => !disabledSet.has(resolveValue(v)));
+      }
+    }
+
+    if (!filteredValues.length) {
+      await editMessageWithKeyboard(token, chatId, msgId,
+        "⚠️ Nenhum valor disponível para esta operadora no momento.",
+        [[{ text: "⬅️ Voltar", callback_data: "menu_recarga" }]]
+      );
+      return;
+    }
+
     // Calculate user cost for each value
-    const vals = carrier.values.sort((a: any, b: any) => resolveValue(a) - resolveValue(b));
+    const vals = filteredValues.sort((a: any, b: any) => resolveValue(a) - resolveValue(b));
 
     function getUserCost(apiCost: number, faceValue: number): number {
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
