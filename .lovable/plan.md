@@ -1,40 +1,28 @@
 
 
-## Diagnóstico e Correção
+## Plano: Adicionar toggle de ativar/desativar valor na seção Precificação
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### O que será feito
+Adicionar um botão toggle (ativar/desativar) em cada **PricingCard** na seção de Precificação do painel Principal. Quando desativado, o valor ficará visualmente marcado e não aparecerá no catálogo (site, bot, miniapp).
 
-### Plano
+### Alterações
 
-**1. Corrigir o mapeamento de status na sync function**
+**1. `src/pages/Principal.tsx`**
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+- **Importar** o hook `useDisabledValues` no topo do arquivo.
+- **Inicializar** o hook dentro do componente Principal: `const { isDisabled, toggle, refetch } = useDisabledValues();`
+- **Passar novas props** para o `PricingCard`: `disabled` (boolean) e `onToggleDisabled` (callback).
+- **Na aba Global**: ao renderizar cada `PricingCard`, passar `disabled={isDisabled(activeOpId, valor)}` e `onToggleDisabled={() => toggle(activeOpId, valor, user.id)}`.
+- **Na aba Por Revendedor**: mesma lógica de props.
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+- **Alterar o componente `PricingCard`**:
+  - Adicionar props `disabled?: boolean` e `onToggleDisabled?: () => void`.
+  - Adicionar um botão toggle no canto superior direito do card (ao lado do badge Global/Personalizado).
+  - Quando `disabled=true`: o card fica com opacidade reduzida, borda vermelha, e um indicador "Desativado".
+  - O botão usa os ícones `ToggleLeft`/`ToggleRight` (já importados no arquivo).
+  - Ao clicar no toggle, chama `onToggleDisabled()`.
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Resultado
+- O admin poderá ativar/desativar qualquer valor de recarga diretamente na tela de Precificação, sem precisar de uma aba separada "Operadoras".
+- A mudança é refletida instantaneamente em todo o sistema (site, bot, miniapp) pois usa a mesma tabela `disabled_recharge_values`.
 
