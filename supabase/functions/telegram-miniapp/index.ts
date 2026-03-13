@@ -214,6 +214,10 @@ serve(async (req) => {
               : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
           };
 
+          // Load disabled values
+          const { data: disabledRows } = await supabase.from("disabled_recharge_values").select("operadora_id, valor");
+          const disabledSet = new Set((disabledRows || []).map((d: any) => `${d.operadora_id}-${Number(d.valor)}`));
+
           const operadoras = catalogData.data.map((carrier: any) => {
             // Find local operadora UUID by name
             const localOp = localOpsList.find((op: any) => normalize(op.nome) === normalize(carrier.name));
@@ -261,8 +265,9 @@ serve(async (req) => {
                   userCost,
                   value: resolvedValue,
                   label: v.label || `R$ ${resolvedValue || apiCost}`,
+                  _disabled: operadoraId ? disabledSet.has(`${operadoraId}-${resolvedValue}`) : false,
                 };
-              }),
+              }).filter((v: any) => !v._disabled),
             };
           });
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -32,6 +33,7 @@ export default function RecargaPublica() {
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
   const refParam = searchParams.get("ref") || searchParams.get("revendedor");
+  const { filterValores } = useDisabledValues();
 
   const [revendedor, setRevendedor] = useState<RevendedorInfo | null>(null);
   const [operadoras, setOperadoras] = useState<Operadora[]>([]);
@@ -344,7 +346,7 @@ export default function RecargaPublica() {
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Valor</label>
                       <div className="grid grid-cols-3 gap-2">
-                        {currentOp.valores.map((v, i) => {
+                        {filterValores(currentOp.id, currentOp.valores).map((v, i) => {
                           const displayPrice = getPrice(currentOp.id, v);
                           const hasCustomPrice = displayPrice !== v;
                           return (

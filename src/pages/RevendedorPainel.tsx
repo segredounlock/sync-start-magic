@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
@@ -50,6 +51,7 @@ interface RevendedorPainelProps {
 export default function RevendedorPainel({ resellerId, resellerBranding }: RevendedorPainelProps = {}) {
   const isClientMode = !!resellerId;
   const navigate = useNavigate();
+  const { filterValores } = useDisabledValues();
   const { user, role, signOut } = useAuth();
   const [saldo, setSaldo] = useState(0);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
@@ -146,7 +148,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         const localCatalog: CatalogCarrier[] = ops.map((op) => {
           const opGlobalRules = (globalRules || []).filter((r) => r.operadora_id === op.id);
           const opResellerRules = (resellerRules || []).filter((r: any) => r.operadora_id === op.id);
-          const valores = (op.valores as unknown as number[]) || [];
+          const valores = filterValores(op.id, (op.valores as unknown as number[]) || []);
           const values: CatalogValue[] = valores.map((v: number) => {
             const resellerRule = opResellerRules.find((r: any) => Number(r.valor_recarga) === v);
             const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
