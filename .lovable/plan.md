@@ -1,40 +1,26 @@
 
 
-## Diagnóstico e Correção
+## Plano: Sincronizar operadoras locais com o catálogo da API
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Problema
+A Claro foi removida do catálogo da API externa, mas a tabela local `operadoras` ainda a marca como `ativo = true`. O painel do revendedor usa a tabela local para montar o catálogo, por isso a Claro continua aparecendo.
 
-### Plano
+### Solução em 2 partes
 
-**1. Corrigir o mapeamento de status na sync function**
+**Parte 1 — Correção imediata: Desativar a Claro no banco**
+- Executar `UPDATE operadoras SET ativo = false WHERE nome = 'Claro'` para remover imediatamente.
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+**Parte 2 — Sincronização automática no Principal.tsx**
+O painel Principal (`/principal`) já faz fetch do catálogo da API na seção de Precificação. Adicionar lógica para:
+1. Após buscar o catálogo da API, comparar os nomes das operadoras retornadas com as operadoras locais ativas.
+2. Operadoras locais que **não existem** no catálogo da API serão automaticamente marcadas como `ativo = false`.
+3. Operadoras que **voltarem** ao catálogo serão reativadas (`ativo = true`).
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+Isso acontecerá toda vez que o admin principal abrir a seção de Precificação — sem necessidade de ação manual.
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+**Arquivo alterado:** `src/pages/Principal.tsx` (dentro da função `loadPricingData` que já faz fetch do catálogo)
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Resultado
+- Claro desaparece imediatamente do sistema
+- Futuras remoções/adições de operadoras pela API serão refletidas automaticamente
 
