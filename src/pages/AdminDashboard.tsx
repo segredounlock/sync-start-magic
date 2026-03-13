@@ -2321,7 +2321,7 @@ export default function AdminDashboard() {
                           </div>
                           <div className="text-center mb-5">
                             <p className="text-3xl font-bold font-mono text-success">+<AnimatedCounter value={t.amount} prefix="R$&nbsp;" /></p>
-                            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                            <StatusBadge status={t.status} type="deposit" className="mt-2 px-3 py-1 text-xs" />
                           </div>
                           {/* Common info */}
                           <div className="space-y-0 divide-y divide-border">
