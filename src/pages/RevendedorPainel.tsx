@@ -1339,12 +1339,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
                       {/* Operadora */}
                       <div>
-                        <label className="block text-sm font-semibold text-foreground mb-1.5">Operadora</label>
+                        <label className="block text-sm font-semibold text-foreground mb-1.5">
+                          Operadora
+                          {detectingOperator && <span className="ml-2 text-xs text-primary animate-pulse">Detectando...</span>}
+                          {detectedOperatorName && !detectingOperator && <span className="ml-2 text-xs text-success">✓ {detectedOperatorName}</span>}
+                        </label>
                         <select
                           value={selectedCarrier?.carrierId || ""}
                           onChange={(e) => {
                             const c = catalog.find((c) => c.carrierId === e.target.value);
                             setSelectedCarrier(c || null);
+                            if (c) setDetectedOperatorName(c.name);
                           }}
                           className="w-full px-5 py-3.5 rounded-xl glass-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all appearance-none bg-[length:16px] bg-[right_16px_center] bg-no-repeat"
                           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2388888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 15 5 5 5-5'/%3E%3Cpath d='m7 9 5-5 5 5'/%3E%3C/svg%3E")` }}
