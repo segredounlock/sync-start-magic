@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { styledToast as toast } from "@/lib/toast";
 import { Loader2, Send, Image, Plus, Trash2, Link, Upload, X, Sparkles, Tag, Zap, Bell, Megaphone, TrendingUp } from 'lucide-react';
+import { TextFormatToolbar, renderTelegramHtml } from './TextFormatToolbar';
 
 interface BroadcastButton {
   text: string;
@@ -140,9 +141,9 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
         {/* Message */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-foreground">Mensagem</label>
-          <textarea
+          <TextFormatToolbar
             value={formData.message}
-            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            onChange={(msg) => setFormData({ ...formData, message: msg })}
             placeholder="Aproveite 20% de desconto em todos os planos! Use o cupom PROMO20. Válido até domingo!"
             rows={4}
             required
@@ -281,7 +282,7 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
                 <img src={formData.image_url} alt="" className="w-full max-h-40 object-cover rounded-lg mb-3" />
               )}
               <p className="text-sm font-bold text-white">📢 {formData.title || 'Título'}</p>
-              <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap">{formData.message || 'Sua mensagem aqui...'}</p>
+              <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderTelegramHtml(formData.message || 'Sua mensagem aqui...') }} />
               {enableButtons && formData.buttons.filter(b => b.text).length > 0 && (
                 <div className="mt-3 flex gap-2">
                   {formData.buttons.filter(b => b.text).map((b, i) => (
