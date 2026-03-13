@@ -29,6 +29,8 @@ project_id = "xtkqyjruyuydlbvwduuy"
     verify_jwt = false
   [functions.recarga-express]
     verify_jwt = false
+  [functions.sync-catalog]
+    verify_jwt = false
   [functions.send-broadcast]
     verify_jwt = false
   [functions.send-push]
