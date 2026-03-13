@@ -2242,7 +2242,7 @@ export default function AdminDashboard() {
                       const commonRows: { label: string; value: string | null | undefined }[] = [
                         { label: "Revendedor", value: t.user_nome || t.user_email || "—" },
                         { label: "Valor", value: fmt(t.amount) },
-                        { label: "Status", value: statusLabel },
+                        { label: "Status", value: getStatusLabel(t.status, "deposit") },
                         { label: "Data", value: fmtDate(t.created_at) },
                         { label: "Método", value: "PIX" },
                         { label: "Gateway", value: gwLabel[gw] || gw || "—" },
