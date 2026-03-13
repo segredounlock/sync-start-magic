@@ -528,8 +528,14 @@ Deno.serve(async (req) => {
         console.log("recharge API full response:", JSON.stringify(rechargeResult));
 
         if (!rechargeResult?.success) {
-          const errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
+          let errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
           console.error(`recharge FAILED: userId=${userId} phone=${phoneNumber} carrier=${carrierId} value=${catalogValue} cost=${chargedCost} error="${errMsg}"`);
+
+          // Fallback: detect MSISDN mismatch errors from provider and convert to friendly message
+          const lowerErrMsg = errMsg.toLowerCase();
+          if (lowerErrMsg.includes("msisdn not found") || lowerErrMsg.includes("msisdn nao encontrado") || lowerErrMsg.includes("operadora divergente") || lowerErrMsg.includes("carrier mismatch")) {
+            errMsg = `Número não pertence à operadora selecionada. Verifique a operadora correta antes de tentar novamente.`;
+          }
 
           // Alert admins when external API credit limit is exceeded
           const lowerErr = errMsg.toLowerCase();
