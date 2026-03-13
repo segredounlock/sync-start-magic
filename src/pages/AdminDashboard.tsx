@@ -1291,8 +1291,7 @@ export default function AdminDashboard() {
                 const initials = (r.user_nome || r.user_email || "?").slice(0, 2).toUpperCase();
                 const avatarColors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                 const colorIdx = (r.user_id || "").charCodeAt(0) % avatarColors.length;
-                const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
-                const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                // Status via plugin
                 return (
                   <motion.div key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3">
                     <div className="flex items-center justify-between mb-2">
