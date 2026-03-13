@@ -67,23 +67,38 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function DeferredEffects() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    // Defer non-critical effects until after initial paint
+    const id = requestIdleCallback ? requestIdleCallback(() => setReady(true)) : setTimeout(() => setReady(true), 1500);
+    return () => { if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id as number); };
+  }, []);
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      <SeasonalEffects />
+      <PullToRefresh />
+    </Suspense>
+  );
+}
+
 function App() {
   useCacheCleanup();
 
   return (
     <ThemeProvider>
       <AuthProvider>
-        <SeasonalEffects />
-        <PullToRefresh />
+        <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Auth />} />
-            <Route path="/recarga" element={<RecargaPublica />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/loja/:slug" element={<ClientePortal />} />
-            <Route path="/miniapp" element={<TelegramMiniApp />} />
-            <Route path="/instalar" element={<InstallApp />} />
+            <Route path="/recarga" element={<Suspense fallback={<SplashScreen />}><RecargaPublica /></Suspense>} />
+            <Route path="/reset-password" element={<Suspense fallback={<SplashScreen />}><ResetPassword /></Suspense>} />
+            <Route path="/loja/:slug" element={<Suspense fallback={<SplashScreen />}><ClientePortal /></Suspense>} />
+            <Route path="/miniapp" element={<Suspense fallback={<SplashScreen />}><TelegramMiniApp /></Suspense>} />
+            <Route path="/instalar" element={<Suspense fallback={<SplashScreen />}><InstallApp /></Suspense>} />
             <Route
               path="/admin"
               element={
