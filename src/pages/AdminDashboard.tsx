@@ -2159,7 +2159,7 @@ export default function AdminDashboard() {
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
                         <p className={`text-[13px] font-bold font-mono tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
+                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}<AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} />
                         </p>
                       </div>
                     </div>
