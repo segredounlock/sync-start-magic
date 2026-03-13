@@ -46,6 +46,7 @@ const AuditTab = lazy(() => import("@/components/AuditTab"));
 
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
+  const { isDisabled, toggle: toggleDisabledValue, refetch: refetchDisabled } = useDisabledValues();
   const navigate = useNavigate();
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
