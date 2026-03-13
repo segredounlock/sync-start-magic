@@ -748,15 +748,29 @@ export default function Principal() {
   // Load analytics after profiles are ready (deferred)
   useEffect(() => { if (revendedores.length > 0) fetchAnalytics(); }, [revendedores.length, fetchAnalytics]);
 
-  // Realtime: atualiza usuários automaticamente
+  // Realtime: atualiza usuários automaticamente (debounced to prevent storm)
   useEffect(() => {
+    let dataTimer: ReturnType<typeof setTimeout> | null = null;
+    let analyticsTimer: ReturnType<typeof setTimeout> | null = null;
+    const debouncedFetchData = () => {
+      if (dataTimer) clearTimeout(dataTimer);
+      dataTimer = setTimeout(() => fetchData(), 2000);
+    };
+    const debouncedFetchAnalytics = () => {
+      if (analyticsTimer) clearTimeout(analyticsTimer);
+      analyticsTimer = setTimeout(() => { analyticsLoaded.current = false; fetchAnalytics(); }, 3000);
+    };
     const channel = supabase.channel('principal-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'saldos' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, () => { analyticsLoaded.current = false; fetchAnalytics(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, debouncedFetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'saldos' }, debouncedFetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, debouncedFetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, debouncedFetchAnalytics)
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (dataTimer) clearTimeout(dataTimer);
+      if (analyticsTimer) clearTimeout(analyticsTimer);
+      supabase.removeChannel(channel);
+    };
   }, [fetchData, fetchAnalytics]);
 
   // Sincroniza selectedRev com a lista atualizada
