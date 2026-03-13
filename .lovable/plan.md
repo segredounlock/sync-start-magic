@@ -1,25 +1,40 @@
 
 
-## Plano: Corrigir notificação prematura e horário errado no comprovante
+## Diagnóstico e Correção
 
-### Problemas identificados
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-1. **Notificação Telegram enviada mesmo quando a recarga está pendente**: Em `recarga-express/index.ts` (linha 575-589), a notificação Telegram com `type: "recarga_completed"` é enviada **incondicionalmente**, mesmo quando `isCompleted` é `false` e o status é "pending". Resultado: o usuário recebe um comprovante com "Recarga Concluída" antes da confirmação real.
+### Plano
 
-2. **Horário errado no comprovante Telegram (Satori)**: Em `telegram-notify/index.ts` (linhas 94-98), o `toLocaleDateString` não especifica `timeZone: "America/Sao_Paulo"`, então usa UTC do servidor Deno — exibindo "13/03/26, 00:47" em vez de "12/03/2026, 21:47:35" (horário de Brasília).
+**1. Corrigir o mapeamento de status na sync function**
 
-### Correções
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-**Arquivo 1: `supabase/functions/recarga-express/index.ts`**
-- Envolver o bloco de notificação Telegram (linhas 575-590) em `if (isCompleted) { ... }` para que só envie quando a recarga for realmente confirmada pela API.
-- Recargas pendentes serão notificadas posteriormente pelo `sync-pending-recargas` quando forem concluídas.
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-**Arquivo 2: `supabase/functions/telegram-notify/index.ts`**
-- Linhas 94-98: Adicionar `timeZone: "America/Sao_Paulo"` nas chamadas `toLocaleDateString` para `dateStr` e `nowStr`.
-- Alterar formato para incluir segundos e ano completo (4 dígitos), ficando consistente com o formato "12/03/2026, 21:47:35" usado no restante do sistema.
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-### Resultado
-- Usuários só recebem comprovante "Recarga Concluída" quando a API confirma de fato
-- Recargas pendentes não geram notificação prematura — a notificação virá quando o `sync-pending-recargas` detectar a conclusão
-- Horários exibidos corretamente no fuso de Brasília
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

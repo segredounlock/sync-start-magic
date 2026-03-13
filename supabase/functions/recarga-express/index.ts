@@ -572,22 +572,24 @@ Deno.serve(async (req) => {
           completed_at: isCompleted ? new Date().toISOString() : null,
         });
 
-        // Telegram notification
-        try {
-          const notifyUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/telegram-notify`;
-          await fetch(notifyUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-            },
-            body: JSON.stringify({
-              type: "recarga_completed",
-              user_id: userId,
-              data: { telefone: phoneNumber, operadora: orderData.carrier?.name || carrierId, valor_recarga: catalogValue, custo: chargedCost, novo_saldo: newBalance, recarga_id: externalId || "" },
-            }),
-          });
-        } catch { /* ignore */ }
+        // Telegram notification — only when API confirmed completion
+        if (isCompleted) {
+          try {
+            const notifyUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/telegram-notify`;
+            await fetch(notifyUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                type: "recarga_completed",
+                user_id: userId,
+                data: { telefone: phoneNumber, operadora: orderData.carrier?.name || carrierId, valor_recarga: catalogValue, custo: chargedCost, novo_saldo: newBalance, recarga_id: externalId || "" },
+              }),
+            });
+          } catch { /* ignore */ }
+        }
 
         result = {
           success: true,

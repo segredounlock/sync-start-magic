@@ -91,11 +91,12 @@ function buildReceiptElement(data: {
       ]),
     ]);
 
+  const dateFmtOpts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Sao_Paulo" };
   const dateStr = data.created_at && data.created_at.length > 0
-    ? new Date(data.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })
-    : new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+    ? new Date(data.created_at).toLocaleDateString("pt-BR", dateFmtOpts)
+    : new Date().toLocaleDateString("pt-BR", dateFmtOpts);
 
-  const nowStr = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const nowStr = new Date().toLocaleDateString("pt-BR", dateFmtOpts);
 
   return h(
     "div",
