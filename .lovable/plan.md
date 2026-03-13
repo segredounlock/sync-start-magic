@@ -1,37 +1,40 @@
 
 
-# Correção: Bot Telegram cobrando valor facial em vez do custo real
+## Diagnóstico e Correção
 
-## Problema
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-Dois pontos no bot do Telegram usam o **valor de face** (R$ 20) ao invés do **custo do revendedor** (R$ 12) para validar saldo e cobrar:
+### Plano
 
-1. **Menu de botões** (linha 1196-1199): O `callback_data` `rec_val_claro_claro_20_12.00` é parseado com `split("_")`, mas como o `valueId` contém `_` (ex: `claro_20`), o custo é lido como `20` em vez de `12.00`
-2. **Atalho rápido** (linha 815): `executeRecarga` compara saldo direto com valor digitado, sem consultar `pricing_rules`
+**1. Corrigir o mapeamento de status na sync function**
 
-## Correção
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-### 1. Corrigir parsing do callback_data (Bug 1)
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-Alterar o formato do `callback_data` para usar `|` como separador do custo (último campo), tornando-o imune a `_` no valueId:
-
-```text
-// Antes: rec_val_claro_claro_20_12.00
-// Depois: rec_val_claro_claro_20|12.00
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-Na montagem (linha 1182): trocar o último `_` por `|`
-Na leitura (linha 1194-1199): fazer split por `|` primeiro para extrair o custo, depois split por `_` no restante
+**2. Corrigir manualmente o pedido preso**
 
-### 2. Corrigir executeRecarga para resolver custo real (Bug 2)
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-Na função `executeRecarga` (linhas 799-829):
-- Detectar operadora pelo número (usar API ou fallback por prefixo)
-- Buscar `pricing_rules` / `reseller_pricing_rules` para o valor digitado
-- Validar saldo contra o **custo real**, não o valor facial
-- Exibir valor facial E custo no texto de confirmação
-- Passar custo correto no `callback_data` de confirmação
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-### Arquivo alterado
-- `supabase/functions/telegram-bot/index.ts`
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
