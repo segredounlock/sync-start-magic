@@ -91,7 +91,7 @@ serve(async (req) => {
           { command: "saldo", description: "Consultar saldo" },
           { command: "recarga", description: "Fazer recarga" },
           { command: "deposito", description: "Depositar via PIX" },
-          { command: "recargas", description: "Histórico de recargas" },
+          { command: "historico", description: "Histórico de recargas" },
           { command: "ajuda", description: "Lista de comandos" },
         ],
       }),
