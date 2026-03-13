@@ -1,34 +1,40 @@
 
 
-# Adicionar seção "Broadcasts Interrompidos" na página Principal
+## Diagnóstico e Correção
 
-## Problema
-A tela de Broadcast atual (image-403) mostra apenas o histórico simples. Falta a seção "Broadcasts Interrompidos" (image-404) que exibe broadcasts com status `cancelled` ou `failed` com progresso visual, estatísticas e botões de **Retomar** / **Excluir**.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Correção
+### Plano
 
-### Arquivo: `src/pages/Principal.tsx`
+**1. Corrigir o mapeamento de status na sync function**
 
-1. **Buscar broadcasts interrompidos**: No `fetchBroadcastHistory`, fazer uma query separada na tabela `broadcast_progress` filtrando por `status IN ('cancelled', 'failed')` onde `(sent_count + failed_count) < total_users`. Armazenar em novo state `interruptedBroadcasts`.
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-2. **Renderizar seção "Broadcasts Interrompidos"** entre o header e o histórico:
-   - Título com ícone `AlertTriangle` e descrição
-   - Para cada broadcast interrompido, exibir:
-     - Título da notificação (join com `notifications`)
-     - Badges de status (Interrompido/Falhou) em cores correspondentes
-     - Botões **Retomar** (chama `send-broadcast` com `resume_progress_id`) e **Excluir** (deleta da `broadcast_progress`)
-     - Barra de progresso com percentual
-     - Grid 4 colunas: Enviados (verde), Falhas (vermelho), Bloqueados (laranja), Total (azul/primary)
-     - Info de "Restantes: X usuários" e "Batch X/Y"
-     - Mensagem de erro se existir
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-3. **Buscar dados com join**: Query `broadcast_progress` com select incluindo `notification:notifications(title)` para obter o título.
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-4. **Ação Excluir**: Delete do registro na `broadcast_progress` e refresh da lista.
+**2. Corrigir manualmente o pedido preso**
 
-### Estilo
-- Seguir o padrão `glass-card rounded-2xl` existente
-- Badges: `bg-orange-500/15 text-orange-400` para interrompido, `bg-red-500/15 text-red-400` para falhou
-- Stats grid com cores iguais ao `BroadcastProgress` component existente
-- Barra de progresso com gradiente orange→red
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
