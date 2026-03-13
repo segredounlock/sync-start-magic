@@ -537,6 +537,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       return;
     }
 
+    // Block if operator mismatch was detected
+    if (phoneCheckResult?.status === "OPERATOR_MISMATCH") {
+      toast.error("Operadora incorreta. Selecione a operadora correta.");
+      return;
+    }
+
     // Check for pending recargas on same number
     if (!skipPendingCheck) {
       const normalizedPhone = telefone.replace(/\D/g, "");
