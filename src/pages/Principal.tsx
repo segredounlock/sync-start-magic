@@ -45,6 +45,7 @@ import { useResilientFetch } from "@/hooks/useAsync";
 import { useCrud } from "@/hooks/useCrud";
 import { confirm } from "@/lib/confirm";
 import { safeValor } from "@/lib/utils";
+import { useDisabledValues } from "@/hooks/useDisabledValues";
 
 type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo";
 
