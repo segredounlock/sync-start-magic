@@ -141,9 +141,9 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
         {/* Message */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-foreground">Mensagem</label>
-          <textarea
+          <TextFormatToolbar
             value={formData.message}
-            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            onChange={(msg) => setFormData({ ...formData, message: msg })}
             placeholder="Aproveite 20% de desconto em todos os planos! Use o cupom PROMO20. Válido até domingo!"
             rows={4}
             required
