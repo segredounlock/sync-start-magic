@@ -213,6 +213,7 @@ export default function TelegramMiniApp() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [refreshingExtrato, setRefreshingExtrato] = useState(false);
   const [refreshingRecargas, setRefreshingRecargas] = useState(false);
+  const [showPriceTable, setShowPriceTable] = useState(false);
 
   // Toast notifications
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info" }[]>([]);
