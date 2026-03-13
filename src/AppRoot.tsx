@@ -6,23 +6,26 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { SplashScreen } from "@/components/SplashScreen";
 import { supabase } from "@/integrations/supabase/client";
 import Auth from "@/pages/Auth";
-import RecargaPublica from "@/pages/RecargaPublica";
-import TelegramMiniApp from "@/pages/TelegramMiniApp";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
-import ClientePortal from "@/pages/ClientePortal";
-import ResetPassword from "@/pages/ResetPassword";
-import MaintenancePage from "@/pages/MaintenancePage";
-import InstallApp from "@/pages/InstallApp";
-import SeasonalEffects from "@/components/SeasonalEffects";
-import PullToRefresh from "@/components/PullToRefresh";
 import { useCacheCleanup } from "@/hooks/useCacheCleanup";
 
+// Lazy load ALL pages that aren't the initial landing
+const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
+const TelegramMiniApp = lazy(() => import("@/pages/TelegramMiniApp"));
+const ClientePortal = lazy(() => import("@/pages/ClientePortal"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const MaintenancePage = lazy(() => import("@/pages/MaintenancePage"));
+const InstallApp = lazy(() => import("@/pages/InstallApp"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
 const Principal = lazy(() => import("@/pages/Principal"));
 const ChatApp = lazy(() => import("@/pages/ChatApp"));
 const UserProfile = lazy(() => import("@/pages/UserProfile"));
+
+// Lazy load non-critical global components (render after initial paint)
+const SeasonalEffects = lazy(() => import("@/components/SeasonalEffects"));
+const PullToRefresh = lazy(() => import("@/components/PullToRefresh"));
 
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const { user, role } = useAuth();
@@ -59,14 +62,25 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 
   // Loading maintenance status
   if (maintenance === null) return <SplashScreen />;
-
-  // Maintenance ON but user is admin → let through
   if (maintenance && role === "admin") return <>{children}</>;
-
-  // Maintenance ON → show page
-  if (maintenance) return <MaintenancePage />;
-
+  if (maintenance) return <Suspense fallback={<SplashScreen />}><MaintenancePage /></Suspense>;
   return <>{children}</>;
+}
+
+function DeferredEffects() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    // Defer non-critical effects until after initial paint
+    const id = requestIdleCallback ? requestIdleCallback(() => setReady(true)) : setTimeout(() => setReady(true), 1500);
+    return () => { if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id as number); };
+  }, []);
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      <SeasonalEffects />
+      <PullToRefresh />
+    </Suspense>
+  );
 }
 
 function App() {
@@ -75,17 +89,16 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <SeasonalEffects />
-        <PullToRefresh />
+        <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Auth />} />
-            <Route path="/recarga" element={<RecargaPublica />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/loja/:slug" element={<ClientePortal />} />
-            <Route path="/miniapp" element={<TelegramMiniApp />} />
-            <Route path="/instalar" element={<InstallApp />} />
+            <Route path="/recarga" element={<Suspense fallback={<SplashScreen />}><RecargaPublica /></Suspense>} />
+            <Route path="/reset-password" element={<Suspense fallback={<SplashScreen />}><ResetPassword /></Suspense>} />
+            <Route path="/loja/:slug" element={<Suspense fallback={<SplashScreen />}><ClientePortal /></Suspense>} />
+            <Route path="/miniapp" element={<Suspense fallback={<SplashScreen />}><TelegramMiniApp /></Suspense>} />
+            <Route path="/instalar" element={<Suspense fallback={<SplashScreen />}><InstallApp /></Suspense>} />
             <Route
               path="/admin"
               element={

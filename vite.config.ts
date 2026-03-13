@@ -60,9 +60,20 @@ function sourceHashPlugin(): Plugin {
 export default defineConfig({
   server: { host: "::", port: 8080 },
   build: {
+    target: "esnext",
+    minify: "esbuild",
     rollupOptions: {
       input: {
         main: "index.html",
+      },
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-charts": ["recharts"],
+          "vendor-motion": ["framer-motion"],
+          "vendor-ui": ["sonner", "@radix-ui/react-dialog"],
+        },
       },
     },
   },

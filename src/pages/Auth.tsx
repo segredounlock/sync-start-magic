@@ -45,6 +45,15 @@ export default function Auth() {
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
 
+  // Prefetch likely next pages while user is on login screen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      import("@/pages/AdminDashboard").catch(() => {});
+      import("@/pages/RevendedorPainel").catch(() => {});
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
