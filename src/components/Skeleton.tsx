@@ -5,9 +5,9 @@ interface SkeletonProps {
 }
 
 /** Base shimmer skeleton block */
-export function Skeleton({ className }: SkeletonProps) {
+export function Skeleton({ className, as: Tag = "div" }: SkeletonProps & { as?: "div" | "span" }) {
   return (
-    <div
+    <Tag
       className={cn(
         "rounded-lg bg-muted/60 relative overflow-hidden",
         "before:absolute before:inset-0 before:-translate-x-full",
