@@ -239,69 +239,6 @@ Deno.serve(async (req) => {
         break;
       }
 
-      case "validate-operator": {
-        // Validate operator match for a phone number
-        const { phoneNumber: valPhone, carrierId: valCarrierId, carrierName: valCarrierName } = params;
-        if (!valPhone) throw new Error("phoneNumber é obrigatório");
-
-        const normalizeOp = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-        const OPERATOR_ALIASES: Record<string, string[]> = {
-          claro: ["claro", "claro br", "claro brasil", "embratel"],
-          tim: ["tim", "tim brasil", "tim celular", "intelig"],
-          vivo: ["vivo", "vivo br", "vivo brasil", "telefonica", "gvt"],
-          oi: ["oi", "oi brasil", "oi movel", "telemar", "brasil telecom"],
-        };
-
-        function matchOperator(name: string): string | null {
-          const n = normalizeOp(name);
-          for (const [canonical, aliases] of Object.entries(OPERATOR_ALIASES)) {
-            if (aliases.some(a => n.includes(a) || a.includes(n))) return canonical;
-          }
-          return null;
-        }
-
-        // Try to query real operator
-        let detectedOperator: string | null = null;
-        try {
-          const { data: consultaUrl } = await adminClient.from("system_config").select("value").eq("key", "consultaOperadoraURL").single();
-          const { data: consultaKey } = await adminClient.from("system_config").select("value").eq("key", "consultaOperadoraKey").single();
-          if (consultaUrl?.value && consultaKey?.value) {
-            const queryResp = await fetch(consultaUrl.value, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "X-API-Key": consultaKey.value },
-              body: JSON.stringify({ phoneNumber: valPhone }),
-            });
-            const queryData = await queryResp.json();
-            const rawName = queryData?.carrier?.name || queryData?.operator || queryData?.operadora || queryData?.name || "";
-            if (rawName) detectedOperator = rawName;
-          }
-        } catch { /* operator query not configured or failed */ }
-
-        if (!detectedOperator) {
-          result = { success: true, data: { match: true, message: "Consulta de operadora não disponível, prosseguindo." } };
-          break;
-        }
-
-        // Compare detected vs selected
-        const selectedName = valCarrierName || valCarrierId || "";
-        const detectedCanonical = matchOperator(detectedOperator);
-        const selectedCanonical = matchOperator(selectedName);
-
-        if (detectedCanonical && selectedCanonical && detectedCanonical !== selectedCanonical) {
-          console.warn(`OPERATOR_MISMATCH: phone=${valPhone} detected=${detectedOperator}(${detectedCanonical}) selected=${selectedName}(${selectedCanonical})`);
-          result = {
-            success: false,
-            code: "OPERATOR_MISMATCH",
-            message: `Este número pertence à ${detectedOperator}, não à ${selectedName}. Selecione a operadora correta.`,
-            detected_operator: detectedOperator,
-            selected_operator: selectedName,
-          };
-        } else {
-          result = { success: true, data: { match: true, detected_operator: detectedOperator } };
-        }
-        break;
-      }
-
       case "recharge": {
         const { carrierId, phoneNumber, valueId, extraData, webhookUrl, saldo_tipo } = params;
         const saldoTipo = saldo_tipo || "revenda";
@@ -528,14 +465,8 @@ Deno.serve(async (req) => {
         console.log("recharge API full response:", JSON.stringify(rechargeResult));
 
         if (!rechargeResult?.success) {
-          let errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
+          const errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
           console.error(`recharge FAILED: userId=${userId} phone=${phoneNumber} carrier=${carrierId} value=${catalogValue} cost=${chargedCost} error="${errMsg}"`);
-
-          // Fallback: detect MSISDN mismatch errors from provider and convert to friendly message
-          const lowerErrMsg = errMsg.toLowerCase();
-          if (lowerErrMsg.includes("msisdn not found") || lowerErrMsg.includes("msisdn nao encontrado") || lowerErrMsg.includes("operadora divergente") || lowerErrMsg.includes("carrier mismatch")) {
-            errMsg = `Número não pertence à operadora selecionada. Verifique a operadora correta antes de tentar novamente.`;
-          }
 
           // Alert admins when external API credit limit is exceeded
           const lowerErr = errMsg.toLowerCase();

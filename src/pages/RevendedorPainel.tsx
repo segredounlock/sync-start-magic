@@ -478,20 +478,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     setCheckingPhone(true);
     setPhoneCheckResult(null);
     try {
-      // Step 1: Validate operator match
-      const valResp = await callApi("validate-operator", {
-        phoneNumber: normalizedPhone,
-        carrierId: selectedCarrier.carrierId,
-        carrierName: selectedCarrier.name,
-      });
-      if (valResp && !valResp.success && valResp.code === "OPERATOR_MISMATCH") {
-        setPhoneCheckResult({ status: "OPERATOR_MISMATCH", message: valResp.message });
-        toast.error(valResp.message);
-        setCheckingPhone(false);
-        return;
-      }
-
-      // Step 2: Check blacklist/cooldown
       const resp = await callApi("check-phone", {
         phoneNumber: normalizedPhone,
         carrierId: selectedCarrier.carrierId,
@@ -534,12 +520,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
     if (selectedValue.cost > saldo) {
       toast.error("Saldo insuficiente");
-      return;
-    }
-
-    // Block if operator mismatch was detected
-    if (phoneCheckResult?.status === "OPERATOR_MISMATCH") {
-      toast.error("Operadora incorreta. Selecione a operadora correta.");
       return;
     }
 
@@ -1361,7 +1341,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             className={`mt-2 p-3 rounded-xl text-sm font-medium flex items-start gap-2 ${
                               phoneCheckResult.status === "CLEAR" ? "bg-success/10 text-success border border-success/20" :
                               phoneCheckResult.status === "COOLDOWN" ? "bg-warning/10 text-warning border border-warning/20" :
-                              phoneCheckResult.status === "OPERATOR_MISMATCH" ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" :
                               "bg-destructive/10 text-destructive border border-destructive/20"
                             }`}>
                             <span className="mt-0.5 shrink-0">
@@ -1419,7 +1398,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         </motion.div>
                       )}
 
-                      <motion.button type="submit" disabled={sending || !selectedValue || !selectedCarrier || selectedValue.cost > saldo || (phoneCheckResult?.status === "BLACKLISTED") || (phoneCheckResult?.status === "OPERATOR_MISMATCH")}
+                      <motion.button type="submit" disabled={sending || !selectedValue || !selectedCarrier || selectedValue.cost > saldo || (phoneCheckResult?.status === "BLACKLISTED")}
                         whileTap={{ scale: 0.97 }}
                         className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:brightness-110 disabled:opacity-40 disabled:hover:brightness-100 transition-all shadow-lg shadow-primary/25 flex items-center justify-center gap-2.5">
                         {sending ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full" />

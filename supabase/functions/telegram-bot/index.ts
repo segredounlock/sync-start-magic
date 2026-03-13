@@ -1385,43 +1385,6 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 
   const { carrier_id, value_id, operadora_nome, valor, bot_msg_id, api_cost, valor_facial } = session.data || {};
 
-  // Validate operator match before proceeding
-  try {
-    const validateResp = await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/recarga-express`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({
-          action: "validate-operator",
-          user_id: user.id,
-          phoneNumber: telefone,
-          carrierId: carrier_id,
-          carrierName: operadora_nome,
-        }),
-      }
-    );
-    const valResult = await validateResp.json();
-    if (valResult && !valResult.success && valResult.code === "OPERATOR_MISMATCH") {
-      clearSession(supabase, chatIdStr);
-      if (bot_msg_id) deleteMessageFire(token, chatId, bot_msg_id);
-      await sendMessageWithKeyboard(token, chatId,
-        `⚠️ <b>Operadora Incorreta</b>\n\n${valResult.message}\n\n📡 Operadora detectada: <b>${valResult.detected_operator || "—"}</b>\n📡 Operadora selecionada: <b>${operadora_nome || "—"}</b>\n\nSelecione a operadora correta e tente novamente.`,
-        [[
-          { text: "📱 Escolher Operadora", callback_data: "menu_recarga" },
-          { text: "📖 Menu", callback_data: "menu_main" },
-        ]]
-      );
-      return;
-    }
-  } catch (err) {
-    console.warn("Operator validation failed (non-blocking):", err);
-    // Continue if validation service is unavailable
-  }
-
   // Check balance
   const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").single();
   const saldoAtual = Number(saldo?.valor || 0);
