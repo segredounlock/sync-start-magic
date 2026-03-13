@@ -217,6 +217,13 @@ Deno.serve(async (req) => {
           : (order.status === "falha" || order.status === "cancelada" || order.status === "expirada") ? "falha"
           : "pending";
 
+        // Only update if status actually changed from pending
+        const { data: currentRecarga } = await adminClient
+          .from("recargas")
+          .select("id, status, custo, user_id")
+          .eq("external_id", external_id)
+          .maybeSingle();
+
         const updatePayload: Record<string, unknown> = { status: localStatus };
         if (localStatus === "completed") {
           updatePayload.completed_at = new Date().toISOString();
@@ -225,6 +232,52 @@ Deno.serve(async (req) => {
           .from("recargas")
           .update(updatePayload)
           .eq("external_id", external_id);
+
+        // Refund balance when status transitions to "falha" from "pending"
+        if (localStatus === "falha" && currentRecarga && currentRecarga.status === "pending") {
+          try {
+            const { data: saldoData } = await adminClient
+              .from("saldos")
+              .select("valor")
+              .eq("user_id", currentRecarga.user_id)
+              .eq("tipo", "revenda")
+              .single();
+            if (saldoData) {
+              const refundedBalance = Number(saldoData.valor) + Number(currentRecarga.custo);
+              await adminClient
+                .from("saldos")
+                .update({ valor: refundedBalance })
+                .eq("user_id", currentRecarga.user_id)
+                .eq("tipo", "revenda");
+              console.log(`order-status: refunded ${currentRecarga.custo} to user ${currentRecarga.user_id}, new balance=${refundedBalance}`);
+            }
+
+            // Send failure notifications
+            const baseUrl = Deno.env.get("SUPABASE_URL")!;
+            const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            const authHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
+
+            fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                type: "recarga_failed",
+                user_id: currentRecarga.user_id,
+                data: { telefone: order.phone || "", operadora: order.operator || "", valor_recarga: order.amount || 0, custo: currentRecarga.custo, recarga_id: currentRecarga.id },
+              }),
+            }).catch(() => {});
+
+            fetch(`${baseUrl}/functions/v1/send-push`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                title: "❌ Recarga Falhou",
+                body: `Recarga falhou. Saldo estornado automaticamente.`,
+                user_ids: [currentRecarga.user_id],
+              }),
+            }).catch(() => {});
+          } catch (refundErr) {
+            console.error("order-status refund error:", refundErr);
+          }
+        }
 
         result = { success: true, data: { ...order, localStatus } };
         break;
