@@ -1566,7 +1566,7 @@ export default function Principal() {
                           <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
                           <p className="text-sm font-medium text-foreground truncate">{r.nome || r.email?.split("@")[0] || "—"}</p>
                         </div>
-                        <span className="text-sm font-bold font-mono text-warning shrink-0">{fmt(r.saldo)}</span>
+                        <span className="text-sm font-bold font-mono text-warning shrink-0"><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" duration={600} /></span>
                       </div>
                     ))}
                   </div>
