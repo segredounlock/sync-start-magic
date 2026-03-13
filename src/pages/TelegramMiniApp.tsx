@@ -1255,10 +1255,10 @@ export default function TelegramMiniApp() {
                     <button
                       onClick={() => { setShowPriceTable(true); if (operadoras.length === 0) loadOperadoras(); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
                       className="rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all active:scale-[0.97]"
-                      style={{ border: "1px solid color-mix(in srgb, var(--tg-btn) 30%, transparent)", backgroundColor: "color-mix(in srgb, var(--tg-btn) 8%, transparent)" }}
+                      style={{ border: "1px solid color-mix(in srgb, var(--tg-hint) 25%, transparent)", backgroundColor: "color-mix(in srgb, var(--tg-hint) 8%, var(--tg-bg))" }}
                     >
-                      <span className="text-sm" style={st.link}>≡</span>
-                      <span className="text-sm font-semibold" style={st.link}>Ver Tabela de Valores</span>
+                      <span className="text-sm" style={st.hint}>≡</span>
+                      <span className="text-sm font-semibold" style={st.hint}>Ver Tabela de Valores</span>
                     </button>
                   </div>
 
