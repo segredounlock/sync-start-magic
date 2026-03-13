@@ -598,6 +598,18 @@ export default function TelegramMiniApp() {
     setCheckingPhone(true);
     setPhoneCheckResult(null);
     try {
+      // Step 1: Validate operator match
+      const { data: valResp } = await supabase.functions.invoke("recarga-express", {
+        body: { action: "validate-operator", phoneNumber: normalizedPhone, carrierId: cId, carrierName: selectedOp?.nome || cId },
+      });
+      if (valResp && !valResp.success && valResp.code === "OPERATOR_MISMATCH") {
+        setPhoneCheckResult({ status: "OPERATOR_MISMATCH", message: valResp.message });
+        tgWebApp?.HapticFeedback?.notificationOccurred("error");
+        setCheckingPhone(false);
+        return;
+      }
+
+      // Step 2: Check blacklist/cooldown
       const { data: resp } = await supabase.functions.invoke("recarga-express", {
         body: { action: "check-phone", phoneNumber: normalizedPhone, carrierId: cId },
       });
@@ -1148,15 +1160,19 @@ export default function TelegramMiniApp() {
                               <motion.div animate={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
                                 <AlertTriangle className="w-12 h-12" style={{ color: "#eab308" }} />
                               </motion.div>
+                            ) : phoneCheckResult.status === "OPERATOR_MISMATCH" ? (
+                              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                                <AlertTriangle className="w-12 h-12" style={{ color: "#f97316" }} />
+                              </motion.div>
                             ) : (
                               <motion.div animate={{ scale: [1, 1.15, 1, 1.1, 1], rotate: [0, -10, 10, -5, 0], opacity: [1, 0.7, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>
                                 <XCircle className="w-12 h-12 text-destructive drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                               </motion.div>
                             )}
                             <p className="text-sm font-semibold text-center" style={{
-                              color: phoneCheckResult.status === "CLEAR" ? "#22c55e" : phoneCheckResult.status === "COOLDOWN" ? "#eab308" : "#ef4444"
+                              color: phoneCheckResult.status === "CLEAR" ? "#22c55e" : phoneCheckResult.status === "COOLDOWN" ? "#eab308" : phoneCheckResult.status === "OPERATOR_MISMATCH" ? "#f97316" : "#ef4444"
                             }}>
-                              {phoneCheckResult.status === "CLEAR" ? "Número Disponível" : phoneCheckResult.status === "COOLDOWN" ? "Cooldown Ativo" : "Número Bloqueado"}
+                              {phoneCheckResult.status === "CLEAR" ? "Número Disponível" : phoneCheckResult.status === "COOLDOWN" ? "Cooldown Ativo" : phoneCheckResult.status === "OPERATOR_MISMATCH" ? "Operadora Incorreta" : "Número Bloqueado"}
                             </p>
                             <p className="text-xs text-center" style={st.hint}>{phoneCheckResult.message}</p>
                           </motion.div>
@@ -1165,7 +1181,7 @@ export default function TelegramMiniApp() {
 
                       {!checkingPhone && phoneCheckResult && (
                         <div className="flex gap-2">
-                          {phoneCheckResult.status !== "BLACKLISTED" && (
+                          {phoneCheckResult.status !== "BLACKLISTED" && phoneCheckResult.status !== "OPERATOR_MISMATCH" && (
                             <button onClick={() => setRecargaStep("valor")}
                               className="flex-1 rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2"
                               style={{ backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" }}>
@@ -1175,7 +1191,7 @@ export default function TelegramMiniApp() {
                           <button onClick={() => { setRecargaStep("op"); setPhoneCheckResult(null); }}
                             className="flex-1 rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2"
                             style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
-                            Trocar Operadora
+                            {phoneCheckResult.status === "OPERATOR_MISMATCH" ? "Trocar Operadora ↩" : "Trocar Operadora"}
                           </button>
                         </div>
                       )}
