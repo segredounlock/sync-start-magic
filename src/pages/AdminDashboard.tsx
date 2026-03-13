@@ -584,7 +584,7 @@ export default function AdminDashboard() {
     supabase.from("system_config").select("value").eq("key", "notif_admin_deposit").maybeSingle()
       .then(({ data }) => { if (data && data.value === "false") setAdminDepositToast(false); });
   }, []);
-  const handleBgPaymentConfirmed = useCallback(() => { fetchData(); }, [fetchData]);
+  const handleBgPaymentConfirmed = useCallback(() => { analyticsLoaded.current = false; fetchData(); }, [fetchData]);
   useBackgroundPaymentMonitor(user?.id, handleBgPaymentConfirmed, adminDepositToast, false);
 
   // Load current user's avatar
