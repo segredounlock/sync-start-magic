@@ -60,11 +60,11 @@ Deno.serve(async (req) => {
       const values = carrier.values || [];
       const valores = values.map((v: any) => v.amount || v.value || v.cost).filter((v: number) => v > 0);
 
-      // Upsert operadora
+      // Upsert operadora (case-insensitive match to prevent duplicates)
       const { data: existing } = await adminClient
         .from("operadoras")
-        .select("id, valores")
-        .eq("nome", nome)
+        .select("id, valores, nome")
+        .ilike("nome", nome)
         .maybeSingle();
 
       let opId: string;
