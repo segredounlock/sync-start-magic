@@ -433,6 +433,38 @@ export type Database = {
           },
         ]
       }
+      disabled_recharge_values: {
+        Row: {
+          created_at: string
+          disabled_by: string
+          id: string
+          operadora_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          disabled_by: string
+          id?: string
+          operadora_id: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          disabled_by?: string
+          id?: string
+          operadora_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disabled_recharge_values_operadora_id_fkey"
+            columns: ["operadora_id"]
+            isOneToOne: false
+            referencedRelation: "operadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
