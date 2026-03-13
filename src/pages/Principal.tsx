@@ -366,21 +366,24 @@ export default function Principal() {
             const { data: inserted } = await supabase.from("operadoras").insert({ nome, valores, ativo: true }).select("id").single();
             opId = inserted?.id || "";
           }
-          // Sync API costs into pricing_rules (only update custo, don't overwrite user rules)
+          // Sync API costs into pricing_rules (always update custo from API)
           if (opId) {
+            const apiValores = new Set<number>();
             for (const v of values) {
               const faceValue = v.value || v.cost;
               const apiCost = v.cost || 0;
               if (faceValue > 0 && apiCost > 0) {
+                apiValores.add(Number(faceValue));
                 const { data: existingRule } = await supabase.from("pricing_rules")
                   .select("id, custo, regra_valor")
                   .eq("operadora_id", opId)
                   .eq("valor_recarga", faceValue)
                   .maybeSingle();
                 if (existingRule) {
-                  // Update custo if it was 0 (not yet set)
-                  if (Number(existingRule.custo) === 0) {
+                  // Always update custo from API to keep prices in sync
+                  if (Number(existingRule.custo) !== Number(apiCost)) {
                     await supabase.from("pricing_rules").update({ custo: apiCost }).eq("id", existingRule.id);
+                    console.log(`[Sync] Custo atualizado: ${nome} R$${faceValue} → custo API R$${apiCost}`);
                   }
                 } else {
                   // Create rule with API cost
@@ -393,6 +396,45 @@ export default function Principal() {
                   });
                 }
               }
+            }
+
+            // Clean up orphan pricing_rules for values no longer in API
+            const { data: existingRules } = await supabase.from("pricing_rules")
+              .select("id, valor_recarga")
+              .eq("operadora_id", opId);
+            if (existingRules) {
+              for (const rule of existingRules) {
+                if (!apiValores.has(Number(rule.valor_recarga))) {
+                  await supabase.from("pricing_rules").delete().eq("id", rule.id);
+                  console.log(`[Sync] Pricing rule removida: ${nome} R$${rule.valor_recarga} (ausente na API)`);
+                }
+              }
+            }
+
+            // Sync disabled_recharge_values: auto-disable removed values, re-enable returned values
+            const { data: prevOp } = await supabase.from("operadoras").select("valores").eq("id", opId).maybeSingle();
+            const prevValores = new Set<number>((prevOp?.valores as number[] || []).map(Number));
+            // Values that were local but removed from API → auto-disable
+            for (const pv of prevValores) {
+              if (!apiValores.has(pv)) {
+                const { data: alreadyDisabled } = await (supabase.from("disabled_recharge_values" as any) as any)
+                  .select("id")
+                  .eq("operadora_id", opId)
+                  .eq("valor", pv)
+                  .maybeSingle();
+                if (!alreadyDisabled) {
+                  await (supabase.from("disabled_recharge_values" as any) as any)
+                    .insert({ operadora_id: opId, valor: pv, disabled_by: user?.id || "" });
+                  console.log(`[Sync] Valor auto-desativado: ${nome} R$${pv} (removido da API)`);
+                }
+              }
+            }
+            // Values that returned to API → re-enable (remove from disabled)
+            for (const av of apiValores) {
+              await (supabase.from("disabled_recharge_values" as any) as any)
+                .delete()
+                .eq("operadora_id", opId)
+                .eq("valor", av);
             }
           }
         }
