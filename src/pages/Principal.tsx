@@ -1167,6 +1167,16 @@ export default function Principal() {
       progresses?.forEach((p: any) => { if (!statusMap[p.notification_id]) statusMap[p.notification_id] = p.status; });
       setBroadcastHistory(data.map((n: any) => ({ ...n, status: statusMap[n.id] || 'pending' })));
     }
+
+    // Fetch interrupted broadcasts
+    const { data: interrupted } = await (supabase.from('broadcast_progress' as any) as any)
+      .select('*, notification:notifications(title)')
+      .in('status', ['cancelled', 'failed'])
+      .order('created_at', { ascending: false });
+    if (interrupted) {
+      const incomplete = interrupted.filter((b: any) => (b.sent_count + b.failed_count) < b.total_users);
+      setInterruptedBroadcasts(incomplete);
+    }
   }, []);
 
   const fetchBroadcastUserCount = useCallback(async () => {
