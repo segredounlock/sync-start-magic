@@ -449,7 +449,7 @@ serve(async (req) => {
           ensureTelegramUser(supabase, message.from.id, message.from.first_name, telegramUsername),
         ]);
 
-          if (text === "/start" || text === "/menu") {
+          if (text === "/start" || text === "/menu" || text === "/vincular") {
           if (linkedUser) {
             // Send menu first for snappy UX, then send pending notifications in background
             await sendMainMenu(BOT_TOKEN, chatId, linkedUser, supabase);
