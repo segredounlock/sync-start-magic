@@ -522,7 +522,7 @@ serve(async (req) => {
 
         if (text === "/saldo") {
           await handleSaldo(supabase, BOT_TOKEN, chatId, linkedUser);
-        } else if (text === "/recargas") {
+        } else if (text === "/recargas" || text === "/historico") {
           await handleRecargas(supabase, BOT_TOKEN, chatId, linkedUser);
         } else if (text === "/recarga" || text.startsWith("/recarga ")) {
           await handleRecarga(supabase, BOT_TOKEN, chatId, linkedUser, text);
