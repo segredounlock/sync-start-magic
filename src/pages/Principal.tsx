@@ -2857,172 +2857,132 @@ export default function Principal() {
 
           {/* ===== BOT TELEGRAM ===== */}
            {view === "bot" && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
 
-              {/* ── Hero Status Card ── */}
-              <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-[hsl(200,80%,55%)]/10 via-card to-card">
-                <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-[hsl(200,80%,55%)]/5 blur-3xl -translate-y-1/2 translate-x-1/4" />
-                <div className="relative p-6 space-y-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-[hsl(200,80%,55%)]/15 border border-[hsl(200,80%,55%)]/20 flex items-center justify-center shadow-lg shadow-[hsl(200,80%,55%)]/10">
-                        <Bot className="h-7 w-7 text-[hsl(200,80%,55%)]" />
-                      </div>
-                      <div>
-                        <h2 className="font-display text-xl font-bold text-foreground">Bot Telegram</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {botStatus.connected
-                            ? `@${botStatus.botUsername || "—"} • ${botStatus.botName || "Sem nome"}`
-                            : "Configure o token para conectar"}
-                        </p>
-                      </div>
-                    </div>
-                    {botStatus.connected ? (
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/15 border border-success/30">
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success" />
-                        </span>
-                        <span className="text-xs font-bold text-success">Online</span>
-                      </div>
-                    ) : botStatus.error ? (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/15 border border-destructive/30">
-                        <WifiOff className="h-3.5 w-3.5 text-destructive" />
-                        <span className="text-xs font-bold text-destructive">Offline</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border">
-                        <Wifi className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs font-bold text-muted-foreground">Pendente</span>
-                      </div>
-                    )}
+              {/* ── Compact Header ── */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Bot className="h-5 w-5 text-primary" />
                   </div>
-
-                  {botStatus.error && !botStatus.connected && (
-                    <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                      <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-                      {botStatus.error}
-                    </div>
-                  )}
+                  <div>
+                    <h2 className="font-display text-lg font-bold text-foreground">Telegram Bot</h2>
+                    <p className="text-[11px] text-muted-foreground">
+                      {botStatus.connected ? `@${botStatus.botUsername || "—"}` : "Não conectado"}
+                    </p>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                  botStatus.connected
+                    ? "bg-success/10 text-success border border-success/20"
+                    : botStatus.error
+                    ? "bg-destructive/10 text-destructive border border-destructive/20"
+                    : "bg-muted text-muted-foreground border border-border"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${botStatus.connected ? "bg-success" : botStatus.error ? "bg-destructive" : "bg-muted-foreground"}`} />
+                  {botStatus.connected ? "Online" : botStatus.error ? "Erro" : "Pendente"}
                 </div>
               </div>
+
+              {botStatus.error && !botStatus.connected && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/15 text-destructive text-xs">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{botStatus.error}</span>
+                </div>
+              )}
 
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
-                  {/* ── Monitoring Grid ── */}
+                  {/* ── Info & Webhook ── */}
                   {botStatus.connected && (
-                    <div className="space-y-4">
-                      {/* Stats */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                      {/* Bot info rows */}
+                      <div className="grid grid-cols-3 divide-x divide-border">
                         {[
-                          { icon: Bot, label: "Nome", value: botStatus.botName || "—", color: "hsl(200,80%,55%)" },
-                          { icon: AtSign, label: "Username", value: `@${botStatus.botUsername || "—"}`, color: "hsl(152,72%,46%)" },
-                          { icon: Hash, label: "Bot ID", value: botStatus.botId || "—", color: "hsl(262,83%,58%)" },
-                          { icon: Clock, label: "Pendentes", value: botStatus.pendingUpdates !== null ? String(botStatus.pendingUpdates) : "0", color: (botStatus.pendingUpdates ?? 0) > 0 ? "hsl(38,92%,50%)" : "hsl(152,72%,46%)", highlight: (botStatus.pendingUpdates ?? 0) > 0 },
-                        ].map((item: any) => (
-                          <div key={item.label} className="rounded-2xl border border-border bg-card p-4 hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${item.color}15` }}>
-                                <item.icon className="h-4 w-4" style={{ color: item.color }} />
-                              </div>
-                              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{item.label}</span>
-                            </div>
-                            <p className={`font-bold text-sm truncate ${item.highlight ? "text-warning" : "text-foreground"}`}>{item.value}</p>
+                          { label: "Nome", value: botStatus.botName || "—" },
+                          { label: "ID", value: botStatus.botId || "—" },
+                          { label: "Pendentes", value: String(botStatus.pendingUpdates ?? 0), warn: (botStatus.pendingUpdates ?? 0) > 0 },
+                        ].map(s => (
+                          <div key={s.label} className="px-3 py-3 text-center">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5">{s.label}</p>
+                            <p className={`text-xs font-bold truncate ${(s as any).warn ? "text-warning" : "text-foreground"}`}>{s.value}</p>
                           </div>
                         ))}
                       </div>
 
-                      {/* Webhook Status */}
-                      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                        <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-[hsl(200,80%,55%)]/10 flex items-center justify-center">
-                              <Wifi className="h-4 w-4 text-[hsl(200,80%,55%)]" />
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-semibold text-foreground">Webhook</h4>
-                              <p className="text-[10px] text-muted-foreground">
-                                Atualização a cada {Math.round(botPollIntervalMs / 1000)}s
-                                {botStatus.lastSyncAt ? ` • ${formatTimeBR(new Date(botStatus.lastSyncAt))}` : ""}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => {
-                              if (!globalConfig.telegramBotToken) { toast.error("Configure o token primeiro"); return; }
-                              refreshBotStatus();
-                            }} disabled={botStatus.loading} className="h-8 w-8 rounded-lg border border-input bg-background flex items-center justify-center hover:bg-accent/50 disabled:opacity-50 transition-colors">
-                              <RefreshCw className={`h-3.5 w-3.5 text-foreground ${botStatus.loading ? "animate-spin" : ""}`} />
-                            </button>
-                            <button onClick={async () => {
-                              if (!globalConfig.telegramBotToken) return;
-                              try {
-                                toast.info("Resetando webhook...");
-                                await fetch(`https://api.telegram.org/bot${globalConfig.telegramBotToken}/deleteWebhook?drop_pending_updates=true`);
-                                await new Promise(r => setTimeout(r, 1000));
-                                const resp = await supabase.functions.invoke("telegram-setup", {
-                                  body: { token: globalConfig.telegramBotToken },
-                                });
-                                if (resp.error) throw resp.error;
-                                if (!resp.data?.success) throw new Error(resp.data?.error || "Falha");
-                                await refreshBotStatus(globalConfig.telegramBotToken, { silent: true });
-                                toast.success("✅ Webhook resetado e reconfigurado!");
-                              } catch { toast.error("Erro ao resetar webhook"); }
-                            }} className="h-8 px-3 rounded-lg bg-warning/15 border border-warning/30 text-warning font-medium text-xs hover:bg-warning/25 transition-colors flex items-center gap-1">
-                              <RotateCcw className="h-3 w-3" /> Resetar
-                            </button>
+                      {/* Webhook row */}
+                      <div className="px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <Wifi className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-foreground">Webhook</p>
+                            {botStatus.webhookUrl && (
+                              <p className="text-[10px] text-muted-foreground font-mono truncate">{botStatus.webhookUrl}</p>
+                            )}
+                            {botStatus.lastSyncAt && (
+                              <p className="text-[10px] text-muted-foreground">Sync: {formatTimeBR(new Date(botStatus.lastSyncAt))}</p>
+                            )}
                           </div>
                         </div>
-
-                        {/* Webhook error */}
-                        {botStatus.webhookError && (
-                          <div className={`flex items-center gap-2 px-5 py-3 text-xs border-b ${webhookErrorIsActive ? "bg-warning/10 border-warning/20 text-warning" : "bg-muted/50 border-border text-muted-foreground"}`}>
-                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">{webhookErrorIsActive ? `Erro: ${botStatus.webhookError}` : `Histórico: ${botStatus.webhookError}`}</span>
-                          </div>
-                        )}
-
-                        {/* Webhook URL */}
-                        {botStatus.webhookUrl && (
-                          <div className="px-5 py-3 flex items-center gap-2 text-xs text-muted-foreground">
-                            <Link2 className="h-3 w-3 shrink-0" />
-                            <span className="truncate font-mono text-[10px]">{botStatus.webhookUrl}</span>
-                          </div>
-                        )}
+                        <div className="flex gap-1.5 shrink-0">
+                          <button onClick={() => {
+                            if (!globalConfig.telegramBotToken) { toast.error("Configure o token primeiro"); return; }
+                            refreshBotStatus();
+                          }} disabled={botStatus.loading} className="h-7 w-7 rounded-lg border border-input bg-background flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-50" title="Atualizar">
+                            <RefreshCw className={`h-3 w-3 text-muted-foreground ${botStatus.loading ? "animate-spin" : ""}`} />
+                          </button>
+                          <button onClick={async () => {
+                            if (!globalConfig.telegramBotToken) return;
+                            try {
+                              toast.info("Resetando webhook...");
+                              await fetch(`https://api.telegram.org/bot${globalConfig.telegramBotToken}/deleteWebhook?drop_pending_updates=true`);
+                              await new Promise(r => setTimeout(r, 1000));
+                              const resp = await supabase.functions.invoke("telegram-setup", {
+                                body: { token: globalConfig.telegramBotToken },
+                              });
+                              if (resp.error) throw resp.error;
+                              if (!resp.data?.success) throw new Error(resp.data?.error || "Falha");
+                              await refreshBotStatus(globalConfig.telegramBotToken, { silent: true });
+                              toast.success("Webhook resetado!");
+                            } catch { toast.error("Erro ao resetar webhook"); }
+                          }} className="h-7 px-2 rounded-lg border border-warning/30 text-warning text-[10px] font-semibold hover:bg-warning/10 transition-colors flex items-center gap-1" title="Resetar">
+                            <RotateCcw className="h-2.5 w-2.5" /> Reset
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Webhook error */}
+                      {botStatus.webhookError && (
+                        <div className={`flex items-center gap-2 px-4 py-2.5 text-[11px] ${webhookErrorIsActive ? "bg-warning/5 text-warning" : "bg-muted/30 text-muted-foreground"}`}>
+                          <AlertTriangle className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{botStatus.webhookError}</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {/* ── Token Config ── */}
-                  <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                    <button onClick={() => setTokenSectionOpen(!tokenSectionOpen)} className="w-full flex items-center justify-between p-5 hover:bg-accent/30 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-[hsl(38,92%,50%)]/10 flex items-center justify-center">
-                          <Link2 className="h-5 w-5 text-[hsl(38,92%,50%)]" />
-                        </div>
-                        <div className="text-left">
-                          <h4 className="font-semibold text-foreground text-sm">Token do Bot</h4>
-                          <p className="text-[11px] text-muted-foreground">Chave de acesso do BotFather</p>
-                        </div>
+                  {/* ── Token ── */}
+                  <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <button onClick={() => setTokenSectionOpen(!tokenSectionOpen)} className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center gap-2.5">
+                        <Link2 className="h-4 w-4 text-warning" />
+                        <span className="text-sm font-medium text-foreground">Token do Bot</span>
                       </div>
-                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${tokenSectionOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${tokenSectionOpen ? "rotate-180" : ""}`} />
                     </button>
                     <AnimatePresence>
                       {tokenSectionOpen && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                          <div className="px-5 pb-5 space-y-4">
-                            <div className="flex items-center gap-2 p-3 rounded-xl bg-warning/10 border border-warning/20 text-warning text-xs">
-                              <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
-                              Alterar o token desconectará o bot atual.
-                            </div>
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
+                          <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+                            <p className="text-[11px] text-muted-foreground">Alterar o token desconectará o bot atual.</p>
                             <div className="flex items-center gap-2">
                               <div className="relative flex-1">
                                 <input type={showApiKey ? "text" : "password"} value={globalConfig.telegramBotToken || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, telegramBotToken: e.target.value }))}
-                                  className="w-full px-3 py-2.5 pr-10 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono" placeholder="123456789:ABC-DEF_ghi..." />
-                                <button type="button" onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
-                                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  className="w-full px-3 py-2 pr-9 rounded-lg border border-input bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono" placeholder="123456789:ABC-DEF..." />
+                                <button type="button" onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                  {showApiKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                 </button>
                               </div>
                               <button onClick={async () => {
@@ -3048,11 +3008,11 @@ export default function Principal() {
                                   });
                                   if (setupResp.error) {
                                     console.error("Webhook setup error:", setupResp.error);
-                                    toast.warning("Token salvo, mas falha ao configurar webhook. Tente resetar manualmente.");
+                                    toast.warning("Token salvo, mas falha ao configurar webhook.");
                                   } else if (!setupResp.data?.success) {
-                                    toast.warning(`Token salvo, mas webhook falhou: ${setupResp.data?.error || "Erro desconhecido"}`);
+                                    toast.warning(`Token salvo, mas webhook falhou: ${setupResp.data?.error || "Erro"}`);
                                   } else {
-                                    toast.success(`✅ Bot configurado! ${data.result.first_name} (@${data.result.username})`);
+                                    toast.success(`Bot configurado! ${data.result.first_name} (@${data.result.username})`);
                                   }
                                   setBotStatus({
                                     connected: true, loading: false,
@@ -3063,11 +3023,11 @@ export default function Principal() {
                                   });
                                   await fetchGlobalConfig();
                                 } catch (err: any) {
-                                  toast.error(err.message || "Erro de conexão ao validar");
+                                  toast.error(err.message || "Erro de conexão");
                                 }
                                 setValidatingToken(false);
-                              }} disabled={validatingToken} className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-colors whitespace-nowrap">
-                                {validatingToken ? "Validando..." : "Conectar"}
+                              }} disabled={validatingToken} className="px-3.5 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-xs hover:opacity-90 disabled:opacity-50 transition-colors whitespace-nowrap">
+                                {validatingToken ? "..." : "Conectar"}
                               </button>
                             </div>
                           </div>
@@ -3077,88 +3037,79 @@ export default function Principal() {
                   </div>
 
                   {/* ── Links ── */}
-                  <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                    <div className="px-5 py-4 border-b border-border flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-[hsl(262,83%,58%)]/10 flex items-center justify-center">
-                        <Globe className="h-5 w-5 text-[hsl(262,83%,58%)]" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground text-sm">Links</h4>
-                        <p className="text-[11px] text-muted-foreground">Grupo e suporte no Telegram</p>
-                      </div>
+                  <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border flex items-center gap-2.5">
+                      <Globe className="h-4 w-4 text-accent" />
+                      <span className="text-sm font-medium text-foreground">Links do Telegram</span>
                     </div>
-                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">URL do Grupo</label>
+                        <label className="block text-[11px] font-medium text-muted-foreground mb-1">URL do Grupo</label>
                         <input type="url" value={globalConfig.telegramGroupUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, telegramGroupUrl: e.target.value }))}
-                          className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://t.me/seugrupo" />
+                          className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://t.me/seugrupo" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">URL de Suporte</label>
+                        <label className="block text-[11px] font-medium text-muted-foreground mb-1">URL de Suporte</label>
                         <input type="url" value={globalConfig.supportUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, supportUrl: e.target.value }))}
-                          className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://t.me/seusuporte" />
+                          className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://t.me/seusuporte" />
                       </div>
                     </div>
                   </div>
 
-                  {/* ── Menu do Bot - Visual Cards ── */}
-                  <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                    <div className="px-5 py-4 border-b border-border flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Menu className="h-5 w-5 text-primary" />
+                  {/* ── Menu do Bot ── */}
+                  <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <Menu className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-foreground">Menu do Bot</span>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground text-sm">Menu do Bot</h4>
-                        <p className="text-[11px] text-muted-foreground">Botões visíveis no menu inline do Telegram</p>
-                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        {[
+                          { key: "bot_btn_saldo", defaultOn: true },
+                          { key: "bot_btn_recarga", defaultOn: true },
+                          { key: "bot_btn_historico", defaultOn: true },
+                          { key: "bot_btn_deposito", defaultOn: true },
+                          { key: "bot_btn_conta", defaultOn: true },
+                          { key: "bot_btn_webapp", defaultOn: true },
+                          { key: "bot_btn_migration", defaultOn: false },
+                          { key: "bot_btn_ajuda", defaultOn: true },
+                        ].filter(b => globalConfig[b.key] !== undefined ? globalConfig[b.key] === "true" : b.defaultOn).length} de 8 ativos
+                      </span>
                     </div>
-                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-3 space-y-1">
                       {[
-                        { key: "bot_btn_saldo", label: "Ver Saldo", emoji: "💰", desc: "Saldo do usuário", defaultOn: true, color: "hsl(38,92%,50%)" },
-                        { key: "bot_btn_recarga", label: "Fazer Recarga", emoji: "📱", desc: "Iniciar recarga", defaultOn: true, color: "hsl(152,72%,46%)" },
-                        { key: "bot_btn_historico", label: "Histórico", emoji: "📋", desc: "Recargas realizadas", defaultOn: true, color: "hsl(200,80%,55%)" },
-                        { key: "bot_btn_deposito", label: "Depositar PIX", emoji: "💳", desc: "QR Code para depósito", defaultOn: true, color: "hsl(262,83%,58%)" },
-                        { key: "bot_btn_conta", label: "Minha Conta", emoji: "👤", desc: "Dados da conta", defaultOn: true, color: "hsl(340,82%,52%)" },
-                        { key: "bot_btn_webapp", label: "Web App", emoji: "🌐", desc: "Painel web no Telegram", defaultOn: true, color: "hsl(200,80%,55%)" },
-                        { key: "bot_btn_migration", label: "Saldo Antigo", emoji: "🔄", desc: "Link site antigo", defaultOn: false, color: "hsl(38,92%,50%)" },
-                        { key: "bot_btn_ajuda", label: "Ajuda", emoji: "❓", desc: "Suporte e ajuda", defaultOn: true, color: "hsl(0,0%,60%)" },
+                        { key: "bot_btn_saldo", label: "Ver Saldo", emoji: "💰", defaultOn: true },
+                        { key: "bot_btn_recarga", label: "Fazer Recarga", emoji: "📱", defaultOn: true },
+                        { key: "bot_btn_historico", label: "Histórico", emoji: "📋", defaultOn: true },
+                        { key: "bot_btn_deposito", label: "Depositar PIX", emoji: "💳", defaultOn: true },
+                        { key: "bot_btn_conta", label: "Minha Conta", emoji: "👤", defaultOn: true },
+                        { key: "bot_btn_webapp", label: "Web App", emoji: "🌐", defaultOn: true },
+                        { key: "bot_btn_migration", label: "Saldo Antigo", emoji: "🔄", defaultOn: false },
+                        { key: "bot_btn_ajuda", label: "Ajuda", emoji: "❓", defaultOn: true },
                       ].map(btn => {
                         const isOn = globalConfig[btn.key] !== undefined ? globalConfig[btn.key] === "true" : btn.defaultOn;
                         return (
                           <button
                             key={btn.key}
                             onClick={() => setGlobalConfig(prev => ({ ...prev, [btn.key]: isOn ? "false" : "true" }))}
-                            className={`relative flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${
-                              isOn
-                                ? "border-primary/40 bg-primary/5 shadow-sm"
-                                : "border-border bg-muted/30 opacity-60 hover:opacity-80"
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
+                              isOn ? "hover:bg-primary/5" : "opacity-50 hover:opacity-70"
                             }`}
                           >
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: isOn ? `${btn.color}15` : undefined }}>
-                              {btn.emoji}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground">{btn.label}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">{btn.desc}</p>
-                            </div>
-                            <div className="shrink-0">
-                              {isOn ? (
-                                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                                  <Check className="h-3 w-3 text-primary-foreground" />
-                                </div>
-                              ) : (
-                                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
-                              )}
+                            <span className="text-base w-6 text-center">{btn.emoji}</span>
+                            <span className={`flex-1 text-sm ${isOn ? "text-foreground font-medium" : "text-muted-foreground line-through"}`}>{btn.label}</span>
+                            <div className={`w-8 h-[18px] rounded-full relative transition-colors ${isOn ? "bg-primary" : "bg-muted"}`}>
+                              <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform ${isOn ? "left-[16px]" : "left-[2px]"}`} />
                             </div>
                           </button>
                         );
                       })}
                     </div>
                     {/* Web App URL */}
-                    <div className="px-5 pb-5 pt-2 border-t border-border">
-                      <label className="block text-xs font-medium text-muted-foreground mb-1.5">URL do Web App</label>
+                    <div className="px-4 pb-4 pt-1 border-t border-border">
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1 mt-3">URL do Web App</label>
                       <input type="url" value={globalConfig.webAppUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, webAppUrl: e.target.value }))}
-                        className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://recargasbrasill.com/miniapp" />
+                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://recargasbrasill.com/miniapp" />
                       <p className="text-[10px] text-muted-foreground mt-1">Deixe vazio para usar o padrão.</p>
                     </div>
                   </div>
