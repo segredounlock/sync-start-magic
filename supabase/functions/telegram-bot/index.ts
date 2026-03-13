@@ -809,20 +809,117 @@ async function executeRecarga(supabase: any, token: string, chatId: number, user
     return;
   }
 
+  // Fetch catalog to find carrier and valueId
+  const catalog = await fetchCatalog(supabase);
+  let matchedCarrier: any = null;
+  let matchedValue: any = null;
+  for (const carrier of catalog) {
+    const v = carrier.values?.find((val: any) => resolveValue(val) === valor);
+    if (v) { matchedCarrier = carrier; matchedValue = v; break; }
+  }
+
+  if (!matchedCarrier || !matchedValue) {
+    await sendMessage(token, chatId, `❌ Valor R$ ${valor.toFixed(2).replace(".", ",")} não encontrado no catálogo.`);
+    return;
+  }
+
+  // Resolve user role and pricing rules (same logic as menu flow)
+  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
+  const userRole = roleData?.role || "cliente";
+
+  let resellerId: string | null = null;
+  if (userRole === "cliente") {
+    const { data: profileData } = await supabase.from("profiles").select("reseller_id").eq("id", user.id).single();
+    resellerId = profileData?.reseller_id || null;
+  }
+
+  // Resolve operadora_id
+  const normalize = (value?: string) => (value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const { data: opsData } = await supabase.from("operadoras").select("id, nome").eq("ativo", true);
+  const targetName = normalize(matchedCarrier.name);
+  const matchedOp = (opsData || []).find((op: any) => {
+    const dbName = normalize(op.nome);
+    return dbName === targetName || dbName.includes(targetName) || targetName.includes(dbName);
+  });
+  const operadoraId = matchedOp?.id || null;
+
+  // Fetch pricing rules
+  let pricingRules: any[] = [];
+  if (operadoraId) {
+    if (userRole === "admin") {
+      const { data: rules } = await supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId);
+      pricingRules = rules || [];
+    } else if (userRole === "revendedor" || (userRole === "cliente" && resellerId)) {
+      const ruleUserId = userRole === "revendedor" ? user.id : resellerId;
+      const [{ data: resellerRules }, { data: globalRules }] = await Promise.all([
+        supabase.from("reseller_pricing_rules").select("*").eq("user_id", ruleUserId).eq("operadora_id", operadoraId),
+        supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId),
+      ]);
+      const resellerMap = new Map((resellerRules || []).map((r: any) => [Number(r.valor_recarga), r]));
+      const globalMap = new Map((globalRules || []).map((r: any) => [Number(r.valor_recarga), r]));
+      const allValues = new Set([...resellerMap.keys(), ...globalMap.keys()]);
+      for (const v of allValues) pricingRules.push(resellerMap.get(v) || globalMap.get(v));
+    } else {
+      const [{ data: ownRules }, { data: globalRules }] = await Promise.all([
+        supabase.from("reseller_pricing_rules").select("*").eq("user_id", user.id).eq("operadora_id", operadoraId),
+        supabase.from("pricing_rules").select("*").eq("operadora_id", operadoraId),
+      ]);
+      if (ownRules && ownRules.length > 0) {
+        const ownMap = new Map(ownRules.map((r: any) => [Number(r.valor_recarga), r]));
+        const gMap = new Map((globalRules || []).map((r: any) => [Number(r.valor_recarga), r]));
+        const allValues = new Set([...ownMap.keys(), ...gMap.keys()]);
+        for (const v of allValues) pricingRules.push(ownMap.get(v) || gMap.get(v));
+      } else {
+        pricingRules = globalRules || [];
+      }
+    }
+  }
+
+  // Calculate user cost
+  const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === valor);
+  let userCost: number;
+  if (rule) {
+    userCost = rule.tipo_regra === "fixo" ? Number(rule.regra_valor) : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
+  } else {
+    userCost = matchedValue.cost || valor;
+  }
+
+  // Check balance against REAL COST
   const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").single();
   const saldoAtual = Number(saldo?.valor || 0);
 
-  if (valor > saldoAtual) {
-    await sendMessage(token, chatId,
-      `❌ <b>Saldo insuficiente</b>\n\nSaldo: R$ ${saldoAtual.toFixed(2).replace(".", ",")}\nRecarga: R$ ${valor.toFixed(2).replace(".", ",")}`
+  if (userCost > saldoAtual) {
+    await sendMessageWithKeyboard(token, chatId,
+      `❌ <b>Saldo insuficiente</b>\n\nSaldo: R$ ${saldoAtual.toFixed(2).replace(".", ",")}\nCusto da recarga: R$ ${userCost.toFixed(2).replace(".", ",")}`,
+      [[{ text: "💳 Depositar", callback_data: "menu_deposito" }, { text: "📖 Menu", callback_data: "menu_main" }]]
     );
     return;
   }
 
+  // Save confirmation in session and use rconfirm_yes flow
+  await setSession(supabase, String(chatId), "awaiting_recarga_confirm", {
+    user_id: user.id,
+    carrier_id: matchedCarrier.carrierId,
+    value_id: matchedValue.valueId,
+    operadora_nome: matchedCarrier.name,
+    valor: userCost,
+    telefone,
+    api_cost: matchedValue.cost,
+    valor_facial: valor,
+  });
+
+  const formattedPhone = telefone.length === 11
+    ? `(${telefone.slice(0,2)}) ${telefone.slice(2,7)}-${telefone.slice(7)}`
+    : `(${telefone.slice(0,2)}) ${telefone.slice(2,6)}-${telefone.slice(6)}`;
+
+  const costLine = valor !== userCost
+    ? `\n💵 Custo: <b>R$ ${userCost.toFixed(2).replace(".", ",")}</b>`
+    : "";
+
   await sendMessageWithKeyboard(token, chatId,
-    `📱 <b>Confirmar Recarga</b>\n\n📞 Telefone: <code>${telefone}</code>\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>\n\nSaldo atual: R$ ${saldoAtual.toFixed(2).replace(".", ",")}`,
+    `📱 <b>Confirmar Recarga</b>\n\n📡 Operadora: <b>${matchedCarrier.name}</b>\n📞 Telefone: <code>${formattedPhone}</code>\n💰 Valor da Recarga: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>${costLine}\n💳 Saldo atual: R$ ${saldoAtual.toFixed(2).replace(".", ",")}`,
     [[
-      { text: "✅ Confirmar", callback_data: `confirm_${telefone}_${valor}_${user.id}` },
+      { text: "✅ Confirmar", callback_data: "rconfirm_yes" },
       { text: "❌ Cancelar", callback_data: "cancel" },
     ]]
   );
