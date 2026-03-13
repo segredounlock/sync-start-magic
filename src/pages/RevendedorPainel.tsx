@@ -1355,6 +1355,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             className={`mt-2 p-3 rounded-xl text-sm font-medium flex items-start gap-2 ${
                               phoneCheckResult.status === "CLEAR" ? "bg-success/10 text-success border border-success/20" :
                               phoneCheckResult.status === "COOLDOWN" ? "bg-warning/10 text-warning border border-warning/20" :
+                              phoneCheckResult.status === "OPERATOR_MISMATCH" ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" :
                               "bg-destructive/10 text-destructive border border-destructive/20"
                             }`}>
                             <span className="mt-0.5 shrink-0">
