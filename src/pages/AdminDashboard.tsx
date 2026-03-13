@@ -3549,7 +3549,7 @@ export default function AdminDashboard() {
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-foreground">{h.title}</h4>
                             {h.message && (
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">{h.message}</p>
+                              <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{h.message}</p>
                             )}
                           </div>
                         </div>
