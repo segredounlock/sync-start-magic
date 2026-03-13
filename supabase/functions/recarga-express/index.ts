@@ -217,6 +217,13 @@ Deno.serve(async (req) => {
           : (order.status === "falha" || order.status === "cancelada" || order.status === "expirada") ? "falha"
           : "pending";
 
+        // Only update if status actually changed from pending
+        const { data: currentRecarga } = await adminClient
+          .from("recargas")
+          .select("id, status, custo, user_id")
+          .eq("external_id", external_id)
+          .maybeSingle();
+
         const updatePayload: Record<string, unknown> = { status: localStatus };
         if (localStatus === "completed") {
           updatePayload.completed_at = new Date().toISOString();
@@ -225,6 +232,52 @@ Deno.serve(async (req) => {
           .from("recargas")
           .update(updatePayload)
           .eq("external_id", external_id);
+
+        // Refund balance when status transitions to "falha" from "pending"
+        if (localStatus === "falha" && currentRecarga && currentRecarga.status === "pending") {
+          try {
+            const { data: saldoData } = await adminClient
+              .from("saldos")
+              .select("valor")
+              .eq("user_id", currentRecarga.user_id)
+              .eq("tipo", "revenda")
+              .single();
+            if (saldoData) {
+              const refundedBalance = Number(saldoData.valor) + Number(currentRecarga.custo);
+              await adminClient
+                .from("saldos")
+                .update({ valor: refundedBalance })
+                .eq("user_id", currentRecarga.user_id)
+                .eq("tipo", "revenda");
+              console.log(`order-status: refunded ${currentRecarga.custo} to user ${currentRecarga.user_id}, new balance=${refundedBalance}`);
+            }
+
+            // Send failure notifications
+            const baseUrl = Deno.env.get("SUPABASE_URL")!;
+            const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            const authHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
+
+            fetch(`${baseUrl}/functions/v1/telegram-notify`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                type: "recarga_failed",
+                user_id: currentRecarga.user_id,
+                data: { telefone: order.phone || "", operadora: order.operator || "", valor_recarga: order.amount || 0, custo: currentRecarga.custo, recarga_id: currentRecarga.id },
+              }),
+            }).catch(() => {});
+
+            fetch(`${baseUrl}/functions/v1/send-push`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                title: "❌ Recarga Falhou",
+                body: `Recarga falhou. Saldo estornado automaticamente.`,
+                user_ids: [currentRecarga.user_id],
+              }),
+            }).catch(() => {});
+          } catch (refundErr) {
+            console.error("order-status refund error:", refundErr);
+          }
+        }
 
         result = { success: true, data: { ...order, localStatus } };
         break;
@@ -548,6 +601,7 @@ Deno.serve(async (req) => {
         // Server-side polling: try to get final status before returning
         const orderData0 = rechargeResult.data || {};
         const extId = orderData0.id || orderData0._id || orderData0.orderId || null;
+        let polledFailed = false;
         if (extId && orderData0.status !== "feita" && orderData0.status !== "completed") {
           const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
           for (let attempt = 0; attempt < 3; attempt++) {
@@ -564,6 +618,7 @@ Deno.serve(async (req) => {
                 }
                 if (found && (found.status === "falha" || found.status === "cancelada" || found.status === "expirada")) {
                   rechargeResult = { ...rechargeResult, data: { ...rechargeResult.data, ...found } };
+                  polledFailed = true;
                   console.log(`recharge polling: found failed on attempt ${attempt + 1}`);
                   break;
                 }
@@ -572,21 +627,30 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Deduct balance
-        const newBalance = userBalance - chargedCost;
-        await adminClient
-          .from("saldos")
-          .update({ valor: newBalance })
-          .eq("user_id", userId)
-          .eq("tipo", saldoTipo);
-
-        // Save recarga locally
+        // Determine final status
         const orderData = rechargeResult.data || {};
         const externalId = orderData.id || orderData._id || orderData.orderId || null;
         console.log("external_id resolved:", externalId, "orderData keys:", Object.keys(orderData));
 
         const operadoraName = orderData.operator || orderData.carrier?.name || resolvedOperator;
-        const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
+        const isFailed = polledFailed || orderData.status === "falha" || orderData.status === "cancelada" || orderData.status === "expirada";
+        const isCompleted = !isFailed && (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
+
+        // Only deduct balance if NOT failed
+        let newBalance = userBalance;
+        if (!isFailed) {
+          newBalance = userBalance - chargedCost;
+          await adminClient
+            .from("saldos")
+            .update({ valor: newBalance })
+            .eq("user_id", userId)
+            .eq("tipo", saldoTipo);
+        } else {
+          console.log(`recharge: NOT deducting balance — recharge failed. userId=${userId} chargedCost=${chargedCost}`);
+        }
+
+        // Save recarga locally
+        const finalStatus = isFailed ? "falha" : (isCompleted ? "completed" : "pending");
         await adminClient.from("recargas").insert({
           user_id: userId,
           telefone: phoneNumber,
@@ -594,7 +658,7 @@ Deno.serve(async (req) => {
           valor: catalogValue,
           custo: chargedCost,
           custo_api: apiCost,
-          status: isCompleted ? "completed" : "pending",
+          status: finalStatus,
           external_id: externalId,
           completed_at: isCompleted ? new Date().toISOString() : null,
         });
@@ -730,6 +794,7 @@ Deno.serve(async (req) => {
         // Server-side polling
         const prOrderData0 = prRechargeResult.data || {};
         const prExtId = prOrderData0.id || prOrderData0._id || prOrderData0.orderId || null;
+        let prPolledFailed = false;
         if (prExtId && prOrderData0.status !== "feita" && prOrderData0.status !== "completed") {
           const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
           for (let attempt = 0; attempt < 3; attempt++) {
@@ -745,6 +810,7 @@ Deno.serve(async (req) => {
                 }
                 if (found && (found.status === "falha" || found.status === "cancelada" || found.status === "expirada")) {
                   prRechargeResult = { ...prRechargeResult, data: { ...prRechargeResult.data, ...found } };
+                  prPolledFailed = true;
                   break;
                 }
               }
@@ -752,15 +818,23 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Deduct balance
-        const prNewBalance = prBalance - prChargedCost;
-        await adminClient.from("saldos").update({ valor: prNewBalance }).eq("user_id", userId).eq("tipo", "revenda");
-
         // Save recarga
         const prOrderData = prRechargeResult.data || {};
         const prExternalId = prOrderData.id || prOrderData._id || prOrderData.orderId || null;
         const prOperadoraName = prOrderData.operator || prResolvedOperator;
-        const prIsCompleted = (prOrderData.status === "feita" || prOrderData.status === "concluida" || prOrderData.status === "completed");
+        const prIsFailed = prPolledFailed || prOrderData.status === "falha" || prOrderData.status === "cancelada" || prOrderData.status === "expirada";
+        const prIsCompleted = !prIsFailed && (prOrderData.status === "feita" || prOrderData.status === "concluida" || prOrderData.status === "completed");
+        const prFinalStatus = prIsFailed ? "falha" : (prIsCompleted ? "completed" : "pending");
+
+        // Only deduct balance if NOT failed
+        let prNewBalance = prBalance;
+        if (!prIsFailed) {
+          prNewBalance = prBalance - prChargedCost;
+          await adminClient.from("saldos").update({ valor: prNewBalance }).eq("user_id", userId).eq("tipo", "revenda");
+        } else {
+          console.log(`public-recharge: NOT deducting balance — recharge failed. reseller=${userId} chargedCost=${prChargedCost}`);
+        }
+
         await adminClient.from("recargas").insert({
           user_id: userId,
           telefone: prPhone,
@@ -768,7 +842,7 @@ Deno.serve(async (req) => {
           valor: prAmount,
           custo: prChargedCost,
           custo_api: prApiCost,
-          status: prIsCompleted ? "completed" : "pending",
+          status: prFinalStatus,
           external_id: prExternalId,
           completed_at: prIsCompleted ? new Date().toISOString() : null,
         });
