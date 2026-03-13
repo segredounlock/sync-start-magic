@@ -3632,6 +3632,8 @@ export default function Principal() {
                                   onSave={(data) => savePricingRule({ operadora_id: activeOpId, valor_recarga: valor, ...data })}
                                   onReset={() => resetPricingRule(activeOpId, valor)}
                                   label="Global"
+                                  disabled={isValueDisabled(activeOpId, valor)}
+                                  onToggleDisabled={() => user?.id && toggleDisabledValue(activeOpId, valor, user.id)}
                                 />
                               );
                             })}
