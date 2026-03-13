@@ -213,6 +213,15 @@ export default function Principal() {
   const [reportPage, setReportPage] = useState(0);
   const REPORT_PER_PAGE = 15;
 
+  // All recargas list state (Todas as Recargas section)
+  const [allRecargasList, setAllRecargasList] = useState<any[]>([]);
+  const [allRecargasLoading, setAllRecargasLoading] = useState(false);
+  const allRecargasLoaded = useRef(false);
+  const [allRecargasStatusFilter, setAllRecargasStatusFilter] = useState<"all" | "completed" | "pending" | "falha">("all");
+  const [allRecargasSearch, setAllRecargasSearch] = useState("");
+  const [allRecargasPage, setAllRecargasPage] = useState(0);
+  const ALL_RECARGAS_PER_PAGE = 20;
+
   // Config API states
   const [apiConfig, setApiConfig] = useState<Record<string, string>>({});
   const [configLoading, setConfigLoading] = useState(false);
