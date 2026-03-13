@@ -2140,7 +2140,7 @@ export default function AdminDashboard() {
                           <p className="text-[11px] text-muted-foreground">{fmtDate(t.created_at)}</p>
                         </div>
                       </div>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${statusClass}`}>{statusLabel}</span>
+                      <StatusBadge status={t.status} type="deposit" className="flex-shrink-0" />
                     </div>
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/50">
                       <div>
