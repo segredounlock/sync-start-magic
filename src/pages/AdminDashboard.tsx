@@ -2033,7 +2033,7 @@ export default function AdminDashboard() {
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
-                                <td className="px-4 py-3 text-right font-bold text-success">{fmt(c.saldo)}</td>
+                                <td className="px-4 py-3 text-right font-bold text-success"><AnimatedCounter value={c.saldo} prefix="R$&nbsp;" duration={600} /></td>
                                 <td className="px-4 py-3 text-muted-foreground">{formatDateFullBR(c.created_at)}</td>
                                 <td className="px-4 py-3 text-center">
                                   <div className="flex items-center justify-center gap-2">
