@@ -1346,8 +1346,8 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const newBalance = orderData.localBalance ?? 0;
       const chargedCost = orderData.cost ?? cost;
       const externalId = orderData._id || orderData.id || orderData.orderId || null;
-      const operadoraNome = orderData.carrier?.name || carrierId;
-      const valorFacial = Number(valorFacialFromSession || orderData.value || orderData.valor || cost);
+      const operadoraNome = orderData.operator || orderData.carrier?.name || carrierId;
+      const valorFacial = Number(valorFacialFromSession || orderData.amount || orderData.value || orderData.valor || cost);
 
       const horario = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
       const formattedPhone = telefone.length === 11
