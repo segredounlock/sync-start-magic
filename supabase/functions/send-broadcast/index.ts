@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -21,12 +23,31 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const tokenCache = new Map<string, { token: string; time: number }>();
 const CACHE_TTL = 60000;
 
+// Track active broadcasts for graceful shutdown
+const activeBroadcasts = new Map<string, string>(); // progressId -> notificationId
+
+// Graceful shutdown: mark active broadcasts as cancelled
+addEventListener('beforeunload', async () => {
+  console.log(`[BROADCAST] beforeunload fired, ${activeBroadcasts.size} active broadcast(s)`);
+  if (activeBroadcasts.size === 0) return;
+
+  const promises = Array.from(activeBroadcasts.entries()).map(([progressId]) =>
+    supabase.from('broadcast_progress').update({
+      status: 'cancelled',
+      error_message: 'Servidor reiniciado durante envio. Retome o broadcast.',
+      completed_at: new Date().toISOString(),
+    }).eq('id', progressId)
+  );
+
+  await Promise.allSettled(promises);
+  console.log('[BROADCAST] beforeunload cleanup done');
+});
+
 async function getBotToken(): Promise<string> {
   const now = Date.now();
   const cached = tokenCache.get('global');
   if (cached && now - cached.time < CACHE_TTL) return cached.token;
 
-  // Try bot_settings table first
   const { data } = await supabase
     .from('bot_settings')
     .select('value')
@@ -38,7 +59,6 @@ async function getBotToken(): Promise<string> {
     return data.value;
   }
 
-  // Fall back to system_config
   const { data: sysData } = await supabase
     .from('system_config')
     .select('value')
@@ -98,6 +118,7 @@ async function sendTelegramMessage(
 
       if (result.error_code === 429 && attempt < retries) {
         const retryAfter = result.parameters?.retry_after || 5;
+        console.log(`[BROADCAST] Rate limited, waiting ${retryAfter}s`);
         await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
         continue;
       }
@@ -126,6 +147,8 @@ async function sendBroadcastInBackground(
   resumeBlockedCount: number = 0
 ) {
   const startTime = Date.now();
+  activeBroadcasts.set(progressId, notificationId);
+  console.log(`[BROADCAST] START notif=${notificationId} progress=${progressId} resume=${resumeFromBatch}`);
 
   try {
     const botToken = await getBotToken();
@@ -138,6 +161,7 @@ async function sendBroadcastInBackground(
 
     if (!notification) {
       await updateProgress(progressId, { status: 'failed', error_message: 'Notificação não encontrada' });
+      activeBroadcasts.delete(progressId);
       return;
     }
 
@@ -154,11 +178,13 @@ async function sendBroadcastInBackground(
 
     if (usersError) {
       await updateProgress(progressId, { status: 'failed', error_message: 'Erro ao buscar usuários' });
+      activeBroadcasts.delete(progressId);
       return;
     }
 
     const totalUsers = users?.length || 0;
     const totalBatches = Math.ceil(totalUsers / BATCH_SIZE);
+    console.log(`[BROADCAST] ${totalUsers} users, ${totalBatches} batches`);
 
     await updateProgress(progressId, {
       status: 'running',
@@ -170,6 +196,7 @@ async function sendBroadcastInBackground(
 
     if (totalUsers === 0) {
       await updateProgress(progressId, { status: 'completed', completed_at: new Date().toISOString() });
+      activeBroadcasts.delete(progressId);
       return;
     }
 
@@ -228,6 +255,8 @@ async function sendBroadcastInBackground(
       const remainingMessages = totalUsers - (sentCount + failedCount);
       const estimatedSecondsRemaining = remainingMessages / Math.max(messagesPerSecond, 1);
 
+      console.log(`[BROADCAST] batch ${currentBatch}/${totalBatches} sent=${sentCount} failed=${failedCount} speed=${messagesPerSecond.toFixed(1)}/s`);
+
       await updateProgress(progressId, {
         sent_count: sentCount,
         failed_count: failedCount,
@@ -255,10 +284,15 @@ async function sendBroadcastInBackground(
       status: 'completed', sent_count: sentCount, failed_count: failedCount,
       blocked_count: blockedCount, completed_at: new Date().toISOString(),
     });
+
+    console.log(`[BROADCAST] COMPLETED notif=${notificationId} sent=${sentCount} failed=${failedCount} elapsed=${((Date.now() - startTime) / 1000).toFixed(1)}s`);
   } catch (error) {
+    console.error(`[BROADCAST] ERROR notif=${notificationId}:`, error);
     await updateProgress(progressId, {
       status: 'failed', error_message: String(error), completed_at: new Date().toISOString(),
     });
+  } finally {
+    activeBroadcasts.delete(progressId);
   }
 }
 
@@ -289,11 +323,12 @@ serve(async (req) => {
         .update({ status: 'running', error_message: null, completed_at: null })
         .eq('id', resume_progress_id);
 
-      sendBroadcastInBackground(
+      const promise = sendBroadcastInBackground(
         existingProgress.notification_id, String(resume_progress_id), true,
         existingProgress.current_batch, existingProgress.sent_count,
         existingProgress.failed_count, existingProgress.blocked_count
-      ).catch(console.error);
+      );
+      EdgeRuntime.waitUntil(promise);
 
       return new Response(JSON.stringify({
         success: true, message: 'Broadcast retomado', progress_id: String(resume_progress_id),
@@ -336,15 +371,17 @@ serve(async (req) => {
       })
       .select().single();
 
-    sendBroadcastInBackground(
+    const promise = sendBroadcastInBackground(
       String(notification_id), progressRecord.id, Boolean(include_unregistered)
-    ).catch(console.error);
+    );
+    EdgeRuntime.waitUntil(promise);
 
     return new Response(JSON.stringify({
       success: true, message: 'Broadcast iniciado',
       progress_id: progressRecord.id, total: userCount || 0,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
+    console.error('[BROADCAST] Handler error:', error);
     return new Response(JSON.stringify({ error: String(error) }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
