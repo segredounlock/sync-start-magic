@@ -14,15 +14,17 @@ export function AnimatedCounter({
   prefix = "",
   suffix = "",
   decimals = 2,
-  duration = 600,
+  duration = 900,
   className = "",
 }: AnimatedCounterProps) {
-  const [display, setDisplay] = useState(value);
-  const prevValue = useRef(value);
+  const [display, setDisplay] = useState(0);
+  const prevValue = useRef(0);
   const rafRef = useRef<number>();
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-    const from = prevValue.current;
+    const from = mountedRef.current ? prevValue.current : 0;
+    mountedRef.current = true;
     const to = value;
     prevValue.current = value;
 
@@ -36,7 +38,7 @@ export function AnimatedCounter({
     const animate = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // easeOutExpo
+      // easeOutExpo for smooth deceleration
       const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
       setDisplay(from + (to - from) * eased);
 
@@ -69,13 +71,15 @@ interface AnimatedIntProps {
   className?: string;
 }
 
-export function AnimatedInt({ value, duration = 600, className = "" }: AnimatedIntProps) {
-  const [display, setDisplay] = useState(value);
-  const prevValue = useRef(value);
+export function AnimatedInt({ value, duration = 900, className = "" }: AnimatedIntProps) {
+  const [display, setDisplay] = useState(0);
+  const prevValue = useRef(0);
   const rafRef = useRef<number>();
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-    const from = prevValue.current;
+    const from = mountedRef.current ? prevValue.current : 0;
+    mountedRef.current = true;
     const to = value;
     prevValue.current = value;
 
@@ -103,5 +107,5 @@ export function AnimatedInt({ value, duration = 600, className = "" }: AnimatedI
     };
   }, [value, duration]);
 
-  return <span className={className}>{display}</span>;
+  return <span className={className}>{display.toLocaleString("pt-BR")}</span>;
 }
