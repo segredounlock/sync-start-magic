@@ -346,7 +346,7 @@ export default function RecargaPublica() {
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Valor</label>
                       <div className="grid grid-cols-3 gap-2">
-                        {currentOp.valores.map((v, i) => {
+                        {filterValores(currentOp.id, currentOp.valores).map((v, i) => {
                           const displayPrice = getPrice(currentOp.id, v);
                           const hasCustomPrice = displayPrice !== v;
                           return (
