@@ -3705,6 +3705,8 @@ export default function Principal() {
                                       onReset={() => resetResellerPricingRule(resellerPricingSelectedUser, activeOpId, valor)}
                                       label={hasCustom ? "Personalizado" : "Global"}
                                       highlight={hasCustom}
+                                      disabled={isValueDisabled(activeOpId, valor)}
+                                      onToggleDisabled={() => user?.id && toggleDisabledValue(activeOpId, valor, user.id)}
                                     />
                                   );
                                 })}
