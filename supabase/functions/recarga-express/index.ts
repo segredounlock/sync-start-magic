@@ -102,7 +102,25 @@ Deno.serve(async (req) => {
 
     let userId: string;
 
-    if (isServiceRole) {
+    // Allow unauthenticated access for public-recharge action only
+    const isPublicRecharge = body.action === "public-recharge";
+
+    if (isPublicRecharge) {
+      // Public recharge doesn't require JWT — uses reseller_id from body
+      const resellerId = params.reseller_id;
+      if (!resellerId) {
+        return new Response(JSON.stringify({ error: "reseller_id obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = resellerId; // Will be used as the recharge owner
+    } else if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } else if (isServiceRole) {
       userId = params.user_id;
       if (!userId) {
         return new Response(JSON.stringify({ error: "user_id obrigatório para chamadas internas" }), {
