@@ -86,10 +86,11 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         commands: [
-          { command: "start", description: "Iniciar o bot" },
-          { command: "vincular", description: "Vincular conta (email)" },
+          { command: "start", description: "Iniciar o bot / Vincular conta" },
+          { command: "menu", description: "Abrir menu principal" },
           { command: "saldo", description: "Consultar saldo" },
           { command: "recarga", description: "Fazer recarga" },
+          { command: "deposito", description: "Depositar via PIX" },
           { command: "recargas", description: "Histórico de recargas" },
           { command: "ajuda", description: "Lista de comandos" },
         ],
