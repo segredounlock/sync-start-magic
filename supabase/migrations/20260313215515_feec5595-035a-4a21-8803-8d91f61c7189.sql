@@ -1,0 +1,1 @@
+UPDATE broadcast_progress SET status = 'cancelled', error_message = 'Limpo manualmente - função reiniciada com fix waitUntil', completed_at = now() WHERE status = 'running' AND completed_at IS NULL;
