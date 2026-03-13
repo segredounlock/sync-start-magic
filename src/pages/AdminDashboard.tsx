@@ -1437,9 +1437,27 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      {op.valores.map(v => (
-                        <span key={v} className="px-2 py-0.5 rounded bg-muted text-xs font-mono text-foreground">{fmt(v)}</span>
-                      ))}
+                      {op.valores.map(v => {
+                        const disabled = isDisabled(op.id, v);
+                        return (
+                          <button
+                            key={v}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (!user?.id) return;
+                              await toggleDisabledValue(op.id, v, user.id);
+                            }}
+                            className={`px-2 py-0.5 rounded text-xs font-mono transition-all ${
+                              disabled
+                                ? "bg-destructive/15 text-destructive line-through opacity-60"
+                                : "bg-muted text-foreground hover:bg-primary/10"
+                            }`}
+                            title={disabled ? "Clique para reativar este valor" : "Clique para desativar este valor"}
+                          >
+                            {fmt(v)} {disabled ? "✕" : ""}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
