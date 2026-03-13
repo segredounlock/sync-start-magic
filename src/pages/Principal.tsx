@@ -396,6 +396,18 @@ export default function Principal() {
             }
           }
         }
+        // Deactivate local operadoras that are NOT in the API catalog
+        const apiNames = catData.data.map((c: any) => (c.name || c.carrierId)?.toLowerCase?.());
+        const { data: allLocalOps } = await supabase.from("operadoras").select("id, nome").eq("ativo", true);
+        if (allLocalOps) {
+          for (const localOp of allLocalOps) {
+            if (!apiNames.includes(localOp.nome?.toLowerCase?.())) {
+              await supabase.from("operadoras").update({ ativo: false, updated_at: new Date().toISOString() }).eq("id", localOp.id);
+              console.log(`[Sync] Operadora "${localOp.nome}" desativada (ausente no catálogo da API)`);
+            }
+          }
+        }
+
         toast.success(`${catData.data.length} operadora(s) sincronizadas da API!`);
       }
 
