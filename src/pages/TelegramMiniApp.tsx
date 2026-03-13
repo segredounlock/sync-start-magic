@@ -1251,14 +1251,16 @@ export default function TelegramMiniApp() {
               {recargaStep === "phone" && (
                 <div className="space-y-3 pt-2">
                   {/* Botão Ver Tabela de Valores */}
-                  <button
-                    onClick={() => { setShowPriceTable(true); if (operadoras.length === 0) loadOperadoras(); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
-                    className="w-full rounded-xl p-3 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                    style={{ ...st.secondaryBg, border: st.borderSub }}
-                  >
-                    <FileText className="w-4 h-4" style={st.link} />
-                    <span className="text-sm font-semibold" style={st.link}>Ver Tabela de Valores</span>
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => { setShowPriceTable(true); if (operadoras.length === 0) loadOperadoras(); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                      className="rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all active:scale-[0.97]"
+                      style={{ border: "1px solid color-mix(in srgb, var(--tg-btn) 30%, transparent)", backgroundColor: "color-mix(in srgb, var(--tg-btn) 8%, transparent)" }}
+                    >
+                      <span className="text-sm" style={st.link}>≡</span>
+                      <span className="text-sm font-semibold" style={st.link}>Ver Tabela de Valores</span>
+                    </button>
+                  </div>
 
                   {/* Modal Bottom Sheet - Tabela de Valores */}
                   <AnimatePresence>
