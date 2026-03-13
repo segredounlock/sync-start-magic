@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
