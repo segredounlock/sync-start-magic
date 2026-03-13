@@ -1302,14 +1302,16 @@ export default function TelegramMiniApp() {
                                 <div className="px-5 py-3 flex items-center gap-2">
                                   <span className="text-sm font-bold" style={st.text}>{op.nome}</span>
                                 </div>
-                                <div className="px-5 pb-3 grid grid-cols-3 gap-2">
+                                <div className="px-5 pb-3 grid grid-cols-2 gap-2">
                                   {op.valores
                                     .sort((a: ValorItem, b: ValorItem) => (a.userCost ?? a.cost) - (b.userCost ?? b.cost))
                                     .map(v => {
+                                      const faceValue = v.value || v.cost;
                                       const displayCost = v.userCost ?? v.cost;
                                       return (
-                                        <div key={v.valueId} className="rounded-lg px-2 py-2 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 10%, transparent)" }}>
-                                          <p className="text-xs font-bold" style={st.text}>R$ {displayCost.toFixed(2).replace(".", ",")}</p>
+                                        <div key={v.valueId} className="rounded-xl px-3 py-3 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--tg-hint) 15%, transparent)" }}>
+                                          <p className="text-sm font-bold" style={st.text}>R$ {faceValue.toFixed(2).replace(".", ",")}</p>
+                                          <p className="text-xs font-medium mt-0.5" style={{ color: "#4ade80" }}>Paga R$ {displayCost.toFixed(2).replace(".", ",")}</p>
                                         </div>
                                       );
                                     })}
