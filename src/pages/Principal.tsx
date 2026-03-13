@@ -3633,7 +3633,7 @@ export default function Principal() {
                                   onReset={() => resetPricingRule(activeOpId, valor)}
                                   label="Global"
                                   disabled={isValueDisabled(activeOpId, valor)}
-                                  onToggleDisabled={() => user?.id && toggleDisabledValue(activeOpId, valor, user.id)}
+                                  onToggleDisabled={user?.id === "f5501acc-79f3-460f-bc3e-493280ea84f0" ? () => toggleDisabledValue(activeOpId, valor, user.id) : undefined}
                                 />
                               );
                             })}
@@ -3706,7 +3706,7 @@ export default function Principal() {
                                       label={hasCustom ? "Personalizado" : "Global"}
                                       highlight={hasCustom}
                                       disabled={isValueDisabled(activeOpId, valor)}
-                                      onToggleDisabled={() => user?.id && toggleDisabledValue(activeOpId, valor, user.id)}
+                                      onToggleDisabled={user?.id === "f5501acc-79f3-460f-bc3e-493280ea84f0" ? () => toggleDisabledValue(activeOpId, valor, user.id) : undefined}
                                     />
                                   );
                                 })}
