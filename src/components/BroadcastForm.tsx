@@ -282,7 +282,7 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
                 <img src={formData.image_url} alt="" className="w-full max-h-40 object-cover rounded-lg mb-3" />
               )}
               <p className="text-sm font-bold text-white">📢 {formData.title || 'Título'}</p>
-              <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap">{formData.message || 'Sua mensagem aqui...'}</p>
+              <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderTelegramHtml(formData.message || 'Sua mensagem aqui...') }} />
               {enableButtons && formData.buttons.filter(b => b.text).length > 0 && (
                 <div className="mt-3 flex gap-2">
                   {formData.buttons.filter(b => b.text).map((b, i) => (
