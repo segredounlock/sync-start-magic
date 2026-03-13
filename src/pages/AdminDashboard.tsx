@@ -3662,12 +3662,12 @@ export default function AdminDashboard() {
                               <span className="text-[10px] text-muted-foreground">{op.count} recargas</span>
                             </div>
                             <span className={`text-xs font-bold ${op.lucro >= 0 ? "text-success" : "text-destructive"}`}>
-                              {op.lucro >= 0 ? "+" : ""}R$ {op.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              {op.lucro >= 0 ? "+" : ""}<AnimatedCounter value={Math.abs(op.lucro)} prefix="R$&nbsp;" />
                             </span>
                           </div>
                           <div className="flex gap-3 text-[10px] text-muted-foreground mb-1.5">
-                            <span>Cobrado: R$ {op.cobrado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            <span>API: R$ {op.custoApi.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            <span>Cobrado: <AnimatedCounter value={op.cobrado} prefix="R$&nbsp;" /></span>
+                            <span>API: <AnimatedCounter value={op.custoApi} prefix="R$&nbsp;" /></span>
                           </div>
                           <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
                             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.1 + i * 0.05 }}
