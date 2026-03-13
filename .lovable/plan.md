@@ -1,38 +1,37 @@
 
 
-# Enviar Broadcast - Reconhecimento Automático de Operadora
+# Correção: Bot Telegram cobrando valor facial em vez do custo real
 
-## Resumo
+## Problema
 
-Vou criar a notificação no banco de dados e disparar o broadcast para **600 usuários registrados** no Telegram com o texto aprovado anteriormente, usando o efeito de confete.
+Dois pontos no bot do Telegram usam o **valor de face** (R$ 20) ao invés do **custo do revendedor** (R$ 12) para validar saldo e cobrar:
 
-## Texto do Broadcast
+1. **Menu de botões** (linha 1196-1199): O `callback_data` `rec_val_claro_claro_20_12.00` é parseado com `split("_")`, mas como o `valueId` contém `_` (ex: `claro_20`), o custo é lido como `20` em vez de `12.00`
+2. **Atalho rápido** (linha 815): `executeRecarga` compara saldo direto com valor digitado, sem consultar `pricing_rules`
 
-```
-📢 Nova Atualização do Sistema!
+## Correção
 
-🔄 Reconhecimento Automático de Operadora
+### 1. Corrigir parsing do callback_data (Bug 1)
 
-Agora ao digitar o número do telefone no painel de recarga, o sistema detecta automaticamente a operadora correta (Claro, Vivo, TIM, Oi) — sem precisar selecionar manualmente!
+Alterar o formato do `callback_data` para usar `|` como separador do custo (último campo), tornando-o imune a `_` no valueId:
 
-✅ Detecção instantânea ao digitar o número completo
-✅ Menos erros de operadora divergente
-✅ Mais agilidade nas suas recargas
-
-Atualize e aproveite! 🚀
+```text
+// Antes: rec_val_claro_claro_20_12.00
+// Depois: rec_val_claro_claro_20|12.00
 ```
 
-**Efeito**: Confete (5046509860389126442)
+Na montagem (linha 1182): trocar o último `_` por `|`
+Na leitura (linha 1194-1199): fazer split por `|` primeiro para extrair o custo, depois split por `_` no restante
 
-## Passos de implementação
+### 2. Corrigir executeRecarga para resolver custo real (Bug 2)
 
-1. Inserir a notificação na tabela `notifications` com título, mensagem e efeito de confete
-2. Chamar a Edge Function `send-broadcast` passando o `notification_id` e `include_unregistered: false`
-3. O broadcast será enviado em lotes de 25 mensagens para os 600 usuários registrados
+Na função `executeRecarga` (linhas 799-829):
+- Detectar operadora pelo número (usar API ou fallback por prefixo)
+- Buscar `pricing_rules` / `reseller_pricing_rules` para o valor digitado
+- Validar saldo contra o **custo real**, não o valor facial
+- Exibir valor facial E custo no texto de confirmação
+- Passar custo correto no `callback_data` de confirmação
 
-## Detalhes técnicos
-
-- A Edge Function `send-broadcast` já está implementada e funcional
-- O progresso será rastreado na tabela `broadcast_progress` em tempo real
-- Estimativa: ~26 segundos para enviar todos (600 users / 25 por batch)
+### Arquivo alterado
+- `supabase/functions/telegram-bot/index.ts`
 
