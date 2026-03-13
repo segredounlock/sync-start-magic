@@ -93,11 +93,7 @@ export default function AdminBankDashboard({
                   transition={{ duration: 0.25 }}
                   className={`text-3xl sm:text-4xl font-bold tracking-tight ${lucro >= 0 ? "text-success" : "text-destructive"}`}
                 >
-                  {loading ? (
-                    <SkeletonValue width="w-36" className="h-9" />
-                  ) : (
-                    <AnimatedCounter value={lucro} prefix={"R$\u00A0"} />
-                  )}
+                  <Currency value={lucro} loading={loading} skeletonWidth="w-36" skeletonHeight="h-9" />
                 </motion.p>
               ) : (
                 <motion.p
