@@ -1322,7 +1322,7 @@ export default function AdminDashboard() {
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Lucro</p>
                         <p className="text-[12px] font-bold font-mono text-success tabular-nums">
-                          {(r.status === "completed" || r.status === "concluida") ? `+${fmt((Number(r.custo) || 0) - (Number((r as any).custo_api) || 0))}` : "—"}
+                          {(r.status === "completed" || r.status === "concluida") ? <><span>+</span><AnimatedCounter value={(Number(r.custo) || 0) - (Number((r as any).custo_api) || 0)} prefix="R$&nbsp;" duration={600} /></> : "—"}
                         </p>
                       </div>
                     </div>
