@@ -2347,7 +2347,7 @@ export default function Principal() {
                                   }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status}</span>
                                 </td>
                                 <td className="px-1 py-2">
-                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type} | ${fmt(t.amount)} | ${(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "expired" ? "Expirado" : t.status}`); appToast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type} | ${fmt(t.amount)} | ${(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "expired" ? "Expirado" : t.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                 </td>
                               </tr>
                             ))}
