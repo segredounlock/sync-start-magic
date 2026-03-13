@@ -72,38 +72,45 @@ class RecargaAPI {
     }
 
     async getProfile() {
-        return this.request('/v1/me');
+        return this.request('/v2/me');
     }
 
     async getBalance() {
-        return this.request('/v1/me/balance');
+        return this.request('/v2/me/balance');
     }
 
     async getCatalog() {
-        return this.request('/v1/catalog');
+        return this.request('/v2/catalog');
     }
 
     async getOrders(page = 1, limit = 15) {
-        return this.request(`/v1/me/orders?page=${page}&limit=${limit}`);
+        return this.request(`/v2/me/orders?page=${page}&limit=${limit}`);
     }
 
     async getOrder(id) {
-        return this.request(`/v1/me/orders/${id}`);
+        return this.request(`/v2/me/orders/${id}`);
     }
 
-    async checkPhone(phoneNumber, carrierId = null) {
+    async checkPhone(phoneNumber, carrierName = null) {
         const body = { phoneNumber };
-        if (carrierId) {
-            body.carrierId = carrierId;
+        if (carrierName) {
+            body.carrierName = carrierName;
         }
-        return this.request('/v1/utils/check-phone', {
+        return this.request('/v2/utils/check-phone', {
             method: 'POST',
             body: JSON.stringify(body)
         });
     }
 
+    async detectOperator(phone) {
+        return this.request('/v2/detect-operator', {
+            method: 'POST',
+            body: JSON.stringify({ phone })
+        });
+    }
+
     async createRecharge(rechargeData) {
-        return this.request('/v1/recharges', {
+        return this.request('/v2/recharges', {
             method: 'POST',
             body: JSON.stringify(rechargeData)
         });

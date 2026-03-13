@@ -287,7 +287,7 @@ async function ensureTelegramUser(supabase: any, telegramId: number, firstName?:
   );
 }
 
-// Fetch catalog from Recarga Express API
+// Fetch catalog from Recarga Express API v2
 async function fetchCatalog(supabase: any): Promise<any[]> {
   const { data: apiKeyRow } = await supabase
     .from("system_config")
@@ -297,27 +297,29 @@ async function fetchCatalog(supabase: any): Promise<any[]> {
   
   if (!apiKeyRow?.value) return [];
   
-  const resp = await fetch("https://express.poeki.dev/api/v1/catalog", {
+  const resp = await fetch("https://express.poeki.dev/api/v2/catalog", {
     headers: { "X-API-Key": apiKeyRow.value, Accept: "application/json" },
   });
   const result = await resp.json();
   if (!result?.success || !result.data) return [];
-  return result.data;
+  // Map v2 format to v1-compatible format
+  return result.data.map((c: any) => ({
+    operator: c.operator,
+    carrierId: c.operator,
+    name: c.operator,
+    values: (c.values || []).map((v: any) => ({
+      valueId: `${c.operator}_${v.amount}`,
+      value: v.amount,
+      amount: v.amount,
+      cost: v.cost,
+      label: `R$ ${v.amount}`,
+    })),
+  }));
 }
 
-// Robust value resolution — mirrors site & Mini App logic (global scope)
+// Robust value resolution — v2 uses amount directly
 function resolveValue(v: any): number {
-  return (Number(v?.value) > 0 ? Number(v.value) : 0) ||
-    (Number(v?.faceValue) > 0 ? Number(v.faceValue) : 0) ||
-    (Number(v?.amount) > 0 ? Number(v.amount) : 0) ||
-    (Number(v?.rechargeValue) > 0 ? Number(v.rechargeValue) : 0) ||
-    (() => {
-      const label = String(v?.label || "").replace(/,/g, ".");
-      const nums = label.match(/\d+(?:\.\d{1,2})?/g);
-      if (!nums?.length) return Number(v?.cost) || 0;
-      const parsed = Number(nums[nums.length - 1]);
-      return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(v?.cost) || 0;
-    })();
+  return Number(v?.amount) || Number(v?.value) || Number(v?.cost) || 0;
 }
 
 async function findUserByTelegram(supabase: any, telegramId: string) {
@@ -1344,8 +1346,8 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const newBalance = orderData.localBalance ?? 0;
       const chargedCost = orderData.cost ?? cost;
       const externalId = orderData._id || orderData.id || orderData.orderId || null;
-      const operadoraNome = orderData.carrier?.name || carrierId;
-      const valorFacial = Number(valorFacialFromSession || orderData.value || orderData.valor || cost);
+      const operadoraNome = orderData.operator || orderData.carrier?.name || carrierId;
+      const valorFacial = Number(valorFacialFromSession || orderData.amount || orderData.value || orderData.valor || cost);
 
       const horario = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
       const formattedPhone = telefone.length === 11

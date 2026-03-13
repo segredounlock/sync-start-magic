@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const API_BASE = "https://express.poeki.dev/api/v1";
+const API_BASE = "https://express.poeki.dev/api/v2";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     }
     const apiKey = configData.value;
 
-    // 2. Fetch catalog from external API
+    // 2. Fetch catalog from v2 API
     const resp = await fetch(`${API_BASE}/catalog`, {
       headers: { "X-API-Key": apiKey, Accept: "application/json" },
     });
@@ -54,11 +54,11 @@ Deno.serve(async (req) => {
     const carriers = catalog.data;
     const syncedNames: string[] = [];
 
-    // 3. Sync each carrier
+    // 3. Sync each carrier (v2 format: operator, values[].amount/cost)
     for (const carrier of carriers) {
-      const nome = carrier.name || carrier.carrierId;
+      const nome = carrier.operator || carrier.name || "unknown";
       const values = carrier.values || [];
-      const valores = values.map((v: any) => v.value || v.cost).filter((v: number) => v > 0);
+      const valores = values.map((v: any) => v.amount || v.value || v.cost).filter((v: number) => v > 0);
 
       // Upsert operadora
       const { data: existing } = await adminClient
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       // Sync pricing_rules — always update custo from API
       const apiValores = new Set<number>();
       for (const v of values) {
-        const faceValue = v.value || v.cost;
+        const faceValue = v.amount || v.value || v.cost;
         const apiCost = v.cost || 0;
         if (faceValue > 0 && apiCost > 0) {
           apiValores.add(Number(faceValue));
@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
 
     // 4. Deactivate operadoras not in API
     const apiNamesLower = carriers.map((c: any) =>
-      (c.name || c.carrierId)?.toLowerCase?.()
+      (c.operator || c.name)?.toLowerCase?.()
     );
     const { data: allLocalOps } = await adminClient
       .from("operadoras")

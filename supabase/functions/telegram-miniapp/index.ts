@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const API_BASE = "https://express.poeki.dev/api/v2";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -145,7 +147,7 @@ serve(async (req) => {
       });
     }
 
-    // Action: operadoras - Get from RecargaExpress API catalog with pricing rules applied
+    // Action: operadoras - Get from RecargaExpress API v2 catalog with pricing rules applied
     if (action === "operadoras") {
       try {
         const { data: configData } = await supabase
@@ -160,14 +162,13 @@ serve(async (req) => {
           });
         }
 
-        const catalogResp = await fetch("https://express.poeki.dev/api/v1/catalog", {
+        const catalogResp = await fetch(`${API_BASE}/catalog`, {
           headers: { "X-API-Key": configData.value, Accept: "application/json" },
         });
         const catalogData = await catalogResp.json();
         console.log("[telegram-miniapp] catalog response success:", catalogData?.success);
 
         if (catalogData?.success && catalogData.data) {
-          // Determine user role and pricing rules
           const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
           let userRole = "usuario";
           let resellerId: string | null = null;
@@ -196,7 +197,6 @@ serve(async (req) => {
             globalRules = gRules || [];
 
             const pricingUserId = (userRole === "cliente" && resellerId) ? resellerId : user_id;
-            // Always check for reseller pricing rules (user may have own rules regardless of role)
             const { data: rRules } = await supabase
               .from("reseller_pricing_rules")
               .select("*")
@@ -218,41 +218,28 @@ serve(async (req) => {
           const { data: disabledRows } = await supabase.from("disabled_recharge_values").select("operadora_id, valor");
           const disabledSet = new Set((disabledRows || []).map((d: any) => `${d.operadora_id}-${Number(d.valor)}`));
 
+          // Map v2 catalog format
           const operadoras = catalogData.data.map((carrier: any) => {
-            // Find local operadora UUID by name
-            const localOp = localOpsList.find((op: any) => normalize(op.nome) === normalize(carrier.name));
+            const operatorName = carrier.operator || carrier.name;
+            const localOp = localOpsList.find((op: any) => normalize(op.nome) === normalize(operatorName));
             const operadoraId = localOp?.id || null;
 
             return {
-              id: carrier.carrierId,
-              nome: carrier.name,
-              carrierId: carrier.carrierId,
+              id: operatorName,
+              nome: operatorName,
+              carrierId: operatorName,
               valores: (carrier.values || []).map((v: any) => {
-                const resolvedValue =
-                  (Number(v?.value) > 0 ? Number(v.value) : 0) ||
-                  (Number(v?.faceValue) > 0 ? Number(v.faceValue) : 0) ||
-                  (Number(v?.amount) > 0 ? Number(v.amount) : 0) ||
-                  (Number(v?.rechargeValue) > 0 ? Number(v.rechargeValue) : 0) ||
-                  (() => {
-                    const label = String(v?.label || "").replace(/,/g, ".");
-                    const nums = label.match(/\d+(?:\.\d{1,2})?/g);
-                    if (!nums?.length) return Number(v?.cost) || 0;
-                    const parsed = Number(nums[nums.length - 1]);
-                    return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(v?.cost) || 0;
-                  })();
-
+                const faceValue = v.amount || v.value || 0;
                 const apiCost = Number(v.cost || 0);
                 let userCost = apiCost;
 
                 // Apply pricing rules if we have operadoraId
                 if (operadoraId && user_id) {
-                  // Try reseller-specific rule first
-                  const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === resolvedValue);
+                  const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
                   if (rRule) {
                     userCost = applyRule(rRule);
                   } else {
-                    // Fallback to global rule
-                    const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === resolvedValue);
+                    const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
                     if (gRule) {
                       userCost = applyRule(gRule);
                     }
@@ -260,12 +247,13 @@ serve(async (req) => {
                 }
 
                 return {
-                  valueId: v.valueId,
+                  valueId: `${operatorName}_${faceValue}`,
                   cost: apiCost,
                   userCost,
-                  value: resolvedValue,
-                  label: v.label || `R$ ${resolvedValue || apiCost}`,
-                  _disabled: operadoraId ? disabledSet.has(`${operadoraId}-${resolvedValue}`) : false,
+                  value: faceValue,
+                  amount: faceValue,
+                  label: `R$ ${faceValue || apiCost}`,
+                  _disabled: operadoraId ? disabledSet.has(`${operadoraId}-${faceValue}`) : false,
                 };
               }).filter((v: any) => !v._disabled),
             };

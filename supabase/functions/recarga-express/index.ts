@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const API_BASE = "https://express.poeki.dev/api/v1";
+const API_BASE = "https://express.poeki.dev/api/v2";
 
 async function getApiKey(adminClient: any): Promise<string> {
   const { data } = await adminClient
@@ -52,6 +52,26 @@ async function proxyPost(apiKey: string, path: string, body: unknown) {
   }
 }
 
+// Normalize string for comparison
+const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+// Map v2 catalog to v1-compatible format for frontend/bot consumption
+function mapCatalogV2toV1(v2Data: any[]): any[] {
+  return v2Data.map((carrier: any) => ({
+    carrierId: carrier.operator,
+    name: carrier.operator,
+    operator: carrier.operator,
+    values: (carrier.values || []).map((v: any) => ({
+      valueId: `${carrier.operator}_${v.amount}`,
+      value: v.amount,
+      amount: v.amount,
+      cost: v.cost,
+      label: `R$ ${v.amount}`,
+    })),
+  }));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -83,7 +103,6 @@ Deno.serve(async (req) => {
     let userId: string;
 
     if (isServiceRole) {
-      // Called internally (e.g. from telegram-bot) — user_id must be in the body
       userId = params.user_id;
       if (!userId) {
         return new Response(JSON.stringify({ error: "user_id obrigatório para chamadas internas" }), {
@@ -92,7 +111,6 @@ Deno.serve(async (req) => {
         });
       }
     } else {
-      // Normal user auth via JWT
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -116,7 +134,13 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case "catalog": {
-        result = await proxyGet(apiKey, "/catalog");
+        const rawResult = await proxyGet(apiKey, "/catalog");
+        // Map v2 format to v1-compatible format
+        if (rawResult?.success && rawResult.data) {
+          result = { ...rawResult, data: mapCatalogV2toV1(rawResult.data) };
+        } else {
+          result = rawResult;
+        }
         break;
       }
 
@@ -138,18 +162,15 @@ Deno.serve(async (req) => {
       }
 
       case "order-status": {
-        // Check status of a specific order by external_id and update local DB
         const { external_id } = params;
         if (!external_id) throw new Error("external_id é obrigatório");
 
-        // Find order in API
-        // Search across multiple pages with higher limit
         let order = null;
         for (let page = 1; page <= 3; page++) {
           const ordersResp = await proxyGet(apiKey, `/me/orders?page=${page}&limit=200`);
           if (!ordersResp?.success) break;
           const orders = Array.isArray(ordersResp.data) ? ordersResp.data : ordersResp.data?.data || [];
-          order = orders.find((o: any) => o._id === external_id);
+          order = orders.find((o: any) => o._id === external_id || o.id === external_id);
           if (order || orders.length < 200) break;
         }
 
@@ -158,12 +179,10 @@ Deno.serve(async (req) => {
           break;
         }
 
-        // Map API status to local status
         const localStatus = (order.status === "feita" || order.status === "completed") ? "completed"
-          : order.status === "falha" ? "falha"
+          : (order.status === "falha" || order.status === "cancelada" || order.status === "expirada") ? "falha"
           : "pending";
 
-        // Update local DB
         const updatePayload: Record<string, unknown> = { status: localStatus };
         if (localStatus === "completed") {
           updatePayload.completed_at = new Date().toISOString();
@@ -181,74 +200,92 @@ Deno.serve(async (req) => {
         const { phoneNumber, carrierId } = params;
         if (!phoneNumber) throw new Error("phoneNumber é obrigatório");
 
-        // Resolve carrierId: if it's a UUID (from local DB), find the API carrierId via catalog
-        let resolvedCarrierId = carrierId;
-        const isUuidCheck = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-        if (carrierId && isUuidCheck(carrierId)) {
+        // v2 uses carrierName (string) instead of carrierId
+        let carrierName = carrierId || undefined;
+        if (carrierId && isUuid(carrierId)) {
           try {
             const { data: opData } = await adminClient.from("operadoras").select("nome").eq("id", carrierId).single();
-            if (opData?.nome) {
-              const catResp = await proxyGet(apiKey, "/catalog");
-              if (catResp?.success && catResp.data) {
-                const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-                const matched = catResp.data.find((c: any) => norm(c.name) === norm(opData.nome));
-                if (matched) resolvedCarrierId = matched.carrierId;
-              }
-            }
+            if (opData?.nome) carrierName = normalize(opData.nome);
           } catch { /* fallback to original */ }
+        } else if (carrierId) {
+          // Already a string name, normalize it
+          carrierName = normalize(carrierId);
         }
 
         result = await proxyPost(apiKey, "/utils/check-phone", {
           phoneNumber,
-          carrierId: resolvedCarrierId || undefined,
+          carrierName: carrierName || undefined,
         });
         break;
       }
 
       case "query-operator": {
+        // v2: use native /detect-operator endpoint
         const { phoneNumber: qPhone } = params;
         if (!qPhone) throw new Error("phoneNumber é obrigatório");
 
-        // Get consulta operadora URL and Key from system_config
-        const { data: consultaUrl } = await adminClient
-          .from("system_config")
-          .select("value")
-          .eq("key", "consultaOperadoraURL")
-          .single();
-        const { data: consultaKey } = await adminClient
-          .from("system_config")
-          .select("value")
-          .eq("key", "consultaOperadoraKey")
-          .single();
+        const detectResp = await proxyPost(apiKey, "/detect-operator", { phone: qPhone });
+        console.log("detect-operator response:", JSON.stringify(detectResp));
 
-        if (!consultaUrl?.value || !consultaKey?.value) {
-          throw new Error("API de consulta de operadora não configurada");
+        if (detectResp?.success && detectResp.data) {
+          // Map to expected format for frontend compatibility
+          result = {
+            success: true,
+            data: {
+              operator: detectResp.data.operator,
+              enabled: detectResp.data.enabled,
+              carrier: { name: detectResp.data.operator },
+            },
+          };
+        } else {
+          result = detectResp;
         }
-
-        const queryResp = await fetch(consultaUrl.value, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": consultaKey.value,
-          },
-          body: JSON.stringify({ phoneNumber: qPhone }),
-        });
-        const queryData = await queryResp.json();
-        console.log("query-operator response:", JSON.stringify(queryData));
-        result = { success: true, data: queryData };
         break;
       }
 
       case "recharge": {
-        const { carrierId, phoneNumber, valueId, extraData, webhookUrl, saldo_tipo } = params;
+        // Accept both v1 params (carrierId/phoneNumber/valueId) and v2 params (operator/phone/amount)
+        const rawCarrierId = params.operator || params.carrierId;
+        const phoneNumber = params.phone || params.phoneNumber;
+        const rawAmount = params.amount || null;
+        const valueId = params.valueId || null;
+        const { extraData, webhookUrl, saldo_tipo } = params;
         const saldoTipo = saldo_tipo || "revenda";
-        if (!carrierId || !phoneNumber || !valueId) {
-          throw new Error("carrierId, phoneNumber e valueId são obrigatórios");
+
+        if (!rawCarrierId || !phoneNumber) {
+          throw new Error("operator/carrierId e phone/phoneNumber são obrigatórios");
         }
 
-        // Helper functions
-        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-        const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+        // Resolve operator name and local operadora UUID
+        let resolvedOperator = rawCarrierId;
+        let operadoraId: string = rawCarrierId;
+
+        if (isUuid(rawCarrierId)) {
+          operadoraId = rawCarrierId;
+          try {
+            const { data: opData } = await adminClient.from("operadoras").select("nome").eq("id", rawCarrierId).single();
+            if (opData?.nome) resolvedOperator = normalize(opData.nome);
+          } catch { /* fallback */ }
+        } else {
+          // String operator name — find local operadora UUID
+          const { data: allOps } = await adminClient.from("operadoras").select("id, nome").eq("ativo", true);
+          if (allOps?.length) {
+            const matched = allOps.find((op: any) => normalize(op.nome) === normalize(rawCarrierId));
+            if (matched) operadoraId = matched.id;
+          }
+        }
+
+        // Resolve amount (face value)
+        let resolvedAmount = rawAmount ? Number(rawAmount) : 0;
+        if (!resolvedAmount && valueId) {
+          // Extract from synthetic valueId format: "operator_amount" or "uuid_amount"
+          const match = String(valueId).match(/_(\d+(?:\.\d+)?)$/);
+          if (match) resolvedAmount = Number(match[1]);
+        }
+
+        if (!resolvedAmount) throw new Error("amount ou valueId é obrigatório");
+
+        console.log(`recharge: operator=${resolvedOperator} operadoraId=${operadoraId} amount=${resolvedAmount} phone=${phoneNumber}`);
 
         // Determine user role
         const { data: roleData } = await adminClient
@@ -258,7 +295,7 @@ Deno.serve(async (req) => {
           .maybeSingle();
         const userRole = roleData?.role || "cliente";
 
-        // Get the user's reseller_id if cliente
+        // Get reseller_id if cliente
         let resellerId: string | null = null;
         if (userRole === "cliente") {
           const { data: profileData } = await adminClient
@@ -269,7 +306,7 @@ Deno.serve(async (req) => {
           resellerId = profileData?.reseller_id || null;
         }
 
-        // Check user balance locally first
+        // Check user balance locally
         const { data: saldoData } = await adminClient
           .from("saldos")
           .select("valor")
@@ -279,105 +316,29 @@ Deno.serve(async (req) => {
 
         const userBalance = Number(saldoData?.valor) || 0;
 
-        // Get API catalog
+        // Get API catalog to find cost
         const catalogResp = await proxyGet(apiKey, "/catalog");
-
-        // Resolve carrierId: if UUID (from local DB), convert to API carrierId
-        let resolvedCarrierId = carrierId;
-        let operadoraId: string = carrierId; // local DB operadora UUID
-        
-        if (isUuid(carrierId)) {
-          // carrierId is a local UUID - resolve to API carrierId via name matching
-          operadoraId = carrierId;
-          try {
-            const { data: opData } = await adminClient.from("operadoras").select("nome").eq("id", carrierId).single();
-            if (opData?.nome && catalogResp?.success && catalogResp.data) {
-              const matched = catalogResp.data.find((c: any) => normalize(c.name) === normalize(opData.nome));
-              if (matched) resolvedCarrierId = matched.carrierId;
-            }
-          } catch { /* fallback to original */ }
-        } else {
-          // carrierId is already an API carrierId - find local operadora UUID
-          const { data: allOps } = await adminClient.from("operadoras").select("id, nome").eq("ativo", true);
-          if (allOps && allOps.length > 0) {
-            let carrierName = carrierId;
-            if (catalogResp?.success && catalogResp.data) {
-              const matchedCarrier = catalogResp.data.find((c: any) => c.carrierId === carrierId);
-              if (matchedCarrier?.name) carrierName = matchedCarrier.name;
-            }
-            const normalizedTarget = normalize(carrierName);
-            const matched = allOps.find((op: any) => normalize(op.nome) === normalizedTarget);
-            if (matched) operadoraId = matched.id;
-          }
-        }
-
-        console.log(`recharge: carrierId=${carrierId} resolvedCarrierId=${resolvedCarrierId} operadoraId=${operadoraId} valueId=${valueId}`);
-
-        // Get API catalog cost and recharge face value using resolved carrierId
         let apiCost = 0;
-        let catalogValue = 0;
-        let resolvedValueId = valueId; // may need to resolve local valueId to API valueId
-
-        // Extract numeric value from local valueId format (e.g. "uuid_30" → 30)
-        const localValueMatch = valueId.match(/_(\d+)$/);
-        const localFaceValue = localValueMatch ? Number(localValueMatch[1]) : 0;
+        let catalogValue = resolvedAmount;
 
         if (catalogResp?.success && catalogResp.data) {
-          for (const carrier of catalogResp.data) {
-            if (carrier.carrierId === resolvedCarrierId) {
-              // First try exact valueId match
-              let valueObj = carrier.values?.find((v: any) => v.valueId === valueId);
-
-              // If not found and valueId looks local (contains uuid), match by face value
-              if (!valueObj && localFaceValue > 0 && carrier.values) {
-                valueObj = carrier.values.find((v: any) => {
-                  const fv = Number(v.value) || Number(v.faceValue) || Number(v.amount) || Number(v.rechargeValue) || 0;
-                  return fv === localFaceValue;
-                });
-                // Also try matching by cost label
-                if (!valueObj) {
-                  valueObj = carrier.values.find((v: any) => {
-                    const label = String(v.label || "").replace(/,/g, ".");
-                    const nums = label.match(/\d+(?:\.\d{1,2})?/g);
-                    if (!nums?.length) return false;
-                    return nums.some((n: string) => Number(n) === localFaceValue);
-                  });
-                }
-                if (valueObj) {
-                  resolvedValueId = valueObj.valueId;
-                  console.log(`Resolved local valueId ${valueId} → API valueId ${resolvedValueId} (face value: ${localFaceValue})`);
-                }
-              }
-
-              if (valueObj) {
-                apiCost = Number(valueObj.cost) || 0;
-                catalogValue =
-                  (Number(valueObj?.value) > 0 ? Number(valueObj.value) : 0) ||
-                  (Number(valueObj?.faceValue) > 0 ? Number(valueObj.faceValue) : 0) ||
-                  (Number(valueObj?.amount) > 0 ? Number(valueObj.amount) : 0) ||
-                  (Number(valueObj?.rechargeValue) > 0 ? Number(valueObj.rechargeValue) : 0) ||
-                  (() => {
-                    const label = String(valueObj?.label || "").replace(/,/g, ".");
-                    const nums = label.match(/\d+(?:\.\d{1,2})?/g);
-                    if (!nums?.length) return Number(valueObj?.cost) || 0;
-                    const parsed = Number(nums[nums.length - 1]);
-                    return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(valueObj?.cost) || 0;
-                  })();
-              }
-              break;
+          const carrier = catalogResp.data.find((c: any) => normalize(c.operator) === normalize(resolvedOperator));
+          if (carrier) {
+            const val = carrier.values?.find((v: any) => Number(v.amount) === resolvedAmount);
+            if (val) {
+              apiCost = Number(val.cost) || 0;
+              catalogValue = Number(val.amount) || resolvedAmount;
             }
           }
         }
 
         if (apiCost <= 0) throw new Error("Valor não encontrado no catálogo");
 
-        // Determine the actual cost to charge the user based on their role's pricing rules
-        // First try role-specific rules, then ALWAYS fallback to global pricing
-        let chargedCost = apiCost; // default to API cost
+        // Determine the actual cost to charge the user based on pricing rules
+        let chargedCost = apiCost;
         let pricingSource = "api_default";
         let pricingRuleDetails: { tipo_regra: string; regra_valor: number; custo: number } | null = null;
 
-        // Helper: get global pricing rule
         const getGlobalRule = async () => {
           const { data: globalRule } = await adminClient
             .from("pricing_rules")
@@ -428,7 +389,6 @@ Deno.serve(async (req) => {
             if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
           }
         } else {
-          // User without specific role or cliente without reseller — check own reseller rules first
           const { data: ownRule } = await adminClient
             .from("reseller_pricing_rules")
             .select("*")
@@ -451,13 +411,12 @@ Deno.serve(async (req) => {
 
         if (userBalance < chargedCost) throw new Error("Saldo insuficiente");
 
-        // Create recharge via API
+        // Create recharge via v2 API
         const rechargeBody: Record<string, unknown> = {
-          carrierId: resolvedCarrierId,
-          phoneNumber,
-          valueId: resolvedValueId,
+          operator: resolvedOperator,
+          phone: phoneNumber,
+          amount: resolvedAmount,
         };
-        if (extraData) rechargeBody.extraData = extraData;
         if (webhookUrl) rechargeBody.webhookUrl = webhookUrl;
 
         let rechargeResult = await proxyPost(apiKey, "/recharges", rechargeBody);
@@ -466,7 +425,7 @@ Deno.serve(async (req) => {
 
         if (!rechargeResult?.success) {
           const errMsg = rechargeResult?.message || rechargeResult?.error || "Erro ao criar recarga na API";
-          console.error(`recharge FAILED: userId=${userId} phone=${phoneNumber} carrier=${carrierId} value=${catalogValue} cost=${chargedCost} error="${errMsg}"`);
+          console.error(`recharge FAILED: userId=${userId} phone=${phoneNumber} operator=${resolvedOperator} amount=${resolvedAmount} cost=${chargedCost} error="${errMsg}"`);
 
           // Alert admins when external API credit limit is exceeded
           const lowerErr = errMsg.toLowerCase();
@@ -483,7 +442,6 @@ Deno.serve(async (req) => {
                 amount: catalogValue,
               });
 
-              // Notify master admin via Telegram + Push
               const baseUrl = Deno.env.get("SUPABASE_URL")!;
               const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
               const authH = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
@@ -491,7 +449,6 @@ Deno.serve(async (req) => {
               const MASTER_TELEGRAM_ID = 1901426549;
               const alertMsg = `⚠️ <b>ALERTA CRÍTICO</b>\n\nSaldo na API de recargas baixo/esgotado.\n\n<b>Erro:</b> ${errMsg}\n\nRecarregue o saldo no provedor para evitar falhas nas recargas.`;
 
-              // Telegram notification to master admin
               fetch(`${baseUrl}/functions/v1/telegram-notify`, {
                 method: "POST", headers: authH,
                 body: JSON.stringify({
@@ -501,7 +458,6 @@ Deno.serve(async (req) => {
                 }),
               }).catch(() => {});
 
-              // Push notification only to master admin (PWA)
               const MASTER_ADMIN_ID = "f5501acc-79f3-460f-bc3e-493280ea84f0";
               fetch(`${baseUrl}/functions/v1/send-push`, {
                 method: "POST", headers: authH,
@@ -521,7 +477,7 @@ Deno.serve(async (req) => {
 
         // Server-side polling: try to get final status before returning
         const orderData0 = rechargeResult.data || {};
-        const extId = orderData0._id || orderData0.id || orderData0.orderId || rechargeResult._id || null;
+        const extId = orderData0.id || orderData0._id || orderData0.orderId || null;
         if (extId && orderData0.status !== "feita" && orderData0.status !== "completed") {
           const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
           for (let attempt = 0; attempt < 3; attempt++) {
@@ -530,13 +486,13 @@ Deno.serve(async (req) => {
               const pollResp = await proxyGet(apiKey, `/me/orders?page=1&limit=50`);
               if (pollResp?.success) {
                 const pollOrders = Array.isArray(pollResp.data) ? pollResp.data : pollResp.data?.data || [];
-                const found = pollOrders.find((o: any) => o._id === extId);
+                const found = pollOrders.find((o: any) => o._id === extId || o.id === extId);
                 if (found && (found.status === "feita" || found.status === "completed")) {
                   rechargeResult = { ...rechargeResult, data: { ...rechargeResult.data, ...found } };
                   console.log(`recharge polling: found completed on attempt ${attempt + 1}`);
                   break;
                 }
-                if (found && (found.status === "falha" || found.status === "cancelada")) {
+                if (found && (found.status === "falha" || found.status === "cancelada" || found.status === "expirada")) {
                   rechargeResult = { ...rechargeResult, data: { ...rechargeResult.data, ...found } };
                   console.log(`recharge polling: found failed on attempt ${attempt + 1}`);
                   break;
@@ -546,7 +502,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Deduct balance using the role-specific cost
+        // Deduct balance
         const newBalance = userBalance - chargedCost;
         await adminClient
           .from("saldos")
@@ -556,14 +512,15 @@ Deno.serve(async (req) => {
 
         // Save recarga locally
         const orderData = rechargeResult.data || {};
-        const externalId = orderData._id || orderData.id || orderData.orderId || rechargeResult._id || null;
+        const externalId = orderData.id || orderData._id || orderData.orderId || null;
         console.log("external_id resolved:", externalId, "orderData keys:", Object.keys(orderData));
-        
-        const isCompleted = (orderData.status === "feita" || orderData.status === "concluida");
+
+        const operadoraName = orderData.operator || orderData.carrier?.name || resolvedOperator;
+        const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
         await adminClient.from("recargas").insert({
           user_id: userId,
           telefone: phoneNumber,
-          operadora: orderData.carrier?.name || carrierId,
+          operadora: operadoraName,
           valor: catalogValue,
           custo: chargedCost,
           custo_api: apiCost,
@@ -585,7 +542,7 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 type: "recarga_completed",
                 user_id: userId,
-                data: { telefone: phoneNumber, operadora: orderData.carrier?.name || carrierId, valor_recarga: catalogValue, custo: chargedCost, novo_saldo: newBalance, recarga_id: externalId || "" },
+                data: { telefone: phoneNumber, operadora: operadoraName, valor_recarga: catalogValue, custo: chargedCost, novo_saldo: newBalance, recarga_id: externalId || "" },
               }),
             });
           } catch { /* ignore */ }
@@ -595,6 +552,10 @@ Deno.serve(async (req) => {
           success: true,
           data: {
             ...orderData,
+            // Map v2 response fields to v1-compatible for frontend
+            _id: externalId,
+            carrier: { name: operadoraName },
+            value: catalogValue,
             localBalance: newBalance,
             cost: chargedCost,
           },
