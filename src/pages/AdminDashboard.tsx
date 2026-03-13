@@ -1379,7 +1379,7 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-2.5 text-right">
                           {(r.status === "completed" || r.status === "concluida") ? (
-                            <span className="font-mono font-bold text-success tabular-nums">+{fmt(lucro)}</span>
+                            <span className="font-mono font-bold text-success tabular-nums">+<AnimatedCounter value={lucro} prefix="R$&nbsp;" duration={600} /></span>
                           ) : (
                             <span className="text-muted-foreground text-[11px]">—</span>
                           )}
