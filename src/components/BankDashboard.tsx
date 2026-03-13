@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { AnimatedCounter, AnimatedInt } from "./AnimatedCounter";
+import { Currency, IntVal, KpiCard } from "@/components/ui";
 import { AnimatedIcon } from "./AnimatedIcon";
 import { SkeletonValue } from "./Skeleton";
 import {
