@@ -73,6 +73,7 @@ export default function AdminDashboard() {
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
+  const [interruptedBroadcasts, setInterruptedBroadcasts] = useState<any[]>([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [showLucroModal, setShowLucroModal] = useState(false);
 
@@ -843,7 +844,6 @@ export default function AdminDashboard() {
       .order('created_at', { ascending: false })
       .limit(20);
     if (data) {
-      // Get progress status for each
       const ids = data.map((n: any) => n.id);
       const { data: progresses } = await (supabase.from('broadcast_progress' as any) as any)
         .select('notification_id, status')
@@ -854,6 +854,16 @@ export default function AdminDashboard() {
       progresses?.forEach((p: any) => { if (!statusMap[p.notification_id]) statusMap[p.notification_id] = p.status; });
       
       setBroadcastHistory(data.map((n: any) => ({ ...n, status: statusMap[n.id] || 'pending' })));
+    }
+
+    // Fetch interrupted broadcasts
+    const { data: interrupted } = await (supabase.from('broadcast_progress' as any) as any)
+      .select('*, notification:notifications(title)')
+      .in('status', ['cancelled', 'failed'])
+      .order('created_at', { ascending: false });
+    if (interrupted) {
+      const incomplete = interrupted.filter((b: any) => (b.sent_count + b.failed_count) < b.total_users);
+      setInterruptedBroadcasts(incomplete);
     }
   }, []);
 
@@ -3428,6 +3438,96 @@ export default function AdminDashboard() {
               />
             )}
 
+            {/* Broadcasts Interrompidos */}
+            {interruptedBroadcasts.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-orange-400" />
+                  <h3 className="text-sm font-bold text-foreground">Broadcasts Interrompidos</h3>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 font-semibold">{interruptedBroadcasts.length}</span>
+                </div>
+                {interruptedBroadcasts.map((b: any) => {
+                  const pct = b.total_users > 0 ? Math.round(((b.sent_count + b.failed_count) / b.total_users) * 100) : 0;
+                  const remaining = b.total_users - (b.sent_count + b.failed_count);
+                  const title = b.notification?.title || 'Broadcast';
+                  return (
+                    <div key={b.id} className="glass-card rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Megaphone className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="font-semibold text-sm text-foreground truncate">{title}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${b.status === 'cancelled' ? 'bg-orange-500/15 text-orange-400' : 'bg-destructive/15 text-destructive'}`}>
+                            {b.status === 'cancelled' ? '⚠️ Interrompido' : '❌ Falhou'}
+                          </span>
+                          <button
+                            onClick={async () => {
+                              setBroadcastTitle(title);
+                              try {
+                                const { data: result, error } = await supabase.functions.invoke('send-broadcast', { body: { resume_progress_id: b.id } });
+                                if (error) throw error;
+                                if (result?.progress_id) { setBroadcastProgressId(result.progress_id); toast.success('Broadcast retomado!'); }
+                                fetchBroadcastHistory();
+                              } catch (err: any) { toast.error('Erro ao retomar: ' + (err.message || 'Erro')); }
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-primary/15 text-primary hover:bg-primary/25 transition-colors font-medium"
+                          >
+                            <RotateCcw className="w-3 h-3" /> Retomar
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!await confirm('Excluir este broadcast interrompido?')) return;
+                              await (supabase.from('broadcast_progress' as any) as any).delete().eq('id', b.id);
+                              toast.success('Excluído');
+                              fetchBroadcastHistory();
+                            }}
+                            className="p-1 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>Progresso</span>
+                          <span>{pct}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-orange-500 to-destructive transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        <div className="text-center p-1.5 rounded-lg bg-green-500/10">
+                          <div className="text-sm font-bold text-green-500">{b.sent_count}</div>
+                          <div className="text-[9px] text-muted-foreground">Enviados</div>
+                        </div>
+                        <div className="text-center p-1.5 rounded-lg bg-red-500/10">
+                          <div className="text-sm font-bold text-red-500">{b.failed_count}</div>
+                          <div className="text-[9px] text-muted-foreground">Falhas</div>
+                        </div>
+                        <div className="text-center p-1.5 rounded-lg bg-orange-500/10">
+                          <div className="text-sm font-bold text-orange-500">{b.blocked_count}</div>
+                          <div className="text-[9px] text-muted-foreground">Bloqueados</div>
+                        </div>
+                        <div className="text-center p-1.5 rounded-lg bg-primary/10">
+                          <div className="text-sm font-bold text-primary">{b.total_users}</div>
+                          <div className="text-[9px] text-muted-foreground">Total</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Restantes: {remaining} usuários</span>
+                        <span>Batch {b.current_batch}/{b.total_batches}</span>
+                      </div>
+                      {b.error_message && (
+                        <div className="text-[11px] p-2 rounded-lg bg-destructive/10 text-destructive">{b.error_message}</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* History */}
             <div>
               <h3 className="text-lg font-bold text-foreground mb-4">Histórico de Notificações</h3>
@@ -3449,7 +3549,7 @@ export default function AdminDashboard() {
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-foreground">{h.title}</h4>
                             {h.message && (
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">{h.message}</p>
+                              <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{h.message}</p>
                             )}
                           </div>
                         </div>
