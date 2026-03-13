@@ -815,7 +815,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <AvatarDisplay />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{user?.email}</p>
-                  <p className="text-xs text-success font-medium">{loading ? <SkeletonValue width="w-14" className="h-3" /> : fmt(saldo)}</p>
+                  <p className="text-xs text-success font-medium">{loading ? <SkeletonValue width="w-14" className="h-3" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}</p>
                 </div>
               </div>
             </div>
