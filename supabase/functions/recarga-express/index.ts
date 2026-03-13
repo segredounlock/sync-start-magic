@@ -78,31 +78,65 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const token = authHeader.replace("Bearer ", "");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const isServiceRole = token === serviceRoleKey;
-
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       serviceRoleKey
     );
 
-    // Parse body first (needed for both service role and normal auth)
+    // Parse body first (needed for routing and auth decisions)
     const body = await req.json();
     const { action, ...params } = body;
 
+    // Auth
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.replace("Bearer ", "") : null;
+    const isServiceRole = token === serviceRoleKey;
+    const isPublicRecharge = action === "public-recharge";
+
     let userId: string;
 
-    if (isServiceRole) {
+    if (isPublicRecharge) {
+      // Public recharge doesn't require JWT — uses reseller_id from body
+      const resellerId = params.reseller_id;
+      if (!resellerId) {
+        return new Response(JSON.stringify({ error: "reseller_id obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Validate reseller exists and is active
+      const { data: resellerProfile } = await adminClient
+        .from("profiles")
+        .select("id, active")
+        .eq("id", resellerId)
+        .single();
+      if (!resellerProfile?.active) {
+        return new Response(JSON.stringify({ error: "Revendedor inativo ou não encontrado" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Validate reseller role
+      const { data: roleCheck } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", resellerId)
+        .in("role", ["revendedor", "admin"])
+        .maybeSingle();
+      if (!roleCheck) {
+        return new Response(JSON.stringify({ error: "Usuário não é revendedor" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = resellerId;
+    } else if (!token) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } else if (isServiceRole) {
       userId = params.user_id;
       if (!userId) {
         return new Response(JSON.stringify({ error: "user_id obrigatório para chamadas internas" }), {
@@ -114,7 +148,7 @@ Deno.serve(async (req) => {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
+        { global: { headers: { Authorization: authHeader! } } }
       );
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user?.id) {
@@ -594,6 +628,176 @@ Deno.serve(async (req) => {
             value: catalogValue,
             localBalance: newBalance,
             cost: chargedCost,
+          },
+        };
+        break;
+      }
+
+      case "public-recharge": {
+        // Public recharge: reuses the "recharge" logic but userId is already set to reseller_id
+        // We redirect to the recharge handler by re-dispatching with adjusted params
+        const prOperator = params.operator;
+        const prPhone = params.phone;
+        const prAmount = params.amount ? Number(params.amount) : 0;
+
+        if (!prOperator || !prPhone || !prAmount) {
+          throw new Error("operator, phone e amount são obrigatórios");
+        }
+
+        // Resolve operator name and local operadora UUID
+        let prResolvedOperator = prOperator;
+        let prOperadoraId: string = prOperator;
+
+        if (isUuid(prOperator)) {
+          prOperadoraId = prOperator;
+          try {
+            const { data: opData } = await adminClient.from("operadoras").select("nome").eq("id", prOperator).single();
+            if (opData?.nome) prResolvedOperator = normalize(opData.nome);
+          } catch { /* fallback */ }
+        } else {
+          const { data: allOps } = await adminClient.from("operadoras").select("id, nome").eq("ativo", true);
+          if (allOps?.length) {
+            const matched = allOps.find((op: any) => normalize(op.nome) === normalize(prOperator));
+            if (matched) prOperadoraId = matched.id;
+          }
+        }
+
+        // Get API catalog cost
+        const prCatalogResp = await proxyGet(apiKey, "/catalog");
+        let prApiCost = 0;
+        if (prCatalogResp?.success && prCatalogResp.data) {
+          const carrier = prCatalogResp.data.find((c: any) => normalize(c.operator) === normalize(prResolvedOperator));
+          if (carrier) {
+            const val = carrier.values?.find((v: any) => Number(v.amount) === prAmount);
+            if (val) prApiCost = Number(val.cost) || 0;
+          }
+        }
+        if (prApiCost <= 0) throw new Error("Valor não encontrado no catálogo");
+
+        // Resolve reseller pricing
+        let prChargedCost = prApiCost;
+        const { data: resellerRule } = await adminClient
+          .from("reseller_pricing_rules")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("operadora_id", prOperadoraId)
+          .eq("valor_recarga", prAmount)
+          .maybeSingle();
+        if (resellerRule) {
+          prChargedCost = resellerRule.tipo_regra === "fixo"
+            ? Number(resellerRule.regra_valor)
+            : Number(resellerRule.custo) * (1 + Number(resellerRule.regra_valor) / 100);
+        } else {
+          const { data: globalRule } = await adminClient
+            .from("pricing_rules")
+            .select("*")
+            .eq("operadora_id", prOperadoraId)
+            .eq("valor_recarga", prAmount)
+            .maybeSingle();
+          if (globalRule) {
+            prChargedCost = globalRule.tipo_regra === "fixo"
+              ? Number(globalRule.regra_valor)
+              : Number(globalRule.custo) * (1 + Number(globalRule.regra_valor) / 100);
+          }
+        }
+
+        // Check reseller balance
+        const { data: prSaldoData } = await adminClient
+          .from("saldos")
+          .select("valor")
+          .eq("user_id", userId)
+          .eq("tipo", "revenda")
+          .single();
+        const prBalance = Number(prSaldoData?.valor) || 0;
+
+        console.log(`public-recharge: reseller=${userId} operator=${prResolvedOperator} amount=${prAmount} apiCost=${prApiCost} chargedCost=${prChargedCost} balance=${prBalance}`);
+
+        if (prBalance < prChargedCost) throw new Error("Saldo insuficiente do revendedor");
+
+        // Execute recharge via API
+        const prRechargeBody: Record<string, unknown> = {
+          operator: prResolvedOperator,
+          phone: prPhone,
+          amount: prAmount,
+        };
+        let prRechargeResult = await proxyPost(apiKey, "/recharges", prRechargeBody);
+        console.log("public-recharge API response:", JSON.stringify(prRechargeResult));
+
+        if (!prRechargeResult?.success) {
+          throw new Error(prRechargeResult?.message || prRechargeResult?.error || "Erro ao criar recarga na API");
+        }
+
+        // Server-side polling
+        const prOrderData0 = prRechargeResult.data || {};
+        const prExtId = prOrderData0.id || prOrderData0._id || prOrderData0.orderId || null;
+        if (prExtId && prOrderData0.status !== "feita" && prOrderData0.status !== "completed") {
+          const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+          for (let attempt = 0; attempt < 3; attempt++) {
+            await sleep(5000);
+            try {
+              const pollResp = await proxyGet(apiKey, `/me/orders?page=1&limit=50`);
+              if (pollResp?.success) {
+                const pollOrders = Array.isArray(pollResp.data) ? pollResp.data : pollResp.data?.data || [];
+                const found = pollOrders.find((o: any) => o._id === prExtId || o.id === prExtId);
+                if (found && (found.status === "feita" || found.status === "completed")) {
+                  prRechargeResult = { ...prRechargeResult, data: { ...prRechargeResult.data, ...found } };
+                  break;
+                }
+                if (found && (found.status === "falha" || found.status === "cancelada" || found.status === "expirada")) {
+                  prRechargeResult = { ...prRechargeResult, data: { ...prRechargeResult.data, ...found } };
+                  break;
+                }
+              }
+            } catch { /* continue */ }
+          }
+        }
+
+        // Deduct balance
+        const prNewBalance = prBalance - prChargedCost;
+        await adminClient.from("saldos").update({ valor: prNewBalance }).eq("user_id", userId).eq("tipo", "revenda");
+
+        // Save recarga
+        const prOrderData = prRechargeResult.data || {};
+        const prExternalId = prOrderData.id || prOrderData._id || prOrderData.orderId || null;
+        const prOperadoraName = prOrderData.operator || prResolvedOperator;
+        const prIsCompleted = (prOrderData.status === "feita" || prOrderData.status === "concluida" || prOrderData.status === "completed");
+        await adminClient.from("recargas").insert({
+          user_id: userId,
+          telefone: prPhone,
+          operadora: prOperadoraName,
+          valor: prAmount,
+          custo: prChargedCost,
+          custo_api: prApiCost,
+          status: prIsCompleted ? "completed" : "pending",
+          external_id: prExternalId,
+          completed_at: prIsCompleted ? new Date().toISOString() : null,
+        });
+
+        // Telegram notification
+        if (prIsCompleted) {
+          try {
+            const notifyUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/telegram-notify`;
+            await fetch(notifyUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+              body: JSON.stringify({
+                type: "recarga_completed",
+                user_id: userId,
+                data: { telefone: prPhone, operadora: prOperadoraName, valor_recarga: prAmount, custo: prChargedCost, novo_saldo: prNewBalance },
+              }),
+            });
+          } catch { /* ignore */ }
+        }
+
+        result = {
+          success: true,
+          data: {
+            ...prOrderData,
+            _id: prExternalId,
+            carrier: { name: prOperadoraName },
+            value: prAmount,
+            localBalance: prNewBalance,
+            cost: prChargedCost,
           },
         };
         break;
