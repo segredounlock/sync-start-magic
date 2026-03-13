@@ -388,7 +388,37 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     return () => { cancelled = true; clearTimeout(timer); };
   }, [tab, telefone]);
 
-   // Auto-detect removed — user selects operator manually, then clicks "Verificar"
+   // Auto-detect operator when phone has 11 digits
+   useEffect(() => {
+     const digits = telefone.replace(/\D/g, "");
+     if (digits.length !== 11 || !catalog.length) return;
+     if (lastDetectedPhoneRef.current === digits) return;
+     
+     const timer = setTimeout(async () => {
+       if (lastDetectedPhoneRef.current === digits) return;
+       lastDetectedPhoneRef.current = digits;
+       setDetectingOperator(true);
+       try {
+         const queryResp = await callApi("query-operator", { phoneNumber: digits });
+         if (queryResp?.success && queryResp.data) {
+           const operatorName = queryResp.data.carrier?.name || queryResp.data.operator || "";
+           if (operatorName) {
+             const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+             const matched = catalog.find(c => norm(c.name).includes(norm(operatorName)) || norm(operatorName).includes(norm(c.name)));
+             if (matched) {
+               setSelectedCarrier(matched);
+               setDetectedOperatorName(matched.name);
+               appToast.success(`Operadora detectada: ${matched.name}`);
+             }
+           }
+         }
+       } catch (err: any) {
+         console.warn("Auto-detect operator failed:", err.message);
+       }
+       setDetectingOperator(false);
+     }, 500);
+     return () => clearTimeout(timer);
+   }, [telefone, catalog]);
 
   const formatPhoneDisplay = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 11);
