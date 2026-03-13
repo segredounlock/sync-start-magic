@@ -1192,11 +1192,14 @@ async function handleCallback(supabase: any, token: string, callback: any) {
 
   // Recarga: value selected → ask for phone number
   if (data.startsWith("rec_val_")) {
-    // Format: rec_val_{carrierId}_{valueId}_{cost}
-    const parts = data.replace("rec_val_", "").split("_");
-    const carrierId = parts[0];
-    const valueId = parts[1];
-    const cost = parseFloat(parts[2]);
+    // Format: rec_val_{carrierId}_{valueId}|{cost}
+    const payload = data.replace("rec_val_", "");
+    const pipeIdx = payload.lastIndexOf("|");
+    const cost = pipeIdx >= 0 ? parseFloat(payload.slice(pipeIdx + 1)) : 0;
+    const prefix = pipeIdx >= 0 ? payload.slice(0, pipeIdx) : payload;
+    const firstUnderscore = prefix.indexOf("_");
+    const carrierId = prefix.slice(0, firstUnderscore);
+    const valueId = prefix.slice(firstUnderscore + 1);
 
     // Get carrier name and API cost from catalog
     const catalog = await fetchCatalog(supabase);
