@@ -1700,7 +1700,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-center">
                           <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Vendas</p>
-                          <p className="text-[11px] font-bold font-mono text-success">{fmt(totalVendido)}</p>
+                          <p className="text-[11px] font-bold font-mono text-success"><AnimatedCounter value={totalVendido} prefix="R$&nbsp;" duration={600} /></p>
                         </div>
                         <div className="text-center">
                           <p className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold">Recs</p>
