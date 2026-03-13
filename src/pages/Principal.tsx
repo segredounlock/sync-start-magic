@@ -2247,7 +2247,10 @@ export default function Principal() {
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                   <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
-                                  <span className="font-bold font-mono text-sm text-foreground">{fmt(safeValor(r))}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold font-mono text-sm text-foreground">{fmt(safeValor(r))}</span>
+                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -2277,6 +2280,9 @@ export default function Principal() {
                                       (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
                                       r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
                                     }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status}</span>
+                                  </td>
+                                  <td className="px-1 py-2">
+                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                   </td>
                                 </tr>
                               ))}
@@ -2308,7 +2314,10 @@ export default function Principal() {
                               </div>
                               <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                 <span className="text-[10px] text-muted-foreground">{fmtDate(t.created_at)}</span>
-                                <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}>{fmt(t.amount)}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}>{fmt(t.amount)}</span>
+                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${statusLabel}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                </div>
                               </div>
                             </div>
                           );
@@ -2336,6 +2345,9 @@ export default function Principal() {
                                     (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" :
                                     t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
                                   }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status}</span>
+                                </td>
+                                <td className="px-1 py-2">
+                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type} | ${fmt(t.amount)} | ${(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "expired" ? "Expirado" : t.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                 </td>
                               </tr>
                             ))}
