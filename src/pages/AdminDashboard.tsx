@@ -73,6 +73,7 @@ export default function AdminDashboard() {
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
+  const [interruptedBroadcasts, setInterruptedBroadcasts] = useState<any[]>([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [showLucroModal, setShowLucroModal] = useState(false);
 
