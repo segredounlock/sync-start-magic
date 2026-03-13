@@ -3636,7 +3636,7 @@ export default function AdminDashboard() {
                   <div className={`p-3 rounded-xl mb-4 ${analytics.lucro >= 0 ? "bg-success/10 border border-success/20" : "bg-destructive/10 border border-destructive/20"}`}>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro Total do Período</p>
                     <p className={`text-xl font-extrabold ${analytics.lucro >= 0 ? "text-success" : "text-destructive"}`}>
-                      {analytics.lucro >= 0 ? "+" : ""}R$ {analytics.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      {analytics.lucro >= 0 ? "+" : ""}<AnimatedCounter value={Math.abs(analytics.lucro)} prefix="R$&nbsp;" />
                     </p>
                   </div>
 
