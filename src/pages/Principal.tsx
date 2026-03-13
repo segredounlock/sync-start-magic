@@ -2316,7 +2316,7 @@ export default function Principal() {
                                 <span className="text-[10px] text-muted-foreground">{fmtDate(t.created_at)}</span>
                                 <div className="flex items-center gap-2">
                                   <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}>{fmt(t.amount)}</span>
-                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${statusLabel}`); appToast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${statusLabel}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                 </div>
                               </div>
                             </div>
