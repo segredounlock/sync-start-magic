@@ -598,6 +598,18 @@ export default function TelegramMiniApp() {
     setCheckingPhone(true);
     setPhoneCheckResult(null);
     try {
+      // Step 1: Validate operator match
+      const { data: valResp } = await supabase.functions.invoke("recarga-express", {
+        body: { action: "validate-operator", phoneNumber: normalizedPhone, carrierId: cId, carrierName: selectedOp?.nome || cId },
+      });
+      if (valResp && !valResp.success && valResp.code === "OPERATOR_MISMATCH") {
+        setPhoneCheckResult({ status: "OPERATOR_MISMATCH", message: valResp.message });
+        tgWebApp?.HapticFeedback?.notificationOccurred("error");
+        setCheckingPhone(false);
+        return;
+      }
+
+      // Step 2: Check blacklist/cooldown
       const { data: resp } = await supabase.functions.invoke("recarga-express", {
         body: { action: "check-phone", phoneNumber: normalizedPhone, carrierId: cId },
       });
