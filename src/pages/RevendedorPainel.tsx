@@ -388,6 +388,24 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     return () => { cancelled = true; clearTimeout(timer); };
   }, [tab, telefone]);
 
+   // Local fallback: detect operator by Brazilian mobile prefix
+   const detectOperatorLocally = useCallback((digits: string): string | null => {
+     if (digits.length !== 11) return null;
+     const prefix = parseInt(digits.substring(2, 6));
+     if ((prefix >= 9611 && prefix <= 9699) || (prefix >= 9100 && prefix <= 9199)) return "claro";
+     if ((prefix >= 9700 && prefix <= 9799) || (prefix >= 9800 && prefix <= 9899)) return "vivo";
+     if ((prefix >= 9900 && prefix <= 9999) || (prefix >= 9200 && prefix <= 9299)) return "tim";
+     if (prefix >= 9300 && prefix <= 9399) return "oi";
+     return null;
+   }, []);
+
+   // Match operator name to catalog entry
+   const matchOperatorToCatalog = useCallback((operatorName: string) => {
+     if (!operatorName || !catalog.length) return null;
+     const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+     return catalog.find(c => norm(c.name).includes(norm(operatorName)) || norm(operatorName).includes(norm(c.name)));
+   }, [catalog]);
+
    // Auto-detect operator when phone has 11 digits
    useEffect(() => {
      const digits = telefone.replace(/\D/g, "");
@@ -398,27 +416,38 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
        if (lastDetectedPhoneRef.current === digits) return;
        lastDetectedPhoneRef.current = digits;
        setDetectingOperator(true);
+       let matched = null;
        try {
          const queryResp = await callApi("query-operator", { phoneNumber: digits });
          if (queryResp?.success && queryResp.data) {
            const operatorName = queryResp.data.carrier?.name || queryResp.data.operator || "";
            if (operatorName) {
-             const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-             const matched = catalog.find(c => norm(c.name).includes(norm(operatorName)) || norm(operatorName).includes(norm(c.name)));
-             if (matched) {
-               setSelectedCarrier(matched);
-               setDetectedOperatorName(matched.name);
-               appToast.success(`Operadora detectada: ${matched.name}`);
-             }
+             matched = matchOperatorToCatalog(operatorName);
            }
          }
        } catch (err: any) {
-         console.warn("Auto-detect operator failed:", err.message);
+         console.warn("Auto-detect operator API failed:", err.message);
+       }
+       // Fallback local if API didn't match
+       if (!matched) {
+         const localName = detectOperatorLocally(digits);
+         if (localName) {
+           matched = matchOperatorToCatalog(localName);
+           if (matched) console.log("Operadora detectada via fallback local:", localName);
+         }
+       }
+       if (matched) {
+         setSelectedCarrier(matched);
+         setDetectedOperatorName(matched.name);
+         appToast.success(`Operadora detectada: ${matched.name}`);
+       } else {
+         setDetectedOperatorName(null);
+         appToast.warning("Não foi possível detectar a operadora automaticamente");
        }
        setDetectingOperator(false);
      }, 500);
      return () => clearTimeout(timer);
-   }, [telefone, catalog, callApi]);
+   }, [telefone, catalog, callApi, matchOperatorToCatalog, detectOperatorLocally]);
 
   const formatPhoneDisplay = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 11);
