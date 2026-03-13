@@ -2127,8 +2127,7 @@ export default function AdminDashboard() {
                 (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
               ).map((t, idx) => {
                 const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
-                const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status;
-                const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                // Status via plugin
                 return (
                   <motion.div key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
                     <div className="flex items-center justify-between mb-2">
