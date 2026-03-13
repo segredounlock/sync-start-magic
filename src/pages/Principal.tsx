@@ -636,13 +636,15 @@ export default function Principal() {
     }
   }, [botStatus.botId, fetchTelegramJson, globalConfig.telegramBotToken]);
 
+  const analyticsLoaded = useRef(false);
+
+  // Light load: profiles, roles, saldos only
   const fetchData = useCallback(async () => {
     await runFetch(async () => {
-      const [roles, profiles, saldos, recData] = await Promise.all([
+      const [roles, profiles, saldos] = await Promise.all([
         fetchAllRows("user_roles", { select: "user_id, role" }),
         fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url, verification_badge" }),
         fetchAllRows("saldos", { select: "user_id, valor", filters: (q: any) => q.eq("tipo", "revenda") }),
-        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
       ]);
 
       setAllUsers((profiles || []).map(p => ({ id: p.id, active: p.active, created_at: p.created_at })));
@@ -673,24 +675,36 @@ export default function Principal() {
       });
 
       setRevendedores(list);
-      setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), custo_api: Number(r.custo_api || 0) })));
 
       // Fetch meuSaldo (admin's own balance)
       if (user?.id) {
         const { data: mySaldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle();
         setMeuSaldo(Number(mySaldo?.valor || 0));
       }
+    });
+  }, [runFetch, user?.id]);
 
-      // Fetch global deposit totals
-      const txRows = await fetchAllRows("transactions", {
-        select: "amount, status, type",
-        filters: (q: any) => q.eq("status", "completed").eq("type", "deposit"),
-      });
+  // Heavy load: recargas + transactions (deferred)
+  const fetchAnalytics = useCallback(async () => {
+    if (analyticsLoaded.current) return;
+    analyticsLoaded.current = true;
+    try {
+      const [recData, txRows] = await Promise.all([
+        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
+        fetchAllRows("transactions", {
+          select: "amount, status, type",
+          filters: (q: any) => q.eq("status", "completed").eq("type", "deposit"),
+        }),
+      ]);
+      setAllRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo), custo_api: Number(r.custo_api || 0) })));
       const deposited = (txRows || []).reduce((s: number, t: any) => s + Number(t.amount), 0);
       setGlobalTxDeposited(deposited);
       setGlobalTxCount((txRows || []).length);
-    });
-  }, [runFetch, user?.id]);
+    } catch (err) {
+      console.error("fetchAnalytics error:", err);
+      analyticsLoaded.current = false;
+    }
+  }, []);
 
   const fetchRevDetail = useCallback(async (rev: Revendedor) => {
     setRevLoading(true);
@@ -731,6 +745,8 @@ export default function Principal() {
   }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  // Load analytics after profiles are ready (deferred)
+  useEffect(() => { if (revendedores.length > 0) fetchAnalytics(); }, [revendedores.length, fetchAnalytics]);
 
   // Realtime: atualiza usuários automaticamente
   useEffect(() => {
@@ -738,10 +754,10 @@ export default function Principal() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saldos' }, () => fetchData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, () => { analyticsLoaded.current = false; fetchAnalytics(); })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [fetchData]);
+  }, [fetchData, fetchAnalytics]);
 
   // Sincroniza selectedRev com a lista atualizada
   useEffect(() => {
