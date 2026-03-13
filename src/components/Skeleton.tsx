@@ -119,7 +119,7 @@ export function SkeletonPricingGrid({ count = 6, className }: SkeletonProps & { 
 
 /** Inline skeleton for values like saldo (replaces "...") */
 export function SkeletonValue({ className, width = "w-16" }: SkeletonProps & { width?: string }) {
-  return <Skeleton className={cn("h-5 inline-block align-middle", width, className)} />;
+  return <Skeleton as="span" className={cn("h-5 inline-block align-middle", width, className)} />;
 }
 
 /** Skeleton for sidebar user card */
