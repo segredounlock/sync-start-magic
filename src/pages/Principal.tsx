@@ -2274,7 +2274,7 @@ export default function Principal() {
                                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground">{fmt(safeValor(r))}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></td>
                                   <td className="px-3 py-2 text-center">
                                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                       (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
