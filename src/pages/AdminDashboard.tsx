@@ -2230,8 +2230,7 @@ export default function AdminDashboard() {
                     {(() => {
                       const t = selectedDeposit;
                       const meta = (t.metadata && typeof t.metadata === "object" && !Array.isArray(t.metadata)) ? t.metadata as Record<string, unknown> : {};
-                      const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status;
-                      const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                      // Status via plugin
                       const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                       const gw = (meta.gateway as string) || t.module || "";
                       const gwLabel: Record<string, string> = {
