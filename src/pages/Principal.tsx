@@ -163,6 +163,7 @@ function TestConsultaButton({ url, apiKey }: { url: string; apiKey: string }) {
 export default function Principal() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isDisabled: isValueDisabled, toggle: toggleDisabledValue } = useDisabledValues();
 
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
