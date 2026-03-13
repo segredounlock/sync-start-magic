@@ -478,6 +478,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     setCheckingPhone(true);
     setPhoneCheckResult(null);
     try {
+      // Step 1: Validate operator match
+      const valResp = await callApi("validate-operator", {
+        phoneNumber: normalizedPhone,
+        carrierId: selectedCarrier.carrierId,
+        carrierName: selectedCarrier.name,
+      });
+      if (valResp && !valResp.success && valResp.code === "OPERATOR_MISMATCH") {
+        setPhoneCheckResult({ status: "OPERATOR_MISMATCH", message: valResp.message });
+        toast.error(valResp.message);
+        setCheckingPhone(false);
+        return;
+      }
+
+      // Step 2: Check blacklist/cooldown
       const resp = await callApi("check-phone", {
         phoneNumber: normalizedPhone,
         carrierId: selectedCarrier.carrierId,
