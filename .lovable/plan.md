@@ -1,40 +1,38 @@
 
 
-## Diagnóstico e Correção
+# Enviar Broadcast - Reconhecimento Automático de Operadora
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Resumo
 
-### Plano
+Vou criar a notificação no banco de dados e disparar o broadcast para **600 usuários registrados** no Telegram com o texto aprovado anteriormente, usando o efeito de confete.
 
-**1. Corrigir o mapeamento de status na sync function**
+## Texto do Broadcast
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+```
+📢 Nova Atualização do Sistema!
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+🔄 Reconhecimento Automático de Operadora
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+Agora ao digitar o número do telefone no painel de recarga, o sistema detecta automaticamente a operadora correta (Claro, Vivo, TIM, Oi) — sem precisar selecionar manualmente!
+
+✅ Detecção instantânea ao digitar o número completo
+✅ Menos erros de operadora divergente
+✅ Mais agilidade nas suas recargas
+
+Atualize e aproveite! 🚀
 ```
 
-**2. Corrigir manualmente o pedido preso**
+**Efeito**: Confete (5046509860389126442)
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+## Passos de implementação
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+1. Inserir a notificação na tabela `notifications` com título, mensagem e efeito de confete
+2. Chamar a Edge Function `send-broadcast` passando o `notification_id` e `include_unregistered: false`
+3. O broadcast será enviado em lotes de 25 mensagens para os 600 usuários registrados
 
-**3. Verificar se há outros pedidos presos**
+## Detalhes técnicos
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+- A Edge Function `send-broadcast` já está implementada e funcional
+- O progresso será rastreado na tabela `broadcast_progress` em tempo real
+- Estimativa: ~26 segundos para enviar todos (600 users / 25 por batch)
 
