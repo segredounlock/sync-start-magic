@@ -62,13 +62,8 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 
   // Loading maintenance status
   if (maintenance === null) return <SplashScreen />;
-
-  // Maintenance ON but user is admin → let through
   if (maintenance && role === "admin") return <>{children}</>;
-
-  // Maintenance ON → show page
-  if (maintenance) return <MaintenancePage />;
-
+  if (maintenance) return <Suspense fallback={<SplashScreen />}><MaintenancePage /></Suspense>;
   return <>{children}</>;
 }
 
