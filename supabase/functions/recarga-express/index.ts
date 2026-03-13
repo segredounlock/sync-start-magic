@@ -548,6 +548,7 @@ Deno.serve(async (req) => {
         // Server-side polling: try to get final status before returning
         const orderData0 = rechargeResult.data || {};
         const extId = orderData0.id || orderData0._id || orderData0.orderId || null;
+        let polledFailed = false;
         if (extId && orderData0.status !== "feita" && orderData0.status !== "completed") {
           const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
           for (let attempt = 0; attempt < 3; attempt++) {
@@ -564,6 +565,7 @@ Deno.serve(async (req) => {
                 }
                 if (found && (found.status === "falha" || found.status === "cancelada" || found.status === "expirada")) {
                   rechargeResult = { ...rechargeResult, data: { ...rechargeResult.data, ...found } };
+                  polledFailed = true;
                   console.log(`recharge polling: found failed on attempt ${attempt + 1}`);
                   break;
                 }
@@ -572,21 +574,30 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Deduct balance
-        const newBalance = userBalance - chargedCost;
-        await adminClient
-          .from("saldos")
-          .update({ valor: newBalance })
-          .eq("user_id", userId)
-          .eq("tipo", saldoTipo);
-
-        // Save recarga locally
+        // Determine final status
         const orderData = rechargeResult.data || {};
         const externalId = orderData.id || orderData._id || orderData.orderId || null;
         console.log("external_id resolved:", externalId, "orderData keys:", Object.keys(orderData));
 
         const operadoraName = orderData.operator || orderData.carrier?.name || resolvedOperator;
-        const isCompleted = (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
+        const isFailed = polledFailed || orderData.status === "falha" || orderData.status === "cancelada" || orderData.status === "expirada";
+        const isCompleted = !isFailed && (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
+
+        // Only deduct balance if NOT failed
+        let newBalance = userBalance;
+        if (!isFailed) {
+          newBalance = userBalance - chargedCost;
+          await adminClient
+            .from("saldos")
+            .update({ valor: newBalance })
+            .eq("user_id", userId)
+            .eq("tipo", saldoTipo);
+        } else {
+          console.log(`recharge: NOT deducting balance — recharge failed. userId=${userId} chargedCost=${chargedCost}`);
+        }
+
+        // Save recarga locally
+        const finalStatus = isFailed ? "falha" : (isCompleted ? "completed" : "pending");
         await adminClient.from("recargas").insert({
           user_id: userId,
           telefone: phoneNumber,
@@ -594,7 +605,7 @@ Deno.serve(async (req) => {
           valor: catalogValue,
           custo: chargedCost,
           custo_api: apiCost,
-          status: isCompleted ? "completed" : "pending",
+          status: finalStatus,
           external_id: externalId,
           completed_at: isCompleted ? new Date().toISOString() : null,
         });
