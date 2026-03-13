@@ -213,6 +213,15 @@ export default function Principal() {
   const [reportPage, setReportPage] = useState(0);
   const REPORT_PER_PAGE = 15;
 
+  // All recargas list state (Todas as Recargas section)
+  const [allRecargasList, setAllRecargasList] = useState<any[]>([]);
+  const [allRecargasLoading, setAllRecargasLoading] = useState(false);
+  const allRecargasLoaded = useRef(false);
+  const [allRecargasStatusFilter, setAllRecargasStatusFilter] = useState<"all" | "completed" | "pending" | "falha">("all");
+  const [allRecargasSearch, setAllRecargasSearch] = useState("");
+  const [allRecargasPage, setAllRecargasPage] = useState(0);
+  const ALL_RECARGAS_PER_PAGE = 20;
+
   // Config API states
   const [apiConfig, setApiConfig] = useState<Record<string, string>>({});
   const [configLoading, setConfigLoading] = useState(false);
@@ -968,7 +977,38 @@ export default function Principal() {
     setReportLoading(false);
   }, [reportPeriodStart]);
 
-  useEffect(() => { if (view === "relatorios") fetchReport(); }, [view, fetchReport]);
+  useEffect(() => { if (view === "relatorios") { fetchReport(); fetchAllRecargasList(); } }, [view, fetchReport]);
+
+  const fetchAllRecargasList = useCallback(async () => {
+    setAllRecargasLoading(true);
+    try {
+      let allData: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      while (true) {
+        let query = supabase.from("recargas").select("*")
+          .gte("created_at", reportPeriodStart)
+          .order("created_at", { ascending: false })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        const { data: batch } = await query;
+        if (!batch || batch.length === 0) break;
+        allData = allData.concat(batch);
+        if (batch.length < pageSize) break;
+        page++;
+      }
+      // Fetch user names
+      const userIds = [...new Set(allData.map(r => r.user_id))];
+      const profileMap: Record<string, { nome: string | null; email: string | null }> = {};
+      for (let i = 0; i < userIds.length; i += 50) {
+        const batch = userIds.slice(i, i + 50);
+        const { data: profiles } = await supabase.from("profiles").select("id, nome, email").in("id", batch);
+        (profiles || []).forEach((p: any) => { profileMap[p.id] = { nome: p.nome, email: p.email }; });
+      }
+      setAllRecargasList(allData.map(r => ({ ...r, user_nome: profileMap[r.user_id]?.nome || null, user_email: profileMap[r.user_id]?.email || null })));
+    } catch (err) { console.error(err); }
+    allRecargasLoaded.current = true;
+    setAllRecargasLoading(false);
+  }, [reportPeriodStart]);
   // Auto-refresh bot status when entering bot tab and token exists
   useEffect(() => {
     if (["dashboard", "configuracoes", "bot", "gateway", "store", "geral", "pagamentos", "depositos"].includes(view)) fetchGlobalConfig();
@@ -3600,6 +3640,150 @@ export default function Principal() {
                   })()}
                 </div>
               )}
+
+              {/* ===== TODAS AS RECARGAS ===== */}
+              <div className="glass-card rounded-xl overflow-hidden">
+                <div className="p-3 border-b border-border/50">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-bold text-foreground">Todas as Recargas</h3>
+                      <span className="text-[10px] text-muted-foreground">({allRecargasList.length})</span>
+                    </div>
+                    <button onClick={fetchAllRecargasList} disabled={allRecargasLoading} className="p-1.5 rounded-lg border border-border/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all active:scale-95">
+                      <RefreshCw className={`h-3 w-3 ${allRecargasLoading ? "animate-spin" : ""}`} />
+                    </button>
+                  </div>
+                  {/* Status filter */}
+                  <div className="flex items-center gap-1.5 mb-2">
+                    {([
+                      { key: "all" as const, label: "Todas" },
+                      { key: "completed" as const, label: "Concluídas" },
+                      { key: "pending" as const, label: "Pendentes" },
+                      { key: "falha" as const, label: "Falhas" },
+                    ]).map(f => (
+                      <button key={f.key} onClick={() => { setAllRecargasStatusFilter(f.key); setAllRecargasPage(0); }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${allRecargasStatusFilter === f.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground bg-muted/40"}`}>
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <input type="text" value={allRecargasSearch} onChange={e => { setAllRecargasSearch(e.target.value); setAllRecargasPage(0); }}
+                      placeholder="Buscar telefone, operadora, usuário..."
+                      className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-input bg-muted/50 text-foreground text-[13px] focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground" />
+                  </div>
+                </div>
+
+                {allRecargasLoading && !allRecargasLoaded.current ? (
+                  <div className="p-3 space-y-1.5">{[1,2,3,4].map(i => <SkeletonRow key={i} />)}</div>
+                ) : (() => {
+                  const statusMatch = (s: string) => {
+                    if (allRecargasStatusFilter === "all") return true;
+                    if (allRecargasStatusFilter === "completed") return s === "completed" || s === "concluida";
+                    if (allRecargasStatusFilter === "pending") return s === "pending";
+                    if (allRecargasStatusFilter === "falha") return s === "falha";
+                    return true;
+                  };
+                  const filtered = allRecargasList.filter(r => {
+                    if (!statusMatch(r.status)) return false;
+                    if (allRecargasSearch) {
+                      const q = allRecargasSearch.toLowerCase();
+                      return (r.telefone || "").includes(q) || (r.operadora || "").toLowerCase().includes(q) || (r.user_nome || "").toLowerCase().includes(q) || (r.user_email || "").toLowerCase().includes(q);
+                    }
+                    return true;
+                  });
+                  const totalPages = Math.ceil(filtered.length / ALL_RECARGAS_PER_PAGE);
+                  const paged = filtered.slice(allRecargasPage * ALL_RECARGAS_PER_PAGE, (allRecargasPage + 1) * ALL_RECARGAS_PER_PAGE);
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="p-8 text-center">
+                        <Smartphone className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Sem recargas para os filtros selecionados.</p>
+                      </div>
+                    );
+                  }
+
+                  const statusBadge = (s: string) => {
+                    if (s === "completed" || s === "concluida") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-success/15 text-success">Concluída</span>;
+                    if (s === "pending") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-warning/15 text-warning">Pendente</span>;
+                    if (s === "falha") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-destructive/15 text-destructive">Falha</span>;
+                    return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">{s}</span>;
+                  };
+
+                  return (
+                    <>
+                      {/* Mobile cards */}
+                      <div className="md:hidden divide-y divide-border/30">
+                        {paged.map((r, i) => (
+                          <motion.div key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
+                            className="px-3 py-2.5 hover:bg-primary/[0.04] transition-colors">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[13px] font-medium text-foreground truncate max-w-[55%]">{r.user_nome || "Usuário"}</span>
+                              {statusBadge(r.status)}
+                            </div>
+                            <div className="flex items-center justify-between text-[12px]">
+                              <span className="text-muted-foreground">{r.operadora || "—"} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
+                              <span className="font-bold font-mono tabular-nums text-foreground">{fmt(Number(r.valor))}</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(r.created_at)}</p>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Desktop table */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-border/60 bg-muted/20">
+                              <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Data</th>
+                              <th className="text-left px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Usuário</th>
+                              <th className="text-left px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Telefone</th>
+                              <th className="text-left px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Operadora</th>
+                              <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Valor</th>
+                              <th className="text-center px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {paged.map((r, i) => (
+                              <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
+                                className="border-b border-border/30 hover:bg-primary/[0.04] transition-colors">
+                                <td className="px-3 py-2 text-[12px] text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
+                                <td className="px-2 py-2">
+                                  <p className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{r.user_nome || "Usuário"}</p>
+                                </td>
+                                <td className="px-2 py-2 font-mono text-[12px] text-muted-foreground">{r.telefone}</td>
+                                <td className="px-2 py-2 text-[13px] text-foreground">{r.operadora || "—"}</td>
+                                <td className="px-2 py-2 text-right font-mono font-bold text-[13px] tabular-nums text-foreground">{fmt(Number(r.valor))}</td>
+                                <td className="px-3 py-2 text-center">{statusBadge(r.status)}</td>
+                              </motion.tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between px-3 py-2.5 border-t border-border/50">
+                          <span className="text-[11px] text-muted-foreground tabular-nums">
+                            {allRecargasPage * ALL_RECARGAS_PER_PAGE + 1}–{Math.min((allRecargasPage + 1) * ALL_RECARGAS_PER_PAGE, filtered.length)} de {filtered.length}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button disabled={allRecargasPage === 0} onClick={() => setAllRecargasPage(p => p - 1)}
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">Anterior</button>
+                            <span className="text-[11px] text-muted-foreground px-1.5 tabular-nums">{allRecargasPage + 1}/{totalPages}</span>
+                            <button disabled={allRecargasPage >= totalPages - 1} onClick={() => setAllRecargasPage(p => p + 1)}
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-medium border border-border hover:bg-muted/50 disabled:opacity-30 transition-colors">Próximo</button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             </motion.div>
           )}
 
