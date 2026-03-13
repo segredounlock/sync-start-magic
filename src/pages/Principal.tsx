@@ -2339,7 +2339,7 @@ export default function Principal() {
                               <tr key={i} className="border-b border-border last:border-0">
                                 <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
                                 <td className="px-3 py-2 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
-                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground">{fmt(t.amount)}</td>
+                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></td>
                                 <td className="px-3 py-2 text-center">
                                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                                     (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" :
