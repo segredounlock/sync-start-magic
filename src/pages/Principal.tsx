@@ -1844,7 +1844,7 @@ export default function Principal() {
                               </span>
                             </td>
                             <td className="px-2 py-2.5 text-right">
-                              <span className={`font-mono font-bold tabular-nums text-[13px] ${saldoBaixo ? "text-warning" : "text-foreground"}`}>{fmt(r.saldo)}</span>
+                              <span className={`font-mono font-bold tabular-nums text-[13px] ${saldoBaixo ? "text-warning" : "text-foreground"}`}><AnimatedCounter value={r.saldo} prefix="R$&nbsp;" duration={600} /></span>
                               {saldoBaixo && <p className="text-[9px] text-warning mt-0.5 font-medium leading-none">Baixo</p>}
                             </td>
                             <td className="px-2 py-2.5 text-center">
