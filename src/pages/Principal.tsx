@@ -1510,7 +1510,7 @@ export default function Principal() {
                               </p>
                               <p className="text-[10px] text-muted-foreground">{r.telefone} • {fmtDate(r.created_at)}</p>
                             </div>
-                            <span className="text-sm font-bold font-mono text-foreground shrink-0">{fmt(safeValor(r))}</span>
+                            <span className="text-sm font-bold font-mono text-foreground shrink-0"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></span>
                           </div>
                         );
                       })}
