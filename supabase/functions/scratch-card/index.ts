@@ -11,30 +11,86 @@ const jsonHeaders = {
   "Content-Type": "application/json",
 };
 
+interface Tier {
+  chance: number; // 0-1
+  min: number;
+  max: number;
+}
+
 async function getConfig(supabaseAdmin: any) {
-  const keys = ["scratchEnabled", "scratchWinChance", "scratchMinPrize", "scratchMaxPrize"];
+  const keys = [
+    "scratchEnabled",
+    // Legacy single-tier keys
+    "scratchWinChance", "scratchMinPrize", "scratchMaxPrize",
+    // New tiered keys
+    "scratchTier1Chance", "scratchTier1Min", "scratchTier1Max",
+    "scratchTier2Chance", "scratchTier2Min", "scratchTier2Max",
+    "scratchTier3Chance", "scratchTier3Min", "scratchTier3Max",
+  ];
   const { data } = await supabaseAdmin
     .from("system_config")
     .select("key, value")
     .in("key", keys);
 
-  const config: Record<string, string> = {};
+  const c: Record<string, string> = {};
   (data || []).forEach((r: any) => {
-    config[r.key] = r.value;
+    c[r.key] = r.value;
   });
 
-  return {
-    enabled: (config.scratchEnabled ?? "true") === "true",
-    winChance: Math.min(100, Math.max(0, parseFloat(config.scratchWinChance || "70"))) / 100,
-    minPrize: Math.max(0.01, parseFloat(config.scratchMinPrize || "0.10")),
-    maxPrize: Math.max(0.01, parseFloat(config.scratchMaxPrize || "2.00")),
-  };
+  const enabled = (c.scratchEnabled ?? "true") === "true";
+
+  // Build tiers – fall back to legacy single-tier config
+  const tiers: Tier[] = [];
+
+  if (c.scratchTier1Chance) {
+    tiers.push({
+      chance: Math.min(100, Math.max(0, parseFloat(c.scratchTier1Chance || "20"))) / 100,
+      min: Math.max(0.01, parseFloat(c.scratchTier1Min || "0.10")),
+      max: Math.max(0.01, parseFloat(c.scratchTier1Max || "1.00")),
+    });
+  }
+  if (c.scratchTier2Chance) {
+    tiers.push({
+      chance: Math.min(100, Math.max(0, parseFloat(c.scratchTier2Chance || "5"))) / 100,
+      min: Math.max(0.01, parseFloat(c.scratchTier2Min || "1.00")),
+      max: Math.max(0.01, parseFloat(c.scratchTier2Max || "10.00")),
+    });
+  }
+  if (c.scratchTier3Chance) {
+    tiers.push({
+      chance: Math.min(100, Math.max(0, parseFloat(c.scratchTier3Chance || "1"))) / 100,
+      min: Math.max(0.01, parseFloat(c.scratchTier3Min || "10.00")),
+      max: Math.max(0.01, parseFloat(c.scratchTier3Max || "100.00")),
+    });
+  }
+
+  // Legacy fallback
+  if (tiers.length === 0) {
+    tiers.push({
+      chance: Math.min(100, Math.max(0, parseFloat(c.scratchWinChance || "20"))) / 100,
+      min: Math.max(0.01, parseFloat(c.scratchMinPrize || "0.10")),
+      max: Math.max(0.01, parseFloat(c.scratchMaxPrize || "2.00")),
+    });
+  }
+
+  return { enabled, tiers };
 }
 
-function generatePrize(min: number, max: number): number {
-  const rand = Math.pow(Math.random(), 2);
-  const raw = min + rand * (max - min);
-  return Math.round(raw * 100) / 100;
+function rollPrize(tiers: Tier[]): { isWon: boolean; prizeAmount: number } {
+  // Try each tier from highest to lowest (reverse order = rarest first)
+  const sorted = [...tiers].sort((a, b) => a.chance - b.chance);
+
+  for (const tier of sorted) {
+    if (Math.random() < tier.chance) {
+      // Won this tier – generate prize within range
+      const rand = Math.pow(Math.random(), 2); // skew towards min
+      const raw = tier.min + rand * (tier.max - tier.min);
+      const prizeAmount = Math.round(raw * 100) / 100;
+      return { isWon: true, prizeAmount };
+    }
+  }
+
+  return { isWon: false, prizeAmount: 0 };
 }
 
 Deno.serve(async (req) => {
@@ -67,9 +123,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    const config = await getConfig(supabaseAdmin);
+    const { enabled, tiers } = await getConfig(supabaseAdmin);
 
-    if (!config.enabled) {
+    if (!enabled) {
       return new Response(
         JSON.stringify({ error: "disabled", message: "Raspadinha está desativada no momento." }),
         { status: 400, headers: jsonHeaders },
@@ -101,15 +157,14 @@ Deno.serve(async (req) => {
         );
       }
 
-      const isWin = Math.random() < config.winChance;
-      const prizeAmount = isWin ? generatePrize(config.minPrize, config.maxPrize) : 0;
+      const { isWon, prizeAmount } = rollPrize(tiers);
 
       const { data: card, error: insertError } = await supabaseAdmin
         .from("scratch_cards")
         .insert({
           user_id: user.id,
           prize_amount: prizeAmount,
-          is_won: isWin,
+          is_won: isWon,
           card_date: today,
         })
         .select()
@@ -129,7 +184,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "scratch") {
-      const body = await req.json().catch(() => ({}));
       const cardId = body?.card_id as string | undefined;
       const today = new Date().toISOString().slice(0, 10);
 
