@@ -1656,7 +1656,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "Operadora"}</span>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "Operadora").toUpperCase()}</span>
                             </div>
                             <p className="text-sm text-muted-foreground font-mono">{r.telefone}</p>
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
@@ -1783,7 +1783,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                       )}
                                     </div>
                                     <div>
-                                      <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "Operadora"}</span>
+                                      <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "Operadora").toUpperCase()}</span>
                                       <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
                                     </div>
                                   </div>
@@ -1831,7 +1831,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               onClick={() => setSelectedRecarga(r)}>
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
-                              <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span></td>
+                              <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "—").toUpperCase()}</span></td>
                               <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
                               <td className="px-4 py-3 text-right font-mono font-medium text-muted-foreground"><Currency value={r.custo || safeValor(r)} duration={600} /></td>
                               <td className="px-4 py-3 text-center">
@@ -1888,7 +1888,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Operadora</span>
-                            <span className={`text-sm font-bold px-2.5 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span>
+                            <span className={`text-sm font-bold px-2.5 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "—").toUpperCase()}</span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Valor da Recarga</span>
