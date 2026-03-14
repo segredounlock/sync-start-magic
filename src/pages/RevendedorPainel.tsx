@@ -2132,7 +2132,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {tab === "meusprecos" && user && <MeusPrecos userId={user.id} />}
 
           {/* ===== TAB: MINHA REDE ===== */}
-          {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} />}
+          {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} referralCode={referralCode} />}
 
         </main>
       </div>
