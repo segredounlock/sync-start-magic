@@ -1591,7 +1591,7 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
 
 async function handleAjuda(token: string, chatId: number) {
   await sendMessageWithKeyboard(token, chatId,
-    `❓ <b>Menu de Ajuda</b>\n\n<b>Atalho:</b> envie <code>telefone valor</code> diretamente!\n<b>Depósito:</b> /deposito`,
+    `❓ <b>Menu de Ajuda</b>\n\n<b>Recarga:</b> use o botão 📱 Fazer Recarga\n<b>Depósito:</b> /deposito`,
     [[
       { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
       { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
