@@ -65,7 +65,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       const [{ data: recs }, { data: comms }, clientsResult] = await Promise.all([
         supabase
           .from("recargas")
-          .select("valor, custo, status, operadora, created_at")
+          .select("valor, custo, custo_api, status, operadora, created_at")
           .eq("user_id", userId)
           .gte("created_at", from)
           .in("status", ["completed", "concluida"]),
@@ -84,7 +84,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       ]);
 
       const recsList = recs || [];
-      const faturamento = recsList.reduce((s, r) => s + Number(r.custo || 0), 0);
+      const faturamento = recsList.reduce((s, r) => s + Math.max(0, Number(r.custo || 0) - Number(r.custo_api || 0)), 0);
       const comissoes = (comms || []).reduce((s, c) => s + Number(c.amount || 0), 0);
       const vendas = recsList.length;
 
@@ -99,7 +99,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       const dailyMap: Record<string, number> = {};
       recsList.forEach(r => {
         const key = toLocalDateKey(r.created_at);
-        dailyMap[key] = (dailyMap[key] || 0) + Number(r.custo || 0);
+        dailyMap[key] = (dailyMap[key] || 0) + Math.max(0, Number(r.custo || 0) - Number(r.custo_api || 0));
       });
       const sortedDays = Object.entries(dailyMap)
         .map(([date, value]) => ({ date, value }))
@@ -224,7 +224,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
   ];
 
   const kpis = [
-    { icon: DollarSign, label: "Faturamento", value: stats.faturamento, isCurrency: true, color: "text-primary", bg: "bg-primary/10" },
+    { icon: DollarSign, label: "Seu Lucro", value: stats.faturamento, isCurrency: true, color: "text-primary", bg: "bg-primary/10" },
     { icon: TrendingUp, label: "Comissões", value: stats.comissoes, isCurrency: true, color: "text-success", bg: "bg-success/10" },
     { icon: ShoppingCart, label: "Vendas Realizadas", value: stats.vendas, isCurrency: false, color: "text-accent-foreground", bg: "bg-accent/10" },
     ...(!isClientMode ? [
@@ -380,8 +380,8 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
         {/* Faturamento Diário */}
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-foreground">Faturamento Diário</h3>
-            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md">Receita (R$)</span>
+            <h3 className="text-sm font-bold text-foreground">Lucro Diário</h3>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md">Lucro (R$)</span>
           </div>
           {dailyData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
@@ -391,7 +391,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
                 <div className="w-3 h-3 rounded-sm bg-primary" />
-                <span>Faturamento</span>
+                <span>Lucro</span>
               </div>
               <div className="h-48 flex items-end gap-1">
                 {dailyData.map((d, i) => (
