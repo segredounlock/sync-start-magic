@@ -59,23 +59,45 @@ export default function UserProfile() {
   const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
   const [listLoading, setListLoading] = useState(false);
 
+  // Resolve slug → UUID
+  useEffect(() => {
+    if (!paramId) return;
+    if (isUUID(paramId)) {
+      setResolvedId(paramId);
+    } else {
+      // It's a slug, resolve to UUID
+      supabase.from("profiles").select("id").eq("slug", paramId).maybeSingle().then(({ data }) => {
+        if (data?.id) {
+          setResolvedId(data.id);
+        } else {
+          setResolvedId(null);
+          setLoading(false);
+        }
+      });
+    }
+  }, [paramId]);
+
   const loadProfile = useCallback(async () => {
-    if (!userId) return;
+    if (!resolvedId) return;
     setLoading(true);
     try {
       const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleData }] = await Promise.all([
-        supabase.from("profiles").select("id, nome, email, avatar_url, bio, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", userId).single(),
-        supabase.rpc("get_follow_counts", { _user_id: userId }),
-        supabase.rpc("get_user_recargas_count" as any, { _user_id: userId }),
-        user?.id && user.id !== userId
-          ? supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", userId).maybeSingle()
+        supabase.from("profiles").select("id, nome, email, avatar_url, bio, slug, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", resolvedId).single(),
+        supabase.rpc("get_follow_counts", { _user_id: resolvedId }),
+        supabase.rpc("get_user_recargas_count" as any, { _user_id: resolvedId }),
+        user?.id && user.id !== resolvedId
+          ? supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", resolvedId).maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+        supabase.rpc("has_role", { _user_id: resolvedId, _role: "admin" }),
       ]);
 
       if (profileData) {
         setProfile(profileData as any);
         setBioText((profileData as any).bio || "");
+        // If we navigated via UUID but profile has a slug, redirect to clean URL
+        if ((profileData as any).slug && paramId && isUUID(paramId)) {
+          navigate(`/perfil/${(profileData as any).slug}`, { replace: true });
+        }
       }
       if (counts && Array.isArray(counts) && counts.length > 0) {
         setFollowersCount(Number(counts[0].followers_count) || 0);
@@ -89,7 +111,7 @@ export default function UserProfile() {
     } finally {
       setLoading(false);
     }
-  }, [userId, user?.id]);
+  }, [resolvedId, user?.id, paramId, navigate]);
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
