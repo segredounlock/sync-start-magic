@@ -125,6 +125,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // Profile slug for store link
   // Profile slug for store link
   const [profileSlug, setProfileSlug] = useState("");
+  const [referralCode, setReferralCode] = useState("");
 
   // Banner config from banners table
   const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string }[]>([]);
