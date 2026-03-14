@@ -992,6 +992,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               </div>
             )}
 
+            <div className="pt-3 mt-3 border-t border-border">
               <a href="/chat"
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all group shadow-[0_0_12px_hsl(var(--primary)/0.08)]">
                 <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
