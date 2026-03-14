@@ -1,40 +1,18 @@
 
 
-## Diagnóstico e Correção
+# Plano: Auto-salvar valor da margem ao ativar toggle
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+O problema atual é uma questão de UX: o usuário ativa o toggle mas esquece de salvar o valor. A solução é fazer o toggle salvar automaticamente um valor padrão quando ativado, e também salvar o valor automaticamente ao digitar (sem precisar clicar no botão Salvar separado).
 
-### Plano
+## Alterações
 
-**1. Corrigir o mapeamento de status na sync function**
+### `src/pages/Principal.tsx`
+1. **Ao ativar o toggle**, salvar automaticamente as 3 chaves: `defaultMarginEnabled=true`, `defaultMarginType=fixo`, `defaultMarginValue=0.50` (valor padrão)
+2. **No campo de valor**, usar `onBlur` para auto-salvar quando o usuário sair do campo, eliminando a necessidade do botão Salvar separado
+3. Manter o botão Salvar como confirmação visual, mas o valor já será persistido ao sair do campo
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Detalhes técnicos
+- No handler do toggle (linha ~3964), adicionar upserts para `defaultMarginType` e `defaultMarginValue` com valores padrão `fixo` e `0.50`
+- Adicionar `onBlur` no input (linha ~3991) que dispara o mesmo upsert do botão Salvar
+- Sem alterações no backend — a lógica da Edge Function já está correta
 
