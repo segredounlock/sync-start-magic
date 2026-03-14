@@ -887,7 +887,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
               {!isClientMode && (
                 <a
-                  href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${user?.id}`}
+                  href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${referralCode || user?.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl bg-muted/30 text-foreground hover:bg-muted/50 active:scale-95 transition-all"
