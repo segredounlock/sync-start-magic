@@ -97,6 +97,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [showBotToken, setShowBotToken] = useState(false);
   const [savingContacts, setSavingContacts] = useState(false);
+  const [salesToolsEnabled, setSalesToolsEnabled] = useState(true);
 
   // Transactions (extrato)
   const [transactions, setTransactions] = useState<Transaction[]>([]);
