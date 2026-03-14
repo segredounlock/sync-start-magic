@@ -27,7 +27,7 @@ export function handleExpiredSession() {
   supabase.auth.signOut().catch(() => {});
 
   setTimeout(() => {
-    window.location.href = "/auth";
+    window.location.href = "/login";
   }, 1500);
 }
 
