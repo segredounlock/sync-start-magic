@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
+import { formatDateFullTitleBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 import { SkeletonValue } from "@/components/Skeleton";
 
 interface DashboardSectionProps {
