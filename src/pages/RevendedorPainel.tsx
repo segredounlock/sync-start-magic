@@ -1991,86 +1991,98 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 </div>
               </div>
 
-              {/* Mobile cards */}
-              <div className="md:hidden space-y-2">
-                {transLoading ? (
-                  <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
-                ) : transactions.length === 0 ? (
-                  <p className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</p>
-                ) : (() => {
-                  let lastDate = "";
-                  return transactions.map((t, i) => {
-                    const dateLabel = formatDateLongUpperBR(t.created_at);
-                    const showSep = dateLabel !== lastDate;
-                    lastDate = dateLabel;
+              {/* Extrato Detalhado */}
+              {(() => {
+                // Merge transactions + recargas into unified list
+                type ExtratoItem = { id: string; tipo: "deposito" | "recarga" | "saque" | "transferencia"; titulo: string; subtitulo: string; valor: number; data: string; status: string };
+                const items: ExtratoItem[] = [
+                  ...transactions.map((t): ExtratoItem => {
                     const isDeposit = t.type === "deposit" || t.type === "deposito";
-                    const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status;
-                    const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
-                    return (
-                      <div key={t.id}>
-                        {showSep && (
-                          <div className="flex justify-center my-2">
-                            <span className="text-[10px] bg-muted/60 text-muted-foreground px-3 py-0.5 rounded-full font-medium">{dateLabel}</span>
-                          </div>
-                        )}
-                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                          className="glass-card rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <p className="font-semibold text-foreground text-sm capitalize">{isDeposit ? "Depósito" : t.type}</p>
-                              <p className="text-xs text-muted-foreground">PIX</p>
-                            </div>
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-3 border-t border-border">
-                            <span className="text-xs text-muted-foreground">{fmtDate(t.created_at)}</span>
-                            <span className={`font-bold font-mono ${isDeposit ? "text-success" : "text-foreground"}`}>
-                              {isDeposit ? "+" : "-"}{fmt(t.amount)}
-                            </span>
-                          </div>
-                        </motion.div>
+                    const isSaque = t.type === "saque" || t.type === "withdrawal";
+                    const isMover = t.type === "transfer" || t.module === "comissoes";
+                    return {
+                      id: t.id,
+                      tipo: isSaque ? "saque" : isMover && !isDeposit ? "transferencia" : "deposito",
+                      titulo: isSaque ? "Saque" : isMover && !isDeposit ? "Transferência" : "Depósito",
+                      subtitulo: t.module ? `Depósito via ${t.module}` : "Depósito PIX",
+                      valor: t.amount,
+                      data: t.created_at,
+                      status: t.status,
+                    };
+                  }),
+                  ...recargas.filter(r => r.status === "completed").map((r): ExtratoItem => ({
+                    id: r.id,
+                    tipo: "recarga",
+                    titulo: "Venda de Recarga",
+                    subtitulo: `Recarga ${r.operadora || "?"} ${fmt(safeValor(r))}`,
+                    valor: r.custo || safeValor(r),
+                    data: r.created_at,
+                    status: r.status,
+                  })),
+                ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+
+                const iconForType = (tipo: ExtratoItem["tipo"]) => {
+                  if (tipo === "deposito") return <CreditCard className="h-4 w-4 text-success" />;
+                  if (tipo === "recarga") return <Smartphone className="h-4 w-4 text-primary" />;
+                  if (tipo === "saque") return <Landmark className="h-4 w-4 text-warning" />;
+                  return <ArrowRightLeft className="h-4 w-4 text-accent" />;
+                };
+                const bgForType = (tipo: ExtratoItem["tipo"]) => {
+                  if (tipo === "deposito") return "bg-success/10";
+                  if (tipo === "recarga") return "bg-primary/10";
+                  if (tipo === "saque") return "bg-warning/10";
+                  return "bg-accent/10";
+                };
+
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-base font-bold text-foreground">Extrato Detalhado</h3>
                       </div>
-                    );
-                  });
-                })()}
-              </div>
-              {/* Desktop table */}
-              <div className="hidden md:block glass-card rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tipo</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Módulo</th>
-                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
-                      <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transLoading ? (
-                      <tr><td colSpan={5} className="py-4"><div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div></td></tr>
-                    ) : transactions.length === 0 ? (
-                      <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma transação encontrada</td></tr>
-                    ) : transactions.map((t, i) => (
-                      <motion.tr key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                        className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
-                        <td className="px-4 py-3 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
-                        <td className="px-4 py-3 text-foreground">PIX</td>
-                        <td className={`px-4 py-3 text-right font-mono font-medium ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}{fmt(t.amount)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                            (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                            {(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status}
-                          </span>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                      <button onClick={fetchTransactions} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <RefreshCw className={`h-4 w-4 ${transLoading ? "animate-spin" : ""}`} />
+                      </button>
+                    </div>
+
+                    {transLoading && items.length === 0 ? (
+                      <div className="space-y-2">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
+                    ) : items.length === 0 ? (
+                      <p className="text-center py-8 text-muted-foreground">Nenhuma movimentação encontrada</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {items.map((item, i) => {
+                          const isPositive = item.tipo === "deposito";
+                          return (
+                            <motion.div
+                              key={item.id}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.02 }}
+                              className="bg-card rounded-xl border border-border p-4 flex items-center gap-3"
+                            >
+                              <div className={`w-10 h-10 rounded-xl ${bgForType(item.tipo)} flex items-center justify-center shrink-0`}>
+                                {iconForType(item.tipo)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-foreground text-sm">{item.titulo}</p>
+                                <p className="text-xs text-muted-foreground truncate">{item.subtitulo}</p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={`font-bold text-sm tabular-nums ${isPositive ? "text-success" : "text-destructive"}`}>
+                                  {isPositive ? "+" : "-"} {fmt(item.valor)}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">{fmtDate(item.data)}</p>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </>
           )}
 
