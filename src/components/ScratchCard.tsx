@@ -79,20 +79,35 @@ export function ScratchCard({ userId }: ScratchCardProps) {
   const claimCard = async () => {
     setLoading(true);
     try {
+      console.log("[ScratchCard] Claiming card...");
       const { data, error } = await supabase.functions.invoke("scratch-card", {
         body: { action: "claim" },
       });
-      if (error) throw error;
-      if (data?.error) {
-        if (data.error === "already_claimed") {
-          await checkTodayCard();
+      console.log("[ScratchCard] Claim response:", { data, error });
+      if (error) {
+        console.error("[ScratchCard] Claim error:", error);
+        throw error;
+      }
+      if (data?.error === "already_claimed" && data?.card) {
+        setCard(data.card);
+        if (data.card.is_scratched) {
+          setRevealed(true);
+          setResult({ prize_amount: data.card.prize_amount, is_won: data.card.is_won });
+        } else {
+          setTimeout(() => initCanvas(), 150);
         }
         return;
       }
-      setCard(data.card);
-      setTimeout(() => initCanvas(), 100);
+      if (data?.error) {
+        console.error("[ScratchCard] Server error:", data.error, data.message);
+        return;
+      }
+      if (data?.card) {
+        setCard(data.card);
+        setTimeout(() => initCanvas(), 150);
+      }
     } catch (e) {
-      console.error("Claim error:", e);
+      console.error("[ScratchCard] Claim exception:", e);
     } finally {
       setLoading(false);
     }
