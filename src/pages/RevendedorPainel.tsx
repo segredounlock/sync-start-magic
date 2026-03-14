@@ -61,7 +61,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [saldo, setSaldo] = useState(0);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const { loading, runFetch } = useResilientFetch();
-  const [tab, setTab] = useState<PainelTab>("recarga");
+  const [tab, setTab] = useState<PainelTab>("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileNome, setProfileNome] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
