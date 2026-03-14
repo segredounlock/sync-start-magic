@@ -2299,13 +2299,11 @@ export default function Principal() {
                       <div className="md:hidden space-y-2">
                         {revTransactions.slice(0, 20).map((t, i) => {
                           const isDeposit = t.type === "deposit" || t.type === "deposito";
-                          const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status;
-                          const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                           return (
                             <div key={i} className="rounded-lg border border-border p-3">
                               <div className="flex items-center justify-between mb-2">
                                 <p className="text-sm font-semibold text-foreground capitalize">{isDeposit ? "Depósito" : t.type}</p>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                                <StatusBadge status={t.status} type="deposit" className="text-xs" />
                               </div>
                               <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                 <span className="text-[10px] text-muted-foreground">{fmtDate(t.created_at)}</span>
