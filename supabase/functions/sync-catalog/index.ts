@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
     // 3. Sync each carrier (v2 format: operator, values[].amount/cost)
     for (const carrier of carriers) {
-      const nome = carrier.operator || carrier.name || "unknown";
+      const nome = (carrier.operator || carrier.name || "unknown").toUpperCase();
       const values = carrier.values || [];
       const valores = values.map((v: any) => v.amount || v.value || v.cost).filter((v: number) => v > 0);
 
