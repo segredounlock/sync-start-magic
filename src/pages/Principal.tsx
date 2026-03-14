@@ -4427,7 +4427,7 @@ export default function Principal() {
         onSelect={(key) => {
           setView(key as any);
           if (key === "config-api") fetchApiConfig();
-          else if (key === "precificacao") fetchPricingData();
+          else if (key === "precificacao") { fetchPricingData(); fetchGlobalConfig(); }
           else if (!["dashboard", "lista", "relatorios"].includes(key)) fetchGlobalConfig();
           setMenuOpen(false);
         }}
