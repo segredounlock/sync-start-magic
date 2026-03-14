@@ -197,10 +197,14 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     const pixels = imageData.data;
     let transparent = 0;
     const total = pixels.length / 4;
+
+    // Considera pixels quase transparentes também
     for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] === 0) transparent++;
+      if (pixels[i] <= 24) transparent++;
     }
-    if (transparent / total >= SCRATCH_THRESHOLD) {
+
+    const ratio = transparent / total;
+    if (ratio >= SCRATCH_THRESHOLD) {
       hasCompleted.current = true;
       setRevealed(true);
       onScratchComplete();
@@ -219,8 +223,16 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     if (!isDrawing.current || disabled || revealed) return;
     e.preventDefault();
     const pos = getPos(e);
-    if (pos) scratch(pos.x, pos.y);
-  }, [disabled, revealed, getPos, scratch]);
+    if (!pos) return;
+
+    scratch(pos.x, pos.y);
+
+    const now = Date.now();
+    if (now - lastProgressCheckRef.current > 120) {
+      lastProgressCheckRef.current = now;
+      checkProgress();
+    }
+  }, [disabled, revealed, getPos, scratch, checkProgress]);
 
   const handleEnd = useCallback(() => {
     if (!isDrawing.current) return;
