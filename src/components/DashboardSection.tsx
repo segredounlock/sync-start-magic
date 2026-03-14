@@ -380,8 +380,8 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
         {/* Faturamento Diário */}
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-foreground">Faturamento Diário</h3>
-            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md">Receita (R$)</span>
+            <h3 className="text-sm font-bold text-foreground">Lucro Diário</h3>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md">Lucro (R$)</span>
           </div>
           {dailyData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
