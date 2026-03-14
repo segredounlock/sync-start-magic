@@ -3421,44 +3421,46 @@ export default function Principal() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">Chance de Ganhar (%)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={globalConfig.scratchWinChance ?? "70"}
-                        onChange={e => setGlobalConfig(prev => ({ ...prev, scratchWinChance: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
+                  {[
+                    { tier: 1, label: "Faixa 1 — Comum", color: "text-success", defChance: "20", defMin: "0.10", defMax: "1.00" },
+                    { tier: 2, label: "Faixa 2 — Rara", color: "text-blue-500", defChance: "5", defMin: "1.00", defMax: "10.00" },
+                    { tier: 3, label: "Faixa 3 — Épica", color: "text-purple-500", defChance: "1", defMin: "10.00", defMax: "100.00" },
+                  ].map(({ tier, label, color, defChance, defMin, defMax }) => (
+                    <div key={tier} className="space-y-2">
+                      <p className={`text-xs font-bold ${color}`}>{label}</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[11px] text-muted-foreground mb-0.5">Chance (%)</label>
+                          <input
+                            type="number" min="0" max="100" step="0.1"
+                            value={globalConfig[`scratchTier${tier}Chance`] ?? defChance}
+                            onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Chance`]: e.target.value }))}
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-muted-foreground mb-0.5">Mín (R$)</label>
+                          <input
+                            type="number" min="0.01" step="0.01"
+                            value={globalConfig[`scratchTier${tier}Min`] ?? defMin}
+                            onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Min`]: e.target.value }))}
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-muted-foreground mb-0.5">Máx (R$)</label>
+                          <input
+                            type="number" min="0.01" step="0.01"
+                            value={globalConfig[`scratchTier${tier}Max`] ?? defMax}
+                            onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Max`]: e.target.value }))}
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">Prêmio Mínimo (R$)</label>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={globalConfig.scratchMinPrize ?? "0.10"}
-                        onChange={e => setGlobalConfig(prev => ({ ...prev, scratchMinPrize: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">Prêmio Máximo (R$)</label>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={globalConfig.scratchMaxPrize ?? "2.00"}
-                        onChange={e => setGlobalConfig(prev => ({ ...prev, scratchMaxPrize: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </div>
-                  </div>
+                  ))}
                   <p className="text-[11px] text-muted-foreground">
-                    Valores salvos ao clicar em "Salvar" no topo. Prêmios são distribuídos aleatoriamente entre o mín. e máx., com valores menores mais frequentes.
+                    Chance total ≈ soma das faixas (~24.8% padrão). Faixas são avaliadas da mais rara para a mais comum. Valores menores são mais frequentes dentro de cada faixa.
                   </p>
                 </div>
 
