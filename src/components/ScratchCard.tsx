@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Currency } from "@/components/ui/Currency";
 import confetti from "canvas-confetti";
+import { ScratchCanvas } from "@/components/ScratchCanvas";
 
 interface ScratchCardProps {
   userId: string;
