@@ -17,43 +17,40 @@ export function AnimatedCounter({
   suffix = "",
   decimals = 2,
   duration = 900,
+  delay = 0,
   className = "",
 }: AnimatedCounterProps) {
   const [display, setDisplay] = useState(0);
-  const prevValue = useRef(0);
   const rafRef = useRef<number>();
-  const mountedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const to = value;
+    if (to === 0) { setDisplay(0); return; }
 
-    if (to === 0) {
-      setDisplay(0);
-      return;
+    const startAnimation = () => {
+      const startTime = performance.now();
+      const animate = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        setDisplay(to * eased);
+        if (progress < 1) rafRef.current = requestAnimationFrame(animate);
+      };
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    if (delay > 0) {
+      timerRef.current = setTimeout(startAnimation, delay);
+    } else {
+      startAnimation();
     }
 
-    // Always animate from 0 for the "rolling counter" effect
-    const from = 0;
-
-    const startTime = performance.now();
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // easeOutExpo for smooth deceleration
-      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      setDisplay(from + (to - from) * eased);
-
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(animate);
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [value, duration]);
+  }, [value, duration, delay]);
 
   const formatted = display.toLocaleString("pt-BR", {
     minimumFractionDigits: decimals,
