@@ -1980,7 +1980,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
                         <Landmark className="h-3.5 w-3.5" /> Sacar
                       </button>
-                      <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
+                      <button onClick={() => { setMoverValor(""); setShowMoverSaldo(true); }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
                         <ArrowRightLeft className="h-3.5 w-3.5" /> Usar Saldo
                       </button>
                     </div>
