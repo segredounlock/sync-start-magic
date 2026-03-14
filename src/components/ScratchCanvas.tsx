@@ -10,7 +10,7 @@ const COLS = 3;
 const ROWS = 3;
 const CELL_PAD = 4;
 const BRUSH = 24;
-const SCRATCH_THRESHOLD = 0.50;
+const SCRATCH_THRESHOLD = 0.35;
 
 export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,6 +20,7 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [revealed, setRevealed] = useState(false);
   const hasCompleted = useRef(false);
+  const lastProgressCheckRef = useRef(0);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -36,6 +37,13 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Reset state when a new grid/card is loaded
+  useEffect(() => {
+    setRevealed(false);
+    hasCompleted.current = false;
+    lastProgressCheckRef.current = 0;
+  }, [grid]);
 
   // Draw underlay (prize values)
   useEffect(() => {
@@ -172,11 +180,11 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   const scratch = useCallback((x: number, y: number) => {
     const cvs = canvasRef.current;
     if (!cvs || revealed || disabled) return;
-    const dpr = window.devicePixelRatio || 1;
     const ctx = cvs.getContext("2d")!;
     ctx.globalCompositeOperation = "destination-out";
     ctx.beginPath();
-    ctx.arc(x * dpr, y * dpr, BRUSH * dpr, 0, Math.PI * 2);
+    // Context já está em pixels CSS (ctx.scale aplicado), sem multiplicar por DPR
+    ctx.arc(x, y, BRUSH, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalCompositeOperation = "source-over";
   }, [revealed, disabled]);
@@ -189,10 +197,14 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     const pixels = imageData.data;
     let transparent = 0;
     const total = pixels.length / 4;
+
+    // Considera pixels quase transparentes também
     for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] === 0) transparent++;
+      if (pixels[i] <= 24) transparent++;
     }
-    if (transparent / total >= SCRATCH_THRESHOLD) {
+
+    const ratio = transparent / total;
+    if (ratio >= SCRATCH_THRESHOLD) {
       hasCompleted.current = true;
       setRevealed(true);
       onScratchComplete();
@@ -211,8 +223,16 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     if (!isDrawing.current || disabled || revealed) return;
     e.preventDefault();
     const pos = getPos(e);
-    if (pos) scratch(pos.x, pos.y);
-  }, [disabled, revealed, getPos, scratch]);
+    if (!pos) return;
+
+    scratch(pos.x, pos.y);
+
+    const now = Date.now();
+    if (now - lastProgressCheckRef.current > 120) {
+      lastProgressCheckRef.current = now;
+      checkProgress();
+    }
+  }, [disabled, revealed, getPos, scratch, checkProgress]);
 
   const handleEnd = useCallback(() => {
     if (!isDrawing.current) return;
@@ -241,6 +261,7 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
               onTouchStart={handleStart}
               onTouchMove={handleMove}
               onTouchEnd={handleEnd}
+              onTouchCancel={handleEnd}
             />
           )}
         </div>
