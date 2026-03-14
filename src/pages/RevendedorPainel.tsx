@@ -30,7 +30,7 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
-  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft,
+  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote,
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
@@ -2022,7 +2022,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
                 const iconForType = (tipo: ExtratoItem["tipo"]) => {
-                  if (tipo === "deposito") return <CreditCard className="h-4 w-4 text-success" />;
+                  if (tipo === "deposito") return <Banknote className="h-4 w-4 text-success" />;
                   if (tipo === "recarga") return <Smartphone className="h-4 w-4 text-primary" />;
                   if (tipo === "saque") return <Landmark className="h-4 w-4 text-warning" />;
                   return <ArrowRightLeft className="h-4 w-4 text-accent" />;
