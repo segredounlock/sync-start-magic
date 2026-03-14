@@ -261,6 +261,7 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
               onTouchStart={handleStart}
               onTouchMove={handleMove}
               onTouchEnd={handleEnd}
+              onTouchCancel={handleEnd}
             />
           )}
         </div>
