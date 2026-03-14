@@ -729,6 +729,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "contatos", label: "Meu Perfil", icon: User },
     { key: "status", label: "Status do Sistema", icon: Activity },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
+    ...(role === "admin" ? [{ key: "configuracoes" as PainelTab, label: "Configurações", icon: Settings }] : []),
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
