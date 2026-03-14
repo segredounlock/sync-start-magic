@@ -84,7 +84,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       ]);
 
       const recsList = recs || [];
-      const faturamento = recsList.reduce((s, r) => s + Number(r.custo || 0), 0);
+      const faturamento = recsList.reduce((s, r) => s + Math.max(0, Number(r.custo || 0) - Number(r.custo_api || 0)), 0);
       const comissoes = (comms || []).reduce((s, c) => s + Number(c.amount || 0), 0);
       const vendas = recsList.length;
 
