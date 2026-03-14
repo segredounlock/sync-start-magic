@@ -75,6 +75,9 @@ export function MobileBottomNav({
                 <motion.div
                   animate={{ y: [0, -2, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  style={item.highlighted ? {
+                    filter: "drop-shadow(0 0 4px hsl(var(--primary))) drop-shadow(0 0 8px hsl(var(--primary) / 0.5))",
+                  } : undefined}
                 >
                   <item.icon className={`h-6 w-6 ${item.color || "text-primary"}`} />
                 </motion.div>
