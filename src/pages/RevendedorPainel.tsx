@@ -2017,7 +2017,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               handleAvatarUpload={handleAvatarUpload}
               recargas={recargas}
               recargasHoje={recargasHoje}
-              totalRecargas={recargas.length}
+              totalRecargas={totalRecargasCount}
               selectTab={selectTab}
               navigate={navigate}
             />
