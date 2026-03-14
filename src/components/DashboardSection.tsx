@@ -99,7 +99,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       const dailyMap: Record<string, number> = {};
       recsList.forEach(r => {
         const key = toLocalDateKey(r.created_at);
-        dailyMap[key] = (dailyMap[key] || 0) + Number(r.custo || 0);
+        dailyMap[key] = (dailyMap[key] || 0) + Math.max(0, Number(r.custo || 0) - Number(r.custo_api || 0));
       });
       const sortedDays = Object.entries(dailyMap)
         .map(([date, value]) => ({ date, value }))
