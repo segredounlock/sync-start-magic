@@ -706,7 +706,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const userInitial = (userLabel[0] || "R").toUpperCase();
 
   type MenuItem = { key: PainelTab; label: string; icon: typeof Send; active?: boolean; dashed?: boolean };
-  const menuItems: MenuItem[] = [
+   const menuItems: MenuItem[] = [
     { key: "recarga", label: "Nova Recarga", icon: Send, active: true },
     { key: "addSaldo", label: "Adicionar Saldo", icon: CreditCard, dashed: true },
     { key: "historico", label: "Histórico de Pedidos", icon: History },
@@ -715,9 +715,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
 
+  const salesMenuItems: MenuItem[] = !isClientMode ? [
+    { key: "meusprecos", label: "Meus Preços", icon: Tag },
+    { key: "minharede", label: "Minha Rede", icon: UsersIcon },
+  ] : [];
+
   const tabTitle: Record<PainelTab, string> = {
     recarga: "Nova Recarga", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
     extrato: "Extrato de Depósitos", contatos: "Meu Perfil", status: "Status do Sistema",
+    meusprecos: "Meus Preços", minharede: "Minha Rede",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
