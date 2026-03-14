@@ -1,40 +1,27 @@
 
 
-## Diagnóstico e Correção
+## Problema Identificado
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+O cliente está vendo o **custo interno da API** ("Paga R$ X") na tabela de preços do Telegram Mini App. Isso acontece porque:
 
-### Plano
+1. O edge function `telegram-miniapp` retorna `cost` (custo do fornecedor) e `userCost` (preço com regra de pricing)
+2. Quando não há regra de pricing do revendedor, `userCost` = `apiCost` (custo do fornecedor), que é diferente do valor de face
+3. O frontend compara `faceValue !== displayCost` → mostra "Paga R$ X" expondo o custo interno
 
-**1. Corrigir o mapeamento de status na sync function**
+**Exemplo**: Recarga de R$ 20,00 custa R$ 19,50 na API. O cliente vê "R$ 20,00 / Paga R$ 19,50" — isso é o custo interno, não deveria aparecer.
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+## Solução
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+### 1. Edge Function `telegram-miniapp` — Lógica de preço por role
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+Para **clientes** (role `cliente`): se não há regra de pricing personalizada, `userCost` deve ser igual ao `faceValue` (valor de face), não ao custo da API. O cliente paga o valor cheio a menos que o revendedor defina um preço diferente.
 
-**2. Corrigir manualmente o pedido preso**
+Para **revendedores**: manter o comportamento atual (mostra custo real).
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+### 2. Frontend `TelegramMiniApp.tsx` — Sem mudança necessária
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+A lógica `hasDiff` já funciona corretamente — o problema é que o backend envia dados errados para clientes.
 
 ### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+- `supabase/functions/telegram-miniapp/index.ts` — Ajustar `userCost` para clientes sem regra de pricing: usar `faceValue` em vez de `apiCost`
 
