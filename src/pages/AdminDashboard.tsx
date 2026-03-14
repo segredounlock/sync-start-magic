@@ -2129,7 +2129,7 @@ export default function AdminDashboard() {
                 const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                 // Status via plugin
                 return (
-                  <motion.div key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
+                  <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04, duration: 0.3 }} className="glass-card rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-primary">
