@@ -718,7 +718,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
 
-  const salesMenuItems: MenuItem[] = !isClientMode ? [
+  const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
     { key: "meusprecos", label: "Meus Preços", icon: Tag },
     { key: "minharede", label: "Minha Rede", icon: UsersIcon },
   ] : [];
