@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardSection } from "@/components/DashboardSection";
+import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
