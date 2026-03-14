@@ -76,6 +76,31 @@ export function ScratchCard({ userId }: ScratchCardProps) {
     if (data) setHistory(data as any);
   };
 
+  type ClaimResponse = {
+    error?: string;
+    message?: string;
+    card?: CardData;
+  };
+
+  type ScratchResponse = {
+    error?: string;
+    message?: string;
+    prize_amount?: number;
+    is_won?: boolean;
+  };
+
+  const parseInvokePayload = <T,>(payload: unknown): T | null => {
+    if (!payload) return null;
+    if (typeof payload === "string") {
+      try {
+        return JSON.parse(payload) as T;
+      } catch {
+        return null;
+      }
+    }
+    return payload as T;
+  };
+
   const claimCard = async () => {
     setLoading(true);
     try {
@@ -83,27 +108,49 @@ export function ScratchCard({ userId }: ScratchCardProps) {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
         body: { action: "claim" },
       });
-      console.log("[ScratchCard] Claim response:", { data, error });
+
+      const payload = parseInvokePayload<ClaimResponse>(data);
+      console.log("[ScratchCard] Claim response:", { raw: data, payload, error });
+
       if (error) {
         console.error("[ScratchCard] Claim error:", error);
         throw error;
       }
-      if (data?.error === "already_claimed" && data?.card) {
-        setCard(data.card);
-        if (data.card.is_scratched) {
+
+      if (!payload) {
+        console.error("[ScratchCard] Invalid claim payload:", data);
+        return;
+      }
+
+      if (payload.error === "already_claimed" && payload.card) {
+        const claimedCard: CardData = {
+          id: payload.card.id,
+          card_date: payload.card.card_date,
+          is_scratched: payload.card.is_scratched,
+          prize_amount: payload.card.prize_amount,
+          is_won: payload.card.is_won,
+        };
+
+        setCard(claimedCard);
+        if (claimedCard.is_scratched) {
           setRevealed(true);
-          setResult({ prize_amount: data.card.prize_amount, is_won: data.card.is_won });
+          setResult({
+            prize_amount: claimedCard.prize_amount ?? 0,
+            is_won: Boolean(claimedCard.is_won),
+          });
         } else {
           setTimeout(() => initCanvas(), 150);
         }
         return;
       }
-      if (data?.error) {
-        console.error("[ScratchCard] Server error:", data.error, data.message);
+
+      if (payload.error) {
+        console.error("[ScratchCard] Server error:", payload.error, payload.message);
         return;
       }
-      if (data?.card) {
-        setCard(data.card);
+
+      if (payload.card) {
+        setCard(payload.card);
         setTimeout(() => initCanvas(), 150);
       }
     } catch (e) {
@@ -222,9 +269,25 @@ export function ScratchCard({ userId }: ScratchCardProps) {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
         body: { action: "scratch" },
       });
+
       if (error) throw error;
-      setResult(data);
-      if (data?.is_won) {
+
+      const payload = parseInvokePayload<ScratchResponse>(data);
+      if (!payload) {
+        throw new Error("Resposta inválida da raspadinha");
+      }
+
+      if (payload.error) {
+        throw new Error(payload.message || payload.error);
+      }
+
+      const revealResult = {
+        prize_amount: Number(payload.prize_amount ?? 0),
+        is_won: Boolean(payload.is_won),
+      };
+
+      setResult(revealResult);
+      if (revealResult.is_won) {
         confetti({
           particleCount: 100,
           spread: 70,

@@ -6,6 +6,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const jsonHeaders = {
+  ...corsHeaders,
+  "Content-Type": "application/json",
+};
+
 async function getConfig(supabaseAdmin: any) {
   const keys = ["scratchEnabled", "scratchWinChance", "scratchMinPrize", "scratchMaxPrize"];
   const { data } = await supabaseAdmin
@@ -14,7 +19,9 @@ async function getConfig(supabaseAdmin: any) {
     .in("key", keys);
 
   const config: Record<string, string> = {};
-  (data || []).forEach((r: any) => { config[r.key] = r.value; });
+  (data || []).forEach((r: any) => {
+    config[r.key] = r.value;
+  });
 
   return {
     enabled: (config.scratchEnabled ?? "true") === "true",
@@ -25,18 +32,21 @@ async function getConfig(supabaseAdmin: any) {
 }
 
 function generatePrize(min: number, max: number): number {
-  // Weighted towards lower values using power distribution
-  const rand = Math.pow(Math.random(), 2); // squares bias towards 0
+  const rand = Math.pow(Math.random(), 2);
   const raw = min + rand * (max - min);
-  return Math.round(raw * 100) / 100; // round to cents
+  return Math.round(raw * 100) / 100;
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return new Response(JSON.stringify({ error: "No auth" }), { status: 401, headers: corsHeaders });
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No auth" }), { status: 401, headers: jsonHeaders });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -45,8 +55,14 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
-    if (authError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseUser.auth.getUser();
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: jsonHeaders });
+    }
 
     const body = await req.json();
     const { action } = body;
@@ -54,7 +70,10 @@ Deno.serve(async (req) => {
     const config = await getConfig(supabaseAdmin);
 
     if (!config.enabled) {
-      return new Response(JSON.stringify({ error: "disabled", message: "Raspadinha está desativada no momento." }), { status: 400, headers: corsHeaders });
+      return new Response(
+        JSON.stringify({ error: "disabled", message: "Raspadinha está desativada no momento." }),
+        { status: 400, headers: jsonHeaders },
+      );
     }
 
     if (action === "claim") {
@@ -67,10 +86,19 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existing) {
-        return new Response(JSON.stringify({
-          error: "already_claimed",
-          card: { id: existing.id, card_date: today, is_scratched: existing.is_scratched, prize_amount: existing.is_scratched ? existing.prize_amount : undefined, is_won: existing.is_scratched ? existing.is_won : undefined },
-        }), { status: 200, headers: corsHeaders });
+        return new Response(
+          JSON.stringify({
+            error: "already_claimed",
+            card: {
+              id: existing.id,
+              card_date: today,
+              is_scratched: existing.is_scratched,
+              prize_amount: existing.is_scratched ? existing.prize_amount : undefined,
+              is_won: existing.is_scratched ? existing.is_won : undefined,
+            },
+          }),
+          { status: 200, headers: jsonHeaders },
+        );
       }
 
       const isWin = Math.random() < config.winChance;
@@ -89,10 +117,15 @@ Deno.serve(async (req) => {
 
       if (insertError) {
         console.error("Insert error:", insertError);
-        return new Response(JSON.stringify({ error: insertError.message }), { status: 500, headers: corsHeaders });
+        return new Response(JSON.stringify({ error: insertError.message }), { status: 500, headers: jsonHeaders });
       }
 
-      return new Response(JSON.stringify({ card: { id: card.id, card_date: card.card_date, is_scratched: false } }), { headers: corsHeaders });
+      return new Response(
+        JSON.stringify({
+          card: { id: card.id, card_date: card.card_date, is_scratched: false },
+        }),
+        { headers: jsonHeaders },
+      );
     }
 
     if (action === "scratch") {
@@ -107,7 +140,10 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (!card) {
-        return new Response(JSON.stringify({ error: "no_card", message: "Nenhuma raspadinha para raspar" }), { status: 400, headers: corsHeaders });
+        return new Response(
+          JSON.stringify({ error: "no_card", message: "Nenhuma raspadinha para raspar" }),
+          { status: 400, headers: jsonHeaders },
+        );
       }
 
       await supabaseAdmin
@@ -132,15 +168,21 @@ Deno.serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({
-        prize_amount: card.prize_amount,
-        is_won: card.is_won,
-      }), { headers: corsHeaders });
+      return new Response(
+        JSON.stringify({
+          prize_amount: card.prize_amount,
+          is_won: card.is_won,
+        }),
+        { headers: jsonHeaders },
+      );
     }
 
-    return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: jsonHeaders });
   } catch (err) {
     console.error(err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: err instanceof Error ? err.message : "Erro interno" }),
+      { status: 500, headers: jsonHeaders },
+    );
   }
 });
