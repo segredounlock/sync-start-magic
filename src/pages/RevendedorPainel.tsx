@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardSection } from "@/components/DashboardSection";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { lazy, Suspense } from "react";
 
 const BackupSection = lazy(() => import("@/components/BackupSection"));
@@ -76,6 +77,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileNome, setProfileNome] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [profileBadge, setProfileBadge] = useState<BadgeType | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
 
@@ -201,7 +203,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "pessoal").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
-        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url, referral_code").eq("id", user.id).single(),
+        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url, referral_code, verification_badge").eq("id", user.id).single(),
         supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle(),
         supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
@@ -218,6 +220,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setProfileSlug(p?.slug || "");
       setReferralCode(p?.referral_code || "");
       setAvatarUrl(p?.avatar_url || null);
+      setProfileBadge((p?.verification_badge as BadgeType) || null);
     });
   }, [user, runFetch]);
 
@@ -961,6 +964,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   <p className="text-sm font-bold text-foreground truncate uppercase shimmer-letters">
                     {userLabel}
                   </p>
+                  <VerificationBadge badge={profileBadge} size="md" />
                   {role === "admin" && (
                     <svg className="h-4 w-4 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor" style={{ animationName: 'spin-wobble' }}>
                       <path d="M12 2L14.09 8.26L21 9.27L16.18 13.14L17.64 20.02L12 16.77L6.36 20.02L7.82 13.14L3 9.27L9.91 8.26L12 2Z" />
