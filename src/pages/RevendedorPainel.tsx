@@ -2149,6 +2149,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: MINHA REDE ===== */}
           {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} referralCode={referralCode} />}
 
+          {/* ===== TAB: ATUALIZAÇÕES ===== */}
+          {tab === "atualizacoes" && <AtualizacoesSection />}
+
         </main>
       </div>
 
