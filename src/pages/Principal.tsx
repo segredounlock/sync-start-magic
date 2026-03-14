@@ -176,6 +176,7 @@ export default function Principal() {
   const [view, setView] = useState<PrincipalView>("dashboard");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
 
   // Broadcast state
   const [broadcastSending, setBroadcastSending] = useState(false);
@@ -2031,23 +2032,7 @@ export default function Principal() {
                       <Trash2 className="h-4 w-4 inline mr-1" /> Deletar
                     </button>
                     <button
-                      onClick={async () => {
-                        const newPass = prompt("Digite a nova senha (mínimo 6 caracteres):");
-                        if (!newPass || newPass.length < 6) {
-                          if (newPass !== null) toast.error("Senha deve ter no mínimo 6 caracteres");
-                          return;
-                        }
-                        try {
-                          const { data, error } = await supabase.functions.invoke("admin-reset-password", {
-                            body: { user_id: selectedRev.id, new_password: newPass },
-                          });
-                          if (error) throw error;
-                          if (data?.error) throw new Error(data.error);
-                          toast.success("Senha alterada com sucesso!");
-                        } catch (err: any) {
-                          toast.error(err.message || "Erro ao alterar senha");
-                        }
-                      }}
+                      onClick={() => setShowPasswordModal(selectedRev)}
                       className="px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-warning/10 text-warning hover:bg-warning/20"
                     >
                       <KeyRound className="h-4 w-4 inline mr-1" /> Redefinir Senha
@@ -4282,6 +4267,7 @@ export default function Principal() {
 
       {showCreateModal && <CreateRevendedorModal onClose={() => setShowCreateModal(false)} onCreated={fetchData} />}
       {showSaldoModal && <SaldoModal rev={showSaldoModal} onClose={() => setShowSaldoModal(null)} onUpdated={fetchData} />}
+      {showPasswordModal && <ResetPasswordModal rev={showPasswordModal} onClose={() => setShowPasswordModal(null)} />}
 
       {/* Mobile Bottom Nav */}
       <MobileBottomNav
@@ -4580,6 +4566,115 @@ function SaldoModal({ rev, onClose, onUpdated }: { rev: Revendedor; onClose: () 
           <button onClick={() => handleSaldo("set")} disabled={loading} className="flex-1 py-2 rounded-md bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50">Definir</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ResetPasswordModal({ rev, onClose }: { rev: Revendedor; onClose: () => void }) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const isValid = newPassword.length >= 6 && newPassword === confirmPassword;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+        body: { user_id: rev.id, new_password: newPassword },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Senha alterada com sucesso!");
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar senha");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        onClick={e => e.stopPropagation()}
+        className="w-full max-w-md glass-card rounded-2xl border border-border/50 shadow-2xl overflow-hidden"
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border/50 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+            <KeyRound className="h-5 w-5 text-warning" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-foreground text-base">Redefinir Senha</h3>
+            <p className="text-xs text-muted-foreground truncate">{rev.nome || rev.email}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Nova Senha</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                minLength={6}
+                required
+                autoFocus
+                className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/30 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary pr-10 transition-all"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {newPassword.length > 0 && newPassword.length < 6 && (
+              <p className="text-[11px] text-destructive mt-1">Mínimo de 6 caracteres</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Confirmar Senha</label>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="Repita a senha"
+              required
+              className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/30 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            />
+            {confirmPassword.length > 0 && newPassword !== confirmPassword && (
+              <p className="text-[11px] text-destructive mt-1">As senhas não coincidem</p>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-border text-foreground text-sm font-medium hover:bg-muted/50 transition-colors">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={!isValid || loading}
+              className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-40 transition-all flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+              {loading ? "Salvando..." : "Alterar Senha"}
+            </button>
+          </div>
+        </form>
+      </motion.div>
     </div>
   );
 }
