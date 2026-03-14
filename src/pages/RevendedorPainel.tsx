@@ -159,7 +159,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             const rule = resellerRule || globalRule;
             const cost = rule
               ? rule.tipo_regra === "fixo"
-                ? Number(rule.regra_valor)
+                ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
                 : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100)
               : v;
             return { valueId: `${op.id}_${v}`, value: v, cost };

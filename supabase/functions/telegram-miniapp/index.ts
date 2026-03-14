@@ -210,7 +210,7 @@ serve(async (req) => {
 
           const applyRule = (rule: any) => {
             return rule.tipo_regra === "fixo"
-              ? Number(rule.regra_valor)
+              ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
               : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
           };
 

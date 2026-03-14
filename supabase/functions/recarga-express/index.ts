@@ -476,7 +476,7 @@ Deno.serve(async (req) => {
           pricingSource = source;
           pricingRuleDetails = { tipo_regra: rule.tipo_regra, regra_valor: Number(rule.regra_valor), custo: Number(rule.custo) };
           return rule.tipo_regra === "fixo"
-            ? Number(rule.regra_valor)
+            ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
             : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
         };
 
@@ -749,7 +749,7 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (resellerRule) {
           prChargedCost = resellerRule.tipo_regra === "fixo"
-            ? Number(resellerRule.regra_valor)
+            ? (Number(resellerRule.regra_valor) > 0 ? Number(resellerRule.regra_valor) : Number(resellerRule.custo))
             : Number(resellerRule.custo) * (1 + Number(resellerRule.regra_valor) / 100);
         } else {
           const { data: globalRule } = await adminClient
@@ -760,7 +760,7 @@ Deno.serve(async (req) => {
             .maybeSingle();
           if (globalRule) {
             prChargedCost = globalRule.tipo_regra === "fixo"
-              ? Number(globalRule.regra_valor)
+              ? (Number(globalRule.regra_valor) > 0 ? Number(globalRule.regra_valor) : Number(globalRule.custo))
               : Number(globalRule.custo) * (1 + Number(globalRule.regra_valor) / 100);
           }
         }
