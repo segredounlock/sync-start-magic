@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, History, Send, Landmark, Smartphone, Shield, Activity,
   CheckCircle2, Loader2, Camera, Pencil, Calendar, Clock,
-  X, Check, ChevronDown, ChevronUp, Lock, LogOut,
+  X, Check, ChevronDown, ChevronUp, Lock, LogOut, User,
+  Key, QrCode, BarChart3, HeadphonesIcon, Bell,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import type { Recarga } from "@/types";
@@ -35,12 +36,24 @@ interface ProfileTabProps {
   navigate: (path: string) => void;
 }
 
+type SettingsSubTab = "perfil" | "seguranca" | "pix" | "pixel" | "suporte" | "notificacoes";
+
+const subTabs: { key: SettingsSubTab; label: string; icon: React.ElementType }[] = [
+  { key: "perfil", label: "Meu Perfil", icon: User },
+  { key: "seguranca", label: "Segurança", icon: Shield },
+  { key: "pix", label: "Chave PIX", icon: QrCode },
+  { key: "pixel", label: "Pixel Ads", icon: BarChart3 },
+  { key: "suporte", label: "Suporte", icon: HeadphonesIcon },
+  { key: "notificacoes", label: "Notificações", icon: Bell },
+];
+
 export function ProfileTab({
   user, role, avatarUrl, avatarError, setAvatarError, userLabel, userInitial,
   profileNome, setProfileNome, saldo, loading, fmt, telegramLinked,
   telegramUsername, whatsappNumber, uploadingAvatar, handleAvatarUpload,
   recargas, recargasHoje, totalRecargas, selectTab, navigate,
 }: ProfileTabProps) {
+  const [activeSubTab, setActiveSubTab] = useState<SettingsSubTab>("perfil");
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [bio, setBio] = useState("");
@@ -54,7 +67,14 @@ export function ProfileTab({
   const [followersList, setFollowersList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
   const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
   const [listLoading, setListLoading] = useState(false);
-  const [showExtras, setShowExtras] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [editingSlug, setEditingSlug] = useState(false);
+  const [slugText, setSlugText] = useState("");
+  const [savingSlug, setSavingSlug] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailText, setEmailText] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [nomeText, setNomeText] = useState("");
 
   const recargasCompleted = recargas.filter((r) => r.status === "completed").length;
 
@@ -63,7 +83,7 @@ export function ProfileTab({
     const load = async () => {
       const [{ data: counts }, { data: profile }] = await Promise.all([
         supabase.rpc("get_follow_counts", { _user_id: user.id }),
-        supabase.from("profiles").select("bio, verification_badge, created_at").eq("id", user.id).single(),
+        supabase.from("profiles").select("bio, verification_badge, slug, nome, email").eq("id", user.id).single(),
       ]);
       if (counts && Array.isArray(counts) && counts.length > 0) {
         setFollowersCount(Number(counts[0].followers_count) || 0);
@@ -73,31 +93,48 @@ export function ProfileTab({
         setBio((profile as any).bio || "");
         setBioText((profile as any).bio || "");
         setBadge(((profile as any).verification_badge as BadgeType) || null);
+        setSlug((profile as any).slug || "");
+        setSlugText((profile as any).slug || "");
+        setNomeText((profile as any).nome || profileNome || "");
+        setEmailText(user?.email || "");
       }
     };
     load();
   }, [user?.id]);
 
-  const handleSaveBio = async () => {
+  const handleSaveProfile = async () => {
     if (!user) return;
-    setSavingBio(true);
+    setSavingProfile(true);
     try {
-      await supabase.from("profiles").update({ bio: bioText.trim() } as any).eq("id", user.id);
-      setBio(bioText.trim());
-      setEditingBio(false);
-      toast.success("Bio atualizada!");
-    } catch { toast.error("Erro ao salvar bio"); }
-    finally { setSavingBio(false); }
-  };
-
-  const handleSaveNome = async () => {
-    if (!user || !profileNome.trim()) { toast.error("Informe um nome válido"); return; }
-    try {
-      const { error } = await supabase.from("profiles").update({ nome: profileNome.trim() } as any).eq("id", user.id);
-      if (error) throw error;
-      setEditingNome(false);
-      toast.success("Nome atualizado!");
-    } catch { toast.error("Erro ao salvar nome"); }
+      const updates: any = {};
+      if (nomeText.trim() && nomeText.trim() !== profileNome) {
+        updates.nome = nomeText.trim();
+        setProfileNome(nomeText.trim());
+      }
+      if (slugText.trim() !== slug) {
+        const cleanSlug = slugText.trim().toLowerCase().replace(/[^a-z0-9._]/g, "");
+        updates.slug = cleanSlug || null;
+        setSlugText(cleanSlug);
+      }
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+        if (error) throw error;
+        if (updates.nome) setProfileNome(updates.nome);
+        if (updates.slug !== undefined) setSlug(updates.slug || "");
+      }
+      // Handle email change
+      if (emailText.trim() && emailText.trim() !== user.email) {
+        const { error } = await supabase.auth.updateUser({ email: emailText.trim() });
+        if (error) throw error;
+        toast.success("Alterações salvas! Verifique o novo e-mail para confirmação.");
+      } else {
+        toast.success("Alterações salvas!");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao salvar");
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const loadFollowersList = async () => {
@@ -128,267 +165,299 @@ export function ProfileTab({
 
   const roleLabel = role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário";
   const roleColor = role === "admin" ? "bg-primary/15 text-primary" : role === "revendedor" ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground";
-  const hasGlow = role === "admin" || !!badge;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-0 pb-4">
-      {/* Cover gradient - more dramatic */}
-      <div className="h-28 rounded-t-2xl bg-gradient-to-br from-primary/40 via-primary/15 to-transparent relative -mx-1 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.2),transparent_70%)]" />
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 pb-4">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Configurações da Conta</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Gerencie seus dados pessoais, segurança e preferências.</p>
       </div>
 
-      {/* Profile header */}
-      <div className="flex flex-col items-center -mt-16 relative z-10 px-4">
-        {/* Avatar */}
-        <label className="relative cursor-pointer group">
-          {avatarUrl && !avatarError ? (
-            <img
-              src={avatarUrl}
-              alt="Avatar"
-              className="w-[104px] h-[104px] rounded-full object-cover ring-[3px] ring-background shadow-2xl"
-              referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
-              onError={() => setAvatarError(true)}
-            />
-          ) : (
-            <div className="w-[104px] h-[104px] rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground flex items-center justify-center font-bold text-3xl ring-[3px] ring-background shadow-2xl">
-              {userInitial}
-            </div>
-          )}
-          <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            {uploadingAvatar ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
-          </div>
-          <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg border-2 border-background">
-            <Camera className="h-3 w-3" />
-          </div>
-          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
-        </label>
-
-        {/* Name + badge */}
-        <div className="flex items-center gap-1.5 mt-3">
-          {editingNome ? (
-            <div className="flex items-center gap-2">
-              <input
-                value={profileNome}
-                onChange={(e) => setProfileNome(e.target.value)}
-                className="px-3 py-1 rounded-lg glass-input text-sm text-foreground border border-border text-center font-bold uppercase"
-                maxLength={100}
-                autoFocus
-              />
-              <button onClick={handleSaveNome} className="p-1.5 rounded-lg bg-primary text-primary-foreground"><Check className="h-4 w-4" /></button>
-              <button onClick={() => setEditingNome(false)} className="p-1.5 rounded-lg bg-muted text-muted-foreground"><X className="h-4 w-4" /></button>
-            </div>
-          ) : (
-            <button onClick={() => setEditingNome(true)} className="flex items-center gap-1.5 group">
-              <h1 className={`font-display text-xl font-bold uppercase ${hasGlow ? "shimmer-letters" : "text-foreground"}`}>{userLabel}</h1>
-              <VerificationBadge badge={badge} size="md" />
-              {role === "admin" && (
-                <svg className="h-5 w-5 text-primary flex-shrink-0 animate-[spin-wobble_3s_ease-in-out_infinite]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L14.09 8.26L21 9.27L16.18 13.14L17.64 20.02L12 16.77L6.36 20.02L7.82 13.14L3 9.27L9.91 8.26L12 2Z" />
-                  <path d="M9.5 12.5L11 14L14.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </svg>
-              )}
-              <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          )}
-        </div>
-
-        {/* Email + role */}
-        <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
-        <span className={`inline-block mt-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${roleColor}`}>
-          {roleLabel}
-        </span>
-
-        {/* Bio */}
-        <div className="mt-2 px-4 text-center w-full max-w-xs">
-          {editingBio ? (
-            <div className="flex items-center gap-2">
-              <input
-                value={bioText}
-                onChange={(e) => setBioText(e.target.value)}
-                maxLength={160}
-                placeholder="Escreva sua bio..."
-                className="flex-1 px-3 py-1.5 rounded-lg glass-input text-xs text-foreground border border-border text-center"
-                autoFocus
-              />
-              <button onClick={handleSaveBio} disabled={savingBio} className="p-1.5 rounded-lg bg-primary text-primary-foreground">
-                {savingBio ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-              </button>
-              <button onClick={() => { setEditingBio(false); setBioText(bio); }} className="p-1.5 rounded-lg bg-muted text-muted-foreground">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : (
-            <p
-              className={`text-xs cursor-pointer hover:text-foreground transition-colors ${bio ? "text-muted-foreground" : "text-muted-foreground/40 italic"}`}
-              onClick={() => setEditingBio(true)}
-            >
-              {bio || "Toque para adicionar bio"}
-              <Pencil className="h-2.5 w-2.5 inline ml-1 opacity-40" />
-            </p>
-          )}
-        </div>
-
-        {/* Stats row */}
-        <div className="flex items-center gap-0 mt-5 w-full max-w-xs">
-          <button onClick={loadFollowersList} className="flex-1 flex flex-col items-center py-2 rounded-l-xl hover:bg-muted/30 transition-colors border border-border/50">
-            <span className="font-display text-lg font-bold text-foreground tabular-nums">{followersCount}</span>
-            <span className="text-[10px] text-muted-foreground font-medium">Seguidores</span>
+      {/* Sub-tabs */}
+      <div className="bg-muted/30 rounded-xl p-1 flex gap-0.5 overflow-x-auto no-scrollbar">
+        {subTabs.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveSubTab(key)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+              activeSubTab === key
+                ? "bg-background text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
           </button>
-          <div className="flex-1 flex flex-col items-center py-2 border-y border-border/50">
-            <span className="font-display text-lg font-bold text-foreground tabular-nums">{recargasCompleted}</span>
-            <span className="text-[10px] text-muted-foreground font-medium">Recargas</span>
-          </div>
-          <button onClick={loadFollowingList} className="flex-1 flex flex-col items-center py-2 rounded-r-xl hover:bg-muted/30 transition-colors border border-border/50">
-            <span className="font-display text-lg font-bold text-foreground tabular-nums">{followingCount}</span>
-            <span className="text-[10px] text-muted-foreground font-medium">Seguindo</span>
-          </button>
-        </div>
+        ))}
       </div>
 
-      {/* Quick action cards */}
-      <div className="grid grid-cols-3 gap-2 mt-5 px-1">
-        <button onClick={() => selectTab("historico")} className="glass-card rounded-xl p-3 flex flex-col items-center gap-1.5 hover:bg-muted/40 transition-colors">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <History className="h-4 w-4 text-primary" />
-          </div>
-          <span className="text-[11px] font-semibold text-foreground">Histórico</span>
-        </button>
-        <button onClick={() => selectTab("extrato")} className="glass-card rounded-xl p-3 flex flex-col items-center gap-1.5 hover:bg-muted/40 transition-colors">
-          <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
-            <Landmark className="h-4 w-4 text-success" />
-          </div>
-          <span className="text-[11px] font-semibold text-foreground">Depósitos</span>
-        </button>
-        <button onClick={() => selectTab("addSaldo")} className="glass-card rounded-xl p-3 flex flex-col items-center gap-1.5 hover:bg-muted/40 transition-colors">
-          <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-            <Wallet className="h-4 w-4 text-accent" />
-          </div>
-          <span className="text-[11px] font-semibold text-foreground">Saldo</span>
-        </button>
-      </div>
-
-      {/* Saldo card - compact */}
-      <div className="glass-card rounded-xl p-3.5 mx-1 mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Wallet className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Saldo Disponível</p>
-            <p className="text-lg font-bold text-foreground tabular-nums">{loading ? "..." : fmt(saldo)}</p>
-          </div>
-        </div>
-        <button onClick={() => selectTab("addSaldo")} className="px-3 py-1.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold hover:bg-primary/25 transition-colors">
-          Depositar
-        </button>
-      </div>
-
-      {/* Collapsible extras */}
-      <div className="mx-1 mt-3">
-        <button
-          onClick={() => setShowExtras(!showExtras)}
-          className="w-full glass-card rounded-xl p-3 flex items-center justify-between hover:bg-muted/30 transition-colors"
+      {/* Sub-tab content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeSubTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.15 }}
         >
-          <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-semibold text-foreground">Configurações & Integrações</span>
-          </div>
-          {showExtras ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-        </button>
+          {activeSubTab === "perfil" && (
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-4">
+              {/* Left: Profile card */}
+              <div className="bg-card rounded-2xl border border-border p-6 flex flex-col items-center text-center">
+                <label className="relative cursor-pointer group">
+                  {avatarUrl && !avatarError ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar"
+                      className="w-24 h-24 rounded-full object-cover ring-4 ring-primary/20"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      onError={() => setAvatarError(true)}
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground flex items-center justify-center font-bold text-3xl ring-4 ring-primary/20">
+                      {userInitial}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    {uploadingAvatar ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                  </div>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
+                </label>
 
-        <AnimatePresence>
-          {showExtras && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="space-y-2 pt-2">
-                {/* Telegram integration */}
-                <div className="glass-card rounded-xl p-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0088cc, #0077b5)" }}>
-                    <Send className="h-3.5 w-3.5 text-white" />
+                <h2 className="text-lg font-bold text-foreground mt-3 flex items-center gap-1.5">
+                  {userLabel}
+                  <VerificationBadge badge={badge} size="md" />
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                  {user?.email}
+                  {badge && <CheckCircle2 className="h-3 w-3 text-success" />}
+                </p>
+                <span className={`inline-block mt-2 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${roleColor}`}>
+                  {roleLabel}
+                </span>
+
+                {/* Stats */}
+                <div className="flex items-center gap-0 mt-5 w-full">
+                  <button onClick={loadFollowersList} className="flex-1 flex flex-col items-center py-2 rounded-l-xl hover:bg-muted/30 transition-colors border border-border/50">
+                    <span className="text-lg font-bold text-foreground tabular-nums">{followersCount}</span>
+                    <span className="text-[10px] text-muted-foreground">Seguidores</span>
+                  </button>
+                  <div className="flex-1 flex flex-col items-center py-2 border-y border-border/50">
+                    <span className="text-lg font-bold text-foreground tabular-nums">{recargasCompleted}</span>
+                    <span className="text-[10px] text-muted-foreground">Recargas</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground text-xs">Telegram</p>
-                    <p className="text-[10px] text-muted-foreground">{telegramLinked ? "Conta vinculada" : "Não configurado"}</p>
-                  </div>
-                  <span className={`flex items-center gap-1 text-[10px] font-bold ${telegramLinked ? "text-success" : "text-muted-foreground"}`}>
-                    {telegramLinked ? <><CheckCircle2 className="h-3 w-3" /> Ativo</> : "Inativo"}
-                  </span>
+                  <button onClick={loadFollowingList} className="flex-1 flex flex-col items-center py-2 rounded-r-xl hover:bg-muted/30 transition-colors border border-border/50">
+                    <span className="text-lg font-bold text-foreground tabular-nums">{followingCount}</span>
+                    <span className="text-[10px] text-muted-foreground">Seguindo</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Edit form */}
+              <div className="bg-card rounded-2xl border border-border p-6 space-y-5">
+                <div className="flex items-center gap-2">
+                  <Pencil className="h-4 w-4 text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Editar Informações</h3>
                 </div>
 
-                {/* Contact links */}
-                {(telegramUsername || whatsappNumber) && (
-                  <div className="glass-card rounded-xl p-2.5 space-y-1">
-                    {telegramUsername && (
-                      <a href={`https://t.me/${telegramUsername}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/30 transition-colors">
-                        <Send className="h-3 w-3" /> @{telegramUsername}
-                      </a>
-                    )}
-                    {whatsappNumber && (
-                      <a href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/30 transition-colors">
-                        <Smartphone className="h-3 w-3" /> {whatsappNumber}
-                      </a>
-                    )}
-                  </div>
-                )}
+                {/* Nome */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">Nome Completo</label>
+                  <input
+                    value={nomeText}
+                    onChange={(e) => setNomeText(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    placeholder="Seu nome"
+                    maxLength={100}
+                  />
+                </div>
 
-                {/* Security */}
-                <div className="glass-card rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-foreground">Segurança</span>
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">E-mail de Contato</label>
+                  <input
+                    value={emailText}
+                    onChange={(e) => setEmailText(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    placeholder="seu@email.com"
+                    type="email"
+                  />
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                    Nota: Alterar o e-mail exigirá uma nova verificação.
+                  </p>
+                </div>
+
+                {/* Slug / Username */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">
+                    Nome de Usuário <span className="text-muted-foreground font-normal">(URL do seu perfil)</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                    <input
+                      value={slugText}
+                      onChange={(e) => setSlugText(e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ""))}
+                      className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                      placeholder="seu.nome"
+                      maxLength={30}
+                    />
                   </div>
-                  <button onClick={async () => {
-                    if (!user?.email) return;
-                    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
-                    if (error) toast.error("Erro ao enviar e-mail");
-                    else toast.success("E-mail de redefinição enviado!");
-                  }} className="text-[11px] font-semibold text-primary hover:underline">
-                    Alterar Senha
+                  <p className="text-[10px] text-muted-foreground">
+                    Apenas letras minúsculas, números, pontos e sublinhados.
+                  </p>
+                </div>
+
+                <div className="border-t border-border pt-4 flex justify-end">
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={savingProfile}
+                    className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {savingProfile && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Salvar Alterações
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeSubTab === "seguranca" && (
+            <div className="bg-card rounded-2xl border border-border p-6 space-y-5">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Segurança</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Alterar Senha</p>
+                      <p className="text-xs text-muted-foreground">Enviaremos um e-mail para redefinição</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!user?.email) return;
+                      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+                      if (error) toast.error("Erro ao enviar e-mail");
+                      else toast.success("E-mail de redefinição enviado!");
+                    }}
+                    className="px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors"
+                  >
+                    Redefinir
                   </button>
                 </div>
 
-                {/* Logout */}
-                <button
-                  onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
-                  className="w-full glass-card rounded-xl p-3 flex items-center gap-2 hover:bg-destructive/10 transition-colors"
-                >
-                  <LogOut className="h-3.5 w-3.5 text-destructive" />
-                  <span className="text-xs font-semibold text-destructive">Sair da conta</span>
-                </button>
+                <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <Send className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Telegram</p>
+                      <p className="text-xs text-muted-foreground">
+                        {telegramLinked ? `Vinculado${telegramUsername ? ` (@${telegramUsername})` : ""}` : "Não configurado"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`flex items-center gap-1 text-xs font-bold ${telegramLinked ? "text-success" : "text-muted-foreground"}`}>
+                    {telegramLinked ? <><CheckCircle2 className="h-3.5 w-3.5" /> Ativo</> : "Inativo"}
+                  </span>
+                </div>
+
+                {whatsappNumber && (
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">WhatsApp</p>
+                        <p className="text-xs text-muted-foreground">{whatsappNumber}</p>
+                      </div>
+                    </div>
+                    <a
+                      href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-primary hover:underline"
+                    >
+                      Abrir
+                    </a>
+                  </div>
+                )}
+
+                <div className="border-t border-border pt-4">
+                  <button
+                    onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
+                    className="w-full py-3 rounded-xl bg-destructive/10 text-destructive text-sm font-bold flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" /> Sair da conta
+                  </button>
+                </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 gap-2 mx-1 mt-3">
-        <div className="glass-card rounded-xl p-3">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Smartphone className="h-4 w-4 text-primary" />
+          {activeSubTab === "pix" && (
+            <div className="bg-card rounded-2xl border border-border p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <QrCode className="h-4 w-4 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Chave PIX</h3>
+              </div>
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <QrCode className="h-10 w-10 opacity-30 mb-3" />
+                <p className="text-sm font-medium">Em breve</p>
+                <p className="text-xs mt-1 opacity-70">Configuração de chaves PIX para recebimento</p>
+              </div>
             </div>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Recargas Hoje</span>
-          </div>
-          <p className="text-xl font-bold text-primary tabular-nums">{recargasHoje}</p>
-        </div>
-        <div className="glass-card rounded-xl p-3">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-              <Clock className="h-4 w-4 text-accent" />
-            </div>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total</span>
-          </div>
-          <p className="text-xl font-bold text-accent tabular-nums">{totalRecargas}</p>
-        </div>
-      </div>
+          )}
 
+          {activeSubTab === "pixel" && (
+            <div className="bg-card rounded-2xl border border-border p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Pixel Ads</h3>
+              </div>
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <BarChart3 className="h-10 w-10 opacity-30 mb-3" />
+                <p className="text-sm font-medium">Em breve</p>
+                <p className="text-xs mt-1 opacity-70">Integração com pixels de rastreamento de anúncios</p>
+              </div>
+            </div>
+          )}
+
+          {activeSubTab === "suporte" && (
+            <div className="bg-card rounded-2xl border border-border p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <HeadphonesIcon className="h-4 w-4 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Suporte</h3>
+              </div>
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <HeadphonesIcon className="h-10 w-10 opacity-30 mb-3" />
+                <p className="text-sm font-medium">Em breve</p>
+                <p className="text-xs mt-1 opacity-70">Central de ajuda e suporte ao revendedor</p>
+              </div>
+            </div>
+          )}
+
+          {activeSubTab === "notificacoes" && (
+            <div className="bg-card rounded-2xl border border-border p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Bell className="h-4 w-4 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Notificações</h3>
+              </div>
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <Bell className="h-10 w-10 opacity-30 mb-3" />
+                <p className="text-sm font-medium">Em breve</p>
+                <p className="text-xs mt-1 opacity-70">Gerencie suas preferências de notificação</p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Followers/Following modal */}
       <AnimatePresence>
         {(showFollowers || showFollowing) && (
           <motion.div
