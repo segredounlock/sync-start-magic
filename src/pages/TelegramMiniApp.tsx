@@ -960,7 +960,7 @@ export default function TelegramMiniApp() {
                           transition={{ delay: 0.6 }}
                           onClick={async () => {
                             const d = recargaResult.details!;
-                            const text = `✅ *Comprovante de Recarga*\n\n📱 Telefone: ${d.telefone}\n📡 Operadora: ${d.operadora}\n💰 Valor: ${formatCurrency(d.valor)}\n🆔 Pedido: ${d.pedidoId || "—"}\n🕐 Data: ${d.hora}\n\nRecarga realizada com sucesso!`;
+                            const text = `✅ *Comprovante de Recarga*\n\n📱 Telefone: ${d.telefone}\n📡 Operadora: ${(d.operadora || "—").toUpperCase()}\n💰 Valor: ${formatCurrency(d.valor)}\n🆔 Pedido: ${d.pedidoId || "—"}\n🕐 Data: ${d.hora}\n\nRecarga realizada com sucesso!`;
                             try {
                               if (navigator.share) {
                                 await navigator.share({ title: "Comprovante de Recarga", text: text.replace(/\*/g, "") });
