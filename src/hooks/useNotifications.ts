@@ -206,7 +206,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             addNotification({
               id: r.id,
               type: "recarga",
-              message: `Recarga ${insertLabel} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
+              message: `Recarga ${insertLabel} — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`,
               amount: Number(r.valor),
               user_id: r.user_id,
               user_nome: profile.nome || undefined,
