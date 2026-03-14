@@ -796,17 +796,7 @@ async function handleRecargas(supabase: any, token: string, chatId: number, user
   ]]);
 }
 
-async function handleRecarga(supabase: any, token: string, chatId: number, user: any, text: string) {
-  const parts = text.replace("/recarga", "").trim().split(/\s+/);
-  if (parts.length < 2 || !parts[0]) {
-    await sendMessageWithKeyboard(token, chatId,
-      "📱 <b>Como fazer recarga:</b>\n\nEnvie: <code>TELEFONE VALOR</code>\n\nExemplo: <code>11999998888 20</code>",
-      [[{ text: "📖 Menu", callback_data: "menu_main" }]]
-    );
-    return;
-  }
-  await executeRecarga(supabase, token, chatId, user, parts[0], parts[1]);
-}
+// handleRecarga removed — /recarga now redirects to operator selection menu
 
 async function executeRecarga(supabase: any, token: string, chatId: number, user: any, phone: string, valorStr: string) {
   const telefone = phone.replace(/\D/g, "");
