@@ -30,7 +30,7 @@ import {
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
-  Trophy, Check,
+  Trophy, Check, KeyRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -2029,6 +2029,28 @@ export default function Principal() {
                       className="px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20"
                     >
                       <Trash2 className="h-4 w-4 inline mr-1" /> Deletar
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const newPass = prompt("Digite a nova senha (mínimo 6 caracteres):");
+                        if (!newPass || newPass.length < 6) {
+                          if (newPass !== null) toast.error("Senha deve ter no mínimo 6 caracteres");
+                          return;
+                        }
+                        try {
+                          const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+                            body: { user_id: selectedRev.id, new_password: newPass },
+                          });
+                          if (error) throw error;
+                          if (data?.error) throw new Error(data.error);
+                          toast.success("Senha alterada com sucesso!");
+                        } catch (err: any) {
+                          toast.error(err.message || "Erro ao alterar senha");
+                        }
+                      }}
+                      className="px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-warning/10 text-warning hover:bg-warning/20"
+                    >
+                      <KeyRound className="h-4 w-4 inline mr-1" /> Redefinir Senha
                     </button>
                 </div>
 
