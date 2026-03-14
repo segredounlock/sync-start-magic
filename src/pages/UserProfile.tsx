@@ -47,7 +47,7 @@ export default function UserProfile() {
   const [avatarError, setAvatarError] = useState(false);
 
   // Edit mode (only for own profile)
-  const isOwnProfile = user?.id === userId;
+  const isOwnProfile = user?.id === resolvedId;
   const [editingBio, setEditingBio] = useState(false);
   const [bioText, setBioText] = useState("");
   const [savingBio, setSavingBio] = useState(false);
