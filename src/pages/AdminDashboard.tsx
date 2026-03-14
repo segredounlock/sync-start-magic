@@ -2192,7 +2192,7 @@ export default function AdminDashboard() {
                   ).map((t, idx) => {
                     const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                     return (
-                      <motion.tr key={t.id} className="border-b border-border/50 last:border-0 hover:bg-primary/[0.04] transition-colors cursor-pointer group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} onClick={() => setSelectedDeposit(t)}>
+                      <motion.tr key={t.id} className="border-b border-border/50 last:border-0 hover:bg-primary/[0.04] transition-colors cursor-pointer group" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.04, duration: 0.3 }} onClick={() => setSelectedDeposit(t)}>
                         <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap text-[11px]">{fmtDate(t.created_at)}</td>
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2.5">
