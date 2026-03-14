@@ -6,6 +6,7 @@ import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
+import { Currency, IntVal, StatusBadge } from "@/components/ui";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { PromoBanner } from "@/components/PromoBanner";
@@ -1563,10 +1564,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="font-bold text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></p>
-                            <span className={`text-xs font-medium ${(r.status === "completed" || r.status === "concluida") ? "text-success" : r.status === "pending" ? "text-warning" : r.status === "falha" ? "text-destructive" : "text-muted-foreground"}`}>
-                              {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}
-                            </span>
+                            <p className="font-bold text-foreground"><Currency value={safeValor(r)} duration={600} /></p>
+                            <StatusBadge status={r.status} type="recarga" className="text-xs" />
                             {(r.status === "completed" || r.status === "concluida") && (
                               <div className="mt-1">
                                 <span className="text-[10px] text-primary/70 font-medium">📄 Ver comprovante</span>
@@ -1654,8 +1653,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           const dateLabel = formatDateLongUpperBR(r.created_at);
                           const showSep = dateLabel !== lastDate;
                           lastDate = dateLabel;
-                          const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
-                          const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                          // Status via plugin
                           return (
                             <div key={r.id}>
                               {showSep && (
@@ -1690,7 +1688,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                       <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
                                     </div>
                                   </div>
-                                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                                  <StatusBadge status={r.status} type="recarga" className="px-2.5 py-1 text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-border">
                                   <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
@@ -1734,12 +1732,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span></td>
-                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground">{fmt(safeValor(r))}</td>
+                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
                               <td className="px-4 py-3 text-center">
-                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                                  {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status}
-                                </span>
+                                <StatusBadge status={r.status} type="recarga" className="text-xs" />
                               </td>
                             </motion.tr>
                           ))}

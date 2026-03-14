@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { Suspense, lazy } from "react";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
+import { Currency, IntVal, StatusBadge, getStatusLabel } from "@/components/ui";
 import { NotificationBell } from "@/components/NotificationBell";
 import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
@@ -1290,8 +1291,7 @@ export default function AdminDashboard() {
                 const initials = (r.user_nome || r.user_email || "?").slice(0, 2).toUpperCase();
                 const avatarColors = ["bg-primary", "bg-accent", "bg-warning", "bg-success", "bg-destructive"];
                 const colorIdx = (r.user_id || "").charCodeAt(0) % avatarColors.length;
-                const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
-                const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                // Status via plugin
                 return (
                   <motion.div key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3">
                     <div className="flex items-center justify-between mb-2">
@@ -1304,7 +1304,7 @@ export default function AdminDashboard() {
                           <p className="text-[11px] text-muted-foreground truncate">{r.user_email || "—"}</p>
                         </div>
                       </div>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${statusClass}`}>{statusLabel}</span>
+                      <StatusBadge status={r.status} type="recarga" className="flex-shrink-0" />
                     </div>
                     <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border/50">
                       <div>
@@ -1385,11 +1385,7 @@ export default function AdminDashboard() {
                           )}
                         </td>
                         <td className="px-4 py-2.5 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
-                            r.status === "pending" ? "bg-warning/15 text-warning" :
-                            "bg-destructive/15 text-destructive"
-                          }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status}</span>
+                          <StatusBadge status={r.status} type="recarga" />
                         </td>
                       </motion.tr>
                     );
@@ -2131,8 +2127,7 @@ export default function AdminDashboard() {
                 (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
               ).map((t, idx) => {
                 const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
-                const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status;
-                const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                // Status via plugin
                 return (
                   <motion.div key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
                     <div className="flex items-center justify-between mb-2">
@@ -2145,7 +2140,7 @@ export default function AdminDashboard() {
                           <p className="text-[11px] text-muted-foreground">{fmtDate(t.created_at)}</p>
                         </div>
                       </div>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${statusClass}`}>{statusLabel}</span>
+                      <StatusBadge status={t.status} type="deposit" className="flex-shrink-0" />
                     </div>
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/50">
                       <div>
@@ -2216,9 +2211,7 @@ export default function AdminDashboard() {
                           {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}<AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} />
                         </td>
                         <td className="px-4 py-2.5 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                          }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status}</span>
+                          <StatusBadge status={t.status} type="deposit" />
                         </td>
                       </motion.tr>
                     );
@@ -2237,8 +2230,7 @@ export default function AdminDashboard() {
                     {(() => {
                       const t = selectedDeposit;
                       const meta = (t.metadata && typeof t.metadata === "object" && !Array.isArray(t.metadata)) ? t.metadata as Record<string, unknown> : {};
-                      const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status;
-                      const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                      // Status via plugin
                       const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                       const gw = (meta.gateway as string) || t.module || "";
                       const gwLabel: Record<string, string> = {
@@ -2250,7 +2242,7 @@ export default function AdminDashboard() {
                       const commonRows: { label: string; value: string | null | undefined }[] = [
                         { label: "Revendedor", value: t.user_nome || t.user_email || "—" },
                         { label: "Valor", value: fmt(t.amount) },
-                        { label: "Status", value: statusLabel },
+                        { label: "Status", value: getStatusLabel(t.status, "deposit") },
                         { label: "Data", value: fmtDate(t.created_at) },
                         { label: "Método", value: "PIX" },
                         { label: "Gateway", value: gwLabel[gw] || gw || "—" },
@@ -2329,7 +2321,7 @@ export default function AdminDashboard() {
                           </div>
                           <div className="text-center mb-5">
                             <p className="text-3xl font-bold font-mono text-success">+<AnimatedCounter value={t.amount} prefix="R$&nbsp;" /></p>
-                            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                            <StatusBadge status={t.status} type="deposit" className="mt-2 px-3 py-1 text-xs" />
                           </div>
                           {/* Common info */}
                           <div className="space-y-0 divide-y divide-border">

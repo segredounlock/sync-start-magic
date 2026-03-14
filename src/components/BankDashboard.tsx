@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { AnimatedCounter, AnimatedInt } from "./AnimatedCounter";
+import { Currency, IntVal, KpiCard } from "@/components/ui";
 import { AnimatedIcon } from "./AnimatedIcon";
 import { SkeletonValue } from "./Skeleton";
 import {
@@ -93,11 +93,7 @@ export default function AdminBankDashboard({
                   transition={{ duration: 0.25 }}
                   className={`text-3xl sm:text-4xl font-bold tracking-tight ${lucro >= 0 ? "text-success" : "text-destructive"}`}
                 >
-                  {loading ? (
-                    <SkeletonValue width="w-36" className="h-9" />
-                  ) : (
-                    <AnimatedCounter value={lucro} prefix={"R$\u00A0"} />
-                  )}
+                  <Currency value={lucro} loading={loading} skeletonWidth="w-36" skeletonHeight="h-9" />
                 </motion.p>
               ) : (
                 <motion.p
@@ -151,7 +147,7 @@ export default function AdminBankDashboard({
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
             <p className="text-lg font-bold text-foreground">
-              {loading ? <SkeletonValue width="w-20" className="h-5" /> : showBalance ? <AnimatedCounter value={meuSaldo} prefix={"R$\u00A0"} /> : `R$\u00A0••••`}
+              <Currency value={meuSaldo} loading={loading} hidden={!showBalance} skeletonWidth="w-20" skeletonHeight="h-5" />
             </p>
           </div>
         </div>
@@ -245,16 +241,10 @@ export default function AdminBankDashboard({
               </div>
             </div>
             <p className={`text-xl sm:text-2xl font-bold ${card.color} truncate`}>
-              {loading ? (
-                <SkeletonValue width="w-20" className="h-7" />
-              ) : card.isCurrency ? (
-                showBalance ? (
-                  <AnimatedCounter value={card.value} prefix={"R$\u00A0"} />
-                ) : (
-                  `R$\u00A0••••`
-                )
+              {card.isCurrency ? (
+                <Currency value={card.value} loading={loading} hidden={!showBalance} skeletonWidth="w-20" skeletonHeight="h-7" />
               ) : (
-                <AnimatedInt value={card.value} />
+                <IntVal value={card.value} loading={loading} skeletonWidth="w-20" skeletonHeight="h-7" />
               )}
             </p>
             {card.sub && (

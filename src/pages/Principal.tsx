@@ -7,6 +7,7 @@ import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
+import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from "@/components/ui";
 import { PromoBanner } from "@/components/PromoBanner";
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -1501,9 +1502,7 @@ export default function Principal() {
                         const statusOk = r.status === "completed" || r.status === "concluida";
                         return (
                           <div key={r.id} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${statusOk ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                              {statusOk ? "Concluída" : r.status === "pending" ? "Processando" : "Falha"}
-                            </span>
+                            <StatusBadge status={r.status} type="recarga" className="shrink-0 text-[10px]" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-foreground truncate">
                                 {rev?.nome || rev?.email?.split("@")[0] || "—"} • <span className={r.operadora?.toLowerCase().includes("tim") ? "text-blue-400" : r.operadora?.toLowerCase().includes("vivo") ? "text-purple-400" : r.operadora?.toLowerCase().includes("claro") ? "text-red-400" : "text-foreground"}>{r.operadora || "—"}</span>
@@ -2234,8 +2233,7 @@ export default function Principal() {
                         {/* Mobile cards */}
                         <div className="md:hidden space-y-2">
                           {filteredRecs.slice(0, 25).map(r => {
-                            const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
-                            const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                            // Status via plugin
                             return (
                               <div key={r.id} className="rounded-lg border border-border p-3">
                                 <div className="flex items-center justify-between mb-2">
@@ -2243,7 +2241,7 @@ export default function Principal() {
                                     <p className="text-sm font-semibold text-foreground">{r.operadora || "—"}</p>
                                     <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
                                   </div>
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                                  <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                   <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
@@ -2274,12 +2272,9 @@ export default function Principal() {
                                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
                                   <td className="px-3 py-2 text-center">
-                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
-                                      r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                                    }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status}</span>
+                                    <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                   </td>
                                   <td className="px-1 py-2">
                                     <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
@@ -2304,19 +2299,17 @@ export default function Principal() {
                       <div className="md:hidden space-y-2">
                         {revTransactions.slice(0, 20).map((t, i) => {
                           const isDeposit = t.type === "deposit" || t.type === "deposito";
-                          const statusLabel = (t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status;
-                          const statusClass = (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" : t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
                           return (
                             <div key={i} className="rounded-lg border border-border p-3">
                               <div className="flex items-center justify-between mb-2">
                                 <p className="text-sm font-semibold text-foreground capitalize">{isDeposit ? "Depósito" : t.type}</p>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                                <StatusBadge status={t.status} type="deposit" className="text-xs" />
                               </div>
                               <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                 <span className="text-[10px] text-muted-foreground">{fmtDate(t.created_at)}</span>
                                 <div className="flex items-center gap-2">
                                   <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></span>
-                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${statusLabel}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${getStatusLabel(t.status, "deposit")}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                 </div>
                               </div>
                             </div>
@@ -2339,12 +2332,9 @@ export default function Principal() {
                               <tr key={i} className="border-b border-border last:border-0">
                                 <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
                                 <td className="px-3 py-2 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
-                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></td>
+                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={t.amount} duration={600} /></td>
                                 <td className="px-3 py-2 text-center">
-                                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" :
-                                    t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                                  }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status}</span>
+                                  <StatusBadge status={t.status} type="deposit" className="text-xs" />
                                 </td>
                                 <td className="px-1 py-2">
                                   <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type} | ${fmt(t.amount)} | ${(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "expired" ? "Expirado" : t.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
