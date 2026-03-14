@@ -2257,6 +2257,10 @@ export default function Principal() {
                                     <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                   </div>
                                 </div>
+                                <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                                  <span>Custo: <span className="font-mono font-medium text-foreground">{fmt(r.custo ?? 0)}</span></span>
+                                  <span>API: <span className="font-mono font-medium text-foreground">{fmt(r.custo_api ?? 0)}</span></span>
+                                </div>
                               </div>
                             );
                           })}
@@ -2265,11 +2269,13 @@ export default function Principal() {
                         <div className="hidden md:block overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="border-b border-border">
+                               <tr className="border-b border-border">
                                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Data</th>
                                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Telefone</th>
                                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Operadora</th>
                                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">Valor</th>
+                                <th className="text-right px-3 py-2 font-medium text-muted-foreground">Custo</th>
+                                <th className="text-right px-3 py-2 font-medium text-muted-foreground">Custo API</th>
                                 <th className="text-center px-3 py-2 font-medium text-muted-foreground">Status</th>
                               </tr>
                             </thead>
@@ -2280,6 +2286,8 @@ export default function Principal() {
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
                                   <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
+                                  <td className="px-3 py-2 text-right font-mono text-muted-foreground">{fmt(r.custo ?? 0)}</td>
+                                  <td className="px-3 py-2 text-right font-mono text-muted-foreground">{fmt(r.custo_api ?? 0)}</td>
                                   <td className="px-3 py-2 text-center">
                                     <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                   </td>
