@@ -64,6 +64,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const { user, role, signOut } = useAuth();
   const [saldo, setSaldo] = useState(0);
   const [saldoPessoal, setSaldoPessoal] = useState(0);
+  const [showMoverSaldo, setShowMoverSaldo] = useState(false);
+  const [moverValor, setMoverValor] = useState("");
+  const [moverLoading, setMoverLoading] = useState(false);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const { loading, runFetch } = useResilientFetch();
   const [tab, setTab] = useState<PainelTab>("dashboard");
@@ -1977,7 +1980,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
                         <Landmark className="h-3.5 w-3.5" /> Sacar
                       </button>
-                      <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
+                      <button onClick={() => { setMoverValor(""); setShowMoverSaldo(true); }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
                         <ArrowRightLeft className="h-3.5 w-3.5" /> Usar Saldo
                       </button>
                     </div>
@@ -2265,6 +2268,105 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           ...(role === "admin" ? [{ label: "Principal", path: "/principal", icon: Landmark, color: "text-success" }] : []),
         ]}
       />
+
+      {/* Modal Mover Saldo */}
+      <AnimatePresence>
+        {showMoverSaldo && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setShowMoverSaldo(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <ArrowRightLeft className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">Mover Saldo</h3>
+                </div>
+                <button onClick={() => setShowMoverSaldo(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-5 flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Transfira o lucro de <strong className="text-foreground">Comissões</strong> para o <strong className="text-foreground">Saldo Principal</strong> para realizar novas recargas imediatamente. Esta ação não tem taxas.
+                </p>
+              </div>
+
+              <div className="space-y-1.5 mb-5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Valor para transferir</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={moverValor}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^\d.,]/g, "").replace(",", ".");
+                    setMoverValor(raw);
+                  }}
+                  placeholder="R$ 0.00"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                />
+                <p className="text-[10px] text-muted-foreground text-right font-medium">
+                  DISPONÍVEL: {fmt(saldoPessoal)}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowMoverSaldo(false)}
+                  className="flex-1 py-3 rounded-xl border border-primary text-primary text-sm font-bold hover:bg-primary/5 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  disabled={moverLoading || !moverValor || parseFloat(moverValor) <= 0 || parseFloat(moverValor) > saldoPessoal}
+                  onClick={async () => {
+                    const val = parseFloat(moverValor);
+                    if (!val || val <= 0 || val > saldoPessoal || !user) return;
+                    setMoverLoading(true);
+                    try {
+                      // Debit comissões
+                      const { error: e1 } = await supabase
+                        .from("saldos")
+                        .update({ valor: saldoPessoal - val })
+                        .eq("user_id", user.id)
+                        .eq("tipo", "pessoal");
+                      if (e1) throw e1;
+                      // Credit revenda
+                      const { error: e2 } = await supabase
+                        .from("saldos")
+                        .update({ valor: saldo + val })
+                        .eq("user_id", user.id)
+                        .eq("tipo", "revenda");
+                      if (e2) throw e2;
+                      setSaldoPessoal(saldoPessoal - val);
+                      setSaldo(saldo + val);
+                      toast.success(`${fmt(val)} transferido para Saldo Principal!`);
+                      setShowMoverSaldo(false);
+                    } catch {
+                      toast.error("Erro ao transferir saldo");
+                    } finally {
+                      setMoverLoading(false);
+                    }
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {moverLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Confirmar Transferência
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
