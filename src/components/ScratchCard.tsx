@@ -191,9 +191,17 @@ export function ScratchCard({ userId }: ScratchCardProps) {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
         body: { action: "claim" },
       });
-      const payload = parsePayload<ClaimResponse>(data);
+      const payload = parsePayload<ClaimResponse & { total_spent?: number; min_required?: number }>(data);
       if (error) throw error;
       if (!payload) return;
+
+      if (payload.error === "insufficient_spending") {
+        setSpendingBlock({
+          totalSpent: payload.total_spent ?? 0,
+          minRequired: payload.min_required ?? 50,
+        });
+        return;
+      }
 
       if (payload.error === "already_claimed" && payload.card) {
         const c = payload.card;
