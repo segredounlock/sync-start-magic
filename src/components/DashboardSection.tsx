@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Smartphone, Users, Banknote, Share2,
   TrendingUp, DollarSign, ShoppingCart, UserPlus, AlertCircle,
+  HelpCircle, X,
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [opData, setOpData] = useState<OpData[]>([]);
   const [hasPendingPrices, setHasPendingPrices] = useState(false);
+  const [showSaqueModal, setShowSaqueModal] = useState(false);
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
   const today = new Date();
@@ -150,7 +152,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
     ...(!isClientMode ? [
       { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
-      { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "extrato", color: "text-success", bg: "bg-success/10" },
+      { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
       { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "contatos", color: "text-destructive", bg: "bg-destructive/10" },
     ] : [
       { icon: Wallet, label: "Depositar", sub: "Adicionar saldo", tab: "addSaldo", color: "text-success", bg: "bg-success/10" },
@@ -239,7 +241,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            onClick={() => onNavigateTab(a.tab)}
+            onClick={() => a.tab === "__saque__" ? setShowSaqueModal(true) : onNavigateTab(a.tab)}
             className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
           >
             <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
@@ -384,6 +386,65 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
           )}
         </div>
       </div>
+
+      {/* Modal Saque */}
+      <AnimatePresence>
+        {showSaqueModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            onClick={() => setShowSaqueModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-card rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5 text-primary" />
+                  <span className="font-bold text-sm text-foreground">ATENÇÃO</span>
+                </div>
+                <button onClick={() => setShowSaqueModal(false)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex flex-col items-center px-6 py-6 gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <HelpCircle className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground">Solicitar Saque (PIX)</h3>
+                <p className="text-sm text-muted-foreground text-center">
+                  Para realizar saques ou transferências, acesse a área detalhada da sua carteira.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="px-6 pb-5 space-y-2">
+                <button
+                  onClick={() => { setShowSaqueModal(false); onNavigateTab("extrato"); }}
+                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors"
+                >
+                  Ir para Carteira
+                </button>
+                <button
+                  onClick={() => setShowSaqueModal(false)}
+                  className="w-full py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
