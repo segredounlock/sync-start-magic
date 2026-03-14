@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
   const defaultTitle = "Recargas Brasil - Sistema de Recargas";
   const defaultDescription =
     "Sistema de recargas de celular para revendedores. Gerencie saldos, recargas e clientes.";
-  const defaultImage = "https://recargas-brasil-v2.lovable.app/og-image.png";
+  const defaultImage = "https://recargasbrasill.com/og-image.png";
 
   // Dynamic values
   const title = store?.store_name
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   const image = store?.store_logo_url || defaultImage;
 
   // The actual SPA URL to redirect real users to
-  const spaUrl = `https://recargas-brasil-v2.lovable.app/loja/${slug}`;
+  const spaUrl = `https://recargasbrasill.com/loja/${slug}`;
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
