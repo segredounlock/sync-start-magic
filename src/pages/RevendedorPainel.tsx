@@ -728,7 +728,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "historico", label: "Meus Pedidos", icon: History },
     { key: "extrato", label: "Carteira", icon: Landmark },
     { key: "addSaldo", label: "Depositar", icon: CreditCard, dashed: true },
-    { key: "contatos", label: "Meu Perfil", icon: User },
+    { key: "contatos", label: "Configurações", icon: Settings },
     { key: "status", label: "Status do Sistema", icon: Activity },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
     
