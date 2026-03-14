@@ -129,14 +129,14 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     for (let i = 0; i < 9; i++) {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
-      const x = CELL_PAD + col * (cellW + CELL_PAD);
-      const y = CELL_PAD + row * (cellH + CELL_PAD);
-      const minDim = Math.min(cellW, cellH);
+      const x = CELL_PAD + col * (cW + CELL_PAD);
+      const y = CELL_PAD + row * (cH + CELL_PAD);
+      const minDim = Math.min(cW, cH);
       ctx.fillStyle = "rgba(255,255,255,0.4)";
       ctx.font = `bold ${minDim * 0.30}px system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("?", x + cellW / 2, y + cellH / 2);
+      ctx.fillText("?", x + cW / 2, y + cH / 2);
     }
 
     // Shimmer dots
