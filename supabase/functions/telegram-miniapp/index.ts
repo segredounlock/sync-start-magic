@@ -220,7 +220,7 @@ serve(async (req) => {
 
           // Map v2 catalog format
           const operadoras = catalogData.data.map((carrier: any) => {
-            const operatorName = carrier.operator || carrier.name;
+            const operatorName = (carrier.operator || carrier.name || "").toUpperCase();
             const localOp = localOpsList.find((op: any) => normalize(op.nome) === normalize(operatorName));
             const operadoraId = localOp?.id || null;
 

@@ -303,18 +303,21 @@ async function fetchCatalog(supabase: any): Promise<any[]> {
   const result = await resp.json();
   if (!result?.success || !result.data) return [];
   // Map v2 format to v1-compatible format
-  return result.data.map((c: any) => ({
-    operator: c.operator,
-    carrierId: c.operator,
-    name: c.operator,
-    values: (c.values || []).map((v: any) => ({
-      valueId: `${c.operator}_${v.amount}`,
-      value: v.amount,
-      amount: v.amount,
-      cost: v.cost,
-      label: `R$ ${v.amount}`,
-    })),
-  }));
+  return result.data.map((c: any) => {
+    const name = (c.operator || "").toUpperCase();
+    return {
+      operator: name,
+      carrierId: c.operator,
+      name,
+      values: (c.values || []).map((v: any) => ({
+        valueId: `${c.operator}_${v.amount}`,
+        value: v.amount,
+        amount: v.amount,
+        cost: v.cost,
+        label: `R$ ${v.amount}`,
+      })),
+    };
+  });
 }
 
 // Robust value resolution — v2 uses amount directly
