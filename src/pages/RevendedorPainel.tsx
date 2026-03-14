@@ -1138,6 +1138,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             />
           ))}
 
+          {/* ===== TAB: DASHBOARD ===== */}
+          {tab === "dashboard" && user && (
+            <DashboardSection
+              saldo={saldo}
+              loading={loading}
+              userId={user.id}
+              onNavigateTab={(t) => selectTab(t as PainelTab)}
+              isClientMode={isClientMode}
+            />
+          )}
+
           {/* ===== TAB: RECARGA ===== */}
           {tab === "recarga" && (
             <>
