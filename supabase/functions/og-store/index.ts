@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
   const defaultTitle = "Recargas Brasil - Sistema de Recargas";
   const defaultDescription =
     "Sistema de recargas de celular para revendedores. Gerencie saldos, recargas e clientes.";
-  const defaultImage = "https://recargas-brasil-v2.lovable.app/og-image.png";
+  const defaultImage = "https://recargasbrasill.com/og-image.png";
 
   // Dynamic values
   const title = store?.store_name
