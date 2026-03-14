@@ -1146,6 +1146,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               saldo={saldo}
               loading={loading}
               userId={user.id}
+              userName={userLabel}
               onNavigateTab={(t) => selectTab(t as PainelTab)}
               isClientMode={isClientMode}
             />
