@@ -559,12 +559,7 @@ serve(async (req) => {
         } else if (text === "/ajuda" || text === "/help") {
           await handleAjuda(BOT_TOKEN, chatId);
         } else {
-          const quickMatch = text.match(/^(\d{10,11})\s+([\d.,]+)$/);
-          if (quickMatch) {
-            await executeRecarga(supabase, BOT_TOKEN, chatId, linkedUser, quickMatch[1], quickMatch[2]);
-          } else {
-            await handleAjuda(BOT_TOKEN, chatId);
-          }
+          await handleAjuda(BOT_TOKEN, chatId);
         }
       } catch (err) {
         console.error(`[ERROR] processUpdate:`, err);
