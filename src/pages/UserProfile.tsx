@@ -116,7 +116,7 @@ export default function UserProfile() {
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
   const handleFollow = async () => {
-    if (!user || !userId || followLoading) return;
+    if (!user || !resolvedId || followLoading) return;
     setFollowLoading(true);
     try {
       if (isFollowing) {
