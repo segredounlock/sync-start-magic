@@ -253,11 +253,11 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-[10%] sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[380px] z-[60] flex flex-col max-h-[85vh]"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
             onClick={e => e.stopPropagation()}
           >
             {/* Receipt Card */}
-            <div ref={receiptRef} className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+            <div ref={receiptRef} className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden w-full max-w-[380px] max-h-[85vh] overflow-y-auto">
               {/* Header gradient */}
               <div className="bg-gradient-to-br from-primary to-primary/80 px-6 pt-6 pb-8 text-center relative">
                 <div className="absolute top-3 right-3" data-hide-capture>
