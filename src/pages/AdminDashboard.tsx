@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { Suspense, lazy } from "react";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
-import { Currency, IntVal, StatusBadge } from "@/components/ui";
+import { Currency, IntVal, StatusBadge, getStatusLabel } from "@/components/ui";
 import { NotificationBell } from "@/components/NotificationBell";
 import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
