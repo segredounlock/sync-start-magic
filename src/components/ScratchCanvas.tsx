@@ -103,9 +103,6 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     const ctx = cvs.getContext("2d")!;
     ctx.scale(dpr, dpr);
 
-    const cellW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
-    const cellH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
-
     // Fill entire canvas as one solid scratch layer
     const grad = ctx.createLinearGradient(0, 0, size.w, size.h);
     grad.addColorStop(0, "#b8b8b8");
@@ -127,8 +124,8 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     ctx.fill();
 
     // Draw question marks on cells
-    const cellW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
-    const cellH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
+    const cW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
+    const cH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
     for (let i = 0; i < 9; i++) {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
