@@ -143,10 +143,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const fetchCatalog = useCallback(async () => {
     await guardedFetch(catalogLoaded, setCatalogLoading, async () => {
       // Always build catalog from local DB with reseller/global pricing rules
+      // In client mode, load reseller's custom pricing; in reseller mode, use global pricing only
+      const pricingUserId = isClientMode ? resellerId : null;
       const [{ data: ops }, { data: globalRules }, { data: resellerRules }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
-        user?.id ? supabase.from("reseller_pricing_rules").select("*").eq("user_id", user.id) : Promise.resolve({ data: [] }),
+        pricingUserId ? supabase.from("reseller_pricing_rules").select("*").eq("user_id", pricingUserId) : Promise.resolve({ data: [] }),
       ]);
 
       if (ops) {
@@ -157,7 +159,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           const values: CatalogValue[] = valores.map((v: number) => {
             const resellerRule = opResellerRules.find((r: any) => Number(r.valor_recarga) === v);
             const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
-            const rule = resellerRule || globalRule;
+            const rule = isClientMode ? (resellerRule || globalRule) : globalRule;
             const cost = rule
               ? rule.tipo_regra === "fixo"
                 ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
