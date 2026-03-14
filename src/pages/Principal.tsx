@@ -2233,8 +2233,7 @@ export default function Principal() {
                         {/* Mobile cards */}
                         <div className="md:hidden space-y-2">
                           {filteredRecs.slice(0, 25).map(r => {
-                            const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
-                            const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                            // Status via plugin
                             return (
                               <div key={r.id} className="rounded-lg border border-border p-3">
                                 <div className="flex items-center justify-between mb-2">
