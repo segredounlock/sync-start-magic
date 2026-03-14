@@ -6,6 +6,7 @@ import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
+import { Currency, IntVal, StatusBadge } from "@/components/ui";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { PromoBanner } from "@/components/PromoBanner";
