@@ -20,6 +20,7 @@ interface ProfileData {
   email: string | null;
   avatar_url: string | null;
   bio: string | null;
+  slug: string | null;
   verification_badge: string | null;
   created_at: string;
   telegram_username: string | null;
