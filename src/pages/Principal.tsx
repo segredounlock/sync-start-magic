@@ -3947,6 +3947,72 @@ export default function Principal() {
                 </button>
               </div>
 
+              {/* Margem Padrão Global */}
+              <div className="glass-card rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                      <Zap className="h-4 w-4 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Margem Padrão Global</p>
+                      <p className="text-xs text-muted-foreground">Aplica automaticamente para todos os usuários sem regra individual</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const newVal = globalConfig.defaultMarginEnabled === "true" ? "false" : "true";
+                      setGlobalConfig(prev => ({ ...prev, defaultMarginEnabled: newVal }));
+                      await supabase.from("system_config").upsert({ key: "defaultMarginEnabled", value: newVal, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                      toast.success(newVal === "true" ? "Margem padrão ativada!" : "Margem padrão desativada!");
+                    }}
+                    className="transition-transform active:scale-90"
+                  >
+                    {globalConfig.defaultMarginEnabled === "true"
+                      ? <ToggleRight className="h-8 w-8 text-primary" />
+                      : <ToggleLeft className="h-8 w-8 text-muted-foreground" />}
+                  </button>
+                </div>
+
+                {globalConfig.defaultMarginEnabled === "true" && (
+                  <div className="flex items-center gap-3 pt-2 border-t border-border/40">
+                    <select
+                      value={globalConfig.defaultMarginType || "fixo"}
+                      onChange={async (e) => {
+                        setGlobalConfig(prev => ({ ...prev, defaultMarginType: e.target.value }));
+                        await supabase.from("system_config").upsert({ key: "defaultMarginType", value: e.target.value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                      }}
+                      className="px-3 py-2 rounded-xl bg-muted/50 border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="fixo">Fixo (R$)</option>
+                      <option value="margem">Margem (%)</option>
+                    </select>
+                    <div className="flex-1 relative">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={globalConfig.defaultMarginValue || ""}
+                        onChange={(e) => setGlobalConfig(prev => ({ ...prev, defaultMarginValue: e.target.value }))}
+                        placeholder={(globalConfig.defaultMarginType || "fixo") === "fixo" ? "0.50" : "5"}
+                        className="w-full px-3 py-2 rounded-xl bg-muted/50 border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const val = globalConfig.defaultMarginValue || "0";
+                        await supabase.from("system_config").upsert({ key: "defaultMarginValue", value: val, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                        await supabase.from("system_config").upsert({ key: "defaultMarginType", value: globalConfig.defaultMarginType || "fixo", updated_at: new Date().toISOString() }, { onConflict: "key" });
+                        toast.success(`Margem padrão salva: ${(globalConfig.defaultMarginType || "fixo") === "fixo" ? "R$ " + val : val + "%"}`);
+                      }}
+                      className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-95"
+                    >
+                      <Save className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Tabs: Global / Por Revendedor */}
               <div className="flex rounded-2xl bg-muted/40 border border-border/40 p-1.5 gap-1.5">
                 <button
