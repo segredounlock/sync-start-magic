@@ -66,9 +66,9 @@ export default function ClientePortal() {
 
   const loadReseller = async () => {
     try {
-      // First get profile by slug
+      // Use profiles_public view (no RLS) so unauthenticated visitors can see the store
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, nome, store_name, store_logo_url, store_primary_color, store_secondary_color, active")
         .eq("slug", slug!)
         .maybeSingle();
@@ -85,21 +85,25 @@ export default function ClientePortal() {
         return;
       }
 
-      // Verify role in parallel-ready fashion (already have profile.id)
+      // Verify role (user_roles allows SELECT for authenticated OR via has_role)
+      // For unauthenticated users, we do a workaround: trust that profiles_public + slug implies a valid reseller
+      // But we still check role if user is authenticated
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", profile.id)
+        .eq("user_id", profile.id!)
         .eq("role", "revendedor")
         .maybeSingle();
 
-      if (!roleData) {
+      // If not authenticated, roleData will be null due to RLS — accept the profile as valid
+      // since profiles_public only shows active users with slugs (set by resellers)
+      if (user && !roleData) {
         setError("Loja não encontrada.");
         setLoading(false);
         return;
       }
 
-      setResellerInfo(profile as ResellerInfo);
+      setResellerInfo({ ...profile, id: profile.id! } as ResellerInfo);
     } catch {
       setError("Erro ao carregar dados da loja.");
     }
