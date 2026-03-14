@@ -1228,6 +1228,7 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_user_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_user_verification_badge: {
         Args: { _user_id: string }
         Returns: string
