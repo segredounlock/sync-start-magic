@@ -2159,6 +2159,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: ATUALIZAÇÕES ===== */}
           {tab === "atualizacoes" && <AtualizacoesSection />}
 
+          {/* ===== TAB: CONFIGURAÇÕES ===== */}
+          {tab === "configuracoes" && role === "admin" && (
+            <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+              <BackupSection />
+            </Suspense>
+          )}
+
         </main>
       </div>
 
