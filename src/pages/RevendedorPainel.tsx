@@ -77,6 +77,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileNome, setProfileNome] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [profileBadge, setProfileBadge] = useState<BadgeType | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
 
