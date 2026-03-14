@@ -45,3 +45,5 @@ project_id = "xtkqyjruyuydlbvwduuy"
     verify_jwt = false
   [functions.vapid-setup]
     verify_jwt = false
+  [functions.og-store]
+    verify_jwt = false

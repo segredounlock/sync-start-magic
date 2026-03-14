@@ -1,43 +1,40 @@
 
 
-# Meta Tags Dinâmicas para Lojas Públicas (`/loja/:slug`)
+## Diagnóstico e Correção
 
-## Problema
-Quando o link `/loja/segredo` é compartilhado (WhatsApp, Telegram, etc.), o preview mostra "Recargas Brasil - Sistema de Recargas" com a imagem genérica `og-image.png`, em vez do nome e logo da loja específica.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Por que é complexo
-Meta tags OG são lidas por crawlers que **não executam JavaScript**. Como o app é uma SPA React, as tags do `index.html` são sempre as mesmas. Alterar via `document.title` no React não resolve para crawlers.
+### Plano
 
-## Solução: Edge Function de renderização de meta tags
+**1. Corrigir o mapeamento de status na sync function**
 
-Criar uma Edge Function `og-store` que, dado um slug, retorna um HTML mínimo com as meta tags corretas. O compartilhamento de links usaria essa URL, ou configuramos um redirect no nível do servidor.
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-### Abordagem concreta
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-1. **Nova Edge Function `og-store`**
-   - Recebe `?slug=segredo` como query param
-   - Consulta `get_public_store_by_slug` para obter nome, logo, cores
-   - Retorna HTML com meta tags OG dinâmicas:
-     - `og:title` = store_name (fallback: "Recargas Brasil")
-     - `og:image` = store_logo_url (fallback: `/og-image.png`)
-     - `og:description` = "Recargas rápidas e seguras em {store_name}"
-   - Inclui `<meta http-equiv="refresh">` para redirecionar ao app SPA real
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-2. **Atualizar `ClientePortal.tsx`**
-   - Usar `document.title` e atualizar meta tags via JS (para quando o usuário já está no app)
-   - `useEffect` que seta `og:title`, `og:image` dinamicamente ao carregar a loja
+**2. Corrigir manualmente o pedido preso**
 
-3. **Instruções de uso**
-   - Para previews funcionarem em crawlers, o link compartilhado deve apontar para a Edge Function (ex: `https://{project}.supabase.co/functions/v1/og-store?slug=segredo`)
-   - Ou: configurar a URL da loja para passar pela Edge Function primeiro
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-### Arquivos
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-| Ação | Arquivo |
-|------|---------|
-| Criar | `supabase/functions/og-store/index.ts` |
-| Editar | `src/pages/ClientePortal.tsx` — adicionar `useEffect` para atualizar `document.title` e meta tags client-side |
+**3. Verificar se há outros pedidos presos**
 
-### Limitação importante
-Crawlers de WhatsApp/Telegram/Twitter acessam a URL direta. Para que o preview dinâmico funcione nesses serviços, o link compartilhado precisa ser o da Edge Function (`/functions/v1/og-store?slug=X`), que retorna HTML estático com as tags corretas e redireciona o navegador real para `/loja/:slug`. Alternativamente, o usuário pode configurar um proxy/CDN que intercepte requests de bots.
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
