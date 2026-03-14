@@ -1502,9 +1502,7 @@ export default function Principal() {
                         const statusOk = r.status === "completed" || r.status === "concluida";
                         return (
                           <div key={r.id} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${statusOk ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                              {statusOk ? "Concluída" : r.status === "pending" ? "Processando" : "Falha"}
-                            </span>
+                            <StatusBadge status={r.status} type="recarga" className="shrink-0 text-[10px]" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-foreground truncate">
                                 {rev?.nome || rev?.email?.split("@")[0] || "—"} • <span className={r.operadora?.toLowerCase().includes("tim") ? "text-blue-400" : r.operadora?.toLowerCase().includes("vivo") ? "text-purple-400" : r.operadora?.toLowerCase().includes("claro") ? "text-red-400" : "text-foreground"}>{r.operadora || "—"}</span>
