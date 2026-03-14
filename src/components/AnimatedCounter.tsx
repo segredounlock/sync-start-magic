@@ -6,6 +6,8 @@ interface AnimatedCounterProps {
   suffix?: string;
   decimals?: number;
   duration?: number;
+  /** Delay before starting animation (ms) — sync with row stagger */
+  delay?: number;
   className?: string;
 }
 
