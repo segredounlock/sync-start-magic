@@ -3962,9 +3962,14 @@ export default function Principal() {
                   <button
                     onClick={async () => {
                       const newVal = globalConfig.defaultMarginEnabled === "true" ? "false" : "true";
-                      setGlobalConfig(prev => ({ ...prev, defaultMarginEnabled: newVal }));
-                      await supabase.from("system_config").upsert({ key: "defaultMarginEnabled", value: newVal, updated_at: new Date().toISOString() }, { onConflict: "key" });
-                      toast.success(newVal === "true" ? "Margem padrão ativada!" : "Margem padrão desativada!");
+                      const ts = new Date().toISOString();
+                      setGlobalConfig(prev => ({ ...prev, defaultMarginEnabled: newVal, ...(newVal === "true" && !prev.defaultMarginType ? { defaultMarginType: "fixo" } : {}), ...(newVal === "true" && !prev.defaultMarginValue ? { defaultMarginValue: "0.50" } : {}) }));
+                      await supabase.from("system_config").upsert({ key: "defaultMarginEnabled", value: newVal, updated_at: ts }, { onConflict: "key" });
+                      if (newVal === "true") {
+                        await supabase.from("system_config").upsert({ key: "defaultMarginType", value: globalConfig.defaultMarginType || "fixo", updated_at: ts }, { onConflict: "key" });
+                        await supabase.from("system_config").upsert({ key: "defaultMarginValue", value: globalConfig.defaultMarginValue || "0.50", updated_at: ts }, { onConflict: "key" });
+                      }
+                      toast.success(newVal === "true" ? "Margem padrão ativada (R$ 0.50)!" : "Margem padrão desativada!");
                     }}
                     className="transition-transform active:scale-90"
                   >
@@ -3994,6 +3999,10 @@ export default function Principal() {
                         min="0"
                         value={globalConfig.defaultMarginValue || ""}
                         onChange={(e) => setGlobalConfig(prev => ({ ...prev, defaultMarginValue: e.target.value }))}
+                        onBlur={async (e) => {
+                          const val = e.target.value || "0";
+                          await supabase.from("system_config").upsert({ key: "defaultMarginValue", value: val, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                        }}
                         placeholder={(globalConfig.defaultMarginType || "fixo") === "fixo" ? "0.50" : "5"}
                         className="w-full px-3 py-2 rounded-xl bg-muted/50 border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       />
