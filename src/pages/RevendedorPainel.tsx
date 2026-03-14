@@ -2200,7 +2200,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
-          ...(role === "admin" ? [{ key: "configuracoes", label: "Config", icon: Settings, color: "text-accent", animation: "float" as const }] : []),
+          
         ] as NavItem[]}
         activeKey={tab}
         onSelect={(key) => {
