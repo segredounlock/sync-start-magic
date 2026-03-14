@@ -1,34 +1,40 @@
 
 
-# Plano: Enviar notificação de atualização da Raspadinha via Telegram
+## Diagnóstico e Correção
 
-## Mensagem proposta
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-**Título:** 🎰 Raspadinha Atualizada!
+### Plano
 
-**Mensagem (HTML):**
+**1. Corrigir o mapeamento de status na sync function**
+
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
-🎰 <b>Raspadinha Atualizada!</b>
 
-Novidades na sua raspadinha diária:
+**2. Corrigir manualmente o pedido preso**
 
-✅ Agora com <b>múltiplos níveis de prêmio</b> — mais chances de ganhar!
-🎁 Prêmios vão de centavos a valores maiores
-⚡ Ganhos são creditados automaticamente no seu saldo
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-Acesse agora e raspe a sua! 🍀
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
 ```
 
-**Efeito sugerido:** Confete 🎉 (`5046509860389126442`)
+**3. Verificar se há outros pedidos presos**
 
-## Destinatários
-- **635 usuários** registrados e ativos no Telegram
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
 
-## Execução
-1. Inserir registro na tabela `notifications` com título, mensagem e efeito de confete
-2. Criar registro em `broadcast_progress` vinculado à notificação
-3. Invocar a Edge Function `send-broadcast` com o ID da notificação e do progresso para disparar o envio
-
-## Arquivos alterados
-Nenhum — apenas operações no banco de dados e invocação de função existente.
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

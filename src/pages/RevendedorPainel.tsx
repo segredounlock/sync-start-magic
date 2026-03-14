@@ -3,9 +3,7 @@ import { DashboardSection } from "@/components/DashboardSection";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
-import { lazy, Suspense } from "react";
-
-const BackupSection = lazy(() => import("@/components/BackupSection"));
+import { Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
@@ -2235,11 +2233,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {tab === "atualizacoes" && (
             <div className="space-y-6">
               <AtualizacoesSection />
-              {role === "admin" && (
-                <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
-                  <BackupSection />
-                </Suspense>
-              )}
             </div>
           )}
 
