@@ -212,18 +212,10 @@ export function ScratchCard({ userId }: ScratchCardProps) {
     }
   };
 
-  const revealCell = useCallback((index: number) => {
-    if (gameOver || revealedCells.has(index)) return;
-    const next = new Set(revealedCells);
-    next.add(index);
-    setRevealedCells(next);
-
-    // Check if enough cells revealed to auto-finish
-    if (next.size >= 6) {
-      // Reveal all and call scratch
-      setTimeout(() => finishGame(next), 600);
-    }
-  }, [gameOver, revealedCells]);
+  const handleScratchComplete = useCallback(() => {
+    if (gameOver) return;
+    finishGame();
+  }, [gameOver]);
 
   const finishGame = async (cells: Set<number>) => {
     setGameOver(true);
