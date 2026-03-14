@@ -684,7 +684,6 @@ export type Database = {
           store_primary_color: string | null
           store_secondary_color: string | null
           telefone: string | null
-          telegram_bot_token: string | null
           telegram_id: number | null
           telegram_username: string | null
           updated_at: string
@@ -707,7 +706,6 @@ export type Database = {
           store_primary_color?: string | null
           store_secondary_color?: string | null
           telefone?: string | null
-          telegram_bot_token?: string | null
           telegram_id?: number | null
           telegram_username?: string | null
           updated_at?: string
@@ -730,7 +728,6 @@ export type Database = {
           store_primary_color?: string | null
           store_secondary_color?: string | null
           telefone?: string | null
-          telegram_bot_token?: string | null
           telegram_id?: number | null
           telegram_username?: string | null
           updated_at?: string
