@@ -3347,7 +3347,37 @@ export default function Principal() {
                   </div>
                 </div>
 
-                {/* Notificações por Cargo */}
+                {/* Ferramentas de Venda Toggle */}
+                <div className="glass-card rounded-xl p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        (globalConfig.salesToolsEnabled ?? "true") === "true" ? "bg-success/15" : "bg-muted/50"
+                      }`}>
+                        <Tag className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground">Ferramentas de Venda</h4>
+                        <p className="text-xs text-muted-foreground">Menu "Meus Preços" e "Minha Rede" no painel dos revendedores</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const newVal = (globalConfig.salesToolsEnabled ?? "true") === "true" ? "false" : "true";
+                        setGlobalConfig(prev => ({ ...prev, salesToolsEnabled: newVal }));
+                        await supabase.from("system_config").upsert({ key: "salesToolsEnabled", value: newVal }, { onConflict: "key" });
+                        toast.success(newVal === "true" ? "✅ Ferramentas de Venda ativadas!" : "❌ Ferramentas de Venda desativadas!");
+                      }}
+                      className="transition-colors"
+                    >
+                      {(globalConfig.salesToolsEnabled ?? "true") === "true"
+                        ? <ToggleRight className="h-7 w-7 text-success" />
+                        : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                      }
+                    </button>
+                  </div>
+                </div>
+
                 <div className="glass-card rounded-xl p-6 space-y-5">
                   <div>
                     <h4 className="font-semibold text-foreground flex items-center gap-2">
