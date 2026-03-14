@@ -1309,7 +1309,7 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border/50">
                       <div>
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Operadora</p>
-                        <p className="text-[12px] font-semibold text-foreground">{r.operadora || "—"}</p>
+                        <p className="text-[12px] font-semibold text-foreground">{(r.operadora || "—").toUpperCase()}</p>
                       </div>
                       <div>
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Telefone</p>
