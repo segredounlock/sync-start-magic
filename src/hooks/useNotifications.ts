@@ -239,7 +239,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               cancelled: "🚫 Cancelada",
             };
             const label = statusMap[r.status] || r.status;
-            const operadora = r.operadora || "";
+            const operadora = (r.operadora || "").toUpperCase();
             const valor = Number(r.valor || 0).toFixed(2);
             const updatedMsg = `Recarga ${label} — ${operadora} R$ ${valor}`;
             const originalTime = r.created_at;
