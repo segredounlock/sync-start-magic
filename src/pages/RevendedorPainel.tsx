@@ -310,7 +310,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         const newRow = payload.new as any;
         const oldRow = payload.old as any;
         if (newRow.status === "completed" && oldRow?.status !== "completed") {
-          appToast.recargaCompleted(`Recarga ${newRow.operadora || ""} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
+          appToast.recargaCompleted(`Recarga ${(newRow.operadora || "").toUpperCase()} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
           playSuccessSound();
           fetchData();
           // Auto-send receipt to Telegram (uses Satori fallback for image)
@@ -364,7 +364,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         try {
           const resp = await callApi("order-status", { external_id: (r as any).external_id });
           if (resp?.success && resp.data?.localStatus === "completed") {
-            appToast.recargaCompleted(`Recarga ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)} para ${r.telefone} concluída!`);
+            appToast.recargaCompleted(`Recarga ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)} para ${r.telefone} concluída!`);
             playSuccessSound();
             fetchData();
             break;

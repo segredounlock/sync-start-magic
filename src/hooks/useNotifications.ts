@@ -206,7 +206,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             addNotification({
               id: r.id,
               type: "recarga",
-              message: `Recarga ${insertLabel} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
+              message: `Recarga ${insertLabel} — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`,
               amount: Number(r.valor),
               user_id: r.user_id,
               user_nome: profile.nome || undefined,
@@ -216,8 +216,8 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               is_read: false,
             });
             if (showRecarga) {
-              showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
-              appToast.recargaProcessing(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+              showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
+              appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
             }
           })
           .on("postgres_changes", {
@@ -239,7 +239,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               cancelled: "🚫 Cancelada",
             };
             const label = statusMap[r.status] || r.status;
-            const operadora = r.operadora || "";
+            const operadora = (r.operadora || "").toUpperCase();
             const valor = Number(r.valor || 0).toFixed(2);
             const updatedMsg = `Recarga ${label} — ${operadora} R$ ${valor}`;
             const originalTime = r.created_at;
@@ -431,7 +431,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
                 addNotification({
                   id: r.id,
                   type: "recarga",
-                  message: `Recarga ${label} — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`,
+                  message: `Recarga ${label} — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`,
                   amount: Number(r.valor),
                   user_id: r.user_id,
                   user_nome: profile.nome || undefined,

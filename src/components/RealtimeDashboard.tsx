@@ -245,7 +245,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
         setRecargas(prev => prev.map(r => r.id === row.id ? { ...r, ...row } : r));
         blinkLive();
         if (row.status === "completed" || row.status === "concluida") {
-          toast.success(`✅ Recarga ${row.operadora || ""} R$ ${Number(row.valor).toFixed(2)} concluída!`);
+          toast.success(`✅ Recarga ${(row.operadora || "").toUpperCase()} R$ ${Number(row.valor).toFixed(2)} concluída!`);
           playSuccessSound();
         }
       })
