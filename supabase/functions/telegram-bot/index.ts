@@ -306,17 +306,18 @@ async function fetchCatalog(supabase: any): Promise<any[]> {
   return result.data.map((c: any) => {
     const name = (c.operator || "").toUpperCase();
     return {
-    operator: name,
-    carrierId: c.operator,
-    name,
-    values: (c.values || []).map((v: any) => ({
-      valueId: `${c.operator}_${v.amount}`,
-      value: v.amount,
-      amount: v.amount,
-      cost: v.cost,
-      label: `R$ ${v.amount}`,
-    })),
-  }));
+      operator: name,
+      carrierId: c.operator,
+      name,
+      values: (c.values || []).map((v: any) => ({
+        valueId: `${c.operator}_${v.amount}`,
+        value: v.amount,
+        amount: v.amount,
+        cost: v.cost,
+        label: `R$ ${v.amount}`,
+      })),
+    };
+  });
 }
 
 // Robust value resolution — v2 uses amount directly
