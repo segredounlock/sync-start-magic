@@ -224,7 +224,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
   ];
 
   const kpis = [
-    { icon: DollarSign, label: "Faturamento", value: stats.faturamento, isCurrency: true, color: "text-primary", bg: "bg-primary/10" },
+    { icon: DollarSign, label: "Seu Lucro", value: stats.faturamento, isCurrency: true, color: "text-primary", bg: "bg-primary/10" },
     { icon: TrendingUp, label: "Comissões", value: stats.comissoes, isCurrency: true, color: "text-success", bg: "bg-success/10" },
     { icon: ShoppingCart, label: "Vendas Realizadas", value: stats.vendas, isCurrency: false, color: "text-accent-foreground", bg: "bg-accent/10" },
     ...(!isClientMode ? [
