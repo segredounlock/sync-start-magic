@@ -71,8 +71,13 @@ function DeferredEffects() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     // Defer non-critical effects until after initial paint
-    const id = requestIdleCallback ? requestIdleCallback(() => setReady(true)) : setTimeout(() => setReady(true), 1500);
-    return () => { if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id as number); };
+    if (typeof requestIdleCallback === 'function') {
+      const id = requestIdleCallback(() => setReady(true));
+      return () => cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(() => setReady(true), 1500);
+      return () => clearTimeout(id);
+    }
   }, []);
   if (!ready) return null;
   return (
