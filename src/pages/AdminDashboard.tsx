@@ -2079,7 +2079,7 @@ export default function AdminDashboard() {
                 <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card rounded-lg p-2.5 text-center">
                   <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{s.label}</p>
                   <p className={`text-lg font-bold mt-0.5 font-mono tabular-nums ${s.color}`}>
-                    {s.prefix ? <AnimatedCounter value={s.value as number} prefix={s.prefix} /> : <AnimatedInt value={s.value as number} />}
+                    {s.prefix ? <Currency value={s.value as number} duration={700} /> : <IntVal value={s.value as number} duration={700} />}
                   </p>
                 </motion.div>
               ))}
