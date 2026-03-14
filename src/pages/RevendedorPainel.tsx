@@ -220,6 +220,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setProfileSlug(p?.slug || "");
       setReferralCode(p?.referral_code || "");
       setAvatarUrl(p?.avatar_url || null);
+      setProfileBadge((p?.verification_badge as BadgeType) || null);
     });
   }, [user, runFetch]);
 
