@@ -2257,6 +2257,10 @@ export default function Principal() {
                                     <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                   </div>
                                 </div>
+                                <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                                  <span>Custo: <span className="font-mono font-medium text-foreground">{fmt(r.custo)}</span></span>
+                                  <span>API: <span className="font-mono font-medium text-foreground">{fmt(r.custo_api)}</span></span>
+                                </div>
                               </div>
                             );
                           })}
