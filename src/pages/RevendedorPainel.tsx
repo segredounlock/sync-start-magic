@@ -1662,7 +1662,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="font-bold text-foreground"><Currency value={safeValor(r)} duration={600} /></p>
+                            <p className="font-bold text-foreground"><Currency value={r.custo || safeValor(r)} duration={600} /></p>
                             <StatusBadge status={r.status} type="recarga" className="text-xs" />
                             {(r.status === "completed" || r.status === "concluida") && (
                               <div className="mt-1">
@@ -1816,7 +1816,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Telefone</th>
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Operadora</th>
-                            <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
+                            <th className="text-right px-4 py-3 font-medium text-muted-foreground">Custo</th>
                             <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
                           </tr>
                         </thead>
@@ -1830,7 +1830,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span></td>
-                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
+                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={r.custo || safeValor(r)} duration={600} /></td>
                               <td className="px-4 py-3 text-center">
                                 <StatusBadge status={r.status} type="recarga" className="text-xs" />
                               </td>
