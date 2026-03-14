@@ -728,7 +728,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "historico", label: "Meus Pedidos", icon: History },
     { key: "extrato", label: "Carteira", icon: Landmark },
     { key: "addSaldo", label: "Depositar", icon: CreditCard, dashed: true },
-    { key: "contatos", label: "Meu Perfil", icon: User },
+    { key: "contatos", label: "Configurações", icon: Settings },
     { key: "status", label: "Status do Sistema", icon: Activity },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
     
@@ -741,7 +741,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const tabTitle: Record<PainelTab, string> = {
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
-    extrato: "Carteira", contatos: "Meu Perfil", status: "Status do Sistema",
+    extrato: "Carteira", contatos: "Configurações", status: "Status do Sistema",
     atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede",
   };
 
@@ -2195,7 +2195,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse", highlighted: true },
           { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
-          { key: "contatos", label: "Perfil", icon: User, color: "text-accent", animation: "float" },
+          { key: "contatos", label: "Config", icon: Settings, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
