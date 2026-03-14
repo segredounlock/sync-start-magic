@@ -1506,7 +1506,7 @@ export default function Principal() {
                             <StatusBadge status={r.status} type="recarga" className="shrink-0 text-[10px]" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-foreground truncate">
-                                {rev?.nome || rev?.email?.split("@")[0] || "—"} • <span className={r.operadora?.toLowerCase().includes("tim") ? "text-blue-400" : r.operadora?.toLowerCase().includes("vivo") ? "text-purple-400" : r.operadora?.toLowerCase().includes("claro") ? "text-red-400" : "text-foreground"}>{r.operadora || "—"}</span>
+                                {rev?.nome || rev?.email?.split("@")[0] || "—"} • <span className={r.operadora?.toLowerCase().includes("tim") ? "text-blue-400" : r.operadora?.toLowerCase().includes("vivo") ? "text-purple-400" : r.operadora?.toLowerCase().includes("claro") ? "text-red-400" : "text-foreground"}>{(r.operadora || "—").toUpperCase()}</span>
                               </p>
                               <p className="text-[10px] text-muted-foreground">{r.telefone} • {fmtDate(r.created_at)}</p>
                             </div>
