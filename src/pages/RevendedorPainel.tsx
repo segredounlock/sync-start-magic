@@ -200,6 +200,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setTelegramBotToken(botTokenConfig?.value || "");
       setTelegramLinked(!!p?.telegram_id);
       setProfileSlug(p?.slug || "");
+      setReferralCode(p?.referral_code || "");
       setAvatarUrl(p?.avatar_url || null);
     });
   }, [user, runFetch]);
