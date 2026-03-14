@@ -257,7 +257,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
             onClick={e => e.stopPropagation()}
           >
             {/* Receipt Card */}
-            <div ref={receiptRef} className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+            <div ref={receiptRef} className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden w-full max-w-[380px] max-h-[85vh] overflow-y-auto">
               {/* Header gradient */}
               <div className="bg-gradient-to-br from-primary to-primary/80 px-6 pt-6 pb-8 text-center relative">
                 <div className="absolute top-3 right-3" data-hide-capture>
