@@ -2208,7 +2208,7 @@ export default function AdminDashboard() {
                         <td className="px-4 py-2.5 text-foreground capitalize text-[13px]">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
                         <td className="px-4 py-2.5 text-foreground text-[13px]">PIX</td>
                         <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          {(t.type === "deposit" || t.type === "deposito") ? "+" : "-"}<AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} />
+                          <Currency value={t.amount} sign duration={500} />
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <StatusBadge status={t.status} type="deposit" />
