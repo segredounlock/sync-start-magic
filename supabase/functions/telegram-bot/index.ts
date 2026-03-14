@@ -303,10 +303,12 @@ async function fetchCatalog(supabase: any): Promise<any[]> {
   const result = await resp.json();
   if (!result?.success || !result.data) return [];
   // Map v2 format to v1-compatible format
-  return result.data.map((c: any) => ({
-    operator: c.operator,
+  return result.data.map((c: any) => {
+    const name = (c.operator || "").toUpperCase();
+    return {
+    operator: name,
     carrierId: c.operator,
-    name: c.operator,
+    name,
     values: (c.values || []).map((v: any) => ({
       valueId: `${c.operator}_${v.amount}`,
       value: v.amount,
