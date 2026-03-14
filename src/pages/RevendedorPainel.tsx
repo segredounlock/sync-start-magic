@@ -1493,19 +1493,22 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                           <label className="block text-sm font-semibold text-foreground mb-2">Valor</label>
                           <div className="grid grid-cols-3 gap-2.5">
-                            {selectedCarrier.values.sort((a, b) => a.value - b.value).map((val, i) => (
-                              <motion.button key={val.valueId} type="button" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
-                                whileTap={{ scale: 0.93 }} onClick={() => setSelectedValue(val)}
-                                className={`py-3 rounded-xl text-sm font-bold border-2 transition-all ${selectedValue?.valueId === val.valueId
-                                  ? "bg-primary text-primary-foreground border-primary glow-primary shadow-lg shadow-primary/20" : "border-border text-foreground hover:border-primary/30 hover:bg-primary/5 glass"}`}>
-                                <div className="text-base">{fmt(val.value)}</div>
-                                {val.label && val.label !== `R$ ${val.cost}` ? (
-                                  <div className="text-[10px] font-medium opacity-70 mt-0.5 truncate">{val.label}</div>
-                                ) : (
-                                  <div className="text-[10px] font-medium opacity-70 mt-0.5">Paga {fmt(val.cost)}</div>
-                                )}
-                              </motion.button>
-                            ))}
+                            {selectedCarrier.values.sort((a, b) => a.value - b.value).map((val, i) => {
+                              const hasDiff = Number(val.value) !== Number(val.cost);
+                              return (
+                                <motion.button key={val.valueId} type="button" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
+                                  whileTap={{ scale: 0.93 }} onClick={() => setSelectedValue(val)}
+                                  className={`py-3 rounded-xl text-sm font-bold border-2 transition-all ${selectedValue?.valueId === val.valueId
+                                    ? "bg-primary text-primary-foreground border-primary glow-primary shadow-lg shadow-primary/20" : "border-border text-foreground hover:border-primary/30 hover:bg-primary/5 glass"}`}>
+                                  <div className="text-base">{fmt(val.value)}</div>
+                                  {val.label && val.label !== `R$ ${val.cost}` ? (
+                                    <div className="text-[10px] font-medium opacity-70 mt-0.5 truncate">{val.label}</div>
+                                  ) : hasDiff ? (
+                                    <div className="text-[10px] font-medium opacity-70 mt-0.5">Paga {fmt(val.cost)}</div>
+                                  ) : null}
+                                </motion.button>
+                              );
+                            })}
                           </div>
                         </motion.div>
                       )}
