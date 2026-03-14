@@ -93,8 +93,6 @@ Deno.serve(async (req) => {
 
       if (totalDeducted > 0) {
         // Deduct balance in one operation
-        const { error: upErr } = await sb.rpc("", {});
-        // Use direct update instead
         await sb
           .from("saldos")
           .update({ valor: availableBalance })
