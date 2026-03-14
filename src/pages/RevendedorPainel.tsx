@@ -743,7 +743,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "contatos", label: "Configurações", icon: Settings },
     { key: "status", label: "Status do Sistema", icon: Activity },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
-    
+    { key: "raspadinha", label: "Raspadinha", icon: Ticket },
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
