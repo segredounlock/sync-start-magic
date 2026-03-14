@@ -66,12 +66,10 @@ export default function ClientePortal() {
 
   const loadReseller = async () => {
     try {
-      // Use profiles_public view (no RLS) so unauthenticated visitors can see the store
-      const { data: profile } = await supabase
-        .from("profiles_public")
-        .select("id, nome, store_name, store_logo_url, store_primary_color, store_secondary_color, active")
-        .eq("slug", slug!)
-        .maybeSingle();
+      // Public-safe lookup via SECURITY DEFINER function
+      const { data, error: storeError } = await supabase.rpc("get_public_store_by_slug" as any, { _slug: slug! });
+      if (storeError) throw storeError;
+      const profile = Array.isArray(data) ? data[0] : null;
 
       if (!profile) {
         setError("Loja não encontrada. Verifique o link.");
