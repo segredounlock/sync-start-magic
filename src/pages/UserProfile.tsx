@@ -125,7 +125,7 @@ export default function UserProfile() {
         setFollowersCount((c) => Math.max(0, c - 1));
         toast.success("Deixou de seguir");
       } else {
-        await supabase.from("follows").insert({ follower_id: user.id, following_id: userId } as any);
+        await supabase.from("follows").insert({ follower_id: user.id, following_id: resolvedId } as any);
         setIsFollowing(true);
         setFollowersCount((c) => c + 1);
         toast.success("Seguindo!");
