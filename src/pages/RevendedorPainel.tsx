@@ -1662,7 +1662,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="font-bold text-foreground"><Currency value={r.custo || safeValor(r)} duration={600} /></p>
+                            <p className="font-bold text-foreground"><Currency value={safeValor(r)} duration={600} /></p>
+                            <p className="text-[10px] text-muted-foreground">Custo: <Currency value={r.custo || safeValor(r)} duration={600} /></p>
                             <StatusBadge status={r.status} type="recarga" className="text-xs" />
                             {(r.status === "completed" || r.status === "concluida") && (
                               <div className="mt-1">
@@ -1816,13 +1817,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Telefone</th>
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Operadora</th>
+                            <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
                             <th className="text-right px-4 py-3 font-medium text-muted-foreground">Custo</th>
                             <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filtered.length === 0 ? (
-                            <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
+                            <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
                           ) : filtered.map((r, i) => (
                             <motion.tr key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                               className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
@@ -1830,7 +1832,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span></td>
-                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={r.custo || safeValor(r)} duration={600} /></td>
+                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
+                              <td className="px-4 py-3 text-right font-mono font-medium text-muted-foreground"><Currency value={r.custo || safeValor(r)} duration={600} /></td>
                               <td className="px-4 py-3 text-center">
                                 <StatusBadge status={r.status} type="recarga" className="text-xs" />
                               </td>
