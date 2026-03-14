@@ -25,7 +25,10 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
+  Tag, Users as UsersIcon,
 } from "lucide-react";
+import { MeusPrecos } from "@/components/MeusPrecos";
+import { MinhaRede } from "@/components/MinhaRede";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
