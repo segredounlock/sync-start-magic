@@ -2142,47 +2142,74 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
                   };
                   const opName = op.operadora.toUpperCase();
-                  const opColor = opName === "CLARO" ? "text-red-400" : opName === "TIM" ? "text-blue-400" : opName === "VIVO" ? "text-purple-400" : "text-muted-foreground";
-                  const avgColor = op.avgRecent <= 120 ? "text-emerald-400" : op.avgRecent <= 300 ? "text-yellow-400" : "text-red-400";
+                  const opGradient = opName === "CLARO"
+                    ? "from-red-500 to-red-600"
+                    : opName === "TIM"
+                    ? "from-blue-500 to-blue-600"
+                    : opName === "VIVO"
+                    ? "from-purple-500 to-purple-600"
+                    : "from-muted to-muted";
+                  const opAccent = opName === "CLARO" ? "text-red-500" : opName === "TIM" ? "text-blue-500" : opName === "VIVO" ? "text-purple-500" : "text-muted-foreground";
+                  const avgColor = op.avgRecent <= 120 ? "text-emerald-500" : op.avgRecent <= 300 ? "text-yellow-500" : "text-red-500";
+                  const minColor = op.minRecent <= 120 ? "text-emerald-500" : op.minRecent <= 300 ? "text-yellow-500" : "text-red-500";
+                  const pendingIcon = op.pendingCount > 5 ? "⚠️" : "⏳";
+
                   return (
                     <motion.div key={op.operadora} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                      className="glass-card rounded-xl p-5 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <motion.div
-                            animate={
-                              opName === "CLARO" ? { scale: [1, 1.15, 1] } :
-                              opName === "TIM"   ? { y: [0, -3, 0] } :
-                                                   { rotate: [0, 8, -8, 0] }
-                            }
-                            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut", delay: i * 0.15 }}
-                          >
-                            <Smartphone className={`h-5 w-5 ${opColor}`} />
-                          </motion.div>
+                      className="rounded-2xl overflow-hidden border border-border/40 bg-card shadow-lg">
+                      
+                      {/* Colored header bar */}
+                      <div className={`bg-gradient-to-r ${opGradient} px-4 py-3 flex items-center justify-between`}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                            <Smartphone className="h-4 w-4 text-white" />
+                          </div>
+                          <span className="font-bold text-white text-base tracking-wide">{opName}</span>
                         </div>
-                        <div>
-                          <p className={`font-bold text-base ${opColor}`}>{op.operadora}</p>
-                          <p className="text-[10px] text-muted-foreground">Baseado nas últimas {op.recentCount} recargas</p>
+                        <div className="text-right">
+                          <p className="text-[10px] text-white/70 uppercase font-semibold tracking-wider">Carga</p>
+                          <p className="text-xl font-black text-white">{op.recentCount + op.pendingCount}</p>
                         </div>
                       </div>
 
-                      <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Média Atual (Recente)</p>
-                        <p className={`text-2xl font-black ${avgColor}`}>{fmtTime(op.avgRecent)}</p>
-                      </div>
+                      {/* Body */}
+                      <div className="p-4 space-y-3">
+                        {/* Avg + Min recent */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="rounded-xl bg-muted/30 border border-border/30 p-3 text-center">
+                            <p className="text-[10px] text-red-400 uppercase font-bold tracking-wider">Média Atual</p>
+                            <p className={`text-xl font-black ${avgColor}`}>{fmtTime(op.avgRecent)}</p>
+                            <p className="text-[9px] text-muted-foreground">Últimas 3</p>
+                          </div>
+                          <div className="rounded-xl bg-muted/30 border border-border/30 p-3 text-center">
+                            <p className="text-[10px] text-emerald-400 uppercase font-bold tracking-wider">Tempo Min.</p>
+                            <p className={`text-xl font-black ${minColor}`}>{fmtTime(op.minRecent)}</p>
+                            <p className="text-[9px] text-muted-foreground">Últimas 3</p>
+                          </div>
+                        </div>
 
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/30">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase">Mínimo (24h)</p>
-                          <p className="text-sm font-semibold text-foreground">{fmtTime(op.min24h)}</p>
+                        {/* Processing count */}
+                        <div className="flex items-center justify-between rounded-xl bg-muted/20 border border-border/30 px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">{pendingIcon}</span>
+                            <span className="text-xs font-bold text-foreground uppercase tracking-wide">Processando</span>
+                          </div>
+                          <span className={`text-lg font-black ${opAccent}`}>{op.pendingCount}</span>
                         </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase">Média (24h)</p>
-                          <p className="text-sm font-semibold text-foreground">{fmtTime(op.avg24h)}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase">Máximo (24h)</p>
-                          <p className="text-sm font-semibold text-foreground">{fmtTime(op.max24h)}</p>
+
+                        {/* Consolidated 24h */}
+                        <div className="border-t border-border/30 pt-3">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold text-center mb-2">Consolidado 24 Horas</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase">Média Geral</p>
+                              <p className="text-sm font-bold text-foreground">{fmtTime(op.avg24h)}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase">Mínimo (24h)</p>
+                              <p className="text-sm font-bold text-foreground">{fmtTime(op.min24h)}</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -2190,38 +2217,22 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 })}
               </div>
 
-              {/* System health indicators */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                  { icon: Server, label: "Servidor", status: true, anim: "pulse" as const },
-                  { icon: Database, label: "Banco", status: statusData?.dbOnline ?? false, anim: "float" as const },
-                  { icon: Shield, label: "Auth", status: statusData?.authOnline ?? false, anim: "wiggle" as const },
-                  { icon: Wifi, label: "API", status: catalog.length > 0, anim: "bounce" as const },
-                ].map((item, i) => (
-                  <div key={item.label} className="glass-card rounded-xl p-3 flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${item.status ? "bg-success animate-pulse" : "bg-destructive"}`} />
-                    <AnimatedIcon icon={item.icon} className={`h-4 w-4 ${item.status ? "text-success" : "text-destructive"}`} animation={item.anim} delay={i * 0.1} />
-                    <span className="text-xs font-medium text-foreground">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {statusData && (
-                <div className="glass-card rounded-xl p-4 grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Operadoras</p>
-                    <p className="text-xl font-bold text-foreground">{catalog.length || statusData.operadorasCount}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Total recargas</p>
-                    <p className="text-xl font-bold text-foreground">{statusData.recargasTotal}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Última</p>
-                    <p className="text-xs font-medium text-foreground">{statusData.lastRecarga ? fmtDate(statusData.lastRecarga) : "—"}</p>
-                  </div>
+              {/* Important observations */}
+              <div className="glass-card rounded-xl p-4 flex gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Info className="h-5 w-5 text-primary" />
                 </div>
-              )}
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-foreground mb-1">Observações Importantes</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    O tempo de processamento e o volume em andamento são indicadores em tempo real para auxiliar sua operação. <span className="font-semibold text-foreground">Todas as informações acima são estimativas baseadas em tráfego recente;</span> o prazo formal das operadoras para a conclusão de recargas permanece de até 24 horas.
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">Última Atualização</p>
+                  <p className="text-sm font-bold text-foreground">{new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p>
+                </div>
+              </div>
             </motion.div>
           )}
 
