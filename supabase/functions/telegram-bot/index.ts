@@ -530,7 +530,21 @@ serve(async (req) => {
         } else if (text === "/recargas" || text === "/historico") {
           await handleRecargas(supabase, BOT_TOKEN, chatId, linkedUser);
         } else if (text === "/recarga" || text.startsWith("/recarga ")) {
-          await handleRecarga(supabase, BOT_TOKEN, chatId, linkedUser, text);
+          // Redirect to operator selection menu (same as menu_recarga callback)
+          const catalog = await fetchCatalog(supabase);
+          if (!catalog?.length) {
+            await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+              "⚠️ Nenhuma operadora disponível no momento.",
+              [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+            );
+          } else {
+            const opButtons = catalog.map((carrier: any) => [{ text: carrier.name || carrier.carrierId, callback_data: `rec_op_${carrier.carrierId}` }]);
+            opButtons.push([{ text: "⬅️ Voltar ao Menu Principal", callback_data: "menu_main" }]);
+            await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+              "📱 <b>VAMOS FAZER UMA RECARGA!</b>\n\nSelecione a operadora:",
+              opButtons
+            );
+          }
         } else if (text === "/deposito") {
           await setSession(supabase, chatIdStr, "awaiting_deposit_amount", { user_id: linkedUser.id });
           await sendMessageWithKeyboard(BOT_TOKEN, chatId,
@@ -545,12 +559,7 @@ serve(async (req) => {
         } else if (text === "/ajuda" || text === "/help") {
           await handleAjuda(BOT_TOKEN, chatId);
         } else {
-          const quickMatch = text.match(/^(\d{10,11})\s+([\d.,]+)$/);
-          if (quickMatch) {
-            await executeRecarga(supabase, BOT_TOKEN, chatId, linkedUser, quickMatch[1], quickMatch[2]);
-          } else {
-            await handleAjuda(BOT_TOKEN, chatId);
-          }
+          await handleAjuda(BOT_TOKEN, chatId);
         }
       } catch (err) {
         console.error(`[ERROR] processUpdate:`, err);
@@ -787,17 +796,7 @@ async function handleRecargas(supabase: any, token: string, chatId: number, user
   ]]);
 }
 
-async function handleRecarga(supabase: any, token: string, chatId: number, user: any, text: string) {
-  const parts = text.replace("/recarga", "").trim().split(/\s+/);
-  if (parts.length < 2 || !parts[0]) {
-    await sendMessageWithKeyboard(token, chatId,
-      "📱 <b>Como fazer recarga:</b>\n\nEnvie: <code>TELEFONE VALOR</code>\n\nExemplo: <code>11999998888 20</code>",
-      [[{ text: "📖 Menu", callback_data: "menu_main" }]]
-    );
-    return;
-  }
-  await executeRecarga(supabase, token, chatId, user, parts[0], parts[1]);
-}
+// handleRecarga removed — /recarga now redirects to operator selection menu
 
 async function executeRecarga(supabase: any, token: string, chatId: number, user: any, phone: string, valorStr: string) {
   const telefone = phone.replace(/\D/g, "");
@@ -1592,7 +1591,7 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
 
 async function handleAjuda(token: string, chatId: number) {
   await sendMessageWithKeyboard(token, chatId,
-    `❓ <b>Menu de Ajuda</b>\n\n<b>Atalho:</b> envie <code>telefone valor</code> diretamente!\n<b>Depósito:</b> /deposito`,
+    `❓ <b>Menu de Ajuda</b>\n\n<b>Recarga:</b> use o botão 📱 Fazer Recarga\n<b>Depósito:</b> /deposito`,
     [[
       { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
       { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
