@@ -85,23 +85,7 @@ export default function ClientePortal() {
         return;
       }
 
-      // Verify role (user_roles allows SELECT for authenticated OR via has_role)
-      // For unauthenticated users, we do a workaround: trust that profiles_public + slug implies a valid reseller
-      // But we still check role if user is authenticated
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", profile.id!)
-        .eq("role", "revendedor")
-        .maybeSingle();
-
-      // If not authenticated, roleData will be null due to RLS — accept the profile as valid
-      // since profiles_public only shows active users with slugs (set by resellers)
-      if (user && !roleData) {
-        setError("Loja não encontrada.");
-        setLoading(false);
-        return;
-      }
+      // profiles_public + slug + active is sufficient validation for store pages
 
       setResellerInfo({ ...profile, id: profile.id! } as ResellerInfo);
     } catch {
