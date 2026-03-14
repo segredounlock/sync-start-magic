@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       if (!opId) continue;
       syncedNames.push(nome);
 
-      // Sync pricing_rules — always update custo from API
+      // Sync pricing_rules — always update custo from API, preserve custom pricing
       const apiValores = new Set<number>();
       for (const v of values) {
         const faceValue = v.amount || v.value || v.cost;
@@ -99,12 +99,13 @@ Deno.serve(async (req) => {
           apiValores.add(Number(faceValue));
           const { data: existingRule } = await adminClient
             .from("pricing_rules")
-            .select("id, custo")
+            .select("id, custo, tipo_regra, regra_valor")
             .eq("operadora_id", opId)
             .eq("valor_recarga", faceValue)
             .maybeSingle();
 
           if (existingRule) {
+            // Only update API cost, preserve tipo_regra and regra_valor (admin customizations)
             if (Number(existingRule.custo) !== Number(apiCost)) {
               await adminClient
                 .from("pricing_rules")
@@ -125,7 +126,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Remove orphan pricing_rules
+      // Orphan pricing_rules: keep them so admin customizations are preserved
+      // When the value returns to the API, the existing rule (with custom pricing) will be reused
       const { data: existingRules } = await adminClient
         .from("pricing_rules")
         .select("id, valor_recarga")
@@ -133,8 +135,7 @@ Deno.serve(async (req) => {
       if (existingRules) {
         for (const rule of existingRules) {
           if (!apiValores.has(Number(rule.valor_recarga))) {
-            await adminClient.from("pricing_rules").delete().eq("id", rule.id);
-            console.log(`[Sync] Regra removida: ${nome} R$${rule.valor_recarga}`);
+            console.log(`[Sync] Regra órfã preservada: ${nome} R$${rule.valor_recarga}`);
           }
         }
       }
