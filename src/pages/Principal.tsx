@@ -2332,12 +2332,9 @@ export default function Principal() {
                               <tr key={i} className="border-b border-border last:border-0">
                                 <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
                                 <td className="px-3 py-2 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
-                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></td>
+                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={t.amount} duration={600} /></td>
                                 <td className="px-3 py-2 text-center">
-                                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    (t.status === "completed" || t.status === "confirmado") ? "bg-success/15 text-success" :
-                                    t.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                                  }`}>{(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "pending" ? "Processando" : t.status === "expired" ? "Expirado" : t.status === "failed" ? "Falhou" : t.status === "cancelled" ? "Cancelado" : t.status}</span>
+                                  <StatusBadge status={t.status} type="deposit" className="text-xs" />
                                 </td>
                                 <td className="px-1 py-2">
                                   <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type} | ${fmt(t.amount)} | ${(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "expired" ? "Expirado" : t.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
