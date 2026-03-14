@@ -216,8 +216,8 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               is_read: false,
             });
             if (showRecarga) {
-              showSystemNotification("📱 Recarga", `Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`);
-              appToast.recargaProcessing(`Recarga Processando — ${r.operadora || ""} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+              showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
+              appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
             }
           })
           .on("postgres_changes", {
