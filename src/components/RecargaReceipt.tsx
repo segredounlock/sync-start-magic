@@ -379,6 +379,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
                 Fechar
               </button>
             </div>
+            </div>
           </motion.div>
         </>
       )}
