@@ -1316,21 +1316,24 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                   <div key={carrier.carrierId}>
                                     <h4 className="font-bold text-foreground text-base mb-2">{carrier.name}</h4>
                                     <div className="grid grid-cols-2 gap-2">
-                                      {carrier.values.sort((a, b) => a.value - b.value).map((val) => (
-                                        <button
-                                          key={val.valueId}
-                                          type="button"
-                                          onClick={() => {
-                                            setSelectedCarrier(carrier);
-                                            setSelectedValue(val);
-                                            setShowValoresModal(false);
-                                          }}
-                                          className="glass rounded-xl p-3 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-center"
-                                        >
-                                          <p className="text-foreground font-bold text-base">{fmt(val.value)}</p>
-                                          <p className="text-primary text-xs font-medium mt-0.5">Paga {fmt(val.cost)}</p>
-                                        </button>
-                                      ))}
+                                      {carrier.values.sort((a, b) => a.value - b.value).map((val) => {
+                                        const hasDiff = Number(val.value) !== Number(val.cost);
+                                        return (
+                                          <button
+                                            key={val.valueId}
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedCarrier(carrier);
+                                              setSelectedValue(val);
+                                              setShowValoresModal(false);
+                                            }}
+                                            className="glass rounded-xl p-3 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-center"
+                                          >
+                                            <p className="text-foreground font-bold text-base">{fmt(val.value)}</p>
+                                            {hasDiff && <p className="text-primary text-xs font-medium mt-0.5">Paga {fmt(val.cost)}</p>}
+                                          </button>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 );
