@@ -2218,19 +2218,21 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               </div>
 
               {/* Important observations */}
-              <div className="glass-card rounded-xl p-4 flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Info className="h-5 w-5 text-primary" />
+              <div className="glass-card rounded-xl p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Info className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-foreground mb-1">Observações Importantes</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      O tempo de processamento e o volume em andamento são indicadores em tempo real para auxiliar sua operação. <span className="font-semibold text-foreground">Todas as informações acima são estimativas baseadas em tráfego recente; o prazo formal das operadoras para a conclusão de recargas permanece de até 24 horas.</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground mb-1">Observações Importantes</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    O tempo de processamento e o volume em andamento são indicadores em tempo real para auxiliar sua operação. <span className="font-semibold text-foreground">Todas as informações acima são estimativas baseadas em tráfego recente;</span> o prazo formal das operadoras para a conclusão de recargas permanece de até 24 horas.
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">Última Atualização</p>
-                  <p className="text-sm font-bold text-foreground">{new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p>
+                <div className="text-center pt-2 border-t border-border/30">
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] font-semibold">Última Atualização</p>
+                  <p className="text-sm font-bold text-foreground mt-0.5">{new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p>
                 </div>
               </div>
             </motion.div>
