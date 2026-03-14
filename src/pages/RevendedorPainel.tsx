@@ -2004,7 +2004,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       id: t.id,
                       tipo: isSaque ? "saque" : isMover && !isDeposit ? "transferencia" : "deposito",
                       titulo: isSaque ? "Saque" : isMover && !isDeposit ? "Transferência" : "Depósito",
-                      subtitulo: t.module ? `Depósito via ${t.module}` : "Depósito PIX",
+                      subtitulo: "Depósito via PIX",
                       valor: t.amount,
                       data: t.created_at,
                       status: t.status,
