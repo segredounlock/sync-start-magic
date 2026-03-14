@@ -17,6 +17,7 @@ interface DashboardSectionProps {
   userName: string;
   onNavigateTab: (tab: string) => void;
   isClientMode?: boolean;
+  salesToolsEnabled?: boolean;
 }
 
 type Period = "hoje" | "mes" | "outro";
