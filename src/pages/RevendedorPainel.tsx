@@ -45,7 +45,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 
-type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "configuracoes";
+type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -731,7 +731,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "contatos", label: "Meu Perfil", icon: User },
     { key: "status", label: "Status do Sistema", icon: Activity },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
-    ...(role === "admin" ? [{ key: "configuracoes" as PainelTab, label: "Configurações", icon: Settings }] : []),
+    
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
@@ -743,7 +743,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
     extrato: "Carteira", contatos: "Meu Perfil", status: "Status do Sistema",
     atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede",
-    configuracoes: "Configurações",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
@@ -2159,13 +2158,15 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} referralCode={referralCode} />}
 
           {/* ===== TAB: ATUALIZAÇÕES ===== */}
-          {tab === "atualizacoes" && <AtualizacoesSection />}
-
-          {/* ===== TAB: CONFIGURAÇÕES ===== */}
-          {tab === "configuracoes" && role === "admin" && (
-            <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
-              <BackupSection />
-            </Suspense>
+          {tab === "atualizacoes" && (
+            <div className="space-y-6">
+              <AtualizacoesSection />
+              {role === "admin" && (
+                <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+                  <BackupSection />
+                </Suspense>
+              )}
+            </div>
           )}
 
         </main>
@@ -2199,7 +2200,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
-          ...(role === "admin" ? [{ key: "configuracoes", label: "Config", icon: Settings, color: "text-accent", animation: "float" as const }] : []),
+          
         ] as NavItem[]}
         activeKey={tab}
         onSelect={(key) => {
