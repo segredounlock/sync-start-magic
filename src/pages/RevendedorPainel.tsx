@@ -1093,7 +1093,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {[
               { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", bgColor: "bg-primary/10", anim: "float" as const },
-              { icon: Clock, label: "Total", rawValue: recargas.length, isCurrency: false, color: "text-accent", bgColor: "bg-accent/10", anim: "pulse" as const },
+              { icon: Clock, label: "Total", rawValue: totalRecargasCount, isCurrency: false, color: "text-accent", bgColor: "bg-accent/10", anim: "pulse" as const },
             ].map((c, i) => (
               <motion.div key={c.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }} className="kpi-card">
                 <div className="flex items-center gap-2.5 mb-2.5">
