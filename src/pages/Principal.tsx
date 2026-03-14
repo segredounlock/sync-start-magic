@@ -4267,6 +4267,7 @@ export default function Principal() {
 
       {showCreateModal && <CreateRevendedorModal onClose={() => setShowCreateModal(false)} onCreated={fetchData} />}
       {showSaldoModal && <SaldoModal rev={showSaldoModal} onClose={() => setShowSaldoModal(null)} onUpdated={fetchData} />}
+      {showPasswordModal && <ResetPasswordModal rev={showPasswordModal} onClose={() => setShowPasswordModal(null)} />}
 
       {/* Mobile Bottom Nav */}
       <MobileBottomNav
