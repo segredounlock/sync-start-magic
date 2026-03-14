@@ -2241,7 +2241,7 @@ export default function Principal() {
                                     <p className="text-sm font-semibold text-foreground">{r.operadora || "—"}</p>
                                     <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
                                   </div>
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                                  <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                   <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
