@@ -31,7 +31,7 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
-  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote,
+  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket,
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
@@ -46,7 +46,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 
-type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede";
+type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -754,7 +754,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const tabTitle: Record<PainelTab, string> = {
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
     extrato: "Carteira", contatos: "Configurações", status: "Status do Sistema",
-    atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede",
+    atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede", raspadinha: "Raspadinha",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
@@ -2242,6 +2242,21 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
           )}
 
+          {/* ===== TAB: RASPADINHA ===== */}
+          {tab === "raspadinha" && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <Ticket className="h-6 w-6 text-primary" />
+                <h2 className="text-xl font-bold text-foreground">Raspadinha</h2>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-8 text-center space-y-4">
+                <Ticket className="h-16 w-16 text-muted-foreground/40 mx-auto" />
+                <p className="text-muted-foreground text-lg font-medium">Em breve!</p>
+                <p className="text-muted-foreground/70 text-sm">A funcionalidade de raspadinha está sendo desenvolvida.</p>
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
 
@@ -2272,6 +2287,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
+          { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-primary", animation: "bounce" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
           
         ] as NavItem[]}
