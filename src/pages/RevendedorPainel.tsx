@@ -1656,7 +1656,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "Operadora"}</span>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "Operadora").toUpperCase()}</span>
                             </div>
                             <p className="text-sm text-muted-foreground font-mono">{r.telefone}</p>
                             <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
