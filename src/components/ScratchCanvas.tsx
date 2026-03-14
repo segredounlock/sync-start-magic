@@ -38,6 +38,13 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     return () => ro.disconnect();
   }, []);
 
+  // Reset state when a new grid/card is loaded
+  useEffect(() => {
+    setRevealed(false);
+    hasCompleted.current = false;
+    lastProgressCheckRef.current = 0;
+  }, [grid]);
+
   // Draw underlay (prize values)
   useEffect(() => {
     const cvs = underlayRef.current;
