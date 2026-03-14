@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { DashboardSection } from "@/components/DashboardSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
@@ -40,7 +41,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 
-type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "meusprecos" | "minharede";
+type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "meusprecos" | "minharede";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -60,7 +61,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [saldo, setSaldo] = useState(0);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const { loading, runFetch } = useResilientFetch();
-  const [tab, setTab] = useState<PainelTab>("recarga");
+  const [tab, setTab] = useState<PainelTab>("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileNome, setProfileNome] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -716,10 +717,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   type MenuItem = { key: PainelTab; label: string; icon: typeof Send; active?: boolean; dashed?: boolean };
    const menuItems: MenuItem[] = [
-    { key: "recarga", label: "Nova Recarga", icon: Send, active: true },
-    { key: "addSaldo", label: "Adicionar Saldo", icon: CreditCard, dashed: true },
-    { key: "historico", label: "Histórico de Pedidos", icon: History },
-    { key: "extrato", label: "Extrato de Depósitos", icon: Landmark },
+    { key: "dashboard", label: "Dashboard", icon: Activity, active: true },
+    { key: "recarga", label: "Fazer Recarga", icon: Send },
+    { key: "historico", label: "Meus Pedidos", icon: History },
+    { key: "extrato", label: "Carteira", icon: Landmark },
+    { key: "addSaldo", label: "Depositar", icon: CreditCard, dashed: true },
     { key: "contatos", label: "Meu Perfil", icon: User },
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
@@ -730,8 +732,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   ] : [];
 
   const tabTitle: Record<PainelTab, string> = {
-    recarga: "Nova Recarga", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
-    extrato: "Extrato de Depósitos", contatos: "Meu Perfil", status: "Status do Sistema",
+    dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
+    extrato: "Carteira", contatos: "Meu Perfil", status: "Status do Sistema",
     meusprecos: "Meus Preços", minharede: "Minha Rede",
   };
 
@@ -1135,6 +1137,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               onClose={() => setDismissedBanners(prev => new Set([...prev, b.position]))}
             />
           ))}
+
+          {/* ===== TAB: DASHBOARD ===== */}
+          {tab === "dashboard" && user && (
+            <DashboardSection
+              saldo={saldo}
+              loading={loading}
+              userId={user.id}
+              onNavigateTab={(t) => selectTab(t as PainelTab)}
+              isClientMode={isClientMode}
+            />
+          )}
 
           {/* ===== TAB: RECARGA ===== */}
           {tab === "recarga" && (
@@ -2155,6 +2168,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       {/* Mobile Bottom Nav */}
       <MobileBottomNav
         items={[
+          { key: "dashboard", label: "Início", icon: Activity, color: "text-primary", animation: "pulse" },
           { key: "recarga", label: "Recarga", icon: Send, color: "text-primary", animation: "bounce" },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse", highlighted: true },
