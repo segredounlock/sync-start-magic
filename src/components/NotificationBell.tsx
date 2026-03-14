@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2 } from "lucide-react";
+import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications, AppNotification, NotifConfig } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
