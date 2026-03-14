@@ -225,26 +225,28 @@ serve(async (req) => {
             const operadoraId = localOp?.id || null;
 
             return {
-              id: operatorName,
-              nome: operatorName,
-              carrierId: operatorName,
-              valores: (carrier.values || []).map((v: any) => {
-                const faceValue = v.amount || v.value || 0;
-                const apiCost = Number(v.cost || 0);
-                let userCost = apiCost;
+                  id: operatorName,
+                  nome: operatorName,
+                  carrierId: operatorName,
+                  valores: (carrier.values || []).map((v: any) => {
+                    const faceValue = v.amount || v.value || 0;
+                    const apiCost = Number(v.cost || 0);
+                    // For clients: default to face value (not internal cost)
+                    // For resellers: default to API cost (so they see their margin)
+                    let userCost = userRole === "cliente" ? faceValue : apiCost;
 
-                // Apply pricing rules if we have operadoraId
-                if (operadoraId && user_id) {
-                  const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
-                  if (rRule) {
-                    userCost = applyRule(rRule);
-                  } else {
-                    const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
-                    if (gRule) {
-                      userCost = applyRule(gRule);
+                    // Apply pricing rules if we have operadoraId
+                    if (operadoraId && user_id) {
+                      const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
+                      if (rRule) {
+                        userCost = applyRule(rRule);
+                      } else {
+                        const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
+                        if (gRule) {
+                          userCost = applyRule(gRule);
+                        }
+                      }
                     }
-                  }
-                }
 
                 return {
                   valueId: `${operatorName}_${faceValue}`,
