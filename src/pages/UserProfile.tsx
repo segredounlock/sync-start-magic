@@ -120,7 +120,7 @@ export default function UserProfile() {
     setFollowLoading(true);
     try {
       if (isFollowing) {
-        await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", userId);
+        await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", resolvedId);
         setIsFollowing(false);
         setFollowersCount((c) => Math.max(0, c - 1));
         toast.success("Deixou de seguir");
