@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Smartphone, Users, Banknote, Share2,
   TrendingUp, DollarSign, ShoppingCart, UserPlus, AlertCircle,
-  HelpCircle, X,
+  HelpCircle, X, Copy, MessageCircle,
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { supabase } from "@/integrations/supabase/client";
