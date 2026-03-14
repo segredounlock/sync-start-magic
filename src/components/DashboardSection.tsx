@@ -65,7 +65,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       const [{ data: recs }, { data: comms }, clientsResult] = await Promise.all([
         supabase
           .from("recargas")
-          .select("valor, custo, status, operadora, created_at")
+          .select("valor, custo, custo_api, status, operadora, created_at")
           .eq("user_id", userId)
           .gte("created_at", from)
           .in("status", ["completed", "concluida"]),
