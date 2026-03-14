@@ -1,40 +1,35 @@
 
 
-## Diagnóstico e Correção
+## Plano: Validação de custo mínimo no recarga-express
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Problema
+Recargas estão sendo concluídas com `custo = 0` para o revendedor, causando prejuízo real (R$ 114 identificados).
 
-### Plano
+### Solução
+Adicionar duas validações no `recarga-express/index.ts` logo após o cálculo do `chargedCost` (linha 533), **antes** do débito de saldo:
 
-**1. Corrigir o mapeamento de status na sync function**
+1. **Bloquear custo zero**: Se `chargedCost <= 0`, usar `apiCost` como fallback obrigatório
+2. **Bloquear custo abaixo da API**: Se `chargedCost < apiCost`, forçar `chargedCost = apiCost` e logar warning
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### Mudança técnica
+
+**Arquivo:** `supabase/functions/recarga-express/index.ts`
+
+Após a linha do `console.log` de pricing (linha 533), inserir:
 
 ```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+// Safety: never allow cost below API cost (prevents loss)
+if (chargedCost <= 0 || chargedCost < apiCost) {
+  console.warn(`PRICING SAFETY: chargedCost=${chargedCost} is below apiCost=${apiCost} for user=${userId} operator=${resolvedOperator} amount=${resolvedAmount}. Forcing apiCost as minimum.`);
+  chargedCost = apiCost;
+  pricingSource += "(safety_floor)";
+}
 ```
 
-**2. Corrigir manualmente o pedido preso**
+Isso garante que **nenhuma recarga será processada com custo zero ou abaixo do custo real da API**, independente de misconfigurações nas pricing_rules.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Impacto
+- Zero risco de prejuízo por regras mal configuradas
+- Comportamento transparente via logs (fácil de auditar)
+- Não bloqueia a recarga — apenas corrige o preço para o mínimo seguro
 
