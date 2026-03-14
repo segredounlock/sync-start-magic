@@ -3962,9 +3962,14 @@ export default function Principal() {
                   <button
                     onClick={async () => {
                       const newVal = globalConfig.defaultMarginEnabled === "true" ? "false" : "true";
-                      setGlobalConfig(prev => ({ ...prev, defaultMarginEnabled: newVal }));
-                      await supabase.from("system_config").upsert({ key: "defaultMarginEnabled", value: newVal, updated_at: new Date().toISOString() }, { onConflict: "key" });
-                      toast.success(newVal === "true" ? "Margem padrão ativada!" : "Margem padrão desativada!");
+                      const ts = new Date().toISOString();
+                      setGlobalConfig(prev => ({ ...prev, defaultMarginEnabled: newVal, ...(newVal === "true" && !prev.defaultMarginType ? { defaultMarginType: "fixo" } : {}), ...(newVal === "true" && !prev.defaultMarginValue ? { defaultMarginValue: "0.50" } : {}) }));
+                      await supabase.from("system_config").upsert({ key: "defaultMarginEnabled", value: newVal, updated_at: ts }, { onConflict: "key" });
+                      if (newVal === "true") {
+                        await supabase.from("system_config").upsert({ key: "defaultMarginType", value: globalConfig.defaultMarginType || "fixo", updated_at: ts }, { onConflict: "key" });
+                        await supabase.from("system_config").upsert({ key: "defaultMarginValue", value: globalConfig.defaultMarginValue || "0.50", updated_at: ts }, { onConflict: "key" });
+                      }
+                      toast.success(newVal === "true" ? "Margem padrão ativada (R$ 0.50)!" : "Margem padrão desativada!");
                     }}
                     className="transition-transform active:scale-90"
                   >
