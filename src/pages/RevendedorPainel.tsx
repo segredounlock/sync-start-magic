@@ -2070,6 +2070,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               )}
             </motion.div>
           )}
+
+          {/* ===== TAB: MEUS PREÇOS ===== */}
+          {tab === "meusprecos" && user && <MeusPrecos userId={user.id} />}
+
+          {/* ===== TAB: MINHA REDE ===== */}
+          {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} />}
+
         </main>
       </div>
 
