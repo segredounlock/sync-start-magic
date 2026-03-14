@@ -56,8 +56,8 @@ export default function UserProfile() {
   // Follower list modal
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const [followersList, setFollowersList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
-  const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
+  const [followersList, setFollowersList] = useState<{ id: string; nome: string | null; avatar_url: string | null; slug: string | null }[]>([]);
+  const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null; slug: string | null }[]>([]);
   const [listLoading, setListLoading] = useState(false);
 
   // Resolve slug → UUID
