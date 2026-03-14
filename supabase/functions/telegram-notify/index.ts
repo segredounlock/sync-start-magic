@@ -179,7 +179,7 @@ function buildReceiptElement(data: {
         },
         [
           row("📱", "Telefone", data.telefone, { mono: true }),
-          row("📱", "Operadora", data.operadora || "—", { mono: false }),
+          row("📱", "Operadora", (data.operadora || "—").toUpperCase(), { mono: false }),
           row("💲", "Valor da Recarga", fmt(data.valor), { isSuccess: true, large: true }),
           row("📅", "Data e Hora", dateStr, { mono: false }),
           row("#️⃣", "ID do Pedido", data.recarga_id ? data.recarga_id.slice(0, 8).toUpperCase() : "—"),
