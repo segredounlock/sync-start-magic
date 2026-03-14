@@ -452,7 +452,7 @@ export default function UserProfile() {
                   (showFollowers ? followersList : followingList).map((u) => (
                     <button
                       key={u.id}
-                      onClick={() => { setShowFollowers(false); setShowFollowing(false); navigate(`/perfil/${u.id}`); }}
+                      onClick={() => { setShowFollowers(false); setShowFollowing(false); navigate(`/perfil/${u.slug || u.id}`); }}
                       className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted/30 transition-colors"
                     >
                       {u.avatar_url ? (
