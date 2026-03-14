@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   const image = store?.store_logo_url || defaultImage;
 
   // The actual SPA URL to redirect real users to
-  const spaUrl = `https://recargas-brasil-v2.lovable.app/loja/${slug}`;
+  const spaUrl = `https://recargasbrasill.com/loja/${slug}`;
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
