@@ -300,7 +300,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Operadora</p>
-                    <p className="text-sm font-semibold text-foreground">{r.operadora || "—"}</p>
+                    <p className="text-sm font-semibold text-foreground">{(r.operadora || "—").toUpperCase()}</p>
                   </div>
                 </div>
 

@@ -413,7 +413,7 @@ Deno.serve(async (req) => {
         "❌ <b>Recarga Falhou!</b>",
         "",
         `📞 Telefone: <code>${data.telefone}</code>`,
-        data.operadora ? `📡 Operadora: ${data.operadora}` : "",
+        data.operadora ? `📡 Operadora: ${data.operadora.toUpperCase()}` : "",
         `📱 Valor: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
         "",
         "💰 <b>Saldo estornado automaticamente</b>",
