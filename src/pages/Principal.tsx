@@ -1320,7 +1320,7 @@ export default function Principal() {
                     if (item.link) { navigate(item.link); } else {
                       setView(item.key as any);
                       if (item.key === "config-api") fetchApiConfig();
-                      else if (item.key === "precificacao") fetchPricingData();
+                      else if (item.key === "precificacao") { fetchPricingData(); fetchGlobalConfig(); }
                       else if (!["dashboard", "lista", "relatorios"].includes(item.key)) fetchGlobalConfig();
                     }
                     setMenuOpen(false);
