@@ -732,8 +732,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   ] : [];
 
   const tabTitle: Record<PainelTab, string> = {
-    recarga: "Nova Recarga", addSaldo: "Adicionar Saldo", historico: "Histórico de Pedidos",
-    extrato: "Extrato de Depósitos", contatos: "Meu Perfil", status: "Status do Sistema",
+    dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
+    extrato: "Carteira", contatos: "Meu Perfil", status: "Status do Sistema",
     meusprecos: "Meus Preços", minharede: "Minha Rede",
   };
 
