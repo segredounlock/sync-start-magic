@@ -39,6 +39,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [opData, setOpData] = useState<OpData[]>([]);
   const [hasPendingPrices, setHasPendingPrices] = useState(false);
+  const [showSaqueModal, setShowSaqueModal] = useState(false);
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
   const today = new Date();
