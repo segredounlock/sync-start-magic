@@ -29,9 +29,10 @@ interface NetworkMember {
 interface MinhaRedeProps {
   userId: string;
   profileSlug?: string;
+  referralCode?: string;
 }
 
-export function MinhaRede({ userId, profileSlug }: MinhaRedeProps) {
+export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps) {
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [members, setMembers] = useState<NetworkMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +42,7 @@ export function MinhaRede({ userId, profileSlug }: MinhaRedeProps) {
 
   const referralLink = profileSlug
     ? `${window.location.origin}/loja/${profileSlug}`
-    : `${window.location.origin}/recarga?ref=${userId}`;
+    : `${window.location.origin}/recarga?ref=${referralCode || userId}`;
 
   const fetchData = useCallback(async () => {
     setLoading(true);

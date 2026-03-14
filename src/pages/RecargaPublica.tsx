@@ -77,6 +77,18 @@ export default function RecargaPublica() {
         revendedorId = profileBySlug.id;
       }
 
+      // If ref is not a UUID, try to resolve as referral_code
+      if (revendedorId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(revendedorId)) {
+        const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: revendedorId });
+        if (resolvedId) {
+          revendedorId = resolvedId as string;
+        } else {
+          setError("Link de recarga inválido. Verifique o link.");
+          setLoading(false);
+          return;
+        }
+      }
+
       if (!revendedorId) {
         setError("Link de recarga inválido.");
         setLoading(false);

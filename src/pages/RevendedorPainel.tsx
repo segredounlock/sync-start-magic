@@ -125,6 +125,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // Profile slug for store link
   // Profile slug for store link
   const [profileSlug, setProfileSlug] = useState("");
+  const [referralCode, setReferralCode] = useState("");
 
   // Banner config from banners table
   const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string }[]>([]);
@@ -185,7 +186,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       const [{ data: saldoData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }, { count: recargasTotalCount }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
-        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url").eq("id", user.id).single(),
+        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url, referral_code").eq("id", user.id).single(),
         supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle(),
         supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
@@ -199,6 +200,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setTelegramBotToken(botTokenConfig?.value || "");
       setTelegramLinked(!!p?.telegram_id);
       setProfileSlug(p?.slug || "");
+      setReferralCode(p?.referral_code || "");
       setAvatarUrl(p?.avatar_url || null);
     });
   }, [user, runFetch]);
@@ -885,7 +887,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
               {!isClientMode && (
                 <a
-                  href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${user?.id}`}
+                  href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${referralCode || user?.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl bg-muted/30 text-foreground hover:bg-muted/50 active:scale-95 transition-all"
@@ -2130,7 +2132,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {tab === "meusprecos" && user && <MeusPrecos userId={user.id} />}
 
           {/* ===== TAB: MINHA REDE ===== */}
-          {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} />}
+          {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} referralCode={referralCode} />}
 
         </main>
       </div>

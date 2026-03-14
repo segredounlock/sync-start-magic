@@ -1280,6 +1280,7 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_user_by_referral_code: { Args: { _code: string }; Returns: string }
       get_user_recargas_count: { Args: { _user_id: string }; Returns: number }
       get_user_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_user_verification_badge: {
