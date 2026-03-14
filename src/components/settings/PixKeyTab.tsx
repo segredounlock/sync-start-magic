@@ -3,7 +3,41 @@ import { QrCode, Info, Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { styledToast as toast } from "@/lib/toast";
 
-const PIX_KEY_TYPES = [
+const PIX_VALIDATORS: Record<string, { regex: RegExp; mask?: (v: string) => string; placeholder: string; maxLen: number; label: string }> = {
+  cpf: {
+    regex: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
+    mask: (v) => v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2").slice(0, 14),
+    placeholder: "000.000.000-00",
+    maxLen: 14,
+    label: "CPF inválido (ex: 000.000.000-00)",
+  },
+  cnpj: {
+    regex: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/,
+    mask: (v) => v.replace(/\D/g, "").replace(/(\d{2})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1/$2").replace(/(\d{4})(\d{1,2})$/, "$1-$2").slice(0, 18),
+    placeholder: "00.000.000/0000-00",
+    maxLen: 18,
+    label: "CNPJ inválido (ex: 00.000.000/0000-00)",
+  },
+  email: {
+    regex: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+    placeholder: "seu@email.com",
+    maxLen: 100,
+    label: "E-mail inválido",
+  },
+  telefone: {
+    regex: /^\+?\d{10,13}$/,
+    mask: (v) => v.replace(/[^\d+]/g, "").slice(0, 14),
+    placeholder: "+5511999999999",
+    maxLen: 14,
+    label: "Telefone inválido (ex: +5511999999999)",
+  },
+  aleatoria: {
+    regex: /^[a-f0-9-]{32,36}$/i,
+    placeholder: "Chave aleatória",
+    maxLen: 36,
+    label: "Chave aleatória inválida",
+  },
+};
   { value: "cpf", label: "CPF" },
   { value: "cnpj", label: "CNPJ" },
   { value: "email", label: "E-mail" },
