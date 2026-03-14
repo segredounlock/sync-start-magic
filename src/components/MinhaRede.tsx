@@ -4,7 +4,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion } from "framer-motion";
-import { Link2, Users, TrendingUp, BarChart3, Search, Filter, Copy, User } from "lucide-react";
+import { Link2, Users, TrendingUp, BarChart3, Search, Copy, User } from "lucide-react";
 import { formatDateTimeBR } from "@/lib/timezone";
 
 interface NetworkStats {
@@ -38,7 +38,6 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"active" | "inactive" | "all">("active");
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const referralLink = profileSlug
     ? `${window.location.origin}/loja/${profileSlug}`
@@ -84,80 +83,76 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Minha Rede</h2>
-        <p className="text-sm text-muted-foreground mt-1">Gerencie sua equipe e acompanhe seus ganhos por indicação.</p>
+      {/* Header row */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Minha Rede</h2>
+          <p className="text-sm text-muted-foreground mt-1">Gerencie sua equipe e acompanhe seus ganhos por indicação.</p>
+        </div>
+        <button
+          onClick={copyLink}
+          className="shrink-0 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+        >
+          <Link2 className="h-4 w-4" />
+          Copiar Link de Indicação
+        </button>
       </div>
 
-      {/* Copy Referral Link */}
-      <button
-        onClick={copyLink}
-        className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
-      >
-        <Link2 className="h-5 w-5" />
-        Copiar Link de Indicação
-      </button>
-
-      {/* Stats Cards */}
-      <div className="space-y-3">
-        {/* Total de Rede */}
+      {/* Stats Cards - horizontal row */}
+      <div className="grid grid-cols-3 gap-3">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="glass-card rounded-xl p-4 flex items-center gap-4 border-l-4 border-primary"
+          className="glass-card rounded-xl p-4 flex items-center gap-3 border-l-4 border-primary"
         >
-          <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Users className="h-7 w-7 text-primary" />
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Users className="h-6 w-6 text-primary" />
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total de Rede</p>
-            <p className="text-2xl font-bold text-foreground">{stats?.total_count || 0}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Total de Rede</p>
+            <p className="text-xl font-bold text-foreground">{stats?.total_count || 0}</p>
           </div>
         </motion.div>
 
-        {/* Lucro Direto */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card rounded-xl p-4 flex items-center gap-4 border-l-4 border-success"
+          className="glass-card rounded-xl p-4 flex items-center gap-3 border-l-4 border-success"
         >
-          <div className="w-14 h-14 rounded-xl bg-success/10 flex items-center justify-center">
-            <TrendingUp className="h-7 w-7 text-success" />
+          <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+            <TrendingUp className="h-6 w-6 text-success" />
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Lucro Direto</p>
-            <p className="text-2xl font-bold text-success">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro Direto</p>
+            <p className="text-xl font-bold text-success">
               <Currency value={stats?.direct_profit || 0} />
             </p>
           </div>
         </motion.div>
 
-        {/* Lucro Indireto */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card rounded-xl p-4 flex items-center gap-4 border-l-4 border-accent"
+          className="glass-card rounded-xl p-4 flex items-center gap-3 border-l-4 border-accent"
         >
-          <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center">
-            <BarChart3 className="h-7 w-7 text-accent" />
+          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+            <BarChart3 className="h-6 w-6 text-accent" />
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Lucro Indireto</p>
-            <p className="text-2xl font-bold text-accent">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro Indireto</p>
+            <p className="text-xl font-bold text-accent">
               <Currency value={stats?.indirect_profit || 0} />
             </p>
           </div>
         </motion.div>
       </div>
 
-      {/* Members Section */}
-      <div className="glass-card rounded-xl p-4 space-y-3">
-        {/* Search */}
-        <div className="relative">
+      {/* Search + Filter row */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
@@ -167,71 +162,55 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
             className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-background border border-border text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
           />
         </div>
-
-        {/* Filter */}
-        <div className="relative">
-          <button
-            onClick={() => setShowFilterMenu(!showFilterMenu)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
-          >
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            {filterLabels[filter]}
-          </button>
-          {showFilterMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowFilterMenu(false)} />
-              <div className="absolute top-full mt-1 left-0 z-50 bg-popover border border-border rounded-lg shadow-xl py-1 min-w-[140px]">
-                {(["active", "inactive", "all"] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => { setFilter(f); setShowFilterMenu(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-muted/50 transition-colors flex items-center gap-2 ${
-                      filter === f ? "text-primary font-semibold" : "text-foreground"
-                    }`}
-                  >
-                    {filter === f && <span>✔</span>}
-                    {filterLabels[f]}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Members List */}
-        {filteredMembers.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            {members.length === 0 ? "Nenhum membro na rede ainda. Compartilhe seu link!" : "Nenhum resultado encontrado."}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredMembers.map((member, i) => (
-              <motion.div
-                key={member.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors"
-              >
-                {member.avatar_url ? (
-                  <img src={member.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-5 w-5 text-primary" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{member.nome || member.email || "Sem nome"}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {member.total_recargas} recargas · {formatDateTimeBR(member.created_at)}
-                  </p>
-                </div>
-                <div className={`w-2.5 h-2.5 rounded-full ${member.active ? "bg-success" : "bg-muted-foreground/30"}`} />
-              </motion.div>
-            ))}
-          </div>
-        )}
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value as any)}
+          className="shrink-0 px-4 py-2.5 rounded-lg bg-background border border-border text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer"
+        >
+          {(["active", "inactive", "all"] as const).map((f) => (
+            <option key={f} value={f}>{filterLabels[f]}</option>
+          ))}
+        </select>
       </div>
+
+      {/* Members List */}
+      {filteredMembers.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
+          <p className="text-sm">
+            {members.length === 0
+              ? "Use seu link de indicação para convidar pessoas e começar a lucrar com a rede."
+              : "Nenhum resultado encontrado."}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredMembers.map((member, i) => (
+            <motion.div
+              key={member.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors"
+            >
+              {member.avatar_url ? (
+                <img src={member.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{member.nome || member.email || "Sem nome"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {member.total_recargas} recargas · {formatDateTimeBR(member.created_at)}
+                </p>
+              </div>
+              <div className={`w-2.5 h-2.5 rounded-full ${member.active ? "bg-success" : "bg-muted-foreground/30"}`} />
+            </motion.div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }
