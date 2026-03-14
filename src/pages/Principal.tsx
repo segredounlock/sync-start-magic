@@ -2258,8 +2258,8 @@ export default function Principal() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-                                  <span>Custo: <span className="font-mono font-medium text-foreground">{fmt(r.custo)}</span></span>
-                                  <span>API: <span className="font-mono font-medium text-foreground">{fmt(r.custo_api)}</span></span>
+                                  <span>Custo: <span className="font-mono font-medium text-foreground">{fmt(r.custo ?? 0)}</span></span>
+                                  <span>API: <span className="font-mono font-medium text-foreground">{fmt(r.custo_api ?? 0)}</span></span>
                                 </div>
                               </div>
                             );
