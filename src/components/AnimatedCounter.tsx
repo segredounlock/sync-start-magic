@@ -67,6 +67,7 @@ export function AnimatedCounter({
 interface AnimatedIntProps {
   value: number;
   duration?: number;
+  delay?: number;
   className?: string;
 }
 
