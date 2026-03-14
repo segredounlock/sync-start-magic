@@ -476,7 +476,7 @@ Deno.serve(async (req) => {
           pricingSource = source;
           pricingRuleDetails = { tipo_regra: rule.tipo_regra, regra_valor: Number(rule.regra_valor), custo: Number(rule.custo) };
           return rule.tipo_regra === "fixo"
-            ? Number(rule.regra_valor)
+            ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
             : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
         };
 
