@@ -23,10 +23,10 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
     if (authError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
 
-    const { action } = await req.json();
+    const body = await req.json();
+    const { action } = body;
 
     if (action === "claim") {
-      // Check if user already has a card today
       const today = new Date().toISOString().slice(0, 10);
       const { data: existing } = await supabaseAdmin
         .from("scratch_cards")
@@ -39,10 +39,9 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "already_claimed", message: "Você já resgatou sua raspadinha hoje!" }), { status: 400, headers: corsHeaders });
       }
 
-      // Determine prize: 70% chance to win, amounts R$0.10 to R$2.00
+      // Determine prize: 70% chance to win
       const isWin = Math.random() < 0.7;
       const prizeOptions = [0.10, 0.15, 0.20, 0.25, 0.30, 0.50, 0.75, 1.00, 1.50, 2.00];
-      // Weighted: smaller prizes more likely
       const weights = [25, 20, 15, 12, 10, 8, 5, 3, 1.5, 0.5];
       let prizeAmount = 0;
 
@@ -75,15 +74,9 @@ Deno.serve(async (req) => {
     }
 
     if (action === "scratch") {
-      const { card_id } = await req.json().catch(() => ({}));
-      // Get card_id from body
-      const body = JSON.parse(await new Response(req.body).text().catch(() => "{}"));
-      
-      // Re-parse since we already consumed the body above
       const today = new Date().toISOString().slice(0, 10);
-      
-      // Find today's unscratched card
-      const { data: card, error: findError } = await supabaseAdmin
+
+      const { data: card } = await supabaseAdmin
         .from("scratch_cards")
         .select("*")
         .eq("user_id", user.id)
@@ -95,13 +88,11 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "no_card", message: "Nenhuma raspadinha para raspar" }), { status: 400, headers: corsHeaders });
       }
 
-      // Mark as scratched
       await supabaseAdmin
         .from("scratch_cards")
         .update({ is_scratched: true, scratched_at: new Date().toISOString() })
         .eq("id", card.id);
 
-      // Credit balance if won
       if (card.is_won && card.prize_amount > 0) {
         const { data: saldo } = await supabaseAdmin
           .from("saldos")
@@ -113,7 +104,7 @@ Deno.serve(async (req) => {
         if (saldo) {
           await supabaseAdmin
             .from("saldos")
-            .update({ valor: saldo.valor + card.prize_amount })
+            .update({ valor: Number(saldo.valor) + Number(card.prize_amount) })
             .eq("user_id", user.id)
             .eq("tipo", "revenda");
         }
