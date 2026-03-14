@@ -310,7 +310,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         const newRow = payload.new as any;
         const oldRow = payload.old as any;
         if (newRow.status === "completed" && oldRow?.status !== "completed") {
-          appToast.recargaCompleted(`Recarga ${newRow.operadora || ""} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
+          appToast.recargaCompleted(`Recarga ${(newRow.operadora || "").toUpperCase()} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
           playSuccessSound();
           fetchData();
           // Auto-send receipt to Telegram (uses Satori fallback for image)
