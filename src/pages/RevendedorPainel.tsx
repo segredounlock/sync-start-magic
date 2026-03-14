@@ -1688,7 +1688,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                       <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
                                     </div>
                                   </div>
-                                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
+                                  <StatusBadge status={r.status} type="recarga" className="px-2.5 py-1 text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-border">
                                   <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
