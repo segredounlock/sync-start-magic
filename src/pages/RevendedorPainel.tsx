@@ -148,9 +148,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const fetchCatalog = useCallback(async () => {
     await guardedFetch(catalogLoaded, setCatalogLoading, async () => {
-      // Always build catalog from local DB with reseller/global pricing rules
-      // In client mode, load reseller's custom pricing; in reseller mode, use global pricing only
-      const pricingUserId = isClientMode ? resellerId : null;
+      // In client mode, load reseller's custom pricing
+      // In reseller/user mode, load own custom pricing (if any) with global as fallback
+      const pricingUserId = isClientMode ? resellerId : user?.id;
       const [{ data: ops }, { data: globalRules }, { data: resellerRules }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
@@ -158,6 +158,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       ]);
 
       if (ops) {
+        const hasResellerRules = (resellerRules || []).length > 0;
         const localCatalog: CatalogCarrier[] = ops.map((op) => {
           const opGlobalRules = (globalRules || []).filter((r) => r.operadora_id === op.id);
           const opResellerRules = (resellerRules || []).filter((r: any) => r.operadora_id === op.id);
@@ -165,7 +166,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           const values: CatalogValue[] = valores.map((v: number) => {
             const resellerRule = opResellerRules.find((r: any) => Number(r.valor_recarga) === v);
             const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
-            const rule = isClientMode ? (resellerRule || globalRule) : globalRule;
+            // Use reseller rule when available (client mode or own custom pricing), fallback to global
+            const rule = hasResellerRules ? (resellerRule || globalRule) : globalRule;
             const cost = rule
               ? rule.tipo_regra === "fixo"
                 ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
