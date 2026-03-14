@@ -241,7 +241,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            onClick={() => onNavigateTab(a.tab)}
+            onClick={() => a.tab === "__saque__" ? setShowSaqueModal(true) : onNavigateTab(a.tab)}
             className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
           >
             <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
