@@ -132,6 +132,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check minimum spending requirement (R$50 in completed recharges)
+    const MIN_SPENDING = 50;
+    const { data: spendingData } = await supabaseAdmin
+      .from("recargas")
+      .select("custo")
+      .eq("user_id", user.id)
+      .eq("status", "completed");
+
+    const totalSpent = (spendingData || []).reduce((sum: number, r: any) => sum + Number(r.custo || 0), 0);
+
+    if (totalSpent < MIN_SPENDING) {
+      return new Response(
+        JSON.stringify({
+          error: "insufficient_spending",
+          message: `Você precisa ter pelo menos R$ ${MIN_SPENDING.toFixed(2)} em recargas para acessar a raspadinha.`,
+          total_spent: Math.round(totalSpent * 100) / 100,
+          min_required: MIN_SPENDING,
+        }),
+        { status: 200, headers: jsonHeaders },
+      );
+    }
+
     if (action === "claim") {
       const today = new Date().toISOString().slice(0, 10);
       const { data: existing } = await supabaseAdmin
