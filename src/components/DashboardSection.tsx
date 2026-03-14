@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
+import { formatDateFullTitleBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 import { SkeletonValue } from "@/components/Skeleton";
 
 interface DashboardSectionProps {
@@ -41,7 +41,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
   const today = new Date();
-  const dateLabel = formatDateLongUpperBR(today.toISOString());
+  const dateLabel = formatDateFullTitleBR(today.toISOString());
 
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);

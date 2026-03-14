@@ -172,6 +172,20 @@ export function formatDateLongUpperBR(dateInput: string | Date): string {
   }).format(d).toUpperCase();
 }
 
+/** "Sábado, 14 De Março De 2026" — title-case with weekday */
+export function formatDateFullTitleBR(dateInput: string | Date): string {
+  const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  const raw = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: BRAZIL_TZ,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(d);
+  // Title-case each word
+  return raw.replace(/\b\w/g, c => c.toUpperCase());
+}
+
 /** "03/03/26, 14:30" with short weekday prefix: "seg. 03/03" */
 export function formatWeekdayDateBR(dateInput: string | Date): string {
   const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
