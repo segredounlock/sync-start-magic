@@ -1,40 +1,12 @@
 
 
-## Diagnóstico e Correção
+# Plano: Resetar raspadinha de hoje
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## O que será feito
+Deletar a raspadinha de hoje do banco de dados para que você possa resgatar uma nova e testar o sistema de faixas.
 
-### Plano
-
-**1. Corrigir o mapeamento de status na sync function**
-
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+## Detalhes técnicos
+- Existe 1 raspadinha para hoje (14/03/2026), ID `7e0c1d89-cadd-4e68-aed7-aa227d804a64`, já raspada (perdeu).
+- Executar `DELETE FROM scratch_cards WHERE card_date = CURRENT_DATE` para limpar.
+- Após deletar, basta clicar em "Resgatar Raspadinha" na tela para testar com o novo sistema de 3 faixas.
 
