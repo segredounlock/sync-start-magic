@@ -244,7 +244,9 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.02, duration: 0.15 }}
                             className={`px-4 py-3 border-b border-border/20 hover:bg-muted/30 transition-colors cursor-default ${
-                              !n.is_read ? "bg-primary/[0.03]" : ""
+                              n.type === "debt_collected"
+                                ? "bg-amber-500/[0.07] border-l-2 border-l-amber-500"
+                                : !n.is_read ? "bg-primary/[0.03]" : ""
                             }`}
                           >
                             <div className="flex items-start gap-3">
