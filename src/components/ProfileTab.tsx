@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import type { Recarga } from "@/types";
+import { PixKeyTab } from "@/components/settings/PixKeyTab";
+import { PixelAdsTab } from "@/components/settings/PixelAdsTab";
+import { SupportTab } from "@/components/settings/SupportTab";
+import { NotificationsTab } from "@/components/settings/NotificationsTab";
 
 interface ProfileTabProps {
   user: any;
