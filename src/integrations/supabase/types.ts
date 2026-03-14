@@ -1259,6 +1259,7 @@ export type Database = {
           table_name: string
         }[]
       }
+      get_sales_tools_enabled: { Args: never; Returns: boolean }
       get_seasonal_theme: { Args: never; Returns: string }
       get_ticker_recargas: {
         Args: never
