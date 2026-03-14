@@ -92,6 +92,29 @@ export default function ClientePortal() {
     setLoading(false);
   };
 
+  const getFunctionErrorMessage = async (err: unknown, fallback: string) => {
+    if (err && typeof err === "object") {
+      const maybeErr = err as { message?: string; context?: Response };
+
+      if (maybeErr.context && typeof maybeErr.context.json === "function") {
+        try {
+          const payload = await maybeErr.context.clone().json();
+          if (payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string") {
+            return payload.error;
+          }
+        } catch {
+          // no-op: fallback to message below
+        }
+      }
+
+      if (typeof maybeErr.message === "string" && maybeErr.message.trim()) {
+        return maybeErr.message;
+      }
+    }
+
+    return fallback;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { toast.error("Preencha todos os campos"); return; }
@@ -100,8 +123,8 @@ export default function ClientePortal() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Login realizado!");
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao fazer login");
+    } catch (err: unknown) {
+      toast.error(await getFunctionErrorMessage(err, "Erro ao fazer login"));
     }
     setSubmitting(false);
   };
@@ -110,7 +133,11 @@ export default function ClientePortal() {
     e.preventDefault();
     if (!email || !password || !nome.trim()) { toast.error("Preencha todos os campos"); return; }
     if (password.length < 6) { toast.error("Senha deve ter no mínimo 6 caracteres"); return; }
-    if (!resellerInfo) return;
+    if (!resellerInfo) {
+      toast.error("Loja inválida para cadastro");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke("client-register", {
@@ -122,8 +149,8 @@ export default function ClientePortal() {
       const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
       if (loginErr) throw loginErr;
       toast.success("Conta criada com sucesso!");
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao criar conta");
+    } catch (err: unknown) {
+      toast.error(await getFunctionErrorMessage(err, "Erro ao criar conta"));
     }
     setSubmitting(false);
   };
