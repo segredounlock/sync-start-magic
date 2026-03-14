@@ -970,7 +970,28 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               );
             })}
 
-            <div className="pt-3 mt-3 border-t border-border">
+            {/* Sales Tools Section */}
+            {salesMenuItems.length > 0 && (
+              <div className="pt-3 mt-3 border-t border-border space-y-1">
+                <div className="px-2 text-[10px] tracking-widest text-muted-foreground/60 uppercase font-semibold">Ferramentas de Venda</div>
+                {salesMenuItems.map((item) => {
+                  const isActive = tab === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => selectTab(item.key)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
+                        isActive ? "nav-item-active" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                      }`}
+                    >
+                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
               <a href="/chat"
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all group shadow-[0_0_12px_hsl(var(--primary)/0.08)]">
                 <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
