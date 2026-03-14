@@ -1565,7 +1565,7 @@ export default function TelegramMiniApp() {
                         </div>
                         {[
                           { icon: Phone, label: "Telefone", value: formatPhone(viewingReceipt.telefone) },
-                          { icon: Zap, label: "Operadora", value: viewingReceipt.operadora || "—" },
+                          { icon: Zap, label: "Operadora", value: (viewingReceipt.operadora || "—").toUpperCase() },
                           { icon: Wallet, label: "Valor", value: formatCurrency(viewingReceipt.valor), highlight: true },
                           { icon: Hash, label: "ID do Pedido", value: viewingReceipt.external_id || viewingReceipt.id.slice(0, 8) },
                           { icon: Clock, label: "Data", value: formatDateTimeBR(viewingReceipt.created_at) },
