@@ -2029,7 +2029,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 };
                 const bgForType = (tipo: ExtratoItem["tipo"]) => {
                   if (tipo === "deposito") return "bg-success/10";
-                  if (tipo === "recarga") return "bg-primary/10";
+                  if (tipo === "recarga") return "bg-blue-500/10";
                   if (tipo === "saque") return "bg-warning/10";
                   return "bg-accent/10";
                 };
