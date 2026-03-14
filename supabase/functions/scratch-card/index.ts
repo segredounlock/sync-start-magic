@@ -6,6 +6,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function getConfig(supabaseAdmin: any) {
+  const keys = ["scratchEnabled", "scratchWinChance", "scratchMinPrize", "scratchMaxPrize"];
+  const { data } = await supabaseAdmin
+    .from("system_config")
+    .select("key, value")
+    .in("key", keys);
+
+  const config: Record<string, string> = {};
+  (data || []).forEach((r: any) => { config[r.key] = r.value; });
+
+  return {
+    enabled: (config.scratchEnabled ?? "true") === "true",
+    winChance: Math.min(100, Math.max(0, parseFloat(config.scratchWinChance || "70"))) / 100,
+    minPrize: Math.max(0.01, parseFloat(config.scratchMinPrize || "0.10")),
+    maxPrize: Math.max(0.01, parseFloat(config.scratchMaxPrize || "2.00")),
+  };
+}
+
+function generatePrize(min: number, max: number): number {
+  // Weighted towards lower values using power distribution
+  const rand = Math.pow(Math.random(), 2); // squares bias towards 0
+  const raw = min + rand * (max - min);
+  return Math.round(raw * 100) / 100; // round to cents
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -26,33 +51,30 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    const config = await getConfig(supabaseAdmin);
+
+    if (!config.enabled) {
+      return new Response(JSON.stringify({ error: "disabled", message: "Raspadinha está desativada no momento." }), { status: 400, headers: corsHeaders });
+    }
+
     if (action === "claim") {
       const today = new Date().toISOString().slice(0, 10);
       const { data: existing } = await supabaseAdmin
         .from("scratch_cards")
-        .select("id")
+        .select("id, is_scratched, prize_amount, is_won")
         .eq("user_id", user.id)
         .eq("card_date", today)
         .maybeSingle();
 
       if (existing) {
-        return new Response(JSON.stringify({ error: "already_claimed", message: "Você já resgatou sua raspadinha hoje!" }), { status: 400, headers: corsHeaders });
+        return new Response(JSON.stringify({
+          error: "already_claimed",
+          card: { id: existing.id, card_date: today, is_scratched: existing.is_scratched, prize_amount: existing.is_scratched ? existing.prize_amount : undefined, is_won: existing.is_scratched ? existing.is_won : undefined },
+        }), { status: 200, headers: corsHeaders });
       }
 
-      // Determine prize: 70% chance to win
-      const isWin = Math.random() < 0.7;
-      const prizeOptions = [0.10, 0.15, 0.20, 0.25, 0.30, 0.50, 0.75, 1.00, 1.50, 2.00];
-      const weights = [25, 20, 15, 12, 10, 8, 5, 3, 1.5, 0.5];
-      let prizeAmount = 0;
-
-      if (isWin) {
-        const totalWeight = weights.reduce((a, b) => a + b, 0);
-        let rand = Math.random() * totalWeight;
-        for (let i = 0; i < weights.length; i++) {
-          rand -= weights[i];
-          if (rand <= 0) { prizeAmount = prizeOptions[i]; break; }
-        }
-      }
+      const isWin = Math.random() < config.winChance;
+      const prizeAmount = isWin ? generatePrize(config.minPrize, config.maxPrize) : 0;
 
       const { data: card, error: insertError } = await supabaseAdmin
         .from("scratch_cards")
