@@ -84,7 +84,8 @@ serve(async (req) => {
 
     // Tables that have user_id referencing profiles.id
     const profileFkTables = new Set([
-      "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config", "transactions",
+      "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config",
+      "transactions", "disabled_recharge_values", "referral_commissions",
     ]);
 
     const getExistingProfileIds = async () => {
