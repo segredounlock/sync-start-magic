@@ -159,7 +159,7 @@ export default function UserProfile() {
       const { data } = await supabase
         .from("follows")
         .select("follower_id")
-        .eq("following_id", userId!);
+        .eq("following_id", resolvedId!);
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.follower_id);
         const { data: profiles } = await supabase
