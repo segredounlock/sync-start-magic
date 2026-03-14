@@ -1293,6 +1293,22 @@ export type Database = {
         }[]
       }
       get_sales_tools_enabled: { Args: never; Returns: boolean }
+      get_scratch_recent_winners: {
+        Args: never
+        Returns: {
+          card_date: string
+          nome: string
+          prize_amount: number
+        }[]
+      }
+      get_scratch_top_winners: {
+        Args: never
+        Returns: {
+          card_date: string
+          nome: string
+          prize_amount: number
+        }[]
+      }
       get_seasonal_theme: { Args: never; Returns: string }
       get_ticker_recargas: {
         Args: never

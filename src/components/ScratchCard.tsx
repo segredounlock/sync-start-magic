@@ -1,7 +1,10 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Ticket, Gift, Sparkles, Calendar, Trophy, History } from "lucide-react";
+import {
+  Ticket, Gift, Sparkles, Calendar, Trophy, History, Crown, Star, Medal,
+  Frown, Info, Wallet, Clock
+} from "lucide-react";
 import { Currency } from "@/components/ui/Currency";
 import confetti from "canvas-confetti";
 
@@ -27,24 +30,115 @@ interface HistoryCard {
   created_at: string;
 }
 
+interface WinnerEntry {
+  nome: string;
+  prize_amount: number;
+  card_date: string;
+}
+
+// Simple seeded random from card ID
+function seededRandom(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(31, h) + seed.charCodeAt(i) | 0;
+  }
+  return () => {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h = (h ^= h >>> 16) >>> 0;
+    return h / 4294967296;
+  };
+}
+
+const POSSIBLE_VALUES = [0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00, 20.00, 50.00, 100.00];
+
+function generateGrid(cardId: string, isWon: boolean, prizeAmount: number): number[] {
+  const rng = seededRandom(cardId);
+  const grid: number[] = new Array(9);
+
+  if (isWon && prizeAmount > 0) {
+    // Place 3 winning cells
+    const positions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    const winPositions: number[] = [];
+    for (let i = 0; i < 3; i++) {
+      const idx = Math.floor(rng() * positions.length);
+      winPositions.push(positions.splice(idx, 1)[0]);
+    }
+    // Fill winning positions
+    for (const p of winPositions) grid[p] = prizeAmount;
+    // Fill rest with non-matching values
+    const others = POSSIBLE_VALUES.filter(v => v !== prizeAmount);
+    for (const p of positions) {
+      grid[p] = others[Math.floor(rng() * others.length)];
+    }
+  } else {
+    // No 3 should match - pick values ensuring max 2 of same
+    const counts: Record<number, number> = {};
+    for (let i = 0; i < 9; i++) {
+      let val: number;
+      let attempts = 0;
+      do {
+        val = POSSIBLE_VALUES[Math.floor(rng() * POSSIBLE_VALUES.length)];
+        attempts++;
+      } while ((counts[val] || 0) >= 2 && attempts < 50);
+      grid[i] = val;
+      counts[val] = (counts[val] || 0) + 1;
+    }
+  }
+  return grid;
+}
+
+const RANK_ICONS = [Crown, Star, Medal];
+const RANK_COLORS = [
+  "bg-yellow-100 text-yellow-600",
+  "bg-gray-100 text-gray-500",
+  "bg-orange-100 text-orange-500",
+];
+
+type ClaimResponse = { error?: string; message?: string; card?: CardData };
+type ScratchResponse = { error?: string; message?: string; prize_amount?: number; is_won?: boolean };
+
+function parsePayload<T>(payload: unknown): T | null {
+  if (!payload) return null;
+  if (typeof payload === "string") {
+    try { return JSON.parse(payload) as T; } catch { return null; }
+  }
+  return payload as T;
+}
+
 export function ScratchCard({ userId }: ScratchCardProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [scratching, setScratchting] = useState(false);
-  const [scratchPercent, setScratchPercent] = useState(0);
-  const [revealed, setRevealed] = useState(false);
+  const [revealedCells, setRevealedCells] = useState<Set<number>>(new Set());
+  const [gameOver, setGameOver] = useState(false);
   const [result, setResult] = useState<{ prize_amount: number; is_won: boolean } | null>(null);
   const [history, setHistory] = useState<HistoryCard[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const isDrawing = useRef(false);
-  const cardSize = { w: 280, h: 200 };
+  const [topWinners, setTopWinners] = useState<WinnerEntry[]>([]);
+  const [recentWinners, setRecentWinners] = useState<WinnerEntry[]>([]);
+  const [balance, setBalance] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<"diaria" | "dourada">("diaria");
 
-  // Check for existing card today
+  const grid = useMemo(() => {
+    if (!card) return [];
+    return generateGrid(card.id, Boolean(card.is_won), card.prize_amount ?? 0);
+  }, [card]);
+
   useEffect(() => {
     checkTodayCard();
     loadHistory();
+    loadLeaderboards();
+    loadBalance();
   }, [userId]);
+
+  const loadBalance = async () => {
+    const { data } = await supabase
+      .from("saldos")
+      .select("valor")
+      .eq("user_id", userId)
+      .eq("tipo", "revenda")
+      .maybeSingle();
+    if (data) setBalance(Number((data as any).valor));
+  };
 
   const checkTodayCard = async () => {
     const today = new Date().toISOString().slice(0, 10);
@@ -54,12 +148,16 @@ export function ScratchCard({ userId }: ScratchCardProps) {
       .eq("user_id", userId)
       .eq("card_date", today)
       .maybeSingle();
-
     if (data) {
       const d = data as any;
-      setCard({ id: d.id, card_date: d.card_date, is_scratched: d.is_scratched });
+      const cardData: CardData = {
+        id: d.id, card_date: d.card_date, is_scratched: d.is_scratched,
+        prize_amount: d.prize_amount, is_won: d.is_won,
+      };
+      setCard(cardData);
       if (d.is_scratched) {
-        setRevealed(true);
+        setGameOver(true);
+        setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
         setResult({ prize_amount: d.prize_amount, is_won: d.is_won });
       }
     }
@@ -76,226 +174,76 @@ export function ScratchCard({ userId }: ScratchCardProps) {
     if (data) setHistory(data as any);
   };
 
-  type ClaimResponse = {
-    error?: string;
-    message?: string;
-    card?: CardData;
-  };
-
-  type ScratchResponse = {
-    error?: string;
-    message?: string;
-    prize_amount?: number;
-    is_won?: boolean;
-  };
-
-  const parseInvokePayload = <T,>(payload: unknown): T | null => {
-    if (!payload) return null;
-    if (typeof payload === "string") {
-      try {
-        return JSON.parse(payload) as T;
-      } catch {
-        return null;
-      }
-    }
-    return payload as T;
+  const loadLeaderboards = async () => {
+    const [top, recent] = await Promise.all([
+      supabase.rpc("get_scratch_top_winners" as any),
+      supabase.rpc("get_scratch_recent_winners" as any),
+    ]);
+    if (top.data) setTopWinners(top.data as any);
+    if (recent.data) setRecentWinners(recent.data as any);
   };
 
   const claimCard = async () => {
     setLoading(true);
     try {
-      console.log("[ScratchCard] Claiming card...");
       const { data, error } = await supabase.functions.invoke("scratch-card", {
         body: { action: "claim" },
       });
-
-      const payload = parseInvokePayload<ClaimResponse>(data);
-      console.log("[ScratchCard] Claim response:", { raw: data, payload, error });
-
-      if (error) {
-        console.error("[ScratchCard] Claim error:", error);
-        throw error;
-      }
-
-      if (!payload) {
-        console.error("[ScratchCard] Invalid claim payload:", data);
-        return;
-      }
+      const payload = parsePayload<ClaimResponse>(data);
+      if (error) throw error;
+      if (!payload) return;
 
       if (payload.error === "already_claimed" && payload.card) {
-        const claimedCard: CardData = {
-          id: payload.card.id,
-          card_date: payload.card.card_date,
-          is_scratched: payload.card.is_scratched,
-          prize_amount: payload.card.prize_amount,
-          is_won: payload.card.is_won,
-        };
-
-        setCard(claimedCard);
-        if (claimedCard.is_scratched) {
-          setRevealed(true);
-          setResult({
-            prize_amount: claimedCard.prize_amount ?? 0,
-            is_won: Boolean(claimedCard.is_won),
-          });
-        } else {
-          setTimeout(() => initCanvas(), 150);
+        const c = payload.card;
+        setCard(c);
+        if (c.is_scratched) {
+          setGameOver(true);
+          setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
+          setResult({ prize_amount: c.prize_amount ?? 0, is_won: Boolean(c.is_won) });
         }
         return;
       }
-
-      if (payload.error) {
-        console.error("[ScratchCard] Server error:", payload.error, payload.message);
-        return;
-      }
-
-      if (payload.card) {
-        setCard(payload.card);
-        setTimeout(() => initCanvas(), 150);
-      }
+      if (payload.card) setCard(payload.card);
     } catch (e) {
-      console.error("[ScratchCard] Claim exception:", e);
+      console.error("[ScratchCard] Claim error:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  const initCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    canvas.width = cardSize.w * 2;
-    canvas.height = cardSize.h * 2;
-    ctx.scale(2, 2);
+  const revealCell = useCallback((index: number) => {
+    if (gameOver || revealedCells.has(index)) return;
+    const next = new Set(revealedCells);
+    next.add(index);
+    setRevealedCells(next);
 
-    // Draw scratch overlay
-    const grad = ctx.createLinearGradient(0, 0, cardSize.w, cardSize.h);
-    grad.addColorStop(0, "#c0c0c0");
-    grad.addColorStop(0.5, "#d4d4d4");
-    grad.addColorStop(1, "#a8a8a8");
-    ctx.fillStyle = grad;
-    roundRect(ctx, 0, 0, cardSize.w, cardSize.h, 16);
-    ctx.fill();
-
-    // Add pattern
-    ctx.fillStyle = "rgba(255,255,255,0.15)";
-    for (let i = 0; i < 20; i++) {
-      const x = Math.random() * cardSize.w;
-      const y = Math.random() * cardSize.h;
-      ctx.beginPath();
-      ctx.arc(x, y, 3 + Math.random() * 8, 0, Math.PI * 2);
-      ctx.fill();
+    // Check if enough cells revealed to auto-finish
+    if (next.size >= 6) {
+      // Reveal all and call scratch
+      setTimeout(() => finishGame(next), 600);
     }
+  }, [gameOver, revealedCells]);
 
-    // Text
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.font = "bold 18px system-ui";
-    ctx.textAlign = "center";
-    ctx.fillText("🎰 RASPE AQUI 🎰", cardSize.w / 2, cardSize.h / 2 - 10);
-    ctx.font = "13px system-ui";
-    ctx.fillText("Arraste para revelar", cardSize.w / 2, cardSize.h / 2 + 15);
-  }, []);
+  const finishGame = async (cells: Set<number>) => {
+    setGameOver(true);
+    setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
 
-  useEffect(() => {
-    if (card && !card.is_scratched && !revealed) {
-      setTimeout(() => initCanvas(), 150);
-    }
-  }, [card, revealed, initCanvas]);
-
-  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    if ("touches" in e) {
-      return {
-        x: (e.touches[0].clientX - rect.left) * scaleX / 2,
-        y: (e.touches[0].clientY - rect.top) * scaleY / 2,
-      };
-    }
-    return {
-      x: (e.clientX - rect.left) * scaleX / 2,
-      y: (e.clientY - rect.top) * scaleY / 2,
-    };
-  };
-
-  const scratch = (x: number, y: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(x * 2, y * 2, 40, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Calculate scratch percentage
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let cleared = 0;
-    for (let i = 3; i < imageData.data.length; i += 4) {
-      if (imageData.data[i] === 0) cleared++;
-    }
-    const pct = (cleared / (imageData.data.length / 4)) * 100;
-    setScratchPercent(pct);
-
-    if (pct > 55 && !revealed) {
-      revealCard();
-    }
-  };
-
-  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    if (revealed) return;
-    isDrawing.current = true;
-    setScratchting(true);
-    const pos = getPos(e);
-    scratch(pos.x, pos.y);
-  };
-
-  const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    if (!isDrawing.current || revealed) return;
-    const pos = getPos(e);
-    scratch(pos.x, pos.y);
-  };
-
-  const handleEnd = () => {
-    isDrawing.current = false;
-    setScratchting(false);
-  };
-
-  const revealCard = async () => {
-    setRevealed(true);
     try {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
         body: { action: "scratch" },
       });
-
       if (error) throw error;
+      const payload = parsePayload<ScratchResponse>(data);
+      if (!payload || payload.error) throw new Error(payload?.message || "Erro");
 
-      const payload = parseInvokePayload<ScratchResponse>(data);
-      if (!payload) {
-        throw new Error("Resposta inválida da raspadinha");
-      }
-
-      if (payload.error) {
-        throw new Error(payload.message || payload.error);
-      }
-
-      const revealResult = {
-        prize_amount: Number(payload.prize_amount ?? 0),
-        is_won: Boolean(payload.is_won),
-      };
-
-      setResult(revealResult);
-      if (revealResult.is_won) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#10b981", "#f59e0b", "#8b5cf6"],
-        });
+      const r = { prize_amount: Number(payload.prize_amount ?? 0), is_won: Boolean(payload.is_won) };
+      setResult(r);
+      if (r.is_won) {
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ["#10b981", "#f59e0b", "#8b5cf6"] });
       }
       loadHistory();
+      loadBalance();
+      loadLeaderboards();
     } catch (e) {
       console.error("Scratch error:", e);
     }
@@ -303,239 +251,295 @@ export function ScratchCard({ userId }: ScratchCardProps) {
 
   const formatDate = (d: string) => {
     const date = new Date(d + "T12:00:00");
-    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
   };
 
-  // No card claimed yet
-  if (!card) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Ticket className="h-6 w-6 text-primary" />
-          <h2 className="text-xl font-bold text-foreground">Raspadinha Diária</h2>
-        </div>
+  const formatTime = (d: string | null) => {
+    if (!d) return "";
+    return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  };
 
-        <motion.div
-          className="bg-card border border-border rounded-2xl p-8 text-center space-y-5 max-w-sm mx-auto"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-        >
-          <motion.div
-            animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-          >
-            <Gift className="h-16 w-16 text-primary mx-auto" />
-          </motion.div>
-          <h3 className="text-lg font-bold text-foreground">Sua raspadinha de hoje</h3>
-          <p className="text-sm text-muted-foreground">
-            Ganhe uma raspadinha grátis todo dia! Raspe e descubra se ganhou saldo.
-          </p>
-          <motion.button
-            onClick={claimCard}
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.02 }}
-          >
-            {loading ? "Gerando..." : "🎰 Resgatar Raspadinha"}
-          </motion.button>
-        </motion.div>
-
-        {history.length > 0 && (
-          <HistorySection history={history} showHistory={showHistory} setShowHistory={setShowHistory} formatDate={formatDate} />
-        )}
-      </div>
-    );
-  }
-
-  // Card already scratched
-  if (revealed && result) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Ticket className="h-6 w-6 text-primary" />
-          <h2 className="text-xl font-bold text-foreground">Raspadinha Diária</h2>
-        </div>
-
-        <motion.div
-          className="bg-card border border-border rounded-2xl p-8 text-center space-y-4 max-w-sm mx-auto overflow-hidden"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200 }}
-        >
-          {result.is_won ? (
-            <>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
-                transition={{ delay: 0.2, type: "spring" }}
-              >
-                <Trophy className="h-16 w-16 text-warning mx-auto" />
-              </motion.div>
-              <motion.h3
-                className="text-xl font-extrabold text-success"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                🎉 Você ganhou!
-              </motion.h3>
-              <motion.div
-                className="text-3xl font-black text-primary"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-              >
-                <Currency value={result.prize_amount} />
-              </motion.div>
-              <p className="text-sm text-muted-foreground">Crédito adicionado ao seu saldo!</p>
-            </>
-          ) : (
-            <>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Ticket className="h-16 w-16 text-muted-foreground/40 mx-auto" />
-              </motion.div>
-              <h3 className="text-lg font-bold text-muted-foreground">Não foi desta vez!</h3>
-              <p className="text-sm text-muted-foreground">Tente novamente amanhã 🍀</p>
-            </>
-          )}
-
-          <div className="pt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>Volte amanhã para uma nova raspadinha!</span>
-          </div>
-        </motion.div>
-
-        {history.length > 0 && (
-          <HistorySection history={history} showHistory={showHistory} setShowHistory={setShowHistory} formatDate={formatDate} />
-        )}
-      </div>
-    );
-  }
-
-  // Card ready to scratch
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Ticket className="h-6 w-6 text-primary" />
-        <h2 className="text-xl font-bold text-foreground">Raspadinha Diária</h2>
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-black text-foreground">Raspadinha</h1>
+        <p className="text-sm text-muted-foreground">Tente a sorte e ganhe saldo na sua carteira!</p>
       </div>
 
-      <div className="max-w-sm mx-auto space-y-4">
-        <motion.div
-          className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 border border-border p-4"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+      {/* Tabs */}
+      <div className="flex max-w-md mx-auto rounded-full border border-border overflow-hidden">
+        <button
+          onClick={() => setActiveTab("diaria")}
+          className={`flex-1 py-2.5 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+            activeTab === "diaria"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card text-muted-foreground hover:bg-muted/50"
+          }`}
         >
-          {/* Prize layer underneath */}
-          <div
-            className="absolute inset-4 rounded-xl bg-card flex flex-col items-center justify-center gap-2 z-0"
-            style={{ width: cardSize.w, height: cardSize.h }}
-          >
-            <Sparkles className="h-10 w-10 text-warning animate-pulse" />
-            <span className="text-sm font-bold text-muted-foreground">Raspando...</span>
-            <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
-              <motion.div
-                className="h-full bg-primary rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(scratchPercent / 55 * 100, 100)}%` }}
-              />
+          <Ticket className="h-4 w-4" /> Diária
+        </button>
+        <button
+          onClick={() => setActiveTab("dourada")}
+          className={`flex-1 py-2.5 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+            activeTab === "dourada"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card text-muted-foreground hover:bg-muted/50"
+          }`}
+        >
+          <Star className="h-4 w-4" /> Dourada
+        </button>
+      </div>
+
+      {activeTab === "dourada" ? (
+        <div className="bg-card border border-border rounded-2xl p-8 text-center max-w-md mx-auto">
+          <Star className="h-12 w-12 text-warning mx-auto mb-3" />
+          <h3 className="font-bold text-foreground">Em breve!</h3>
+          <p className="text-sm text-muted-foreground mt-1">A raspadinha dourada está chegando.</p>
+        </div>
+      ) : (
+        <>
+          {/* Main layout */}
+          <div className="flex flex-col lg:flex-row gap-5">
+            {/* Left: Game area */}
+            <div className="flex-1">
+              <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <Ticket className="h-5 w-5 text-primary" /> Sua chance
+                </h3>
+
+                {!card ? (
+                  /* Claim state */
+                  <motion.div
+                    className="text-center space-y-5 py-6"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                  >
+                    <motion.div
+                      animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                    >
+                      <Gift className="h-16 w-16 text-primary mx-auto" />
+                    </motion.div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground">Sua raspadinha de hoje</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Ganhe uma raspadinha grátis todo dia! Revele as células e descubra se ganhou.
+                      </p>
+                    </div>
+                    <motion.button
+                      onClick={claimCard}
+                      disabled={loading}
+                      className="w-full max-w-xs mx-auto py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"
+                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      {loading ? "Gerando..." : "🎰 Resgatar Raspadinha"}
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  /* Grid */
+                  <div className="relative">
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {grid.map((value, idx) => {
+                        const isRevealed = revealedCells.has(idx);
+                        return (
+                          <motion.button
+                            key={idx}
+                            onClick={() => revealCell(idx)}
+                            disabled={gameOver || isRevealed}
+                            className={`relative aspect-[4/3] rounded-xl font-bold text-sm transition-all overflow-hidden ${
+                              isRevealed
+                                ? "bg-muted/60 border border-border"
+                                : "bg-gradient-to-br from-gray-400 to-gray-500 border border-gray-400 cursor-pointer hover:from-gray-350 hover:to-gray-450 active:scale-95"
+                            }`}
+                            whileTap={!isRevealed && !gameOver ? { scale: 0.9 } : undefined}
+                            initial={false}
+                            animate={isRevealed ? { rotateY: 0 } : { rotateY: 0 }}
+                          >
+                            {isRevealed ? (
+                              <motion.div
+                                className="flex flex-col items-center justify-center h-full gap-1"
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                              >
+                                <span className="text-[10px] text-success">💰</span>
+                                <span className="text-foreground font-black text-base">
+                                  R${value.toFixed(2)}
+                                </span>
+                              </motion.div>
+                            ) : (
+                              <div className="flex items-center justify-center h-full">
+                                <span className="text-white/50 text-xs">?</span>
+                              </div>
+                            )}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Game Over Overlay */}
+                    <AnimatePresence>
+                      {gameOver && result && (
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center z-10"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          <motion.div
+                            className="bg-card/95 backdrop-blur-sm rounded-2xl p-6 text-center shadow-xl border border-border max-w-[80%]"
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.4, type: "spring" }}
+                          >
+                            {result.is_won ? (
+                              <>
+                                <Trophy className="h-12 w-12 text-warning mx-auto mb-2" />
+                                <h3 className="text-lg font-extrabold text-success">🎉 Parabéns!</h3>
+                                <p className="text-2xl font-black text-primary mt-1">
+                                  + R$ {result.prize_amount.toFixed(2)}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-2">Crédito adicionado!</p>
+                              </>
+                            ) : (
+                              <>
+                                <Frown className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
+                                <h3 className="text-lg font-bold text-foreground">Não foi dessa vez</h3>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  Tente novamente amanhã ou jogue a Gold!
+                                </p>
+                              </>
+                            )}
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </div>
+
+              {/* Rules */}
+              <div className="mt-4 bg-card border border-border rounded-2xl p-4">
+                <h4 className="font-bold text-sm text-primary flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4" /> Regras Diárias:
+                </h4>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li><strong>Jogue grátis</strong> uma vez por dia!</li>
+                  <li>Encontre <strong>3 valores iguais</strong> para ganhar.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Right sidebar */}
+            <div className="lg:w-80 space-y-4">
+              {/* Balance */}
+              <div className="bg-primary rounded-2xl p-5 text-primary-foreground relative overflow-hidden">
+                <div className="absolute top-3 right-3 opacity-20">
+                  <Wallet className="h-12 w-12" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider opacity-80">Seu Saldo Atual</p>
+                <p className="text-3xl font-black mt-1">R$ {balance.toFixed(2)}</p>
+                <p className="text-xs mt-2 opacity-70">Prêmios da raspadinha são somados aqui.</p>
+              </div>
+
+              {/* History */}
+              <div className="bg-card border border-border rounded-2xl p-4">
+                <h4 className="font-bold text-foreground flex items-center gap-2 mb-3">
+                  <Clock className="h-4 w-4 text-muted-foreground" /> Seu Histórico
+                </h4>
+                {history.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhum jogo ainda.</p>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {history.map((h) => (
+                      <div key={h.id} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${h.is_won ? "bg-success" : "bg-muted-foreground/30"}`} />
+                          <div>
+                            <p className="font-medium text-foreground">{formatDate(h.card_date)}</p>
+                            <p className="text-xs text-muted-foreground">{formatTime(h.scratched_at)} • Diária</p>
+                          </div>
+                        </div>
+                        {h.is_won ? (
+                          <span className="font-bold text-success text-xs">+ R$ {h.prize_amount.toFixed(2)}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground font-medium px-2 py-0.5 bg-muted rounded">PERDEU</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Canvas scratch layer */}
-          <canvas
-            ref={canvasRef}
-            className="relative z-10 rounded-xl cursor-pointer touch-none"
-            style={{ width: cardSize.w, height: cardSize.h }}
-            onMouseDown={handleStart}
-            onMouseMove={handleMove}
-            onMouseUp={handleEnd}
-            onMouseLeave={handleEnd}
-            onTouchStart={handleStart}
-            onTouchMove={handleMove}
-            onTouchEnd={handleEnd}
-          />
-        </motion.div>
+          {/* Leaderboards */}
+          {(topWinners.length > 0 || recentWinners.length > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Hall da Fama */}
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <h4 className="font-bold text-foreground flex items-center gap-2 mb-4">
+                  <Trophy className="h-5 w-5 text-warning" /> Hall da Fama
+                </h4>
+                <div className="space-y-3">
+                  {topWinners.map((w, i) => {
+                    const RankIcon = RANK_ICONS[i] || null;
+                    return (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                            i < 3 ? RANK_COLORS[i] : "bg-muted text-muted-foreground"
+                          }`}>
+                            {RankIcon ? <RankIcon className="h-4 w-4" /> : i + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground text-sm">{w.nome}</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
+                          </div>
+                        </div>
+                        <span className="font-bold text-success text-sm">+ R$ {w.prize_amount.toFixed(2)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-        <p className="text-center text-xs text-muted-foreground">
-          {scratching ? "Continue raspando..." : "Arraste o dedo ou mouse para raspar!"}
-        </p>
-      </div>
-
-      {history.length > 0 && (
-        <HistorySection history={history} showHistory={showHistory} setShowHistory={setShowHistory} formatDate={formatDate} />
+              {/* Últimos Prêmios */}
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <h4 className="font-bold text-foreground flex items-center gap-2 mb-4">
+                  <Sparkles className="h-5 w-5 text-purple-500" /> Últimos Prêmios
+                </h4>
+                <div className="space-y-3">
+                  {recentWinners.map((w, i) => {
+                    const RankIcon = RANK_ICONS[i] || null;
+                    return (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                            i < 3 ? RANK_COLORS[i] : "bg-muted text-muted-foreground"
+                          }`}>
+                            {RankIcon ? <RankIcon className="h-4 w-4" /> : i + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground text-sm">{w.nome}</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
+                          </div>
+                        </div>
+                        <span className="font-bold text-success text-sm">+ R$ {w.prize_amount.toFixed(2)}</span>
+                      </div>
+                    );
+                  })}
+                  {recentWinners.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nenhum ganhador ainda.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
-}
-
-function HistorySection({ history, showHistory, setShowHistory, formatDate }: {
-  history: HistoryCard[];
-  showHistory: boolean;
-  setShowHistory: (v: boolean) => void;
-  formatDate: (d: string) => string;
-}) {
-  const totalWon = history.filter(h => h.is_won).reduce((sum, h) => sum + h.prize_amount, 0);
-  const winRate = history.length > 0 ? Math.round((history.filter(h => h.is_won).length / history.length) * 100) : 0;
-
-  return (
-    <div className="max-w-sm mx-auto">
-      <button
-        onClick={() => setShowHistory(!showHistory)}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-muted/30 text-sm font-medium text-foreground"
-      >
-        <span className="flex items-center gap-2">
-          <History className="h-4 w-4 text-muted-foreground" />
-          Histórico ({history.length})
-        </span>
-        <span className="text-xs text-muted-foreground">
-          Ganhos: <Currency value={totalWon} /> • {winRate}% de acerto
-        </span>
-      </button>
-
-      <AnimatePresence>
-        {showHistory && (
-          <motion.div
-            className="mt-2 space-y-1.5 max-h-60 overflow-y-auto"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-          >
-            {history.map((h) => (
-              <div
-                key={h.id}
-                className="flex items-center justify-between px-3 py-2 rounded-lg bg-card border border-border text-sm"
-              >
-                <span className="text-muted-foreground">{formatDate(h.card_date)}</span>
-                {h.is_won ? (
-                  <span className="font-bold text-success">+<Currency value={h.prize_amount} /></span>
-                ) : (
-                  <span className="text-muted-foreground/50">Sem prêmio</span>
-                )}
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
 }
