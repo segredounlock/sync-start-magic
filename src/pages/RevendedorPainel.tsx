@@ -40,7 +40,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 
-type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status";
+type PainelTab = "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "meusprecos" | "minharede";
 
 interface RevendedorPainelProps {
   resellerId?: string;
