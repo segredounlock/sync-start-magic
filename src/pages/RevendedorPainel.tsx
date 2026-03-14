@@ -132,7 +132,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     operadorasCount: number;
     recargasTotal: number;
     lastRecarga: string | null;
-    operatorStats: { operadora: string; avgRecent: number; min24h: number; avg24h: number; max24h: number; recentCount: number }[];
+    operatorStats: { operadora: string; avgRecent: number; minRecent: number; min24h: number; avg24h: number; max24h: number; recentCount: number; pendingCount: number }[];
   } | null>(null);
 
   // Profile slug for store link
