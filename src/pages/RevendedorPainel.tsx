@@ -97,6 +97,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [showBotToken, setShowBotToken] = useState(false);
   const [savingContacts, setSavingContacts] = useState(false);
+  const [salesToolsEnabled, setSalesToolsEnabled] = useState(true);
 
   // Transactions (extrato)
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -259,6 +260,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   useEffect(() => {
     supabase.rpc("get_notif_config", { _key: "notif_revendedor_deposit" })
       .then(({ data }) => { if (data === "true") setRevDepositToast(true); });
+    supabase.rpc("get_sales_tools_enabled" as any)
+      .then(({ data }) => { setSalesToolsEnabled(data !== false); });
   }, []);
   const handleBgPaymentConfirmed = useCallback(() => {
     fetchData();
@@ -715,7 +718,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
 
-  const salesMenuItems: MenuItem[] = !isClientMode ? [
+  const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
     { key: "meusprecos", label: "Meus Preços", icon: Tag },
     { key: "minharede", label: "Minha Rede", icon: UsersIcon },
   ] : [];
