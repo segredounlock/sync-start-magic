@@ -3,47 +3,62 @@ import { QrCode, Info, Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { styledToast as toast } from "@/lib/toast";
 
-const PIX_VALIDATORS: Record<string, { regex: RegExp; mask?: (v: string) => string; placeholder: string; maxLen: number; label: string }> = {
-  cpf: {
-    regex: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
-    mask: (v) => v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2").slice(0, 14),
-    placeholder: "000.000.000-00",
-    maxLen: 14,
-    label: "CPF inválido (ex: 000.000.000-00)",
-  },
-  cnpj: {
-    regex: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/,
-    mask: (v) => v.replace(/\D/g, "").replace(/(\d{2})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1/$2").replace(/(\d{4})(\d{1,2})$/, "$1-$2").slice(0, 18),
-    placeholder: "00.000.000/0000-00",
-    maxLen: 18,
-    label: "CNPJ inválido (ex: 00.000.000/0000-00)",
-  },
-  email: {
-    regex: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
-    placeholder: "seu@email.com",
-    maxLen: 100,
-    label: "E-mail inválido",
-  },
-  telefone: {
-    regex: /^\+?\d{10,13}$/,
-    mask: (v) => v.replace(/[^\d+]/g, "").slice(0, 14),
-    placeholder: "+5511999999999",
-    maxLen: 14,
-    label: "Telefone inválido (ex: +5511999999999)",
-  },
-  aleatoria: {
-    regex: /^[a-f0-9-]{32,36}$/i,
-    placeholder: "Chave aleatória",
-    maxLen: 36,
-    label: "Chave aleatória inválida",
-  },
-};
+const PIX_KEY_TYPES = [
   { value: "cpf", label: "CPF" },
   { value: "cnpj", label: "CNPJ" },
   { value: "email", label: "E-mail" },
   { value: "telefone", label: "Telefone" },
   { value: "aleatoria", label: "Aleatória" },
 ];
+
+const PIX_VALIDATORS: Record<string, { regex: RegExp; mask?: (v: string) => string; placeholder: string; maxLen: number; errorMsg: string }> = {
+  cpf: {
+    regex: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
+    mask: (v) =>
+      v
+        .replace(/\D/g, "")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+        .slice(0, 14),
+    placeholder: "000.000.000-00",
+    maxLen: 14,
+    errorMsg: "CPF inválido (ex: 000.000.000-00)",
+  },
+  cnpj: {
+    regex: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/,
+    mask: (v) =>
+      v
+        .replace(/\D/g, "")
+        .replace(/(\d{2})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1/$2")
+        .replace(/(\d{4})(\d{1,2})$/, "$1-$2")
+        .slice(0, 18),
+    placeholder: "00.000.000/0000-00",
+    maxLen: 18,
+    errorMsg: "CNPJ inválido (ex: 00.000.000/0000-00)",
+  },
+  email: {
+    regex: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+    placeholder: "seu@email.com",
+    maxLen: 100,
+    errorMsg: "E-mail inválido",
+  },
+  telefone: {
+    regex: /^\+?\d{10,13}$/,
+    mask: (v) => v.replace(/[^\d+]/g, "").slice(0, 14),
+    placeholder: "+5511999999999",
+    maxLen: 14,
+    errorMsg: "Telefone inválido (ex: +5511999999999)",
+  },
+  aleatoria: {
+    regex: /^[a-f0-9-]{32,36}$/i,
+    placeholder: "Chave aleatória",
+    maxLen: 36,
+    errorMsg: "Chave aleatória inválida (32-36 caracteres)",
+  },
+};
 
 interface PixKeyTabProps {
   userId: string;
@@ -54,6 +69,7 @@ export function PixKeyTab({ userId }: PixKeyTabProps) {
   const [keyValue, setKeyValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -72,11 +88,34 @@ export function PixKeyTab({ userId }: PixKeyTabProps) {
     })();
   }, [userId]);
 
-  const handleSave = async () => {
+  const validator = PIX_VALIDATORS[keyType];
+
+  const handleKeyChange = (raw: string) => {
+    const masked = validator?.mask ? validator.mask(raw) : raw;
+    setKeyValue(masked);
+    setError("");
+  };
+
+  const handleTypeChange = (newType: string) => {
+    setKeyType(newType);
+    setKeyValue("");
+    setError("");
+  };
+
+  const validate = (): boolean => {
     if (!keyValue.trim()) {
-      toast.error("Informe a chave PIX");
-      return;
+      setError("Informe a chave PIX");
+      return false;
     }
+    if (validator && !validator.regex.test(keyValue.trim())) {
+      setError(validator.errorMsg);
+      return false;
+    }
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
     setSaving(true);
     try {
       for (const { key, value } of [
@@ -88,6 +127,7 @@ export function PixKeyTab({ userId }: PixKeyTabProps) {
           .upsert({ user_id: userId, key, value }, { onConflict: "user_id,key" });
       }
       toast.success("Chave PIX salva!");
+      setError("");
     } catch {
       toast.error("Erro ao salvar");
     } finally {
@@ -107,7 +147,6 @@ export function PixKeyTab({ userId }: PixKeyTabProps) {
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-4">
       {/* Left column */}
       <div className="space-y-4">
-        {/* Info card */}
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-2">
             <Info className="h-4 w-4 text-primary" />
@@ -118,7 +157,6 @@ export function PixKeyTab({ userId }: PixKeyTabProps) {
           </p>
         </div>
 
-        {/* Current PIX card */}
         <div className="bg-card rounded-2xl border border-border p-5 bg-gradient-to-br from-foreground/[0.03] to-transparent">
           <h3 className="text-sm font-bold text-foreground mb-2">PIX</h3>
           <p className="text-xs text-muted-foreground">
@@ -142,7 +180,7 @@ export function PixKeyTab({ userId }: PixKeyTabProps) {
               <QrCode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <select
                 value={keyType}
-                onChange={(e) => setKeyType(e.target.value)}
+                onChange={(e) => handleTypeChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition appearance-none"
               >
                 {PIX_KEY_TYPES.map((t) => (
@@ -156,11 +194,16 @@ export function PixKeyTab({ userId }: PixKeyTabProps) {
             <label className="text-xs font-bold text-foreground">Chave PIX</label>
             <input
               value={keyValue}
-              onChange={(e) => setKeyValue(e.target.value)}
-              placeholder="Digite sua chave aqui"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-              maxLength={100}
+              onChange={(e) => handleKeyChange(e.target.value)}
+              placeholder={validator?.placeholder || "Digite sua chave aqui"}
+              className={`w-full px-4 py-2.5 rounded-xl border text-sm text-foreground focus:outline-none focus:ring-2 transition ${
+                error ? "border-destructive focus:ring-destructive/30 bg-destructive/5" : "border-border bg-background focus:ring-primary/30"
+              }`}
+              maxLength={validator?.maxLen || 100}
             />
+            {error && (
+              <p className="text-[11px] text-destructive font-medium">{error}</p>
+            )}
           </div>
         </div>
 
