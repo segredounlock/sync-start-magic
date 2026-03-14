@@ -3462,7 +3462,7 @@ export default function Principal() {
                   </p>
                 </div>
 
-
+                <div className="glass-card rounded-xl p-6 space-y-5">
                   <div>
                     <h4 className="font-semibold text-foreground flex items-center gap-2">
                       <Megaphone className="h-4 w-4 text-primary" /> Notificações
