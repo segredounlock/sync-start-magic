@@ -354,7 +354,7 @@ Deno.serve(async (req) => {
         "✅ <b>Recarga Realizada!</b>",
         "",
         `📞 Telefone: <code>${data.telefone}</code>`,
-        data.operadora ? `📡 Operadora: ${data.operadora}` : "",
+        data.operadora ? `📡 Operadora: ${data.operadora.toUpperCase()}` : "",
         `📱 Valor: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
       ].filter(Boolean).join("\n");
 
