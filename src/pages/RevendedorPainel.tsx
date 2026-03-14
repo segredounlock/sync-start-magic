@@ -743,7 +743,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
     extrato: "Carteira", contatos: "Meu Perfil", status: "Status do Sistema",
     atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede",
-    configuracoes: "Configurações",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
