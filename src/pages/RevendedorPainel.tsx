@@ -1653,8 +1653,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           const dateLabel = formatDateLongUpperBR(r.created_at);
                           const showSep = dateLabel !== lastDate;
                           lastDate = dateLabel;
-                          const statusLabel = (r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status === "falha" ? "Falha" : r.status;
-                          const statusClass = (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+                          // Status via plugin
                           return (
                             <div key={r.id}>
                               {showSep && (
