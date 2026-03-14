@@ -717,10 +717,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   type MenuItem = { key: PainelTab; label: string; icon: typeof Send; active?: boolean; dashed?: boolean };
    const menuItems: MenuItem[] = [
-    { key: "recarga", label: "Nova Recarga", icon: Send, active: true },
-    { key: "addSaldo", label: "Adicionar Saldo", icon: CreditCard, dashed: true },
-    { key: "historico", label: "Histórico de Pedidos", icon: History },
-    { key: "extrato", label: "Extrato de Depósitos", icon: Landmark },
+    { key: "dashboard", label: "Dashboard", icon: Activity, active: true },
+    { key: "recarga", label: "Fazer Recarga", icon: Send },
+    { key: "historico", label: "Meus Pedidos", icon: History },
+    { key: "extrato", label: "Carteira", icon: Landmark },
+    { key: "addSaldo", label: "Depositar", icon: CreditCard, dashed: true },
     { key: "contatos", label: "Meu Perfil", icon: User },
     { key: "status", label: "Status do Sistema", icon: Activity },
   ];
