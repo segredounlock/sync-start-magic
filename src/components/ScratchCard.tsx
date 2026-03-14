@@ -333,44 +333,11 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                 ) : (
                   /* Grid */
                   <div className="relative">
-                    <div className="grid grid-cols-3 gap-2.5">
-                      {grid.map((value, idx) => {
-                        const isRevealed = revealedCells.has(idx);
-                        return (
-                          <motion.button
-                            key={idx}
-                            onClick={() => revealCell(idx)}
-                            disabled={gameOver || isRevealed}
-                            className={`relative aspect-[4/3] rounded-xl font-bold text-sm transition-all overflow-hidden ${
-                              isRevealed
-                                ? "bg-muted/60 border border-border"
-                                : "bg-gradient-to-br from-gray-400 to-gray-500 border border-gray-400 cursor-pointer hover:from-gray-350 hover:to-gray-450 active:scale-95"
-                            }`}
-                            whileTap={!isRevealed && !gameOver ? { scale: 0.9 } : undefined}
-                            initial={false}
-                            animate={isRevealed ? { rotateY: 0 } : { rotateY: 0 }}
-                          >
-                            {isRevealed ? (
-                              <motion.div
-                                className="flex flex-col items-center justify-center h-full gap-1"
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                              >
-                                <span className="text-[10px] text-success">💰</span>
-                                <span className="text-foreground font-black text-base">
-                                  R${value.toFixed(2)}
-                                </span>
-                              </motion.div>
-                            ) : (
-                              <div className="flex items-center justify-center h-full">
-                                <span className="text-white/50 text-xs">?</span>
-                              </div>
-                            )}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
+                    <ScratchCanvas
+                      grid={grid}
+                      onScratchComplete={handleScratchComplete}
+                      disabled={gameOver}
+                    />
 
                     {/* Game Over Overlay */}
                     <AnimatePresence>
