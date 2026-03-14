@@ -133,19 +133,46 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       // Check pending prices (reseller only)
       if (!isClientMode) {
         try {
-          const [{ data: ops }, { data: rules }] = await Promise.all([
+          const [{ data: ops }, { data: globalRules }, { data: resellerRules }] = await Promise.all([
             supabase.from("operadoras").select("id, valores").eq("ativo", true),
-            supabase.from("reseller_pricing_rules").select("operadora_id, valor_recarga, regra_valor").eq("user_id", userId),
+            supabase
+              .from("pricing_rules")
+              .select("operadora_id, valor_recarga, tipo_regra, regra_valor, custo"),
+            supabase
+              .from("reseller_pricing_rules")
+              .select("operadora_id, valor_recarga, regra_valor")
+              .eq("user_id", userId),
           ]);
-          // A rule is "configured" only if it exists AND has regra_valor > 0
-          const configuredSet = new Set(
-            (rules || [])
-              .filter(r => Number(r.regra_valor) > 0)
-              .map(r => `${r.operadora_id}-${Number(r.valor_recarga)}`)
-          );
+
           const hasPending = (ops || []).some(op => {
             const vals = Array.isArray(op.valores) ? op.valores : [];
-            return vals.some((v: any) => !configuredSet.has(`${op.id}-${Number(v)}`));
+
+            return vals.some((rawV: any) => {
+              const v = Number(rawV);
+
+              const gRule = (globalRules || []).find(
+                (r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v
+              );
+
+              const rRule = (resellerRules || []).find(
+                (r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v
+              );
+
+              // Sem regra custom = pendente
+              if (!rRule) return true;
+
+              const baseCost = gRule
+                ? gRule.tipo_regra === "fixo"
+                  ? Number(gRule.regra_valor)
+                  : Number(gRule.custo) * (1 + Number(gRule.regra_valor) / 100)
+                : v;
+
+              const finalPrice = Number(rRule.regra_valor);
+              const profit = finalPrice - baseCost;
+
+              // Lucro não definido (0 ou negativo) = pendente
+              return profit <= 0;
+            });
           });
           setHasPendingPrices(hasPending);
         } catch (e) {
