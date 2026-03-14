@@ -879,7 +879,7 @@ async function executeRecarga(supabase: any, token: string, chatId: number, user
   const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === valor);
   let userCost: number;
   if (rule) {
-    userCost = rule.tipo_regra === "fixo" ? Number(rule.regra_valor) : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
+    userCost = rule.tipo_regra === "fixo" ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo)) : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
   } else {
     userCost = matchedValue.cost || valor;
   }
