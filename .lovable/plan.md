@@ -1,40 +1,21 @@
 
 
-## Diagnóstico e Correção
+# Plano: Forçar operadora em UPPERCASE nos comprovantes
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Problema
+O nome da operadora aparece em minúsculo ("tim") nos comprovantes do site e do Telegram, apesar da convenção UPPERCASE do sistema.
 
-### Plano
+## Alterações
 
-**1. Corrigir o mapeamento de status na sync function**
+### 1. `src/components/RecargaReceipt.tsx`
+- **Linha 303**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
+- **Linha 48** (buildText): `${r.operadora || "—"}` → `${(r.operadora || "—").toUpperCase()}`
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### 2. `supabase/functions/telegram-notify/index.ts`
+- **Linha 182** (imagem Satori): `data.operadora || "—"` → `(data.operadora || "—").toUpperCase()`
+- **Linha 357** (caption recarga_completed): `data.operadora` → `data.operadora.toUpperCase()`
+- **Linha 387** (generateReceiptPng call): `data.operadora || "—"` → `(data.operadora || "—").toUpperCase()`
+- **Linha 416** (caption recarga_failed): `data.operadora` → `data.operadora.toUpperCase()`
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Todas as exibições de operadora nos comprovantes passarão a usar `.toUpperCase()`.
 
