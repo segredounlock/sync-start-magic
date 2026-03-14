@@ -77,7 +77,7 @@ export default function UserProfile() {
         setFollowersCount(Number(counts[0].followers_count) || 0);
         setFollowingCount(Number(counts[0].following_count) || 0);
       }
-      setRecargasCount(Number(recargaResult.count) || 0);
+      setRecargasCount(Number(recargaResult.data) || 0);
       setIsFollowing(!!followData);
       if (roleData === true) setProfileRole("admin");
     } catch (e) {
