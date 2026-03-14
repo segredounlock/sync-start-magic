@@ -246,14 +246,16 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       ]);
 
       // Map RPC results to expected format
-      const operatorStats: { operadora: string; avgRecent: number; min24h: number; avg24h: number; max24h: number; recentCount: number }[] = 
+      const operatorStats: { operadora: string; avgRecent: number; minRecent: number; min24h: number; avg24h: number; max24h: number; recentCount: number; pendingCount: number }[] = 
         (Array.isArray(rpcStats) ? rpcStats : []).map((s: any) => ({
           operadora: s.operadora || "",
           avgRecent: Number(s.avg_recent) || 0,
+          minRecent: Number(s.min_recent) || 0,
           min24h: Number(s.min_24h) || 0,
           avg24h: Number(s.avg_24h) || 0,
           max24h: Number(s.max_24h) || 0,
           recentCount: Number(s.recent_count) || 0,
+          pendingCount: Number(s.pending_count) || 0,
         }));
 
       // Ensure all active operators appear
