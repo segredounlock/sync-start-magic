@@ -334,6 +334,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                   /* Grid */
                   <div className="relative">
                     <ScratchCanvas
+                      key={card.id}
                       grid={grid}
                       onScratchComplete={handleScratchComplete}
                       disabled={gameOver}

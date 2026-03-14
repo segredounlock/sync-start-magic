@@ -10,7 +10,7 @@ const COLS = 3;
 const ROWS = 3;
 const CELL_PAD = 4;
 const BRUSH = 24;
-const SCRATCH_THRESHOLD = 0.50;
+const SCRATCH_THRESHOLD = 0.35;
 
 export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,6 +20,7 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [revealed, setRevealed] = useState(false);
   const hasCompleted = useRef(false);
+  const lastProgressCheckRef = useRef(0);
 
   useEffect(() => {
     const el = containerRef.current;
