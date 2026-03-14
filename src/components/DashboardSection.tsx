@@ -151,12 +151,31 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
+  // Fetch referral code
+  useEffect(() => {
+    if (isClientMode) return;
+    supabase.from("profiles").select("referral_code").eq("id", userId).maybeSingle()
+      .then(({ data }) => setReferralCode(data?.referral_code || ""));
+  }, [userId, isClientMode]);
+
+  const siteOrigin = window.location.origin;
+  const referralLink = referralCode ? `${siteOrigin}/auth?ref=${referralCode}` : "";
+
+  const copyToClipboard = async (text: string, type: "code" | "link") => {
+    try { await navigator.clipboard.writeText(text); setCopied(type); setTimeout(() => setCopied(null), 2000); } catch {}
+  };
+
+  const shareWhatsApp = () => {
+    const msg = `Faça suas recargas com desconto! Cadastre-se pelo meu link:\n${referralLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   const quickActions = [
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
     ...(!isClientMode ? [
       { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
       { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
-      { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "contatos", color: "text-destructive", bg: "bg-destructive/10" },
+      { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "__convidar__", color: "text-destructive", bg: "bg-destructive/10" },
     ] : [
       { icon: Wallet, label: "Depositar", sub: "Adicionar saldo", tab: "addSaldo", color: "text-success", bg: "bg-success/10" },
     ]),
