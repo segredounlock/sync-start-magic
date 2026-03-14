@@ -1315,14 +1315,14 @@ export default function AdminDashboard() {
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Telefone</p>
                         <p className="text-[12px] font-mono text-foreground">{r.telefone}</p>
                       </div>
-                      <div className="text-right">
+                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
-                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums"><AnimatedCounter value={r.valor} prefix="R$&nbsp;" duration={600} /></p>
+                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums"><Currency value={r.valor} duration={600} delay={idx * 40} /></p>
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Lucro</p>
                         <p className="text-[12px] font-bold font-mono text-success tabular-nums">
-                          {(r.status === "completed" || r.status === "concluida") ? <><span>+</span><AnimatedCounter value={(Number(r.custo) || 0) - (Number((r as any).custo_api) || 0)} prefix="R$&nbsp;" duration={600} /></> : "—"}
+                          {(r.status === "completed" || r.status === "concluida") ? <Currency value={(Number(r.custo) || 0) - (Number((r as any).custo_api) || 0)} sign duration={600} delay={idx * 40} /> : "—"}
                         </p>
                       </div>
                     </div>
