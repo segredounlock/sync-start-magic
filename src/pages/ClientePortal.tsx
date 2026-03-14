@@ -92,6 +92,33 @@ export default function ClientePortal() {
     setLoading(false);
   };
 
+  // Update document title and meta tags client-side
+  useEffect(() => {
+    if (!resellerInfo) return;
+    const storeName = resellerInfo.store_name || resellerInfo.nome || "Recargas Brasil";
+    document.title = `${storeName} - Recargas`;
+
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("property", property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    setMeta("og:title", `${storeName} - Recargas`);
+    setMeta("og:description", `Recargas rápidas e seguras em ${storeName}`);
+    if (resellerInfo.store_logo_url) {
+      setMeta("og:image", resellerInfo.store_logo_url);
+    }
+
+    return () => {
+      document.title = "Recargas Brasil - Sistema de Recargas";
+    };
+  }, [resellerInfo]);
+
   const getFunctionErrorMessage = async (err: unknown, fallback: string) => {
     if (err && typeof err === "object") {
       const maybeErr = err as { message?: string; context?: Response };
