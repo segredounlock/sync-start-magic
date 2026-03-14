@@ -2154,7 +2154,7 @@ export default function AdminDashboard() {
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
                         <p className={`text-[13px] font-bold font-mono tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          <Currency value={t.amount} sign duration={500} />
+                          <Currency value={t.amount} sign duration={800} />
                         </p>
                       </div>
                     </div>
