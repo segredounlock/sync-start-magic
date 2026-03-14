@@ -1584,7 +1584,7 @@ export default function TelegramMiniApp() {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={async () => {
-                            const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${formatPhone(viewingReceipt.telefone)}\n📡 Operadora: ${viewingReceipt.operadora || "—"}\n💰 Valor: ${formatCurrency(viewingReceipt.valor)}\n🆔 Pedido: ${viewingReceipt.external_id || viewingReceipt.id.slice(0, 8)}\n🕐 Data: ${formatFullDateTimeBR(viewingReceipt.created_at)}\n\nRecarga realizada com sucesso!`;
+                            const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${formatPhone(viewingReceipt.telefone)}\n📡 Operadora: ${(viewingReceipt.operadora || "—").toUpperCase()}\n💰 Valor: ${formatCurrency(viewingReceipt.valor)}\n🆔 Pedido: ${viewingReceipt.external_id || viewingReceipt.id.slice(0, 8)}\n🕐 Data: ${formatFullDateTimeBR(viewingReceipt.created_at)}\n\nRecarga realizada com sucesso!`;
                             try {
                               if (navigator.share) await navigator.share({ title: "Comprovante de Recarga", text });
                               else { await navigator.clipboard.writeText(text); tgWebApp?.HapticFeedback?.notificationOccurred("success"); }
