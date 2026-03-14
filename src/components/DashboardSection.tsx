@@ -135,12 +135,17 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
         try {
           const [{ data: ops }, { data: rules }] = await Promise.all([
             supabase.from("operadoras").select("id, valores").eq("ativo", true),
-            supabase.from("reseller_pricing_rules").select("operadora_id, valor_recarga").eq("user_id", userId),
+            supabase.from("reseller_pricing_rules").select("operadora_id, valor_recarga, regra_valor").eq("user_id", userId),
           ]);
-          const ruleSet = new Set((rules || []).map(r => `${r.operadora_id}-${Number(r.valor_recarga)}`));
+          // A rule is "configured" only if it exists AND has regra_valor > 0
+          const configuredSet = new Set(
+            (rules || [])
+              .filter(r => Number(r.regra_valor) > 0)
+              .map(r => `${r.operadora_id}-${Number(r.valor_recarga)}`)
+          );
           const hasPending = (ops || []).some(op => {
             const vals = Array.isArray(op.valores) ? op.valores : [];
-            return vals.some((v: any) => !ruleSet.has(`${op.id}-${Number(v)}`));
+            return vals.some((v: any) => !configuredSet.has(`${op.id}-${Number(v)}`));
           });
           setHasPendingPrices(hasPending);
         } catch (e) {
