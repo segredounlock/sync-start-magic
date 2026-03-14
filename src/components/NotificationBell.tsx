@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2 } from "lucide-react";
+import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications, AppNotification, NotifConfig } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -12,18 +12,20 @@ interface NotificationBellProps {
   revendedores?: { id: string; nome: string | null; email: string | null }[];
 }
 
-const ICON_MAP: Record<AppNotification["type"], typeof DollarSign> = {
+const ICON_MAP: Record<string, typeof DollarSign> = {
   deposit: DollarSign,
   recarga: Smartphone,
   new_user_web: UserPlus,
   new_user_telegram: Bot,
+  debt_collected: ShieldAlert,
 };
 
-const COLOR_MAP: Record<AppNotification["type"], string> = {
+const COLOR_MAP: Record<string, string> = {
   deposit: "bg-success/15 text-success",
   recarga: "bg-primary/15 text-primary",
   new_user_web: "bg-accent/15 text-accent-foreground",
   new_user_telegram: "bg-primary/15 text-primary",
+  debt_collected: "bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/30",
 };
 
 const STATUS_LABEL: Record<string, { icon: string; cls: string }> = {
@@ -242,7 +244,9 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.02, duration: 0.15 }}
                             className={`px-4 py-3 border-b border-border/20 hover:bg-muted/30 transition-colors cursor-default ${
-                              !n.is_read ? "bg-primary/[0.03]" : ""
+                              n.type === "debt_collected"
+                                ? "bg-amber-500/[0.07] border-l-2 border-l-amber-500"
+                                : !n.is_read ? "bg-primary/[0.03]" : ""
                             }`}
                           >
                             <div className="flex items-start gap-3">
