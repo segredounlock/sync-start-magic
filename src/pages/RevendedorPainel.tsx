@@ -1149,6 +1149,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               userName={userLabel}
               onNavigateTab={(t) => selectTab(t as PainelTab)}
               isClientMode={isClientMode}
+              salesToolsEnabled={salesToolsEnabled}
             />
           )}
 

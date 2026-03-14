@@ -17,6 +17,7 @@ interface DashboardSectionProps {
   userName: string;
   onNavigateTab: (tab: string) => void;
   isClientMode?: boolean;
+  salesToolsEnabled?: boolean;
 }
 
 type Period = "hoje" | "mes" | "outro";
@@ -31,7 +32,7 @@ const OP_COLORS: Record<string, string> = {
   oi: "hsl(35 90% 55%)",
 };
 
-export function DashboardSection({ saldo, loading, userId, userName, onNavigateTab, isClientMode }: DashboardSectionProps) {
+export function DashboardSection({ saldo, loading, userId, userName, onNavigateTab, isClientMode, salesToolsEnabled = true }: DashboardSectionProps) {
   const [period, setPeriod] = useState<Period>("mes");
   const [stats, setStats] = useState({ faturamento: 0, comissoes: 0, vendas: 0, novosClientes: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -210,9 +211,13 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
   const quickActions = [
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
     ...(!isClientMode ? [
-      { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
-      { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
-      { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "__convidar__", color: "text-destructive", bg: "bg-destructive/10" },
+      ...(salesToolsEnabled ? [
+        { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
+      ] : []),
+      ...(salesToolsEnabled ? [
+        { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
+        { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "__convidar__", color: "text-destructive", bg: "bg-destructive/10" },
+      ] : []),
     ] : [
       { icon: Wallet, label: "Depositar", sub: "Adicionar saldo", tab: "addSaldo", color: "text-success", bg: "bg-success/10" },
     ]),
