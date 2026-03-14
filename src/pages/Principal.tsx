@@ -2286,6 +2286,8 @@ export default function Principal() {
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
                                   <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
+                                  <td className="px-3 py-2 text-right font-mono text-muted-foreground">{fmt(r.custo ?? 0)}</td>
+                                  <td className="px-3 py-2 text-right font-mono text-muted-foreground">{fmt(r.custo_api ?? 0)}</td>
                                   <td className="px-3 py-2 text-center">
                                     <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                   </td>
