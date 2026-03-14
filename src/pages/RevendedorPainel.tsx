@@ -30,7 +30,7 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
-  Tag, Users as UsersIcon, Settings,
+  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft,
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
@@ -63,6 +63,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const { filterValores } = useDisabledValues();
   const { user, role, signOut } = useAuth();
   const [saldo, setSaldo] = useState(0);
+  const [saldoPessoal, setSaldoPessoal] = useState(0);
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const { loading, runFetch } = useResilientFetch();
   const [tab, setTab] = useState<PainelTab>("dashboard");
@@ -190,14 +191,16 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const fetchData = useCallback(async () => {
     if (!user) return;
     await runFetch(async () => {
-      const [{ data: saldoData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }, { count: recargasTotalCount }] = await Promise.all([
+      const [{ data: saldoData }, { data: saldoPessoalData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }, { count: recargasTotalCount }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
+        supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "pessoal").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
         supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url, referral_code").eq("id", user.id).single(),
         supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle(),
         supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
       setSaldo(Number(saldoData?.valor) || 0);
+      setSaldoPessoal(Number(saldoPessoalData?.valor) || 0);
       setRecargas(recargasData || []);
       setTotalRecargasCount(recargasTotalCount || 0);
       const p = profile as any;
@@ -1937,6 +1940,51 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           )}
           {tab === "extrato" && (
             <>
+              {/* Wallet Header */}
+              <div className="mb-5">
+                <h2 className="text-xl font-bold text-foreground">Minha Carteira</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Gerencie seu saldo, faça recargas e solicite saques.</p>
+              </div>
+              <div className="rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-primary/70 p-5 mb-5 text-primary-foreground">
+                <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1fr] gap-4 items-center">
+                  {/* Saldo de Recargas */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                        <Wallet className="h-4 w-4" />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">Saldo de Recargas</span>
+                    </div>
+                    <p className="text-3xl font-bold tabular-nums">{loading ? "..." : fmt(saldo)}</p>
+                    <button
+                      onClick={() => selectTab("addSaldo")}
+                      className="self-start flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-primary text-xs font-bold hover:bg-white/90 transition-colors mt-1"
+                    >
+                      <CreditCard className="h-3.5 w-3.5" /> Comprar Créditos
+                    </button>
+                  </div>
+
+                  {/* Comissões */}
+                  <div className="flex flex-col gap-2 sm:border-l sm:border-white/20 sm:pl-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                        <Star className="h-4 w-4" />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">Comissões</span>
+                    </div>
+                    <p className="text-2xl font-bold tabular-nums">{loading ? "..." : fmt(saldoPessoal)}</p>
+                    <div className="flex gap-2 mt-1">
+                      <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
+                        <Landmark className="h-3.5 w-3.5" /> Sacar
+                      </button>
+                      <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 text-xs font-bold hover:bg-white/25 transition-colors">
+                        <ArrowRightLeft className="h-3.5 w-3.5" /> Usar Saldo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Mobile cards */}
               <div className="md:hidden space-y-2">
                 {transLoading ? (
