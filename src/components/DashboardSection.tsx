@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Wallet, Smartphone, Users, Banknote, Share2,
-  TrendingUp, DollarSign, ShoppingCart, UserPlus,
+  TrendingUp, DollarSign, ShoppingCart, UserPlus, AlertCircle,
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,17 +13,31 @@ interface DashboardSectionProps {
   saldo: number;
   loading: boolean;
   userId: string;
+  userName: string;
   onNavigateTab: (tab: string) => void;
   isClientMode?: boolean;
 }
 
 type Period = "hoje" | "mes" | "outro";
 
-export function DashboardSection({ saldo, loading, userId, onNavigateTab, isClientMode }: DashboardSectionProps) {
+interface DailyData { date: string; value: number }
+interface OpData { name: string; value: number; color: string }
+
+const OP_COLORS: Record<string, string> = {
+  claro: "hsl(0 80% 55%)",
+  vivo: "hsl(280 70% 55%)",
+  tim: "hsl(220 80% 55%)",
+  oi: "hsl(35 90% 55%)",
+};
+
+export function DashboardSection({ saldo, loading, userId, userName, onNavigateTab, isClientMode }: DashboardSectionProps) {
   const [period, setPeriod] = useState<Period>("mes");
   const [stats, setStats] = useState({ faturamento: 0, comissoes: 0, vendas: 0, novosClientes: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
   const [comissaoSaque, setComissaoSaque] = useState(0);
+  const [dailyData, setDailyData] = useState<DailyData[]>([]);
+  const [opData, setOpData] = useState<OpData[]>([]);
+  const [hasPendingPrices, setHasPendingPrices] = useState(false);
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
   const today = new Date();
@@ -42,10 +56,10 @@ export function DashboardSection({ saldo, loading, userId, onNavigateTab, isClie
         from = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
       }
 
-      const [{ data: recs }, { data: comms }, { data: clients }] = await Promise.all([
+      const [{ data: recs }, { data: comms }, clientsResult] = await Promise.all([
         supabase
           .from("recargas")
-          .select("valor, custo, status")
+          .select("valor, custo, status, operadora, created_at")
           .eq("user_id", userId)
           .gte("created_at", from)
           .in("status", ["completed", "concluida"]),
@@ -55,7 +69,7 @@ export function DashboardSection({ saldo, loading, userId, onNavigateTab, isClie
           .eq("user_id", userId)
           .gte("created_at", from),
         isClientMode
-          ? { data: [] }
+          ? Promise.resolve({ count: 0 })
           : supabase
               .from("profiles")
               .select("id", { count: "exact", head: true })
@@ -63,16 +77,44 @@ export function DashboardSection({ saldo, loading, userId, onNavigateTab, isClie
               .gte("created_at", from),
       ]);
 
-      const faturamento = (recs || []).reduce((s, r) => s + Number(r.custo || 0), 0);
+      const recsList = recs || [];
+      const faturamento = recsList.reduce((s, r) => s + Number(r.custo || 0), 0);
       const comissoes = (comms || []).reduce((s, c) => s + Number(c.amount || 0), 0);
-      const vendas = (recs || []).length;
+      const vendas = recsList.length;
 
       setStats({
         faturamento,
         comissoes,
         vendas,
-        novosClientes: typeof clients === "number" ? clients : 0,
+        novosClientes: (clientsResult as any)?.count || 0,
       });
+
+      // Build daily chart data
+      const dailyMap: Record<string, number> = {};
+      recsList.forEach(r => {
+        const key = toLocalDateKey(r.created_at);
+        dailyMap[key] = (dailyMap[key] || 0) + Number(r.custo || 0);
+      });
+      const sortedDays = Object.entries(dailyMap)
+        .map(([date, value]) => ({ date, value }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      setDailyData(sortedDays);
+
+      // Build operator chart data
+      const opMap: Record<string, number> = {};
+      recsList.forEach(r => {
+        const op = (r.operadora || "Outros").toUpperCase();
+        opMap[op] = (opMap[op] || 0) + Number(r.custo || 0);
+      });
+      setOpData(
+        Object.entries(opMap)
+          .map(([name, value]) => ({
+            name,
+            value,
+            color: OP_COLORS[name.toLowerCase()] || "hsl(var(--muted-foreground))",
+          }))
+          .sort((a, b) => b.value - a.value)
+      );
 
       // Fetch comissão saque balance
       const { data: saldoComissao } = await supabase
@@ -82,6 +124,20 @@ export function DashboardSection({ saldo, loading, userId, onNavigateTab, isClie
         .eq("tipo", "comissao")
         .maybeSingle();
       setComissaoSaque(Number(saldoComissao?.valor) || 0);
+
+      // Check pending prices (reseller only)
+      if (!isClientMode) {
+        const [{ data: ops }, { data: rules }] = await Promise.all([
+          supabase.from("operadoras").select("id, valores").eq("ativo", true),
+          supabase.from("reseller_pricing_rules").select("operadora_id, valor_recarga").eq("user_id", userId),
+        ]);
+        const ruleSet = new Set((rules || []).map(r => `${r.operadora_id}-${r.valor_recarga}`));
+        const hasPending = (ops || []).some(op => {
+          const vals = Array.isArray(op.valores) ? op.valores : [];
+          return vals.some((v: any) => !ruleSet.has(`${op.id}-${v}`));
+        });
+        setHasPendingPrices(hasPending);
+      }
     } catch (e) {
       console.error("Dashboard stats error:", e);
     }
@@ -110,63 +166,91 @@ export function DashboardSection({ saldo, loading, userId, onNavigateTab, isClie
     ] : []),
   ];
 
+  // Chart scaling
+  const maxDaily = Math.max(...dailyData.map(d => d.value), 1);
+  const opTotal = opData.reduce((s, o) => s + o.value, 0) || 1;
+
   return (
     <div className="space-y-5">
-      {/* Date */}
+      {/* Greeting + Date */}
       <div>
         <p className="text-xs text-muted-foreground">{dateLabel}</p>
+        <h1 className="text-2xl font-bold text-foreground">Olá, {userName}!</h1>
       </div>
 
+      {/* Pending Prices Alert */}
+      {!isClientMode && hasPendingPrices && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-warning/10 border border-warning/20"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-warning/20 flex items-center justify-center">
+              <AlertCircle className="h-4 w-4 text-warning" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Preços Pendentes</p>
+              <p className="text-xs text-muted-foreground">Alguns produtos ainda não têm seu lucro definido.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigateTab("meusprecos")}
+            className="shrink-0 px-3 py-1.5 rounded-lg border border-foreground/20 text-xs font-bold text-foreground hover:bg-muted transition-colors"
+          >
+            Configurar Agora
+          </button>
+        </motion.div>
+      )}
+
       {/* Saldo Card + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {/* Saldo Card */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 text-primary-foreground shadow-lg"
+          className="col-span-2 sm:col-span-1 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 text-primary-foreground shadow-lg"
         >
           <div className="absolute top-3 right-3 opacity-20">
-            <Wallet className="h-10 w-10" />
+            <Wallet className="h-8 w-8" />
           </div>
           <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Saldo de Recargas</p>
-          <p className="text-3xl font-bold mt-1">
-            {loading ? <SkeletonValue width="w-28" className="h-8 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
+          <p className="text-2xl sm:text-3xl font-bold mt-1">
+            {loading ? <SkeletonValue width="w-24" className="h-7 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
           </p>
-          <div className="mt-3 pt-3 border-t border-white/20">
+          <div className="mt-2 pt-2 border-t border-white/20">
             <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Comissões (Saque)</p>
-            <p className="text-lg font-bold">
-              {loading ? <SkeletonValue width="w-20" className="h-5 bg-white/20" /> : fmt(comissaoSaque)}
+            <p className="text-base font-bold">
+              {loading ? <SkeletonValue width="w-16" className="h-4 bg-white/20" /> : fmt(comissaoSaque)}
             </p>
           </div>
           <button
             onClick={() => onNavigateTab("addSaldo")}
-            className="mt-4 w-full py-2.5 rounded-xl bg-background text-primary font-bold text-sm hover:bg-background/90 transition-colors flex items-center justify-center gap-2"
+            className="mt-3 w-full py-2 rounded-xl bg-background text-primary font-bold text-sm hover:bg-background/90 transition-colors flex items-center justify-center gap-1"
           >
             + Depositar
           </button>
         </motion.div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((a, i) => (
-            <motion.button
-              key={a.tab}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => onNavigateTab(a.tab)}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
-            >
-              <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
-                <a.icon className={`h-5 w-5 ${a.color}`} />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-foreground">{a.label}</p>
-                <p className="text-[10px] text-muted-foreground">{a.sub}</p>
-              </div>
-            </motion.button>
-          ))}
-        </div>
+        {quickActions.map((a, i) => (
+          <motion.button
+            key={a.tab}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            onClick={() => onNavigateTab(a.tab)}
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
+          >
+            <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
+              <a.icon className={`h-5 w-5 ${a.color}`} />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-foreground">{a.label}</p>
+              <p className="text-[10px] text-muted-foreground">{a.sub}</p>
+            </div>
+          </motion.button>
+        ))}
       </div>
 
       {/* Relatório de Desempenho */}
@@ -222,6 +306,82 @@ export function DashboardSection({ saldo, loading, userId, onNavigateTab, isClie
               </p>
             </motion.div>
           ))}
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
+        {/* Faturamento Diário */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-foreground">Faturamento Diário</h3>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md">Receita (R$)</span>
+          </div>
+          {dailyData.length === 0 ? (
+            <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
+              Sem dados no período
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
+                <div className="w-3 h-3 rounded-sm bg-primary" />
+                <span>Faturamento</span>
+              </div>
+              <div className="h-48 flex items-end gap-1">
+                {dailyData.map((d, i) => (
+                  <div key={d.date} className="flex-1 flex flex-col items-center gap-1" title={`${d.date}: ${fmt(d.value)}`}>
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${Math.max((d.value / maxDaily) * 100, 4)}%` }}
+                      transition={{ delay: i * 0.03, duration: 0.4 }}
+                      className="w-full rounded-t-md bg-primary/80 min-h-[4px]"
+                    />
+                    <span className="text-[8px] text-muted-foreground truncate w-full text-center">
+                      {d.date.slice(5)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Por Operadora */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <h3 className="text-sm font-bold text-foreground mb-4">Por Operadora</h3>
+          {opData.length === 0 ? (
+            <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
+              Sem dados no período
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {opData.map((op, i) => {
+                const pct = ((op.value / opTotal) * 100).toFixed(0);
+                return (
+                  <motion.div
+                    key={op.name}
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-semibold text-foreground">{op.name}</span>
+                      <span className="text-muted-foreground">{fmt(op.value)} ({pct}%)</span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ delay: i * 0.05, duration: 0.5 }}
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: op.color }}
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
