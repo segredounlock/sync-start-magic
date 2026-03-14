@@ -410,15 +410,15 @@ export default function Principal() {
               }
             }
 
-            // Clean up orphan pricing_rules for values no longer in API
+            // Orphan pricing_rules: keep them so admin customizations are preserved
+            // When the value returns to the API, the existing rule (with custom pricing) will be reused
             const { data: existingRules } = await supabase.from("pricing_rules")
               .select("id, valor_recarga")
               .eq("operadora_id", opId);
             if (existingRules) {
               for (const rule of existingRules) {
                 if (!apiValores.has(Number(rule.valor_recarga))) {
-                  await supabase.from("pricing_rules").delete().eq("id", rule.id);
-                  console.log(`[Sync] Pricing rule removida: ${nome} R$${rule.valor_recarga} (ausente na API)`);
+                  console.log(`[Sync] Regra órfã preservada: ${nome} R$${rule.valor_recarga}`);
                 }
               }
             }
