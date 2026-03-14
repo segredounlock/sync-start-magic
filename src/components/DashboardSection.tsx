@@ -211,9 +211,13 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
   const quickActions = [
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
     ...(!isClientMode ? [
-      { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
-      { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
-      { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "__convidar__", color: "text-destructive", bg: "bg-destructive/10" },
+      ...(salesToolsEnabled ? [
+        { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
+      ] : []),
+      ...(salesToolsEnabled ? [
+        { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
+        { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "__convidar__", color: "text-destructive", bg: "bg-destructive/10" },
+      ] : []),
     ] : [
       { icon: Wallet, label: "Depositar", sub: "Adicionar saldo", tab: "addSaldo", color: "text-success", bg: "bg-success/10" },
     ]),
