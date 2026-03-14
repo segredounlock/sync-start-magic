@@ -27,11 +27,15 @@ interface ProfileData {
   active: boolean;
 }
 
+// Helper to detect UUID format
+const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 export default function UserProfile() {
-  const { userId } = useParams<{ userId: string }>();
+  const { userId: paramId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [resolvedId, setResolvedId] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [followersCount, setFollowersCount] = useState(0);
