@@ -2129,7 +2129,7 @@ export default function AdminDashboard() {
                 const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                 // Status via plugin
                 return (
-                  <motion.div key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="glass-card rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
+                  <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04, duration: 0.3 }} className="glass-card rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setSelectedDeposit(t)}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-primary">
@@ -2154,7 +2154,7 @@ export default function AdminDashboard() {
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
                         <p className={`text-[13px] font-bold font-mono tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          <Currency value={t.amount} sign duration={500} />
+                          <Currency value={t.amount} sign duration={800} delay={idx * 40} />
                         </p>
                       </div>
                     </div>
@@ -2192,7 +2192,7 @@ export default function AdminDashboard() {
                   ).map((t, idx) => {
                     const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                     return (
-                      <motion.tr key={t.id} className="border-b border-border/50 last:border-0 hover:bg-primary/[0.04] transition-colors cursor-pointer group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} onClick={() => setSelectedDeposit(t)}>
+                      <motion.tr key={t.id} className="border-b border-border/50 last:border-0 hover:bg-primary/[0.04] transition-colors cursor-pointer group" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.04, duration: 0.3 }} onClick={() => setSelectedDeposit(t)}>
                         <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap text-[11px]">{fmtDate(t.created_at)}</td>
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2.5">
@@ -2208,7 +2208,7 @@ export default function AdminDashboard() {
                         <td className="px-4 py-2.5 text-foreground capitalize text-[13px]">{(t.type === "deposito" || t.type === "deposit") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
                         <td className="px-4 py-2.5 text-foreground text-[13px]">PIX</td>
                         <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${(t.type === "deposit" || t.type === "deposito") ? "text-success" : "text-foreground"}`}>
-                          <Currency value={t.amount} sign duration={500} />
+                          <Currency value={t.amount} sign duration={800} delay={idx * 40} />
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <StatusBadge status={t.status} type="deposit" />
