@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardSection } from "@/components/DashboardSection";
+import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
@@ -41,7 +42,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 
-type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "meusprecos" | "minharede";
+type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -724,6 +725,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "addSaldo", label: "Depositar", icon: CreditCard, dashed: true },
     { key: "contatos", label: "Meu Perfil", icon: User },
     { key: "status", label: "Status do Sistema", icon: Activity },
+    { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
@@ -734,7 +736,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const tabTitle: Record<PainelTab, string> = {
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
     extrato: "Carteira", contatos: "Meu Perfil", status: "Status do Sistema",
-    meusprecos: "Meus Preços", minharede: "Minha Rede",
+    atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
@@ -2147,6 +2149,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: MINHA REDE ===== */}
           {tab === "minharede" && user && <MinhaRede userId={user.id} profileSlug={profileSlug} referralCode={referralCode} />}
 
+          {/* ===== TAB: ATUALIZAÇÕES ===== */}
+          {tab === "atualizacoes" && <AtualizacoesSection />}
+
         </main>
       </div>
 
@@ -2176,6 +2181,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "contatos", label: "Perfil", icon: User, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
+          { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-accent-foreground", animation: "float" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
         ] as NavItem[]}
         activeKey={tab}
