@@ -2245,7 +2245,7 @@ export default function Principal() {
                               <div key={r.id} className="rounded-lg border border-border p-3">
                                 <div className="flex items-center justify-between mb-2">
                                   <div>
-                                    <p className="text-sm font-semibold text-foreground">{r.operadora || "—"}</p>
+                                    <p className="text-sm font-semibold text-foreground">{(r.operadora || "—").toUpperCase()}</p>
                                     <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
                                   </div>
                                   <StatusBadge status={r.status} type="recarga" className="text-xs" />

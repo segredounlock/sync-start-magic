@@ -1370,7 +1370,7 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className="px-4 py-2.5">
-                          <p className="text-foreground text-[13px] font-medium">{r.operadora || "—"}</p>
+                          <p className="text-foreground text-[13px] font-medium">{(r.operadora || "—").toUpperCase()}</p>
                           <p className="font-mono text-muted-foreground text-[11px]">{r.telefone}</p>
                         </td>
                         <td className="px-4 py-2.5 text-right">

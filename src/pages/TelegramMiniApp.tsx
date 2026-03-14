@@ -1634,7 +1634,7 @@ export default function TelegramMiniApp() {
                             <Smartphone className="w-4 h-4" style={st.hint} />
                           </div>
                           <div>
-                            <p className="font-semibold text-sm" style={st.text}>{r.operadora || "—"}</p>
+                            <p className="font-semibold text-sm" style={st.text}>{(r.operadora || "—").toUpperCase()}</p>
                             <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
                           </div>
                         </div>
