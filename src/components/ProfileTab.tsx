@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import type { Recarga } from "@/types";
+import { PixKeyTab } from "@/components/settings/PixKeyTab";
+import { PixelAdsTab } from "@/components/settings/PixelAdsTab";
+import { SupportTab } from "@/components/settings/SupportTab";
+import { NotificationsTab } from "@/components/settings/NotificationsTab";
 
 interface ProfileTabProps {
   user: any;
@@ -399,60 +403,14 @@ export function ProfileTab({
             </div>
           )}
 
-          {activeSubTab === "pix" && (
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <QrCode className="h-4 w-4 text-primary" />
-                <h3 className="text-base font-bold text-foreground">Chave PIX</h3>
-              </div>
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <QrCode className="h-10 w-10 opacity-30 mb-3" />
-                <p className="text-sm font-medium">Em breve</p>
-                <p className="text-xs mt-1 opacity-70">Configuração de chaves PIX para recebimento</p>
-              </div>
-            </div>
-          )}
+          {activeSubTab === "pix" && user && <PixKeyTab userId={user.id} />}
 
-          {activeSubTab === "pixel" && (
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="h-4 w-4 text-primary" />
-                <h3 className="text-base font-bold text-foreground">Pixel Ads</h3>
-              </div>
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <BarChart3 className="h-10 w-10 opacity-30 mb-3" />
-                <p className="text-sm font-medium">Em breve</p>
-                <p className="text-xs mt-1 opacity-70">Integração com pixels de rastreamento de anúncios</p>
-              </div>
-            </div>
-          )}
+          {activeSubTab === "pixel" && user && <PixelAdsTab userId={user.id} />}
 
-          {activeSubTab === "suporte" && (
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <HeadphonesIcon className="h-4 w-4 text-primary" />
-                <h3 className="text-base font-bold text-foreground">Suporte</h3>
-              </div>
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <HeadphonesIcon className="h-10 w-10 opacity-30 mb-3" />
-                <p className="text-sm font-medium">Em breve</p>
-                <p className="text-xs mt-1 opacity-70">Central de ajuda e suporte ao revendedor</p>
-              </div>
-            </div>
-          )}
+          {activeSubTab === "suporte" && user && <SupportTab userId={user.id} />}
 
-          {activeSubTab === "notificacoes" && (
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Bell className="h-4 w-4 text-primary" />
-                <h3 className="text-base font-bold text-foreground">Notificações</h3>
-              </div>
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <Bell className="h-10 w-10 opacity-30 mb-3" />
-                <p className="text-sm font-medium">Em breve</p>
-                <p className="text-xs mt-1 opacity-70">Gerencie suas preferências de notificação</p>
-              </div>
-            </div>
+          {activeSubTab === "notificacoes" && user && (
+            <NotificationsTab userId={user.id} telegramLinked={telegramLinked} telegramUsername={telegramUsername} />
           )}
         </motion.div>
       </AnimatePresence>
