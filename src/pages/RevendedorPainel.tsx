@@ -260,6 +260,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   useEffect(() => {
     supabase.rpc("get_notif_config", { _key: "notif_revendedor_deposit" })
       .then(({ data }) => { if (data === "true") setRevDepositToast(true); });
+    supabase.rpc("get_sales_tools_enabled" as any)
+      .then(({ data }) => { setSalesToolsEnabled(data !== false); });
   }, []);
   const handleBgPaymentConfirmed = useCallback(() => {
     fetchData();
