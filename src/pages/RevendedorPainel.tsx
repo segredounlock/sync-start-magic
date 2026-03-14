@@ -2014,7 +2014,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     id: r.id,
                     tipo: "recarga",
                     titulo: "Venda de Recarga",
-                    subtitulo: `${r.operadora || "Recarga"} ${fmt(safeValor(r))} • ${r.telefone}`,
+                    subtitulo: `${(r.operadora || "Recarga").toUpperCase()} ${fmt(safeValor(r))} • ${r.telefone}`,
                     valor: r.custo || safeValor(r),
                     data: r.created_at,
                     status: r.status,
