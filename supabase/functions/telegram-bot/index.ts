@@ -1246,7 +1246,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
       if (rule) {
         const cost = rule.tipo_regra === "fixo"
-          ? Number(rule.regra_valor)
+          ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
           : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
         console.log(`[PRICING] getUserCost: faceValue=${faceValue} matched rule tipo=${rule.tipo_regra} → cost=${cost}`);
         return cost;

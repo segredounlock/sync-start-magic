@@ -760,7 +760,7 @@ Deno.serve(async (req) => {
             .maybeSingle();
           if (globalRule) {
             prChargedCost = globalRule.tipo_regra === "fixo"
-              ? Number(globalRule.regra_valor)
+              ? (Number(globalRule.regra_valor) > 0 ? Number(globalRule.regra_valor) : Number(globalRule.custo))
               : Number(globalRule.custo) * (1 + Number(globalRule.regra_valor) / 100);
           }
         }

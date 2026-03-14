@@ -962,14 +962,14 @@ export default function Principal() {
 
       const globalPriceMap: Record<string, { preco: number; custo: number }> = {};
       (globalPricing || []).forEach((r: any) => {
-        const preco = r.tipo_regra === "fixo" ? Number(r.regra_valor) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
+        const preco = r.tipo_regra === "fixo" ? (Number(r.regra_valor) > 0 ? Number(r.regra_valor) : Number(r.custo)) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
         globalPriceMap[`${r.operadora_id}-${r.valor_recarga}`] = { preco, custo: Number(r.custo) };
       });
 
       const resellerPriceMap: Record<string, Record<string, { preco: number; custo: number }>> = {};
       (allResellerPricing || []).forEach((r: any) => {
         if (!resellerPriceMap[r.user_id]) resellerPriceMap[r.user_id] = {};
-        const preco = r.tipo_regra === "fixo" ? Number(r.regra_valor) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
+        const preco = r.tipo_regra === "fixo" ? (Number(r.regra_valor) > 0 ? Number(r.regra_valor) : Number(r.custo)) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
         resellerPriceMap[r.user_id][`${r.operadora_id}-${r.valor_recarga}`] = { preco, custo: Number(r.custo) };
       });
 
