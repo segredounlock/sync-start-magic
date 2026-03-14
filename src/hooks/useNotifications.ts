@@ -36,7 +36,7 @@ async function showSystemNotification(title: string, body: string) {
 
 export interface AppNotification {
   id: string;
-  type: "deposit" | "recarga" | "new_user_web" | "new_user_telegram";
+  type: "deposit" | "recarga" | "new_user_web" | "new_user_telegram" | "debt_collected";
   message: string;
   amount: number;
   user_id: string;
