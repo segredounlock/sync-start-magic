@@ -12,18 +12,20 @@ interface NotificationBellProps {
   revendedores?: { id: string; nome: string | null; email: string | null }[];
 }
 
-const ICON_MAP: Record<AppNotification["type"], typeof DollarSign> = {
+const ICON_MAP: Record<string, typeof DollarSign> = {
   deposit: DollarSign,
   recarga: Smartphone,
   new_user_web: UserPlus,
   new_user_telegram: Bot,
+  debt_collected: ShieldAlert,
 };
 
-const COLOR_MAP: Record<AppNotification["type"], string> = {
+const COLOR_MAP: Record<string, string> = {
   deposit: "bg-success/15 text-success",
   recarga: "bg-primary/15 text-primary",
   new_user_web: "bg-accent/15 text-accent-foreground",
   new_user_telegram: "bg-primary/15 text-primary",
+  debt_collected: "bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/30",
 };
 
 const STATUS_LABEL: Record<string, { icon: string; cls: string }> = {
