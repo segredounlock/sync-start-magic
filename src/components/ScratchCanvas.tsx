@@ -173,11 +173,11 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   const scratch = useCallback((x: number, y: number) => {
     const cvs = canvasRef.current;
     if (!cvs || revealed || disabled) return;
-    const dpr = window.devicePixelRatio || 1;
     const ctx = cvs.getContext("2d")!;
     ctx.globalCompositeOperation = "destination-out";
     ctx.beginPath();
-    ctx.arc(x * dpr, y * dpr, BRUSH * dpr, 0, Math.PI * 2);
+    // Context já está em pixels CSS (ctx.scale aplicado), sem multiplicar por DPR
+    ctx.arc(x, y, BRUSH, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalCompositeOperation = "source-over";
   }, [revealed, disabled]);
