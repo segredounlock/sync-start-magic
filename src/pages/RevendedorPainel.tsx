@@ -2370,6 +2370,117 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal Solicitar Saque */}
+      <AnimatePresence>
+        {showSaque && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setShowSaque(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Landmark className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">Solicitar Saque (PIX)</h3>
+                </div>
+                <button onClick={() => setShowSaque(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 mb-5 flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-foreground mb-0.5">INFORMAÇÃO IMPORTANTE</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Os saques são processados em até 72 horas úteis. Na maioria dos casos, o valor cai na sua conta em segundos.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 mb-5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Quanto deseja sacar?</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={saqueValor}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^\d.,]/g, "").replace(",", ".");
+                    setSaqueValor(raw);
+                  }}
+                  placeholder="R$ Mínimo 5.00"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                />
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    DISPONÍVEL: {fmt(saldoPessoal)}
+                  </p>
+                  <button
+                    onClick={() => setSaqueValor(String(saldoPessoal))}
+                    className="text-[10px] font-bold text-primary hover:underline"
+                  >
+                    SACAR TUDO
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSaque(false)}
+                  className="flex-1 py-3 rounded-xl border border-primary text-primary text-sm font-bold hover:bg-primary/5 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  disabled={saqueLoading || !saqueValor || parseFloat(saqueValor) < 5 || parseFloat(saqueValor) > saldoPessoal}
+                  onClick={async () => {
+                    const val = parseFloat(saqueValor);
+                    if (!val || val < 5 || val > saldoPessoal || !user) return;
+                    setSaqueLoading(true);
+                    try {
+                      // Create withdrawal transaction
+                      const { error } = await supabase.from("transactions").insert({
+                        user_id: user.id,
+                        amount: val,
+                        type: "saque",
+                        status: "pending",
+                        module: "comissoes",
+                      });
+                      if (error) throw error;
+                      // Debit comissões
+                      const { error: e2 } = await supabase
+                        .from("saldos")
+                        .update({ valor: saldoPessoal - val })
+                        .eq("user_id", user.id)
+                        .eq("tipo", "pessoal");
+                      if (e2) throw e2;
+                      setSaldoPessoal(saldoPessoal - val);
+                      toast.success(`Saque de ${fmt(val)} solicitado com sucesso!`);
+                      setShowSaque(false);
+                    } catch {
+                      toast.error("Erro ao solicitar saque");
+                    } finally {
+                      setSaqueLoading(false);
+                    }
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {saqueLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Confirmar e Sacar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
