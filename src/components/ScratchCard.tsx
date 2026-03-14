@@ -212,22 +212,42 @@ export function ScratchCard({ userId }: ScratchCardProps) {
     }
   };
 
-  const handleScratchComplete = useCallback(() => {
-    if (gameOver) return;
-    finishGame();
-  }, [gameOver]);
-
   const finishGame = async () => {
+    if (!card) return;
+
     setGameOver(true);
     setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
 
+    const recoverFromNoCard = async () => {
+      setGameOver(false);
+      setRevealedCells(new Set());
+      setResult(null);
+      setCard(null);
+      await checkTodayCard();
+    };
+
     try {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
-        body: { action: "scratch" },
+        body: { action: "scratch", card_id: card.id },
       });
-      if (error) throw error;
+
+      if (error) {
+        const contextPayload = parsePayload<ScratchResponse>((error as any)?.context?.json);
+        if (contextPayload?.error === "no_card") {
+          await recoverFromNoCard();
+          return;
+        }
+        throw error;
+      }
+
       const payload = parsePayload<ScratchResponse>(data);
-      if (!payload || payload.error) throw new Error(payload?.message || "Erro");
+      if (!payload || payload.error) {
+        if (payload?.error === "no_card") {
+          await recoverFromNoCard();
+          return;
+        }
+        throw new Error(payload?.message || "Erro");
+      }
 
       const r = { prize_amount: Number(payload.prize_amount ?? 0), is_won: Boolean(payload.is_won) };
       setResult(r);
@@ -239,7 +259,13 @@ export function ScratchCard({ userId }: ScratchCardProps) {
       loadLeaderboards();
     } catch (e) {
       console.error("Scratch error:", e);
+      setGameOver(false);
     }
+  };
+
+  const handleScratchComplete = () => {
+    if (gameOver) return;
+    void finishGame();
   };
 
   const formatDate = (d: string) => {
