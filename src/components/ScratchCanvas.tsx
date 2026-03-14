@@ -8,9 +8,9 @@ interface ScratchCanvasProps {
 
 const COLS = 3;
 const ROWS = 3;
-const CELL_PAD = 6;
-const BRUSH = 28;
-const SCRATCH_THRESHOLD = 0.55; // 55% scratched to auto-reveal
+const CELL_PAD = 4;
+const BRUSH = 24;
+const SCRATCH_THRESHOLD = 0.50;
 
 export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -21,15 +21,17 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   const [revealed, setRevealed] = useState(false);
   const hasCompleted = useRef(false);
 
-  // Measure container
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
       const { width } = entries[0].contentRect;
-      const cellW = (width - CELL_PAD * 2) / COLS;
-      const h = cellW * ROWS + CELL_PAD * 2;
-      setSize({ w: Math.floor(width), h: Math.floor(h) });
+      // Make cells more compact/square
+      const maxW = Math.min(width, 380);
+      const cellW = (maxW - CELL_PAD * (COLS + 1)) / COLS;
+      const cellH = cellW * 0.75;
+      const h = cellH * ROWS + CELL_PAD * (ROWS + 1);
+      setSize({ w: Math.floor(maxW), h: Math.floor(h) });
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -50,9 +52,10 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     const cellW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
     const cellH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
 
-    // Background
-    ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(0, 0, size.w, size.h);
+    // Background - match card bg
+    ctx.fillStyle = "#f1f5f9";
+    roundRect(ctx, 0, 0, size.w, size.h, 14);
+    ctx.fill();
 
     for (let i = 0; i < 9; i++) {
       const col = i % COLS;
@@ -60,21 +63,31 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
       const x = CELL_PAD + col * (cellW + CELL_PAD);
       const y = CELL_PAD + row * (cellH + CELL_PAD);
 
-      // Cell bg
-      ctx.fillStyle = "#e2e8f0";
-      roundRect(ctx, x, y, cellW, cellH, 10);
+      // Cell bg with subtle gradient
+      const cellGrad = ctx.createLinearGradient(x, y, x, y + cellH);
+      cellGrad.addColorStop(0, "#ffffff");
+      cellGrad.addColorStop(1, "#f0fdf4");
+      ctx.fillStyle = cellGrad;
+      roundRect(ctx, x, y, cellW, cellH, 8);
       ctx.fill();
 
-      // Emoji
-      ctx.font = `${Math.min(cellW, cellH) * 0.22}px sans-serif`;
+      // Cell border
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+      roundRect(ctx, x, y, cellW, cellH, 8);
+      ctx.stroke();
+
+      // Money emoji - smaller
+      const minDim = Math.min(cellW, cellH);
+      ctx.font = `${minDim * 0.18}px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("💰", x + cellW / 2, y + cellH * 0.35);
+      ctx.fillText("💰", x + cellW / 2, y + cellH * 0.32);
 
-      // Value
-      ctx.fillStyle = "#0f172a";
-      ctx.font = `bold ${Math.min(cellW, cellH) * 0.28}px system-ui, sans-serif`;
-      ctx.fillText(`R$${grid[i].toFixed(2)}`, x + cellW / 2, y + cellH * 0.65);
+      // Value - smaller font
+      ctx.fillStyle = "#16a34a";
+      ctx.font = `bold ${minDim * 0.20}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(`R$${grid[i].toFixed(2)}`, x + cellW / 2, y + cellH * 0.66);
     }
   }, [size, grid]);
 
@@ -93,39 +106,53 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     const cellW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
     const cellH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
 
-    // Draw silver cells with rounded corners
+    // Rounded bg to match container
+    ctx.fillStyle = "#e2e8f0";
+    roundRect(ctx, 0, 0, size.w, size.h, 14);
+    ctx.fill();
+
     for (let i = 0; i < 9; i++) {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
       const x = CELL_PAD + col * (cellW + CELL_PAD);
       const y = CELL_PAD + row * (cellH + CELL_PAD);
 
-      // Silver gradient
+      // Silver gradient per cell
       const grad = ctx.createLinearGradient(x, y, x + cellW, y + cellH);
-      grad.addColorStop(0, "#c0c0c0");
-      grad.addColorStop(0.3, "#d8d8d8");
-      grad.addColorStop(0.5, "#e8e8e8");
-      grad.addColorStop(0.7, "#d0d0d0");
+      grad.addColorStop(0, "#b8b8b8");
+      grad.addColorStop(0.2, "#d4d4d4");
+      grad.addColorStop(0.4, "#e0e0e0");
+      grad.addColorStop(0.6, "#d0d0d0");
+      grad.addColorStop(0.8, "#c8c8c8");
       grad.addColorStop(1, "#b0b0b0");
       ctx.fillStyle = grad;
-      roundRect(ctx, x, y, cellW, cellH, 10);
+      roundRect(ctx, x, y, cellW, cellH, 8);
+      ctx.fill();
+
+      // Subtle inner highlight
+      const highlight = ctx.createLinearGradient(x, y, x, y + cellH * 0.4);
+      highlight.addColorStop(0, "rgba(255,255,255,0.35)");
+      highlight.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = highlight;
+      roundRect(ctx, x + 2, y + 2, cellW - 4, cellH * 0.4, 6);
       ctx.fill();
 
       // Question mark
-      ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.font = `bold ${Math.min(cellW, cellH) * 0.35}px system-ui, sans-serif`;
+      const minDim = Math.min(cellW, cellH);
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      ctx.font = `bold ${minDim * 0.30}px system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("?", x + cellW / 2, y + cellH / 2);
     }
 
-    // Add shimmer dots
-    for (let i = 0; i < 30; i++) {
-      const sx = Math.random() * size.w;
-      const sy = Math.random() * size.h;
-      ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.4})`;
+    // Shimmer dots
+    for (let i = 0; i < 20; i++) {
+      const sx = CELL_PAD + Math.random() * (size.w - CELL_PAD * 2);
+      const sy = CELL_PAD + Math.random() * (size.h - CELL_PAD * 2);
+      ctx.fillStyle = `rgba(255,255,255,${0.2 + Math.random() * 0.3})`;
       ctx.beginPath();
-      ctx.arc(sx, sy, 1 + Math.random() * 1.5, 0, Math.PI * 2);
+      ctx.arc(sx, sy, 0.8 + Math.random() * 1.2, 0, Math.PI * 2);
       ctx.fill();
     }
   }, [size, revealed]);
@@ -164,7 +191,6 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   const checkProgress = useCallback(() => {
     const cvs = canvasRef.current;
     if (!cvs || hasCompleted.current || revealed) return;
-    const dpr = window.devicePixelRatio || 1;
     const ctx = cvs.getContext("2d")!;
     const imageData = ctx.getImageData(0, 0, cvs.width, cvs.height);
     const pixels = imageData.data;
@@ -202,16 +228,14 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   }, [checkProgress]);
 
   return (
-    <div ref={containerRef} className="w-full select-none">
+    <div ref={containerRef} className="w-full select-none flex justify-center">
       {size.w > 0 && (
-        <div className="relative rounded-2xl overflow-hidden" style={{ width: size.w, height: size.h }}>
-          {/* Underlay - prize values */}
+        <div className="relative rounded-2xl overflow-hidden shadow-sm" style={{ width: size.w, height: size.h }}>
           <canvas
             ref={underlayRef}
             className="absolute inset-0"
             style={{ width: size.w, height: size.h }}
           />
-          {/* Scratch overlay */}
           {!revealed && (
             <canvas
               ref={canvasRef}
@@ -229,7 +253,7 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
         </div>
       )}
       {!revealed && !disabled && (
-        <p className="text-xs text-muted-foreground text-center mt-2 animate-pulse">
+        <p className="text-xs text-muted-foreground text-center mt-2.5 animate-pulse absolute -bottom-7">
           👆 Arraste o dedo para raspar!
         </p>
       )}
