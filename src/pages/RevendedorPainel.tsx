@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
+import { ScratchCard } from "@/components/ScratchCard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -2243,18 +2244,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           )}
 
           {/* ===== TAB: RASPADINHA ===== */}
-          {tab === "raspadinha" && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <Ticket className="h-6 w-6 text-primary" />
-                <h2 className="text-xl font-bold text-foreground">Raspadinha</h2>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-8 text-center space-y-4">
-                <Ticket className="h-16 w-16 text-muted-foreground/40 mx-auto" />
-                <p className="text-muted-foreground text-lg font-medium">Em breve!</p>
-                <p className="text-muted-foreground/70 text-sm">A funcionalidade de raspadinha está sendo desenvolvida.</p>
-              </div>
-            </div>
+          {tab === "raspadinha" && user && (
+            <ScratchCard userId={user.id} />
           )}
 
         </main>

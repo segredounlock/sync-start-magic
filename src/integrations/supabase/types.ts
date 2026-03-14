@@ -962,6 +962,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scratch_cards: {
+        Row: {
+          card_date: string
+          created_at: string
+          id: string
+          is_scratched: boolean
+          is_won: boolean
+          prize_amount: number
+          scratched_at: string | null
+          user_id: string
+        }
+        Insert: {
+          card_date?: string
+          created_at?: string
+          id?: string
+          is_scratched?: boolean
+          is_won?: boolean
+          prize_amount?: number
+          scratched_at?: string | null
+          user_id: string
+        }
+        Update: {
+          card_date?: string
+          created_at?: string
+          id?: string
+          is_scratched?: boolean
+          is_won?: boolean
+          prize_amount?: number
+          scratched_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           created_at: string
