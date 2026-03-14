@@ -4604,12 +4604,12 @@ function ResetPasswordModal({ rev, onClose }: { rev: Revendedor; onClose: () => 
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-md glass-card rounded-2xl border border-border/50 shadow-2xl overflow-hidden"
+        className="w-full max-w-md bg-background rounded-2xl border border-border shadow-2xl overflow-hidden"
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border/50 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
-            <KeyRound className="h-5 w-5 text-warning" />
+        <div className="px-6 py-4 border-b border-border flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+            <KeyRound className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-foreground text-base">Redefinir Senha</h3>
