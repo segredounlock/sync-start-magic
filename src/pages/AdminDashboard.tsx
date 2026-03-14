@@ -1829,7 +1829,7 @@ export default function AdminDashboard() {
                                 className="px-2 py-1 rounded-lg text-[10px] font-bold bg-success/15 text-success hover:bg-success/25 transition-colors flex items-center gap-0.5">
                                 <DollarSign className="h-3 w-3" /> Saldo
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); navigate(`/perfil/${r.id}`); }}
+                              <button onClick={(e) => { e.stopPropagation(); navigate(`/perfil/${(r as any).slug || r.id}`); }}
                                 className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Ver perfil">
                                 <Eye className="h-3.5 w-3.5" />
                               </button>

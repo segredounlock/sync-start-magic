@@ -20,6 +20,7 @@ interface ProfileData {
   email: string | null;
   avatar_url: string | null;
   bio: string | null;
+  slug: string | null;
   verification_badge: string | null;
   created_at: string;
   telegram_username: string | null;
@@ -27,11 +28,15 @@ interface ProfileData {
   active: boolean;
 }
 
+// Helper to detect UUID format
+const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 export default function UserProfile() {
-  const { userId } = useParams<{ userId: string }>();
+  const { userId: paramId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [resolvedId, setResolvedId] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [followersCount, setFollowersCount] = useState(0);
@@ -43,7 +48,7 @@ export default function UserProfile() {
   const [avatarError, setAvatarError] = useState(false);
 
   // Edit mode (only for own profile)
-  const isOwnProfile = user?.id === userId;
+  const isOwnProfile = user?.id === resolvedId;
   const [editingBio, setEditingBio] = useState(false);
   const [bioText, setBioText] = useState("");
   const [savingBio, setSavingBio] = useState(false);
@@ -51,27 +56,49 @@ export default function UserProfile() {
   // Follower list modal
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const [followersList, setFollowersList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
-  const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
+  const [followersList, setFollowersList] = useState<{ id: string; nome: string | null; avatar_url: string | null; slug: string | null }[]>([]);
+  const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null; slug: string | null }[]>([]);
   const [listLoading, setListLoading] = useState(false);
 
+  // Resolve slug → UUID
+  useEffect(() => {
+    if (!paramId) return;
+    if (isUUID(paramId)) {
+      setResolvedId(paramId);
+    } else {
+      // It's a slug, resolve to UUID
+      supabase.from("profiles").select("id").eq("slug", paramId).maybeSingle().then(({ data }) => {
+        if (data?.id) {
+          setResolvedId(data.id);
+        } else {
+          setResolvedId(null);
+          setLoading(false);
+        }
+      });
+    }
+  }, [paramId]);
+
   const loadProfile = useCallback(async () => {
-    if (!userId) return;
+    if (!resolvedId) return;
     setLoading(true);
     try {
       const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleData }] = await Promise.all([
-        supabase.from("profiles").select("id, nome, email, avatar_url, bio, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", userId).single(),
-        supabase.rpc("get_follow_counts", { _user_id: userId }),
-        supabase.rpc("get_user_recargas_count" as any, { _user_id: userId }),
-        user?.id && user.id !== userId
-          ? supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", userId).maybeSingle()
+        supabase.from("profiles").select("id, nome, email, avatar_url, bio, slug, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", resolvedId).single(),
+        supabase.rpc("get_follow_counts", { _user_id: resolvedId }),
+        supabase.rpc("get_user_recargas_count" as any, { _user_id: resolvedId }),
+        user?.id && user.id !== resolvedId
+          ? supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", resolvedId).maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+        supabase.rpc("has_role", { _user_id: resolvedId, _role: "admin" }),
       ]);
 
       if (profileData) {
         setProfile(profileData as any);
         setBioText((profileData as any).bio || "");
+        // If we navigated via UUID but profile has a slug, redirect to clean URL
+        if ((profileData as any).slug && paramId && isUUID(paramId)) {
+          navigate(`/perfil/${(profileData as any).slug}`, { replace: true });
+        }
       }
       if (counts && Array.isArray(counts) && counts.length > 0) {
         setFollowersCount(Number(counts[0].followers_count) || 0);
@@ -85,21 +112,21 @@ export default function UserProfile() {
     } finally {
       setLoading(false);
     }
-  }, [userId, user?.id]);
+  }, [resolvedId, user?.id, paramId, navigate]);
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
   const handleFollow = async () => {
-    if (!user || !userId || followLoading) return;
+    if (!user || !resolvedId || followLoading) return;
     setFollowLoading(true);
     try {
       if (isFollowing) {
-        await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", userId);
+        await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", resolvedId);
         setIsFollowing(false);
         setFollowersCount((c) => Math.max(0, c - 1));
         toast.success("Deixou de seguir");
       } else {
-        await supabase.from("follows").insert({ follower_id: user.id, following_id: userId } as any);
+        await supabase.from("follows").insert({ follower_id: user.id, following_id: resolvedId } as any);
         setIsFollowing(true);
         setFollowersCount((c) => c + 1);
         toast.success("Seguindo!");
@@ -133,12 +160,12 @@ export default function UserProfile() {
       const { data } = await supabase
         .from("follows")
         .select("follower_id")
-        .eq("following_id", userId!);
+        .eq("following_id", resolvedId!);
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.follower_id);
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, nome, avatar_url")
+          .select("id, nome, avatar_url, slug")
           .in("id", ids);
         setFollowersList((profiles as any) || []);
       } else {
@@ -155,12 +182,12 @@ export default function UserProfile() {
       const { data } = await supabase
         .from("follows")
         .select("following_id")
-        .eq("follower_id", userId!);
+        .eq("follower_id", resolvedId!);
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.following_id);
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, nome, avatar_url")
+          .select("id, nome, avatar_url, slug")
           .in("id", ids);
         setFollowingList((profiles as any) || []);
       } else {
@@ -425,7 +452,7 @@ export default function UserProfile() {
                   (showFollowers ? followersList : followingList).map((u) => (
                     <button
                       key={u.id}
-                      onClick={() => { setShowFollowers(false); setShowFollowing(false); navigate(`/perfil/${u.id}`); }}
+                      onClick={() => { setShowFollowers(false); setShowFollowing(false); navigate(`/perfil/${u.slug || u.id}`); }}
                       className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted/30 transition-colors"
                     >
                       {u.avatar_url ? (
