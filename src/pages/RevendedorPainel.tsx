@@ -2167,8 +2167,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           <span className="font-bold text-white text-base tracking-wide">{opName}</span>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] text-white/70 uppercase font-semibold tracking-wider">Carga</p>
-                          <p className="text-xl font-black text-white">{op.recentCount + op.pendingCount}</p>
+                          <p className="text-[10px] text-white/70 uppercase font-semibold tracking-wider">Pendentes</p>
+                          <p className="text-xl font-black text-white">{op.pendingCount}</p>
                         </div>
                       </div>
 
