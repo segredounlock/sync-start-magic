@@ -1732,12 +1732,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{r.operadora || "—"}</span></td>
-                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground">{fmt(safeValor(r))}</td>
+                              <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
                               <td className="px-4 py-3 text-center">
-                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" : r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>
-                                  {(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status}
-                                </span>
+                                <StatusBadge status={r.status} type="recarga" className="text-xs" />
                               </td>
                             </motion.tr>
                           ))}
