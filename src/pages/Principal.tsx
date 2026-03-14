@@ -3999,6 +3999,10 @@ export default function Principal() {
                         min="0"
                         value={globalConfig.defaultMarginValue || ""}
                         onChange={(e) => setGlobalConfig(prev => ({ ...prev, defaultMarginValue: e.target.value }))}
+                        onBlur={async (e) => {
+                          const val = e.target.value || "0";
+                          await supabase.from("system_config").upsert({ key: "defaultMarginValue", value: val, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                        }}
                         placeholder={(globalConfig.defaultMarginType || "fixo") === "fixo" ? "0.50" : "5"}
                         className="w-full px-3 py-2 rounded-xl bg-muted/50 border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       />
