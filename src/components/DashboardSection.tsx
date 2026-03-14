@@ -40,6 +40,9 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
   const [opData, setOpData] = useState<OpData[]>([]);
   const [hasPendingPrices, setHasPendingPrices] = useState(false);
   const [showSaqueModal, setShowSaqueModal] = useState(false);
+  const [showConvidarModal, setShowConvidarModal] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+  const [copied, setCopied] = useState<"code" | "link" | null>(null);
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
   const today = new Date();
