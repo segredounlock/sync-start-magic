@@ -467,6 +467,101 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal Convidar */}
+      <AnimatePresence>
+        {showConvidarModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            onClick={() => setShowConvidarModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-card rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
+                    <Users className="h-4 w-4 text-success" />
+                  </div>
+                  <span className="font-bold text-sm text-foreground">Expandir sua Rede</span>
+                </div>
+                <button onClick={() => setShowConvidarModal(false)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-6 py-4 space-y-5">
+                <p className="text-sm text-muted-foreground text-center">
+                  Compartilhe seus links abaixo. Novos usuários serão vinculados à sua rede e gerarão <strong className="text-foreground">lucro automático</strong> para você.
+                </p>
+
+                {/* Código */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-1.5 block">Código de Indicação</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-primary/5 border border-primary/20">
+                      <Share2 className="h-4 w-4 text-primary shrink-0" />
+                      <span className="font-bold text-primary text-lg tracking-wider">{referralCode || "..."}</span>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(referralCode, "code")}
+                      className="px-3.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {copied === "code" && <p className="text-[10px] text-success mt-1">Copiado!</p>}
+                </div>
+
+                {/* Link */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-1.5 block">Link Direto de Cadastro</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted border border-border overflow-hidden">
+                      <Share2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground truncate">{referralLink || "..."}</span>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(referralLink, "link")}
+                      className="px-3.5 rounded-xl border border-border bg-card hover:bg-muted transition-colors flex items-center"
+                    >
+                      <Copy className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">Leva diretamente para a tela de registro com seu código.</p>
+                  {copied === "link" && <p className="text-[10px] text-success mt-0.5">Copiado!</p>}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="px-6 pb-5 flex gap-2">
+                <button
+                  onClick={shareWhatsApp}
+                  className="flex-1 py-3 rounded-xl bg-[hsl(142,70%,45%)] text-white font-bold text-sm hover:bg-[hsl(142,70%,40%)] transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp
+                </button>
+                <button
+                  onClick={() => setShowConvidarModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted transition-colors"
+                >
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
