@@ -850,6 +850,32 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 );
               })}
 
+              {/* Sales Tools */}
+              {salesMenuItems.length > 0 && (
+                <>
+                  <div className="col-span-3 pt-1">
+                    <p className="text-[10px] tracking-widest text-muted-foreground/60 uppercase font-semibold text-center">Ferramentas de Venda</p>
+                  </div>
+                  {salesMenuItems.map((item) => {
+                    const isActive = tab === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => selectTab(item.key)}
+                        className={`flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl active:scale-95 transition-all ${
+                          isActive
+                            ? "bg-primary/15 text-primary border border-primary/25 shadow-[0_0_12px_hsl(var(--primary)/0.1)]"
+                            : "bg-muted/30 text-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        <item.icon className={`h-6 w-6 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className={`text-[11px] font-semibold text-center leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+
               {!isClientMode && (
                 <a
                   href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${user?.id}`}
