@@ -725,6 +725,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "addSaldo", label: "Depositar", icon: CreditCard, dashed: true },
     { key: "contatos", label: "Meu Perfil", icon: User },
     { key: "status", label: "Status do Sistema", icon: Activity },
+    { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
