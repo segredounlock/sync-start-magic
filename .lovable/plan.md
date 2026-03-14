@@ -1,40 +1,35 @@
 
 
-## Diagnóstico e Correção
+# Plano: Forçar operadora UPPERCASE em todos os painéis
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Problema
+Vários locais nos painéis Principal, Admin, Revendedor e Mini App exibem o nome da operadora sem `.toUpperCase()`.
 
-### Plano
+## Locais a corrigir
 
-**1. Corrigir o mapeamento de status na sync function**
+### 1. `src/pages/AdminDashboard.tsx`
+- **Linha 1312**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
+- **Linha 1373**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### 2. `src/pages/Principal.tsx`
+- **Linha 1509**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
+- **Linha 2248**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+### 3. `src/pages/TelegramMiniApp.tsx`
+- **Linha 963**: `${d.operadora}` → `${(d.operadora || "—").toUpperCase()}`
+- **Linha 1357**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
+- **Linha 1568**: `viewingReceipt.operadora || "—"` → `(viewingReceipt.operadora || "—").toUpperCase()`
+- **Linha 1587**: `${viewingReceipt.operadora || "—"}` → `${(viewingReceipt.operadora || "—").toUpperCase()}`
+- **Linha 1637**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+### 4. `src/components/RecargasTicker.tsx`
+- **Linha 168**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
 
-**2. Corrigir manualmente o pedido preso**
+### 5. `src/components/RealtimeDashboard.tsx`
+- **Linha 98**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+### 6. `src/components/chat/UserRecargasModal.tsx`
+- **Linha 475**: `{r.operadora || "—"}` → `{(r.operadora || "—").toUpperCase()}`
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Total: 12 pontos de correção em 6 arquivos. Todos recebem `.toUpperCase()`.
 
