@@ -179,7 +179,7 @@ function buildReceiptElement(data: {
         },
         [
           row("📱", "Telefone", data.telefone, { mono: true }),
-          row("📱", "Operadora", data.operadora || "—", { mono: false }),
+          row("📱", "Operadora", (data.operadora || "—").toUpperCase(), { mono: false }),
           row("💲", "Valor da Recarga", fmt(data.valor), { isSuccess: true, large: true }),
           row("📅", "Data e Hora", dateStr, { mono: false }),
           row("#️⃣", "ID do Pedido", data.recarga_id ? data.recarga_id.slice(0, 8).toUpperCase() : "—"),
@@ -354,7 +354,7 @@ Deno.serve(async (req) => {
         "✅ <b>Recarga Realizada!</b>",
         "",
         `📞 Telefone: <code>${data.telefone}</code>`,
-        data.operadora ? `📡 Operadora: ${data.operadora}` : "",
+        data.operadora ? `📡 Operadora: ${data.operadora.toUpperCase()}` : "",
         `📱 Valor: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
       ].filter(Boolean).join("\n");
 
@@ -384,7 +384,7 @@ Deno.serve(async (req) => {
       console.log(`Generating receipt image for user telegram_id=${targetTelegramId}`);
       const imageData = await generateReceiptPng({
         telefone: data.telefone,
-        operadora: data.operadora || "—",
+        operadora: (data.operadora || "—").toUpperCase(),
         valor: data.valor_recarga || data.valor,
         custo: data.custo || data.valor,
         novo_saldo: data.novo_saldo,
@@ -413,7 +413,7 @@ Deno.serve(async (req) => {
         "❌ <b>Recarga Falhou!</b>",
         "",
         `📞 Telefone: <code>${data.telefone}</code>`,
-        data.operadora ? `📡 Operadora: ${data.operadora}` : "",
+        data.operadora ? `📡 Operadora: ${data.operadora.toUpperCase()}` : "",
         `📱 Valor: <b>${fmt(data.valor_recarga || data.valor)}</b>`,
         "",
         "💰 <b>Saldo estornado automaticamente</b>",

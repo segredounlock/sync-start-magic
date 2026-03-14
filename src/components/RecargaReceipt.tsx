@@ -45,7 +45,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
   const statusEmoji = isCompleted ? "✅" : isFailed ? "❌" : "⏳";
 
   const buildText = useCallback(() => {
-    return `${statusEmoji} ${statusLabel}\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${r.operadora || "—"}\n💰 Valor: ${fmt(safeValor(r))}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
+    return `${statusEmoji} ${statusLabel}\n\n📱 Telefone: ${r.telefone}\n📡 Operadora: ${(r.operadora || "—").toUpperCase()}\n💰 Valor: ${fmt(safeValor(r))}\n📅 Data: ${fmtDate(r.created_at)}\n🔖 ID: ${r.id.slice(0, 8)}...${storeName ? `\n\n${storeName}` : ""}`;
   }, [r, storeName, statusLabel, statusEmoji]);
 
   // Pre-generate the image when the modal opens so it's ready instantly on click
@@ -300,7 +300,7 @@ export function RecargaReceipt({ recarga, open, onClose, storeName, userId }: Re
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Operadora</p>
-                    <p className="text-sm font-semibold text-foreground">{r.operadora || "—"}</p>
+                    <p className="text-sm font-semibold text-foreground">{(r.operadora || "—").toUpperCase()}</p>
                   </div>
                 </div>
 
