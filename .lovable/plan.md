@@ -1,40 +1,33 @@
 
 
-## Diagnóstico e Correção
+## Plano: Desconto do custo API dos revendedores com saldo suficiente
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Dados confirmados
 
-### Plano
+| Revendedor | Saldo Atual | Custo API (débito) | Saldo Final |
+|---|---|---|---|
+| yagoalmirantesdaserra | R$ 20,70 | R$ 17,00 | R$ 3,70 |
+| lucasgabriel305jj | R$ 16,95 | R$ 16,00 | R$ 0,95 |
 
-**1. Corrigir o mapeamento de status na sync function**
+### Ações
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+1. **Atualizar saldo** de cada revendedor na tabela `saldos` (tipo = 'revenda'), subtraindo o `custo_api`
+2. **Atualizar campo `custo`** nas recargas correspondentes (de 0 para o valor do `custo_api`), corrigindo o registro histórico
+3. **Registrar audit_log** para cada desconto, documentando a correção administrativa
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+### SQL (via insert tool)
 
 ```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+-- 1. Descontar saldo yagoalmirantesdaserra
+UPDATE saldos SET valor = valor - 17 WHERE user_id = '39b3977b-bc42-461b-8489-09ef0f7bf4e6' AND tipo = 'revenda';
+
+-- 2. Descontar saldo lucasgabriel305jj
+UPDATE saldos SET valor = valor - 16 WHERE user_id = 'd8c4d2a2-454a-4779-a19e-719f9b6eabeb' AND tipo = 'revenda';
+
+-- 3. Corrigir custo nas recargas
+UPDATE recargas SET custo = 17 WHERE id = '4dfb3f5f-5cab-4d00-9b1d-0f9f5d348b3c';
+UPDATE recargas SET custo = 16 WHERE id = 'aa63c82d-8ce2-4bf3-80a8-5851a182223d';
 ```
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Nenhum saldo ficará negativo.
 
