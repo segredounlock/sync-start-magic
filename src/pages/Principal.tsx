@@ -3393,6 +3393,75 @@ export default function Principal() {
                   </div>
                 </div>
 
+                {/* Raspadinha Config */}
+                <div className="glass-card rounded-xl p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                      <Trophy className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground">Raspadinha Diária</h4>
+                      <p className="text-xs text-muted-foreground">Configure probabilidade e valores dos prêmios</p>
+                    </div>
+                    <div className="ml-auto">
+                      <button
+                        onClick={async () => {
+                          const newVal = (globalConfig.scratchEnabled ?? "true") === "true" ? "false" : "true";
+                          setGlobalConfig(prev => ({ ...prev, scratchEnabled: newVal }));
+                          await supabase.from("system_config").upsert({ key: "scratchEnabled", value: newVal }, { onConflict: "key" });
+                          toast.success(newVal === "true" ? "🎰 Raspadinha ativada!" : "❌ Raspadinha desativada!");
+                        }}
+                        className="transition-colors"
+                      >
+                        {(globalConfig.scratchEnabled ?? "true") === "true"
+                          ? <ToggleRight className="h-7 w-7 text-success" />
+                          : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                        }
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Chance de Ganhar (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={globalConfig.scratchWinChance ?? "70"}
+                        onChange={e => setGlobalConfig(prev => ({ ...prev, scratchWinChance: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Prêmio Mínimo (R$)</label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={globalConfig.scratchMinPrize ?? "0.10"}
+                        onChange={e => setGlobalConfig(prev => ({ ...prev, scratchMinPrize: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Prêmio Máximo (R$)</label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={globalConfig.scratchMaxPrize ?? "2.00"}
+                        onChange={e => setGlobalConfig(prev => ({ ...prev, scratchMaxPrize: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Valores salvos ao clicar em "Salvar" no topo. Prêmios são distribuídos aleatoriamente entre o mín. e máx., com valores menores mais frequentes.
+                  </p>
+                </div>
+
                 <div className="glass-card rounded-xl p-6 space-y-5">
                   <div>
                     <h4 className="font-semibold text-foreground flex items-center gap-2">
