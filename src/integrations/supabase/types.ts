@@ -677,6 +677,7 @@ export type Database = {
           id: string
           last_seen_at: string | null
           nome: string | null
+          referral_code: string | null
           reseller_id: string | null
           slug: string | null
           store_logo_url: string | null
@@ -699,6 +700,7 @@ export type Database = {
           id: string
           last_seen_at?: string | null
           nome?: string | null
+          referral_code?: string | null
           reseller_id?: string | null
           slug?: string | null
           store_logo_url?: string | null
@@ -721,6 +723,7 @@ export type Database = {
           id?: string
           last_seen_at?: string | null
           nome?: string | null
+          referral_code?: string | null
           reseller_id?: string | null
           slug?: string | null
           store_logo_url?: string | null
@@ -822,6 +825,44 @@ export type Database = {
           valor?: number
         }
         Relationships: []
+      }
+      referral_commissions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          recarga_id: string | null
+          referred_user_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          recarga_id?: string | null
+          referred_user_id: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          recarga_id?: string | null
+          referred_user_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_commissions_recarga_id_fkey"
+            columns: ["recarga_id"]
+            isOneToOne: false
+            referencedRelation: "recargas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reseller_config: {
         Row: {
@@ -1178,6 +1219,19 @@ export type Database = {
         }[]
       }
       get_maintenance_mode: { Args: never; Returns: boolean }
+      get_network_members: {
+        Args: { _filter?: string; _user_id: string }
+        Returns: {
+          active: boolean
+          avatar_url: string
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          total_recargas: number
+        }[]
+      }
+      get_network_stats: { Args: { _user_id: string }; Returns: Json }
       get_notif_config: { Args: { _key: string }; Returns: string }
       get_operator_stats: { Args: never; Returns: Json }
       get_poll_vote_counts: {
