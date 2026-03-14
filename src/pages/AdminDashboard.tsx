@@ -1315,14 +1315,14 @@ export default function AdminDashboard() {
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Telefone</p>
                         <p className="text-[12px] font-mono text-foreground">{r.telefone}</p>
                       </div>
-                      <div className="text-right">
+                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Valor</p>
-                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums"><AnimatedCounter value={r.valor} prefix="R$&nbsp;" duration={600} /></p>
+                        <p className="text-[12px] font-bold font-mono text-foreground tabular-nums"><Currency value={r.valor} duration={600} delay={idx * 40} /></p>
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Lucro</p>
                         <p className="text-[12px] font-bold font-mono text-success tabular-nums">
-                          {(r.status === "completed" || r.status === "concluida") ? <><span>+</span><AnimatedCounter value={(Number(r.custo) || 0) - (Number((r as any).custo_api) || 0)} prefix="R$&nbsp;" duration={600} /></> : "—"}
+                          {(r.status === "completed" || r.status === "concluida") ? <Currency value={(Number(r.custo) || 0) - (Number((r as any).custo_api) || 0)} sign duration={600} delay={idx * 40} /> : "—"}
                         </p>
                       </div>
                     </div>
@@ -1374,12 +1374,12 @@ export default function AdminDashboard() {
                           <p className="font-mono text-muted-foreground text-[11px]">{r.telefone}</p>
                         </td>
                         <td className="px-4 py-2.5 text-right">
-                          <p className="font-mono font-bold text-foreground tabular-nums"><AnimatedCounter value={r.valor} prefix="R$&nbsp;" duration={600} /></p>
-                          {role === "admin" && <p className="text-[11px] text-muted-foreground font-mono tabular-nums">Custo: <AnimatedCounter value={r.custo} prefix="R$&nbsp;" duration={600} /></p>}
+                          <p className="font-mono font-bold text-foreground tabular-nums"><Currency value={r.valor} duration={600} delay={idx * 20} /></p>
+                          {role === "admin" && <p className="text-[11px] text-muted-foreground font-mono tabular-nums">Custo: <Currency value={r.custo} duration={600} delay={idx * 20} /></p>}
                         </td>
                         <td className="px-4 py-2.5 text-right">
                           {(r.status === "completed" || r.status === "concluida") ? (
-                            <span className="font-mono font-bold text-success tabular-nums">+<AnimatedCounter value={lucro} prefix="R$&nbsp;" duration={600} /></span>
+                            <Currency value={lucro} sign className="font-mono font-bold text-success tabular-nums" duration={600} delay={idx * 20} />
                           ) : (
                             <span className="text-muted-foreground text-[11px]">—</span>
                           )}
