@@ -532,6 +532,13 @@ Deno.serve(async (req) => {
           : "nenhuma regra encontrada";
         console.log(`pricing: role=${userRole} | source=${pricingSource} | ${ruleLog} | apiCost=${apiCost} | chargedCost=${chargedCost} | catalogValue=${catalogValue} | userId=${userId} | resellerId=${resellerId || "null"}`);
 
+        // Safety: never allow cost below API cost (prevents loss)
+        if (chargedCost <= 0 || chargedCost < apiCost) {
+          console.warn(`PRICING SAFETY: chargedCost=${chargedCost} is below apiCost=${apiCost} for user=${userId} operator=${resolvedOperator} amount=${resolvedAmount}. Forcing apiCost as minimum.`);
+          chargedCost = apiCost;
+          pricingSource += "(safety_floor)";
+        }
+
         if (userBalance < chargedCost) throw new Error("Saldo insuficiente");
 
         // Create recharge via v2 API
