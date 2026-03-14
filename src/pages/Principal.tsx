@@ -2269,11 +2269,13 @@ export default function Principal() {
                         <div className="hidden md:block overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="border-b border-border">
+                               <tr className="border-b border-border">
                                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Data</th>
                                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Telefone</th>
                                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Operadora</th>
                                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">Valor</th>
+                                <th className="text-right px-3 py-2 font-medium text-muted-foreground">Custo</th>
+                                <th className="text-right px-3 py-2 font-medium text-muted-foreground">Custo API</th>
                                 <th className="text-center px-3 py-2 font-medium text-muted-foreground">Status</th>
                               </tr>
                             </thead>
