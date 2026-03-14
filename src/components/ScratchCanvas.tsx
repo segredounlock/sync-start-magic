@@ -103,47 +103,40 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     const ctx = cvs.getContext("2d")!;
     ctx.scale(dpr, dpr);
 
-    const cellW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
-    const cellH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
-
-    // Rounded bg to match container
-    ctx.fillStyle = "#e2e8f0";
+    // Fill entire canvas as one solid scratch layer
+    const grad = ctx.createLinearGradient(0, 0, size.w, size.h);
+    grad.addColorStop(0, "#b8b8b8");
+    grad.addColorStop(0.2, "#d4d4d4");
+    grad.addColorStop(0.4, "#e0e0e0");
+    grad.addColorStop(0.6, "#d0d0d0");
+    grad.addColorStop(0.8, "#c8c8c8");
+    grad.addColorStop(1, "#b0b0b0");
+    ctx.fillStyle = grad;
     roundRect(ctx, 0, 0, size.w, size.h, 14);
     ctx.fill();
 
+    // Top highlight
+    const highlight = ctx.createLinearGradient(0, 0, 0, size.h * 0.3);
+    highlight.addColorStop(0, "rgba(255,255,255,0.3)");
+    highlight.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = highlight;
+    roundRect(ctx, 0, 0, size.w, size.h * 0.3, 14);
+    ctx.fill();
+
+    // Draw question marks on cells
+    const cW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
+    const cH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
     for (let i = 0; i < 9; i++) {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
-      const x = CELL_PAD + col * (cellW + CELL_PAD);
-      const y = CELL_PAD + row * (cellH + CELL_PAD);
-
-      // Silver gradient per cell
-      const grad = ctx.createLinearGradient(x, y, x + cellW, y + cellH);
-      grad.addColorStop(0, "#b8b8b8");
-      grad.addColorStop(0.2, "#d4d4d4");
-      grad.addColorStop(0.4, "#e0e0e0");
-      grad.addColorStop(0.6, "#d0d0d0");
-      grad.addColorStop(0.8, "#c8c8c8");
-      grad.addColorStop(1, "#b0b0b0");
-      ctx.fillStyle = grad;
-      roundRect(ctx, x, y, cellW, cellH, 8);
-      ctx.fill();
-
-      // Subtle inner highlight
-      const highlight = ctx.createLinearGradient(x, y, x, y + cellH * 0.4);
-      highlight.addColorStop(0, "rgba(255,255,255,0.35)");
-      highlight.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = highlight;
-      roundRect(ctx, x + 2, y + 2, cellW - 4, cellH * 0.4, 6);
-      ctx.fill();
-
-      // Question mark
-      const minDim = Math.min(cellW, cellH);
-      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      const x = CELL_PAD + col * (cW + CELL_PAD);
+      const y = CELL_PAD + row * (cH + CELL_PAD);
+      const minDim = Math.min(cW, cH);
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
       ctx.font = `bold ${minDim * 0.30}px system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("?", x + cellW / 2, y + cellH / 2);
+      ctx.fillText("?", x + cW / 2, y + cH / 2);
     }
 
     // Shimmer dots
