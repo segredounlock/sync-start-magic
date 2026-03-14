@@ -129,7 +129,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // Banner config from banners table
   const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string }[]>([]);
   const [dismissedBanners, setDismissedBanners] = useState<Set<number>>(new Set());
-
+  const [totalRecargasCount, setTotalRecargasCount] = useState(0);
 
   // Call edge function helper
   const callApi = useCallback(async (action: string, params: Record<string, unknown> = {}) => {
