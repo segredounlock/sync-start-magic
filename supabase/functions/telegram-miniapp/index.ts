@@ -236,13 +236,15 @@ serve(async (req) => {
                     let userCost = userRole === "cliente" ? faceValue : apiCost;
 
                     // Apply pricing rules if we have operadoraId
+                    // Skip rules with regra_valor=0 on fixo type (means "not configured")
+                    const isValidRule = (r: any) => !(r.tipo_regra === "fixo" && Number(r.regra_valor) === 0);
                     if (operadoraId && user_id) {
                       const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
-                      if (rRule) {
+                      if (rRule && isValidRule(rRule)) {
                         userCost = applyRule(rRule);
                       } else {
                         const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
-                        if (gRule) {
+                        if (gRule && isValidRule(gRule)) {
                           userCost = applyRule(gRule);
                         }
                       }
