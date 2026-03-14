@@ -275,7 +275,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         operatorStats,
       });
     } catch {
-      setStatusData({ dbOnline: false, authOnline: !!user, operadorasCount: 0, recargasTotal: 0, lastRecarga: null, operatorStats: [] });
+      setStatusData({ dbOnline: false, authOnline: !!user, operadorasCount: 0, recargasTotal: 0, lastRecarga: null, operatorStats: [], lastUpdated: null });
     }
   }, [user]);
 
