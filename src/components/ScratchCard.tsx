@@ -336,7 +336,43 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                   <Ticket className="h-5 w-5 text-primary" /> Sua chance
                 </h3>
 
-                {!card ? (
+                {spendingBlock ? (
+                  /* Spending requirement not met */
+                  <motion.div
+                    className="text-center space-y-4 py-6"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                  >
+                    <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                      <Wallet className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground">Raspadinha Bloqueada</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Faça pelo menos <span className="font-bold text-primary">R$ {spendingBlock.minRequired.toFixed(2)}</span> em recargas para desbloquear.
+                      </p>
+                    </div>
+                    <div className="max-w-xs mx-auto">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span>Progresso</span>
+                        <span className="font-bold text-foreground">
+                          R$ {spendingBlock.totalSpent.toFixed(2)} / R$ {spendingBlock.minRequired.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="h-3 rounded-full bg-muted overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full bg-primary"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (spendingBlock.totalSpent / spendingBlock.minRequired) * 100)}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Faltam <span className="font-bold text-primary">R$ {Math.max(0, spendingBlock.minRequired - spendingBlock.totalSpent).toFixed(2)}</span> em recargas
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : !card ? (
                   /* Claim state */
                   <motion.div
                     className="text-center space-y-5 py-6"
