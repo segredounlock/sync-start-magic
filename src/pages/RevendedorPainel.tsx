@@ -1823,7 +1823,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         </thead>
                         <tbody>
                           {filtered.length === 0 ? (
-                            <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
+                            <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</td></tr>
                           ) : filtered.map((r, i) => (
                             <motion.tr key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                               className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
