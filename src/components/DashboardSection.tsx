@@ -132,16 +132,21 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
 
       // Check pending prices (reseller only)
       if (!isClientMode) {
-        const [{ data: ops }, { data: rules }] = await Promise.all([
-          supabase.from("operadoras").select("id, valores").eq("ativo", true),
-          supabase.from("reseller_pricing_rules").select("operadora_id, valor_recarga").eq("user_id", userId),
-        ]);
-        const ruleSet = new Set((rules || []).map(r => `${r.operadora_id}-${r.valor_recarga}`));
-        const hasPending = (ops || []).some(op => {
-          const vals = Array.isArray(op.valores) ? op.valores : [];
-          return vals.some((v: any) => !ruleSet.has(`${op.id}-${v}`));
-        });
-        setHasPendingPrices(hasPending);
+        try {
+          const [{ data: ops }, { data: rules }] = await Promise.all([
+            supabase.from("operadoras").select("id, valores").eq("ativo", true),
+            supabase.from("reseller_pricing_rules").select("operadora_id, valor_recarga").eq("user_id", userId),
+          ]);
+          const ruleSet = new Set((rules || []).map(r => `${r.operadora_id}-${Number(r.valor_recarga)}`));
+          const hasPending = (ops || []).some(op => {
+            const vals = Array.isArray(op.valores) ? op.valores : [];
+            return vals.some((v: any) => !ruleSet.has(`${op.id}-${Number(v)}`));
+          });
+          setHasPendingPrices(hasPending);
+        } catch (e) {
+          console.error("Pending prices check error:", e);
+          setHasPendingPrices(false);
+        }
       }
     } catch (e) {
       console.error("Dashboard stats error:", e);
