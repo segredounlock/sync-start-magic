@@ -95,7 +95,7 @@ function CreditsFeed({
           {statusIcon(r.status)}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className={`font-bold text-sm ${opColor(r.operadora)}`}>{r.operadora || "—"}</span>
+              <span className={`font-bold text-sm ${opColor(r.operadora)}`}>{(r.operadora || "—").toUpperCase()}</span>
               <span className="text-xs text-muted-foreground font-mono">{r.telefone}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">

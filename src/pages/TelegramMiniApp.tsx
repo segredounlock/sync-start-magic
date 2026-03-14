@@ -960,7 +960,7 @@ export default function TelegramMiniApp() {
                           transition={{ delay: 0.6 }}
                           onClick={async () => {
                             const d = recargaResult.details!;
-                            const text = `✅ *Comprovante de Recarga*\n\n📱 Telefone: ${d.telefone}\n📡 Operadora: ${d.operadora}\n💰 Valor: ${formatCurrency(d.valor)}\n🆔 Pedido: ${d.pedidoId || "—"}\n🕐 Data: ${d.hora}\n\nRecarga realizada com sucesso!`;
+                            const text = `✅ *Comprovante de Recarga*\n\n📱 Telefone: ${d.telefone}\n📡 Operadora: ${(d.operadora || "—").toUpperCase()}\n💰 Valor: ${formatCurrency(d.valor)}\n🆔 Pedido: ${d.pedidoId || "—"}\n🕐 Data: ${d.hora}\n\nRecarga realizada com sucesso!`;
                             try {
                               if (navigator.share) {
                                 await navigator.share({ title: "Comprovante de Recarga", text: text.replace(/\*/g, "") });
@@ -1354,7 +1354,7 @@ export default function TelegramMiniApp() {
                             <Smartphone className="w-5 h-5" style={st.link} />
                           </div>
                           <div>
-                            <p className="font-bold text-sm" style={st.text}>{r.operadora || "—"}</p>
+                            <p className="font-bold text-sm" style={st.text}>{(r.operadora || "—").toUpperCase()}</p>
                             <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
                           </div>
                         </div>
@@ -1565,7 +1565,7 @@ export default function TelegramMiniApp() {
                         </div>
                         {[
                           { icon: Phone, label: "Telefone", value: formatPhone(viewingReceipt.telefone) },
-                          { icon: Zap, label: "Operadora", value: viewingReceipt.operadora || "—" },
+                          { icon: Zap, label: "Operadora", value: (viewingReceipt.operadora || "—").toUpperCase() },
                           { icon: Wallet, label: "Valor", value: formatCurrency(viewingReceipt.valor), highlight: true },
                           { icon: Hash, label: "ID do Pedido", value: viewingReceipt.external_id || viewingReceipt.id.slice(0, 8) },
                           { icon: Clock, label: "Data", value: formatDateTimeBR(viewingReceipt.created_at) },
@@ -1584,7 +1584,7 @@ export default function TelegramMiniApp() {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={async () => {
-                            const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${formatPhone(viewingReceipt.telefone)}\n📡 Operadora: ${viewingReceipt.operadora || "—"}\n💰 Valor: ${formatCurrency(viewingReceipt.valor)}\n🆔 Pedido: ${viewingReceipt.external_id || viewingReceipt.id.slice(0, 8)}\n🕐 Data: ${formatFullDateTimeBR(viewingReceipt.created_at)}\n\nRecarga realizada com sucesso!`;
+                            const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${formatPhone(viewingReceipt.telefone)}\n📡 Operadora: ${(viewingReceipt.operadora || "—").toUpperCase()}\n💰 Valor: ${formatCurrency(viewingReceipt.valor)}\n🆔 Pedido: ${viewingReceipt.external_id || viewingReceipt.id.slice(0, 8)}\n🕐 Data: ${formatFullDateTimeBR(viewingReceipt.created_at)}\n\nRecarga realizada com sucesso!`;
                             try {
                               if (navigator.share) await navigator.share({ title: "Comprovante de Recarga", text });
                               else { await navigator.clipboard.writeText(text); tgWebApp?.HapticFeedback?.notificationOccurred("success"); }
@@ -1634,7 +1634,7 @@ export default function TelegramMiniApp() {
                             <Smartphone className="w-4 h-4" style={st.hint} />
                           </div>
                           <div>
-                            <p className="font-semibold text-sm" style={st.text}>{r.operadora || "—"}</p>
+                            <p className="font-semibold text-sm" style={st.text}>{(r.operadora || "—").toUpperCase()}</p>
                             <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
                           </div>
                         </div>

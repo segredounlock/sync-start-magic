@@ -472,7 +472,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                       </div>
                       <div className="flex justify-between items-center py-1.5 border-b border-border">
                         <span className="text-xs text-muted-foreground">Operadora</span>
-                        <span className="text-xs font-semibold text-foreground">{r.operadora || "—"}</span>
+                        <span className="text-xs font-semibold text-foreground">{(r.operadora || "—").toUpperCase()}</span>
                       </div>
                       <div className="flex justify-between items-center py-1.5 border-b border-border">
                         <span className="text-xs text-muted-foreground">Valor da Recarga</span>
