@@ -1216,6 +1216,10 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_user_verification_badge: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_verification_badge: { Args: { _user_id: string }; Returns: boolean }
       is_chat_member: {
