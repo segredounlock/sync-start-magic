@@ -2272,12 +2272,9 @@ export default function Principal() {
                                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
                                   <td className="px-3 py-2 text-center">
-                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      (r.status === "completed" || r.status === "concluida") ? "bg-success/15 text-success" :
-                                      r.status === "pending" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"
-                                    }`}>{(r.status === "completed" || r.status === "concluida") ? "Concluída" : r.status === "pending" ? "Processando" : r.status}</span>
+                                    <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                   </td>
                                   <td className="px-1 py-2">
                                     <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
