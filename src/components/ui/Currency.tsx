@@ -3,38 +3,24 @@ import { SkeletonValue } from "@/components/Skeleton";
 
 interface CurrencyProps {
   value: number;
-  /** Show +/- sign before value */
   sign?: boolean;
-  /** Loading state — shows skeleton */
   loading?: boolean;
-  /** Hide value (show ••••) */
   hidden?: boolean;
-  /** Animation duration in ms (default 900) */
   duration?: number;
-  /** Number of decimal places (default 2) */
+  delay?: number;
   decimals?: number;
   className?: string;
-  /** Skeleton width class (default w-20) */
   skeletonWidth?: string;
-  /** Skeleton height class */
   skeletonHeight?: string;
 }
 
-/**
- * Animated currency display with rolling counter effect.
- * Replaces all `fmt(value)` and `<AnimatedCounter prefix="R$" />` patterns.
- *
- * Usage:
- *   <Currency value={1500} />
- *   <Currency value={lucro} sign />
- *   <Currency value={saldo} loading={isLoading} hidden={!showBalance} />
- */
 export function Currency({
   value,
   sign = false,
   loading = false,
   hidden = false,
   duration = 900,
+  delay = 0,
   decimals = 2,
   className = "",
   skeletonWidth = "w-20",
@@ -51,7 +37,7 @@ export function Currency({
   return (
     <span className={className}>
       {sign && (value >= 0 ? "+" : "")}
-      <AnimatedCounter value={sign ? Math.abs(value) : value} prefix="R$&nbsp;" decimals={decimals} duration={duration} />
+      <AnimatedCounter value={sign ? Math.abs(value) : value} prefix="R$&nbsp;" decimals={decimals} duration={duration} delay={delay} />
     </span>
   );
 }
