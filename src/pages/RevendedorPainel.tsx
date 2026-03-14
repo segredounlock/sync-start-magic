@@ -2023,13 +2023,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
                 const iconForType = (tipo: ExtratoItem["tipo"]) => {
                   if (tipo === "deposito") return <Banknote className="h-4 w-4 text-success" />;
-                  if (tipo === "recarga") return <Smartphone className="h-4 w-4 text-primary" />;
+                  if (tipo === "recarga") return <Smartphone className="h-4 w-4 text-blue-500" />;
                   if (tipo === "saque") return <Landmark className="h-4 w-4 text-warning" />;
                   return <ArrowRightLeft className="h-4 w-4 text-accent" />;
                 };
                 const bgForType = (tipo: ExtratoItem["tipo"]) => {
                   if (tipo === "deposito") return "bg-success/10";
-                  if (tipo === "recarga") return "bg-primary/10";
+                  if (tipo === "recarga") return "bg-blue-500/10";
                   if (tipo === "saque") return "bg-warning/10";
                   return "bg-accent/10";
                 };
