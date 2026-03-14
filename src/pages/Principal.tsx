@@ -176,6 +176,7 @@ export default function Principal() {
   const [view, setView] = useState<PrincipalView>("dashboard");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
 
   // Broadcast state
   const [broadcastSending, setBroadcastSending] = useState(false);
