@@ -232,7 +232,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
           </div>
 
           {/* Values Cards */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
             {activeOp.values.map((pv) => {
               const key = `${pv.operadoraId}_${pv.value}`;
               const isSelected = selectedValues.has(key);
