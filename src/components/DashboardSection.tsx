@@ -391,7 +391,7 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
                 <div className="w-3 h-3 rounded-sm bg-primary" />
-                <span>Faturamento</span>
+                <span>Lucro</span>
               </div>
               <div className="h-48 flex items-end gap-1">
                 {dailyData.map((d, i) => (
