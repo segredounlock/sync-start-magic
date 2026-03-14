@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
+import { ScratchCard } from "@/components/ScratchCard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
