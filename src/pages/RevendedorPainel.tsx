@@ -2168,6 +2168,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       {/* Mobile Bottom Nav */}
       <MobileBottomNav
         items={[
+          { key: "dashboard", label: "Início", icon: Activity, color: "text-primary", animation: "pulse" },
           { key: "recarga", label: "Recarga", icon: Send, color: "text-primary", animation: "bounce" },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse", highlighted: true },
