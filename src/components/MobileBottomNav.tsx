@@ -73,11 +73,17 @@ export function MobileBottomNav({
                 whileTap={{ scale: 0.9 }}
               >
                 <motion.div
-                  animate={{ y: [0, -2, 0] }}
+                  animate={item.highlighted ? {
+                    y: [0, -2, 0],
+                    filter: [
+                      "drop-shadow(0 0 3px hsl(var(--primary))) drop-shadow(0 0 6px hsl(var(--primary) / 0.3))",
+                      "drop-shadow(0 0 8px hsl(var(--primary))) drop-shadow(0 0 16px hsl(var(--primary) / 0.6)) drop-shadow(0 0 24px hsl(var(--primary) / 0.3))",
+                      "drop-shadow(0 0 5px hsl(var(--primary))) drop-shadow(0 0 10px hsl(var(--primary) / 0.4))",
+                      "drop-shadow(0 0 10px hsl(var(--primary))) drop-shadow(0 0 20px hsl(var(--primary) / 0.7)) drop-shadow(0 0 30px hsl(var(--primary) / 0.4))",
+                      "drop-shadow(0 0 3px hsl(var(--primary))) drop-shadow(0 0 6px hsl(var(--primary) / 0.3))",
+                    ],
+                  } : { y: [0, -2, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  style={item.highlighted ? {
-                    filter: "drop-shadow(0 0 4px hsl(var(--primary))) drop-shadow(0 0 8px hsl(var(--primary) / 0.5))",
-                  } : undefined}
                 >
                   <item.icon className={`h-6 w-6 ${item.color || "text-primary"}`} />
                 </motion.div>
