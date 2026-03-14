@@ -82,7 +82,7 @@ serve(async (req) => {
           "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
           "admin_notifications", "banners", "polls", "poll_votes", "follows", "audit_logs",
           "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
-          "push_subscriptions", "update_history",
+          "push_subscriptions", "update_history", "disabled_recharge_values", "referral_commissions",
         ];
         for (const t of candidateTables) {
           const { error } = await supabaseAdmin.from(t).select("id").limit(0);

@@ -84,7 +84,8 @@ serve(async (req) => {
 
     // Tables that have user_id referencing profiles.id
     const profileFkTables = new Set([
-      "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config", "transactions",
+      "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config",
+      "transactions", "disabled_recharge_values", "referral_commissions",
     ]);
 
     const getExistingProfileIds = async () => {
@@ -108,7 +109,8 @@ serve(async (req) => {
     const knownOrder = [
       "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
       "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
-      "pricing_rules", "reseller_pricing_rules", "reseller_config", "transactions", "recargas",
+      "pricing_rules", "reseller_pricing_rules", "reseller_config", "disabled_recharge_values",
+      "transactions", "recargas", "referral_commissions",
       "admin_notifications", "banners", "polls", "poll_votes", "follows", "audit_logs",
       "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
       "push_subscriptions", "update_history",
