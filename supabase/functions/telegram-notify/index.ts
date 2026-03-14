@@ -384,7 +384,7 @@ Deno.serve(async (req) => {
       console.log(`Generating receipt image for user telegram_id=${targetTelegramId}`);
       const imageData = await generateReceiptPng({
         telefone: data.telefone,
-        operadora: data.operadora || "—",
+        operadora: (data.operadora || "—").toUpperCase(),
         valor: data.valor_recarga || data.valor,
         custo: data.custo || data.valor,
         novo_saldo: data.novo_saldo,
