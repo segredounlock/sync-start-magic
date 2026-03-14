@@ -530,7 +530,21 @@ serve(async (req) => {
         } else if (text === "/recargas" || text === "/historico") {
           await handleRecargas(supabase, BOT_TOKEN, chatId, linkedUser);
         } else if (text === "/recarga" || text.startsWith("/recarga ")) {
-          await handleRecarga(supabase, BOT_TOKEN, chatId, linkedUser, text);
+          // Redirect to operator selection menu (same as menu_recarga callback)
+          const catalog = await fetchCatalog(supabase);
+          if (!catalog?.length) {
+            await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+              "⚠️ Nenhuma operadora disponível no momento.",
+              [[{ text: "📖 Voltar ao Menu", callback_data: "menu_main" }]]
+            );
+          } else {
+            const opButtons = catalog.map((carrier: any) => [{ text: carrier.name || carrier.carrierId, callback_data: `rec_op_${carrier.carrierId}` }]);
+            opButtons.push([{ text: "⬅️ Voltar ao Menu Principal", callback_data: "menu_main" }]);
+            await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+              "📱 <b>VAMOS FAZER UMA RECARGA!</b>\n\nSelecione a operadora:",
+              opButtons
+            );
+          }
         } else if (text === "/deposito") {
           await setSession(supabase, chatIdStr, "awaiting_deposit_amount", { user_id: linkedUser.id });
           await sendMessageWithKeyboard(BOT_TOKEN, chatId,
