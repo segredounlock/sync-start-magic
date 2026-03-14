@@ -749,7 +749,7 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (resellerRule) {
           prChargedCost = resellerRule.tipo_regra === "fixo"
-            ? Number(resellerRule.regra_valor)
+            ? (Number(resellerRule.regra_valor) > 0 ? Number(resellerRule.regra_valor) : Number(resellerRule.custo))
             : Number(resellerRule.custo) * (1 + Number(resellerRule.regra_valor) / 100);
         } else {
           const { data: globalRule } = await adminClient
