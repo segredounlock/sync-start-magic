@@ -1190,6 +1190,18 @@ export type Database = {
           vote_count: number
         }[]
       }
+      get_public_store_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          active: boolean
+          id: string
+          nome: string
+          store_logo_url: string
+          store_name: string
+          store_primary_color: string
+          store_secondary_color: string
+        }[]
+      }
       get_public_tables: {
         Args: never
         Returns: {
