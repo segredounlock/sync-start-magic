@@ -1816,6 +1816,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Telefone</th>
                             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Operadora</th>
+                            <th className="text-right px-4 py-3 font-medium text-muted-foreground">Valor</th>
                             <th className="text-right px-4 py-3 font-medium text-muted-foreground">Custo</th>
                             <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
                           </tr>
