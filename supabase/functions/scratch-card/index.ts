@@ -129,15 +129,35 @@ Deno.serve(async (req) => {
     }
 
     if (action === "scratch") {
+      const body = await req.json().catch(() => ({}));
+      const cardId = body?.card_id as string | undefined;
       const today = new Date().toISOString().slice(0, 10);
 
-      const { data: card } = await supabaseAdmin
-        .from("scratch_cards")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("card_date", today)
-        .eq("is_scratched", false)
-        .maybeSingle();
+      let card: any = null;
+
+      if (cardId) {
+        const byId = await supabaseAdmin
+          .from("scratch_cards")
+          .select("*")
+          .eq("id", cardId)
+          .eq("user_id", user.id)
+          .eq("is_scratched", false)
+          .maybeSingle();
+
+        card = byId.data;
+      }
+
+      if (!card) {
+        const byDate = await supabaseAdmin
+          .from("scratch_cards")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("card_date", today)
+          .eq("is_scratched", false)
+          .maybeSingle();
+
+        card = byDate.data;
+      }
 
       if (!card) {
         return new Response(
