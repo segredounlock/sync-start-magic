@@ -101,7 +101,7 @@ export function AtualizacoesSection() {
       </div>
 
       {items.map((item, i) => {
-        const buttons: { label: string; url: string }[] = Array.isArray(item.buttons) ? item.buttons : [];
+        const buttons: NotifButton[] = Array.isArray(item.buttons) ? item.buttons : [];
         const isRecent = isNew(item.created_at);
 
         return (
