@@ -2119,7 +2119,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     ) : (
                       <div className="space-y-2">
                         {items.map((item, i) => {
-                          const isPositive = item.tipo === "deposito";
                           return (
                             <motion.div
                               key={item.id}
