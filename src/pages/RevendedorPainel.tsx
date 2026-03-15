@@ -1005,23 +1005,31 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           </div>
 
           <nav className="p-3 space-y-1 overflow-y-auto flex-1 relative">
-            {menuItems.map((item) => {
+            {menuItems.map((item, index) => {
               const isActive = tab === item.key;
               return (
-                <button
+                <motion.div
                   key={item.key}
-                  onClick={() => selectTab(item.key)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
-                    isActive
-                      ? "nav-item-active"
-                      : item.dashed
-                      ? "text-success border border-dashed border-success/30 hover:bg-success/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : item.dashed ? "text-success" : ""}`} />
-                  <span>{item.label}</span>
-                </button>
+                  <button
+                    onClick={() => selectTab(item.key)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
+                      isActive
+                        ? "nav-item-active"
+                        : item.dashed
+                        ? "text-success border border-dashed border-success/30 hover:bg-success/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    }`}
+                  >
+                    <FloatingMenuIcon icon={item.icon} color={isActive ? "text-primary" : item.dashed ? "text-success" : "text-primary"} isActive={false} index={index} size="h-4 w-4" />
+                    <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                      {item.label}
+                    </motion.span>
+                  </button>
+                </motion.div>
               );
             })}
 
