@@ -1037,19 +1037,27 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             {salesMenuItems.length > 0 && (
               <div className="pt-3 mt-3 border-t border-border space-y-1">
                 <div className="px-2 text-[10px] tracking-widest text-muted-foreground/60 uppercase font-semibold">Ferramentas de Venda</div>
-                {salesMenuItems.map((item) => {
+                {salesMenuItems.map((item, index) => {
                   const isActive = tab === item.key;
                   return (
-                    <button
+                    <motion.div
                       key={item.key}
-                      onClick={() => selectTab(item.key)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
-                        isActive ? "nav-item-active" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                      }`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (menuItems.length + index) * 0.05 }}
                     >
-                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
-                      <span>{item.label}</span>
-                    </button>
+                      <button
+                        onClick={() => selectTab(item.key)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
+                          isActive ? "nav-item-active" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                        }`}
+                      >
+                        <FloatingMenuIcon icon={item.icon} color="text-primary" isActive={false} index={menuItems.length + index} size="h-4 w-4" />
+                        <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                          {item.label}
+                        </motion.span>
+                      </button>
+                    </motion.div>
                   );
                 })}
               </div>
