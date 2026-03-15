@@ -317,11 +317,7 @@ export function MinhaRede({ userId, profileSlug, referralCode, onOpenExclusivePr
                             <button
                               onClick={() => {
                                 setOpenMenuId(null);
-                                if (onOpenExclusivePricing) {
-                                  onOpenExclusivePricing(member.id, member.nome || member.email || "Membro");
-                                } else {
-                                  toast.info("Funcionalidade de preços exclusivos em breve.");
-                                }
+                                setPricingModal({ id: member.id, name: member.nome || member.email || "Membro" });
                               }}
                               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 transition-colors text-left"
                             >
