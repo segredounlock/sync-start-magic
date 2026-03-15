@@ -1002,7 +1002,7 @@ export default function BackupSection() {
                 <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Tabelas no backup</p>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                <span className="text-[10px] font-mono px-2 py-1 rounded-lg bg-white/[0.05] text-muted-foreground shadow-[inset_0_1px_0px_rgba(255,255,255,0.04)]">
+                <span className="text-[10px] font-mono px-2 py-1 rounded-lg bg-muted/50 text-muted-foreground border border-border/50">
                   🔄 Descoberta automática — todas as tabelas do schema public
                 </span>
               </div>
