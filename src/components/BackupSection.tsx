@@ -1105,7 +1105,7 @@ export default function BackupSection() {
                     value={githubPat}
                     onChange={e => setGithubPat(e.target.value)}
                     placeholder="ghp_..."
-                    className="w-full px-3 py-2 pr-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                    className="w-full px-3 py-2 pr-9 rounded-xl bg-muted/50 border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
                   />
                   <button type="button" onClick={() => setShowPat(!showPat)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showPat ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
