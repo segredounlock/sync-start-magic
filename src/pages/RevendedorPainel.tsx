@@ -1024,7 +1024,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                     }`}
                   >
-                    <FloatingMenuIcon icon={item.icon} color={isActive ? "text-primary" : item.dashed ? "text-success" : "text-primary"} isActive={false} index={index} size="h-4 w-4" />
+                    <FloatingMenuIcon icon={item.icon} color={item.color} isActive={isActive} index={index} size="h-4 w-4" />
                     <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
                       {item.label}
                     </motion.span>
