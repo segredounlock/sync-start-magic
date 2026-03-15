@@ -938,9 +938,9 @@ export default function BackupSection() {
                     {/* Expandable checksums */}
                     {Object.keys(integrityResult.hashes).length > 0 && (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                        className="rounded-xl bg-white/[0.02] border border-white/10 overflow-hidden">
+                        className="rounded-xl bg-muted/30 border border-border overflow-hidden">
                         <button onClick={() => setShowChecksums(!showChecksums)}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors group">
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/60 transition-colors group">
                           <Hash className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
                           <motion.div animate={{ rotate: showChecksums ? 90 : 0 }} transition={{ duration: 0.2 }}>
                             <ChevronRight className="h-3 w-3 text-muted-foreground" />
