@@ -1370,6 +1370,7 @@ export type Database = {
           card_date: string
           nome: string
           prize_amount: number
+          verification_badge: string
         }[]
       }
       get_scratch_top_winners: {
@@ -1379,6 +1380,7 @@ export type Database = {
           card_date: string
           nome: string
           prize_amount: number
+          verification_badge: string
         }[]
       }
       get_seasonal_theme: { Args: never; Returns: string }
