@@ -211,13 +211,16 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
+  const isAdmin = userRole === "admin";
+  const showSalesTools = isAdmin || salesToolsEnabled;
+
   const quickActions = [
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
     ...(!isClientMode ? [
-      ...(salesToolsEnabled ? [
+      ...(showSalesTools ? [
         { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
       ] : []),
-      ...(salesToolsEnabled ? [
+      ...(showSalesTools ? [
         { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
         { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "__convidar__", color: "text-destructive", bg: "bg-destructive/10" },
       ] : []),
