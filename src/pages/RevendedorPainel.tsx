@@ -2339,9 +2339,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       <MobileBottomNav
         items={[
           { key: "dashboard", label: "Início", icon: Activity, color: "text-primary", animation: "pulse" },
-          { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
-          { key: "recarga", label: "Recarga", icon: Smartphone, color: "text-primary", animation: "bounce", elevated: true },
           { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-primary", animation: "bounce" },
+          { key: "recarga", label: "Recarga", icon: Smartphone, color: "text-primary", animation: "bounce", elevated: true },
+          { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse" },
           { key: "contatos", label: "Config", icon: Settings, color: "text-accent", animation: "float" },
@@ -2356,7 +2356,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           if (key === "chat") { navigate("/chat"); return; }
           selectTab(key as PainelTab);
         }}
-        mainCount={5}
+        mainCount={4}
         userLabel={user?.email || userLabel}
         userRole={role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário"}
         userAvatarUrl={avatarUrl}
