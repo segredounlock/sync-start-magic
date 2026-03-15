@@ -1321,7 +1321,7 @@ export default function BackupSection() {
             </AnimatePresence>
 
             {/* Update History */}
-            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 space-y-3">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-4 space-y-3">
               <button onClick={() => setShowHistory(!showHistory)} className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
