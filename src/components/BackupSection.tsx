@@ -847,7 +847,7 @@ export default function BackupSection() {
             </AnimatePresence>
 
             {/* Integrity Check */}
-            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-4 space-y-3">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${integrityChecking ? "bg-primary/20" : "bg-muted/30"} transition-colors`}>
