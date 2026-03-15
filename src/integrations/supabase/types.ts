@@ -1273,6 +1273,25 @@ export type Database = {
           total_recargas: number
         }[]
       }
+      get_network_members_v2: {
+        Args: { _filter?: string; _user_id: string }
+        Returns: {
+          active: boolean
+          avatar_url: string
+          created_at: string
+          direct_network: number
+          direct_profit: number
+          email: string
+          id: string
+          indirect_network: number
+          indirect_profit: number
+          nome: string
+          role: string
+          saldo_pessoal: number
+          saldo_revenda: number
+          total_recargas: number
+        }[]
+      }
       get_network_stats: { Args: { _user_id: string }; Returns: Json }
       get_notif_config: { Args: { _key: string }; Returns: string }
       get_operator_stats: { Args: never; Returns: Json }
