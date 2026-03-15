@@ -330,7 +330,7 @@ export default function BackupSection() {
 
 
   const handleExport = async () => {
-    if (!includeDb && !includeSource) { toast.error("Selecione pelo menos uma opção"); return; }
+    if (!includeDb && !includeSource && !includeSchema) { toast.error("Selecione pelo menos uma opção"); return; }
     setExporting(true); setExportProgress(0); setExportStage("Iniciando...");
     try {
       const { data: { session } } = await supabase.auth.getSession();
