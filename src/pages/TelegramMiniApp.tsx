@@ -210,6 +210,7 @@ export default function TelegramMiniApp() {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositLoading, setDepositLoading] = useState(false);
   const [pixData, setPixData] = useState<PixResult | null>(null);
+  const { calcFee: feeCalc } = useFeePreview();
   const [copied, setCopied] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
