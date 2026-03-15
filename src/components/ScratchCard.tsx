@@ -516,7 +516,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
               {/* Hall da Fama */}
               <div className="bg-card border border-border rounded-2xl p-5">
                 <h4 className="font-bold text-foreground flex items-center gap-2 mb-4">
-                  <Trophy className="h-5 w-5 text-warning" /> Hall da Fama
+                  <AnimatedIcon icon={Trophy} className="h-5 w-5 text-warning" animation="wiggle" /> Hall da Fama
                 </h4>
                 <div className="space-y-3">
                   {topWinners.map((w, i) => (
