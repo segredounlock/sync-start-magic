@@ -6,6 +6,7 @@ import {
   Frown, Info, Wallet, Clock
 } from "lucide-react";
 import { Currency } from "@/components/ui/Currency";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import confetti from "canvas-confetti";
 import { ScratchCanvas } from "@/components/ScratchCanvas";
 
