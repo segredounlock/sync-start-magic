@@ -996,7 +996,7 @@ export default function BackupSection() {
             </div>
 
             {/* Tables info */}
-            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-4">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-4">
               <div className="flex items-center gap-2 mb-3">
                 <HardDrive className="h-4 w-4 text-muted-foreground" />
                 <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Tabelas no backup</p>
