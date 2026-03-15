@@ -103,6 +103,7 @@ export default function BackupSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("dados");
   const [includeDb, setIncludeDb] = useState(true);
   const [includeSource, setIncludeSource] = useState(true);
+  const [includeSchema, setIncludeSchema] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [exportStage, setExportStage] = useState("");
