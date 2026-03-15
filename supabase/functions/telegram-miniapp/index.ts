@@ -214,9 +214,17 @@ serve(async (req) => {
               : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
           };
 
-          // Load disabled values
-          const { data: disabledRows } = await supabase.from("disabled_recharge_values").select("operadora_id, valor");
+          // Load disabled values + default margin config
+          const [{ data: disabledRows }, { data: dmRows }] = await Promise.all([
+            supabase.from("disabled_recharge_values").select("operadora_id, valor"),
+            supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
+          ]);
           const disabledSet = new Set((disabledRows || []).map((d: any) => `${d.operadora_id}-${Number(d.valor)}`));
+          const dmCfg: Record<string, string> = {};
+          (dmRows || []).forEach((r: any) => { dmCfg[r.key] = r.value; });
+          const dmEnabled = dmCfg.defaultMarginEnabled === "true";
+          const dmType = dmCfg.defaultMarginType || "fixo";
+          const dmVal = parseFloat(dmCfg.defaultMarginValue || "0");
 
           // Map v2 catalog format
           const operadoras = catalogData.data.map((carrier: any) => {
@@ -242,8 +250,12 @@ serve(async (req) => {
                     const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
                     if (gRule) {
                       userCost = applyRule(gRule);
+                    } else if (dmEnabled && dmVal > 0) {
+                      userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
                     }
                   }
+                } else if (dmEnabled && dmVal > 0) {
+                  userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
                 }
 
                 return {
