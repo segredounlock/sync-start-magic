@@ -762,22 +762,22 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const userLabel = profileNome || user?.email?.split("@")[0] || "Revendedor";
   const userInitial = (userLabel[0] || "R").toUpperCase();
 
-  type MenuItem = { key: PainelTab; label: string; icon: typeof Send; active?: boolean; dashed?: boolean };
+  type MenuItem = { key: PainelTab; label: string; icon: typeof Send; color: string; active?: boolean; dashed?: boolean };
    const menuItems: MenuItem[] = [
-    { key: "dashboard", label: "Dashboard", icon: Activity, active: true },
-    { key: "recarga", label: "Fazer Recarga", icon: Send },
-    { key: "historico", label: "Meus Pedidos", icon: History },
-    { key: "extrato", label: "Carteira", icon: Landmark },
-    { key: "addSaldo", label: "Depositar", icon: CreditCard, dashed: true },
-    { key: "contatos", label: "Configurações", icon: Settings },
-    { key: "status", label: "Status do Sistema", icon: Activity },
-    { key: "atualizacoes", label: "Atualizações", icon: RefreshCw },
-    { key: "raspadinha", label: "Raspadinha", icon: Ticket },
+    { key: "dashboard", label: "Dashboard", icon: Activity, color: "text-primary" },
+    { key: "recarga", label: "Fazer Recarga", icon: Send, color: "text-accent" },
+    { key: "historico", label: "Meus Pedidos", icon: History, color: "text-warning" },
+    { key: "extrato", label: "Carteira", icon: Landmark, color: "text-success" },
+    { key: "addSaldo", label: "Depositar", icon: CreditCard, color: "text-success", dashed: true },
+    { key: "contatos", label: "Configurações", icon: Settings, color: "text-muted-foreground" },
+    { key: "status", label: "Status do Sistema", icon: Activity, color: "text-accent" },
+    { key: "atualizacoes", label: "Atualizações", icon: RefreshCw, color: "text-primary" },
+    { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-warning" },
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && (role === "admin" || salesToolsEnabled)) ? [
-    { key: "meusprecos", label: "Meus Preços", icon: Tag },
-    { key: "minharede", label: "Minha Rede", icon: UsersIcon },
+    { key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-warning" },
+    { key: "minharede", label: "Minha Rede", icon: UsersIcon, color: "text-accent" },
   ] : [];
 
   const tabTitle: Record<PainelTab, string> = {
