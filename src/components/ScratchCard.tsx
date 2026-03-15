@@ -550,7 +550,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
               {/* Últimos Prêmios */}
               <div className="bg-card border border-border rounded-2xl p-5">
                 <h4 className="font-bold text-foreground flex items-center gap-2 mb-4">
-                  <Sparkles className="h-5 w-5 text-purple-500" /> Últimos Prêmios
+                  <AnimatedIcon icon={Sparkles} className="h-5 w-5 text-purple-500" animation="pulse" /> Últimos Prêmios
                 </h4>
                 <div className="space-y-3">
                   {recentWinners.map((w, i) => (
