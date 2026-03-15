@@ -4204,8 +4204,13 @@ export default function Principal() {
                   </div>
                   <div>
                     <h2 className="font-display text-xl font-bold text-foreground">Broadcast</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" /> {broadcastUserCount} usuários ativos
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+                      <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {broadcastUserCount} usuários ativos</span>
+                      {broadcastBlockedCount > 0 && (
+                        <span className="flex items-center gap-1 text-orange-400">
+                          <UserX className="w-3.5 h-3.5" /> {broadcastBlockedCount} bloqueados
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>

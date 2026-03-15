@@ -3427,8 +3427,13 @@ export default function AdminDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-extrabold text-foreground">Notificações</h2>
-                <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-                  <Users className="w-4 h-4" /> {broadcastUserCount} usuários ativos para receber
+                <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                  <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {broadcastUserCount} usuários ativos</span>
+                  {broadcastBlockedCount > 0 && (
+                    <span className="flex items-center gap-1 text-orange-400">
+                      <UserX className="w-4 h-4" /> {broadcastBlockedCount} bloqueados
+                    </span>
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-2">
