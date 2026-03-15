@@ -524,8 +524,29 @@ Deno.serve(async (req) => {
           return { cost: Math.round(finalCost * 100) / 100, applied: true };
         };
 
-        // Check default margin FIRST — it overrides everything when active
-        const dmResult = await getDefaultMarginCost(apiCost);
+        // Check if user has any custom pricing rules (if so, skip global margin)
+        const hasCustomPricing = async (): Promise<boolean> => {
+          if (userRole === "revendedor" || userRole === "admin") {
+            const { count } = await adminClient
+              .from("reseller_pricing_rules")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", userId);
+            return (count || 0) > 0;
+          }
+          if (userRole === "cliente" && resellerId) {
+            // Check if the reseller has custom rules
+            const { count } = await adminClient
+              .from("reseller_pricing_rules")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", resellerId);
+            return (count || 0) > 0;
+          }
+          return false;
+        };
+
+        // Check default margin FIRST — but skip if user has custom pricing rules
+        const userHasCustomPricing = await hasCustomPricing();
+        const dmResult = !userHasCustomPricing ? await getDefaultMarginCost(apiCost) : { cost: apiCost, applied: false };
         if (dmResult.applied) {
           chargedCost = dmResult.cost;
           pricingSource = "default_margin_override";

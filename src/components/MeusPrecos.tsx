@@ -54,6 +54,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
       const globalMarginType = marginMap.defaultMarginType || "fixo";
       const globalMarginValue = parseFloat(marginMap.defaultMarginValue || "0") || 0;
 
+      // If reseller has ANY custom rules, global margin doesn't apply to them
+      const hasAnyCustomRules = (resellerRules || []).length > 0;
+      const useGlobalMargin = globalMarginEnabled && !hasAnyCustomRules;
+
       const result: OperadoraPricing[] = ops.map((op) => {
         const valores = (op.valores as unknown as number[]) || [];
         const values: PricingValue[] = valores.map((v) => {
@@ -62,9 +66,9 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
 
           const apiCost = gRule ? Number(gRule.custo) : v;
 
-          // When global margin is active, baseCost = apiCost + margin (overrides per-operator rules)
+          // Global margin only applies if reseller has NO custom rules at all
           let baseCost: number;
-          if (globalMarginEnabled) {
+          if (useGlobalMargin) {
             baseCost = globalMarginType === "percentual"
               ? apiCost * (1 + globalMarginValue / 100)
               : apiCost + globalMarginValue;
