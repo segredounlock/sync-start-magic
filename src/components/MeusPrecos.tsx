@@ -248,6 +248,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                const displayProfit = getDisplayProfit(pv);
                const displayProfitRaw = getDisplayProfitRaw(pv);
                const finalPrice = getFinalPrice(pv);
+               const hasEdits = editedProfits[key] !== undefined;
 
               return (
                 <motion.div
