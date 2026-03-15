@@ -219,13 +219,7 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        // If we have a reseller and a confirmed user, set reseller_id on profile
-        if (resellerId && signUpData?.user?.id) {
-          await supabase
-            .from("profiles")
-            .update({ reseller_id: resellerId } as any)
-            .eq("id", signUpData.user.id);
-        }
+        // reseller_id is now handled by the handle_new_user trigger via metadata
 
         setDestination("/painel");
       }
