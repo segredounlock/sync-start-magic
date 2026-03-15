@@ -960,7 +960,7 @@ export default function BackupSection() {
                                     initial={{ opacity: 0, x: -4 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: Math.min(i * 0.012, 0.8) }}
-                                    className="flex items-center justify-between gap-2 py-1 px-1.5 rounded-md hover:bg-white/[0.03] transition-colors group/row">
+                                    className="flex items-center justify-between gap-2 py-1 px-1.5 rounded-md hover:bg-muted/60 transition-colors group/row">
                                     <p className="text-[10px] font-mono text-foreground/60 group-hover/row:text-foreground/80 truncate flex-1 transition-colors">
                                       {file.split("/").pop()}
                                       <span className="text-foreground/30 ml-1 hidden sm:inline">{file.split("/").slice(0, -1).join("/")}/</span>
