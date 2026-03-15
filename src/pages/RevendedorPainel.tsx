@@ -147,6 +147,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string }[]>([]);
   const [dismissedBanners, setDismissedBanners] = useState<Set<number>>(new Set());
   const [totalRecargasCount, setTotalRecargasCount] = useState(0);
+  const [totalCompletedCount, setTotalCompletedCount] = useState(0);
 
   // Call edge function helper
   const callApi = useCallback(async (action: string, params: Record<string, unknown> = {}) => {
@@ -215,18 +216,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const fetchData = useCallback(async () => {
     if (!user) return;
     await runFetch(async () => {
-      const [{ data: saldoData }, { data: saldoPessoalData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }, { count: recargasTotalCount }] = await Promise.all([
+      const [{ data: saldoData }, { data: saldoPessoalData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }, { count: recargasTotalCount }, { count: recargasCompletedCount }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "pessoal").maybeSingle(),
         supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
         supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url, referral_code, verification_badge").eq("id", user.id).single(),
         supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle(),
         supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "completed"),
       ]);
       setSaldo(Number(saldoData?.valor) || 0);
       setSaldoPessoal(Number(saldoPessoalData?.valor) || 0);
       setRecargas(recargasData || []);
       setTotalRecargasCount(recargasTotalCount || 0);
+      setTotalCompletedCount(recargasCompletedCount || 0);
       const p = profile as any;
       setProfileNome(p?.nome || "");
       setTelegramUsername(p?.telegram_username || "");
@@ -758,7 +761,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   };
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
-  const recargasHoje = recargas.filter((r) => toLocalDateKey(r.created_at) === getTodayLocalKey()).length;
+  const todayKey = getTodayLocalKey();
+  const recargasHojeAll = recargas.filter((r) => toLocalDateKey(r.created_at) === todayKey);
+  const recargasHoje = recargasHojeAll.length;
+  const recargasHojeCompleted = recargasHojeAll.filter((r) => r.status === "completed").length;
+  const recargasHojePending = recargasHojeAll.filter((r) => r.status === "pending" || r.status === "processing").length;
+  const successRate = totalRecargasCount > 0 ? Math.round((totalCompletedCount / totalRecargasCount) * 100) : 0;
   const userLabel = profileNome || user?.email?.split("@")[0] || "Revendedor";
   const userInitial = (userLabel[0] || "R").toUpperCase();
 
@@ -1155,22 +1163,55 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* Stats - hidden on profile tab */}
           {tab === "dashboard" && (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {[
-              { icon: Smartphone, label: "Recargas Hoje", rawValue: recargasHoje, isCurrency: false, color: "text-primary", bgColor: "bg-primary/10", anim: "float" as const },
-              { icon: Clock, label: "Total", rawValue: totalRecargasCount, isCurrency: false, color: "text-accent", bgColor: "bg-accent/10", anim: "pulse" as const },
-            ].map((c, i) => (
-              <motion.div key={c.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }} className="kpi-card">
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className={`w-10 h-10 rounded-xl ${c.bgColor} flex items-center justify-center icon-container`}>
-                    <AnimatedIcon icon={c.icon} className={`h-5 w-5 ${c.color}`} animation={c.anim} delay={i * 0.12} />
-                  </div>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{c.label}</span>
+            {/* Recargas Hoje */}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 200 }} className="kpi-card">
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center icon-container">
+                  <AnimatedIcon icon={Smartphone} className="h-5 w-5 text-primary" animation="float" delay={0} />
                 </div>
-                <p className={`text-2xl md:text-3xl font-bold ${c.color} truncate`}>
-                  {loading ? <SkeletonValue width="w-16" className="h-7" /> : c.isCurrency ? <AnimatedCounter value={c.rawValue} prefix="R$&nbsp;" /> : <AnimatedInt value={c.rawValue} />}
-                </p>
-              </motion.div>
-            ))}
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Recargas Hoje</span>
+              </div>
+              <p className="text-2xl md:text-3xl font-bold text-primary truncate">
+                {loading ? <SkeletonValue width="w-16" className="h-7" /> : <AnimatedInt value={recargasHoje} />}
+              </p>
+              {!loading && recargasHoje > 0 && (
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-[10px] text-success font-medium">
+                    <CheckCircle2 className="h-3 w-3" /> {recargasHojeCompleted}
+                  </span>
+                  {recargasHojePending > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-warning font-medium">
+                      <Clock className="h-3 w-3" /> {recargasHojePending}
+                    </span>
+                  )}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Total Geral */}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="kpi-card">
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center icon-container">
+                  <AnimatedIcon icon={Activity} className="h-5 w-5 text-accent" animation="pulse" delay={0.12} />
+                </div>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total Geral</span>
+              </div>
+              <p className="text-2xl md:text-3xl font-bold text-accent truncate">
+                {loading ? <SkeletonValue width="w-16" className="h-7" /> : <AnimatedInt value={totalCompletedCount} />}
+              </p>
+              {!loading && totalRecargasCount > 0 && (
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="inline-flex items-center gap-1 text-[10px] text-success font-medium">
+                    {successRate}% sucesso
+                  </span>
+                  {totalRecargasCount - totalCompletedCount > 0 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      · {totalRecargasCount - totalCompletedCount} outras
+                    </span>
+                  )}
+                </div>
+              )}
+            </motion.div>
           </div>
           )}
 
