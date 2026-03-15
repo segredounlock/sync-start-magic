@@ -340,37 +340,62 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               {/* Crown above avatar for 1st place only */}
               {isCenter && (
                 <div className="-mb-3 z-10">
-                  <GoldFloatingCrown size={48} />
+                  <GoldFloatingCrown size={36} />
                 </div>
               )}
 
-              {/* Avatar with medal badges for 2nd/3rd */}
-              <div className={`relative ${config.avatarSize} rounded-full ring-2 ${config.ringColor} overflow-visible`}>
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.nome}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-xl">
-                    {(user.nome?.[0] || "?").toUpperCase()}
-                  </div>
+              {/* Avatar container */}
+              <div className="relative">
+                {/* Golden aura glow for 1st place */}
+                {isCenter && (
+                  <>
+                    <motion.div
+                      className="absolute inset-[-12px] rounded-full"
+                      style={{
+                        background: "radial-gradient(circle, rgba(251,191,36,0.35) 0%, rgba(251,191,36,0.15) 40%, transparent 70%)",
+                      }}
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <motion.div
+                      className="absolute inset-[-6px] rounded-full"
+                      style={{
+                        background: "radial-gradient(circle, rgba(251,191,36,0.5) 0%, transparent 60%)",
+                        filter: "blur(8px)",
+                      }}
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+                      transition={{ duration: 1.8, repeat: Infinity }}
+                    />
+                  </>
                 )}
-                <AvatarFlash index={config.position - 1} />
 
-                {/* Medal badge on top-right for 2nd/3rd */}
-                {!isCenter && (
-                  <div className="absolute -top-1 -right-1 z-10">
-                    {config.badge}
-                  </div>
-                )}
+                <div className={`relative ${config.avatarSize} rounded-full ring-2 ${config.ringColor} overflow-visible`}>
+                  {user.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.nome}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-xl">
+                      {(user.nome?.[0] || "?").toUpperCase()}
+                    </div>
+                  )}
+                  <AvatarFlash index={config.position - 1} />
 
-                {user.verification_badge && (
-                  <div className="absolute -bottom-1 -right-1 z-10">
-                    <VerificationBadge badge={user.verification_badge as BadgeType} size="sm" />
-                  </div>
-                )}
+                  {/* Medal badge on top-right for 2nd/3rd */}
+                  {!isCenter && (
+                    <div className="absolute -top-1 -right-1 z-10">
+                      {config.badge}
+                    </div>
+                  )}
+
+                  {user.verification_badge && (
+                    <div className="absolute -bottom-1 -right-1 z-10">
+                      <VerificationBadge badge={user.verification_badge as BadgeType} size="sm" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Name + count */}
