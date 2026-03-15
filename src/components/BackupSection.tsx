@@ -1166,9 +1166,9 @@ export default function BackupSection() {
                     <FolderSync className="h-4 w-4" /> Sincronizar tudo
                   </button>
                 ) : (
-                  <div className="rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 space-y-3">
+                   <div className="rounded-2xl bg-card border border-border shadow-sm p-4 space-y-3">
                     <p className="text-sm font-semibold text-foreground">{syncStage}</p>
-                    <div className="w-full h-2.5 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
                       <motion.div className="h-full bg-gradient-to-r from-primary to-amber-400 rounded-full"
                         initial={{ width: 0 }} animate={{ width: `${syncProgress}%` }} transition={{ duration: 0.3 }} />
                     </div>
