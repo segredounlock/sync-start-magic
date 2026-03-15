@@ -1117,7 +1117,7 @@ export default function BackupSection() {
                   Salvar
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Gere em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" className="underline hover:text-foreground">github.com/settings/tokens</a> com escopo <code className="bg-white/[0.06] px-1 rounded">repo</code></p>
+              <p className="text-[10px] text-muted-foreground">Gere em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" className="underline hover:text-foreground">github.com/settings/tokens</a> com escopo <code className="bg-muted/50 px-1 rounded border border-border/50">repo</code></p>
             </div>
 
             {/* Load repos */}
