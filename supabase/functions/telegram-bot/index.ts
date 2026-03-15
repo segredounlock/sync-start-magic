@@ -1309,6 +1309,12 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     const dmVal2 = dmCfg2.value;
 
     function getUserCost(apiCost: number, faceValue: number): number {
+      // Default margin OVERRIDES all rules when active
+      if (dmEnabled2 && dmVal2 > 0) {
+        const cost = dmType2 === "fixo" ? apiCost + dmVal2 : apiCost * (1 + dmVal2 / 100);
+        console.log(`[PRICING] getUserCost: faceValue=${faceValue} default_margin_override ${dmType2}=${dmVal2} → cost=${cost}`);
+        return cost;
+      }
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
       if (rule) {
         const cost = rule.tipo_regra === "fixo"
@@ -1316,12 +1322,6 @@ async function handleCallback(supabase: any, token: string, callback: any) {
           : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
         console.log(`[PRICING] getUserCost: faceValue=${faceValue} matched rule tipo=${rule.tipo_regra} → cost=${cost}`);
         return cost;
-      }
-      // Apply default margin fallback
-      if (dmEnabled2 && dmVal2 > 0) {
-        const fallback = dmType2 === "fixo" ? apiCost + dmVal2 : apiCost * (1 + dmVal2 / 100);
-        console.log(`[PRICING] getUserCost: faceValue=${faceValue} default_margin ${dmType2}=${dmVal2} → cost=${fallback}`);
-        return fallback;
       }
       console.log(`[PRICING] getUserCost: faceValue=${faceValue} NO RULE MATCH → using apiCost=${apiCost}`);
       return apiCost;
