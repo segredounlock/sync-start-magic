@@ -1074,6 +1074,11 @@ Deno.serve(async (req) => {
           completed_at: prIsCompleted ? new Date().toISOString() : null,
         });
 
+        // Generate referral commissions for completed public recharges
+        if (prIsCompleted) {
+          generateCommissions(adminClient, userId, prChargedCost, prApiCost, prExternalId).catch(() => {});
+        }
+
         // Telegram notification
         if (prIsCompleted) {
           try {
