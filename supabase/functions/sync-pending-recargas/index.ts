@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       .eq("status", "pending")
       .not("external_id", "is", null)
       .order("created_at", { ascending: true })
-      .limit(100);
+      .limit(500);
 
     if (fetchError) throw fetchError;
 
