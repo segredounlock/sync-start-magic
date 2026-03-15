@@ -1230,7 +1230,7 @@ export default function TelegramMiniApp() {
                       </button>
                       <div className="rounded-2xl p-5 space-y-3" style={{ ...st.secondaryBg, border: st.borderSub }}>
                         <h2 className="text-lg font-bold text-center" style={st.text}>Confirmar Recarga</h2>
-                        <div className="flex justify-between"><span style={st.hint}>Operadora</span><span className="font-semibold" style={st.text}>{selectedOp.nome}</span></div>
+                        <div className="flex justify-between"><span style={st.hint}>Operadora</span><span className="font-semibold" style={st.text}>{(selectedOp.nome || "").toUpperCase()}</span></div>
                         <div className="flex justify-between"><span style={st.hint}>Número</span><span className="font-mono" style={st.text}>{formatPhone(phone)}</span></div>
                         <div className="flex justify-between"><span style={st.hint}>Valor</span><span className="font-bold" style={st.green}>{formatCurrency(selectedValor.userCost ?? selectedValor.cost)}</span></div>
                         <div className="flex justify-between text-sm"><span style={st.hint}>Saldo após</span><span style={st.text}>{formatCurrency(saldo - (selectedValor.userCost ?? selectedValor.cost))}</span></div>
