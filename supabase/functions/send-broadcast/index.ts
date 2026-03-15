@@ -325,6 +325,7 @@ async function sendBroadcastInBackground(
         return {
           telegramId: user.telegram_id,
           firstName: user.first_name,
+          wasBlocked: user.is_blocked === true,
           ...result,
         };
       });
