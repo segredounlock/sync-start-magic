@@ -242,8 +242,12 @@ serve(async (req) => {
                     const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
                     if (gRule) {
                       userCost = applyRule(gRule);
+                    } else if (dmEnabled && dmVal > 0) {
+                      userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
                     }
                   }
+                } else if (dmEnabled && dmVal > 0) {
+                  userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
                 }
 
                 return {
