@@ -159,11 +159,19 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       // In client mode, load reseller's custom pricing
       // In reseller/user mode, load own custom pricing (if any) with global as fallback
       const pricingUserId = isClientMode ? resellerId : user?.id;
-      const [{ data: ops }, { data: globalRules }, { data: resellerRules }] = await Promise.all([
+      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: dmConfigs }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
         pricingUserId ? supabase.from("reseller_pricing_rules").select("*").eq("user_id", pricingUserId) : Promise.resolve({ data: [] }),
+        supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
       ]);
+
+      // Parse default margin config
+      const dmMap: Record<string, string> = {};
+      (dmConfigs || []).forEach((c: any) => { dmMap[c.key] = c.value || ""; });
+      const dmEnabled = dmMap.defaultMarginEnabled === "true";
+      const dmType = dmMap.defaultMarginType || "fixo";
+      const dmValue = parseFloat(dmMap.defaultMarginValue || "0") || 0;
 
       if (ops) {
         const hasResellerRules = (resellerRules || []).length > 0;
@@ -174,13 +182,19 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           const values: CatalogValue[] = valores.map((v: number) => {
             const resellerRule = opResellerRules.find((r: any) => Number(r.valor_recarga) === v);
             const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
-            // Use reseller rule when available (client mode or own custom pricing), fallback to global
             const rule = hasResellerRules ? (resellerRule || globalRule) : globalRule;
-            const cost = rule
-              ? rule.tipo_regra === "fixo"
+            let cost: number;
+            if (dmEnabled && dmValue > 0 && rule) {
+              // Default margin overrides all specific rules
+              const apiCost = Number(rule.custo);
+              cost = dmType === "fixo" ? apiCost + dmValue : apiCost * (1 + dmValue / 100);
+            } else if (rule) {
+              cost = rule.tipo_regra === "fixo"
                 ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo))
-                : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100)
-              : v;
+                : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
+            } else {
+              cost = v;
+            }
             return { valueId: `${op.id}_${v}`, value: v, cost };
           });
           return { carrierId: op.id, name: op.nome, order: 0, values };

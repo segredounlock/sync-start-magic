@@ -95,12 +95,13 @@ export default function RecargaPublica() {
         return;
       }
 
-      const [{ data: profile }, { data: role }, { data: ops }, { data: resellerPricing }, { data: globalPricing }] = await Promise.all([
+      const [{ data: profile }, { data: role }, { data: ops }, { data: resellerPricing }, { data: globalPricing }, { data: dmConfigs }] = await Promise.all([
         supabase.from("profiles").select("id, nome, telegram_username, whatsapp_number, active, store_name, store_logo_url, store_primary_color, store_secondary_color").eq("id", revendedorId).single(),
         supabase.from("user_roles").select("role").eq("user_id", revendedorId).eq("role", "revendedor").maybeSingle(),
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", revendedorId),
         supabase.from("pricing_rules").select("*"),
+        supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
       ]);
 
       if (!profile || !role) {
@@ -114,18 +115,32 @@ export default function RecargaPublica() {
         return;
       }
 
-      // Build price map: reseller pricing takes precedence over global
+      // Parse default margin config
+      const dmMap: Record<string, string> = {};
+      (dmConfigs || []).forEach((c: any) => { dmMap[c.key] = c.value || ""; });
+      const dmEnabled = dmMap.defaultMarginEnabled === "true";
+      const dmType = dmMap.defaultMarginType || "fixo";
+      const dmValue = parseFloat(dmMap.defaultMarginValue || "0") || 0;
+
+      // Build price map: default margin overrides all when enabled
       const pm: PriceMap = {};
-      // First load global prices
       (globalPricing || []).forEach((r: any) => {
-        const precoFinal = r.tipo_regra === "fixo" ? Number(r.regra_valor) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
+        let precoFinal: number;
+        if (dmEnabled && dmValue > 0) {
+          const apiCost = Number(r.custo);
+          precoFinal = dmType === "fixo" ? apiCost + dmValue : apiCost * (1 + dmValue / 100);
+        } else {
+          precoFinal = r.tipo_regra === "fixo" ? Number(r.regra_valor) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
+        }
         if (precoFinal > 0) pm[`${r.operadora_id}-${r.valor_recarga}`] = precoFinal;
       });
-      // Override with reseller-specific prices
-      (resellerPricing || []).forEach((r: any) => {
-        const precoFinal = r.tipo_regra === "fixo" ? Number(r.regra_valor) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
-        if (precoFinal > 0) pm[`${r.operadora_id}-${r.valor_recarga}`] = precoFinal;
-      });
+      // Override with reseller-specific prices only if default margin is NOT active
+      if (!dmEnabled || dmValue <= 0) {
+        (resellerPricing || []).forEach((r: any) => {
+          const precoFinal = r.tipo_regra === "fixo" ? Number(r.regra_valor) : Number(r.valor_recarga) * (1 + Number(r.regra_valor) / 100);
+          if (precoFinal > 0) pm[`${r.operadora_id}-${r.valor_recarga}`] = precoFinal;
+        });
+      }
       setPriceMap(pm);
 
       setRevendedor(profile as any as RevendedorInfo);
