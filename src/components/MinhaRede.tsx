@@ -100,41 +100,45 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
     }
   };
 
-  const promoteToReseller = async (member: NetworkMember) => {
-    if (member.role === "revendedor" || member.role === "admin") {
-      toast.error("Este membro já é vendedor/admin.");
-      return;
-    }
-    setPromotingId(member.id);
+  const invokeToggleRole = async (memberId: string, action: "add" | "remove") => {
+    setPromotingId(memberId);
     try {
       const res = await supabase.functions.invoke("admin-toggle-role", {
-        body: { user_id: member.id, role: "revendedor", action: "add" },
+        body: { user_id: memberId, role: "revendedor", action },
       });
-      if (res.error) throw res.error;
-      toast.success(`${member.nome || "Usuário"} promovido a Vendedor!`);
-      setOpenMenuId(null);
-      fetchData();
+      // Parse error from response body (edge function returns { error: msg } with 400)
+      if (res.error) {
+        const bodyError = typeof res.data === "object" && res.data?.error;
+        throw new Error(bodyError || res.error.message || "Erro desconhecido");
+      }
+      return true;
     } catch (err: any) {
-      toast.error(err.message || "Erro ao promover");
+      toast.error(err.message || "Erro ao alterar cargo");
+      return false;
     } finally {
       setPromotingId(null);
     }
   };
 
+  const promoteToReseller = async (member: NetworkMember) => {
+    if (member.role === "revendedor" || member.role === "admin") {
+      toast.error("Este membro já é vendedor/admin.");
+      return;
+    }
+    const ok = await invokeToggleRole(member.id, "add");
+    if (ok) {
+      toast.success(`${member.nome || "Usuário"} promovido a Vendedor!`);
+      setOpenMenuId(null);
+      fetchData();
+    }
+  };
+
   const demoteToClient = async (member: NetworkMember) => {
-    setPromotingId(member.id);
-    try {
-      const res = await supabase.functions.invoke("admin-toggle-role", {
-        body: { user_id: member.id, role: "revendedor", action: "remove" },
-      });
-      if (res.error) throw res.error;
+    const ok = await invokeToggleRole(member.id, "remove");
+    if (ok) {
       toast.success(`${member.nome || "Usuário"} rebaixado para Cliente.`);
       setOpenMenuId(null);
       fetchData();
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao rebaixar");
-    } finally {
-      setPromotingId(null);
     }
   };
 
