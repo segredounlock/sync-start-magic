@@ -45,7 +45,7 @@ export async function invokeWithSessionGuard<T = any>(
     const msg = result.error?.message || "";
     const status = (result.error as any)?.status || (result.error as any)?.context?.status;
 
-    if (status === 401 || status === 403 || msg.includes("session_not_found") || msg.includes("Invalid JWT")) {
+    if (status === 401 || status === 403 || msg.includes("session_not_found") || msg.includes("Invalid JWT") || msg.includes("Token inválido")) {
       handleExpiredSession();
     }
   }

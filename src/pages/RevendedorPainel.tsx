@@ -47,6 +47,7 @@ import { useFeePreview } from "@/hooks/useFeePreview";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 import { applyCurrencyMask } from "@/lib/currencyMask";
+import { handleExpiredSession } from "@/lib/sessionGuard";
 
 type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha";
 
@@ -149,12 +150,25 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [totalRecargasCount, setTotalRecargasCount] = useState(0);
   const [totalCompletedCount, setTotalCompletedCount] = useState(0);
 
-  // Call edge function helper
+  // Call edge function helper with session guard
   const callApi = useCallback(async (action: string, params: Record<string, unknown> = {}) => {
     const { data, error } = await supabase.functions.invoke("recarga-express", {
       body: { action, ...params },
     });
-    if (error) throw new Error(error.message || "Erro na API");
+    if (error) {
+      const msg = error?.message || "";
+      const status = (error as any)?.status || (error as any)?.context?.status;
+      if (status === 401 || msg.includes("Token inválido") || msg.includes("Invalid JWT")) {
+        handleExpiredSession();
+        throw new Error("Sessão expirada");
+      }
+      throw new Error(msg || "Erro na API");
+    }
+    // Check if response body contains auth error
+    if (data?.error && (data.error === "Token inválido" || data.error === "Não autorizado")) {
+      handleExpiredSession();
+      throw new Error("Sessão expirada");
+    }
     return data;
   }, []);
 
