@@ -396,23 +396,23 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
           transition={{ delay: 0.6 }}
           className="flex items-center justify-center pt-2"
         >
-          <div className="flex items-center gap-3 bg-secondary/80 backdrop-blur-sm rounded-full px-5 py-2.5 border border-border shadow-lg">
-            <span className="text-sm text-muted-foreground">Sua posição:</span>
-            <span className="bg-destructive text-destructive-foreground font-bold text-sm min-w-[32px] text-center px-2.5 py-1 rounded-full">
+          <div className="flex items-center gap-2 bg-secondary/80 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border shadow-lg">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Sua posição:</span>
+            <span className="bg-destructive text-destructive-foreground font-bold text-xs min-w-[24px] text-center px-2 py-0.5 rounded-full">
               {userRank + 1}º
             </span>
             {ranking[userRank]?.avatar_url ? (
-              <img src={ranking[userRank].avatar_url!} alt="" className="h-9 w-9 rounded-full ring-2 ring-border object-cover" />
+              <img src={ranking[userRank].avatar_url!} alt="" className="h-7 w-7 rounded-full ring-1 ring-border object-cover" />
             ) : (
-              <div className="h-9 w-9 rounded-full ring-2 ring-border bg-muted flex items-center justify-center text-foreground font-bold text-xs">
+              <div className="h-7 w-7 rounded-full ring-1 ring-border bg-muted flex items-center justify-center text-foreground font-bold text-[10px]">
                 {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
               </div>
             )}
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-foreground">{ranking[userRank]?.nome}</span>
-              <span className="text-[10px] text-muted-foreground">{ranking[userRank]?.total_recargas} compras</span>
+              <span className="text-xs font-semibold text-foreground leading-tight">{ranking[userRank]?.nome}</span>
+              <span className="text-[9px] text-muted-foreground leading-tight">{ranking[userRank]?.total_recargas} compras</span>
             </div>
-            <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">Você</span>
+            <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-semibold">Você</span>
           </div>
         </motion.div>
       )}
