@@ -1218,7 +1218,7 @@ export default function BackupSection() {
         {activeTab === "atualizacao" && (
           <motion.div key="atualizacao" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="space-y-4">
             {/* Version info */}
-            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 flex items-center gap-3">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-600/10 flex items-center justify-center shadow-lg shadow-blue-500/5">
                 <Info className="h-4 w-4 text-blue-400" />
               </div>
