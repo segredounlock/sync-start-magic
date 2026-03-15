@@ -307,8 +307,9 @@ Deno.serve(async (req) => {
       }
 
       case "check-phone": {
-        const { phoneNumber, carrierId } = params;
-        if (!phoneNumber) throw new Error("phoneNumber é obrigatório");
+        const { phoneNumber: rawPhone, carrierId } = params;
+        if (!rawPhone) throw new Error("phoneNumber é obrigatório");
+        const phoneNumber = validatePhone(rawPhone);
 
         // v2 uses carrierName (string) instead of carrierId
         let carrierName = carrierId || undefined;
