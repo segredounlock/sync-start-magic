@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     }
 
     const count = expired?.length || 0;
-    console.log(`Expired ${count} pending deposits older than 30 min`);
+    console.log(`Expired ${count} pending deposits older than 45 min`);
 
     return new Response(JSON.stringify({ success: true, expired_count: count }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
