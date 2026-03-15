@@ -33,6 +33,7 @@ interface HistoryCard {
 
 interface WinnerEntry {
   nome: string;
+  avatar_url: string | null;
   prize_amount: number;
   card_date: string;
 }
