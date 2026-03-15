@@ -509,10 +509,10 @@ async function flushUnblockedUsers(telegramIds: number[]) {
       });
     }
 
+    // Count ALL users (including blocked) since broadcast re-verifies everyone
     let userQuery = supabase
       .from('telegram_users')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_blocked', false);
+      .select('*', { count: 'exact', head: true });
 
     if (!include_unregistered) {
       userQuery = userQuery.eq('is_registered', true);
