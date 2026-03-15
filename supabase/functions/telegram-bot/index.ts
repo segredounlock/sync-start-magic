@@ -88,6 +88,37 @@ async function getMigrationConfig(supabase: any): Promise<{ enabled: boolean; ur
   return result;
 }
 
+// Default margin cache
+let defaultMarginCache: { enabled: boolean; type: string; value: number; time: number } | null = null;
+const DEFAULT_MARGIN_CACHE_TTL = 30_000; // 30s
+
+async function getDefaultMarginConfig(supabase: any): Promise<{ enabled: boolean; type: string; value: number }> {
+  if (defaultMarginCache && (Date.now() - defaultMarginCache.time) < DEFAULT_MARGIN_CACHE_TTL) {
+    return {
+      enabled: defaultMarginCache.enabled,
+      type: defaultMarginCache.type,
+      value: defaultMarginCache.value,
+    };
+  }
+
+  const { data } = await supabase
+    .from("system_config")
+    .select("key, value")
+    .in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
+
+  const map: Record<string, string> = {};
+  for (const row of (data || [])) map[row.key] = row.value || "";
+
+  const result = {
+    enabled: map.defaultMarginEnabled === "true",
+    type: map.defaultMarginType || "fixo",
+    value: parseFloat(map.defaultMarginValue || "0"),
+  };
+
+  defaultMarginCache = { ...result, time: Date.now() };
+  return result;
+}
+
 async function resolveBotToken(supabase: any, botId?: string): Promise<string> {
   const cacheKey = botId || "__default__";
   const cached = tokenCache.get(cacheKey);
@@ -883,15 +914,11 @@ async function executeRecarga(supabase: any, token: string, chatId: number, user
   if (rule) {
     userCost = rule.tipo_regra === "fixo" ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo)) : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
   } else {
-    // Apply default margin fallback
+    // Apply default margin fallback (cached)
     const baseCost = matchedValue.cost || valor;
-    const { data: dmRows } = await supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
-    const dmCfg: Record<string, string> = {};
-    (dmRows || []).forEach((r: any) => { dmCfg[r.key] = r.value; });
-    if (dmCfg.defaultMarginEnabled === "true" && parseFloat(dmCfg.defaultMarginValue || "0") > 0) {
-      const mType = dmCfg.defaultMarginType || "fixo";
-      const mVal = parseFloat(dmCfg.defaultMarginValue);
-      userCost = mType === "fixo" ? baseCost + mVal : baseCost * (1 + mVal / 100);
+    const dmCfg = await getDefaultMarginConfig(supabase);
+    if (dmCfg.enabled && dmCfg.value > 0) {
+      userCost = dmCfg.type === "fixo" ? baseCost + dmCfg.value : baseCost * (1 + dmCfg.value / 100);
     } else {
       userCost = baseCost;
     }
@@ -1255,13 +1282,11 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     // Calculate user cost for each value
     const vals = filteredValues.sort((a: any, b: any) => resolveValue(a) - resolveValue(b));
 
-    // Load default margin config once for this listing
-    const { data: dmRows2 } = await supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
-    const dmCfg2: Record<string, string> = {};
-    (dmRows2 || []).forEach((r: any) => { dmCfg2[r.key] = r.value; });
-    const dmEnabled2 = dmCfg2.defaultMarginEnabled === "true";
-    const dmType2 = dmCfg2.defaultMarginType || "fixo";
-    const dmVal2 = parseFloat(dmCfg2.defaultMarginValue || "0");
+    // Load default margin config once for this listing (cached)
+    const dmCfg2 = await getDefaultMarginConfig(supabase);
+    const dmEnabled2 = dmCfg2.enabled;
+    const dmType2 = dmCfg2.type;
+    const dmVal2 = dmCfg2.value;
 
     function getUserCost(apiCost: number, faceValue: number): number {
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
