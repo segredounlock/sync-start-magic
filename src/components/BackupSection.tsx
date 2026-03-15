@@ -1174,7 +1174,7 @@ export default function BackupSection() {
                     </div>
                     <p className="text-[11px] text-muted-foreground text-right font-mono">{syncProgress}%</p>
                     {syncLog.length > 0 && (
-                      <div ref={syncLogRef} className="max-h-44 overflow-y-auto space-y-0.5 rounded-xl p-2 bg-white/[0.02]">
+                      <div ref={syncLogRef} className="max-h-44 overflow-y-auto space-y-0.5 rounded-xl p-2 bg-muted/30">
                         {syncLog.map((item, i) => (
                           <div key={i} className="flex items-center justify-between text-[11px] py-0.5">
                             <span className="text-foreground font-mono truncate max-w-[220px]">{item.path.split("/").pop()}</span>
