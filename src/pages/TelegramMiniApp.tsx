@@ -3,6 +3,7 @@ import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { createPixDeposit, type PixResult } from "@/lib/payment";
+import { useFeePreview } from "@/hooks/useFeePreview";
 import { motion, AnimatePresence } from "framer-motion";
 import recargasLogo from "@/assets/recargas-brasil-logo.jpeg";
 import { QRCodeSVG } from "qrcode.react";
