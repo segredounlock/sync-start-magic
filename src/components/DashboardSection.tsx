@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Smartphone, Users, Banknote, Share2,
