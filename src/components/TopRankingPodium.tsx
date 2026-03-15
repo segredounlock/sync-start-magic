@@ -304,6 +304,13 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               Top Recargas
             </motion.span>
           </h2>
+
+          {/* Ranking badge */}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-amber-950 text-xs font-bold shadow-lg">
+            <Trophy className="w-3.5 h-3.5" />
+            Ranking
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          </span>
         </div>
 
         {onViewFull && (
