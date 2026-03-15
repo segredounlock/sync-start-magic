@@ -111,10 +111,10 @@ serve(async (req) => {
       "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
       "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
       "pricing_rules", "reseller_pricing_rules", "reseller_config", "disabled_recharge_values",
-      "transactions", "recargas", "referral_commissions",
+      "client_pricing_rules", "transactions", "recargas", "referral_commissions",
       "admin_notifications", "banners", "polls", "poll_votes", "follows", "audit_logs",
       "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
-      "push_subscriptions", "update_history",
+      "push_subscriptions", "update_history", "scratch_cards",
     ];
 
     // Build final restore order: known tables that exist in ZIP first, then unknown tables from ZIP
