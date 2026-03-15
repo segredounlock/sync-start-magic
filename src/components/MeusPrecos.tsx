@@ -33,7 +33,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
   const [bulkProfit, setBulkProfit] = useState("");
   const [showBulk, setShowBulk] = useState(false);
-  const [editedProfits, setEditedProfits] = useState<Record<string, number>>({});
+  const [editedProfits, setEditedProfits] = useState<Record<string, string>>({});
 
   const fetchPricing = useCallback(async () => {
     setLoading(true);
