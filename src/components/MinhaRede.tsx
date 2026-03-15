@@ -55,6 +55,7 @@ export function MinhaRede({ userId, profileSlug, referralCode, onOpenExclusivePr
   const [filter, setFilter] = useState<"active" | "inactive" | "all">("active");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [promotingId, setPromotingId] = useState<string | null>(null);
+  const [pricingModal, setPricingModal] = useState<{ id: string; name: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const referralLink = profileSlug
