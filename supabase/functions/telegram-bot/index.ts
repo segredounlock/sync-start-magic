@@ -914,15 +914,11 @@ async function executeRecarga(supabase: any, token: string, chatId: number, user
   if (rule) {
     userCost = rule.tipo_regra === "fixo" ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo)) : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
   } else {
-    // Apply default margin fallback
+    // Apply default margin fallback (cached)
     const baseCost = matchedValue.cost || valor;
-    const { data: dmRows } = await supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
-    const dmCfg: Record<string, string> = {};
-    (dmRows || []).forEach((r: any) => { dmCfg[r.key] = r.value; });
-    if (dmCfg.defaultMarginEnabled === "true" && parseFloat(dmCfg.defaultMarginValue || "0") > 0) {
-      const mType = dmCfg.defaultMarginType || "fixo";
-      const mVal = parseFloat(dmCfg.defaultMarginValue);
-      userCost = mType === "fixo" ? baseCost + mVal : baseCost * (1 + mVal / 100);
+    const dmCfg = await getDefaultMarginConfig(supabase);
+    if (dmCfg.enabled && dmCfg.value > 0) {
+      userCost = dmCfg.type === "fixo" ? baseCost + dmCfg.value : baseCost * (1 + dmCfg.value / 100);
     } else {
       userCost = baseCost;
     }
