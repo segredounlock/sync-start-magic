@@ -772,7 +772,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "raspadinha", label: "Raspadinha", icon: Ticket },
   ];
 
-  const salesMenuItems: MenuItem[] = (!isClientMode && salesToolsEnabled) ? [
+  const salesMenuItems: MenuItem[] = (!isClientMode && (role === "admin" || salesToolsEnabled)) ? [
     { key: "meusprecos", label: "Meus Preços", icon: Tag },
     { key: "minharede", label: "Minha Rede", icon: UsersIcon },
   ] : [];
@@ -1190,6 +1190,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               onNavigateTab={(t) => selectTab(t as PainelTab)}
               isClientMode={isClientMode}
               salesToolsEnabled={salesToolsEnabled}
+              userRole={role}
             />
           )}
 

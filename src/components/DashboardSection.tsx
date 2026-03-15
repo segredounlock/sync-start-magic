@@ -20,6 +20,7 @@ interface DashboardSectionProps {
   onNavigateTab: (tab: string) => void;
   isClientMode?: boolean;
   salesToolsEnabled?: boolean;
+  userRole?: string | null;
 }
 
 type Period = "hoje" | "mes" | "outro";
@@ -34,7 +35,7 @@ const OP_COLORS: Record<string, string> = {
   oi: "hsl(35 90% 55%)",
 };
 
-export function DashboardSection({ saldo, loading, userId, userName, badge, onNavigateTab, isClientMode, salesToolsEnabled = true }: DashboardSectionProps) {
+export function DashboardSection({ saldo, loading, userId, userName, badge, onNavigateTab, isClientMode, salesToolsEnabled = true, userRole }: DashboardSectionProps) {
   const [period, setPeriod] = useState<Period>("mes");
   const [stats, setStats] = useState({ faturamento: 0, comissoes: 0, vendas: 0, novosClientes: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -210,13 +211,16 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
+  const isAdmin = userRole === "admin";
+  const showSalesTools = isAdmin || salesToolsEnabled;
+
   const quickActions = [
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
     ...(!isClientMode ? [
-      ...(salesToolsEnabled ? [
+      ...(showSalesTools ? [
         { icon: Users, label: "Minha Rede", sub: "Gerenciar equipe", tab: "minharede", color: "text-accent-foreground", bg: "bg-accent/10" },
       ] : []),
-      ...(salesToolsEnabled ? [
+      ...(showSalesTools ? [
         { icon: Banknote, label: "Sacar", sub: "Retirar lucros", tab: "__saque__", color: "text-success", bg: "bg-success/10" },
         { icon: Share2, label: "Convidar", sub: "Expandir rede", tab: "__convidar__", color: "text-destructive", bg: "bg-destructive/10" },
       ] : []),
@@ -250,7 +254,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
       </div>
 
       {/* Pending Prices Alert */}
-      {!isClientMode && salesToolsEnabled && hasPendingPrices && (
+      {!isClientMode && showSalesTools && hasPendingPrices && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
