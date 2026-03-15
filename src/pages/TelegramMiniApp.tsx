@@ -1503,7 +1503,7 @@ export default function TelegramMiniApp() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span style={st.hint}>R$</span>
-                      <input type="text" inputMode="decimal" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value.replace(/[^\d,.]/g, ""))}
+                      <input type="text" inputMode="numeric" value={depositAmount} onChange={(e) => setDepositAmount(applyCurrencyMask(e.target.value))}
                         placeholder="Outro valor (mín. R$ 10)" className="flex-1 rounded-xl p-3 focus:outline-none"
                         style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }} />
                     </div>
