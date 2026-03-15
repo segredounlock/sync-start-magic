@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
+import { VerificationBadge, BadgeType, BADGE_CONFIG } from "@/components/VerificationBadge";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, History, Send, Landmark, Smartphone, Shield, Activity,
@@ -241,6 +241,40 @@ export function ProfileTab({
                 <span className={`inline-block mt-2 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${roleColor}`}>
                   {roleLabel}
                 </span>
+
+                {/* Selo de Verificação */}
+                <div className="mt-4 w-full p-3 rounded-xl bg-muted/30 border border-border/50">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">Selo de Verificação</span>
+                  <div className="flex flex-wrap gap-1.5 justify-center">
+                    <button
+                      onClick={async () => {
+                        await supabase.from("profiles").update({ verification_badge: null }).eq("id", user.id);
+                        setBadge(null);
+                        toast.success("Selo removido");
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${!badge ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                    >
+                      Nenhum
+                    </button>
+                    {Object.entries(BADGE_CONFIG).map(([key, cfg]) => {
+                      const Icon = cfg.icon;
+                      return (
+                        <button
+                          key={key}
+                          onClick={async () => {
+                            await supabase.from("profiles").update({ verification_badge: key }).eq("id", user.id);
+                            setBadge(key as BadgeType);
+                            toast.success(`Selo "${cfg.label}" atribuído!`);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors flex items-center gap-1 ${badge === key ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                        >
+                          <Icon className={`h-3 w-3 ${cfg.color} ${cfg.fill}`} />
+                          {cfg.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {/* Stats */}
                 <div className="flex items-center gap-0 mt-5 w-full">
