@@ -14,6 +14,7 @@ import { Currency, IntVal, StatusBadge } from "@/components/ui";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { PromoBanner } from "@/components/PromoBanner";
+import { FloatingMenuIcon, FloatingGridIcon } from "@/components/FloatingMenuIcon";
 import { PopupBanner } from "@/components/PopupBanner";
 import { PixResult } from "@/lib/payment";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
