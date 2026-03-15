@@ -1,45 +1,40 @@
 
 
-## Auditoria da Conta + Correção do Fluxo de Depósitos
+## Diagnóstico e Correção
 
-### Diagnóstico da Conta (Thiago - thiago13otvp@gmail.com)
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-**Situação**: O depósito de R$ 20,00 (payment_id: `019ceec3...`) foi criado as 20:51 BRT e o webhook do PixGo so confirmou as 21:28 BRT -- **37 minutos de atraso**. Nesse intervalo, o saldo nao foi creditado. Agora o deposito ja consta como `completed` e o saldo atual e R$ 20,40.
+### Plano
 
-**Causa raiz**: O sistema depende 100% do webhook do PixGo para confirmar depositos. Se o PixGo atrasa ou falha em chamar o webhook, o deposito fica pendente indefinidamente (ate expirar em 30 min).
+**1. Corrigir o mapeamento de status na sync function**
 
-### Bugs Encontrados
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-1. **Sem polling ativo no servidor** -- O polling do frontend so le o banco local. Nao existe nenhuma Edge Function que consulte a API do PixGo ativamente para verificar se depositos pendentes ja foram pagos.
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-2. **RLS bloqueia margem para nao-admins** -- A tabela `system_config` so permite leitura por admins (exceto chaves `room_images_*`). Revendedores comuns que acessam o site **nao conseguem ler** `defaultMarginEnabled/Type/Value`, fazendo a margem global nao funcionar no frontend para eles.
-
-### Plano de Implementacao
-
-#### 1. Nova Edge Function: `check-pending-pix`
-Funcao que consulta a API do PixGo para verificar o status de depositos pendentes e credita o saldo automaticamente quando pagos.
-
-- Busca transacoes `status=pending, type=deposit` com menos de 30 minutos
-- Para cada uma com gateway `pixgo`, consulta `https://pixgo.org/api/v1/payment/{payment_id}`
-- Se `completed`, executa a mesma logica do `pix-webhook`: atualiza status, credita saldo, envia notificacoes
-- Cron job a cada 2 minutos
-
-#### 2. Corrigir RLS do `system_config`
-Adicionar uma policy SELECT que permita usuarios autenticados lerem as chaves de margem padrao:
-
-```sql
-CREATE POLICY "Authenticated can view margin config"
-ON public.system_config FOR SELECT
-TO authenticated
-USING (key IN ('defaultMarginEnabled', 'defaultMarginType', 'defaultMarginValue'));
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-#### 3. Ajustar expiracão para nao conflitar
-Aumentar o timeout do `expire-pending-deposits` de 30 para 45 minutos, garantindo que a funcao de polling tenha tempo de verificar antes da expiracao.
+**2. Corrigir manualmente o pedido preso**
 
-### Arquivos Modificados
-- `supabase/functions/check-pending-pix/index.ts` (novo)
-- `supabase/functions/expire-pending-deposits/index.ts` (ajuste timeout)
-- Migracao SQL (nova policy RLS)
-- Cron job SQL (INSERT via insert tool)
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

@@ -49,3 +49,7 @@ project_id = "xtkqyjruyuydlbvwduuy"
     verify_jwt = false
   [functions.collect-pending-debts]
     verify_jwt = false
+  [functions.check-pending-pix]
+    verify_jwt = false
+  [functions.expire-pending-deposits]
+    verify_jwt = false
