@@ -342,7 +342,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               </div>
 
               {/* Name + count */}
-              <p className={`text-center font-semibold truncate max-w-[80px] md:max-w-[100px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`}>
+              <p className={`text-center font-semibold truncate max-w-[120px] md:max-w-[140px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`} title={user.nome}>
                 {user.nome}
               </p>
               <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-lg text-yellow-500" : "text-sm text-muted-foreground"}`}>
