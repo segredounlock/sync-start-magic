@@ -1232,6 +1232,19 @@ export default function Principal() {
 
   useEffect(() => { if (view === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [view, fetchBroadcastHistory, fetchBroadcastUserCount]);
 
+  // Persist broadcast progress to localStorage so it survives page navigation
+  useEffect(() => {
+    try {
+      if (broadcastProgressId) {
+        localStorage.setItem('broadcast_progress_id', broadcastProgressId);
+        localStorage.setItem('broadcast_title', broadcastTitle);
+      } else {
+        localStorage.removeItem('broadcast_progress_id');
+        localStorage.removeItem('broadcast_title');
+      }
+    } catch {}
+  }, [broadcastProgressId, broadcastTitle]);
+
   const menuItems: { key: string; icon: any; label: string; color: string; link?: string }[] = [
     { key: "dashboard", icon: BarChart3, label: "Dashboard", color: "text-primary" },
     { key: "lista", icon: Users, label: "Usuários", color: "text-accent" },

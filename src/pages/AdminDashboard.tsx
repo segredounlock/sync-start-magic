@@ -912,6 +912,19 @@ export default function AdminDashboard() {
 
   useEffect(() => { if (tab === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [tab, fetchBroadcastHistory, fetchBroadcastUserCount]);
 
+  // Persist broadcast progress to localStorage so it survives page navigation
+  useEffect(() => {
+    try {
+      if (broadcastProgressId) {
+        localStorage.setItem('broadcast_progress_id', broadcastProgressId);
+        localStorage.setItem('broadcast_title', broadcastTitle);
+      } else {
+        localStorage.removeItem('broadcast_progress_id');
+        localStorage.removeItem('broadcast_title');
+      }
+    } catch {}
+  }, [broadcastProgressId, broadcastTitle]);
+
   useEffect(() => { if (tab === "gateway") fetchGatewayConfig(); }, [tab, fetchGatewayConfig]);
   useEffect(() => { if (tab === "loja") fetchStoreConfig(); }, [tab, fetchStoreConfig]);
   useEffect(() => { if (tab === "usuarios" && userSubTab === "clientes") fetchClients(); }, [tab, userSubTab, fetchClients]);
