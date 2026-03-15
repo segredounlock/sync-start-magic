@@ -1362,6 +1362,16 @@ export type Database = {
           table_name: string
         }[]
       }
+      get_recargas_ranking: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          nome: string
+          total_recargas: number
+          user_id: string
+          verification_badge: string
+        }[]
+      }
       get_sales_tools_enabled: { Args: never; Returns: boolean }
       get_scratch_recent_winners: {
         Args: never
