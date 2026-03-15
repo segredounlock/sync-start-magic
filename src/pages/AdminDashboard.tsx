@@ -25,7 +25,7 @@ import {
   Save, Eye, EyeOff, Globe, Key, Bot, Zap, Menu, X,
   Wifi, WifiOff, Hash, AtSign, Trash2, AlertTriangle, CheckCircle2, ChevronDown, Link2, RotateCcw,
   Settings2, Store, Upload, Palette, Image, Copy, Loader2, QrCode, ExternalLink, Clock,
-  Megaphone, Send, Check, Shield, UserX,
+  Megaphone, Send, Check, Shield, UserX, MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -3784,9 +3784,9 @@ export default function AdminDashboard() {
       {/* Mobile Bottom Nav */}
       <MobileBottomNav
         items={[
-          { key: "visao", label: "Home", icon: BarChart3, color: "text-primary", animation: "pulse" },
-          { key: "historico", label: "Recargas", icon: History, color: "text-warning", animation: "wiggle" },
-          { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse", highlighted: true },
+          { key: "visao", label: "Início", icon: BarChart3, color: "text-primary", animation: "pulse" },
+          { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
+          { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-primary", animation: "bounce", elevated: true },
           { key: "depositos", label: "Depósitos", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "loja", label: "Loja", icon: Store, color: "text-accent", animation: "float" },
           { key: "usuarios", label: "Usuários", icon: Users, color: "text-accent", animation: "bounce" },
