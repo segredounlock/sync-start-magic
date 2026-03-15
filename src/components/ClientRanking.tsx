@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Crown, Medal, Trophy, Star, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
 
 interface RankUser {
   user_id: string;
