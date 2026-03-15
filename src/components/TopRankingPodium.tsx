@@ -307,23 +307,27 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
       </div>
 
       {/* Podium: [2nd, 1st, 3rd] */}
-      <div className="flex items-end justify-center gap-3 md:gap-6 py-2">
+      <div className="flex items-end justify-center gap-4 md:gap-8 py-2">
         {podiumOrder.map((user, displayIndex) => {
           const config = getPodiumConfig(displayIndex);
           const isCenter = displayIndex === 1;
           return (
             <motion.div
               key={user.user_id}
-              className="flex flex-col items-center gap-1.5"
+              className={`flex flex-col items-center gap-1.5 ${isCenter ? "mb-4" : ""}`}
               initial={{ opacity: 0, y: 30, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: displayIndex * 0.15, type: "spring", stiffness: 200, damping: 20 }}
               whileHover={{ scale: 1.08 }}
             >
-              {/* Badge icon */}
-              <div className="mb-1">{config.badge}</div>
+              {/* Crown above avatar for 1st place only */}
+              {isCenter && (
+                <div className="-mb-2 z-10">
+                  <GoldFloatingCrown size={40} />
+                </div>
+              )}
 
-              {/* Avatar */}
+              {/* Avatar with medal badges for 2nd/3rd */}
               <div className={`relative ${config.avatarSize} rounded-full ring-2 ${config.ringColor} overflow-visible`}>
                 {user.avatar_url ? (
                   <img
@@ -337,8 +341,16 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                   </div>
                 )}
                 <AvatarFlash index={config.position - 1} />
+
+                {/* Medal badge on top-right for 2nd/3rd */}
+                {!isCenter && (
+                  <div className="absolute -top-1 -right-1 z-10">
+                    {config.badge}
+                  </div>
+                )}
+
                 {user.verification_badge && (
-                  <div className="absolute -bottom-1 -right-1">
+                  <div className="absolute -bottom-1 -right-1 z-10">
                     <VerificationBadge badge={user.verification_badge as BadgeType} size="sm" />
                   </div>
                 )}
