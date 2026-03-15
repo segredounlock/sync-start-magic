@@ -73,38 +73,31 @@ export function MobileBottomNav({
                   className="flex flex-col items-center justify-center touch-manipulation relative -mt-7 z-10"
                   whileTap={{ scale: 0.9 }}
                 >
-                  <div className="relative w-14 h-14 flex items-center justify-center">
-                    {/* Snake border animation */}
-                    <svg className="absolute inset-0 w-14 h-14 animate-[spin_3s_linear_infinite]" viewBox="0 0 56 56">
+                  <div className="relative w-[52px] h-[52px] flex items-center justify-center">
+                    {/* Snake border effect - hugs the circle edge */}
+                    <svg className="absolute inset-0 w-[52px] h-[52px] animate-[spin_2.5s_linear_infinite]" viewBox="0 0 52 52">
+                      <defs>
+                        <linearGradient id="snake-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                          <stop offset="40%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="1" />
+                        </linearGradient>
+                      </defs>
                       <circle
-                        cx="28"
-                        cy="28"
-                        r="25"
+                        cx="26"
+                        cy="26"
+                        r="24"
                         fill="none"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth="2.5"
-                        strokeDasharray="40 118"
+                        stroke="url(#snake-grad)"
+                        strokeWidth="2"
+                        strokeDasharray="50 101"
                         strokeLinecap="round"
-                        className="opacity-60"
-                      />
-                    </svg>
-                    <svg className="absolute inset-0 w-14 h-14 animate-[spin_3s_linear_infinite_reverse]" viewBox="0 0 56 56">
-                      <circle
-                        cx="28"
-                        cy="28"
-                        r="25"
-                        fill="none"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth="1.5"
-                        strokeDasharray="25 133"
-                        strokeLinecap="round"
-                        className="opacity-30"
                       />
                     </svg>
                     <motion.div
-                      className={`w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg ${isActive ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`}
+                      className={`w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg`}
                       animate={{
-                        scale: [1, 1.05, 1],
+                        scale: [1, 1.04, 1],
                         boxShadow: [
                           "0 4px 14px hsl(var(--primary) / 0.3)",
                           "0 6px 20px hsl(var(--primary) / 0.5)",
