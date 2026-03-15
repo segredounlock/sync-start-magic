@@ -2682,7 +2682,7 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">R$</span>
             <input
               type="text"
-              inputMode="decimal"
+              inputMode="numeric"
               value={depositAmount}
               onChange={e => setDepositAmount(applyCurrencyMask(e.target.value))}
               placeholder="Outro valor (mín. R$ 10)"

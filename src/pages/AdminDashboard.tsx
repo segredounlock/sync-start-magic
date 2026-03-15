@@ -3902,7 +3902,7 @@ function AdminAddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, us
 
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">R$</span>
-            <input type="text" inputMode="decimal" value={depositAmount}
+            <input type="text" inputMode="numeric" value={depositAmount}
               onChange={e => setDepositAmount(applyCurrencyMask(e.target.value))}
               placeholder="Outro valor (mín. R$ 10)"
               className="w-full pl-10 pr-3 py-3 rounded-xl glass-input text-foreground font-bold text-lg focus:outline-none focus:ring-2 focus:ring-success/50 border border-border" />
