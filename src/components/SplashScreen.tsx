@@ -29,7 +29,7 @@ export function SplashScreen() {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="w-2.5 h-2.5 rounded-full bg-primary splash-dot"
+            className="w-2.5 h-2.5 rounded-full bg-primary animate-splash-dot"
             style={{ animationDelay: `${i * 150}ms` }}
           />
         ))}
