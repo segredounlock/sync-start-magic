@@ -1371,7 +1371,7 @@ export default function BackupSection() {
             </div>
 
             {/* How it works */}
-            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] p-4 space-y-2">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-4 space-y-2">
               <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Como funciona</p>
               <div className="space-y-1.5 text-[11px] text-muted-foreground">
                 <p>📦 <b className="text-foreground">Gerar Pacote</b> — Exporta banco de dados + código-fonte como um ZIP versionado</p>
