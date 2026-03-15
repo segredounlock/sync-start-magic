@@ -185,8 +185,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
             const rule = hasResellerRules ? (resellerRule || globalRule) : globalRule;
             let cost: number;
-            if (dmEnabled && dmValue > 0 && rule && !hasResellerRules) {
-              // Default margin only applies when reseller has NO custom rules
+            if (dmEnabled && dmValue > 0 && rule) {
+              // Default margin applies to base cost
               const apiCost = Number(rule.custo);
               cost = dmType === "fixo" ? apiCost + dmValue : apiCost * (1 + dmValue / 100);
             } else if (rule) {
