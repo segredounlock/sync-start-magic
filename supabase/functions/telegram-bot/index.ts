@@ -119,6 +119,29 @@ async function getDefaultMarginConfig(supabase: any): Promise<{ enabled: boolean
   return result;
 }
 
+async function resolveUserRole(
+  supabase: any,
+  userId: string,
+  fallback: "admin" | "revendedor" | "cliente" | "usuario" = "usuario",
+): Promise<string> {
+  const { data: roleRows, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error(`[ROLE] failed to resolve roles for user=${userId}:`, error.message);
+    return fallback;
+  }
+
+  const roles = new Set((roleRows || []).map((r: any) => String(r.role || "").toLowerCase()));
+  if (roles.has("admin")) return "admin";
+  if (roles.has("revendedor")) return "revendedor";
+  if (roles.has("cliente")) return "cliente";
+  if (roles.has("usuario")) return "usuario";
+  return fallback;
+}
+
 async function resolveBotToken(supabase: any, botId?: string): Promise<string> {
   const cacheKey = botId || "__default__";
   const cached = tokenCache.get(cacheKey);
