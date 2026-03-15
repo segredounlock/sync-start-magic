@@ -264,10 +264,10 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
       {/* Title bar */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
-          <h2 className="relative text-lg md:text-xl font-bold overflow-hidden">
+          <Trophy className="w-6 h-6 text-yellow-500 shrink-0" />
+          <h2 className="relative text-xl md:text-2xl font-bold overflow-hidden">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
-              Top Recargas
+              Top Rei da GG
             </span>
             <motion.span
               className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
@@ -279,7 +279,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               animate={{ backgroundPosition: ["200% center", "-200% center"] }}
               transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
             >
-              Top Recargas
+              Top Rei da GG
             </motion.span>
           </h2>
         </div>
@@ -293,9 +293,9 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             />
             <button
               onClick={onViewFull}
-              className="relative bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-bold text-xs px-4 py-1.5 rounded-full flex items-center gap-1.5 transition-colors"
+              className="relative bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-bold text-sm px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
             >
-              <Trophy className="w-3.5 h-3.5" />
+              <Trophy className="w-4 h-4" />
               Ranking
               <span className="relative ml-1 flex h-2.5 w-2.5">
                 <span className="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75" />
@@ -307,14 +307,14 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
       </div>
 
       {/* Podium: [2nd, 1st, 3rd] */}
-      <div className="flex items-end justify-center gap-4 md:gap-8 py-2">
+      <div className="flex items-end justify-center gap-6 md:gap-10 pt-4 pb-2">
         {podiumOrder.map((user, displayIndex) => {
           const config = getPodiumConfig(displayIndex);
           const isCenter = displayIndex === 1;
           return (
             <motion.div
               key={user.user_id}
-              className={`flex flex-col items-center gap-1.5 ${isCenter ? "mb-4" : ""}`}
+              className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""}`}
               initial={{ opacity: 0, y: 30, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: displayIndex * 0.15, type: "spring", stiffness: 200, damping: 20 }}
@@ -322,8 +322,8 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             >
               {/* Crown above avatar for 1st place only */}
               {isCenter && (
-                <div className="-mb-2 z-10">
-                  <GoldFloatingCrown size={40} />
+                <div className="-mb-3 z-10">
+                  <GoldFloatingCrown size={44} />
                 </div>
               )}
 
@@ -336,7 +336,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-lg">
+                  <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-xl">
                     {(user.nome?.[0] || "?").toUpperCase()}
                   </div>
                 )}
@@ -357,13 +357,15 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               </div>
 
               {/* Name + count */}
-              <p className={`text-center font-semibold truncate max-w-[120px] md:max-w-[140px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`} title={user.nome}>
-                {user.nome}
-              </p>
-              <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
-                <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-lg" : "text-sm"}`}>{user.total_recargas}</span>
-                {" "}compras
-              </span>
+              <div className="flex flex-col items-center">
+                <p className={`text-center font-semibold truncate max-w-[120px] md:max-w-[140px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`} title={user.nome}>
+                  {user.nome}
+                </p>
+                <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
+                  <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-base" : "text-sm"}`}>{user.total_recargas}</span>
+                  {" "}compras
+                </span>
+              </div>
             </motion.div>
           );
         })}
