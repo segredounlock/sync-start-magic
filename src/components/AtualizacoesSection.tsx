@@ -6,11 +6,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDateLongUpperBR, isTodayBR, toLocalDateKey } from "@/lib/timezone";
 import { styledToast as toast } from "@/lib/toast";
 
+interface NotifButton {
+  text?: string;
+  label?: string;
+  url: string;
+}
+
 interface Notif {
   id: string;
   title: string;
   message: string;
-  buttons: { label: string; url: string }[] | null;
+  buttons: NotifButton[] | null;
   image_url: string | null;
   created_at: string;
   status: string;
@@ -95,7 +101,7 @@ export function AtualizacoesSection() {
       </div>
 
       {items.map((item, i) => {
-        const buttons: { label: string; url: string }[] = Array.isArray(item.buttons) ? item.buttons : [];
+        const buttons: NotifButton[] = Array.isArray(item.buttons) ? item.buttons : [];
         const isRecent = isNew(item.created_at);
 
         return (
@@ -148,7 +154,7 @@ export function AtualizacoesSection() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity"
                   >
-                    {btn.label} <ExternalLink className="h-3 w-3" />
+                    {btn.label || btn.text} <ExternalLink className="h-3 w-3" />
                   </a>
                 ))}
               </div>
