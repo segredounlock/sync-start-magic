@@ -245,7 +245,7 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto overflow-y-visible rounded-lg border border-border" style={{ overflow: "visible" }}>
+        <div className="rounded-lg border border-border relative">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">

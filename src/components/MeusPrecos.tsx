@@ -76,9 +76,9 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
 
   useEffect(() => { fetchPricing(); }, []);
 
-  const handleProfitChange = (opId: string, value: number, profit: number) => {
+  const handleProfitChange = (opId: string, value: number, rawValue: string) => {
     const key = `${opId}_${value}`;
-    setEditedProfits((prev) => ({ ...prev, [key]: profit }));
+    setEditedProfits((prev) => ({ ...prev, [key]: rawValue }));
   };
 
   const getDisplayProfit = (pv: PricingValue) => {
