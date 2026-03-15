@@ -930,19 +930,19 @@ async function executeRecarga(supabase: any, token: string, chatId: number, user
     }
   }
 
-  // Calculate user cost
-  const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === valor);
+  // Calculate user cost — default margin OVERRIDES all rules when active
+  const dmCfg = await getDefaultMarginConfig(supabase);
   let userCost: number;
-  if (rule) {
-    userCost = rule.tipo_regra === "fixo" ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo)) : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
-  } else {
-    // Apply default margin fallback (cached)
+  if (dmCfg.enabled && dmCfg.value > 0) {
     const baseCost = matchedValue.cost || valor;
-    const dmCfg = await getDefaultMarginConfig(supabase);
-    if (dmCfg.enabled && dmCfg.value > 0) {
-      userCost = dmCfg.type === "fixo" ? baseCost + dmCfg.value : baseCost * (1 + dmCfg.value / 100);
+    userCost = dmCfg.type === "fixo" ? baseCost + dmCfg.value : baseCost * (1 + dmCfg.value / 100);
+  } else {
+    const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === valor);
+    if (rule) {
+      userCost = rule.tipo_regra === "fixo" ? (Number(rule.regra_valor) > 0 ? Number(rule.regra_valor) : Number(rule.custo)) : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
     } else {
-      userCost = baseCost;
+      userCost = matchedValue.cost || valor;
+    }
     }
   }
 
