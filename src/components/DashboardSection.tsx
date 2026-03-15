@@ -6,6 +6,7 @@ import {
   HelpCircle, X, Copy, MessageCircle,
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateFullTitleBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 import { SkeletonValue } from "@/components/Skeleton";
@@ -15,6 +16,7 @@ interface DashboardSectionProps {
   loading: boolean;
   userId: string;
   userName: string;
+  badge?: BadgeType | null;
   onNavigateTab: (tab: string) => void;
   isClientMode?: boolean;
   salesToolsEnabled?: boolean;
@@ -32,7 +34,7 @@ const OP_COLORS: Record<string, string> = {
   oi: "hsl(35 90% 55%)",
 };
 
-export function DashboardSection({ saldo, loading, userId, userName, onNavigateTab, isClientMode, salesToolsEnabled = true }: DashboardSectionProps) {
+export function DashboardSection({ saldo, loading, userId, userName, badge, onNavigateTab, isClientMode, salesToolsEnabled = true }: DashboardSectionProps) {
   const [period, setPeriod] = useState<Period>("mes");
   const [stats, setStats] = useState({ faturamento: 0, comissoes: 0, vendas: 0, novosClientes: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -241,7 +243,10 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       {/* Greeting + Date */}
       <div>
         <p className="text-xs text-muted-foreground">{dateLabel}</p>
-        <h1 className="text-2xl font-bold text-foreground">Olá, {userName}!</h1>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          Olá, <span className={badge ? "shimmer-letters" : ""}>{userName}</span>!
+          <VerificationBadge badge={badge ?? null} size="md" />
+        </h1>
       </div>
 
       {/* Pending Prices Alert */}
