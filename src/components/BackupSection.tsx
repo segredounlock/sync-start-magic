@@ -1131,7 +1131,7 @@ export default function BackupSection() {
               <>
                 <div className="relative">
                   <select value={selectedRepo} onChange={e => setSelectedRepo(e.target.value)}
-                    className="w-full py-2.5 px-3 pl-9 rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] text-foreground text-sm focus:ring-2 focus:ring-primary/30 focus:outline-none appearance-none">
+                    className="w-full py-2.5 px-3 pl-9 rounded-2xl bg-card border border-border shadow-sm text-foreground text-sm focus:ring-2 focus:ring-primary/30 focus:outline-none appearance-none">
                     {repos.map((r: any) => (
                       <option key={r.full_name} value={r.full_name}>
                         {r.full_name} ({r.default_branch}) {r.private ? "• privado" : "• público"}
