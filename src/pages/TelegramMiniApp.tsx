@@ -1188,7 +1188,7 @@ export default function TelegramMiniApp() {
                       <button onClick={() => setRecargaStep("check")} className="flex items-center gap-1 text-sm" style={st.hint}>
                         <ArrowLeft className="w-4 h-4" /> Voltar
                       </button>
-                      <h2 className="text-lg font-bold" style={st.text}>{selectedOp.nome} — Valor</h2>
+                      <h2 className="text-lg font-bold" style={st.text}>{(selectedOp.nome || "").toUpperCase()} — Valor</h2>
 
                       <div className="grid grid-cols-2 gap-3">
                         {selectedOp.valores.sort((a: ValorItem, b: ValorItem) => (a.userCost ?? a.cost) - (b.userCost ?? b.cost)).map((v: ValorItem) => {
