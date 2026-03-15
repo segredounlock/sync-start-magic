@@ -3910,6 +3910,31 @@ function AdminAddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, us
             )}
           </div>
 
+          {/* Fee preview */}
+          {(() => {
+            const val = parseFloat((depositAmount || "0").replace(",", "."));
+            const preview = feeCalc(val);
+            if (preview.hasFee && val >= 10) {
+              return (
+                <div className="rounded-xl bg-muted/30 border border-border px-4 py-3 space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Valor do depósito</span>
+                    <span className="font-mono">{fmt(val)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Taxa ({preview.feeLabel})</span>
+                    <span className="font-mono text-destructive/80">-{fmt(preview.feeAmount)}</span>
+                  </div>
+                  <div className="border-t border-border pt-1 flex justify-between text-sm font-semibold">
+                    <span className="text-foreground">Você receberá</span>
+                    <span className="text-success font-mono">{fmt(preview.netAmount)}</span>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           <button onClick={() => handleGeneratePix()} disabled={generating || !depositAmount || parseFloat(depositAmount.replace(",", ".")) < 10}
             className="w-full py-3.5 rounded-xl bg-success text-success-foreground font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-all shadow-[0_0_16px_hsl(var(--success)/0.3)]">
             {generating ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}
