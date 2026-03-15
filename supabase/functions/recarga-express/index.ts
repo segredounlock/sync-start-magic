@@ -967,11 +967,15 @@ Deno.serve(async (req) => {
         const prIsCompleted = !prIsFailed && (prOrderData.status === "feita" || prOrderData.status === "concluida" || prOrderData.status === "completed");
         const prFinalStatus = prIsFailed ? "falha" : (prIsCompleted ? "completed" : "pending");
 
-        // Only deduct balance if NOT failed
+        // Only deduct balance if NOT failed (atomic)
         let prNewBalance = prBalance;
         if (!prIsFailed) {
-          prNewBalance = prBalance - prChargedCost;
-          await adminClient.from("saldos").update({ valor: prNewBalance }).eq("user_id", userId).eq("tipo", "revenda");
+          const { data: updatedBal } = await adminClient.rpc("increment_saldo", {
+            p_user_id: userId,
+            p_tipo: "revenda",
+            p_amount: -prChargedCost,
+          });
+          prNewBalance = Number(updatedBal) ?? (prBalance - prChargedCost);
         } else {
           console.log(`public-recharge: NOT deducting balance — recharge failed. reseller=${userId} chargedCost=${prChargedCost}`);
         }
