@@ -2027,30 +2027,61 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               {/* Extrato Detalhado */}
               {(() => {
                 // Merge transactions + recargas into unified list
-                type ExtratoItem = { id: string; tipo: "deposito" | "recarga" | "saque" | "transferencia"; titulo: string; subtitulo: string; valor: number; data: string; status: string };
+                type ExtratoItem = { id: string; tipo: "deposito" | "recarga" | "saque" | "transferencia" | "comissao"; titulo: string; subtitulo: string; valor: number; data: string; status: string; isPositive: boolean };
                 const items: ExtratoItem[] = [
                   ...transactions.map((t): ExtratoItem => {
                     const isDeposit = t.type === "deposit" || t.type === "deposito";
                     const isSaque = t.type === "saque" || t.type === "withdrawal";
                     const isMover = t.type === "transfer" || t.module === "comissoes";
+                    const saqueCompleted = isSaque && (t.status === "completed" || t.status === "paid");
+
+                    let titulo = "Depósito";
+                    let subtitulo = "Depósito via PIX";
+                    let tipo: ExtratoItem["tipo"] = "deposito";
+
+                    if (isSaque) {
+                      tipo = "saque";
+                      titulo = saqueCompleted ? "Saque Concluído" : t.status === "pending" ? "Saque Pendente" : "Saque";
+                      subtitulo = saqueCompleted ? "Seu saque foi pago" : t.status === "pending" ? "Aguardando processamento" : "Solicitação de saque";
+                    } else if (isMover && !isDeposit) {
+                      tipo = "transferencia";
+                      titulo = "Transferência";
+                      subtitulo = t.module === "comissoes" ? "Mover saldo de comissões" : "Transferência entre carteiras";
+                    } else {
+                      subtitulo = "Depósito via PIX";
+                    }
+
                     return {
                       id: t.id,
-                      tipo: isSaque ? "saque" : isMover && !isDeposit ? "transferencia" : "deposito",
-                      titulo: isSaque ? "Saque" : isMover && !isDeposit ? "Transferência" : "Depósito",
-                      subtitulo: "Depósito via PIX",
+                      tipo,
+                      titulo,
+                      subtitulo,
                       valor: t.amount,
                       data: t.created_at,
                       status: t.status,
+                      isPositive: isDeposit || (isMover && !isDeposit && t.amount > 0),
                     };
                   }),
+                  // Commissions from referral_commissions
+                  ...commissions.map((c): ExtratoItem => ({
+                    id: c.id,
+                    tipo: "comissao",
+                    titulo: "Comissão Recebida",
+                    subtitulo: `Comissão ${c.type === "indirect" ? "indireta" : "direta"} de indicação`,
+                    valor: c.amount,
+                    data: c.created_at,
+                    status: "completed",
+                    isPositive: true,
+                  })),
                   ...recargas.filter(r => r.status === "completed").map((r): ExtratoItem => ({
                     id: r.id,
                     tipo: "recarga",
                     titulo: "Venda de Recarga",
-                    subtitulo: `${(r.operadora || "Recarga").toUpperCase()} ${fmt(safeValor(r))} • ${r.telefone}`,
+                    subtitulo: `Recarga ${(r.operadora || "").toUpperCase()} ${fmt(safeValor(r))}`,
                     valor: r.custo || safeValor(r),
                     data: r.created_at,
                     status: r.status,
+                    isPositive: false,
                   })),
                 ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
@@ -2058,12 +2089,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   if (tipo === "deposito") return <Banknote className="h-4 w-4 text-success" />;
                   if (tipo === "recarga") return <Smartphone className="h-4 w-4 text-blue-500" />;
                   if (tipo === "saque") return <Landmark className="h-4 w-4 text-warning" />;
+                  if (tipo === "comissao") return <Star className="h-4 w-4 text-warning" />;
                   return <ArrowRightLeft className="h-4 w-4 text-accent" />;
                 };
                 const bgForType = (tipo: ExtratoItem["tipo"]) => {
                   if (tipo === "deposito") return "bg-success/10";
                   if (tipo === "recarga") return "bg-blue-500/10";
-                  if (tipo === "saque") return "bg-warning/10";
+                  if (tipo === "saque") return "bg-destructive/10";
+                  if (tipo === "comissao") return "bg-warning/10";
                   return "bg-accent/10";
                 };
 
