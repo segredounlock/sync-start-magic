@@ -345,6 +345,14 @@ export function MinhaRede({ userId, profileSlug, referralCode, onOpenExclusivePr
           </table>
         </div>
       )}
+      {/* Client Pricing Modal */}
+      <ClientPricingModal
+        open={!!pricingModal}
+        onClose={() => setPricingModal(null)}
+        resellerId={userId}
+        clientId={pricingModal?.id || ""}
+        clientName={pricingModal?.name || ""}
+      />
     </motion.div>
   );
 }
