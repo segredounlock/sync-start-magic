@@ -12,6 +12,7 @@ export interface NavItem {
   color?: string;
   animation?: "pulse" | "bounce" | "spin" | "wiggle" | "float";
   highlighted?: boolean;
+  elevated?: boolean;
 }
 
 interface PanelLink {
