@@ -57,6 +57,7 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const includeDatabase = body.includeDatabase !== false;
+    const includeSchema = body.includeSchema === true;
 
     const zip = new JSZip();
 
@@ -66,16 +67,12 @@ serve(async (req) => {
       const { data: tableRows, error: tableError } = await supabaseAdmin.rpc("get_public_tables");
       if (tableError) {
         console.error("Error discovering tables via RPC, using fallback query:", tableError.message);
-        // Fallback: try raw query via PostgREST isn't possible, so use a known list as last resort
         tables = [];
       } else {
         tables = (tableRows || []).map((r: any) => r.table_name);
       }
 
-      // If RPC didn't work or returned empty, try fetching from information_schema via a different approach
       if (tables.length === 0) {
-        // Use supabaseAdmin to query each known table and discover dynamically
-        // As a robust fallback, list all tables we can successfully query
         const candidateTables = [
           "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
           "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
@@ -83,6 +80,7 @@ serve(async (req) => {
           "admin_notifications", "banners", "polls", "poll_votes", "follows", "audit_logs",
           "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
           "push_subscriptions", "update_history", "disabled_recharge_values", "referral_commissions",
+          "scratch_cards", "client_pricing_rules",
         ];
         for (const t of candidateTables) {
           const { error } = await supabaseAdmin.from(t).select("id").limit(0);
@@ -93,13 +91,15 @@ serve(async (req) => {
 
     // Metadata
     zip.file("backup-info.json", JSON.stringify({
-      version: "2.0",
+      version: "3.0",
       created_at: new Date().toISOString(),
       created_by: user.email,
       include_database: includeDatabase,
+      include_schema: includeSchema,
       tables: tables,
     }, null, 2));
 
+    // === DATABASE DATA ===
     if (includeDatabase && tables.length > 0) {
       const dbFolder = zip.folder("database");
 
@@ -119,9 +119,7 @@ serve(async (req) => {
             if (error) {
               console.error(`Error fetching ${table}:`, error.message);
               dbFolder!.file(`${table}.json`, JSON.stringify({
-                error: error.message,
-                rows: [],
-                count: 0,
+                error: error.message, rows: [], count: 0,
               }, null, 2));
               hasMore = false;
               continue;
@@ -136,19 +134,105 @@ serve(async (req) => {
           }
 
           dbFolder!.file(`${table}.json`, JSON.stringify({
-            table,
-            count: allRows.length,
+            table, count: allRows.length,
             exported_at: new Date().toISOString(),
             rows: allRows,
           }, null, 2));
         } catch (err: any) {
           dbFolder!.file(`${table}.json`, JSON.stringify({
-            table,
-            error: err.message,
-            rows: [],
-            count: 0,
+            table, error: err.message, rows: [], count: 0,
           }, null, 2));
         }
+      }
+    }
+
+    // === SCHEMA EXPORT (functions, RLS, triggers, enums) ===
+    if (includeSchema) {
+      const schemaFolder = zip.folder("schema");
+
+      try {
+        // Use the export_schema_info RPC
+        const { data: schemaData, error: schemaError } = await supabaseUser.rpc("export_schema_info");
+
+        if (schemaError) {
+          console.error("Schema export error:", schemaError.message);
+          schemaFolder!.file("_error.txt", `Error: ${schemaError.message}`);
+        } else if (schemaData) {
+          // Functions as individual SQL
+          const funcs = schemaData.functions || [];
+          let functionsSql = `-- Exported at: ${new Date().toISOString()}\n`;
+          functionsSql += `-- Total functions: ${funcs.length}\n\n`;
+          for (const fn of funcs) {
+            functionsSql += `-- Function: ${fn.name}\n`;
+            functionsSql += `${fn.source}\n\n`;
+          }
+          schemaFolder!.file("functions.sql", functionsSql);
+
+          // RLS policies as JSON
+          schemaFolder!.file("rls-policies.json", JSON.stringify(schemaData.rls_policies || [], null, 2));
+
+          // Triggers
+          schemaFolder!.file("triggers.json", JSON.stringify(schemaData.triggers || [], null, 2));
+
+          // Enums
+          schemaFolder!.file("enums.json", JSON.stringify(schemaData.enums || [], null, 2));
+
+          // Full schema dump
+          schemaFolder!.file("full-schema.json", JSON.stringify(schemaData, null, 2));
+        }
+      } catch (err: any) {
+        console.error("Schema export error:", err.message);
+        schemaFolder!.file("_error.txt", `Error: ${err.message}`);
+      }
+
+      // === CONFIG ===
+      const configFolder = zip.folder("config");
+
+      // Supabase config.toml content
+      const { data: configData } = await supabaseAdmin
+        .from("system_config")
+        .select("key, value")
+        .order("key");
+
+      // env template
+      const envTemplate = [
+        "# Variáveis de ambiente necessárias para o projeto",
+        "# Preencha com os valores do seu novo ambiente",
+        "",
+        "VITE_SUPABASE_URL=https://SEU_PROJETO.supabase.co",
+        "VITE_SUPABASE_PUBLISHABLE_KEY=sua_anon_key_aqui",
+        "VITE_SUPABASE_PROJECT_ID=seu_project_id",
+        "",
+        "# Edge Function secrets (configurar no dashboard):",
+        "# SUPABASE_URL",
+        "# SUPABASE_ANON_KEY",
+        "# SUPABASE_SERVICE_ROLE_KEY",
+        "# SUPABASE_DB_URL",
+        "# LOVABLE_API_KEY",
+      ].join("\n");
+      configFolder!.file("env-template.env", envTemplate);
+
+      // Secrets list (names only, no values)
+      const secretsList = [
+        { name: "SUPABASE_URL", description: "URL do projeto Supabase" },
+        { name: "SUPABASE_ANON_KEY", description: "Chave anônima" },
+        { name: "SUPABASE_SERVICE_ROLE_KEY", description: "Chave de serviço (admin)" },
+        { name: "SUPABASE_DB_URL", description: "URL direta do PostgreSQL" },
+        { name: "LOVABLE_API_KEY", description: "Chave do Lovable AI Gateway" },
+        { name: "SUPABASE_PUBLISHABLE_KEY", description: "Chave pública" },
+      ];
+      configFolder!.file("secrets-list.json", JSON.stringify(secretsList, null, 2));
+
+      // System config dump (gateway keys, feature flags etc)
+      if (configData) {
+        // Filter out sensitive values
+        const safeConfig = configData.map((c: any) => ({
+          key: c.key,
+          value: c.key.toLowerCase().includes("token") || c.key.toLowerCase().includes("secret") || c.key.toLowerCase().includes("pat")
+            ? "***REDACTED***"
+            : c.value,
+        }));
+        configFolder!.file("system-config.json", JSON.stringify(safeConfig, null, 2));
       }
     }
 
