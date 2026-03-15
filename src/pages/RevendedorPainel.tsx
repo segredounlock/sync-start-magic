@@ -42,6 +42,7 @@ import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalD
 
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
+import { useFeePreview } from "@/hooks/useFeePreview";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 
