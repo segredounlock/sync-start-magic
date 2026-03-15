@@ -2693,6 +2693,31 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
             )}
           </div>
 
+          {/* Fee preview */}
+          {(() => {
+            const val = parseFloat((depositAmount || "0").replace(",", "."));
+            const preview = feeCalc(val);
+            if (preview.hasFee && val >= 10) {
+              return (
+                <div className="rounded-xl bg-muted/30 border border-border px-4 py-3 space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Valor do depósito</span>
+                    <span className="font-mono">{fmt(val)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Taxa ({preview.feeLabel})</span>
+                    <span className="font-mono text-destructive/80">-{fmt(preview.feeAmount)}</span>
+                  </div>
+                  <div className="border-t border-border pt-1 flex justify-between text-sm font-semibold">
+                    <span className="text-foreground">Você receberá</span>
+                    <span className="text-success font-mono">{fmt(preview.netAmount)}</span>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           {/* Generate button - full width below */}
           <button
             onClick={() => handleGeneratePix()}
