@@ -264,7 +264,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
   return (
     <div className="glass-card rounded-xl p-4 space-y-4 overflow-visible">
       {/* Title bar */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-center gap-3">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           {/* Trophy with ghost glow + bounce */}
           <motion.div
