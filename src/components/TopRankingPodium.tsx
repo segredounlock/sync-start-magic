@@ -265,27 +265,26 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
     <div className="glass-card rounded-xl p-4 space-y-4 overflow-visible">
       {/* Title bar */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* Trophy with ghost glow */}
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          {/* Trophy with ghost glow + bounce */}
           <motion.div
             animate={{ y: [0, -3, 0], rotate: [0, -5, 5, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
             className="relative shrink-0"
           >
-            <Trophy className="w-8 h-8 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-            {/* Ghost glow behind */}
+            <Trophy className="w-7 h-7 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
             <motion.div
               className="absolute inset-0"
               animate={{ opacity: [0.2, 0.6, 0.2] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Trophy className="w-8 h-8 text-yellow-300 blur-[2px]" />
+              <Trophy className="w-7 h-7 text-yellow-300 blur-[2px]" />
             </motion.div>
           </motion.div>
 
-          <h2 className="relative text-2xl md:text-3xl font-bold overflow-hidden">
+          <h2 className="relative text-xl md:text-2xl font-extrabold overflow-hidden tracking-tight">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
-              Top Rei da GG
+              Top Recargas
             </span>
             <motion.span
               className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
@@ -297,7 +296,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               animate={{ backgroundPosition: ["200% center", "-200% center"] }}
               transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
             >
-              Top Rei da GG
+              Top Recargas
             </motion.span>
           </h2>
         </div>
