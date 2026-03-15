@@ -1282,13 +1282,11 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     // Calculate user cost for each value
     const vals = filteredValues.sort((a: any, b: any) => resolveValue(a) - resolveValue(b));
 
-    // Load default margin config once for this listing
-    const { data: dmRows2 } = await supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
-    const dmCfg2: Record<string, string> = {};
-    (dmRows2 || []).forEach((r: any) => { dmCfg2[r.key] = r.value; });
-    const dmEnabled2 = dmCfg2.defaultMarginEnabled === "true";
-    const dmType2 = dmCfg2.defaultMarginType || "fixo";
-    const dmVal2 = parseFloat(dmCfg2.defaultMarginValue || "0");
+    // Load default margin config once for this listing (cached)
+    const dmCfg2 = await getDefaultMarginConfig(supabase);
+    const dmEnabled2 = dmCfg2.enabled;
+    const dmType2 = dmCfg2.type;
+    const dmVal2 = dmCfg2.value;
 
     function getUserCost(apiCost: number, faceValue: number): number {
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
