@@ -38,13 +38,21 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const fetchPricing = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: ops }, { data: globalRules }, { data: resellerRules }] = await Promise.all([
+      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: marginConfig }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", userId),
+        supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
       ]);
 
       if (!ops) return;
+
+      // Parse global margin settings
+      const marginMap: Record<string, string> = {};
+      (marginConfig || []).forEach((c: any) => { marginMap[c.key] = c.value; });
+      const globalMarginEnabled = marginMap.defaultMarginEnabled === "true";
+      const globalMarginType = marginMap.defaultMarginType || "fixo";
+      const globalMarginValue = parseFloat(marginMap.defaultMarginValue || "0") || 0;
 
       const result: OperadoraPricing[] = ops.map((op) => {
         const valores = (op.valores as unknown as number[]) || [];
@@ -52,9 +60,19 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
           const gRule = (globalRules || []).find((r) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
           const rRule = (resellerRules || []).find((r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
 
-          const baseCost = gRule
-            ? gRule.tipo_regra === "fixo" ? Number(gRule.regra_valor) : Number(gRule.custo) * (1 + Number(gRule.regra_valor) / 100)
-            : v;
+          const apiCost = gRule ? Number(gRule.custo) : v;
+
+          // When global margin is active, baseCost = apiCost + margin (overrides per-operator rules)
+          let baseCost: number;
+          if (globalMarginEnabled) {
+            baseCost = globalMarginType === "percentual"
+              ? apiCost * (1 + globalMarginValue / 100)
+              : apiCost + globalMarginValue;
+          } else {
+            baseCost = gRule
+              ? gRule.tipo_regra === "fixo" ? Number(gRule.regra_valor) : Number(gRule.custo) * (1 + Number(gRule.regra_valor) / 100)
+              : v;
+          }
 
           const hasCustom = !!rRule;
           const profit = hasCustom ? Number(rRule!.regra_valor) - baseCost : 0;
