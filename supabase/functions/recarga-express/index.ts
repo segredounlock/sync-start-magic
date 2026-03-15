@@ -320,7 +320,7 @@ Deno.serve(async (req) => {
         // Only update if status actually changed from pending
         const { data: currentRecarga } = await adminClient
           .from("recargas")
-          .select("id, status, custo, user_id")
+          .select("id, status, custo, custo_api, user_id")
           .eq("external_id", external_id)
           .maybeSingle();
 
