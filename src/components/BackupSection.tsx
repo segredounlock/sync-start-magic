@@ -1038,6 +1038,22 @@ export default function BackupSection() {
               </div>
             </button>
 
+            {/* Include Schema toggle */}
+            <button onClick={() => setIncludeSchema(!includeSchema)}
+              className="flex items-center gap-3 w-full p-3.5 rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-all text-left">
+              <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                includeSchema ? "bg-primary border-primary" : "border-muted-foreground/40"
+              }`}>
+                {includeSchema && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Shield className="h-3.5 w-3.5" /> Incluir schema completo
+                </p>
+                <p className="text-[11px] text-muted-foreground">Funções SQL, RLS policies, triggers, enums, configs, documentação</p>
+              </div>
+            </button>
+
             {/* Restore Result */}
             <AnimatePresence>
               {restoreResult && (
