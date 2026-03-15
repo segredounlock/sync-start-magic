@@ -74,7 +74,7 @@ export function MobileBottomNav({
                   whileTap={{ scale: 0.9 }}
                 >
                   <motion.div
-                    className={`w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg ${isActive ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`}
+                    className={`w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg ${isActive ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`}
                     animate={{
                       scale: [1, 1.05, 1],
                       boxShadow: [
