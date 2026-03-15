@@ -259,21 +259,12 @@ Deno.serve(async (req) => {
         // Refund balance when status transitions to "falha" from "pending"
         if (localStatus === "falha" && currentRecarga && currentRecarga.status === "pending") {
           try {
-            const { data: saldoData } = await adminClient
-              .from("saldos")
-              .select("valor")
-              .eq("user_id", currentRecarga.user_id)
-              .eq("tipo", "revenda")
-              .single();
-            if (saldoData) {
-              const refundedBalance = Number(saldoData.valor) + Number(currentRecarga.custo);
-              await adminClient
-                .from("saldos")
-                .update({ valor: refundedBalance })
-                .eq("user_id", currentRecarga.user_id)
-                .eq("tipo", "revenda");
-              console.log(`order-status: refunded ${currentRecarga.custo} to user ${currentRecarga.user_id}, new balance=${refundedBalance}`);
-            }
+            const { data: newBal } = await adminClient.rpc("increment_saldo", {
+              p_user_id: currentRecarga.user_id,
+              p_tipo: "revenda",
+              p_amount: Number(currentRecarga.custo),
+            });
+            console.log(`order-status: refunded ${currentRecarga.custo} to user ${currentRecarga.user_id} via increment_saldo, new balance=${newBal}`);
 
             // Send failure notifications
             const baseUrl = Deno.env.get("SUPABASE_URL")!;
