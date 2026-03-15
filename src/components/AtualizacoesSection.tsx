@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Share2, ExternalLink, Loader2 } from "lucide-react";
+import { renderTelegramHtml } from "@/components/TextFormatToolbar";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateLongUpperBR, isTodayBR, toLocalDateKey } from "@/lib/timezone";
 import { styledToast as toast } from "@/lib/toast";
