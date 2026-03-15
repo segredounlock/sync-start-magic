@@ -1340,7 +1340,7 @@ export default function BackupSection() {
                     ) : (
                       <div className="space-y-2 max-h-60 overflow-y-auto">
                         {updateHistory.map((h: any) => (
-                          <div key={h.id} className="rounded-xl bg-white/[0.03] p-3 space-y-1.5">
+                          <div key={h.id} className="rounded-xl bg-muted/40 border border-border/50 p-3 space-y-1.5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-semibold text-foreground font-mono">
                                 {h.previous_version ? `v${h.previous_version} → ` : ""}v{h.version}
