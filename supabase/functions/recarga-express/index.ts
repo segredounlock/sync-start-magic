@@ -394,15 +394,16 @@ Deno.serve(async (req) => {
       case "recharge": {
         // Accept both v1 params (carrierId/phoneNumber/valueId) and v2 params (operator/phone/amount)
         const rawCarrierId = params.operator || params.carrierId;
-        const phoneNumber = params.phone || params.phoneNumber;
+        const rawPhone2 = params.phone || params.phoneNumber;
         const rawAmount = params.amount || null;
         const valueId = params.valueId || null;
         const { extraData, webhookUrl, saldo_tipo } = params;
         const saldoTipo = saldo_tipo || "revenda";
 
-        if (!rawCarrierId || !phoneNumber) {
+        if (!rawCarrierId || !rawPhone2) {
           throw new Error("operator/carrierId e phone/phoneNumber são obrigatórios");
         }
+        const phoneNumber = validatePhone(rawPhone2);
 
         // Resolve operator name and local operadora UUID
         let resolvedOperator = rawCarrierId;
