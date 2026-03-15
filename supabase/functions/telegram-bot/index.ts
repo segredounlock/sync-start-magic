@@ -1255,6 +1255,14 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     // Calculate user cost for each value
     const vals = filteredValues.sort((a: any, b: any) => resolveValue(a) - resolveValue(b));
 
+    // Load default margin config once for this listing
+    const { data: dmRows2 } = await supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
+    const dmCfg2: Record<string, string> = {};
+    (dmRows2 || []).forEach((r: any) => { dmCfg2[r.key] = r.value; });
+    const dmEnabled2 = dmCfg2.defaultMarginEnabled === "true";
+    const dmType2 = dmCfg2.defaultMarginType || "fixo";
+    const dmVal2 = parseFloat(dmCfg2.defaultMarginValue || "0");
+
     function getUserCost(apiCost: number, faceValue: number): number {
       const rule = pricingRules.find((r: any) => Number(r.valor_recarga) === faceValue);
       if (rule) {
@@ -1263,6 +1271,12 @@ async function handleCallback(supabase: any, token: string, callback: any) {
           : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
         console.log(`[PRICING] getUserCost: faceValue=${faceValue} matched rule tipo=${rule.tipo_regra} → cost=${cost}`);
         return cost;
+      }
+      // Apply default margin fallback
+      if (dmEnabled2 && dmVal2 > 0) {
+        const fallback = dmType2 === "fixo" ? apiCost + dmVal2 : apiCost * (1 + dmVal2 / 100);
+        console.log(`[PRICING] getUserCost: faceValue=${faceValue} default_margin ${dmType2}=${dmVal2} → cost=${fallback}`);
+        return fallback;
       }
       console.log(`[PRICING] getUserCost: faceValue=${faceValue} NO RULE MATCH → using apiCost=${apiCost}`);
       return apiCost;
