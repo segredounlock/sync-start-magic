@@ -45,6 +45,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useFeePreview } from "@/hooks/useFeePreview";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
+import { applyCurrencyMask } from "@/lib/currencyMask";
 
 type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha";
 
@@ -2681,12 +2682,9 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">R$</span>
             <input
               type="text"
-              inputMode="decimal"
+              inputMode="numeric"
               value={depositAmount}
-              onChange={e => {
-                const raw = e.target.value.replace(/[^0-9,.]/g, "");
-                setDepositAmount(raw);
-              }}
+              onChange={e => setDepositAmount(applyCurrencyMask(e.target.value))}
               placeholder="Outro valor (mín. R$ 10)"
               min={10}
               className="w-full pl-10 pr-3 py-3 rounded-xl glass-input text-foreground font-bold text-lg focus:outline-none focus:ring-2 focus:ring-success/50 border border-border"

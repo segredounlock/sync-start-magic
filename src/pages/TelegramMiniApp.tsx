@@ -3,6 +3,7 @@ import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { createPixDeposit, type PixResult } from "@/lib/payment";
+import { applyCurrencyMask } from "@/lib/currencyMask";
 import { useFeePreview } from "@/hooks/useFeePreview";
 import { motion, AnimatePresence } from "framer-motion";
 import recargasLogo from "@/assets/recargas-brasil-logo.jpeg";
@@ -1502,7 +1503,7 @@ export default function TelegramMiniApp() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span style={st.hint}>R$</span>
-                      <input type="text" inputMode="decimal" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value.replace(/[^\d,.]/g, ""))}
+                      <input type="text" inputMode="numeric" value={depositAmount} onChange={(e) => setDepositAmount(applyCurrencyMask(e.target.value))}
                         placeholder="Outro valor (mín. R$ 10)" className="flex-1 rounded-xl p-3 focus:outline-none"
                         style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }} />
                     </div>
