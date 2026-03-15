@@ -1,32 +1,40 @@
 
 
-# Plano: Templates de Broadcast por Operadora Lenta
+## Diagnóstico e Correção
 
-## O que será feito
-Adicionar templates individuais de aviso de lentidão para cada operadora (TIM, CLARO, VIVO) na lista de templates do `BroadcastForm.tsx`, permitindo notificar rapidamente os usuários quando uma operadora específica estiver com processamento lento.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Alterações
+### Plano
 
-### `src/components/BroadcastForm.tsx`
-Adicionar 3 novos templates ao array `TEMPLATES`:
+**1. Corrigir o mapeamento de status na sync function**
 
-- **TIM Lenta** — cor vermelha (`bg-red-600/80`), emoji ⏳, mensagem informando lentidão específica da TIM
-- **CLARO Lenta** — cor vermelha (`bg-red-600/80`), emoji ⏳, mensagem informando lentidão específica da CLARO  
-- **VIVO Lenta** — cor purple (`bg-purple-600/80`), emoji ⏳, mensagem informando lentidão específica da VIVO
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-Cada template terá uma mensagem padrão como:
-```
-⏳ A operadora [NOME] está apresentando lentidão no processamento das recargas.
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-⚠️ Suas recargas serão processadas normalmente, porém com um tempo maior que o habitual.
-
-🔄 Estamos monitorando a situação e atualizaremos assim que normalizar.
-
-📞 Em caso de dúvidas, entre em contato com o suporte.
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-O grid de templates passará de `grid-cols-2` para acomodar os novos itens mantendo o layout responsivo.
+**2. Corrigir manualmente o pedido preso**
 
-### Arquivo alterado
-- `src/components/BroadcastForm.tsx`
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
