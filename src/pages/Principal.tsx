@@ -178,10 +178,14 @@ export default function Principal() {
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
 
-  // Broadcast state
+  // Broadcast state - restore from localStorage if a broadcast was running
   const [broadcastSending, setBroadcastSending] = useState(false);
-  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
-  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(() => {
+    try { return localStorage.getItem('broadcast_progress_id'); } catch { return null; }
+  });
+  const [broadcastTitle, setBroadcastTitle] = useState(() => {
+    try { return localStorage.getItem('broadcast_title') || ''; } catch { return ''; }
+  });
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastBlockedCount, setBroadcastBlockedCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
