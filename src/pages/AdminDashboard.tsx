@@ -1053,23 +1053,31 @@ export default function AdminDashboard() {
           </div>
 
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-            {menuItems.map(item => {
+            {menuItems.map((item, index) => {
               const isActive = tab === item.key;
               return (
-                <button
+                <motion.div
                   key={item.key}
-                  onClick={() => { if (item.link) { navigate(item.link); } else { setTab(item.key as any); } setMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-primary-foreground" : item.color}`} />
-                  <span>{item.label}</span>
-                  {item.link && <ArrowUpRight className="ml-auto h-3.5 w-3.5 text-muted-foreground" />}
-                  {!item.link && isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
-                </button>
+                  <button
+                    onClick={() => { if (item.link) { navigate(item.link); } else { setTab(item.key as any); } setMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    }`}
+                  >
+                    <FloatingMenuIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                    <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                      {item.label}
+                    </motion.span>
+                    {item.link && <ArrowUpRight className="ml-auto h-3.5 w-3.5 text-muted-foreground" />}
+                    {!item.link && isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
+                  </button>
+                </motion.div>
               );
             })}
           </nav>
