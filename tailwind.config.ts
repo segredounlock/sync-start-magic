@@ -72,9 +72,19 @@ export default {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
         },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "splash-dot": {
+          "0%, 100%": { transform: "translateY(0)", opacity: "0.5" },
+          "50%": { transform: "translateY(-10px)", opacity: "1" },
+        },
       },
       animation: {
         "gradient-x": "gradient-x 6s ease infinite",
+        "fade-in": "fade-in 0.4s ease-out both",
+        "splash-dot": "splash-dot 0.6s ease-in-out infinite",
       },
     },
   },
