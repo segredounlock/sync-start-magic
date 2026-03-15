@@ -532,10 +532,12 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                             </div>
                           )}
                           <div>
-                            <p className={`font-medium text-foreground text-sm flex items-center gap-1 ${w.verification_badge ? "shimmer-letters" : ""}`}>
-                              {w.nome}
+                            <div className="flex items-center gap-1">
+                              <p className={`font-medium text-foreground text-sm ${w.verification_badge ? "shimmer-letters" : ""}`}>
+                                {w.nome}
+                              </p>
                               <VerificationBadge badge={w.verification_badge as BadgeType} size="xs" />
-                            </p>
+                            </div>
                             <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
                           </div>
                         </div>
@@ -564,10 +566,12 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                             </div>
                           )}
                           <div>
-                            <p className={`font-medium text-foreground text-sm flex items-center gap-1 ${w.verification_badge ? "shimmer-letters" : ""}`}>
-                              {w.nome}
+                            <div className="flex items-center gap-1">
+                              <p className={`font-medium text-foreground text-sm ${w.verification_badge ? "shimmer-letters" : ""}`}>
+                                {w.nome}
+                              </p>
                               <VerificationBadge badge={w.verification_badge as BadgeType} size="xs" />
-                            </p>
+                            </div>
                             <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
                           </div>
                         </div>
