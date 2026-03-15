@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -36,7 +36,9 @@ const COOLDOWN_MS = 60_000;
 export default function Auth() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const refParam = searchParams.get("ref") || "";
+  const [isLogin, setIsLogin] = useState(!refParam); // if ref param present, default to signup
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
@@ -197,12 +199,34 @@ export default function Auth() {
 
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Resolve referral code to reseller ID
+        let resellerId: string | null = null;
+        if (refParam) {
+          // If it's a UUID, use directly; otherwise resolve referral code
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refParam);
+          if (isUuid) {
+            resellerId = refParam;
+          } else {
+            const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: refParam });
+            if (resolvedId) resellerId = resolvedId as string;
+          }
+        }
+
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { nome }, emailRedirectTo: window.location.origin },
+          options: { data: { nome, reseller_id: resellerId || undefined }, emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
+
+        // If we have a reseller and a confirmed user, set reseller_id on profile
+        if (resellerId && signUpData?.user?.id) {
+          await supabase
+            .from("profiles")
+            .update({ reseller_id: resellerId } as any)
+            .eq("id", signUpData.user.id);
+        }
+
         setDestination("/painel");
       }
       if (!isLogin) appToast.success("Conta criada com sucesso!");
