@@ -1231,7 +1231,7 @@ export default function BackupSection() {
             {/* Export / Import Cards */}
             <div className="grid grid-cols-2 gap-3">
               <button onClick={handleUpdateExport} disabled={updateExporting}
-                className="relative group rounded-2xl p-4 backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] hover:bg-white/[0.07] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_0_20px_rgba(59,130,246,0.08)] transition-all text-left disabled:opacity-60">
+                className="relative group rounded-2xl p-4 bg-card border border-border shadow-sm hover:bg-muted/60 hover:shadow-md hover:border-blue-500/30 transition-all text-left disabled:opacity-60">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center mb-3 shadow-lg shadow-blue-500/5">
                   {updateExporting ? <Loader2 className="h-4 w-4 animate-spin text-blue-400" /> : <ArrowDownToLine className="h-4 w-4 text-blue-400" />}
                 </div>
