@@ -6,6 +6,7 @@ import {
   HelpCircle, X, Copy, MessageCircle,
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateFullTitleBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
 import { SkeletonValue } from "@/components/Skeleton";
@@ -15,6 +16,7 @@ interface DashboardSectionProps {
   loading: boolean;
   userId: string;
   userName: string;
+  badge?: BadgeType | null;
   onNavigateTab: (tab: string) => void;
   isClientMode?: boolean;
   salesToolsEnabled?: boolean;
