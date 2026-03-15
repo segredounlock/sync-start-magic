@@ -35,7 +35,7 @@ const OP_COLORS: Record<string, string> = {
   oi: "hsl(35 90% 55%)",
 };
 
-export function DashboardSection({ saldo, loading, userId, userName, badge, onNavigateTab, isClientMode, salesToolsEnabled = true }: DashboardSectionProps) {
+export function DashboardSection({ saldo, loading, userId, userName, badge, onNavigateTab, isClientMode, salesToolsEnabled = true, userRole }: DashboardSectionProps) {
   const [period, setPeriod] = useState<Period>("mes");
   const [stats, setStats] = useState({ faturamento: 0, comissoes: 0, vendas: 0, novosClientes: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
