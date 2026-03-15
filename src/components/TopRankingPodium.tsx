@@ -443,6 +443,10 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                 {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
               </div>
             )}
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-foreground">{ranking[userRank]?.nome}</span>
+              <span className="text-[10px] text-muted-foreground">{ranking[userRank]?.total_recargas} compras</span>
+            </div>
             <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">Você</span>
           </div>
         </motion.div>
