@@ -1489,7 +1489,7 @@ export default function TelegramMiniApp() {
                   <h2 className="font-bold" style={st.text}>Selecione o valor</h2>
                   <div className="grid grid-cols-3 gap-2">
                     {[10, 15, 20, 30, 50, 100].map((v) => (
-                      <button key={v} onClick={() => setDepositAmount(String(v))}
+                      <button key={v} onClick={() => setDepositAmount(v.toFixed(2).replace(".", ","))}
                         className="rounded-xl py-3.5 text-center font-semibold transition"
                         style={{
                           ...(depositAmount === String(v) ? { backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)", color: "var(--tg-link)" } : { ...st.secondaryBg, ...st.text }),

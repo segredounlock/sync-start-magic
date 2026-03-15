@@ -3887,7 +3887,7 @@ function AdminAddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, us
 
           <div className="grid grid-cols-3 gap-2">
             {presetAmounts.map(v => (
-              <button key={v} onClick={() => setDepositAmount(String(v))}
+              <button key={v} onClick={() => setDepositAmount(v.toFixed(2).replace(".", ","))}
                 disabled={generating}
                 className={`py-3 rounded-xl border font-bold text-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 ${
                   depositAmount === String(v)
