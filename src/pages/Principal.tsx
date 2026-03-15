@@ -6,6 +6,7 @@ import BackupSection from "@/components/BackupSection";
 import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { FloatingMenuIcon, FloatingGridIcon } from "@/components/FloatingMenuIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from "@/components/ui";
 import { PromoBanner } from "@/components/PromoBanner";
@@ -1288,7 +1289,7 @@ export default function Principal() {
             </div>
 
             <div className="px-4 pb-3 grid grid-cols-3 gap-2">
-              {menuItems.map((item) => {
+              {menuItems.map((item, index) => {
                 const isActive = view === item.key;
                 return (
                   <button key={item.key}
@@ -1304,7 +1305,7 @@ export default function Principal() {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium transition-all group ${
                       isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/40"
                     }`}>
-                    <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                    <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
                     <span className="text-center leading-tight">{item.label}</span>
                   </button>
                 );
@@ -1335,30 +1336,38 @@ export default function Principal() {
           </div>
 
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-            {menuItems.map(item => {
+            {menuItems.map((item, index) => {
               const isActive = view === item.key;
               return (
-                <button
+                <motion.div
                   key={item.key}
-                  onClick={() => {
-                    if (item.link) { navigate(item.link); } else {
-                      setView(item.key as any);
-                      if (item.key === "config-api") fetchApiConfig();
-                      else if (item.key === "precificacao") { fetchPricingData(); fetchGlobalConfig(); }
-                      else if (!["dashboard", "lista", "relatorios"].includes(item.key)) fetchGlobalConfig();
-                    }
-                    setMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-medium transition-all group ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${isActive ? "text-primary-foreground animate-[pulse_2s_ease-in-out_1]" : item.color}`} />
-                  <span>{item.label}</span>
-                  {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
-                </button>
+                  <button
+                    onClick={() => {
+                      if (item.link) { navigate(item.link); } else {
+                        setView(item.key as any);
+                        if (item.key === "config-api") fetchApiConfig();
+                        else if (item.key === "precificacao") { fetchPricingData(); fetchGlobalConfig(); }
+                        else if (!["dashboard", "lista", "relatorios"].includes(item.key)) fetchGlobalConfig();
+                      }
+                      setMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-medium transition-all group ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    }`}
+                  >
+                    <FloatingMenuIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                    <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                      {item.label}
+                    </motion.span>
+                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
+                  </button>
+                </motion.div>
               );
             })}
           </nav>
