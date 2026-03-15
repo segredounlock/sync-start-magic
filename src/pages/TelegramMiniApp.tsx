@@ -1105,7 +1105,7 @@ export default function TelegramMiniApp() {
                               style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)" }}>
                               <Smartphone className="w-5 h-5" style={st.link} />
                             </div>
-                            <span className="font-semibold" style={st.text}>{op.nome}</span>
+                            <span className="font-semibold" style={st.text}>{(op.nome || "").toUpperCase()}</span>
                           </div>
                           <ChevronRight className="w-4 h-4" style={st.hint} />
                         </button>
@@ -1129,7 +1129,7 @@ export default function TelegramMiniApp() {
                           <Shield className="w-7 h-7" style={st.link} />
                         </motion.div>
                         <h2 className="text-lg font-bold" style={st.text}>Verificação de Número</h2>
-                        <p className="text-sm mt-1" style={st.hint}>{selectedOp.nome} • {phone}</p>
+                        <p className="text-sm mt-1" style={st.hint}>{(selectedOp.nome || "").toUpperCase()} • {phone}</p>
                       </div>
 
                       <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
@@ -1188,7 +1188,7 @@ export default function TelegramMiniApp() {
                       <button onClick={() => setRecargaStep("check")} className="flex items-center gap-1 text-sm" style={st.hint}>
                         <ArrowLeft className="w-4 h-4" /> Voltar
                       </button>
-                      <h2 className="text-lg font-bold" style={st.text}>{selectedOp.nome} — Valor</h2>
+                      <h2 className="text-lg font-bold" style={st.text}>{(selectedOp.nome || "").toUpperCase()} — Valor</h2>
 
                       <div className="grid grid-cols-2 gap-3">
                         {selectedOp.valores.sort((a: ValorItem, b: ValorItem) => (a.userCost ?? a.cost) - (b.userCost ?? b.cost)).map((v: ValorItem) => {
@@ -1230,7 +1230,7 @@ export default function TelegramMiniApp() {
                       </button>
                       <div className="rounded-2xl p-5 space-y-3" style={{ ...st.secondaryBg, border: st.borderSub }}>
                         <h2 className="text-lg font-bold text-center" style={st.text}>Confirmar Recarga</h2>
-                        <div className="flex justify-between"><span style={st.hint}>Operadora</span><span className="font-semibold" style={st.text}>{selectedOp.nome}</span></div>
+                        <div className="flex justify-between"><span style={st.hint}>Operadora</span><span className="font-semibold" style={st.text}>{(selectedOp.nome || "").toUpperCase()}</span></div>
                         <div className="flex justify-between"><span style={st.hint}>Número</span><span className="font-mono" style={st.text}>{formatPhone(phone)}</span></div>
                         <div className="flex justify-between"><span style={st.hint}>Valor</span><span className="font-bold" style={st.green}>{formatCurrency(selectedValor.userCost ?? selectedValor.cost)}</span></div>
                         <div className="flex justify-between text-sm"><span style={st.hint}>Saldo após</span><span style={st.text}>{formatCurrency(saldo - (selectedValor.userCost ?? selectedValor.cost))}</span></div>
@@ -1301,7 +1301,7 @@ export default function TelegramMiniApp() {
                             ) : operadoras.map((op, opIdx) => (
                               <div key={op.id} style={opIdx > 0 ? { borderTop: st.borderSub } : undefined}>
                                 <div className="px-5 py-3 flex items-center gap-2">
-                                  <span className="text-sm font-bold" style={st.text}>{op.nome}</span>
+                                  <span className="text-sm font-bold" style={st.text}>{(op.nome || "").toUpperCase()}</span>
                                 </div>
                                 <div className="px-5 pb-4 grid grid-cols-2 gap-2.5">
                                   {op.valores

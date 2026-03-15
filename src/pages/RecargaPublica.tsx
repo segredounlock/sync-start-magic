@@ -367,7 +367,7 @@ export default function RecargaPublica() {
                     >
                       <option value="">Selecione...</option>
                       {operadoras.map(op => (
-                        <option key={op.id} value={op.nome}>{op.nome}</option>
+                        <option key={op.id} value={op.nome}>{(op.nome || "").toUpperCase()}</option>
                       ))}
                     </select>
                   </div>
@@ -446,7 +446,7 @@ export default function RecargaPublica() {
                   {selectedOp && (
                     <div className="flex justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Operadora</span>
-                      <span className="font-medium text-foreground">{selectedOp}</span>
+                      <span className="font-medium text-foreground">{(selectedOp || "").toUpperCase()}</span>
                     </div>
                   )}
                   <div className="flex justify-between py-2">
