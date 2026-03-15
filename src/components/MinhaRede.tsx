@@ -37,7 +37,6 @@ interface MinhaRedeProps {
   userId: string;
   profileSlug?: string;
   referralCode?: string;
-  onOpenExclusivePricing?: (memberId: string, memberName: string) => void;
 }
 
 const roleBadge: Record<string, { label: string; color: string }> = {
