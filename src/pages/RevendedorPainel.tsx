@@ -761,7 +761,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   };
   const fmtDate = (d: string) => formatDateTimeBR(d);
 
-  const recargasHoje = recargas.filter((r) => toLocalDateKey(r.created_at) === getTodayLocalKey()).length;
+  const todayKey = getTodayLocalKey();
+  const recargasHojeAll = recargas.filter((r) => toLocalDateKey(r.created_at) === todayKey);
+  const recargasHoje = recargasHojeAll.length;
+  const recargasHojeCompleted = recargasHojeAll.filter((r) => r.status === "completed").length;
+  const recargasHojePending = recargasHojeAll.filter((r) => r.status === "pending" || r.status === "processing").length;
+  const successRate = totalRecargasCount > 0 ? Math.round((totalCompletedCount / totalRecargasCount) * 100) : 0;
   const userLabel = profileNome || user?.email?.split("@")[0] || "Revendedor";
   const userInitial = (userLabel[0] || "R").toUpperCase();
 
