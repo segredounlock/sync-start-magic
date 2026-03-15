@@ -2341,13 +2341,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "dashboard", label: "Início", icon: Activity, color: "text-primary", animation: "pulse" },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "recarga", label: "Recarga", icon: Smartphone, color: "text-primary", animation: "bounce", elevated: true },
+          { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-primary", animation: "bounce" },
           { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
           { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse" },
           { key: "contatos", label: "Config", icon: Settings, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
-          { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-primary", animation: "bounce" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
           
         ] as NavItem[]}
@@ -2356,7 +2356,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           if (key === "chat") { navigate("/chat"); return; }
           selectTab(key as PainelTab);
         }}
-        mainCount={4}
+        mainCount={5}
         userLabel={user?.email || userLabel}
         userRole={role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário"}
         userAvatarUrl={avatarUrl}
