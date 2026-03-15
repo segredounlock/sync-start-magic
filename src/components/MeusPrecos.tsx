@@ -81,9 +81,18 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
     setEditedProfits((prev) => ({ ...prev, [key]: rawValue }));
   };
 
-  const getDisplayProfit = (pv: PricingValue) => {
+  const getDisplayProfit = (pv: PricingValue): number => {
     const key = `${pv.operadoraId}_${pv.value}`;
-    return editedProfits[key] ?? pv.profit;
+    const edited = editedProfits[key];
+    if (edited !== undefined) return parseFloat(edited) || 0;
+    return pv.profit;
+  };
+
+  const getDisplayProfitRaw = (pv: PricingValue): string => {
+    const key = `${pv.operadoraId}_${pv.value}`;
+    const edited = editedProfits[key];
+    if (edited !== undefined) return edited;
+    return pv.profit.toFixed(2);
   };
 
   const getFinalPrice = (pv: PricingValue) => {
@@ -92,7 +101,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
 
   const saveRule = async (pv: PricingValue) => {
     const key = `${pv.operadoraId}_${pv.value}`;
-    const profit = editedProfits[key] ?? pv.profit;
+    const profit = getDisplayProfit(pv);
     const finalPrice = pv.cost + profit;
     setSaving(key);
     try {
