@@ -804,8 +804,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       toast.error("Formato não suportado. Use JPG, PNG, WebP ou GIF.");
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Arquivo muito grande. Máximo 2MB.");
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 8MB.");
       return;
     }
     e.target.value = "";

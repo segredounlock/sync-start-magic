@@ -417,7 +417,7 @@ export default function TelegramMiniApp() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
-    if (file.size > 2 * 1024 * 1024) { alert("Arquivo muito grande (máx 2MB)"); return; }
+    if (file.size > 8 * 1024 * 1024) { alert("Arquivo muito grande (máx 8MB)"); return; }
     setUploadingAvatar(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
