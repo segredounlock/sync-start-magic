@@ -277,7 +277,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             animate={{ backgroundPosition: ["200% center", "-200% center"] }}
             transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
           >
-            🏆 Top Rei da GG
+            🏆 Top Recargas
           </motion.span>
         </h2>
 
