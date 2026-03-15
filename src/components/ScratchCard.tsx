@@ -564,7 +564,10 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-foreground text-sm">{w.nome}</p>
+                            <p className={`font-medium text-foreground text-sm flex items-center gap-1 ${w.verification_badge ? "shimmer-letters" : ""}`}>
+                              {w.nome}
+                              <VerificationBadge badge={w.verification_badge as BadgeType} size="xs" />
+                            </p>
                             <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
                           </div>
                         </div>
