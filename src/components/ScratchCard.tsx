@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Currency } from "@/components/ui/Currency";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
+import { AnimatedIcon } from "@/components/AnimatedIcon";
 import confetti from "canvas-confetti";
 import { ScratchCanvas } from "@/components/ScratchCanvas";
 
@@ -516,7 +517,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
               {/* Hall da Fama */}
               <div className="bg-card border border-border rounded-2xl p-5">
                 <h4 className="font-bold text-foreground flex items-center gap-2 mb-4">
-                  <Trophy className="h-5 w-5 text-warning" /> Hall da Fama
+                  <AnimatedIcon icon={Trophy} className="h-5 w-5 text-warning" animation="wiggle" /> Hall da Fama
                 </h4>
                 <div className="space-y-3">
                   {topWinners.map((w, i) => (
@@ -550,7 +551,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
               {/* Últimos Prêmios */}
               <div className="bg-card border border-border rounded-2xl p-5">
                 <h4 className="font-bold text-foreground flex items-center gap-2 mb-4">
-                  <Sparkles className="h-5 w-5 text-purple-500" /> Últimos Prêmios
+                  <AnimatedIcon icon={Sparkles} className="h-5 w-5 text-purple-500" animation="pulse" /> Últimos Prêmios
                 </h4>
                 <div className="space-y-3">
                   {recentWinners.map((w, i) => (
