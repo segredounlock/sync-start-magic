@@ -54,7 +54,6 @@ export function AtualizacoesSection() {
       const { data } = await supabase
         .from("notifications")
         .select("id, title, message, buttons, image_url, created_at, status")
-        .in("status", ["sent", "completed"])
         .order("created_at", { ascending: false })
         .limit(20);
       setItems((data as Notif[] | null) || []);
