@@ -1,16 +1,17 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { SplashScreen } from "@/components/SplashScreen";
+import { PageSkeleton } from "@/components/Skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
 import { useCacheCleanup } from "@/hooks/useCacheCleanup";
 
-// Lazy load ALL pages that aren't the initial landing
+// Lazy load ALL pages
 const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
 const TelegramMiniApp = lazy(() => import("@/pages/TelegramMiniApp"));
 const ClientePortal = lazy(() => import("@/pages/ClientePortal"));
@@ -23,19 +24,49 @@ const Principal = lazy(() => import("@/pages/Principal"));
 const ChatApp = lazy(() => import("@/pages/ChatApp"));
 const UserProfile = lazy(() => import("@/pages/UserProfile"));
 
-// Lazy load non-critical global components (render after initial paint)
+// Lazy load non-critical global components
 const SeasonalEffects = lazy(() => import("@/components/SeasonalEffects"));
 const PullToRefresh = lazy(() => import("@/components/PullToRefresh"));
 
+// ── Prefetch common routes after initial paint ──
+function usePrefetchRoutes() {
+  const prefetched = useRef(false);
+  useEffect(() => {
+    if (prefetched.current) return;
+    prefetched.current = true;
+
+    const prefetch = () => {
+      // Prefetch the most likely next routes
+      import("@/pages/RevendedorPainel");
+      import("@/pages/AdminDashboard");
+    };
+
+    if (typeof requestIdleCallback === 'function') {
+      const id = requestIdleCallback(prefetch, { timeout: 5000 });
+      return () => cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(prefetch, 3000);
+      return () => clearTimeout(id);
+    }
+  }, []);
+}
+
+// ── Maintenance guard with optimistic rendering ──
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const [maintenance, setMaintenance] = useState<boolean | null>(null);
+  const checkedRef = useRef(false);
 
   useEffect(() => {
+    if (checkedRef.current) return;
+    checkedRef.current = true;
+
     let mounted = true;
+
+    // Fast timeout — don't block UI for more than 2s
     const timeout = setTimeout(() => {
       if (mounted && maintenance === null) setMaintenance(false);
-    }, 5000);
+    }, 2000);
 
     const check = async () => {
       try {
@@ -49,10 +80,13 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     };
     check();
 
-    // Listen for realtime changes
+    // Realtime changes
     const channel = supabase
       .channel("maintenance-mode")
-      .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.maintenanceMode" }, (payload: any) => {
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "system_config",
+        filter: "key=eq.maintenanceMode"
+      }, (payload: any) => {
         if (mounted) setMaintenance(payload.new?.value === "true");
       })
       .subscribe();
@@ -60,19 +94,19 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     return () => { mounted = false; clearTimeout(timeout); supabase.removeChannel(channel); };
   }, []);
 
-  // Loading maintenance status
+  // Show splash only briefly while checking maintenance
   if (maintenance === null) return <SplashScreen />;
   if (maintenance && role === "admin") return <>{children}</>;
   if (maintenance) return <Suspense fallback={<SplashScreen />}><MaintenancePage /></Suspense>;
   return <>{children}</>;
 }
 
+// ── Deferred non-critical effects ──
 function DeferredEffects() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    // Defer non-critical effects until after initial paint
     if (typeof requestIdleCallback === 'function') {
-      const id = requestIdleCallback(() => setReady(true));
+      const id = requestIdleCallback(() => setReady(true), { timeout: 3000 });
       return () => cancelIdleCallback(id);
     } else {
       const id = setTimeout(() => setReady(true), 1500);
@@ -88,8 +122,14 @@ function DeferredEffects() {
   );
 }
 
+// ── Page loading fallback (skeleton instead of splash) ──
+function LazyPage({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>;
+}
+
 function App() {
   useCacheCleanup();
+  usePrefetchRoutes();
 
   return (
     <ThemeProvider>
@@ -99,18 +139,16 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Auth />} />
-            <Route path="/recarga" element={<Suspense fallback={<SplashScreen />}><RecargaPublica /></Suspense>} />
-            <Route path="/reset-password" element={<Suspense fallback={<SplashScreen />}><ResetPassword /></Suspense>} />
-            <Route path="/loja/:slug" element={<Suspense fallback={<SplashScreen />}><ClientePortal /></Suspense>} />
-            <Route path="/miniapp" element={<Suspense fallback={<SplashScreen />}><TelegramMiniApp /></Suspense>} />
-            <Route path="/instalar" element={<Suspense fallback={<SplashScreen />}><InstallApp /></Suspense>} />
+            <Route path="/recarga" element={<LazyPage><RecargaPublica /></LazyPage>} />
+            <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
+            <Route path="/loja/:slug" element={<LazyPage><ClientePortal /></LazyPage>} />
+            <Route path="/miniapp" element={<LazyPage><TelegramMiniApp /></LazyPage>} />
+            <Route path="/instalar" element={<LazyPage><InstallApp /></LazyPage>} />
             <Route
               path="/admin"
               element={
                 <ProtectedRoute allowedRoles={["admin", "revendedor"]}>
-                  <Suspense fallback={<SplashScreen />}>
-                    <AdminDashboard />
-                  </Suspense>
+                  <LazyPage><AdminDashboard /></LazyPage>
                 </ProtectedRoute>
               }
             />
@@ -118,9 +156,7 @@ function App() {
               path="/principal"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <Suspense fallback={<SplashScreen />}>
-                    <Principal />
-                  </Suspense>
+                  <LazyPage><Principal /></LazyPage>
                 </ProtectedRoute>
               }
             />
@@ -128,9 +164,7 @@ function App() {
               path="/painel"
               element={
                 <ProtectedRoute>
-                  <Suspense fallback={<SplashScreen />}>
-                    <RevendedorPainel />
-                  </Suspense>
+                  <LazyPage><RevendedorPainel /></LazyPage>
                 </ProtectedRoute>
               }
             />
@@ -138,9 +172,7 @@ function App() {
               path="/chat"
               element={
                 <ProtectedRoute>
-                  <Suspense fallback={<SplashScreen />}>
-                    <ChatApp />
-                  </Suspense>
+                  <LazyPage><ChatApp /></LazyPage>
                 </ProtectedRoute>
               }
             />
@@ -148,9 +180,7 @@ function App() {
               path="/perfil/:userId"
               element={
                 <ProtectedRoute>
-                  <Suspense fallback={<SplashScreen />}>
-                    <UserProfile />
-                  </Suspense>
+                  <LazyPage><UserProfile /></LazyPage>
                 </ProtectedRoute>
               }
             />
