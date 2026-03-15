@@ -5,6 +5,7 @@ import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link2, Users, TrendingUp, BarChart3, Search, User, MoreVertical, Tag, ArrowUpCircle } from "lucide-react";
+import { ClientPricingModal } from "@/components/ClientPricingModal";
 
 interface NetworkStats {
   direct_count: number;
