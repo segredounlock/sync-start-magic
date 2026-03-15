@@ -1431,6 +1431,22 @@ export default function TelegramMiniApp() {
                   >
                     {formatCurrency(pixData.amount)}
                   </motion.p>
+                  {pixData.fee_amount && pixData.fee_amount > 0 ? (
+                    <motion.div
+                      className="text-center space-y-0.5"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                    >
+                      <p className="text-xs" style={st.hint}>
+                        Taxa: <span className="font-mono" style={{ color: "var(--tg-destructive, #ec3942)" }}>-{formatCurrency(pixData.fee_amount)}</span>
+                        {pixData.fee_type === "percentual" && pixData.fee_value ? ` (${pixData.fee_value}%)` : ""}
+                      </p>
+                      <p className="text-sm font-semibold" style={st.text}>
+                        Você receberá: <span style={st.green}>{formatCurrency(pixData.net_amount ?? pixData.amount)}</span>
+                      </p>
+                    </motion.div>
+                  ) : null}
 
                   {/* Copy section */}
                   {pixData.qr_code && (

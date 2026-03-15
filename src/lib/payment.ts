@@ -9,6 +9,10 @@ export type PixResult = {
   payment_link: string | null;
   amount: number;
   status: string;
+  fee_amount?: number;
+  fee_type?: string | null;
+  fee_value?: number | null;
+  net_amount?: number;
 };
 
 export async function createPixDeposit(amount: number, email?: string, name?: string, useGlobal?: boolean, resellerUserId?: string, saldoTipo?: string): Promise<PixResult> {

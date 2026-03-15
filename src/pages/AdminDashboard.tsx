@@ -3932,7 +3932,19 @@ function AdminAddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, us
             <h3 className="font-display text-lg font-bold text-foreground">PIX Gerado!</h3>
             <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o código abaixo</p>
             <p className="text-2xl font-bold text-success mt-2">{fmt(pixData.amount)}</p>
-            <p className="text-xs text-muted-foreground mt-1">via PIX</p>
+            {pixData.fee_amount && pixData.fee_amount > 0 ? (
+              <div className="mt-1 space-y-0.5">
+                <p className="text-xs text-muted-foreground">
+                  Taxa: <span className="font-mono text-destructive/80">-{fmt(pixData.fee_amount)}</span>
+                  {pixData.fee_type === "percentual" && pixData.fee_value ? ` (${pixData.fee_value}%)` : ""}
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  Você receberá: <span className="text-success">{fmt(pixData.net_amount ?? pixData.amount)}</span>
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">via PIX</p>
+            )}
           </div>
 
           {pixData.qr_code && (

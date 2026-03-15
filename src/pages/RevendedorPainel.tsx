@@ -2754,14 +2754,31 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
             >
               {fmt(pixData.amount)}
             </motion.p>
-            <motion.p
-              className="text-xs text-muted-foreground mt-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              via Pix
-            </motion.p>
+            {pixData.fee_amount && pixData.fee_amount > 0 ? (
+              <motion.div
+                className="mt-1 space-y-0.5"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <p className="text-xs text-muted-foreground">
+                  Taxa: <span className="font-mono text-destructive/80">-{fmt(pixData.fee_amount)}</span>
+                  {pixData.fee_type === "percentual" && pixData.fee_value ? ` (${pixData.fee_value}%)` : ""}
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  Você receberá: <span className="text-success">{fmt(pixData.net_amount ?? pixData.amount)}</span>
+                </p>
+              </motion.div>
+            ) : (
+              <motion.p
+                className="text-xs text-muted-foreground mt-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                via Pix
+              </motion.p>
+            )}
           </div>
 
           {/* QR Code - Gerado localmente a partir do copia-e-cola */}
