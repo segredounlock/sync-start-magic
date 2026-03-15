@@ -245,9 +245,9 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
             {activeOp.values.map((pv) => {
               const key = `${pv.operadoraId}_${pv.value}`;
               const isSelected = selectedValues.has(key);
-              const displayProfit = getDisplayProfit(pv);
-              const finalPrice = getFinalPrice(pv);
-              const hasEdits = editedProfits[key] !== undefined;
+               const displayProfit = getDisplayProfit(pv);
+               const displayProfitRaw = getDisplayProfitRaw(pv);
+               const finalPrice = getFinalPrice(pv);
 
               return (
                 <motion.div
