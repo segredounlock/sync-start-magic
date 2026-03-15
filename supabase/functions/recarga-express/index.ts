@@ -915,7 +915,7 @@ Deno.serve(async (req) => {
           .single();
         const prBalance = Number(prSaldoData?.valor) || 0;
 
-        console.log(`public-recharge: reseller=${userId} operator=${prResolvedOperator} amount=${prAmount} apiCost=${prApiCost} chargedCost=${prChargedCost} balance=${prBalance}`);
+        console.log(`public-recharge: reseller=${userId} operator=${prResolvedOperator} amount=${prAmount} apiCost=${prApiCost} chargedCost=${prChargedCost} source=${prPricingSource} balance=${prBalance}`);
 
         if (prBalance < prChargedCost) throw new Error("Saldo insuficiente do revendedor");
 
