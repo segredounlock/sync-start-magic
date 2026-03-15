@@ -3470,6 +3470,7 @@ export default function AdminDashboard() {
                 notificationTitle={broadcastTitle}
                 onComplete={() => {
                   toast.success('Broadcast concluído!');
+                  setBroadcastProgressId(null);
                   fetchBroadcastHistory();
                 }}
                 onResume={async (pid) => {
