@@ -183,6 +183,7 @@ export default function Principal() {
   const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
+  const [broadcastBlockedCount, setBroadcastBlockedCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
   const [interruptedBroadcasts, setInterruptedBroadcasts] = useState<any[]>([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
