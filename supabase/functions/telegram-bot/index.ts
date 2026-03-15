@@ -88,6 +88,37 @@ async function getMigrationConfig(supabase: any): Promise<{ enabled: boolean; ur
   return result;
 }
 
+// Default margin cache
+let defaultMarginCache: { enabled: boolean; type: string; value: number; time: number } | null = null;
+const DEFAULT_MARGIN_CACHE_TTL = 30_000; // 30s
+
+async function getDefaultMarginConfig(supabase: any): Promise<{ enabled: boolean; type: string; value: number }> {
+  if (defaultMarginCache && (Date.now() - defaultMarginCache.time) < DEFAULT_MARGIN_CACHE_TTL) {
+    return {
+      enabled: defaultMarginCache.enabled,
+      type: defaultMarginCache.type,
+      value: defaultMarginCache.value,
+    };
+  }
+
+  const { data } = await supabase
+    .from("system_config")
+    .select("key, value")
+    .in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
+
+  const map: Record<string, string> = {};
+  for (const row of (data || [])) map[row.key] = row.value || "";
+
+  const result = {
+    enabled: map.defaultMarginEnabled === "true",
+    type: map.defaultMarginType || "fixo",
+    value: parseFloat(map.defaultMarginValue || "0"),
+  };
+
+  defaultMarginCache = { ...result, time: Date.now() };
+  return result;
+}
+
 async function resolveBotToken(supabase: any, botId?: string): Promise<string> {
   const cacheKey = botId || "__default__";
   const cached = tokenCache.get(cacheKey);
