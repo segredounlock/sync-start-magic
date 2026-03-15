@@ -1150,7 +1150,7 @@ export default function BackupSection() {
                   const edgeFns = effectivePaths.filter(p => p.startsWith("supabase/functions/")).length;
                   const configs = effectivePaths.filter(p => !p.startsWith("src/") && !p.startsWith("supabase/functions/") && !p.startsWith("public/")).length;
                   return (
-                    <div className="rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] p-3">
+                    <div className="rounded-2xl bg-card border border-border shadow-sm p-3">
                       <p className="text-xs text-muted-foreground">
                         <span className="font-semibold text-foreground">Projeto completo:</span>{" "}
                         {pages} páginas · {components} componentes · {hooks} hooks · {libs} libs · {edgeFns} edge functions{configs > 0 ? ` · ${configs} configs` : ""}
