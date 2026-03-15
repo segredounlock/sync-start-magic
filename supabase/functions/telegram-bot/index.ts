@@ -1441,10 +1441,12 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     const user = await findUserByTelegram(supabase, telegramId);
     if (!user) return;
 
-    // Check gateway in parallel
-    const [resellerCfg, globalCfg] = await Promise.all([
+    // Check gateway + fee config in parallel
+    const [resellerCfg, globalCfg, taxaTipoRow, taxaValorRow] = await Promise.all([
       supabase.from("reseller_config").select("key, value").eq("user_id", user.id).eq("key", "paymentModule").maybeSingle(),
       supabase.from("system_config").select("value").eq("key", "paymentModule").maybeSingle(),
+      supabase.from("system_config").select("value").eq("key", "taxaTipo").maybeSingle(),
+      supabase.from("system_config").select("value").eq("key", "taxaValor").maybeSingle(),
     ]);
 
     const hasGateway = !!resellerCfg?.data?.value || !!globalCfg?.data?.value;
@@ -1457,9 +1459,18 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       return;
     }
 
+    // Build fee info line for deposit menu
+    const taxaTipo = taxaTipoRow?.data?.value || "";
+    const taxaValor = parseFloat((taxaValorRow?.data?.value || "0").replace(",", ".")) || 0;
+    let feeInfoLine = "";
+    if (taxaTipo && taxaValor > 0) {
+      const feeLabel = taxaTipo === "percentual" ? `${taxaValor}%` : `R$ ${taxaValor.toFixed(2).replace(".", ",")}`;
+      feeInfoLine = `\n💸 <b>Taxa de depósito:</b> ${feeLabel}`;
+    }
+
     await setSession(supabase, String(chatId), "awaiting_deposit_amount", { user_id: user.id, bot_msg_id: msgId });
     await editMessageWithKeyboard(token, chatId, msgId,
-      "💳 <b>Depósito PIX</b>\n\n💰 Valor mínimo: <b>R$ 10,00</b>\n\nEscolha um valor ou digite manualmente:",
+      `💳 <b>Depósito PIX</b>\n\n💰 Valor mínimo: <b>R$ 10,00</b>${feeInfoLine}\n\nEscolha um valor ou digite manualmente:`,
       [
         [{ text: "R$ 10", callback_data: "deposit_10" }, { text: "R$ 15", callback_data: "deposit_15" }, { text: "R$ 20", callback_data: "deposit_20" }],
         [{ text: "R$ 30", callback_data: "deposit_30" }, { text: "R$ 50", callback_data: "deposit_50" }, { text: "R$ 100", callback_data: "deposit_100" }],

@@ -42,6 +42,7 @@ import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalD
 
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
+import { useFeePreview } from "@/hooks/useFeePreview";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
 
@@ -2608,6 +2609,8 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
     checkStatus: handleCheckStatus, reset: handleNewPix,
   } = pix;
 
+  const { calcFee: feeCalc } = useFeePreview();
+
   const DEPOSIT_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
   const depositTxs = transactions.filter(t => t.type === "deposit").map(t => {
     if (t.status === "pending" && (Date.now() - new Date(t.created_at).getTime()) > DEPOSIT_EXPIRY_MS) {
@@ -2692,6 +2695,31 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
               <p className="text-xs text-destructive mt-1">Valor mínimo: R$ 10,00</p>
             )}
           </div>
+
+          {/* Fee preview */}
+          {(() => {
+            const val = parseFloat((depositAmount || "0").replace(",", "."));
+            const preview = feeCalc(val);
+            if (preview.hasFee && val >= 10) {
+              return (
+                <div className="rounded-xl bg-muted/30 border border-border px-4 py-3 space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Valor do depósito</span>
+                    <span className="font-mono">{fmt(val)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Taxa ({preview.feeLabel})</span>
+                    <span className="font-mono text-destructive/80">-{fmt(preview.feeAmount)}</span>
+                  </div>
+                  <div className="border-t border-border pt-1 flex justify-between text-sm font-semibold">
+                    <span className="text-foreground">Você receberá</span>
+                    <span className="text-success font-mono">{fmt(preview.netAmount)}</span>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Generate button - full width below */}
           <button
