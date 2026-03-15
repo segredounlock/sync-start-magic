@@ -1,40 +1,18 @@
 
 
-## Diagnóstico e Correção
+## Adicionar Template "Recarga Maluca" ao Broadcast
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+Adicionar um novo template ao array `TEMPLATES` em `src/components/BroadcastForm.tsx` com texto promocional para a promoção de fim de semana.
 
-### Plano
+### Mudança
 
-**1. Corrigir o mapeamento de status na sync function**
+No array `TEMPLATES` (linha ~38), adicionar um 5º item:
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```ts
+{ key: 'maluca', label: 'Recarga Maluca', emoji: '🤪', color: 'bg-orange-600/80',
+  title: '🤪🔥 RECARGA MALUCA do FDS!',
+  message: '⚡ Todo fim de semana tem RECARGA MALUCA!\n\n💰 Preços EXCLUSIVOS e DIFERENCIADOS que você só encontra aqui!\n\n📱 Recarregue já e aproveite antes que acabe!\n\n⏰ Válido sábado e domingo!' }
 ```
 
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Ajustar o grid de templates de `grid-cols-2` para acomodar 5 itens (última linha com item centralizado ou manter 2 colunas com 3 linhas).
 
