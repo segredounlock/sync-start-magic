@@ -367,7 +367,7 @@ export default function RecargaPublica() {
                     >
                       <option value="">Selecione...</option>
                       {operadoras.map(op => (
-                        <option key={op.id} value={op.nome}>{op.nome}</option>
+                        <option key={op.id} value={op.nome}>{(op.nome || "").toUpperCase()}</option>
                       ))}
                     </select>
                   </div>
