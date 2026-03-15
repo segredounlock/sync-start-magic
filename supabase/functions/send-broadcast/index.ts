@@ -389,9 +389,12 @@ async function sendBroadcastInBackground(
       }
     }
 
-    // Flush remaining blocked users
+    // Flush remaining blocked/unblocked users
     if (blockedUpdates.length > 0) {
       await flushBlockedUsers(blockedUpdates);
+    }
+    if (unblockedIds.length > 0) {
+      await flushUnblockedUsers(unblockedIds);
     }
 
     // Only mark completed if not already cancelled
