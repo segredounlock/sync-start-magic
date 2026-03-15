@@ -33,7 +33,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
   const [bulkProfit, setBulkProfit] = useState("");
   const [showBulk, setShowBulk] = useState(false);
-  const [editedProfits, setEditedProfits] = useState<Record<string, number>>({});
+  const [editedProfits, setEditedProfits] = useState<Record<string, string>>({});
 
   const fetchPricing = useCallback(async () => {
     setLoading(true);
@@ -76,14 +76,23 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
 
   useEffect(() => { fetchPricing(); }, []);
 
-  const handleProfitChange = (opId: string, value: number, profit: number) => {
+  const handleProfitChange = (opId: string, value: number, rawValue: string) => {
     const key = `${opId}_${value}`;
-    setEditedProfits((prev) => ({ ...prev, [key]: profit }));
+    setEditedProfits((prev) => ({ ...prev, [key]: rawValue }));
   };
 
-  const getDisplayProfit = (pv: PricingValue) => {
+  const getDisplayProfit = (pv: PricingValue): number => {
     const key = `${pv.operadoraId}_${pv.value}`;
-    return editedProfits[key] ?? pv.profit;
+    const edited = editedProfits[key];
+    if (edited !== undefined) return parseFloat(edited) || 0;
+    return pv.profit;
+  };
+
+  const getDisplayProfitRaw = (pv: PricingValue): string => {
+    const key = `${pv.operadoraId}_${pv.value}`;
+    const edited = editedProfits[key];
+    if (edited !== undefined) return edited;
+    return pv.profit.toFixed(2);
   };
 
   const getFinalPrice = (pv: PricingValue) => {
@@ -92,7 +101,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
 
   const saveRule = async (pv: PricingValue) => {
     const key = `${pv.operadoraId}_${pv.value}`;
-    const profit = editedProfits[key] ?? pv.profit;
+    const profit = getDisplayProfit(pv);
     const finalPrice = pv.cost + profit;
     setSaving(key);
     try {
@@ -236,9 +245,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
             {activeOp.values.map((pv) => {
               const key = `${pv.operadoraId}_${pv.value}`;
               const isSelected = selectedValues.has(key);
-              const displayProfit = getDisplayProfit(pv);
-              const finalPrice = getFinalPrice(pv);
-              const hasEdits = editedProfits[key] !== undefined;
+               const displayProfit = getDisplayProfit(pv);
+               const displayProfitRaw = getDisplayProfitRaw(pv);
+               const finalPrice = getFinalPrice(pv);
+               const hasEdits = editedProfits[key] !== undefined;
 
               return (
                 <motion.div
@@ -278,8 +288,8 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                           type="number"
                           step="0.01"
                           min="0"
-                          value={displayProfit.toFixed(2)}
-                          onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, parseFloat(e.target.value) || 0)}
+                          value={displayProfitRaw}
+                          onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, e.target.value)}
                           className="w-20 text-right bg-background border border-border rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
                         />
                       </div>
