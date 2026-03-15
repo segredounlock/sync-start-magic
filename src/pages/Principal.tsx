@@ -6,6 +6,7 @@ import BackupSection from "@/components/BackupSection";
 import { BroadcastForm } from "@/components/BroadcastForm";
 import { BroadcastProgress } from "@/components/BroadcastProgress";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { FloatingMenuIcon, FloatingGridIcon } from "@/components/FloatingMenuIcon";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from "@/components/ui";
 import { PromoBanner } from "@/components/PromoBanner";

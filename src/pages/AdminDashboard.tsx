@@ -8,6 +8,7 @@ import { SkeletonRow, SkeletonCard, SkeletonValue, SkeletonPricingGrid } from "@
 import BrandedQRCode from "@/components/BrandedQRCode";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { FloatingMenuIcon, FloatingGridIcon } from "@/components/FloatingMenuIcon";
 import { Suspense, lazy } from "react";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { Currency, IntVal, StatusBadge, getStatusLabel } from "@/components/ui";
