@@ -1460,7 +1460,7 @@ export default function AdminDashboard() {
                 <div key={op.id} className="glass-card rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground">{op.nome}</h3>
+                      <h3 className="font-semibold text-foreground">{(op.nome || "").toUpperCase()}</h3>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${op.ativo ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                         {op.ativo ? "Ativo" : "Inativo"}
                       </span>
