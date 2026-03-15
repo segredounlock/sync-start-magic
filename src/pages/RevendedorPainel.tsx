@@ -14,6 +14,7 @@ import { Currency, IntVal, StatusBadge } from "@/components/ui";
 import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { PromoBanner } from "@/components/PromoBanner";
+import { FloatingMenuIcon, FloatingGridIcon } from "@/components/FloatingMenuIcon";
 import { PopupBanner } from "@/components/PopupBanner";
 import { PixResult } from "@/lib/payment";
 import { useBackgroundPaymentMonitor } from "@/hooks/useBackgroundPaymentMonitor";
@@ -891,7 +892,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
             {/* Grid */}
             <div className="px-4 pb-3 grid grid-cols-3 gap-2">
-              {menuItems.map((item) => {
+              {menuItems.map((item, index) => {
                 const isActive = tab === item.key;
                 return (
                   <button
@@ -903,7 +904,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         : "bg-muted/30 text-foreground hover:bg-muted/50"
                     }`}
                   >
-                    <item.icon className={`h-6 w-6 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                    <FloatingGridIcon icon={item.icon} color={isActive ? "text-primary" : "text-muted-foreground"} isActive={isActive} index={index} />
                     <span className={`text-[11px] font-semibold text-center leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>{item.label}</span>
                   </button>
                 );
@@ -915,7 +916,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   <div className="col-span-3 pt-1">
                     <p className="text-[10px] tracking-widest text-muted-foreground/60 uppercase font-semibold text-center">Ferramentas de Venda</p>
                   </div>
-                  {salesMenuItems.map((item) => {
+                  {salesMenuItems.map((item, index) => {
                     const isActive = tab === item.key;
                     return (
                       <button
@@ -927,7 +928,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             : "bg-muted/30 text-foreground hover:bg-muted/50"
                         }`}
                       >
-                        <item.icon className={`h-6 w-6 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                        <FloatingGridIcon icon={item.icon} color={isActive ? "text-primary" : "text-muted-foreground"} isActive={isActive} index={menuItems.length + index} />
                         <span className={`text-[11px] font-semibold text-center leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>{item.label}</span>
                       </button>
                     );
@@ -1004,23 +1005,31 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           </div>
 
           <nav className="p-3 space-y-1 overflow-y-auto flex-1 relative">
-            {menuItems.map((item) => {
+            {menuItems.map((item, index) => {
               const isActive = tab === item.key;
               return (
-                <button
+                <motion.div
                   key={item.key}
-                  onClick={() => selectTab(item.key)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
-                    isActive
-                      ? "nav-item-active"
-                      : item.dashed
-                      ? "text-success border border-dashed border-success/30 hover:bg-success/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : item.dashed ? "text-success" : ""}`} />
-                  <span>{item.label}</span>
-                </button>
+                  <button
+                    onClick={() => selectTab(item.key)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
+                      isActive
+                        ? "nav-item-active"
+                        : item.dashed
+                        ? "text-success border border-dashed border-success/30 hover:bg-success/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    }`}
+                  >
+                    <FloatingMenuIcon icon={item.icon} color={isActive ? "text-primary" : item.dashed ? "text-success" : "text-primary"} isActive={false} index={index} size="h-4 w-4" />
+                    <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                      {item.label}
+                    </motion.span>
+                  </button>
+                </motion.div>
               );
             })}
 
@@ -1028,19 +1037,27 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             {salesMenuItems.length > 0 && (
               <div className="pt-3 mt-3 border-t border-border space-y-1">
                 <div className="px-2 text-[10px] tracking-widest text-muted-foreground/60 uppercase font-semibold">Ferramentas de Venda</div>
-                {salesMenuItems.map((item) => {
+                {salesMenuItems.map((item, index) => {
                   const isActive = tab === item.key;
                   return (
-                    <button
+                    <motion.div
                       key={item.key}
-                      onClick={() => selectTab(item.key)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
-                        isActive ? "nav-item-active" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                      }`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (menuItems.length + index) * 0.05 }}
                     >
-                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
-                      <span>{item.label}</span>
-                    </button>
+                      <button
+                        onClick={() => selectTab(item.key)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all ${
+                          isActive ? "nav-item-active" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                        }`}
+                      >
+                        <FloatingMenuIcon icon={item.icon} color="text-primary" isActive={false} index={menuItems.length + index} size="h-4 w-4" />
+                        <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                          {item.label}
+                        </motion.span>
+                      </button>
+                    </motion.div>
                   );
                 })}
               </div>
