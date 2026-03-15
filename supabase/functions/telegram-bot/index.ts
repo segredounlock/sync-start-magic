@@ -1729,9 +1729,20 @@ async function handleDepositAmount(supabase: any, token: string, chatId: number,
       [{ text: "📖 Menu", callback_data: "menu_main" }],
     ];
 
+    // Build fee info line
+    const feeAmount = pix.fee_amount || 0;
+    const netAmount = pix.net_amount ?? valor;
+    const feeType = pix.fee_type || "";
+    const feeValue = pix.fee_value || 0;
+    let feeLine = "";
+    if (feeAmount > 0) {
+      const feeLabel = feeType === "percentual" && feeValue ? ` (${feeValue}%)` : "";
+      feeLine = `\n💸 Taxa: <b>-R$ ${feeAmount.toFixed(2).replace(".", ",")}</b>${feeLabel}\n✅ Você receberá: <b>R$ ${netAmount.toFixed(2).replace(".", ",")}</b>`;
+    }
+
     if (pix.qr_code) {
       const qrUrl = generateQRCodeUrl(pix.qr_code);
-      let caption = `💳 <b>PIX Gerado!</b>\n\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>\n🏦 Pagamento via PIX\n\n`;
+      let caption = `💳 <b>PIX Gerado!</b>\n\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>${feeLine}\n🏦 Pagamento via PIX\n\n`;
       caption += `📋 <b>Código Copia e Cola:</b>\n<code>${pix.qr_code}</code>\n\n`;
       if (pix.payment_link) caption += `🔗 <a href="${pix.payment_link}">Link de pagamento</a>\n\n`;
       caption += `⏱ Aguardando pagamento...`;
@@ -1746,7 +1757,7 @@ async function handleDepositAmount(supabase: any, token: string, chatId: number,
       if (sent) return;
     }
 
-    let msg = `💳 <b>PIX Gerado!</b>\n\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>\n🏦 Pagamento via PIX\n\n`;
+    let msg = `💳 <b>PIX Gerado!</b>\n\n💰 Valor: <b>R$ ${valor.toFixed(2).replace(".", ",")}</b>${feeLine}\n🏦 Pagamento via PIX\n\n`;
     if (pix.qr_code) msg += `📋 <b>Copie o código PIX abaixo:</b>\n\n<code>${pix.qr_code}</code>\n\n`;
     if (pix.payment_link) msg += `🔗 <a href="${pix.payment_link}">Link de pagamento</a>\n\n`;
     msg += `⏱ Aguardando pagamento...`;
