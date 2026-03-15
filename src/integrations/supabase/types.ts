@@ -1292,6 +1292,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      export_schema_info: { Args: never; Returns: Json }
       get_chat_enabled: { Args: never; Returns: boolean }
       get_chat_new_conv_filter: { Args: never; Returns: string }
       get_follow_counts: {
