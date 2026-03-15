@@ -6,6 +6,7 @@ import {
   Frown, Info, Wallet, Clock
 } from "lucide-react";
 import { Currency } from "@/components/ui/Currency";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import confetti from "canvas-confetti";
 import { ScratchCanvas } from "@/components/ScratchCanvas";
 
@@ -34,6 +35,7 @@ interface HistoryCard {
 interface WinnerEntry {
   nome: string;
   avatar_url: string | null;
+  verification_badge: string | null;
   prize_amount: number;
   card_date: string;
 }
@@ -530,7 +532,10 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-foreground text-sm">{w.nome}</p>
+                            <p className={`font-medium text-foreground text-sm flex items-center gap-1 ${w.verification_badge ? "shimmer-letters" : ""}`}>
+                              {w.nome}
+                              <VerificationBadge badge={w.verification_badge as BadgeType} size="xs" />
+                            </p>
                             <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
                           </div>
                         </div>
@@ -559,7 +564,10 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-foreground text-sm">{w.nome}</p>
+                            <p className={`font-medium text-foreground text-sm flex items-center gap-1 ${w.verification_badge ? "shimmer-letters" : ""}`}>
+                              {w.nome}
+                              <VerificationBadge badge={w.verification_badge as BadgeType} size="xs" />
+                            </p>
                             <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
                           </div>
                         </div>
