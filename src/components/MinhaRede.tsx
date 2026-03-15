@@ -121,6 +121,23 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
     }
   };
 
+  const demoteToClient = async (member: NetworkMember) => {
+    setPromotingId(member.id);
+    try {
+      const res = await supabase.functions.invoke("admin-toggle-role", {
+        body: { user_id: member.id, role: "revendedor", action: "remove" },
+      });
+      if (res.error) throw res.error;
+      toast.success(`${member.nome || "Usuário"} rebaixado para Cliente.`);
+      setOpenMenuId(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao rebaixar");
+    } finally {
+      setPromotingId(null);
+    }
+  };
+
   const filteredMembers = members.filter((m) => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -331,6 +348,16 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
                               >
                                 <ArrowUpCircle className="h-4 w-4 text-purple-500" />
                                 {promotingId === member.id ? "Promovendo..." : "Promover p/ Vendedor"}
+                              </button>
+                            )}
+                            {member.role === "revendedor" && (
+                              <button
+                                disabled={promotingId === member.id}
+                                onClick={() => demoteToClient(member)}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-muted/50 transition-colors text-left disabled:opacity-50"
+                              >
+                                <ArrowUpCircle className="h-4 w-4 rotate-180 text-destructive" />
+                                {promotingId === member.id ? "Rebaixando..." : "Rebaixar p/ Cliente"}
                               </button>
                             )}
                           </motion.div>
