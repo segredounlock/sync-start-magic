@@ -839,6 +839,11 @@ Deno.serve(async (req) => {
           completed_at: isCompleted ? new Date().toISOString() : null,
         });
 
+        // Generate referral commissions for completed recharges
+        if (isCompleted) {
+          generateCommissions(adminClient, userId, chargedCost, apiCost, externalId).catch(() => {});
+        }
+
         // Telegram notification — only when API confirmed completion
         if (isCompleted) {
           try {
