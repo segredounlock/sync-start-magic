@@ -1200,9 +1200,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     }
 
     // Get user role and pricing rules
-    const { data: roleData } = await supabase
-      .from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
-    const userRole = roleData?.role || "cliente";
+    const userRole = await resolveUserRole(supabase, user.id, "cliente");
 
     let resellerId: string | null = null;
     if (userRole === "cliente") {
