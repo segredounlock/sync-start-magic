@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
                 const valorFmt = Number(tx.amount)
                   .toFixed(2)
                   .replace(".", ",");
-                const saldoFmt = newBalance
+                const saldoFmt = Number(newBalance || 0)
                   .toFixed(2)
                   .replace(".", ",");
                 const feeNote =
