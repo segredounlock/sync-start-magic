@@ -64,6 +64,34 @@ export function MobileBottomNav({
         <div className="flex items-center justify-around h-16">
           {mainItems.map((item) => {
             const isActive = activeKey === item.key;
+
+            if (item.elevated) {
+              return (
+                <motion.button
+                  key={item.key}
+                  onClick={() => handleSelect(item.key)}
+                  className="flex flex-col items-center justify-center touch-manipulation relative -mt-7 z-10"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <motion.div
+                    className={`w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg ${isActive ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`}
+                    animate={{
+                      scale: [1, 1.05, 1],
+                      boxShadow: [
+                        "0 4px 14px hsl(var(--primary) / 0.3)",
+                        "0 6px 20px hsl(var(--primary) / 0.5)",
+                        "0 4px 14px hsl(var(--primary) / 0.3)",
+                      ],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <item.icon className="h-6 w-6 text-primary-foreground" />
+                  </motion.div>
+                  <span className="text-[10px] font-bold text-primary mt-1">{item.label}</span>
+                </motion.button>
+              );
+            }
+
             return (
               <motion.button
                 key={item.key}
