@@ -549,19 +549,44 @@ Deno.serve(async (req) => {
             }
           }
         } else if (userRole === "cliente" && resellerId) {
-          const { data: resellerRule } = await adminClient
-            .from("reseller_pricing_rules")
+          // Check client-specific pricing first
+          const { data: clientRule } = await adminClient
+            .from("client_pricing_rules")
             .select("*")
-            .eq("user_id", resellerId)
+            .eq("reseller_id", resellerId)
+            .eq("client_id", userId)
             .eq("operadora_id", operadoraId)
             .eq("valor_recarga", catalogValue)
             .maybeSingle();
-          if (resellerRule) {
-            chargedCost = applyRule(resellerRule, "reseller_pricing_rules(via_reseller)");
-          } else {
+
+          if (clientRule) {
+            // Client pricing stores lucro (profit) — add to base cost
+            const baseCost = apiCost;
+            // Find base cost from global rules
             const globalRule = await getGlobalRule();
-            if (globalRule) {
-              chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
+            const resolvedBase = globalRule
+              ? (globalRule.tipo_regra === "fixo"
+                ? (Number(globalRule.regra_valor) > 0 ? Number(globalRule.regra_valor) : Number(globalRule.custo))
+                : Number(globalRule.custo) * (1 + Number(globalRule.regra_valor) / 100))
+              : baseCost;
+            chargedCost = resolvedBase + Number(clientRule.lucro);
+            pricingSource = "client_pricing_rules";
+          } else {
+            // Fallback: reseller pricing → global
+            const { data: resellerRule } = await adminClient
+              .from("reseller_pricing_rules")
+              .select("*")
+              .eq("user_id", resellerId)
+              .eq("operadora_id", operadoraId)
+              .eq("valor_recarga", catalogValue)
+              .maybeSingle();
+            if (resellerRule) {
+              chargedCost = applyRule(resellerRule, "reseller_pricing_rules(via_reseller)");
+            } else {
+              const globalRule = await getGlobalRule();
+              if (globalRule) {
+                chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
+              }
             }
           }
         } else {

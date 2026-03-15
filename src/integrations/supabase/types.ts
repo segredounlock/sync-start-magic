@@ -433,6 +433,47 @@ export type Database = {
           },
         ]
       }
+      client_pricing_rules: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          lucro: number
+          operadora_id: string
+          reseller_id: string
+          updated_at: string
+          valor_recarga: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          lucro?: number
+          operadora_id: string
+          reseller_id: string
+          updated_at?: string
+          valor_recarga: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          lucro?: number
+          operadora_id?: string
+          reseller_id?: string
+          updated_at?: string
+          valor_recarga?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_pricing_rules_operadora_id_fkey"
+            columns: ["operadora_id"]
+            isOneToOne: false
+            referencedRelation: "operadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disabled_recharge_values: {
         Row: {
           created_at: string

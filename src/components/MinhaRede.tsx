@@ -5,6 +5,7 @@ import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link2, Users, TrendingUp, BarChart3, Search, User, MoreVertical, Tag, ArrowUpCircle } from "lucide-react";
+import { ClientPricingModal } from "@/components/ClientPricingModal";
 
 interface NetworkStats {
   direct_count: number;
@@ -36,7 +37,6 @@ interface MinhaRedeProps {
   userId: string;
   profileSlug?: string;
   referralCode?: string;
-  onOpenExclusivePricing?: (memberId: string, memberName: string) => void;
 }
 
 const roleBadge: Record<string, { label: string; color: string }> = {
@@ -46,7 +46,7 @@ const roleBadge: Record<string, { label: string; color: string }> = {
   usuario: { label: "Cliente", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
 };
 
-export function MinhaRede({ userId, profileSlug, referralCode, onOpenExclusivePricing }: MinhaRedeProps) {
+export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps) {
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [members, setMembers] = useState<NetworkMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +54,7 @@ export function MinhaRede({ userId, profileSlug, referralCode, onOpenExclusivePr
   const [filter, setFilter] = useState<"active" | "inactive" | "all">("active");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [promotingId, setPromotingId] = useState<string | null>(null);
+  const [pricingModal, setPricingModal] = useState<{ id: string; name: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const referralLink = profileSlug
@@ -315,11 +316,7 @@ export function MinhaRede({ userId, profileSlug, referralCode, onOpenExclusivePr
                             <button
                               onClick={() => {
                                 setOpenMenuId(null);
-                                if (onOpenExclusivePricing) {
-                                  onOpenExclusivePricing(member.id, member.nome || member.email || "Membro");
-                                } else {
-                                  toast.info("Funcionalidade de preços exclusivos em breve.");
-                                }
+                                setPricingModal({ id: member.id, name: member.nome || member.email || "Membro" });
                               }}
                               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 transition-colors text-left"
                             >
@@ -347,6 +344,14 @@ export function MinhaRede({ userId, profileSlug, referralCode, onOpenExclusivePr
           </table>
         </div>
       )}
+      {/* Client Pricing Modal */}
+      <ClientPricingModal
+        open={!!pricingModal}
+        onClose={() => setPricingModal(null)}
+        resellerId={userId}
+        clientId={pricingModal?.id || ""}
+        clientName={pricingModal?.name || ""}
+      />
     </motion.div>
   );
 }
