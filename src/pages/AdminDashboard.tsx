@@ -2778,7 +2778,7 @@ export default function AdminDashboard() {
                               ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                               : "glass-card text-muted-foreground hover:text-foreground hover:bg-muted/40"
                           }`}>
-                          <Package className="h-4 w-4" />{op.nome}
+                          <Package className="h-4 w-4" />{(op.nome || "").toUpperCase()}
                         </button>
                       ))}
                     </div>
