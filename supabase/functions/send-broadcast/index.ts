@@ -447,7 +447,14 @@ async function flushBlockedUsers(updates: Array<{ telegram_id: number; reason: s
   console.log(`[BROADCAST] Flushed ${updates.length} blocked users`);
 }
 
-serve(async (req) => {
+async function flushUnblockedUsers(telegramIds: number[]) {
+  await supabase.from('telegram_users')
+    .update({ is_blocked: false, block_reason: null })
+    .in('telegram_id', telegramIds);
+  console.log(`[BROADCAST] Unblocked ${telegramIds.length} users (they unblocked the bot)`);
+}
+
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
