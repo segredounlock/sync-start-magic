@@ -8,6 +8,29 @@ const corsHeaders = {
 
 const API_BASE = "https://express.poeki.dev/api/v2";
 
+async function resolveUserRole(
+  supabase: any,
+  userId: string,
+  fallback: "admin" | "revendedor" | "cliente" | "usuario" = "usuario",
+): Promise<string> {
+  const { data: roleRows, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error(`[telegram-miniapp] failed to resolve roles for user=${userId}:`, error.message);
+    return fallback;
+  }
+
+  const roles = new Set((roleRows || []).map((r: any) => String(r.role || "").toLowerCase()));
+  if (roles.has("admin")) return "admin";
+  if (roles.has("revendedor")) return "revendedor";
+  if (roles.has("cliente")) return "cliente";
+  if (roles.has("usuario")) return "usuario";
+  return fallback;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
