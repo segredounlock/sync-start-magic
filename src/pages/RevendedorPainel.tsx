@@ -892,7 +892,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
             {/* Grid */}
             <div className="px-4 pb-3 grid grid-cols-3 gap-2">
-              {menuItems.map((item) => {
+              {menuItems.map((item, index) => {
                 const isActive = tab === item.key;
                 return (
                   <button
@@ -904,7 +904,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         : "bg-muted/30 text-foreground hover:bg-muted/50"
                     }`}
                   >
-                    <item.icon className={`h-6 w-6 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                    <FloatingGridIcon icon={item.icon} color={isActive ? "text-primary" : "text-muted-foreground"} isActive={isActive} index={index} />
                     <span className={`text-[11px] font-semibold text-center leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>{item.label}</span>
                   </button>
                 );
