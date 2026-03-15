@@ -355,7 +355,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
       </div>
 
       {/* User position bar */}
-      {userRank >= 3 && (
+      {userRank >= 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -364,13 +364,13 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
         >
           <div className="flex items-center gap-3 bg-secondary/80 backdrop-blur-sm rounded-full px-5 py-2.5 border border-border shadow-lg">
             <span className="text-sm text-muted-foreground">Sua posição:</span>
-            <span className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1 rounded-full">
+            <span className="bg-destructive text-destructive-foreground font-bold text-sm min-w-[32px] text-center px-2.5 py-1 rounded-full">
               {userRank + 1}º
             </span>
             {ranking[userRank]?.avatar_url ? (
-              <img src={ranking[userRank].avatar_url!} alt="" className="h-9 w-9 rounded-full ring-2 ring-primary/50 object-cover" />
+              <img src={ranking[userRank].avatar_url!} alt="" className="h-9 w-9 rounded-full ring-2 ring-border object-cover" />
             ) : (
-              <div className="h-9 w-9 rounded-full ring-2 ring-primary/50 bg-muted flex items-center justify-center text-foreground font-bold text-xs">
+              <div className="h-9 w-9 rounded-full ring-2 ring-border bg-muted flex items-center justify-center text-foreground font-bold text-xs">
                 {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
               </div>
             )}
