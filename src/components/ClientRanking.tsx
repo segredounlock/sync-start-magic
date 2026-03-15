@@ -360,7 +360,7 @@ export function ClientRanking({ userId, onBack }: ClientRankingProps) {
                         {user.total_recargas}
                       </p>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                        compras
+                        recargas
                       </p>
                     </div>
                   </motion.div>
