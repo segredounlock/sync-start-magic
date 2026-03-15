@@ -73,21 +73,50 @@ export function MobileBottomNav({
                   className="flex flex-col items-center justify-center touch-manipulation relative -mt-7 z-10"
                   whileTap={{ scale: 0.9 }}
                 >
-                  <motion.div
-                    className={`w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg ${isActive ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`}
-                    animate={{
-                      scale: [1, 1.05, 1],
-                      boxShadow: [
-                        "0 4px 14px hsl(var(--primary) / 0.3)",
-                        "0 6px 20px hsl(var(--primary) / 0.5)",
-                        "0 4px 14px hsl(var(--primary) / 0.3)",
-                      ],
-                    }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <item.icon className="h-6 w-6 text-primary-foreground" />
-                  </motion.div>
-                  <span className="text-[10px] font-bold text-primary mt-1">{item.label}</span>
+                  <div className="relative w-14 h-14 flex items-center justify-center">
+                    {/* Snake border animation */}
+                    <svg className="absolute inset-0 w-14 h-14 animate-[spin_3s_linear_infinite]" viewBox="0 0 56 56">
+                      <circle
+                        cx="28"
+                        cy="28"
+                        r="25"
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="2.5"
+                        strokeDasharray="40 118"
+                        strokeLinecap="round"
+                        className="opacity-60"
+                      />
+                    </svg>
+                    <svg className="absolute inset-0 w-14 h-14 animate-[spin_3s_linear_infinite_reverse]" viewBox="0 0 56 56">
+                      <circle
+                        cx="28"
+                        cy="28"
+                        r="25"
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="1.5"
+                        strokeDasharray="25 133"
+                        strokeLinecap="round"
+                        className="opacity-30"
+                      />
+                    </svg>
+                    <motion.div
+                      className={`w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg ${isActive ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`}
+                      animate={{
+                        scale: [1, 1.05, 1],
+                        boxShadow: [
+                          "0 4px 14px hsl(var(--primary) / 0.3)",
+                          "0 6px 20px hsl(var(--primary) / 0.5)",
+                          "0 4px 14px hsl(var(--primary) / 0.3)",
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <item.icon className="h-5 w-5 text-primary-foreground" />
+                    </motion.div>
+                  </div>
+                  <span className="text-[10px] font-bold text-primary mt-0.5">{item.label}</span>
                 </motion.button>
               );
             }
