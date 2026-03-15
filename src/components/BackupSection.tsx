@@ -1010,7 +1010,7 @@ export default function BackupSection() {
 
             {/* Include DB toggle */}
             <button onClick={() => setIncludeDb(!includeDb)}
-              className="flex items-center gap-3 w-full p-3.5 rounded-2xl backdrop-blur-xl bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-all text-left">
+              className="flex items-center gap-3 w-full p-3.5 rounded-2xl bg-card border border-border shadow-sm hover:bg-muted/60 transition-all text-left">
               <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
                 includeDb ? "bg-primary border-primary" : "border-muted-foreground/40"
               }`}>
