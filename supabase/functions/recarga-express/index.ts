@@ -56,6 +56,29 @@ async function proxyPost(apiKey: string, path: string, body: unknown) {
 const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+// Validate Brazilian phone numbers (10-11 digits, valid DDD 11-99, no obviously fake patterns)
+function validatePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  // Remove country code 55 if present
+  const phone = digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
+  if (phone.length < 10 || phone.length > 11) {
+    throw new Error(`Número de telefone inválido: deve ter 10 ou 11 dígitos (recebido ${phone.length})`);
+  }
+  const ddd = parseInt(phone.slice(0, 2), 10);
+  if (ddd < 11 || ddd > 99) {
+    throw new Error(`DDD inválido: ${ddd}. DDDs válidos são de 11 a 99`);
+  }
+  // Reject all-same-digit numbers (e.g. 00000000000, 11111111111)
+  if (/^(\d)\1+$/.test(phone)) {
+    throw new Error("Número de telefone inválido: dígitos repetidos");
+  }
+  // For 11-digit numbers, the 9th digit (mobile) must be 9
+  if (phone.length === 11 && phone[2] !== "9") {
+    throw new Error("Número de celular inválido: deve começar com 9 após o DDD");
+  }
+  return phone;
+}
+
 // Map v2 catalog to v1-compatible format for frontend/bot consumption
 function mapCatalogV2toV1(v2Data: any[]): any[] {
   return v2Data.map((carrier: any) => ({
@@ -284,8 +307,9 @@ Deno.serve(async (req) => {
       }
 
       case "check-phone": {
-        const { phoneNumber, carrierId } = params;
-        if (!phoneNumber) throw new Error("phoneNumber é obrigatório");
+        const { phoneNumber: rawPhone, carrierId } = params;
+        if (!rawPhone) throw new Error("phoneNumber é obrigatório");
+        const phoneNumber = validatePhone(rawPhone);
 
         // v2 uses carrierName (string) instead of carrierId
         let carrierName = carrierId || undefined;
@@ -308,8 +332,9 @@ Deno.serve(async (req) => {
 
       case "query-operator": {
         // v2: use native /detect-operator endpoint with fallback
-        const { phoneNumber: qPhone } = params;
-        if (!qPhone) throw new Error("phoneNumber é obrigatório");
+        const { phoneNumber: rawQPhone } = params;
+        if (!rawQPhone) throw new Error("phoneNumber é obrigatório");
+        const qPhone = validatePhone(rawQPhone);
 
         let detectedOperator: string | null = null;
         let detectedEnabled = true;
@@ -369,15 +394,16 @@ Deno.serve(async (req) => {
       case "recharge": {
         // Accept both v1 params (carrierId/phoneNumber/valueId) and v2 params (operator/phone/amount)
         const rawCarrierId = params.operator || params.carrierId;
-        const phoneNumber = params.phone || params.phoneNumber;
+        const rawPhone2 = params.phone || params.phoneNumber;
         const rawAmount = params.amount || null;
         const valueId = params.valueId || null;
         const { extraData, webhookUrl, saldo_tipo } = params;
         const saldoTipo = saldo_tipo || "revenda";
 
-        if (!rawCarrierId || !phoneNumber) {
+        if (!rawCarrierId || !rawPhone2) {
           throw new Error("operator/carrierId e phone/phoneNumber são obrigatórios");
         }
+        const phoneNumber = validatePhone(rawPhone2);
 
         // Resolve operator name and local operadora UUID
         let resolvedOperator = rawCarrierId;
