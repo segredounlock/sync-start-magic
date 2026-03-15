@@ -3417,6 +3417,51 @@ export default function Principal() {
                   </div>
                 </div>
 
+                {/* Comissão Indireta */}
+                <div className="glass-card rounded-xl p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        (globalConfig.indirectCommissionEnabled ?? "true") === "true" ? "bg-success/15" : "bg-muted/50"
+                      }`}>
+                        <TrendingUp className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground">Comissão Indireta</h4>
+                        <p className="text-xs text-muted-foreground">Revendedores "avô" recebem % do lucro dos sub-revendedores</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const newVal = (globalConfig.indirectCommissionEnabled ?? "true") === "true" ? "false" : "true";
+                        setGlobalConfig(prev => ({ ...prev, indirectCommissionEnabled: newVal }));
+                        await supabase.from("system_config").upsert({ key: "indirectCommissionEnabled", value: newVal }, { onConflict: "key" });
+                        toast.success(newVal === "true" ? "✅ Comissão indireta ativada!" : "❌ Comissão indireta desativada!");
+                      }}
+                      className="transition-colors"
+                    >
+                      {(globalConfig.indirectCommissionEnabled ?? "true") === "true"
+                        ? <ToggleRight className="h-7 w-7 text-success" />
+                        : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                      }
+                    </button>
+                  </div>
+
+                  {(globalConfig.indirectCommissionEnabled ?? "true") === "true" && (
+                    <div className="space-y-2 pt-2 border-t border-border">
+                      <label className="block text-sm font-medium text-foreground">Porcentagem da Comissão Indireta (%)</label>
+                      <p className="text-[11px] text-muted-foreground">Percentual sobre o lucro direto que o revendedor "avô" recebe quando um sub-revendedor faz uma recarga.</p>
+                      <input
+                        type="number" min="0" max="100" step="0.5"
+                        value={globalConfig.indirectCommissionPercent ?? "10"}
+                        onChange={e => setGlobalConfig(prev => ({ ...prev, indirectCommissionPercent: e.target.value }))}
+                        className="w-full max-w-[140px] px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        placeholder="10"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* Raspadinha Config */}
                 <div className="glass-card rounded-xl p-6 space-y-4">
                   <div className="flex items-center gap-3">
