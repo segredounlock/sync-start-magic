@@ -1195,7 +1195,7 @@ export default function BackupSection() {
             <AnimatePresence>
               {syncResult && !syncing && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                  className="rounded-2xl backdrop-blur-xl bg-emerald-500/[0.06] shadow-[inset_0_1px_1px_rgba(52,211,153,0.1),0_0_20px_rgba(16,185,129,0.06)] p-4 space-y-2 overflow-hidden">
+                  className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4 space-y-2 overflow-hidden">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4" /> Sincronizado
