@@ -3842,6 +3842,7 @@ function AdminAddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, us
     presetAmounts, generatePix: handleGeneratePix, copyCode: handleCopyCode,
     checkStatus: handleCheckStatus, reset: handleNewPix,
   } = pix;
+  const { calcFee: feeCalc } = useFeePreview();
 
   const depositTxs = transactions.filter(t => t.type === "deposit" || t.type === "deposito");
 
