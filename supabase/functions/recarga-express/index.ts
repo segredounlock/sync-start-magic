@@ -735,15 +735,15 @@ Deno.serve(async (req) => {
         const isFailed = polledFailed || orderData.status === "falha" || orderData.status === "cancelada" || orderData.status === "expirada";
         const isCompleted = !isFailed && (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
 
-        // Only deduct balance if NOT failed
+        // Only deduct balance if NOT failed (atomic)
         let newBalance = userBalance;
         if (!isFailed) {
-          newBalance = userBalance - chargedCost;
-          await adminClient
-            .from("saldos")
-            .update({ valor: newBalance })
-            .eq("user_id", userId)
-            .eq("tipo", saldoTipo);
+          const { data: updatedBal } = await adminClient.rpc("increment_saldo", {
+            p_user_id: userId,
+            p_tipo: saldoTipo,
+            p_amount: -chargedCost,
+          });
+          newBalance = Number(updatedBal) ?? (userBalance - chargedCost);
         } else {
           console.log(`recharge: NOT deducting balance — recharge failed. userId=${userId} chargedCost=${chargedCost}`);
         }
