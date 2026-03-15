@@ -1242,6 +1242,15 @@ export type Database = {
       }
     }
     Functions: {
+      claim_transaction: {
+        Args: {
+          p_from_status: string
+          p_metadata?: Json
+          p_to_status: string
+          p_tx_id: string
+        }
+        Returns: boolean
+      }
       get_chat_enabled: { Args: never; Returns: boolean }
       get_chat_new_conv_filter: { Args: never; Returns: string }
       get_follow_counts: {
@@ -1338,6 +1347,10 @@ export type Database = {
       }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_verification_badge: { Args: { _user_id: string }; Returns: boolean }
+      increment_saldo: {
+        Args: { p_amount: number; p_tipo: string; p_user_id: string }
+        Returns: number
+      }
       is_chat_member: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean

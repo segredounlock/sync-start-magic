@@ -210,13 +210,23 @@ Deno.serve(async (req) => {
       if (tx) {
         console.log(`Approving transaction ${tx.id} for user ${tx.user_id}, amount ${tx.amount}`);
 
-        // Update transaction status + merge payer info into metadata
+        // Atomically claim the transaction (prevents double-processing)
         const existingMeta = (tx.metadata as Record<string, unknown>) || {};
         const updatedMeta = { ...existingMeta, ...payerInfo, confirmed_at: new Date().toISOString() };
-        await supabase
-          .from("transactions")
-          .update({ status: "completed", updated_at: new Date().toISOString(), metadata: updatedMeta })
-          .eq("id", tx.id);
+        
+        const { data: claimed } = await supabase.rpc("claim_transaction", {
+          p_tx_id: tx.id,
+          p_from_status: "pending",
+          p_to_status: "completed",
+          p_metadata: updatedMeta,
+        });
+
+        if (!claimed) {
+          console.warn(`Transaction ${tx.id} already processed, skipping`);
+          return new Response(JSON.stringify({ received: true, status: "already_processed" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
 
         // Determine which saldo type to credit from transaction metadata
         const txMeta = (tx.metadata as Record<string, unknown>) || {};
@@ -242,27 +252,17 @@ Deno.serve(async (req) => {
           } else {
             fee = taxaValor;
           }
-          fee = Math.round(fee * 100) / 100; // round to 2 decimal places
+          fee = Math.round(fee * 100) / 100;
         }
 
         const creditAmount = Math.max(0, Number(tx.amount) - fee);
 
-        // Credit user balance
-        const { data: saldo } = await supabase
-          .from("saldos")
-          .select("valor")
-          .eq("user_id", tx.user_id)
-          .eq("tipo", saldoTipo)
-          .single();
-
-        const currentBalance = saldo?.valor || 0;
-        const newBalance = currentBalance + creditAmount;
-
-        await supabase
-          .from("saldos")
-          .update({ valor: newBalance, updated_at: new Date().toISOString() })
-          .eq("user_id", tx.user_id)
-          .eq("tipo", saldoTipo);
+        // Atomically credit user balance
+        const { data: newBalance } = await supabase.rpc("increment_saldo", {
+          p_user_id: tx.user_id,
+          p_tipo: saldoTipo,
+          p_amount: creditAmount,
+        });
 
         // Store fee info in transaction metadata
         if (fee > 0) {
@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
         }
 
         console.log(
-          `Balance updated (${saldoTipo}): ${currentBalance} -> ${newBalance} for user ${tx.user_id} (fee: R$${fee.toFixed(2)})`
+          `Balance updated atomically (${saldoTipo}): +${creditAmount} = ${newBalance} for user ${tx.user_id} (fee: R$${fee.toFixed(2)})`
         );
 
         // ===== TELEGRAM NOTIFICATION =====
@@ -318,7 +318,7 @@ Deno.serve(async (req) => {
 
             const nome = profile.nome || "Usuário";
             const valorFmt = Number(tx.amount).toFixed(2).replace(".", ",");
-            const saldoFmt = newBalance.toFixed(2).replace(".", ",");
+            const saldoFmt = Number(newBalance || 0).toFixed(2).replace(".", ",");
             const feeNote = fee > 0 ? `\n💸 Taxa: <b>R$ ${fee.toFixed(2).replace(".", ",")}</b>\n💵 Creditado: <b>R$ ${creditAmount.toFixed(2).replace(".", ",")}</b>` : "";
             const msg = `✅ <b>Pagamento Confirmado!</b>\n\n💰 Valor: <b>R$ ${valorFmt}</b>${feeNote}\n💳 Novo saldo: <b>R$ ${saldoFmt}</b>\n👤 ${nome}\n\n🎉 Saldo creditado com sucesso!`;
 
