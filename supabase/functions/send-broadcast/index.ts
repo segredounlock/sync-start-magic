@@ -236,10 +236,10 @@ async function sendBroadcastInBackground(
       return;
     }
 
+    // Query ALL users (including previously blocked) — each broadcast re-verifies status
     let usersQuery = supabase
       .from('telegram_users')
-      .select('telegram_id, first_name')
-      .eq('is_blocked', false);
+      .select('telegram_id, first_name, is_blocked');
 
     if (!includeUnregistered) {
       usersQuery = usersQuery.eq('is_registered', true);
