@@ -820,7 +820,7 @@ export default function BackupSection() {
 
               {/* Import Card */}
               <button onClick={() => fileInputRef.current?.click()} disabled={importing}
-                className="relative group rounded-2xl p-4 backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] hover:bg-white/[0.07] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_0_20px_rgba(239,68,68,0.08)] transition-all text-left disabled:opacity-60">
+                className="relative group rounded-2xl p-4 bg-card border border-border shadow-sm hover:bg-muted/60 hover:shadow-md hover:border-red-500/30 transition-all text-left disabled:opacity-60">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/10 flex items-center justify-center mb-3 shadow-lg shadow-red-500/5">
                   {importing ? <Loader2 className="h-4 w-4 animate-spin text-red-400" /> : <ArrowUpFromLine className="h-4 w-4 text-red-400" />}
                 </div>
