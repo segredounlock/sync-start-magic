@@ -54,6 +54,83 @@ async function proxyPost(apiKey: string, path: string, body: unknown) {
 
 // Normalize string for comparison
 const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+// Generate referral commissions after a completed recharge
+async function generateCommissions(
+  adminClient: any,
+  userId: string,
+  chargedCost: number,
+  apiCost: number,
+  recargaId?: string
+) {
+  try {
+    const profit = chargedCost - apiCost;
+    if (profit <= 0) {
+      console.log(`commissions: no profit (charged=${chargedCost}, api=${apiCost}), skipping`);
+      return;
+    }
+
+    // Get user's reseller (direct parent)
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("reseller_id")
+      .eq("id", userId)
+      .single();
+
+    const resellerId = profile?.reseller_id;
+    if (!resellerId) {
+      console.log(`commissions: user ${userId} has no reseller, skipping`);
+      return;
+    }
+
+    // Insert direct commission
+    await adminClient.from("referral_commissions").insert({
+      user_id: resellerId,
+      referred_user_id: userId,
+      recarga_id: recargaId || null,
+      type: "direct",
+      amount: profit,
+    });
+    console.log(`commissions: direct ${profit} to reseller ${resellerId} from user ${userId}`);
+
+    // Check indirect commission config
+    const { data: cfgRows } = await adminClient
+      .from("system_config")
+      .select("key, value")
+      .in("key", ["indirectCommissionEnabled", "indirectCommissionPercent"]);
+    const cfg: Record<string, string> = {};
+    (cfgRows || []).forEach((r: any) => { cfg[r.key] = r.value; });
+
+    if (cfg.indirectCommissionEnabled !== "true") return;
+
+    const indirectPercent = parseFloat(cfg.indirectCommissionPercent || "0");
+    if (indirectPercent <= 0) return;
+
+    // Get reseller's parent (grandparent)
+    const { data: resellerProfile } = await adminClient
+      .from("profiles")
+      .select("reseller_id")
+      .eq("id", resellerId)
+      .single();
+
+    const grandparentId = resellerProfile?.reseller_id;
+    if (!grandparentId) return;
+
+    const indirectAmount = Math.round(profit * (indirectPercent / 100) * 100) / 100;
+    if (indirectAmount <= 0) return;
+
+    await adminClient.from("referral_commissions").insert({
+      user_id: grandparentId,
+      referred_user_id: userId,
+      recarga_id: recargaId || null,
+      type: "indirect",
+      amount: indirectAmount,
+    });
+    console.log(`commissions: indirect ${indirectAmount} to grandparent ${grandparentId} from user ${userId}`);
+  } catch (err) {
+    console.error("generateCommissions error:", err);
+  }
+}
 const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 // Validate Brazilian phone numbers (10-11 digits, valid DDD 11-99, no obviously fake patterns)
