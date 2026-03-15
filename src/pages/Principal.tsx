@@ -1289,7 +1289,7 @@ export default function Principal() {
             </div>
 
             <div className="px-4 pb-3 grid grid-cols-3 gap-2">
-              {menuItems.map((item) => {
+              {menuItems.map((item, index) => {
                 const isActive = view === item.key;
                 return (
                   <button key={item.key}
@@ -1305,7 +1305,7 @@ export default function Principal() {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium transition-all group ${
                       isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/40"
                     }`}>
-                    <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                    <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
                     <span className="text-center leading-tight">{item.label}</span>
                   </button>
                 );
