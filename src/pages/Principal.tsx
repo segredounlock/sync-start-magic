@@ -183,6 +183,7 @@ export default function Principal() {
   const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
+  const [broadcastBlockedCount, setBroadcastBlockedCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
   const [interruptedBroadcasts, setInterruptedBroadcasts] = useState<any[]>([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
@@ -1212,11 +1213,17 @@ export default function Principal() {
   }, []);
 
   const fetchBroadcastUserCount = useCallback(async () => {
-    const { count } = await (supabase.from('telegram_users' as any) as any)
-      .select('*', { count: 'exact', head: true })
-      .eq('is_blocked', false)
-      .eq('is_registered', true);
-    setBroadcastUserCount(count || 0);
+    const [activeRes, blockedRes] = await Promise.all([
+      (supabase.from('telegram_users' as any) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('is_blocked', false)
+        .eq('is_registered', true),
+      (supabase.from('telegram_users' as any) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('is_blocked', true),
+    ]);
+    setBroadcastUserCount(activeRes.count || 0);
+    setBroadcastBlockedCount(blockedRes.count || 0);
   }, []);
 
   useEffect(() => { if (view === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [view, fetchBroadcastHistory, fetchBroadcastUserCount]);
@@ -4197,8 +4204,13 @@ export default function Principal() {
                   </div>
                   <div>
                     <h2 className="font-display text-xl font-bold text-foreground">Broadcast</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" /> {broadcastUserCount} usuários ativos
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+                      <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {broadcastUserCount} usuários ativos</span>
+                      {broadcastBlockedCount > 0 && (
+                        <span className="flex items-center gap-1 text-orange-400">
+                          <UserX className="w-3.5 h-3.5" /> {broadcastBlockedCount} bloqueados
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>

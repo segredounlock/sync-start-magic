@@ -1,21 +1,40 @@
 
 
-# Plano: Exibir contagem de usuários bloqueados no header do Broadcast
+## Diagnóstico e Correção
 
-## O que será feito
-Adicionar ao lado de "X usuários ativos" a contagem de usuários bloqueados no Telegram (ex: `661 usuários ativos · 12 bloqueados`), nos dois arquivos que exibem o header do Broadcast.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Alterações
+### Plano
 
-### 1. `src/pages/Principal.tsx`
-- Adicionar state `broadcastBlockedCount`
-- Na função `fetchBroadcastUserCount`, fazer uma segunda query contando `telegram_users` com `is_blocked = true`
-- No header do broadcast (linha ~4200), exibir: `{broadcastUserCount} usuários ativos · {broadcastBlockedCount} bloqueados`
+**1. Corrigir o mapeamento de status na sync function**
 
-### 2. `src/pages/AdminDashboard.tsx`
-- Mesma lógica: state `broadcastBlockedCount`, query adicional, exibição no header (linha ~3424)
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-### Detalhes técnicos
-- Query: `supabase.from('telegram_users').select('*', { count: 'exact', head: true }).eq('is_blocked', true)`
-- Exibição com ícone `UserX` e cor `text-orange-400` para diferenciar visualmente
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

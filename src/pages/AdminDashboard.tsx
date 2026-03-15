@@ -25,7 +25,7 @@ import {
   Save, Eye, EyeOff, Globe, Key, Bot, Zap, Menu, X,
   Wifi, WifiOff, Hash, AtSign, Trash2, AlertTriangle, CheckCircle2, ChevronDown, Link2, RotateCcw,
   Settings2, Store, Upload, Palette, Image, Copy, Loader2, QrCode, ExternalLink, Clock,
-  Megaphone, Send, Check, Shield,
+  Megaphone, Send, Check, Shield, UserX,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -73,6 +73,7 @@ export default function AdminDashboard() {
   const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
+  const [broadcastBlockedCount, setBroadcastBlockedCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
   const [interruptedBroadcasts, setInterruptedBroadcasts] = useState<any[]>([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
@@ -892,11 +893,17 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchBroadcastUserCount = useCallback(async () => {
-    const { count } = await (supabase.from('telegram_users' as any) as any)
-      .select('*', { count: 'exact', head: true })
-      .eq('is_blocked', false)
-      .eq('is_registered', true);
-    setBroadcastUserCount(count || 0);
+    const [activeRes, blockedRes] = await Promise.all([
+      (supabase.from('telegram_users' as any) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('is_blocked', false)
+        .eq('is_registered', true),
+      (supabase.from('telegram_users' as any) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('is_blocked', true),
+    ]);
+    setBroadcastUserCount(activeRes.count || 0);
+    setBroadcastBlockedCount(blockedRes.count || 0);
   }, []);
 
   useEffect(() => { if (tab === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [tab, fetchBroadcastHistory, fetchBroadcastUserCount]);
@@ -3420,8 +3427,13 @@ export default function AdminDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-extrabold text-foreground">Notificações</h2>
-                <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-                  <Users className="w-4 h-4" /> {broadcastUserCount} usuários ativos para receber
+                <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                  <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {broadcastUserCount} usuários ativos</span>
+                  {broadcastBlockedCount > 0 && (
+                    <span className="flex items-center gap-1 text-orange-400">
+                      <UserX className="w-4 h-4" /> {broadcastBlockedCount} bloqueados
+                    </span>
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-2">
