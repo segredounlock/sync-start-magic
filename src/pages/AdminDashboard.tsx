@@ -2982,7 +2982,7 @@ export default function AdminDashboard() {
                       }`}
                     >
                       <Package className="h-4 w-4" />
-                      {op.nome}
+                      {(op.nome || "").toUpperCase()}
                     </button>
                   ))}
                 </div>

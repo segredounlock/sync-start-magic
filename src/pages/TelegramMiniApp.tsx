@@ -1301,7 +1301,7 @@ export default function TelegramMiniApp() {
                             ) : operadoras.map((op, opIdx) => (
                               <div key={op.id} style={opIdx > 0 ? { borderTop: st.borderSub } : undefined}>
                                 <div className="px-5 py-3 flex items-center gap-2">
-                                  <span className="text-sm font-bold" style={st.text}>{op.nome}</span>
+                                  <span className="text-sm font-bold" style={st.text}>{(op.nome || "").toUpperCase()}</span>
                                 </div>
                                 <div className="px-5 pb-4 grid grid-cols-2 gap-2.5">
                                   {op.valores

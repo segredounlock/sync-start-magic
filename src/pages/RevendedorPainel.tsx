@@ -1755,7 +1755,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         className="px-3 py-2.5 rounded-xl bg-muted/40 border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                       >
                         <option value="all">Todas operadoras</option>
-                        {operadoras.map(op => <option key={op} value={op}>{op}</option>)}
+                        {operadoras.map(op => <option key={op} value={op}>{op.toUpperCase()}</option>)}
                       </select>
                     </div>
 
