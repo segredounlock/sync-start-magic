@@ -237,16 +237,27 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     });
   }, [user, runFetch]);
 
+  const [commissions, setCommissions] = useState<{ id: string; amount: number; type: string; created_at: string; recarga_id: string | null; referred_user_id: string }[]>([]);
+
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
     await guardedFetch(transLoaded, setTransLoading, async () => {
-      const { data } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      setTransactions(data || []);
+      const [{ data: txData }, { data: commData }] = await Promise.all([
+        supabase
+          .from("transactions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("referral_commissions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+      setTransactions(txData || []);
+      setCommissions(commData || []);
     });
   }, [user]);
 
