@@ -414,7 +414,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                 </p>
                 <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
                   <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-base" : "text-sm"}`}>{user.total_recargas}</span>
-                  {" "}compras
+                  {" "}recargas
                 </span>
               </div>
             </motion.div>
