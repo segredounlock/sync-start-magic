@@ -4243,7 +4243,7 @@ export default function Principal() {
                 <BroadcastProgress
                   progressId={broadcastProgressId}
                   notificationTitle={broadcastTitle}
-                  onComplete={() => { toast.success('Broadcast concluído!'); fetchBroadcastHistory(); }}
+                  onComplete={() => { toast.success('Broadcast concluído!'); setBroadcastProgressId(null); fetchBroadcastHistory(); }}
                   onResume={async (pid) => {
                     const { error } = await supabase.functions.invoke('send-broadcast', { body: { resume_progress_id: pid } });
                     if (error) toast.error('Erro ao retomar: ' + error.message);
