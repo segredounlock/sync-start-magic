@@ -943,7 +943,6 @@ async function executeRecarga(supabase: any, token: string, chatId: number, user
     } else {
       userCost = matchedValue.cost || valor;
     }
-    }
   }
 
   // Check balance against REAL COST
