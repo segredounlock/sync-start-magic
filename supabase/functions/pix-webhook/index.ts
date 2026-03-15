@@ -318,7 +318,7 @@ Deno.serve(async (req) => {
 
             const nome = profile.nome || "Usuário";
             const valorFmt = Number(tx.amount).toFixed(2).replace(".", ",");
-            const saldoFmt = newBalance.toFixed(2).replace(".", ",");
+            const saldoFmt = Number(newBalance || 0).toFixed(2).replace(".", ",");
             const feeNote = fee > 0 ? `\n💸 Taxa: <b>R$ ${fee.toFixed(2).replace(".", ",")}</b>\n💵 Creditado: <b>R$ ${creditAmount.toFixed(2).replace(".", ",")}</b>` : "";
             const msg = `✅ <b>Pagamento Confirmado!</b>\n\n💰 Valor: <b>R$ ${valorFmt}</b>${feeNote}\n💳 Novo saldo: <b>R$ ${saldoFmt}</b>\n👤 ${nome}\n\n🎉 Saldo creditado com sucesso!`;
 
