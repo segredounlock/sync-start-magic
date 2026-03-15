@@ -259,21 +259,12 @@ Deno.serve(async (req) => {
         // Refund balance when status transitions to "falha" from "pending"
         if (localStatus === "falha" && currentRecarga && currentRecarga.status === "pending") {
           try {
-            const { data: saldoData } = await adminClient
-              .from("saldos")
-              .select("valor")
-              .eq("user_id", currentRecarga.user_id)
-              .eq("tipo", "revenda")
-              .single();
-            if (saldoData) {
-              const refundedBalance = Number(saldoData.valor) + Number(currentRecarga.custo);
-              await adminClient
-                .from("saldos")
-                .update({ valor: refundedBalance })
-                .eq("user_id", currentRecarga.user_id)
-                .eq("tipo", "revenda");
-              console.log(`order-status: refunded ${currentRecarga.custo} to user ${currentRecarga.user_id}, new balance=${refundedBalance}`);
-            }
+            const { data: newBal } = await adminClient.rpc("increment_saldo", {
+              p_user_id: currentRecarga.user_id,
+              p_tipo: "revenda",
+              p_amount: Number(currentRecarga.custo),
+            });
+            console.log(`order-status: refunded ${currentRecarga.custo} to user ${currentRecarga.user_id} via increment_saldo, new balance=${newBal}`);
 
             // Send failure notifications
             const baseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -744,15 +735,15 @@ Deno.serve(async (req) => {
         const isFailed = polledFailed || orderData.status === "falha" || orderData.status === "cancelada" || orderData.status === "expirada";
         const isCompleted = !isFailed && (orderData.status === "feita" || orderData.status === "concluida" || orderData.status === "completed");
 
-        // Only deduct balance if NOT failed
+        // Only deduct balance if NOT failed (atomic)
         let newBalance = userBalance;
         if (!isFailed) {
-          newBalance = userBalance - chargedCost;
-          await adminClient
-            .from("saldos")
-            .update({ valor: newBalance })
-            .eq("user_id", userId)
-            .eq("tipo", saldoTipo);
+          const { data: updatedBal } = await adminClient.rpc("increment_saldo", {
+            p_user_id: userId,
+            p_tipo: saldoTipo,
+            p_amount: -chargedCost,
+          });
+          newBalance = Number(updatedBal) ?? (userBalance - chargedCost);
         } else {
           console.log(`recharge: NOT deducting balance — recharge failed. userId=${userId} chargedCost=${chargedCost}`);
         }
@@ -846,31 +837,73 @@ Deno.serve(async (req) => {
         }
         if (prApiCost <= 0) throw new Error("Valor não encontrado no catálogo");
 
-        // Resolve reseller pricing
+        // Resolve reseller pricing — check default margin first (like recharge action)
         let prChargedCost = prApiCost;
-        const { data: resellerRule } = await adminClient
+        let prPricingSource = "api_default";
+
+        // Check if reseller has any custom pricing rules
+        const { count: prCustomCount } = await adminClient
           .from("reseller_pricing_rules")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("operadora_id", prOperadoraId)
-          .eq("valor_recarga", prAmount)
-          .maybeSingle();
-        if (resellerRule) {
-          prChargedCost = resellerRule.tipo_regra === "fixo"
-            ? (Number(resellerRule.regra_valor) > 0 ? Number(resellerRule.regra_valor) : Number(resellerRule.custo))
-            : Number(resellerRule.custo) * (1 + Number(resellerRule.regra_valor) / 100);
-        } else {
-          const { data: globalRule } = await adminClient
-            .from("pricing_rules")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId);
+        const prHasCustomPricing = (prCustomCount || 0) > 0;
+
+        // Default margin — OVERRIDES when active and no custom pricing
+        if (!prHasCustomPricing) {
+          const { data: cfgRows } = await adminClient
+            .from("system_config")
+            .select("key, value")
+            .in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]);
+          const cfg: Record<string, string> = {};
+          (cfgRows || []).forEach((r: any) => { cfg[r.key] = r.value; });
+          if (cfg.defaultMarginEnabled === "true") {
+            const marginType = cfg.defaultMarginType || "fixo";
+            const marginValue = parseFloat(cfg.defaultMarginValue || "0");
+            if (marginValue > 0) {
+              prChargedCost = marginType === "fixo"
+                ? prApiCost + marginValue
+                : prApiCost * (1 + marginValue / 100);
+              prChargedCost = Math.round(prChargedCost * 100) / 100;
+              prPricingSource = "default_margin_override";
+            }
+          }
+        }
+
+        // If default margin didn't apply, check custom rules
+        if (prPricingSource === "api_default") {
+          const { data: resellerRule } = await adminClient
+            .from("reseller_pricing_rules")
             .select("*")
+            .eq("user_id", userId)
             .eq("operadora_id", prOperadoraId)
             .eq("valor_recarga", prAmount)
             .maybeSingle();
-          if (globalRule) {
-            prChargedCost = globalRule.tipo_regra === "fixo"
-              ? (Number(globalRule.regra_valor) > 0 ? Number(globalRule.regra_valor) : Number(globalRule.custo))
-              : Number(globalRule.custo) * (1 + Number(globalRule.regra_valor) / 100);
+          if (resellerRule) {
+            prChargedCost = resellerRule.tipo_regra === "fixo"
+              ? (Number(resellerRule.regra_valor) > 0 ? Number(resellerRule.regra_valor) : Number(resellerRule.custo))
+              : Number(resellerRule.custo) * (1 + Number(resellerRule.regra_valor) / 100);
+            prPricingSource = "reseller_pricing_rules";
+          } else {
+            const { data: globalRule } = await adminClient
+              .from("pricing_rules")
+              .select("*")
+              .eq("operadora_id", prOperadoraId)
+              .eq("valor_recarga", prAmount)
+              .maybeSingle();
+            if (globalRule) {
+              prChargedCost = globalRule.tipo_regra === "fixo"
+                ? (Number(globalRule.regra_valor) > 0 ? Number(globalRule.regra_valor) : Number(globalRule.custo))
+                : Number(globalRule.custo) * (1 + Number(globalRule.regra_valor) / 100);
+              prPricingSource = "pricing_rules(fallback)";
+            }
           }
+        }
+
+        // Safety floor: never charge below API cost
+        if (prChargedCost <= 0 || prChargedCost < prApiCost) {
+          console.warn(`PUBLIC-RECHARGE PRICING SAFETY: prChargedCost=${prChargedCost} is below prApiCost=${prApiCost}. Forcing apiCost as minimum.`);
+          prChargedCost = prApiCost;
+          prPricingSource += "(safety_floor)";
         }
 
         // Check reseller balance
@@ -882,7 +915,7 @@ Deno.serve(async (req) => {
           .single();
         const prBalance = Number(prSaldoData?.valor) || 0;
 
-        console.log(`public-recharge: reseller=${userId} operator=${prResolvedOperator} amount=${prAmount} apiCost=${prApiCost} chargedCost=${prChargedCost} balance=${prBalance}`);
+        console.log(`public-recharge: reseller=${userId} operator=${prResolvedOperator} amount=${prAmount} apiCost=${prApiCost} chargedCost=${prChargedCost} source=${prPricingSource} balance=${prBalance}`);
 
         if (prBalance < prChargedCost) throw new Error("Saldo insuficiente do revendedor");
 
@@ -934,11 +967,15 @@ Deno.serve(async (req) => {
         const prIsCompleted = !prIsFailed && (prOrderData.status === "feita" || prOrderData.status === "concluida" || prOrderData.status === "completed");
         const prFinalStatus = prIsFailed ? "falha" : (prIsCompleted ? "completed" : "pending");
 
-        // Only deduct balance if NOT failed
+        // Only deduct balance if NOT failed (atomic)
         let prNewBalance = prBalance;
         if (!prIsFailed) {
-          prNewBalance = prBalance - prChargedCost;
-          await adminClient.from("saldos").update({ valor: prNewBalance }).eq("user_id", userId).eq("tipo", "revenda");
+          const { data: updatedBal } = await adminClient.rpc("increment_saldo", {
+            p_user_id: userId,
+            p_tipo: "revenda",
+            p_amount: -prChargedCost,
+          });
+          prNewBalance = Number(updatedBal) ?? (prBalance - prChargedCost);
         } else {
           console.log(`public-recharge: NOT deducting balance — recharge failed. reseller=${userId} chargedCost=${prChargedCost}`);
         }

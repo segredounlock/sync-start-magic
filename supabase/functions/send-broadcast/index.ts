@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// send-broadcast edge function
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
@@ -455,6 +455,7 @@ async function flushUnblockedUsers(telegramIds: number[]) {
 }
 
 
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
