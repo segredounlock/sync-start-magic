@@ -172,13 +172,19 @@ export function renderTelegramHtml(text: string): string {
   for (const tag of allowedTags) {
     // Opening tags (with attributes for <a>)
     if (tag === 'a') {
-      safe = safe.replace(/&lt;a\s+href=&quot;([^&]*)&quot;&gt;/gi, '<a href="$1" class="text-blue-400 underline" target="_blank" rel="noopener">');
+      safe = safe.replace(/&lt;a\s+href=&quot;([^&]*)&quot;&gt;/gi, '<a href="$1" class="text-primary underline" target="_blank" rel="noopener noreferrer">');
     } else {
       safe = safe.replace(new RegExp(`&lt;${tag}&gt;`, 'gi'), `<${tag}>`);
     }
     // Closing tags
     safe = safe.replace(new RegExp(`&lt;/${tag}&gt;`, 'gi'), `</${tag}>`);
   }
+
+  // Auto-link plain URLs that are not already inside <a> tags
+  safe = safe.replace(
+    /(?<!href="|">)(https?:\/\/[^\s<]+)/gi,
+    '<a href="$1" class="text-primary underline break-all" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
 
   return safe;
 }
