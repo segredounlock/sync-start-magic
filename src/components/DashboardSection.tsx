@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Smartphone, Users, Banknote, Share2,
@@ -327,6 +328,9 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
           </motion.button>
         ))}
       </div>
+
+      {/* Ranking */}
+      <TopRankingPodium userId={userId} />
 
       {/* Relatório de Desempenho */}
       <div>
