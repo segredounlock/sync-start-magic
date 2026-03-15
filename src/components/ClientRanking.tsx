@@ -260,14 +260,14 @@ export function ClientRanking({ userId, onBack }: ClientRankingProps) {
       </div>
 
       {/* Ranking Card */}
-      <Card className="border-border overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10 pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+      <div className="rounded-xl border border-border overflow-hidden bg-card">
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-3">
+          <h3 className="flex items-center gap-2 text-base font-semibold">
             <Trophy className="w-5 h-5 text-primary" />
             Top 20 Compradores
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+          </h3>
+        </div>
+        <div className="p-0">
           {loading ? (
             <div className="divide-y divide-border">
               {[...Array(8)].map((_, i) => <RankingItemSkeleton key={i} />)}
@@ -314,7 +314,6 @@ export function ClientRanking({ userId, onBack }: ClientRankingProps) {
                         </div>
                       )}
 
-                      {/* Badge positioning: top-left for top3, top-left number for others */}
                       {isTopThree && badge && (
                         <div className="absolute" style={{ top: -4, left: -4 }}>
                           {badge}
@@ -327,7 +326,6 @@ export function ClientRanking({ userId, onBack }: ClientRankingProps) {
                         </span>
                       )}
 
-                      {/* Flash for top 3 */}
                       {isTopThree && <ListFlash index={index} />}
 
                       {user.verification_badge && (
@@ -370,8 +368,8 @@ export function ClientRanking({ userId, onBack }: ClientRankingProps) {
               })}
             </motion.div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
