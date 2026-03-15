@@ -1096,7 +1096,7 @@ export default function BackupSection() {
         {activeTab === "github" && (
           <motion.div key="github" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="space-y-4">
             {/* GitHub PAT Config */}
-            <div className="rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] p-4 space-y-2">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-4 space-y-2">
               <label className="block text-xs font-semibold text-foreground uppercase tracking-wider">GitHub PAT (Personal Access Token)</label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
