@@ -132,9 +132,10 @@ export function AtualizacoesSection() {
             )}
 
             {/* Message */}
-            <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-              {item.message}
-            </div>
+            <div
+              className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed [&_b]:font-bold [&_i]:italic [&_s]:line-through [&_code]:bg-muted/50 [&_code]:px-1 [&_code]:rounded [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-3 [&_blockquote]:italic"
+              dangerouslySetInnerHTML={{ __html: renderTelegramHtml(item.message) }}
+            />
 
             {/* Buttons */}
             {buttons.length > 0 && (
