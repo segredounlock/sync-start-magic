@@ -199,12 +199,7 @@ serve(async (req) => {
           let globalRules: any[] = [];
 
           if (user_id) {
-            const { data: roleData } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", user_id)
-              .maybeSingle();
-            userRole = roleData?.role || "usuario";
+            userRole = await resolveUserRole(supabase, user_id, "usuario");
 
             if (userRole === "cliente") {
               const { data: profileData } = await supabase
