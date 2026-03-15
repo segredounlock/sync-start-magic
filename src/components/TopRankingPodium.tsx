@@ -265,7 +265,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
       <div className="flex items-center justify-between">
         <h2 className="relative text-lg md:text-xl font-bold overflow-hidden">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
-            🏆 Top Rei da GG
+            🏆 Top Recargas
           </span>
           <motion.span
             className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
