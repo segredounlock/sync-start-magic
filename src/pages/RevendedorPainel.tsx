@@ -2063,16 +2063,23 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     };
                   }),
                   // Commissions from referral_commissions
-                  ...commissions.map((c): ExtratoItem => ({
-                    id: c.id,
-                    tipo: "comissao",
-                    titulo: "Comissão Recebida",
-                    subtitulo: `Comissão ${c.type === "indirect" ? "indireta" : "direta"} de indicação`,
-                    valor: c.amount,
-                    data: c.created_at,
-                    status: "completed",
-                    isPositive: true,
-                  })),
+                  ...commissions.map((c): ExtratoItem => {
+                    // Try to find matching recarga for richer subtitle
+                    const matchedRecarga = c.recarga_id ? recargas.find(r => r.id === c.recarga_id) : null;
+                    const subtitulo = matchedRecarga
+                      ? `Comissão pela venda de ${(matchedRecarga.operadora || "").toUpperCase()} ${fmt(safeValor(matchedRecarga))}`
+                      : `Comissão ${c.type === "indirect" ? "indireta" : "direta"} de indicação`;
+                    return {
+                      id: c.id,
+                      tipo: "comissao",
+                      titulo: "Comissão Recebida",
+                      subtitulo,
+                      valor: c.amount,
+                      data: c.created_at,
+                      status: "completed",
+                      isPositive: true,
+                    };
+                  }),
                   ...recargas.filter(r => r.status === "completed").map((r): ExtratoItem => ({
                     id: r.id,
                     tipo: "recarga",
