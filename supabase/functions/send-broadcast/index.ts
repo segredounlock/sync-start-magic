@@ -334,6 +334,11 @@ async function sendBroadcastInBackground(
       for (const result of results) {
         if (result.ok) {
           sentCount++;
+          // If this user was previously blocked, unblock them (they unblocked the bot!)
+          if (result.wasBlocked) {
+            unblockedIds.push(result.telegramId);
+            console.log(`[BROADCAST] UNBLOCKED ${result.firstName}(${result.telegramId}): message delivered successfully`);
+          }
         } else {
           failedCount++;
           const errorCode = result.error_code || 0;
@@ -350,9 +355,12 @@ async function sendBroadcastInBackground(
         }
       }
 
-      // Flush blocked users in batches of 50 to avoid huge queries
+      // Flush blocked/unblocked users in batches of 50
       if (blockedUpdates.length >= 50) {
         await flushBlockedUsers(blockedUpdates.splice(0, 50));
+      }
+      if (unblockedIds.length >= 50) {
+        await flushUnblockedUsers(unblockedIds.splice(0, 50));
       }
 
       const elapsedMs = Date.now() - startTime;
