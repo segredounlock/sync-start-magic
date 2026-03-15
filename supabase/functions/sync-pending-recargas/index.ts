@@ -212,22 +212,13 @@ Deno.serve(async (req) => {
             const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
             const authHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
 
-            const { data: saldoData } = await adminClient
-              .from("saldos")
-              .select("valor")
-              .eq("user_id", recarga.user_id)
-              .eq("tipo", "revenda")
-              .single();
-
-            let newBalance = Number(saldoData?.valor) || 0;
-            if (saldoData) {
-              newBalance = Number(saldoData.valor) + Number(recarga.custo);
-              await adminClient
-                .from("saldos")
-                .update({ valor: newBalance })
-                .eq("user_id", recarga.user_id)
-                .eq("tipo", "revenda");
-            }
+            let newBalance = 0;
+            const { data: refundedBal } = await adminClient.rpc("increment_saldo", {
+              p_user_id: recarga.user_id,
+              p_tipo: "revenda",
+              p_amount: Number(recarga.custo),
+            });
+            newBalance = Number(refundedBal) || 0;
 
             // Telegram notification
             fetch(`${baseUrl}/functions/v1/telegram-notify`, {

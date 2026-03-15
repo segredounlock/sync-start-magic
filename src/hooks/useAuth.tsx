@@ -39,11 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .eq("user_id", userId);
 
       if (!isMountedRef.current) return;
-      setRole((data?.role as AppRole) ?? null);
+
+      if (data && data.length > 0) {
+        // Priority: admin > revendedor > cliente > usuario
+        const priority: Record<string, number> = { admin: 1, revendedor: 2, cliente: 3, usuario: 4 };
+        const sorted = data.sort((a, b) => (priority[a.role] ?? 99) - (priority[b.role] ?? 99));
+        setRole((sorted[0].role as AppRole) ?? null);
+      } else {
+        setRole(null);
+      }
     } catch {
       if (!isMountedRef.current) return;
       setRole(null);

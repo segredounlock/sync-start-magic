@@ -54,19 +54,24 @@ Deno.serve(async (req) => {
 
       if (!saldo || saldo.valor <= 0) continue;
 
-      let availableBalance = saldo.valor;
-      let totalDeducted = 0;
-
       // Sort by custo_api ascending — pay smaller debts first
       const sorted = userRecargaDebts.sort(
         (a: any, b: any) => a.custo_api - b.custo_api,
       );
 
+      let totalDeducted = 0;
+      let availableBalance = saldo.valor;
+
       for (const debt of sorted) {
         if (availableBalance < debt.custo_api) continue; // not enough for this debt
 
-        // Deduct
-        availableBalance -= debt.custo_api;
+        // Deduct atomically
+        const { data: newBal } = await sb.rpc("increment_saldo", {
+          p_user_id: userId,
+          p_tipo: "revenda",
+          p_amount: -debt.custo_api,
+        });
+        availableBalance = Number(newBal) || (availableBalance - debt.custo_api);
         totalDeducted += debt.custo_api;
 
         // Update recarga custo
@@ -92,13 +97,6 @@ Deno.serve(async (req) => {
       }
 
       if (totalDeducted > 0) {
-        // Deduct balance in one operation
-        await sb
-          .from("saldos")
-          .update({ valor: availableBalance })
-          .eq("user_id", userId)
-          .eq("tipo", "revenda");
-
         // Get user name for notification
         const { data: profile } = await sb
           .from("profiles")

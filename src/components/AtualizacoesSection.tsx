@@ -50,7 +50,7 @@ export function AtualizacoesSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    const loadItems = async () => {
       const { data } = await supabase
         .from("notifications")
         .select("id, title, message, buttons, image_url, created_at, status")
@@ -58,7 +58,23 @@ export function AtualizacoesSection() {
         .limit(20);
       setItems((data as Notif[] | null) || []);
       setLoading(false);
-    })();
+    };
+    loadItems();
+
+    // Realtime subscription for new notifications
+    const channel = supabase
+      .channel("notifications-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          const newNotif = payload.new as Notif;
+          setItems((prev) => [newNotif, ...prev].slice(0, 20));
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const handleShare = async (item: Notif) => {
