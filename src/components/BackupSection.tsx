@@ -1255,9 +1255,9 @@ export default function BackupSection() {
             <AnimatePresence>
               {updateExporting && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                  className="rounded-2xl backdrop-blur-xl bg-blue-500/[0.06] shadow-[inset_0_1px_1px_rgba(59,130,246,0.1)] p-4 space-y-3 overflow-hidden">
+                  className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-4 space-y-3 overflow-hidden">
                   <p className="text-sm font-semibold text-foreground">{updateExportStage}</p>
-                  <div className="w-full h-2.5 bg-white/[0.06] rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
                     <motion.div className="h-full bg-gradient-to-r from-blue-500 to-indigo-400 rounded-full"
                       initial={{ width: 0 }} animate={{ width: `${updateExportProgress}%` }} transition={{ duration: 0.3 }} />
                   </div>
