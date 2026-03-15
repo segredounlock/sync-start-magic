@@ -904,7 +904,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         : "bg-muted/30 text-foreground hover:bg-muted/50"
                     }`}
                   >
-                    <FloatingGridIcon icon={item.icon} color={isActive ? "text-primary" : "text-muted-foreground"} isActive={isActive} index={index} />
+                    <FloatingGridIcon icon={item.icon} color={isActive ? "text-primary" : item.color} isActive={isActive} index={index} />
                     <span className={`text-[11px] font-semibold text-center leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>{item.label}</span>
                   </button>
                 );
