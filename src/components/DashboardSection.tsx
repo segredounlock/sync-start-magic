@@ -254,7 +254,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
       </div>
 
       {/* Pending Prices Alert */}
-      {!isClientMode && salesToolsEnabled && hasPendingPrices && (
+      {!isClientMode && showSalesTools && hasPendingPrices && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
