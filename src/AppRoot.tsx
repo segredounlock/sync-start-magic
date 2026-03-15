@@ -55,17 +55,13 @@ function usePrefetchRoutes() {
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const { role } = useAuth();
   const [maintenance, setMaintenance] = useState<boolean | null>(null);
-  const checkedRef = useRef(false);
 
   useEffect(() => {
-    if (checkedRef.current) return;
-    checkedRef.current = true;
-
     let mounted = true;
 
     // Fast timeout — don't block UI for more than 2s
     const timeout = setTimeout(() => {
-      if (mounted && maintenance === null) setMaintenance(false);
+      if (mounted) setMaintenance((prev) => prev === null ? false : prev);
     }, 2000);
 
     const check = async () => {
