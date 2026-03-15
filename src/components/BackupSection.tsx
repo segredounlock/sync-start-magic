@@ -385,12 +385,28 @@ export default function BackupSection() {
         }
       }
 
+      // 3. Documentation files
+      if (includeSchema) {
+        const docsFolder = zip.folder("documentation");
+        const docFiles = ["DOCUMENTACAO_MIGRACAO.md", "ALTERACOES.md", "README.md"];
+        for (const docFile of docFiles) {
+          try {
+            const r = await fetch(new URL(`/${docFile}`, window.location.origin).href);
+            if (r.ok) {
+              const text = await r.text();
+              if (text && text.length > 10) docsFolder!.file(docFile, text);
+            }
+          } catch { /* skip */ }
+        }
+      }
+
       // Update backup-info
       zip.file("backup-info.json", JSON.stringify({
-        version: "2.0",
+        version: "3.0",
         created_at: new Date().toISOString(),
         include_database: includeDb,
         include_source: includeSource,
+        include_schema: includeSchema,
         source_files: includeSource ? effectivePaths.length : 0,
         tables: "dynamic",
       }, null, 2));
