@@ -2900,7 +2900,7 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
             className="px-5 py-3 border-b border-border last:border-0 flex items-center justify-between">
             <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${t.status === "completed" ? "bg-success/15" : t.status === "expired" ? "bg-destructive/15" : "bg-warning/15"}`}>
-                {t.status === "completed" ? <AnimatedCheck size={18} className="text-success" /> : t.status === "expired" ? <motion.span initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 300, damping: 15, delay: i * 0.06 + 0.2 }} className="text-destructive text-sm font-bold block">✕</motion.span> : <Loader2 className="h-4 w-4 text-warning animate-spin" />}
+                {t.status === "completed" ? <AnimatedCheck size={18} className="text-success" /> : t.status === "expired" ? <motion.span animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} className="text-destructive text-sm font-bold block">✕</motion.span> : <Loader2 className="h-4 w-4 text-warning animate-spin" />}
               </div>
               <div>
                 <p className="font-medium text-foreground text-sm">Depósito PIX</p>
