@@ -265,7 +265,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
       <div className="flex items-center justify-between">
         <h2 className="relative text-lg md:text-xl font-bold overflow-hidden">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
-            🏆 Top Ranking
+            🏆 Top Rei da GG
           </span>
           <motion.span
             className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
@@ -277,7 +277,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             animate={{ backgroundPosition: ["200% center", "-200% center"] }}
             transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
           >
-            🏆 Top Ranking
+            🏆 Top Rei da GG
           </motion.span>
         </h2>
 
@@ -345,8 +345,9 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               <p className={`text-center font-semibold truncate max-w-[120px] md:max-w-[140px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`} title={user.nome}>
                 {user.nome}
               </p>
-              <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-lg text-yellow-500" : "text-sm text-muted-foreground"}`}>
-                {user.total_recargas}
+              <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
+                <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-lg" : "text-sm"}`}>{user.total_recargas}</span>
+                {" "}compras
               </span>
             </motion.div>
           );
@@ -442,6 +443,10 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                 {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
               </div>
             )}
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-foreground">{ranking[userRank]?.nome}</span>
+              <span className="text-[10px] text-muted-foreground">{ranking[userRank]?.total_recargas} compras</span>
+            </div>
             <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">Você</span>
           </div>
         </motion.div>
