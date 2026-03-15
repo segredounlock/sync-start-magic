@@ -68,10 +68,14 @@ export default function AdminDashboard() {
   const [savingSaldo, setSavingSaldo] = useState(false);
   const [confirmRoleRemove, setConfirmRoleRemove] = useState<Revendedor | null>(null);
 
-  // Broadcast state
+  // Broadcast state - restore from localStorage if a broadcast was running
   const [broadcastSending, setBroadcastSending] = useState(false);
-  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
-  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(() => {
+    try { return localStorage.getItem('broadcast_progress_id'); } catch { return null; }
+  });
+  const [broadcastTitle, setBroadcastTitle] = useState(() => {
+    try { return localStorage.getItem('broadcast_title') || ''; } catch { return ''; }
+  });
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastBlockedCount, setBroadcastBlockedCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
@@ -907,6 +911,19 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => { if (tab === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [tab, fetchBroadcastHistory, fetchBroadcastUserCount]);
+
+  // Persist broadcast progress to localStorage so it survives page navigation
+  useEffect(() => {
+    try {
+      if (broadcastProgressId) {
+        localStorage.setItem('broadcast_progress_id', broadcastProgressId);
+        localStorage.setItem('broadcast_title', broadcastTitle);
+      } else {
+        localStorage.removeItem('broadcast_progress_id');
+        localStorage.removeItem('broadcast_title');
+      }
+    } catch {}
+  }, [broadcastProgressId, broadcastTitle]);
 
   useEffect(() => { if (tab === "gateway") fetchGatewayConfig(); }, [tab, fetchGatewayConfig]);
   useEffect(() => { if (tab === "loja") fetchStoreConfig(); }, [tab, fetchStoreConfig]);
@@ -3453,6 +3470,7 @@ export default function AdminDashboard() {
                 notificationTitle={broadcastTitle}
                 onComplete={() => {
                   toast.success('Broadcast concluído!');
+                  setBroadcastProgressId(null);
                   fetchBroadcastHistory();
                 }}
                 onResume={async (pid) => {

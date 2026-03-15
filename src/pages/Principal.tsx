@@ -178,10 +178,14 @@ export default function Principal() {
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
 
-  // Broadcast state
+  // Broadcast state - restore from localStorage if a broadcast was running
   const [broadcastSending, setBroadcastSending] = useState(false);
-  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(null);
-  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastProgressId, setBroadcastProgressId] = useState<string | null>(() => {
+    try { return localStorage.getItem('broadcast_progress_id'); } catch { return null; }
+  });
+  const [broadcastTitle, setBroadcastTitle] = useState(() => {
+    try { return localStorage.getItem('broadcast_title') || ''; } catch { return ''; }
+  });
   const [broadcastUserCount, setBroadcastUserCount] = useState(0);
   const [broadcastBlockedCount, setBroadcastBlockedCount] = useState(0);
   const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
@@ -1227,6 +1231,19 @@ export default function Principal() {
   }, []);
 
   useEffect(() => { if (view === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [view, fetchBroadcastHistory, fetchBroadcastUserCount]);
+
+  // Persist broadcast progress to localStorage so it survives page navigation
+  useEffect(() => {
+    try {
+      if (broadcastProgressId) {
+        localStorage.setItem('broadcast_progress_id', broadcastProgressId);
+        localStorage.setItem('broadcast_title', broadcastTitle);
+      } else {
+        localStorage.removeItem('broadcast_progress_id');
+        localStorage.removeItem('broadcast_title');
+      }
+    } catch {}
+  }, [broadcastProgressId, broadcastTitle]);
 
   const menuItems: { key: string; icon: any; label: string; color: string; link?: string }[] = [
     { key: "dashboard", icon: BarChart3, label: "Dashboard", color: "text-primary" },
@@ -4226,7 +4243,7 @@ export default function Principal() {
                 <BroadcastProgress
                   progressId={broadcastProgressId}
                   notificationTitle={broadcastTitle}
-                  onComplete={() => { toast.success('Broadcast concluído!'); fetchBroadcastHistory(); }}
+                  onComplete={() => { toast.success('Broadcast concluído!'); setBroadcastProgressId(null); fetchBroadcastHistory(); }}
                   onResume={async (pid) => {
                     const { error } = await supabase.functions.invoke('send-broadcast', { body: { resume_progress_id: pid } });
                     if (error) toast.error('Erro ao retomar: ' + error.message);

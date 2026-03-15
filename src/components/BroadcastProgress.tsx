@@ -37,7 +37,14 @@ export function BroadcastProgress({ progressId, notificationTitle, onComplete, o
         .select('*')
         .eq('id', progressId)
         .single();
-      if (data) setProgress(data as any as BroadcastProgressData);
+      if (data) {
+        const d = data as any as BroadcastProgressData;
+        setProgress(d);
+        // If broadcast already finished while user was away, notify
+        if (d.status === 'completed' || d.status === 'failed') {
+          onComplete?.();
+        }
+      }
     };
 
     fetchProgress();
