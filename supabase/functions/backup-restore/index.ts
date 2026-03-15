@@ -86,6 +86,7 @@ serve(async (req) => {
     const profileFkTables = new Set([
       "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config",
       "transactions", "disabled_recharge_values", "referral_commissions",
+      "scratch_cards", "client_pricing_rules", "push_subscriptions",
     ]);
 
     const getExistingProfileIds = async () => {
