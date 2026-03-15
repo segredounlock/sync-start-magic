@@ -329,6 +329,9 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
         ))}
       </div>
 
+      {/* Ranking */}
+      <TopRankingPodium userId={userId} />
+
       {/* Relatório de Desempenho */}
       <div>
         <div className="flex items-center justify-between mb-4">
