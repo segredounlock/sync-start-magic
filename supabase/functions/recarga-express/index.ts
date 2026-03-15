@@ -332,8 +332,9 @@ Deno.serve(async (req) => {
 
       case "query-operator": {
         // v2: use native /detect-operator endpoint with fallback
-        const { phoneNumber: qPhone } = params;
-        if (!qPhone) throw new Error("phoneNumber é obrigatório");
+        const { phoneNumber: rawQPhone } = params;
+        if (!rawQPhone) throw new Error("phoneNumber é obrigatório");
+        const qPhone = validatePhone(rawQPhone);
 
         let detectedOperator: string | null = null;
         let detectedEnabled = true;
