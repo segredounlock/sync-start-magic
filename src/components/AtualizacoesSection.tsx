@@ -6,11 +6,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDateLongUpperBR, isTodayBR, toLocalDateKey } from "@/lib/timezone";
 import { styledToast as toast } from "@/lib/toast";
 
+interface NotifButton {
+  text?: string;
+  label?: string;
+  url: string;
+}
+
 interface Notif {
   id: string;
   title: string;
   message: string;
-  buttons: { label: string; url: string }[] | null;
+  buttons: NotifButton[] | null;
   image_url: string | null;
   created_at: string;
   status: string;
