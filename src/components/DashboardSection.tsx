@@ -243,7 +243,10 @@ export function DashboardSection({ saldo, loading, userId, userName, onNavigateT
       {/* Greeting + Date */}
       <div>
         <p className="text-xs text-muted-foreground">{dateLabel}</p>
-        <h1 className="text-2xl font-bold text-foreground">Olá, {userName}!</h1>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          Olá, <span className={badge ? "shimmer-letters" : ""}>{userName}</span>!
+          <VerificationBadge badge={badge ?? null} size="md" />
+        </h1>
       </div>
 
       {/* Pending Prices Alert */}
