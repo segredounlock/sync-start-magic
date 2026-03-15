@@ -1213,11 +1213,17 @@ export default function Principal() {
   }, []);
 
   const fetchBroadcastUserCount = useCallback(async () => {
-    const { count } = await (supabase.from('telegram_users' as any) as any)
-      .select('*', { count: 'exact', head: true })
-      .eq('is_blocked', false)
-      .eq('is_registered', true);
-    setBroadcastUserCount(count || 0);
+    const [activeRes, blockedRes] = await Promise.all([
+      (supabase.from('telegram_users' as any) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('is_blocked', false)
+        .eq('is_registered', true),
+      (supabase.from('telegram_users' as any) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('is_blocked', true),
+    ]);
+    setBroadcastUserCount(activeRes.count || 0);
+    setBroadcastBlockedCount(blockedRes.count || 0);
   }, []);
 
   useEffect(() => { if (view === "broadcast") { fetchBroadcastHistory(); fetchBroadcastUserCount(); } }, [view, fetchBroadcastHistory, fetchBroadcastUserCount]);
