@@ -1129,7 +1129,7 @@ export default function TelegramMiniApp() {
                           <Shield className="w-7 h-7" style={st.link} />
                         </motion.div>
                         <h2 className="text-lg font-bold" style={st.text}>Verificação de Número</h2>
-                        <p className="text-sm mt-1" style={st.hint}>{selectedOp.nome} • {phone}</p>
+                        <p className="text-sm mt-1" style={st.hint}>{(selectedOp.nome || "").toUpperCase()} • {phone}</p>
                       </div>
 
                       <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
