@@ -48,47 +48,35 @@ function GoldFloatingCrown({ size = 48 }: { size?: number }) {
       />
 
       {/* Crown icon with gradient stroke */}
-      <div className="relative flex flex-col items-center" style={{ width: size * 0.7 }}>
-        <div className="relative" style={{ width: size * 0.7, height: size * 0.7 }}>
-          <Crown
-            fill="currentColor"
-            className="text-yellow-400 absolute inset-0 w-full h-full"
-            strokeWidth={0}
+      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+        <Crown
+          className="absolute inset-0 w-full h-full text-yellow-400"
+          fill="currentColor"
+          strokeWidth={0}
+        />
+        <svg
+          viewBox="0 0 24 24"
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ filter: "drop-shadow(0 0 8px rgba(253, 224, 71, 0.9))" }}
+        >
+          <defs>
+            <linearGradient id="crownGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="50%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+          </defs>
+          <motion.path
+            d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z M5 21a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H6a1 1 0 0 1-1-1"
+            fill="none"
+            stroke="url(#crownGradient)"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            initial={{ strokeDasharray: 100, strokeDashoffset: 100 }}
+            animate={{ strokeDashoffset: -100 }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
           />
-          <svg viewBox="0 0 24 24" className="absolute inset-0 w-full h-full">
-            <defs>
-              <linearGradient id="crownGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#fde047" />
-                <stop offset="50%" stopColor="#ffffff" />
-                <stop offset="100%" stopColor="#fbbf24" />
-              </linearGradient>
-            </defs>
-            <motion.path
-              d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.735H5.81a1 1 0 0 1-.957-.735L2.02 6.019a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"
-              fill="none"
-              stroke="url(#crownGradient)"
-              strokeWidth={1.5}
-              initial={{ strokeDasharray: 100, strokeDashoffset: 100 }}
-              animate={{ strokeDashoffset: -100 }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-            />
-          </svg>
-        </div>
-        {/* Two golden bars below crown (pedestal) */}
-        <div className="flex flex-col items-center gap-[2px] -mt-0.5" style={{ width: size * 0.55 }}>
-          <motion.div
-            className="h-[3px] w-full rounded-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600"
-            style={{ boxShadow: "0 0 6px 1px rgba(251,191,36,0.5)" }}
-            animate={{ opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-          <motion.div
-            className="h-[2px] rounded-full bg-gradient-to-r from-yellow-700 via-yellow-500 to-yellow-700"
-            style={{ width: "75%", boxShadow: "0 0 4px 1px rgba(251,191,36,0.3)" }}
-            animate={{ opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-          />
-        </div>
+        </svg>
       </div>
     </motion.div>
   );
