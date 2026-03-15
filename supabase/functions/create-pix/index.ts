@@ -613,9 +613,32 @@ Deno.serve(async (req) => {
       metadata: { reference, gateway, qr_code: result.qr_code || null, saldo_tipo: saldoType },
     });
 
-    console.log(`[create-pix] OK user=${userId} gateway=${gateway} amount=${amount} payment_id=${result.payment_id}`);
+    // Calculate fee info so the frontend can display it
+    const taxaTipo = config.taxaTipo || "";
+    const taxaValorRaw = parseFloat((config.taxaValor || "0").replace(",", ".")) || 0;
+    let feeAmount = 0;
+    let netAmount = amount;
+    if (taxaValorRaw > 0 && taxaTipo) {
+      if (taxaTipo === "percentual") {
+        feeAmount = Math.round(amount * taxaValorRaw) / 100;
+      } else {
+        feeAmount = taxaValorRaw;
+      }
+      feeAmount = Math.round(feeAmount * 100) / 100;
+      netAmount = Math.max(0, Math.round((amount - feeAmount) * 100) / 100);
+    }
 
-    return new Response(JSON.stringify({ success: true, data: result }), {
+    const responseData = {
+      ...result,
+      fee_amount: feeAmount,
+      fee_type: taxaTipo || null,
+      fee_value: taxaValorRaw || null,
+      net_amount: netAmount,
+    };
+
+    console.log(`[create-pix] OK user=${userId} gateway=${gateway} amount=${amount} fee=${feeAmount} net=${netAmount} payment_id=${result.payment_id}`);
+
+    return new Response(JSON.stringify({ success: true, data: responseData }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
