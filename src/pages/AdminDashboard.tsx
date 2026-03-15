@@ -44,6 +44,7 @@ import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { useCrud } from "@/hooks/useCrud";
 import { confirm } from "@/lib/confirm";
 import { logAudit } from "@/lib/auditLog";
+import { applyCurrencyMask } from "@/lib/currencyMask";
 const AuditTab = lazy(() => import("@/components/AuditTab"));
 
 export default function AdminDashboard() {
