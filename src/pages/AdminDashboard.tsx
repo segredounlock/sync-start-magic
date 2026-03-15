@@ -39,6 +39,7 @@ import {
 
 import type { Revendedor, RecargaHistorico, Operadora, PricingRule, Period } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
+import { useFeePreview } from "@/hooks/useFeePreview";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { useCrud } from "@/hooks/useCrud";
 import { confirm } from "@/lib/confirm";
