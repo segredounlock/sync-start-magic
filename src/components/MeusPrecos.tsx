@@ -288,8 +288,8 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                           type="number"
                           step="0.01"
                           min="0"
-                          value={displayProfit.toFixed(2)}
-                          onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, parseFloat(e.target.value) || 0)}
+                          value={displayProfitRaw}
+                          onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, e.target.value)}
                           className="w-20 text-right bg-background border border-border rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
                         />
                       </div>
