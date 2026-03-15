@@ -37,6 +37,7 @@ const TEMPLATES = [
   { key: 'novidade', label: 'Novidade', emoji: '✨', color: 'bg-purple-600/80', title: '✨ Novidade!', message: 'Temos novidades incríveis para você! Confira as últimas atualizações.' },
   { key: 'aviso', label: 'Aviso', emoji: '🔔', color: 'bg-yellow-600/80', title: '⚠️ Aviso Importante', message: 'Atenção! Informamos que haverá uma manutenção programada.' },
   { key: 'comunicado', label: 'Comunicado', emoji: '📢', color: 'bg-blue-600/80', title: '📢 Comunicado Oficial', message: 'Comunicamos a todos os nossos clientes sobre as seguintes mudanças.' },
+  { key: 'maluca', label: 'Recarga Maluca', emoji: '🤪', color: 'bg-orange-600/80', title: '🤪🔥 RECARGA MALUCA do FDS!', message: '⚡ Todo fim de semana tem RECARGA MALUCA!\n\n💰 Preços EXCLUSIVOS e DIFERENCIADOS que você só encontra aqui!\n\n📱 Recarregue já e aproveite antes que acabe!\n\n⏰ Válido sábado e domingo!' },
 ];
 
 const BATCH_SIZE = 25;
