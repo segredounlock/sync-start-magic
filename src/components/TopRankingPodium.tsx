@@ -74,13 +74,21 @@ function GoldFloatingCrown({ size = 48 }: { size?: number }) {
             />
           </svg>
         </div>
-        {/* Small golden circle below crown */}
-        <motion.div
-          className="w-2 h-2 rounded-full bg-yellow-400 -mt-0.5"
-          style={{ boxShadow: "0 0 6px 2px rgba(251,191,36,0.5)" }}
-          animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
+        {/* Two golden bars below crown (pedestal) */}
+        <div className="flex flex-col items-center gap-[2px] -mt-0.5" style={{ width: size * 0.55 }}>
+          <motion.div
+            className="h-[3px] w-full rounded-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600"
+            style={{ boxShadow: "0 0 6px 1px rgba(251,191,36,0.5)" }}
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+          <motion.div
+            className="h-[2px] rounded-full bg-gradient-to-r from-yellow-700 via-yellow-500 to-yellow-700"
+            style={{ width: "75%", boxShadow: "0 0 4px 1px rgba(251,191,36,0.3)" }}
+            animate={{ opacity: [0.5, 0.8, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+          />
+        </div>
       </div>
     </motion.div>
   );
