@@ -370,6 +370,17 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Generate commissions when status transitions from pending to completed
+        if (localStatus === "completed" && currentRecarga && currentRecarga.status === "pending") {
+          generateCommissions(
+            adminClient,
+            currentRecarga.user_id,
+            Number(currentRecarga.custo),
+            Number(currentRecarga.custo_api),
+            external_id
+          ).catch(() => {});
+        }
+
         result = { success: true, data: { ...order, localStatus } };
         break;
       }
