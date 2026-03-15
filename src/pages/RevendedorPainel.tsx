@@ -2609,6 +2609,8 @@ function AddSaldoSection({ saldo, fmt, fmtDate, transactions, userEmail, userNam
     checkStatus: handleCheckStatus, reset: handleNewPix,
   } = pix;
 
+  const { calcFee: feeCalc } = useFeePreview();
+
   const DEPOSIT_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
   const depositTxs = transactions.filter(t => t.type === "deposit").map(t => {
     if (t.status === "pending" && (Date.now() - new Date(t.created_at).getTime()) > DEPOSIT_EXPIRY_MS) {
