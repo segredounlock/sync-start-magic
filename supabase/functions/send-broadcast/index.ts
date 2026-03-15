@@ -236,10 +236,10 @@ async function sendBroadcastInBackground(
       return;
     }
 
+    // Query ALL users (including previously blocked) — each broadcast re-verifies status
     let usersQuery = supabase
       .from('telegram_users')
-      .select('telegram_id, first_name')
-      .eq('is_blocked', false);
+      .select('telegram_id, first_name, is_blocked');
 
     if (!includeUnregistered) {
       usersQuery = usersQuery.eq('is_registered', true);
@@ -276,8 +276,9 @@ async function sendBroadcastInBackground(
     let blockedCount = resumeBlockedCount;
     let currentBatch = resumeFromBatch;
 
-    // Collect blocked users with reasons for batch update
+    // Collect status changes for batch update
     const blockedUpdates: Array<{ telegram_id: number; reason: string }> = [];
+    const unblockedIds: number[] = []; // Users that succeeded but were previously blocked
 
     const batches: typeof users[] = [];
     for (let i = 0; i < totalUsers; i += BATCH_SIZE) {
@@ -324,6 +325,7 @@ async function sendBroadcastInBackground(
         return {
           telegramId: user.telegram_id,
           firstName: user.first_name,
+          wasBlocked: user.is_blocked === true,
           ...result,
         };
       });
@@ -333,6 +335,11 @@ async function sendBroadcastInBackground(
       for (const result of results) {
         if (result.ok) {
           sentCount++;
+          // If this user was previously blocked, unblock them (they unblocked the bot!)
+          if (result.wasBlocked) {
+            unblockedIds.push(result.telegramId);
+            console.log(`[BROADCAST] UNBLOCKED ${result.firstName}(${result.telegramId}): message delivered successfully`);
+          }
         } else {
           failedCount++;
           const errorCode = result.error_code || 0;
@@ -349,9 +356,12 @@ async function sendBroadcastInBackground(
         }
       }
 
-      // Flush blocked users in batches of 50 to avoid huge queries
+      // Flush blocked/unblocked users in batches of 50
       if (blockedUpdates.length >= 50) {
         await flushBlockedUsers(blockedUpdates.splice(0, 50));
+      }
+      if (unblockedIds.length >= 50) {
+        await flushUnblockedUsers(unblockedIds.splice(0, 50));
       }
 
       const elapsedMs = Date.now() - startTime;
@@ -379,9 +389,12 @@ async function sendBroadcastInBackground(
       }
     }
 
-    // Flush remaining blocked users
+    // Flush remaining blocked/unblocked users
     if (blockedUpdates.length > 0) {
       await flushBlockedUsers(blockedUpdates);
+    }
+    if (unblockedIds.length > 0) {
+      await flushUnblockedUsers(unblockedIds);
     }
 
     // Only mark completed if not already cancelled
@@ -434,7 +447,14 @@ async function flushBlockedUsers(updates: Array<{ telegram_id: number; reason: s
   console.log(`[BROADCAST] Flushed ${updates.length} blocked users`);
 }
 
-serve(async (req) => {
+async function flushUnblockedUsers(telegramIds: number[]) {
+  await supabase.from('telegram_users')
+    .update({ is_blocked: false, block_reason: null })
+    .in('telegram_id', telegramIds);
+  console.log(`[BROADCAST] Unblocked ${telegramIds.length} users (they unblocked the bot)`);
+}
+
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -489,10 +509,10 @@ serve(async (req) => {
       });
     }
 
+    // Count ALL users (including blocked) since broadcast re-verifies everyone
     let userQuery = supabase
       .from('telegram_users')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_blocked', false);
+      .select('*', { count: 'exact', head: true });
 
     if (!include_unregistered) {
       userQuery = userQuery.eq('is_registered', true);
