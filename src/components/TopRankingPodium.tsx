@@ -345,8 +345,9 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               <p className={`text-center font-semibold truncate max-w-[120px] md:max-w-[140px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`} title={user.nome}>
                 {user.nome}
               </p>
-              <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-lg text-yellow-500" : "text-sm text-muted-foreground"}`}>
-                {user.total_recargas}
+              <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
+                <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-lg" : "text-sm"}`}>{user.total_recargas}</span>
+                {" "}compras
               </span>
             </motion.div>
           );
