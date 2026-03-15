@@ -778,7 +778,7 @@ export default function BackupSection() {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       {/* Header with stats */}
-      <div className="flex items-center gap-3 p-4 rounded-2xl backdrop-blur-xl bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+      <div className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border shadow-sm">
         <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 flex items-center justify-center shadow-lg shadow-amber-500/10">
           <Shield className="h-5 w-5 text-amber-400" />
         </div>
