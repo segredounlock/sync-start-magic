@@ -444,7 +444,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             )}
             <div className="flex flex-col">
               <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">{ranking[userRank]?.nome}</span>
-              <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{ranking[userRank]?.total_recargas} compras</span>
+              <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{ranking[userRank]?.total_recargas} recargas</span>
             </div>
             <span className="text-[10px] md:text-xs bg-primary/20 text-primary px-1.5 md:px-2 py-0.5 rounded-full font-semibold">Você</span>
           </div>
