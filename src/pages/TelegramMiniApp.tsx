@@ -1510,6 +1510,30 @@ export default function TelegramMiniApp() {
                       <p className="text-xs" style={{ color: "var(--tg-destructive, #ec3942)" }}>Valor mínimo: R$ 10,00</p>
                     )}
                   </div>
+                  {/* Fee preview */}
+                  {(() => {
+                    const val = parseFloat((depositAmount || "0").replace(",", "."));
+                    const preview = feeCalc(val);
+                    if (preview.hasFee && val >= 10) {
+                      return (
+                        <div className="rounded-xl px-4 py-3 space-y-1" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                          <div className="flex justify-between text-xs" style={st.hint}>
+                            <span>Valor do depósito</span>
+                            <span className="font-mono">{formatCurrency(val)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs" style={st.hint}>
+                            <span>Taxa ({preview.feeLabel})</span>
+                            <span className="font-mono" style={{ color: "var(--tg-destructive, #ec3942)" }}>-{formatCurrency(preview.feeAmount)}</span>
+                          </div>
+                          <div className="pt-1 flex justify-between text-sm font-semibold" style={{ ...st.text, borderTop: st.borderSub }}>
+                            <span>Você receberá</span>
+                            <span className="font-mono" style={st.green}>{formatCurrency(preview.netAmount)}</span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                   <motion.button
                     onClick={handleDeposit}
                     disabled={depositLoading || !depositAmount || parseFloat((depositAmount || "0").replace(",", ".")) < 10}
