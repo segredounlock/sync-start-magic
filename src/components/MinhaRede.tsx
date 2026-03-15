@@ -121,6 +121,23 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
     }
   };
 
+  const demoteToClient = async (member: NetworkMember) => {
+    setPromotingId(member.id);
+    try {
+      const res = await supabase.functions.invoke("admin-toggle-role", {
+        body: { user_id: member.id, role: "revendedor", action: "remove" },
+      });
+      if (res.error) throw res.error;
+      toast.success(`${member.nome || "Usuário"} rebaixado para Cliente.`);
+      setOpenMenuId(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao rebaixar");
+    } finally {
+      setPromotingId(null);
+    }
+  };
+
   const filteredMembers = members.filter((m) => {
     if (!search) return true;
     const q = search.toLowerCase();
