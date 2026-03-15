@@ -1,20 +1,40 @@
 
 
-# Plano: Resetar Usuários Bloqueados do Telegram
+## Diagnóstico e Correção
 
-## O que será feito
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-1. **Resetar todos os 20 usuários** marcados como `is_blocked = true` na tabela `telegram_users`, voltando para `is_blocked = false` e limpando o `block_reason`
-2. Isso permitirá que o próximo broadcast tente enviar para todos, e o sistema automaticamente re-marcará os que realmente bloquearam o bot
+### Plano
 
-## Detalhes técnicos
+**1. Corrigir o mapeamento de status na sync function**
 
-- Executar `UPDATE telegram_users SET is_blocked = false, block_reason = NULL WHERE is_blocked = true`
-- Nenhuma alteração de código necessária -- o `send-broadcast` já marca automaticamente quem retornar erro 403 como bloqueado
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-## Resultado esperado
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-- Todos os 685+ usuários receberão tentativa de envio no próximo broadcast
-- Os que realmente bloquearam o bot serão re-identificados e marcados automaticamente
-- Você terá um retrato fiel de quem está ativo e quem não está
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

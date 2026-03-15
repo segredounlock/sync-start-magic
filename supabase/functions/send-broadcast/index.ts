@@ -11,9 +11,48 @@ const corsHeaders = {
 const BATCH_SIZE = 25;
 const BATCH_DELAY = 1100;
 
+// Error codes that indicate the user permanently can't receive messages
+const PERMANENT_BLOCK_CODES = new Set([
+  403, // Forbidden - user blocked the bot
+  400, // Bad Request - chat not found, user deactivated, bot kicked
+]);
+
+// Telegram error descriptions indicating permanent failures
+const PERMANENT_ERROR_DESCRIPTIONS = [
+  'chat not found',
+  'user is deactivated',
+  'bot was blocked by the user',
+  'bot was kicked from the group',
+  'bot can\'t initiate conversation',
+  'have no rights to send a message',
+  'need to be invited',
+  'peer_id_invalid',
+  'user_not_participant',
+];
+
 function isValidUUID(value: unknown): boolean {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return typeof value === 'string' && regex.test(value);
+}
+
+function isPermanentError(errorCode: number, description?: string): boolean {
+  if (PERMANENT_BLOCK_CODES.has(errorCode)) return true;
+  if (description) {
+    const lower = description.toLowerCase();
+    return PERMANENT_ERROR_DESCRIPTIONS.some(d => lower.includes(d));
+  }
+  return false;
+}
+
+function classifyBlockReason(errorCode: number, description?: string): string {
+  if (!description) return `telegram_error_${errorCode}`;
+  const lower = description.toLowerCase();
+  if (lower.includes('blocked')) return 'telegram_blocked';
+  if (lower.includes('deactivated')) return 'user_deactivated';
+  if (lower.includes('chat not found')) return 'chat_not_found';
+  if (lower.includes('kicked')) return 'bot_kicked';
+  if (lower.includes('can\'t initiate')) return 'cant_initiate';
+  return `telegram_error_${errorCode}`;
 }
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -24,9 +63,8 @@ const tokenCache = new Map<string, { token: string; time: number }>();
 const CACHE_TTL = 60000;
 
 // Track active broadcasts for graceful shutdown
-const activeBroadcasts = new Map<string, string>(); // progressId -> notificationId
+const activeBroadcasts = new Map<string, string>();
 
-// Graceful shutdown: mark active broadcasts as cancelled
 addEventListener('beforeunload', async () => {
   console.log(`[BROADCAST] beforeunload fired, ${activeBroadcasts.size} active broadcast(s)`);
   if (activeBroadcasts.size === 0) return;
@@ -73,6 +111,13 @@ async function getBotToken(): Promise<string> {
   throw new Error('No Telegram bot token configured');
 }
 
+interface SendResult {
+  ok: boolean;
+  error_code?: number;
+  description?: string;
+  parameters?: { retry_after?: number };
+}
+
 async function sendTelegramMessage(
   botToken: string,
   chatId: number,
@@ -81,7 +126,7 @@ async function sendTelegramMessage(
   buttons?: Array<{ text: string; url: string }>,
   messageEffectId?: string | null,
   retries = 2
-): Promise<{ ok: boolean; error_code?: number }> {
+): Promise<SendResult> {
   const hasImage = imageUrl && imageUrl.trim().length > 0;
   const url = hasImage
     ? `https://api.telegram.org/bot${botToken}/sendPhoto`
@@ -116,25 +161,51 @@ async function sendTelegramMessage(
 
       const result = await response.json();
 
+      // Rate limit - wait and retry
       if (result.error_code === 429 && attempt < retries) {
         const retryAfter = result.parameters?.retry_after || 5;
-        console.log(`[BROADCAST] Rate limited, waiting ${retryAfter}s`);
+        console.log(`[BROADCAST] Rate limited chat=${chatId}, waiting ${retryAfter}s`);
         await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
         continue;
       }
 
-      return result;
-    } catch {
-      if (attempt === retries) return { ok: false, error_code: 0 };
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Permanent errors - don't retry
+      if (result.error_code && isPermanentError(result.error_code, result.description)) {
+        return {
+          ok: false,
+          error_code: result.error_code,
+          description: result.description,
+        };
+      }
+
+      return {
+        ok: result.ok ?? false,
+        error_code: result.error_code,
+        description: result.description,
+        parameters: result.parameters,
+      };
+    } catch (err) {
+      if (attempt === retries) {
+        return { ok: false, error_code: 0, description: `network_error: ${String(err)}` };
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
     }
   }
 
-  return { ok: false, error_code: 0 };
+  return { ok: false, error_code: 0, description: 'max_retries_exhausted' };
 }
 
 async function updateProgress(progressId: string, updates: Record<string, unknown>) {
   await supabase.from('broadcast_progress').update(updates).eq('id', progressId);
+}
+
+async function checkCancelled(progressId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('broadcast_progress')
+    .select('status')
+    .eq('id', progressId)
+    .single();
+  return data?.status === 'cancelled';
 }
 
 async function sendBroadcastInBackground(
@@ -202,11 +273,13 @@ async function sendBroadcastInBackground(
 
     let sentCount = resumeSentCount;
     let failedCount = resumeFailedCount;
-    let blockedUsers: number[] = [];
     let blockedCount = resumeBlockedCount;
     let currentBatch = resumeFromBatch;
 
-    const batches = [];
+    // Collect blocked users with reasons for batch update
+    const blockedUpdates: Array<{ telegram_id: number; reason: string }> = [];
+
+    const batches: typeof users[] = [];
     for (let i = 0; i < totalUsers; i += BATCH_SIZE) {
       batches.push(users!.slice(i, i + BATCH_SIZE));
     }
@@ -215,38 +288,70 @@ async function sendBroadcastInBackground(
 
     for (const batch of batchesToProcess) {
       currentBatch++;
+
+      // Check for cancellation every 5 batches to reduce DB calls
+      if (currentBatch % 5 === 0) {
+        const cancelled = await checkCancelled(progressId);
+        if (cancelled) {
+          console.log(`[BROADCAST] CANCELLED by user at batch ${currentBatch}/${totalBatches}`);
+          await updateProgress(progressId, {
+            sent_count: sentCount,
+            failed_count: failedCount,
+            blocked_count: blockedCount,
+            current_batch: currentBatch,
+            completed_at: new Date().toISOString(),
+          });
+          break;
+        }
+      }
+
       const batchStartTime = Date.now();
 
       const batchPromises = batch.map(async (user: any, index: number) => {
+        // Stagger requests within batch to avoid burst
         await new Promise(resolve => setTimeout(resolve, index * 40));
 
         const message = `📢 <b>${notification.title}</b>\n\n${notification.message}`;
         const buttons = Array.isArray(notification.buttons) ? notification.buttons : [];
 
-        try {
-          const result = await sendTelegramMessage(
-            botToken, user.telegram_id, message,
-            notification.image_url,
-            buttons as Array<{ text: string; url: string }>,
-            notification.message_effect_id
-          );
+        const result = await sendTelegramMessage(
+          botToken, user.telegram_id, message,
+          notification.image_url,
+          buttons as Array<{ text: string; url: string }>,
+          notification.message_effect_id
+        );
 
-          if (result.ok) return { success: true, telegramId: user.telegram_id };
-          if (result.error_code === 403) return { success: false, blocked: true, telegramId: user.telegram_id };
-          return { success: false, telegramId: user.telegram_id };
-        } catch {
-          return { success: false, telegramId: user.telegram_id };
-        }
+        return {
+          telegramId: user.telegram_id,
+          firstName: user.first_name,
+          ...result,
+        };
       });
 
       const results = await Promise.all(batchPromises);
 
       for (const result of results) {
-        if (result.success) sentCount++;
-        else {
+        if (result.ok) {
+          sentCount++;
+        } else {
           failedCount++;
-          if ((result as any).blocked) { blockedUsers.push(result.telegramId); blockedCount++; }
+          const errorCode = result.error_code || 0;
+          const description = result.description || '';
+
+          if (isPermanentError(errorCode, description)) {
+            const reason = classifyBlockReason(errorCode, description);
+            blockedUpdates.push({ telegram_id: result.telegramId, reason });
+            blockedCount++;
+            console.log(`[BROADCAST] BLOCKED ${result.firstName}(${result.telegramId}): ${reason} [${errorCode}] ${description}`);
+          } else {
+            console.log(`[BROADCAST] FAIL ${result.firstName}(${result.telegramId}): [${errorCode}] ${description}`);
+          }
         }
+      }
+
+      // Flush blocked users in batches of 50 to avoid huge queries
+      if (blockedUpdates.length >= 50) {
+        await flushBlockedUsers(blockedUpdates.splice(0, 50));
       }
 
       const elapsedMs = Date.now() - startTime;
@@ -255,7 +360,7 @@ async function sendBroadcastInBackground(
       const remainingMessages = totalUsers - (sentCount + failedCount);
       const estimatedSecondsRemaining = remainingMessages / Math.max(messagesPerSecond, 1);
 
-      console.log(`[BROADCAST] batch ${currentBatch}/${totalBatches} sent=${sentCount} failed=${failedCount} speed=${messagesPerSecond.toFixed(1)}/s`);
+      console.log(`[BROADCAST] batch ${currentBatch}/${totalBatches} sent=${sentCount} failed=${failedCount} blocked=${blockedCount} speed=${messagesPerSecond.toFixed(1)}/s`);
 
       await updateProgress(progressId, {
         sent_count: sentCount,
@@ -274,26 +379,59 @@ async function sendBroadcastInBackground(
       }
     }
 
-    if (blockedUsers.length > 0) {
-      await supabase.from('telegram_users')
-        .update({ is_blocked: true, block_reason: 'telegram_blocked' })
-        .in('telegram_id', blockedUsers);
+    // Flush remaining blocked users
+    if (blockedUpdates.length > 0) {
+      await flushBlockedUsers(blockedUpdates);
     }
 
-    await updateProgress(progressId, {
-      status: 'completed', sent_count: sentCount, failed_count: failedCount,
-      blocked_count: blockedCount, completed_at: new Date().toISOString(),
-    });
+    // Only mark completed if not already cancelled
+    const { data: currentStatus } = await supabase
+      .from('broadcast_progress')
+      .select('status')
+      .eq('id', progressId)
+      .single();
 
-    console.log(`[BROADCAST] COMPLETED notif=${notificationId} sent=${sentCount} failed=${failedCount} elapsed=${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+    if (currentStatus?.status !== 'cancelled') {
+      await updateProgress(progressId, {
+        status: 'completed',
+        sent_count: sentCount,
+        failed_count: failedCount,
+        blocked_count: blockedCount,
+        completed_at: new Date().toISOString(),
+      });
+    }
+
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`[BROADCAST] DONE notif=${notificationId} sent=${sentCount} failed=${failedCount} blocked=${blockedCount} elapsed=${elapsed}s`);
   } catch (error) {
     console.error(`[BROADCAST] ERROR notif=${notificationId}:`, error);
     await updateProgress(progressId, {
-      status: 'failed', error_message: String(error), completed_at: new Date().toISOString(),
+      status: 'failed',
+      error_message: String(error),
+      completed_at: new Date().toISOString(),
     });
   } finally {
     activeBroadcasts.delete(progressId);
   }
+}
+
+async function flushBlockedUsers(updates: Array<{ telegram_id: number; reason: string }>) {
+  // Group by reason for efficient batch updates
+  const byReason = new Map<string, number[]>();
+  for (const u of updates) {
+    const ids = byReason.get(u.reason) || [];
+    ids.push(u.telegram_id);
+    byReason.set(u.reason, ids);
+  }
+
+  const promises = Array.from(byReason.entries()).map(([reason, ids]) =>
+    supabase.from('telegram_users')
+      .update({ is_blocked: true, block_reason: reason })
+      .in('telegram_id', ids)
+  );
+
+  await Promise.allSettled(promises);
+  console.log(`[BROADCAST] Flushed ${updates.length} blocked users`);
 }
 
 serve(async (req) => {
