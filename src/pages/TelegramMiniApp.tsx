@@ -1105,7 +1105,7 @@ export default function TelegramMiniApp() {
                               style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)" }}>
                               <Smartphone className="w-5 h-5" style={st.link} />
                             </div>
-                            <span className="font-semibold" style={st.text}>{op.nome}</span>
+                            <span className="font-semibold" style={st.text}>{(op.nome || "").toUpperCase()}</span>
                           </div>
                           <ChevronRight className="w-4 h-4" style={st.hint} />
                         </button>
