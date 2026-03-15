@@ -1366,6 +1366,7 @@ export type Database = {
       get_scratch_recent_winners: {
         Args: never
         Returns: {
+          avatar_url: string
           card_date: string
           nome: string
           prize_amount: number
@@ -1374,6 +1375,7 @@ export type Database = {
       get_scratch_top_winners: {
         Args: never
         Returns: {
+          avatar_url: string
           card_date: string
           nome: string
           prize_amount: number

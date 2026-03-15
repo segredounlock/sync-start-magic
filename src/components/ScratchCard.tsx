@@ -33,6 +33,7 @@ interface HistoryCard {
 
 interface WinnerEntry {
   nome: string;
+  avatar_url: string | null;
   prize_amount: number;
   card_date: string;
 }
@@ -516,16 +517,18 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                   <Trophy className="h-5 w-5 text-warning" /> Hall da Fama
                 </h4>
                 <div className="space-y-3">
-                  {topWinners.map((w, i) => {
-                    const RankIcon = RANK_ICONS[i] || null;
-                    return (
+                  {topWinners.map((w, i) => (
                       <div key={i} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                            i < 3 ? RANK_COLORS[i] : "bg-muted text-muted-foreground"
-                          }`}>
-                            {RankIcon ? <RankIcon className="h-4 w-4" /> : i + 1}
-                          </div>
+                          {w.avatar_url ? (
+                            <img src={w.avatar_url} alt={w.nome} className="w-8 h-8 rounded-full object-cover" />
+                          ) : (
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                              i < 3 ? RANK_COLORS[i] : "bg-muted text-muted-foreground"
+                            }`}>
+                              {w.nome.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <p className="font-medium text-foreground text-sm">{w.nome}</p>
                             <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
@@ -533,8 +536,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                         </div>
                         <span className="font-bold text-success text-sm">+ R$ {w.prize_amount.toFixed(2)}</span>
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               </div>
 
@@ -544,16 +546,18 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                   <Sparkles className="h-5 w-5 text-purple-500" /> Últimos Prêmios
                 </h4>
                 <div className="space-y-3">
-                  {recentWinners.map((w, i) => {
-                    const RankIcon = RANK_ICONS[i] || null;
-                    return (
+                  {recentWinners.map((w, i) => (
                       <div key={i} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                            i < 3 ? RANK_COLORS[i] : "bg-muted text-muted-foreground"
-                          }`}>
-                            {RankIcon ? <RankIcon className="h-4 w-4" /> : i + 1}
-                          </div>
+                          {w.avatar_url ? (
+                            <img src={w.avatar_url} alt={w.nome} className="w-8 h-8 rounded-full object-cover" />
+                          ) : (
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                              i < 3 ? RANK_COLORS[i] : "bg-muted text-muted-foreground"
+                            }`}>
+                              {w.nome.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <p className="font-medium text-foreground text-sm">{w.nome}</p>
                             <p className="text-xs text-muted-foreground">{formatDate(w.card_date)}</p>
@@ -561,8 +565,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
                         </div>
                         <span className="font-bold text-success text-sm">+ R$ {w.prize_amount.toFixed(2)}</span>
                       </div>
-                    );
-                  })}
+                    ))}
                   {recentWinners.length === 0 && (
                     <p className="text-sm text-muted-foreground">Nenhum ganhador ainda.</p>
                   )}
