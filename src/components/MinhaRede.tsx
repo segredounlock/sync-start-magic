@@ -350,6 +350,16 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
                                 {promotingId === member.id ? "Promovendo..." : "Promover p/ Vendedor"}
                               </button>
                             )}
+                            {member.role === "revendedor" && (
+                              <button
+                                disabled={promotingId === member.id}
+                                onClick={() => demoteToClient(member)}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-muted/50 transition-colors text-left disabled:opacity-50"
+                              >
+                                <ArrowUpCircle className="h-4 w-4 rotate-180 text-destructive" />
+                                {promotingId === member.id ? "Rebaixando..." : "Rebaixar p/ Cliente"}
+                              </button>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>
