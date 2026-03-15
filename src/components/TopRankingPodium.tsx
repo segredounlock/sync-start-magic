@@ -261,28 +261,31 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
 
   return (
     <div className="glass-card rounded-xl p-4 space-y-4 overflow-visible">
-      {/* Title with golden shine */}
-      <div className="flex items-center justify-between">
-        <h2 className="relative text-lg md:text-xl font-bold overflow-hidden">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
-            🏆 Top Rei da GG
-          </span>
-          <motion.span
-            className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
-            style={{
-              backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(255,255,255,0.9) 50%, transparent 65%, transparent 100%)",
-              backgroundSize: "200% 100%",
-              WebkitBackgroundClip: "text",
-            }}
-            animate={{ backgroundPosition: ["200% center", "-200% center"] }}
-            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
-          >
-            🏆 Top Recargas
-          </motion.span>
-        </h2>
+      {/* Title bar */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
+          <h2 className="relative text-lg md:text-xl font-bold overflow-hidden">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
+              Top Recargas
+            </span>
+            <motion.span
+              className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
+              style={{
+                backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(255,255,255,0.9) 50%, transparent 65%, transparent 100%)",
+                backgroundSize: "200% 100%",
+                WebkitBackgroundClip: "text",
+              }}
+              animate={{ backgroundPosition: ["200% center", "-200% center"] }}
+              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+            >
+              Top Recargas
+            </motion.span>
+          </h2>
+        </div>
 
         {onViewFull && (
-          <div className="relative">
+          <div className="relative shrink-0">
             <motion.div
               className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-500/40 to-amber-500/40 blur-lg"
               animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
@@ -290,13 +293,13 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             />
             <button
               onClick={onViewFull}
-              className="relative bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-bold text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors"
+              className="relative bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-bold text-xs px-4 py-1.5 rounded-full flex items-center gap-1.5 transition-colors"
             >
               <Trophy className="w-3.5 h-3.5" />
               Ranking
-              <span className="relative ml-1 flex h-2 w-2">
+              <span className="relative ml-1 flex h-2.5 w-2.5">
                 <span className="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative rounded-full h-2 w-2 bg-green-500" />
+                <span className="relative rounded-full h-2.5 w-2.5 bg-green-500" />
               </span>
             </button>
           </div>
