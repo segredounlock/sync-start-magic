@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Crown, Medal, Trophy, ChevronRight } from "lucide-react";
+import { Crown, Medal, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
@@ -13,7 +13,7 @@ interface RankUser {
 }
 
 /* ─── Gold Floating Crown (1st place) ─── */
-function GoldFloatingCrown({ size = 40 }: { size?: number }) {
+function GoldFloatingCrown({ size = 48 }: { size?: number }) {
   return (
     <motion.div
       className="relative inline-flex items-center justify-center"
@@ -42,7 +42,7 @@ function GoldFloatingCrown({ size = 40 }: { size?: number }) {
       {/* Pulsing radial glow */}
       <motion.div
         className="absolute inset-[-8px] rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(251,191,36,0.25) 0%, transparent 65%)" }}
+        style={{ background: "radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 65%)" }}
         animate={{ scale: [1.2, 1.4, 1.2] }}
         transition={{ duration: 2, repeat: Infinity }}
       />
@@ -111,7 +111,7 @@ function SilverIceBadge({ size = 36 }: { size?: number }) {
       />
 
       {/* Badge with shimmer */}
-      <div className="relative w-8 h-8 rounded-full bg-gradient-to-r from-gray-300 to-slate-400 flex items-center justify-center overflow-hidden">
+      <div className="relative w-9 h-9 rounded-full bg-gradient-to-r from-gray-300 to-slate-400 flex items-center justify-center overflow-hidden">
         <motion.div
           className="absolute inset-0"
           style={{ background: "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%)" }}
@@ -158,7 +158,7 @@ function BronzeFireBadge({ size = 36 }: { size?: number }) {
       />
 
       {/* Badge with flame overlay */}
-      <div className="relative w-8 h-8 rounded-full bg-gradient-to-r from-orange-600 to-amber-700 flex items-center justify-center overflow-hidden">
+      <div className="relative w-9 h-9 rounded-full bg-gradient-to-r from-orange-600 to-amber-700 flex items-center justify-center overflow-hidden">
         <motion.div
           className="absolute inset-0"
           style={{ background: "linear-gradient(0deg, rgba(255,100,0,0.4) 0%, transparent 50%, rgba(255,200,100,0.3) 100%)" }}
@@ -206,16 +206,26 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadRanking();
-  }, []);
-
   const loadRanking = async () => {
     setLoading(true);
     const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 10 });
     if (data) setRanking(data as RankUser[]);
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadRanking();
+    // Realtime updates
+    const channel = supabase
+      .channel("ranking-updates")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => loadRanking()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   if (loading) {
     return (
@@ -237,8 +247,6 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
   if (ranking.length < 3) return null;
 
   const topUsers = ranking.slice(0, 3);
-  const restUsers = ranking.slice(3);
-  const maxRecargas = Math.max(...ranking.map(r => r.total_recargas), 1);
   const userRank = ranking.findIndex(r => r.user_id === userId);
 
   // Podium order: [2nd, 1st, 3rd]
@@ -246,26 +254,36 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
 
   const getPodiumConfig = (displayIndex: number) => {
     switch (displayIndex) {
-      case 0: return { position: 2, avatarSize: "w-20 h-20", ringColor: "ring-gray-300/60", badge: <SilverIceBadge size={28} /> };
-      case 1: return { position: 1, avatarSize: "w-28 h-28", ringColor: "ring-yellow-500/70", badge: <GoldFloatingCrown size={40} /> };
-      case 2: return { position: 3, avatarSize: "w-20 h-20", ringColor: "ring-orange-600/60", badge: <BronzeFireBadge size={28} /> };
-      default: return { position: 0, avatarSize: "w-20 h-20", ringColor: "ring-muted", badge: null };
+      case 0: return { position: 2, avatarSize: "w-24 h-24", ringColor: "ring-gray-300/60", badge: <SilverIceBadge size={28} /> };
+      case 1: return { position: 1, avatarSize: "w-32 h-32", ringColor: "ring-yellow-500/70", badge: <GoldFloatingCrown size={48} /> };
+      case 2: return { position: 3, avatarSize: "w-24 h-24", ringColor: "ring-orange-600/60", badge: <BronzeFireBadge size={28} /> };
+      default: return { position: 0, avatarSize: "w-24 h-24", ringColor: "ring-muted", badge: null };
     }
   };
-
-  const rowStyles = [
-    "bg-gradient-to-r from-yellow-500/15 to-transparent border-l-2 border-l-yellow-500",
-    "bg-gradient-to-r from-gray-400/10 to-transparent border-l-2 border-l-gray-400",
-    "bg-gradient-to-r from-amber-600/10 to-transparent border-l-2 border-l-amber-600",
-  ];
 
   return (
     <div className="glass-card rounded-xl p-4 space-y-4 overflow-visible">
       {/* Title bar */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Trophy className="w-6 h-6 text-yellow-500 shrink-0" />
-          <h2 className="relative text-xl md:text-2xl font-bold overflow-hidden">
+          {/* Trophy with ghost glow */}
+          <motion.div
+            animate={{ y: [0, -3, 0], rotate: [0, -5, 5, 0] }}
+            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
+            className="relative shrink-0"
+          >
+            <Trophy className="w-8 h-8 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+            {/* Ghost glow behind */}
+            <motion.div
+              className="absolute inset-0"
+              animate={{ opacity: [0.2, 0.6, 0.2] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Trophy className="w-8 h-8 text-yellow-300 blur-[2px]" />
+            </motion.div>
+          </motion.div>
+
+          <h2 className="relative text-2xl md:text-3xl font-bold overflow-hidden">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
               Top Rei da GG
             </span>
@@ -323,7 +341,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               {/* Crown above avatar for 1st place only */}
               {isCenter && (
                 <div className="-mb-3 z-10">
-                  <GoldFloatingCrown size={44} />
+                  <GoldFloatingCrown size={48} />
                 </div>
               )}
 
