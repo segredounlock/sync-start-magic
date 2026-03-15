@@ -130,42 +130,32 @@ Deno.serve(async (req) => {
 
             const updatedMeta = { ...meta, ...payerInfo };
 
-            // Update transaction
-            await supabase
-              .from("transactions")
-              .update({
-                status: "completed",
-                updated_at: new Date().toISOString(),
-                metadata: updatedMeta,
-              })
-              .eq("id", tx.id);
+            // Atomically claim the transaction (prevents double-processing)
+            const { data: claimed } = await supabase.rpc("claim_transaction", {
+              p_tx_id: tx.id,
+              p_from_status: "pending",
+              p_to_status: "completed",
+              p_metadata: updatedMeta,
+            });
 
-            // Credit balance
+            if (!claimed) {
+              console.log(`Transaction ${tx.id} already processed by webhook, skipping`);
+              continue;
+            }
+
+            // Credit balance atomically
             const txMeta = meta;
             const saldoTipo =
               (txMeta.saldo_tipo as string) || "revenda";
 
-            const { data: saldo } = await supabase
-              .from("saldos")
-              .select("valor")
-              .eq("user_id", tx.user_id)
-              .eq("tipo", saldoTipo)
-              .single();
-
-            const currentBalance = saldo?.valor || 0;
-            const newBalance = currentBalance + creditAmount;
-
-            await supabase
-              .from("saldos")
-              .update({
-                valor: newBalance,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("user_id", tx.user_id)
-              .eq("tipo", saldoTipo);
+            const { data: newBalance } = await supabase.rpc("increment_saldo", {
+              p_user_id: tx.user_id,
+              p_tipo: saldoTipo,
+              p_amount: creditAmount,
+            });
 
             console.log(
-              `Balance updated (${saldoTipo}): ${currentBalance} -> ${newBalance} for user ${tx.user_id} (fee: R$${fee.toFixed(2)})`
+              `Balance updated atomically (${saldoTipo}): +${creditAmount} = ${newBalance} for user ${tx.user_id} (fee: R$${fee.toFixed(2)})`
             );
 
             // ===== TELEGRAM NOTIFICATION =====
