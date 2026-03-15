@@ -880,8 +880,7 @@ async function executeRecarga(supabase: any, token: string, chatId: number, user
   }
 
   // Resolve user role and pricing rules (same logic as menu flow)
-  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
-  const userRole = roleData?.role || "cliente";
+  const userRole = await resolveUserRole(supabase, user.id, "cliente");
 
   let resellerId: string | null = null;
   if (userRole === "cliente") {
