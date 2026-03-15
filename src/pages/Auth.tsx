@@ -36,7 +36,9 @@ const COOLDOWN_MS = 60_000;
 export default function Auth() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const refParam = searchParams.get("ref") || "";
+  const [isLogin, setIsLogin] = useState(!refParam); // if ref param present, default to signup
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
