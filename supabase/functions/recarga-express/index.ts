@@ -480,7 +480,7 @@ Deno.serve(async (req) => {
             : Number(rule.custo) * (1 + Number(rule.regra_valor) / 100);
         };
 
-        // Default margin fallback — applies when no individual rule is found
+        // Default margin — OVERRIDES all rules when active
         const getDefaultMarginCost = async (baseCost: number): Promise<{ cost: number; applied: boolean }> => {
           const { data: cfgRows } = await adminClient
             .from("system_config")
@@ -498,7 +498,12 @@ Deno.serve(async (req) => {
           return { cost: Math.round(finalCost * 100) / 100, applied: true };
         };
 
-        if (userRole === "admin") {
+        // Check default margin FIRST — it overrides everything when active
+        const dmResult = await getDefaultMarginCost(apiCost);
+        if (dmResult.applied) {
+          chargedCost = dmResult.cost;
+          pricingSource = "default_margin_override";
+        } else if (userRole === "admin") {
           const globalRule = await getGlobalRule();
           if (globalRule) chargedCost = applyRule(globalRule, "pricing_rules");
         } else if (userRole === "revendedor") {
@@ -515,9 +520,6 @@ Deno.serve(async (req) => {
             const globalRule = await getGlobalRule();
             if (globalRule) {
               chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
-            } else {
-              const dm = await getDefaultMarginCost(apiCost);
-              if (dm.applied) { chargedCost = dm.cost; pricingSource = "default_margin"; }
             }
           }
         } else if (userRole === "cliente" && resellerId) {
@@ -534,9 +536,6 @@ Deno.serve(async (req) => {
             const globalRule = await getGlobalRule();
             if (globalRule) {
               chargedCost = applyRule(globalRule, "pricing_rules(fallback)");
-            } else {
-              const dm = await getDefaultMarginCost(apiCost);
-              if (dm.applied) { chargedCost = dm.cost; pricingSource = "default_margin(via_reseller)"; }
             }
           }
         } else {
@@ -553,9 +552,6 @@ Deno.serve(async (req) => {
             const globalRule = await getGlobalRule();
             if (globalRule) {
               chargedCost = applyRule(globalRule, "pricing_rules");
-            } else {
-              const dm = await getDefaultMarginCost(apiCost);
-              if (dm.applied) { chargedCost = dm.cost; pricingSource = "default_margin"; }
             }
           }
         }

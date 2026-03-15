@@ -259,8 +259,10 @@ serve(async (req) => {
                 const apiCost = Number(v.cost || 0);
                 let userCost = apiCost;
 
-                // Apply pricing rules if we have operadoraId
-                if (operadoraId && user_id) {
+                // Default margin OVERRIDES all rules when active
+                if (dmEnabled && dmVal > 0) {
+                  userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
+                } else if (operadoraId && user_id) {
                   const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
                   if (rRule) {
                     userCost = applyRule(rRule);
@@ -268,12 +270,8 @@ serve(async (req) => {
                     const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
                     if (gRule) {
                       userCost = applyRule(gRule);
-                    } else if (dmEnabled && dmVal > 0) {
-                      userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
                     }
                   }
-                } else if (dmEnabled && dmVal > 0) {
-                  userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
                 }
 
                 return {
