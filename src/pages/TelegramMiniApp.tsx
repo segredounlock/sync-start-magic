@@ -218,6 +218,8 @@ export default function TelegramMiniApp() {
   const [refreshingExtrato, setRefreshingExtrato] = useState(false);
   const [refreshingRecargas, setRefreshingRecargas] = useState(false);
   const [showPriceTable, setShowPriceTable] = useState(false);
+  const [rankingData, setRankingData] = useState<{ user_id: string; nome: string; avatar_url: string | null; total_recargas: number }[]>([]);
+  const [rankingLoading, setRankingLoading] = useState(false);
 
   // Toast notifications
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info" }[]>([]);
