@@ -195,7 +195,7 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
-        body: { action: "claim" },
+        body: { action: "claim", ...(noAuthMode ? { user_id: userId } : {}) },
       });
       const payload = parsePayload<ClaimResponse & { total_spent?: number; min_required?: number }>(data);
       if (error) throw error;
