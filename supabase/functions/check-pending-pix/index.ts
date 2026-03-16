@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load system config for gateway keys and fees
+    // Load system config for gateway keys
     const { data: configRows } = await supabase
       .from("system_config")
       .select("key, value");
@@ -50,11 +50,6 @@ Deno.serve(async (req) => {
     configRows?.forEach((r: { key: string; value: string | null }) => {
       config[r.key] = r.value || "";
     });
-
-    // Load fee config
-    const taxaTipo = config.taxaTipo || "fixo";
-    const taxaValor =
-      Number((config.taxaValor || "0").replace(",", ".")) || 0;
 
     let confirmed = 0;
     let checked = 0;
@@ -102,7 +97,10 @@ Deno.serve(async (req) => {
               `PixGo payment ${paymentId} confirmed! Crediting user ${tx.user_id}`
             );
 
-            // Calculate fee
+            // Resolve fee per user (reseller-specific → global fallback)
+            const { data: feeRows } = await supabase.rpc("get_deposit_fee_for_user", { _user_id: tx.user_id });
+            const taxaTipo = feeRows?.[0]?.fee_type || "fixo";
+            const taxaValor = Number(feeRows?.[0]?.fee_value) || 0;
             let fee = 0;
             if (taxaValor > 0) {
               fee =

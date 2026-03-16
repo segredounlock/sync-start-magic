@@ -613,9 +613,10 @@ Deno.serve(async (req) => {
       metadata: { reference, gateway, qr_code: result.qr_code || null, saldo_tipo: saldoType },
     });
 
-    // Calculate fee info so the frontend can display it
-    const taxaTipo = config.taxaTipo || "";
-    const taxaValorRaw = parseFloat((config.taxaValor || "0").replace(",", ".")) || 0;
+    // Resolve fee using RPC (reseller-specific → global fallback)
+    const { data: feeRows } = await adminClient.rpc("get_deposit_fee_for_user", { _user_id: userId });
+    const taxaTipo = feeRows?.[0]?.fee_type || "";
+    const taxaValorRaw = Number(feeRows?.[0]?.fee_value) || 0;
     let feeAmount = 0;
     let netAmount = amount;
     if (taxaValorRaw > 0 && taxaTipo) {
