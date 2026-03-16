@@ -2062,10 +2062,10 @@ export default function TelegramMiniApp() {
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}>
                       <div className="text-center">
                         <div className="w-14 h-14 rounded-full mx-auto mb-2 flex items-center justify-center"
-                          style={{ backgroundColor: viewingReceipt.status === "completed" ? "rgba(74,222,128,0.15)" : viewingReceipt.status === "pending" ? "rgba(250,204,21,0.15)" : "rgba(239,68,68,0.15)" }}>
-                          {viewingReceipt.status === "completed" ? <Check className="w-7 h-7" style={{ color: "#4ade80" }} />
-                            : viewingReceipt.status === "pending" ? <Clock className="w-7 h-7" style={{ color: "#facc15" }} />
-                            : <XCircle className="w-7 h-7" style={{ color: "#ef4444" }} />}
+                          style={{ backgroundColor: viewingReceipt.status === "completed" ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : viewingReceipt.status === "pending" ? "color-mix(in srgb, var(--tg-warning, #facc15) 15%, transparent)" : "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" }}>
+                          {viewingReceipt.status === "completed" ? <Check className="w-7 h-7" style={st.accent} />
+                            : viewingReceipt.status === "pending" ? <Clock className="w-7 h-7" style={st.warningText} />
+                            : <XCircle className="w-7 h-7" style={st.destructive} />}
                         </div>
                         <p className="font-bold text-lg" style={st.text}>
                           {viewingReceipt.status === "completed" ? "Recarga Concluída" : viewingReceipt.status === "pending" ? "Processando..." : "Falha na Recarga"}
