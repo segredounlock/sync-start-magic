@@ -57,6 +57,14 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
       const globalMarginType = marginMap.defaultMarginType || "fixo";
       const globalMarginValue = parseFloat(marginMap.defaultMarginValue || "0") || 0;
 
+      // Parse commission config
+      const commMap: Record<string, string> = {};
+      (commConfig || []).forEach((c: any) => { commMap[c.key] = c.value; });
+      setCommissionConfig({
+        direct: commMap.directCommissionPercent || "100",
+        indirect: commMap.indirectCommissionPercent || "10",
+      });
+
       // If reseller has ANY custom rules, global margin doesn't apply to price resolution
       // BUT the base cost shown should always reflect the actual cost (with global margin if enabled)
       const hasAnyCustomRules = (resellerRules || []).length > 0;
