@@ -33,7 +33,7 @@ import {
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
-  Trophy, Check, KeyRound, Banknote, Network, XCircle,
+  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -245,6 +245,7 @@ export default function Principal() {
   const globalConfigLoaded = useRef(false);
   const [globalConfigSaving, setGlobalConfigSaving] = useState(false);
   const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  const [configSection, setConfigSection] = useState<"geral" | "rede" | "jogos" | "notificacoes" | "banners">("geral");
 
   // Bot status
   const [botStatus, setBotStatus] = useState<{
@@ -3239,7 +3240,7 @@ export default function Principal() {
 
           {/* ===== GERAL ===== */}
           {view === "geral" && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               {/* Header */}
               <div className="glass-card rounded-2xl p-5 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
@@ -3247,56 +3248,423 @@ export default function Principal() {
                 </div>
                 <div>
                   <h2 className="font-display text-xl font-bold text-foreground">Configurações</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Configurações gerais, temas e banners</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Gerencie todas as configurações do sistema</p>
                 </div>
               </div>
+
+              {/* Section Navigation */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                {([
+                  { key: "geral" as const, label: "Sistema", icon: Globe, emoji: "⚙️" },
+                  { key: "rede" as const, label: "Rede", icon: TrendingUp, emoji: "🔗" },
+                  { key: "jogos" as const, label: "Jogos", icon: Trophy, emoji: "🎰" },
+                  { key: "notificacoes" as const, label: "Alertas", icon: Megaphone, emoji: "🔔" },
+                  { key: "banners" as const, label: "Banners", icon: Image, emoji: "🖼️" },
+                ] as const).map(s => (
+                  <button
+                    key={s.key}
+                    onClick={() => setConfigSection(s.key)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                      configSection === s.key
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground border border-border/40"
+                    }`}
+                  >
+                    <span className="text-sm">{s.emoji}</span>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
-                <div className="glass-card rounded-xl p-6 space-y-4">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2"><Globe className="h-4 w-4 text-primary" /> Configurações Gerais</h4>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Nome do Site</label>
-                    <input type="text" value={globalConfig.siteTitle || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteTitle: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Recargas Brasil" />
-                  </div>
-                </div>
-
-                {/* Modo Manutenção */}
-                <div className="glass-card rounded-xl p-6 space-y-4">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-warning" /> Modo Manutenção
-                  </h4>
-                  <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                    globalConfig.maintenanceMode === 'true' ? 'border-warning bg-warning/10' : 'border-border bg-muted/30'}`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                        globalConfig.maintenanceMode === "true" ? "bg-warning/20" : "bg-muted"
-                      }`}>
-                        <AlertTriangle className="h-5 w-5 text-warning" />
-                      </div>
+                {/* ═══════ SETOR: SISTEMA ═══════ */}
+                {configSection === "geral" && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Nome do Site */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-primary" /> Configurações Gerais
+                      </h4>
                       <div>
-                        <p className="text-sm font-bold text-foreground">Status do Site</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {globalConfig.maintenanceMode === "true"
-                            ? "🔴 O site está INACESSÍVEL para os usuários"
-                            : "🟢 O site está funcionando normalmente"}
-                        </p>
+                        <label className="block text-sm font-medium text-foreground mb-1">Nome do Site</label>
+                        <input type="text" value={globalConfig.siteTitle || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteTitle: e.target.value }))}
+                          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Recargas Brasil" />
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowMaintenanceDialog(true)}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                        globalConfig.maintenanceMode === "true"
-                          ? "bg-success text-success-foreground hover:opacity-90"
-                          : "bg-warning text-warning-foreground hover:opacity-90"
-                      }`}
-                    >
-                      {globalConfig.maintenanceMode === "true" ? "Desativar" : "Ativar Manutenção"}
-                    </button>
-                  </div>
-                </div>
+
+                    {/* Modo Manutenção */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-warning" /> Modo Manutenção
+                      </h4>
+                      <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                        globalConfig.maintenanceMode === 'true' ? 'border-warning bg-warning/10' : 'border-border bg-muted/30'}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                            globalConfig.maintenanceMode === "true" ? "bg-warning/20" : "bg-muted"
+                          }`}>
+                            <AlertTriangle className="h-5 w-5 text-warning" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-foreground">Status do Site</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {globalConfig.maintenanceMode === "true"
+                                ? "🔴 O site está INACESSÍVEL para os usuários"
+                                : "🟢 O site está funcionando normalmente"}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowMaintenanceDialog(true)}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                            globalConfig.maintenanceMode === "true"
+                              ? "bg-success text-success-foreground hover:opacity-90"
+                              : "bg-warning text-warning-foreground hover:opacity-90"
+                          }`}
+                        >
+                          {globalConfig.maintenanceMode === "true" ? "Desativar" : "Ativar Manutenção"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Temas Sazonais */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-primary" /> Temas Sazonais
+                      </h4>
+                      <p className="text-xs text-muted-foreground">Ative um tema especial para datas comemorativas. Os efeitos aparecem em todo o site.</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { key: "none", label: "Nenhum", emoji: "⚪" },
+                          { key: "ano_novo", label: "Ano Novo", emoji: "🎆" },
+                          { key: "carnaval", label: "Carnaval", emoji: "🎭" },
+                          { key: "pascoa", label: "Páscoa", emoji: "🐰" },
+                          { key: "dia_maes", label: "Dia das Mães", emoji: "💐" },
+                          { key: "dia_namorados", label: "Dia dos Namorados", emoji: "💕" },
+                          { key: "festa_junina", label: "Festa Junina", emoji: "🎪" },
+                          { key: "dia_pais", label: "Dia dos Pais", emoji: "👔" },
+                          { key: "dia_criancas", label: "Dia das Crianças", emoji: "🎈" },
+                          { key: "black_friday", label: "Black Friday", emoji: "🏷️" },
+                          { key: "natal", label: "Natal", emoji: "🎄" },
+                        ].map(t => (
+                          <button
+                            key={t.key}
+                            onClick={async () => {
+                              setGlobalConfig(prev => ({ ...prev, seasonalTheme: t.key }));
+                              await supabase.from("system_config").upsert({ key: "seasonalTheme", value: t.key }, { onConflict: "key" });
+                              toast.success(t.key === "none" ? "Tema sazonal desativado" : `Tema ${t.label} ativado! ${t.emoji}`);
+                            }}
+                            className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+                              (globalConfig.seasonalTheme || "none") === t.key
+                                ? "border-primary bg-primary/10 shadow-sm"
+                                : "border-border bg-muted/30 hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            <span className="text-xl">{t.emoji}</span>
+                            <span className={`text-xs font-medium ${
+                              (globalConfig.seasonalTheme || "none") === t.key ? "text-primary" : "text-foreground"
+                            }`}>{t.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ═══════ SETOR: REDE ═══════ */}
+                {configSection === "rede" && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Ferramentas de Venda */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            (globalConfig.salesToolsEnabled ?? "true") === "true" ? "bg-success/15" : "bg-muted/50"
+                          }`}>
+                            <Tag className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-foreground">Ferramentas de Venda</h4>
+                            <p className="text-xs text-muted-foreground">Menu "Meus Preços" e "Minha Rede" no painel dos revendedores</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const newVal = (globalConfig.salesToolsEnabled ?? "true") === "true" ? "false" : "true";
+                            setGlobalConfig(prev => ({ ...prev, salesToolsEnabled: newVal }));
+                            await supabase.from("system_config").upsert({ key: "salesToolsEnabled", value: newVal }, { onConflict: "key" });
+                            toast.success(newVal === "true" ? "✅ Ferramentas de Venda ativadas!" : "❌ Ferramentas de Venda desativadas!");
+                          }}
+                          className="transition-colors"
+                        >
+                          {(globalConfig.salesToolsEnabled ?? "true") === "true"
+                            ? <ToggleRight className="h-7 w-7 text-success" />
+                            : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                          }
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Comissões da Rede */}
+                    <div className="glass-card rounded-xl p-5 space-y-5">
+                      <div className="flex items-center gap-3 mb-1">
+                        <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                          <TrendingUp className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-foreground">Comissões da Rede</h4>
+                          <p className="text-xs text-muted-foreground">Configure lucro direto e indireto dos revendedores</p>
+                        </div>
+                      </div>
+
+                      {/* Comissão Direta */}
+                      <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="font-medium text-sm text-foreground">Comissão Direta</h5>
+                            <p className="text-[11px] text-muted-foreground">Percentual do lucro real que o revendedor imediato recebe</p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const newVal = (globalConfig.directCommissionEnabled ?? "true") === "true" ? "false" : "true";
+                              setGlobalConfig(prev => ({ ...prev, directCommissionEnabled: newVal }));
+                              await supabase.from("system_config").upsert({ key: "directCommissionEnabled", value: newVal }, { onConflict: "key" });
+                              toast.success(newVal === "true" ? "✅ Comissão direta ativada!" : "❌ Comissão direta desativada!");
+                            }}
+                            className="transition-colors"
+                          >
+                            {(globalConfig.directCommissionEnabled ?? "true") === "true"
+                              ? <ToggleRight className="h-7 w-7 text-success" />
+                              : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                            }
+                          </button>
+                        </div>
+
+                        {(globalConfig.directCommissionEnabled ?? "true") === "true" && (
+                          <div className="space-y-2 pt-2 border-t border-border">
+                            <label className="block text-sm font-medium text-foreground">Porcentagem da Comissão Direta (%)</label>
+                            <p className="text-[11px] text-muted-foreground">100% = revendedor recebe o lucro integral. Ex: 80% = revendedor recebe 80% do lucro, 20% fica com o sistema.</p>
+                            <input
+                              type="number" min="0" max="100" step="0.5"
+                              value={globalConfig.directCommissionPercent ?? "100"}
+                              onChange={e => setGlobalConfig(prev => ({ ...prev, directCommissionPercent: e.target.value }))}
+                              onBlur={async () => {
+                                await supabase.from("system_config").upsert({ key: "directCommissionPercent", value: globalConfig.directCommissionPercent ?? "100" }, { onConflict: "key" });
+                              }}
+                              className="w-full max-w-[140px] px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                              placeholder="100"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Comissão Indireta */}
+                      <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="font-medium text-sm text-foreground">Comissão Indireta</h5>
+                            <p className="text-[11px] text-muted-foreground">Revendedores "avô" recebem % do lucro dos sub-revendedores</p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const newVal = (globalConfig.indirectCommissionEnabled ?? "true") === "true" ? "false" : "true";
+                              setGlobalConfig(prev => ({ ...prev, indirectCommissionEnabled: newVal }));
+                              await supabase.from("system_config").upsert({ key: "indirectCommissionEnabled", value: newVal }, { onConflict: "key" });
+                              toast.success(newVal === "true" ? "✅ Comissão indireta ativada!" : "❌ Comissão indireta desativada!");
+                            }}
+                            className="transition-colors"
+                          >
+                            {(globalConfig.indirectCommissionEnabled ?? "true") === "true"
+                              ? <ToggleRight className="h-7 w-7 text-success" />
+                              : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                            }
+                          </button>
+                        </div>
+
+                        {(globalConfig.indirectCommissionEnabled ?? "true") === "true" && (
+                          <div className="space-y-2 pt-2 border-t border-border">
+                            <label className="block text-sm font-medium text-foreground">Porcentagem da Comissão Indireta (%)</label>
+                            <p className="text-[11px] text-muted-foreground">Percentual sobre o lucro direto que o revendedor "avô" recebe quando um sub-revendedor faz uma recarga.</p>
+                            <input
+                              type="number" min="0" max="100" step="0.5"
+                              value={globalConfig.indirectCommissionPercent ?? "10"}
+                              onChange={e => setGlobalConfig(prev => ({ ...prev, indirectCommissionPercent: e.target.value }))}
+                              onBlur={async () => {
+                                await supabase.from("system_config").upsert({ key: "indirectCommissionPercent", value: globalConfig.indirectCommissionPercent ?? "10" }, { onConflict: "key" });
+                              }}
+                              className="w-full max-w-[140px] px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                              placeholder="10"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ═══════ SETOR: JOGOS ═══════ */}
+                {configSection === "jogos" && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Raspadinha Config */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                          <Trophy className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-foreground">Raspadinha Diária</h4>
+                          <p className="text-xs text-muted-foreground">Configure probabilidade e valores dos prêmios</p>
+                        </div>
+                        <div className="ml-auto">
+                          <button
+                            onClick={async () => {
+                              const newVal = (globalConfig.scratchEnabled ?? "true") === "true" ? "false" : "true";
+                              setGlobalConfig(prev => ({ ...prev, scratchEnabled: newVal }));
+                              await supabase.from("system_config").upsert({ key: "scratchEnabled", value: newVal }, { onConflict: "key" });
+                              toast.success(newVal === "true" ? "🎰 Raspadinha ativada!" : "❌ Raspadinha desativada!");
+                            }}
+                            className="transition-colors"
+                          >
+                            {(globalConfig.scratchEnabled ?? "true") === "true"
+                              ? <ToggleRight className="h-7 w-7 text-success" />
+                              : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
+                            }
+                          </button>
+                        </div>
+                      </div>
+
+                      {[
+                        { tier: 1, label: "Faixa 1 — Comum", color: "text-success", defChance: "20", defMin: "0.10", defMax: "1.00" },
+                        { tier: 2, label: "Faixa 2 — Rara", color: "text-primary", defChance: "5", defMin: "1.00", defMax: "10.00" },
+                        { tier: 3, label: "Faixa 3 — Épica", color: "text-accent-foreground", defChance: "1", defMin: "10.00", defMax: "100.00" },
+                      ].map(({ tier, label, color, defChance, defMin, defMax }) => (
+                        <div key={tier} className="space-y-2">
+                          <p className={`text-xs font-bold ${color}`}>{label}</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-[11px] text-muted-foreground mb-0.5">Chance (%)</label>
+                              <input
+                                type="number" min="0" max="100" step="0.1"
+                                value={globalConfig[`scratchTier${tier}Chance`] ?? defChance}
+                                onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Chance`]: e.target.value }))}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] text-muted-foreground mb-0.5">Mín (R$)</label>
+                              <input
+                                type="number" min="0.01" step="0.01"
+                                value={globalConfig[`scratchTier${tier}Min`] ?? defMin}
+                                onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Min`]: e.target.value }))}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] text-muted-foreground mb-0.5">Máx (R$)</label>
+                              <input
+                                type="number" min="0.01" step="0.01"
+                                value={globalConfig[`scratchTier${tier}Max`] ?? defMax}
+                                onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Max`]: e.target.value }))}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <p className="text-[11px] text-muted-foreground">
+                        Chance total ≈ soma das faixas (~24.8% padrão). Faixas são avaliadas da mais rara para a mais comum.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ═══════ SETOR: NOTIFICAÇÕES ═══════ */}
+                {configSection === "notificacoes" && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    <div className="glass-card rounded-xl p-5 space-y-5">
+                      <div>
+                        <h4 className="font-semibold text-foreground flex items-center gap-2">
+                          <Megaphone className="h-4 w-4 text-primary" /> Notificações
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">Configure quais alertas visuais cada cargo recebe. Sons funcionam para todos.</p>
+                      </div>
+
+                      {/* Admin Master */}
+                      <div className="space-y-2">
+                        <p className="text-sm font-bold text-foreground flex items-center gap-1.5">👑 Administrador Master</p>
+                        <div className="space-y-1.5 pl-1">
+                          {[
+                            { key: "notif_admin_deposit", label: "💰 Depósitos confirmados", defaultVal: "true" },
+                            { key: "notif_admin_recarga", label: "📱 Recargas processadas", defaultVal: "true" },
+                            { key: "notif_admin_new_user", label: "🆕 Novos cadastros", defaultVal: "true" },
+                          ].map(item => {
+                            const isOn = (globalConfig[item.key] ?? item.defaultVal) === "true";
+                            return (
+                              <div key={item.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                                <span className="text-sm text-foreground">{item.label}</span>
+                                <button
+                                  onClick={() => setGlobalConfig(prev => ({ ...prev, [item.key]: isOn ? "false" : "true" }))}
+                                  className="transition-colors"
+                                >
+                                  {isOn
+                                    ? <ToggleRight className="h-6 w-6 text-success" />
+                                    : <ToggleLeft className="h-6 w-6 text-muted-foreground" />
+                                  }
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Revendedor */}
+                      <div className="space-y-2">
+                        <p className="text-sm font-bold text-foreground flex items-center gap-1.5">🏪 Revendedor</p>
+                        <div className="space-y-1.5 pl-1">
+                          {[
+                            { key: "notif_revendedor_deposit", label: "💰 Depósitos confirmados", defaultVal: "false" },
+                            { key: "notif_revendedor_recarga", label: "📱 Recargas processadas", defaultVal: "false" },
+                          ].map(item => {
+                            const isOn = (globalConfig[item.key] ?? item.defaultVal) === "true";
+                            return (
+                              <div key={item.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                                <span className="text-sm text-foreground">{item.label}</span>
+                                <button
+                                  onClick={() => setGlobalConfig(prev => ({ ...prev, [item.key]: isOn ? "false" : "true" }))}
+                                  className="transition-colors"
+                                >
+                                  {isOn
+                                    ? <ToggleRight className="h-6 w-6 text-success" />
+                                    : <ToggleLeft className="h-6 w-6 text-muted-foreground" />
+                                  }
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-muted-foreground italic">ℹ️ Sons funcionam para todos os cargos. Os toggles controlam apenas toasts e alertas visuais.</p>
+
+                      <button
+                        onClick={() => { unlockAudio(); playCashRegisterSound(); }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 text-foreground font-medium text-sm transition-all active:scale-95"
+                      >
+                        🔊 Testar Som de Depósito
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ═══════ SETOR: BANNERS ═══════ */}
+                {configSection === "banners" && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    <BannersManager botUsername={botStatus.botUsername} />
+                  </motion.div>
+                )}
 
                 {/* Maintenance Confirmation Dialog */}
                 <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
@@ -3380,320 +3748,6 @@ export default function Principal() {
                     </DialogContent>
                   </DialogPortal>
                 </Dialog>
-
-                {/* Temas Sazonais */}
-                <div className="glass-card rounded-xl p-6 space-y-4">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-primary" /> Temas Sazonais
-                  </h4>
-                  <p className="text-xs text-muted-foreground">Ative um tema especial para datas comemorativas. Os efeitos aparecem em todo o site.</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {[
-                      { key: "none", label: "Nenhum", emoji: "⚪" },
-                      { key: "ano_novo", label: "Ano Novo", emoji: "🎆" },
-                      { key: "carnaval", label: "Carnaval", emoji: "🎭" },
-                      { key: "pascoa", label: "Páscoa", emoji: "🐰" },
-                      { key: "dia_maes", label: "Dia das Mães", emoji: "💐" },
-                      { key: "dia_namorados", label: "Dia dos Namorados", emoji: "💕" },
-                      { key: "festa_junina", label: "Festa Junina", emoji: "🎪" },
-                      { key: "dia_pais", label: "Dia dos Pais", emoji: "👔" },
-                      { key: "dia_criancas", label: "Dia das Crianças", emoji: "🎈" },
-                      { key: "black_friday", label: "Black Friday", emoji: "🏷️" },
-                      { key: "natal", label: "Natal", emoji: "🎄" },
-                    ].map(t => (
-                      <button
-                        key={t.key}
-                        onClick={async () => {
-                          setGlobalConfig(prev => ({ ...prev, seasonalTheme: t.key }));
-                          await supabase.from("system_config").upsert({ key: "seasonalTheme", value: t.key }, { onConflict: "key" });
-                          toast.success(t.key === "none" ? "Tema sazonal desativado" : `Tema ${t.label} ativado! ${t.emoji}`);
-                        }}
-                        className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
-                          (globalConfig.seasonalTheme || "none") === t.key
-                            ? "border-primary bg-primary/10 shadow-sm"
-                            : "border-border bg-muted/30 hover:border-muted-foreground/30"
-                        }`}
-                      >
-                        <span className="text-xl">{t.emoji}</span>
-                        <span className={`text-xs font-medium ${
-                          (globalConfig.seasonalTheme || "none") === t.key ? "text-primary" : "text-foreground"
-                        }`}>{t.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Ferramentas de Venda Toggle */}
-                <div className="glass-card rounded-xl p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        (globalConfig.salesToolsEnabled ?? "true") === "true" ? "bg-success/15" : "bg-muted/50"
-                      }`}>
-                        <Tag className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground">Ferramentas de Venda</h4>
-                        <p className="text-xs text-muted-foreground">Menu "Meus Preços" e "Minha Rede" no painel dos revendedores</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        const newVal = (globalConfig.salesToolsEnabled ?? "true") === "true" ? "false" : "true";
-                        setGlobalConfig(prev => ({ ...prev, salesToolsEnabled: newVal }));
-                        await supabase.from("system_config").upsert({ key: "salesToolsEnabled", value: newVal }, { onConflict: "key" });
-                        toast.success(newVal === "true" ? "✅ Ferramentas de Venda ativadas!" : "❌ Ferramentas de Venda desativadas!");
-                      }}
-                      className="transition-colors"
-                    >
-                      {(globalConfig.salesToolsEnabled ?? "true") === "true"
-                        ? <ToggleRight className="h-7 w-7 text-success" />
-                        : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
-                      }
-                    </button>
-                  </div>
-                </div>
-
-                {/* Comissões da Rede */}
-                <div className="glass-card rounded-xl p-6 space-y-5">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Comissões da Rede</h4>
-                      <p className="text-xs text-muted-foreground">Configure lucro direto e indireto dos revendedores</p>
-                    </div>
-                  </div>
-
-                  {/* Comissão Direta */}
-                  <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h5 className="font-medium text-sm text-foreground">Comissão Direta</h5>
-                        <p className="text-[11px] text-muted-foreground">Percentual do lucro real que o revendedor imediato recebe</p>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          const newVal = (globalConfig.directCommissionEnabled ?? "true") === "true" ? "false" : "true";
-                          setGlobalConfig(prev => ({ ...prev, directCommissionEnabled: newVal }));
-                          await supabase.from("system_config").upsert({ key: "directCommissionEnabled", value: newVal }, { onConflict: "key" });
-                          toast.success(newVal === "true" ? "✅ Comissão direta ativada!" : "❌ Comissão direta desativada!");
-                        }}
-                        className="transition-colors"
-                      >
-                        {(globalConfig.directCommissionEnabled ?? "true") === "true"
-                          ? <ToggleRight className="h-7 w-7 text-success" />
-                          : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
-                        }
-                      </button>
-                    </div>
-
-                    {(globalConfig.directCommissionEnabled ?? "true") === "true" && (
-                      <div className="space-y-2 pt-2 border-t border-border">
-                        <label className="block text-sm font-medium text-foreground">Porcentagem da Comissão Direta (%)</label>
-                        <p className="text-[11px] text-muted-foreground">100% = revendedor recebe o lucro integral. Ex: 80% = revendedor recebe 80% do lucro, 20% fica com o sistema.</p>
-                        <input
-                          type="number" min="0" max="100" step="0.5"
-                          value={globalConfig.directCommissionPercent ?? "100"}
-                          onChange={e => setGlobalConfig(prev => ({ ...prev, directCommissionPercent: e.target.value }))}
-                          onBlur={async () => {
-                            await supabase.from("system_config").upsert({ key: "directCommissionPercent", value: globalConfig.directCommissionPercent ?? "100" }, { onConflict: "key" });
-                          }}
-                          className="w-full max-w-[140px] px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          placeholder="100"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Comissão Indireta */}
-                  <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h5 className="font-medium text-sm text-foreground">Comissão Indireta</h5>
-                        <p className="text-[11px] text-muted-foreground">Revendedores "avô" recebem % do lucro dos sub-revendedores</p>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          const newVal = (globalConfig.indirectCommissionEnabled ?? "true") === "true" ? "false" : "true";
-                          setGlobalConfig(prev => ({ ...prev, indirectCommissionEnabled: newVal }));
-                          await supabase.from("system_config").upsert({ key: "indirectCommissionEnabled", value: newVal }, { onConflict: "key" });
-                          toast.success(newVal === "true" ? "✅ Comissão indireta ativada!" : "❌ Comissão indireta desativada!");
-                        }}
-                        className="transition-colors"
-                      >
-                        {(globalConfig.indirectCommissionEnabled ?? "true") === "true"
-                          ? <ToggleRight className="h-7 w-7 text-success" />
-                          : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
-                        }
-                      </button>
-                    </div>
-
-                    {(globalConfig.indirectCommissionEnabled ?? "true") === "true" && (
-                      <div className="space-y-2 pt-2 border-t border-border">
-                        <label className="block text-sm font-medium text-foreground">Porcentagem da Comissão Indireta (%)</label>
-                        <p className="text-[11px] text-muted-foreground">Percentual sobre o lucro direto que o revendedor "avô" recebe quando um sub-revendedor faz uma recarga.</p>
-                        <input
-                          type="number" min="0" max="100" step="0.5"
-                          value={globalConfig.indirectCommissionPercent ?? "10"}
-                          onChange={e => setGlobalConfig(prev => ({ ...prev, indirectCommissionPercent: e.target.value }))}
-                          onBlur={async () => {
-                            await supabase.from("system_config").upsert({ key: "indirectCommissionPercent", value: globalConfig.indirectCommissionPercent ?? "10" }, { onConflict: "key" });
-                          }}
-                          className="w-full max-w-[140px] px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          placeholder="10"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Raspadinha Config */}
-                <div className="glass-card rounded-xl p-6 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                      <Trophy className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Raspadinha Diária</h4>
-                      <p className="text-xs text-muted-foreground">Configure probabilidade e valores dos prêmios</p>
-                    </div>
-                    <div className="ml-auto">
-                      <button
-                        onClick={async () => {
-                          const newVal = (globalConfig.scratchEnabled ?? "true") === "true" ? "false" : "true";
-                          setGlobalConfig(prev => ({ ...prev, scratchEnabled: newVal }));
-                          await supabase.from("system_config").upsert({ key: "scratchEnabled", value: newVal }, { onConflict: "key" });
-                          toast.success(newVal === "true" ? "🎰 Raspadinha ativada!" : "❌ Raspadinha desativada!");
-                        }}
-                        className="transition-colors"
-                      >
-                        {(globalConfig.scratchEnabled ?? "true") === "true"
-                          ? <ToggleRight className="h-7 w-7 text-success" />
-                          : <ToggleLeft className="h-7 w-7 text-muted-foreground" />
-                        }
-                      </button>
-                    </div>
-                  </div>
-
-                  {[
-                    { tier: 1, label: "Faixa 1 — Comum", color: "text-success", defChance: "20", defMin: "0.10", defMax: "1.00" },
-                    { tier: 2, label: "Faixa 2 — Rara", color: "text-blue-500", defChance: "5", defMin: "1.00", defMax: "10.00" },
-                    { tier: 3, label: "Faixa 3 — Épica", color: "text-purple-500", defChance: "1", defMin: "10.00", defMax: "100.00" },
-                  ].map(({ tier, label, color, defChance, defMin, defMax }) => (
-                    <div key={tier} className="space-y-2">
-                      <p className={`text-xs font-bold ${color}`}>{label}</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <label className="block text-[11px] text-muted-foreground mb-0.5">Chance (%)</label>
-                          <input
-                            type="number" min="0" max="100" step="0.1"
-                            value={globalConfig[`scratchTier${tier}Chance`] ?? defChance}
-                            onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Chance`]: e.target.value }))}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-muted-foreground mb-0.5">Mín (R$)</label>
-                          <input
-                            type="number" min="0.01" step="0.01"
-                            value={globalConfig[`scratchTier${tier}Min`] ?? defMin}
-                            onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Min`]: e.target.value }))}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-muted-foreground mb-0.5">Máx (R$)</label>
-                          <input
-                            type="number" min="0.01" step="0.01"
-                            value={globalConfig[`scratchTier${tier}Max`] ?? defMax}
-                            onChange={e => setGlobalConfig(prev => ({ ...prev, [`scratchTier${tier}Max`]: e.target.value }))}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <p className="text-[11px] text-muted-foreground">
-                    Chance total ≈ soma das faixas (~24.8% padrão). Faixas são avaliadas da mais rara para a mais comum. Valores menores são mais frequentes dentro de cada faixa.
-                  </p>
-                </div>
-
-                <div className="glass-card rounded-xl p-6 space-y-5">
-                  <div>
-                    <h4 className="font-semibold text-foreground flex items-center gap-2">
-                      <Megaphone className="h-4 w-4 text-primary" /> Notificações
-                    </h4>
-                    <p className="text-xs text-muted-foreground mt-1">Configure quais alertas visuais cada cargo recebe. Sons funcionam para todos.</p>
-                  </div>
-
-                  {/* Admin Master */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-bold text-foreground flex items-center gap-1.5">👑 Administrador Master</p>
-                    <div className="space-y-1.5 pl-1">
-                      {[
-                        { key: "notif_admin_deposit", label: "💰 Depósitos confirmados", defaultVal: "true" },
-                        { key: "notif_admin_recarga", label: "📱 Recargas processadas", defaultVal: "true" },
-                        { key: "notif_admin_new_user", label: "🆕 Novos cadastros", defaultVal: "true" },
-                      ].map(item => {
-                        const isOn = (globalConfig[item.key] ?? item.defaultVal) === "true";
-                        return (
-                          <div key={item.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                            <span className="text-sm text-foreground">{item.label}</span>
-                            <button
-                              onClick={() => setGlobalConfig(prev => ({ ...prev, [item.key]: isOn ? "false" : "true" }))}
-                              className="transition-colors"
-                            >
-                              {isOn
-                                ? <ToggleRight className="h-6 w-6 text-success" />
-                                : <ToggleLeft className="h-6 w-6 text-muted-foreground" />
-                              }
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Revendedor */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-bold text-foreground flex items-center gap-1.5">🏪 Revendedor</p>
-                    <div className="space-y-1.5 pl-1">
-                      {[
-                        { key: "notif_revendedor_deposit", label: "💰 Depósitos confirmados", defaultVal: "false" },
-                        { key: "notif_revendedor_recarga", label: "📱 Recargas processadas", defaultVal: "false" },
-                      ].map(item => {
-                        const isOn = (globalConfig[item.key] ?? item.defaultVal) === "true";
-                        return (
-                          <div key={item.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                            <span className="text-sm text-foreground">{item.label}</span>
-                            <button
-                              onClick={() => setGlobalConfig(prev => ({ ...prev, [item.key]: isOn ? "false" : "true" }))}
-                              className="transition-colors"
-                            >
-                              {isOn
-                                ? <ToggleRight className="h-6 w-6 text-success" />
-                                : <ToggleLeft className="h-6 w-6 text-muted-foreground" />
-                              }
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-muted-foreground italic">ℹ️ Sons funcionam para todos os cargos. Os toggles controlam apenas toasts e alertas visuais.</p>
-
-                  <button
-                    onClick={() => { unlockAudio(); playCashRegisterSound(); }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 text-foreground font-medium text-sm transition-all active:scale-95"
-                  >
-                    🔊 Testar Som de Depósito
-                  </button>
-                </div>
-
-                <BannersManager botUsername={botStatus.botUsername} />
                 </>
               )}
             </motion.div>
