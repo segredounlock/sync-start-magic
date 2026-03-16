@@ -2734,7 +2734,7 @@ export default function TelegramMiniApp() {
                 <button
                   onClick={() => setMoreOpen(false)}
                   className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "var(--tg-destructive)" }}
+                  style={{ backgroundColor: "color-mix(in srgb, var(--tg-destructive) 10%, transparent)", color: "var(--tg-destructive)" }}
                 >
                   <X className="h-4 w-4" />
                 </button>
