@@ -1384,8 +1384,8 @@ export default function TelegramMiniApp() {
                   {/* Check step - blacklist/cooldown verification */}
                   {recargaStep === "check" && selectedOp && (
                     <div className="space-y-4">
-                      <button onClick={() => { setRecargaStep("op"); setPhoneCheckResult(null); }} className="flex items-center gap-1 text-sm" style={st.hint}>
-                        <ArrowLeft className="w-4 h-4" /> Voltar
+                      <button onClick={() => { loadOperadoras(); setRecargaStep("op"); setPhoneCheckResult(null); }} className="flex items-center gap-1 text-sm" style={st.hint}>
+                        <ArrowLeft className="w-4 h-4" /> Trocar Operadora
                       </button>
                       <div className="text-center">
                         <motion.div
@@ -1397,7 +1397,14 @@ export default function TelegramMiniApp() {
                           <Shield className="w-7 h-7" style={st.link} />
                         </motion.div>
                         <h2 className="text-lg font-bold" style={st.text}>Verificação de Número</h2>
-                        <p className="text-sm mt-1" style={st.hint}>{(selectedOp.nome || "").toUpperCase()} • {phone}</p>
+                        <div className="flex items-center justify-center gap-2 mt-1">
+                          {detectedOperatorName && (
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)", color: "var(--tg-accent)" }}>
+                              ✓ Detectada
+                            </span>
+                          )}
+                          <p className="text-sm" style={st.hint}>{(selectedOp.nome || "").toUpperCase()} • {formatPhone(phone)}</p>
+                        </div>
                       </div>
 
                       <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
