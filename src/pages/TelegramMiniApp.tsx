@@ -2017,16 +2017,16 @@ export default function TelegramMiniApp() {
       {/* Bottom Tab Bar */}
       <div className="fixed bottom-0 left-0 right-0 backdrop-blur-xl z-30 safe-area-bottom"
         style={{ ...st.bottomBar, borderTop: st.borderMain }}>
-        <div className="flex justify-around items-center px-2 py-2.5">
+        <div className="flex justify-around items-center px-1 py-2.5 relative">
           {([
             { id: "recarga" as Section, icon: Smartphone, label: seasonalEmojis.recarga ? `${seasonalEmojis.recarga}` : "Recarga", defaultLabel: "Recarga" },
-            { id: "deposito" as Section, icon: Plus, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo" },
             { id: "raspadinha" as Section, icon: Ticket, label: "Raspadinha", defaultLabel: "Raspadinha" },
+            { id: "deposito" as Section, icon: Plus, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo", isFab: true },
             { id: "chat" as Section, icon: MessageCircle, label: seasonalEmojis.chat ? `${seasonalEmojis.chat}` : "Chat", defaultLabel: "Chat" },
             { id: "historico" as Section, icon: Clock, label: seasonalEmojis.historico ? `${seasonalEmojis.historico}` : "Pedidos", defaultLabel: "Pedidos" },
-            { id: "conta" as Section, icon: User, label: seasonalEmojis.conta ? `${seasonalEmojis.conta}` : "Conta", defaultLabel: "Conta" },
           ]).map((item) => {
             const isActive = section === item.id;
+            const isFab = (item as any).isFab;
             // Unique animation per icon
             const iconAnimations: Record<string, any> = {
               recarga: { rotate: [0, -15, 15, -10, 0], scale: [1, 1.15, 1], transition: { duration: 0.5, ease: "easeInOut" } },
@@ -2034,7 +2034,6 @@ export default function TelegramMiniApp() {
               raspadinha: { rotate: [0, -10, 10, -5, 0], scale: [1, 1.2, 1], transition: { duration: 0.5, ease: "easeInOut" } },
               chat: { scale: [1, 1.2, 1], y: [0, -4, 0], transition: { duration: 0.4, ease: "easeOut" } },
               historico: { rotate: [0, 360], transition: { duration: 0.8, ease: "easeInOut" } },
-              extrato: { y: [0, -6, 0], scale: [1, 1.1, 1], transition: { duration: 0.4, ease: "easeOut" } },
               conta: { scale: [1, 1.2, 0.9, 1.1, 1], transition: { duration: 0.5, type: "spring" } },
             };
             const continuousAnimations: Record<string, any> = {
@@ -2043,23 +2042,52 @@ export default function TelegramMiniApp() {
               raspadinha: { rotate: [0, 5, -5, 0], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               chat: { y: [0, -2, 0], scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               historico: { rotate: [0, 360], transition: { repeat: Infinity, duration: 4, ease: "linear" } },
-              extrato: { y: [0, -2, 0, 2, 0], transition: { repeat: Infinity, duration: 2.2, ease: "easeInOut" } },
               conta: { scale: [1, 1.08, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
             };
             const iconAnimation = isActive ? (iconAnimations[item.id] || {}) : {};
             const continuousAnim = continuousAnimations[item.id] || {};
 
+            if (isFab) {
+              return (
+                <button key={item.id} onClick={() => { setSection(item.id); tgWebApp?.HapticFeedback?.impactOccurred("medium"); }}
+                  className="flex flex-col items-center -mt-8 relative z-10"
+                  style={{ color: isActive ? "#fff" : "var(--tg-hint)" }}>
+                  <motion.div
+                    className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg relative"
+                    style={{
+                      background: isActive
+                        ? "linear-gradient(135deg, var(--tg-accent), var(--tg-btn))"
+                        : "var(--tg-secondary-bg)",
+                      border: isActive ? "none" : "2px solid var(--tg-hint)",
+                      boxShadow: isActive ? "0 4px 20px rgba(0,0,0,0.3)" : "0 2px 10px rgba(0,0,0,0.15)",
+                    }}
+                    animate={{ ...iconAnimation, ...continuousAnim } as any}
+                    whileTap={{ scale: 0.85 }}
+                  >
+                    {/* Snake border animation */}
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56" style={{ filter: isActive ? "drop-shadow(0 0 6px var(--tg-accent))" : "none" }}>
+                      <circle cx="28" cy="28" r="26" fill="none" stroke="var(--tg-accent)" strokeWidth="2" strokeDasharray="8 6" opacity={isActive ? 0.7 : 0.25}>
+                        <animateTransform attributeName="transform" type="rotate" from="0 28 28" to="360 28 28" dur="4s" repeatCount="indefinite" />
+                      </circle>
+                    </svg>
+                    <item.icon className="w-7 h-7" style={{ color: isActive ? "#fff" : "var(--tg-hint)" }} />
+                  </motion.div>
+                  <span className="text-[10px] font-bold mt-1 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
+                </button>
+              );
+            }
+
             return (
               <button key={item.id} onClick={() => { setSection(item.id); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition min-w-[60px]"
+                className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition min-w-[50px]"
                 style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>
                 <motion.div
                   animate={{ ...iconAnimation, ...continuousAnim } as any}
                   whileTap={{ scale: 0.8 }}
                 >
-                  <item.icon className="w-6 h-6" />
+                  <item.icon className="w-5 h-5" />
                 </motion.div>
-                <span className="text-[11px] font-medium leading-tight">{item.label}</span>
+                <span className="text-[10px] font-medium leading-tight">{item.label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="tab-indicator"
