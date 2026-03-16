@@ -2278,7 +2278,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                 <p className="text-xs text-muted-foreground truncate">{item.subtitulo}</p>
                               </div>
                               <div className="text-right shrink-0">
-                                <p className={`font-bold text-sm tabular-nums ${item.isPositive ? "text-success" : "text-destructive"}`}>
+                                <p className={`font-bold text-sm tabular-nums ${item.tipo === "saque" && item.status === "pending" ? "text-warning" : item.isPositive ? "text-success" : "text-destructive"}`}>
                                   {item.isPositive ? "+" : "-"} {fmt(item.valor)}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground">{fmtDate(item.data)}</p>
