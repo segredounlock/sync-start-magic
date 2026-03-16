@@ -423,7 +423,7 @@ Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
 ⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
 
-const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg";
+const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg"; // kept for future optional use
 
 async function checkTermsAccepted(supabase: any, telegramId: string): Promise<boolean> {
   const { data } = await supabase
@@ -447,7 +447,7 @@ async function recordTermsAcceptance(supabase: any, telegramId: string) {
 }
 
 async function sendTermsMessage(token: string, chatId: number) {
-  await sendPhoto(token, chatId, TERMS_IMAGE, TERMS_TEXT, [
+  await sendMessageWithKeyboard(token, chatId, TERMS_TEXT, [
     [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
     [{ text: "❌ Recusar", callback_data: "terms_decline" }],
   ]);
@@ -681,8 +681,7 @@ serve(async (req) => {
     })();
 
     // Return 200 immediately to Telegram, but keep processing alive
-    // Deno Deploy keeps the isolate alive while promises are pending
-    (globalThis as any).__processPromise = processPromise;
+    EdgeRuntime.waitUntil(processPromise);
 
     console.log(`[TIMING] response sent in ${Date.now() - t0}ms | update_id=${update?.update_id}`);
     return new Response("ok", { headers: corsHeaders });
