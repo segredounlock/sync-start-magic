@@ -413,6 +413,40 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchData]);
 
+  // Realtime: transactions (saques) status updates
+  useEffect(() => {
+    if (!user) return;
+    const txChannel = supabase
+      .channel(`tx-realtime-${user.id}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "transactions",
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const newRow = payload.new as any;
+        const oldRow = payload.old as any;
+        if (newRow.type === "saque" && newRow.status !== oldRow?.status) {
+          fetchTransactions();
+          fetchData();
+          if (newRow.status === "completed") {
+            toast.success(`🎉 Saque de R$ ${Number(newRow.amount).toFixed(2).replace(".", ",")} foi pago!`);
+          } else if (newRow.status === "approved") {
+            toast.success(`✅ Saque de R$ ${Number(newRow.amount).toFixed(2).replace(".", ",")} aprovado!`);
+          } else if (newRow.status === "rejected") {
+            toast.error(`❌ Saque de R$ ${Number(newRow.amount).toFixed(2).replace(".", ",")} rejeitado. Saldo estornado.`);
+          }
+        }
+        // Also refresh for deposit status changes
+        if (newRow.type === "deposit" && newRow.status !== oldRow?.status) {
+          fetchTransactions();
+          fetchData();
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(txChannel); };
+  }, [user, fetchData, fetchTransactions]);
+
   useEffect(() => {
     // Parallel initial load: data + catalog + banners
     fetchData();
