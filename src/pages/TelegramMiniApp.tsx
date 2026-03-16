@@ -241,23 +241,35 @@ function StatusOperatorCards({ st }: { st: any }) {
   );
 }
 
-function useTelegramTheme() {
+function useTelegramTheme(themeOverride: "auto" | "light" | "dark" = "auto") {
+  const [isDark, setIsDark] = useState(true);
+
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
     const tg = window.Telegram?.WebApp;
 
     const applyTelegramTheme = () => {
-      const liveTg = window.Telegram?.WebApp;
-      const tp = liveTg?.themeParams ?? {};
-      const hasTelegramColors = Boolean(tp.bg_color || tp.secondary_bg_color || tp.text_color || tp.button_color);
-      const isDark = hasTelegramColors
-        ? isDarkTelegramPalette(tp.bg_color, tp.text_color)
-        : (liveTg?.colorScheme === "light" ? false : true); // default to dark when outside Telegram
-      // Always use the website's premium theme — ignore Telegram native colors
-      const theme = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
+      let resolvedDark: boolean;
 
-      root.classList.toggle("dark", isDark);
+      if (themeOverride === "light") {
+        resolvedDark = false;
+      } else if (themeOverride === "dark") {
+        resolvedDark = true;
+      } else {
+        // auto: detect from Telegram
+        const liveTg = window.Telegram?.WebApp;
+        const tp = liveTg?.themeParams ?? {};
+        const hasTelegramColors = Boolean(tp.bg_color || tp.secondary_bg_color || tp.text_color || tp.button_color);
+        resolvedDark = hasTelegramColors
+          ? isDarkTelegramPalette(tp.bg_color, tp.text_color)
+          : (liveTg?.colorScheme === "light" ? false : true);
+      }
+
+      setIsDark(resolvedDark);
+      const theme = resolvedDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
+
+      root.classList.toggle("dark", resolvedDark);
 
       root.style.setProperty("--tg-bg", theme.bg_color);
       root.style.setProperty("--tg-text", theme.text_color);
@@ -273,7 +285,7 @@ function useTelegramTheme() {
       root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
       root.style.setProperty("--tg-section-header", theme.section_header_text_color);
       root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color);
-      root.style.setProperty("--tg-warning", isDark ? "#facc15" : "#eab308");
+      root.style.setProperty("--tg-warning", resolvedDark ? "#facc15" : "#eab308");
       root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color})`);
 
       body.style.background = theme.bg_color;
@@ -281,14 +293,18 @@ function useTelegramTheme() {
     };
 
     applyTelegramTheme();
-    tg?.onEvent?.("themeChanged", applyTelegramTheme);
+    if (themeOverride === "auto") {
+      tg?.onEvent?.("themeChanged", applyTelegramTheme);
+    }
 
     return () => {
       tg?.offEvent?.("themeChanged", applyTelegramTheme);
       body.style.background = "";
       body.style.color = "";
     };
-  }, []);
+  }, [themeOverride]);
+
+  return { isDark };
 }
 
 type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha" | "atualizacoes";
