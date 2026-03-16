@@ -27,7 +27,7 @@ import { ProfileTab } from "@/components/ProfileTab";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Wallet, Smartphone, History, Send, Clock, MessageCircle,
-  Menu, X, User, Activity, Landmark, CreditCard, CheckCircle2, XCircle,
+  Menu, X, User, Activity, Landmark, CreditCard, DollarSign, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
   Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info,
@@ -2416,7 +2416,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "recarga", label: "Recarga", icon: Smartphone, color: "text-primary", animation: "bounce", elevated: true },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
-          { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse" },
+          { key: "addSaldo", label: "Saldo", icon: DollarSign, color: "text-success", animation: "pulse" },
           { key: "contatos", label: "Config", icon: Settings, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
