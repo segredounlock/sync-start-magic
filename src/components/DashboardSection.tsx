@@ -280,12 +280,12 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
       )}
 
       {/* Saldo Card + Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         {/* Saldo Card */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="col-span-2 sm:col-span-1 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 text-primary-foreground shadow-lg"
+          className="w-full sm:w-auto sm:min-w-[200px] sm:max-w-[240px] shrink-0 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 text-primary-foreground shadow-lg"
         >
           <div className="absolute top-3 right-3 opacity-20">
             <Wallet className="h-8 w-8" />
@@ -309,24 +309,26 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
         </motion.div>
 
         {/* Quick Actions */}
-        {quickActions.map((a, i) => (
-          <motion.button
-            key={a.tab}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            onClick={() => a.tab === "__saque__" ? setShowSaqueModal(true) : a.tab === "__convidar__" ? setShowConvidarModal(true) : onNavigateTab(a.tab)}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
-          >
-            <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
-              <a.icon className={`h-5 w-5 ${a.color}`} />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-foreground">{a.label}</p>
-              <p className="text-[10px] text-muted-foreground">{a.sub}</p>
-            </div>
-          </motion.button>
-        ))}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 flex-1 min-w-0">
+          {quickActions.map((a, i) => (
+            <motion.button
+              key={a.tab}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => a.tab === "__saque__" ? setShowSaqueModal(true) : a.tab === "__convidar__" ? setShowConvidarModal(true) : onNavigateTab(a.tab)}
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
+            >
+              <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
+                <a.icon className={`h-5 w-5 ${a.color}`} />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-foreground">{a.label}</p>
+                <p className="text-[10px] text-muted-foreground">{a.sub}</p>
+              </div>
+            </motion.button>
+          ))}
+        </div>
       </div>
 
       {/* Ranking */}
