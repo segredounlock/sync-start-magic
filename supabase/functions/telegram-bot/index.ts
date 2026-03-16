@@ -432,6 +432,19 @@ Não. Há custos operacionais no sistema e o serviço é voltado para <b>revende
 ❸ <b>O que fazer se minha recarga for cancelada?</b>
 O saldo é devolvido automaticamente. Reembolse seu cliente e envie para outro número.
 
+🛠 <b>POLÍTICA DE SUPORTE — LEIA COM ATENÇÃO</b>
+
+Nós <b>não vendemos para o cliente final</b>. Vendemos para <b>você, revendedor</b>. O atendimento ao seu cliente é de <b>sua responsabilidade</b>.
+
+Antes de acionar o suporte, <b>verifique no app da operadora</b>:
+
+🔴 <b>Claro</b> — CPF + senha do app <b>Minha Claro</b>
+🟣 <b>TIM</b> — Número da linha + senha do app <b>Meu TIM</b>
+
+⚠️ Se o cliente se recusar a fornecer os dados, a verificação não poderá ser feita e o suporte <b>não prosseguirá</b>.
+
+⏱️ As recargas geralmente aparecem no extrato da operadora em até <b>1 hora</b> após a conclusão. Informe esse prazo ao seu cliente <b>antes</b> de realizar a recarga.
+
 ⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
 
 const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg"; // kept for future optional use
