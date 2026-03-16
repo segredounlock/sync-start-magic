@@ -2248,7 +2248,7 @@ export default function TelegramMiniApp() {
       {/* Bottom Tab Bar */}
       <div className="fixed bottom-0 left-0 right-0 backdrop-blur-xl z-30 safe-area-bottom"
         style={{ ...st.bottomBar, borderTop: st.borderMain }}>
-        <div className="flex justify-around items-center px-1 py-2.5 relative">
+        <div className="flex justify-around items-end px-2 pt-2 pb-2.5 relative">
           {([
             { id: "recarga" as Section, icon: Smartphone, label: seasonalEmojis.recarga ? `${seasonalEmojis.recarga}` : "Recarga", defaultLabel: "Recarga" },
             { id: "raspadinha" as Section, icon: Ticket, label: "Raspadinha", defaultLabel: "Raspadinha" },
@@ -2275,35 +2275,38 @@ export default function TelegramMiniApp() {
             if (isFab) {
               return (
                 <button key={item.id} onClick={() => { setSection(item.id); tgWebApp?.HapticFeedback?.impactOccurred("medium"); }}
-                  className="flex flex-col items-center -mt-5 relative z-10"
+                  className="flex flex-col items-center -mt-7 relative z-10"
                   style={{ color: isActive ? "#fff" : "var(--tg-hint)" }}>
                   <motion.div
-                    className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg relative"
+                    className="w-14 h-14 rounded-full flex items-center justify-center relative"
                     style={{
                       background: isActive
                         ? "linear-gradient(135deg, var(--tg-accent), var(--tg-btn))"
                         : "var(--tg-secondary-bg)",
-                      border: isActive ? "none" : "2px solid var(--tg-hint)",
-                      boxShadow: isActive ? "0 4px 20px rgba(0,0,0,0.3)" : "0 2px 10px rgba(0,0,0,0.15)",
+                      border: isActive ? "2px solid var(--tg-accent)" : "2px solid color-mix(in srgb, var(--tg-hint) 30%, transparent)",
+                      boxShadow: isActive
+                        ? "0 4px 24px rgba(34,197,94,0.35), 0 0 12px rgba(34,197,94,0.2)"
+                        : "0 2px 12px rgba(0,0,0,0.2)",
                     }}
                     animate={{ ...iconAnimation, ...continuousAnim } as any}
                     whileTap={{ scale: 0.85 }}
                   >
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 44 44" style={{ filter: isActive ? "drop-shadow(0 0 6px var(--tg-accent))" : "none" }}>
-                      <circle cx="22" cy="22" r="20" fill="none" stroke="var(--tg-accent)" strokeWidth="2" strokeDasharray="6 5" opacity={isActive ? 0.7 : 0.25}>
-                        <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="4s" repeatCount="indefinite" />
+                    {/* Snake border SVG */}
+                    <svg className="absolute inset-[-3px] w-[calc(100%+6px)] h-[calc(100%+6px)]" viewBox="0 0 56 56" style={{ filter: isActive ? "drop-shadow(0 0 8px var(--tg-accent))" : "none" }}>
+                      <circle cx="28" cy="28" r="26" fill="none" stroke="var(--tg-accent)" strokeWidth="2" strokeDasharray="8 6" opacity={isActive ? 0.8 : 0.3}>
+                        <animateTransform attributeName="transform" type="rotate" from="0 28 28" to="360 28 28" dur="4s" repeatCount="indefinite" />
                       </circle>
                     </svg>
-                    <item.icon className="w-5 h-5" style={{ color: isActive ? "#fff" : "var(--tg-hint)" }} />
+                    <item.icon className="w-6 h-6" style={{ color: isActive ? "#fff" : "var(--tg-hint)" }} />
                   </motion.div>
-                  <span className="text-[10px] font-bold mt-1 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
+                  <span className="text-[10px] font-bold mt-1.5 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
                 </button>
               );
             }
 
             return (
               <button key={item.id} onClick={() => { setSection(item.id); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
-                className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition min-w-[50px]"
+                className="flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition min-w-[50px]"
                 style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>
                 <motion.div
                   animate={{ ...iconAnimation, ...continuousAnim } as any}
@@ -2315,7 +2318,7 @@ export default function TelegramMiniApp() {
                 {isActive && (
                   <motion.div
                     layoutId="tab-indicator"
-                    className="w-1.5 h-1.5 rounded-full mt-0.5"
+                    className="w-1.5 h-1.5 rounded-full"
                     style={{ backgroundColor: "var(--tg-accent)" }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
@@ -2330,7 +2333,7 @@ export default function TelegramMiniApp() {
             const isActiveInMore = moreSections.includes(section);
             return (
               <button onClick={() => { setMoreOpen(true); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
-                className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition min-w-[50px]"
+                className="flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition min-w-[50px]"
                 style={{ color: isActiveInMore ? "var(--tg-accent)" : "var(--tg-hint)" }}>
                 <motion.div
                   animate={{ scale: [1, 1.05, 1] }}
@@ -2342,7 +2345,7 @@ export default function TelegramMiniApp() {
                 <span className="text-[10px] font-medium leading-tight">Mais</span>
                 {isActiveInMore && (
                   <motion.div
-                    className="w-1.5 h-1.5 rounded-full mt-0.5"
+                    className="w-1.5 h-1.5 rounded-full"
                     style={{ backgroundColor: "var(--tg-accent)" }}
                   />
                 )}
