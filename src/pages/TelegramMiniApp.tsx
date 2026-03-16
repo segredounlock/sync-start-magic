@@ -1888,6 +1888,12 @@ export default function TelegramMiniApp() {
               ))}
             </motion.div>
           )}
+          {/* ── Raspadinha ── */}
+          {section === "raspadinha" && userId && (
+            <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              <ScratchCard userId={userId} />
+            </motion.div>
+          )}
           {/* ── Chat ── */}
           {section === "chat" && userId && hasAuthSession && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-[calc(100vh-180px)] tg-chat-theme">
