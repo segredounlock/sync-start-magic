@@ -2301,7 +2301,7 @@ export default function TelegramMiniApp() {
                         {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" style={st.accent} /> : <Save className="w-4 h-4" style={st.accent} />}
                       </button>
                       <button onClick={() => setEditingName(false)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.15)" }}>
+                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={st.dangerBg}>
                         <X className="w-4 h-4" style={st.destructive} />
                       </button>
                     </div>
