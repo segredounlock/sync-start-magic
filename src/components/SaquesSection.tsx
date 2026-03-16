@@ -4,8 +4,9 @@ import { Currency } from "@/components/ui";
 import { motion, AnimatePresence } from "framer-motion";
 import { styledToast as toast } from "@/lib/toast";
 import {
-  Banknote, CheckCircle2, XCircle, Clock, Loader2, Search, Filter,
-  ChevronDown, RefreshCw, User, Calendar, DollarSign, AlertTriangle,
+  Banknote, CheckCircle2, XCircle, Clock, Loader2, Search,
+  ChevronDown, ChevronUp, RefreshCw, User, Calendar, DollarSign, AlertTriangle,
+  Copy, Hash, Wallet,
 } from "lucide-react";
 import { formatFullDateTimeBR } from "@/lib/timezone";
 import { confirm } from "@/lib/confirm";
