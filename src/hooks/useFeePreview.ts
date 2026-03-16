@@ -17,7 +17,10 @@ interface FeePreview {
 
 /**
  * Hook to fetch fee configuration and calculate a preview of the deposit fee.
- * Reads from system_config (taxaTipo + taxaValor).
+ * 
+ * Priority:
+ * 1. If user has a reseller → uses reseller_deposit_fees
+ * 2. Fallback → global system_config (taxaTipo + taxaValor)
  */
 export function useFeePreview(): { config: FeeConfig; calcFee: (amount: number) => FeePreview } {
   const [config, setConfig] = useState<FeeConfig>({ taxaTipo: "", taxaValor: 0, loaded: false });
@@ -26,6 +29,24 @@ export function useFeePreview(): { config: FeeConfig; calcFee: (amount: number) 
     let cancelled = false;
     (async () => {
       try {
+        // Use the RPC that resolves reseller fee → global fallback
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+
+        if (userId) {
+          const { data, error } = await supabase.rpc("get_deposit_fee_for_user", { _user_id: userId });
+          if (!cancelled && !error && data && data.length > 0) {
+            const row = data[0] as { fee_type: string; fee_value: number };
+            setConfig({
+              taxaTipo: row.fee_type || "",
+              taxaValor: Number(row.fee_value) || 0,
+              loaded: true,
+            });
+            return;
+          }
+        }
+
+        // Fallback: read global config directly
         const { data } = await supabase
           .from("system_config")
           .select("key, value")
