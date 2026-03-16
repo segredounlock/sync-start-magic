@@ -185,7 +185,7 @@ function StatusOperatorCards({ st }: { st: any }) {
             {/* Colored header bar */}
             <div className="px-4 py-3 flex items-center justify-between" style={{ background: colors.gradient }}>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, white 20%, transparent)" }}>
                   <Smartphone className="h-3.5 w-3.5 text-white" />
                 </div>
                 <span className="font-bold text-white text-sm tracking-wide">{opName}</span>
