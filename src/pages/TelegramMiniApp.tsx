@@ -325,6 +325,8 @@ export default function TelegramMiniApp() {
             applySession(sess);
             saveSession(sess);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
+            // If we have an existing Supabase session, mark it
+            if (existingSessionUserId && !cancelled) setHasAuthSession(true);
             if (!cancelled) setLoading(false);
             return;
           }
@@ -333,6 +335,7 @@ export default function TelegramMiniApp() {
 
       // 2) Try existing auth user if available
       if (existingSessionUserId && !cancelled) {
+        if (!cancelled) setHasAuthSession(true);
         try {
           const { data, error } = await supabase.functions.invoke("telegram-miniapp", {
             body: { action: "lookup_by_user_id", user_id: existingSessionUserId },
