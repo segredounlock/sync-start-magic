@@ -395,6 +395,56 @@ function generatePassword(): string {
   return pass;
 }
 
+// ===== TERMS OF SERVICE =====
+const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
+
+const TERMS_TEXT = `📜 <b>TERMOS DE UTILIZAÇÃO</b>
+
+Ao utilizar este bot, você concorda com as seguintes regras:
+
+1️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
+
+2️⃣ <b>Saldo e Pagamentos</b> — Depósitos via PIX são processados automaticamente. Recargas confirmadas <b>não podem ser estornadas</b>.
+
+3️⃣ <b>Dados Pessoais</b> — Seus dados são armazenados de forma segura e utilizados apenas para operação do serviço.
+
+4️⃣ <b>Responsabilidade</b> — O usuário é responsável por informar corretamente o número e operadora. Recargas para números errados não serão reembolsadas.
+
+5️⃣ <b>Disponibilidade</b> — O serviço pode sofrer interrupções para manutenção. Não nos responsabilizamos por indisponibilidades temporárias.
+
+6️⃣ <b>Proibições</b> — É proibido o uso de bots, scripts ou automações para interagir com este sistema.
+
+7️⃣ <b>Alterações</b> — Os termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação.
+
+⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
+
+const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg";
+
+async function checkTermsAccepted(supabase: any, telegramId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("terms_acceptance")
+    .select("accepted_at")
+    .eq("telegram_id", telegramId)
+    .order("accepted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return false;
+  const elapsed = Date.now() - new Date(data.accepted_at).getTime();
+  return elapsed < TERMS_VALIDITY_MS;
+}
+
+async function recordTermsAcceptance(supabase: any, telegramId: string) {
+  await supabase.from("terms_acceptance").insert({ telegram_id: telegramId });
+}
+
+async function sendTermsMessage(token: string, chatId: number) {
+  await sendPhoto(token, chatId, TERMS_IMAGE, TERMS_TEXT, [
+    [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
+    [{ text: "❌ Recusar", callback_data: "terms_decline" }],
+  ]);
+}
+
 // Send pending deposit notifications that weren't delivered yet
 async function sendPendingNotifications(supabase: any, token: string, chatId: number, userId: string) {
   try {
