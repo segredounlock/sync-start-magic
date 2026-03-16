@@ -119,6 +119,126 @@ const isDarkTelegramPalette = (bgColor?: string, textColor?: string) => {
   return bgLuma < 0.45 && textLuma > bgLuma;
 };
 
+/** Operator timing cards for Status section — mirrors RevendedorPainel */
+function StatusOperatorCards({ st }: { st: any }) {
+  const [stats, setStats] = useState<{ operadora: string; avgRecent: number; minRecent: number; min24h: number; avg24h: number; pendingCount: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: rpcStats } = await supabase.rpc("get_operator_stats" as any);
+        const mapped = (Array.isArray(rpcStats) ? rpcStats : []).map((s: any) => ({
+          operadora: s.operadora || "",
+          avgRecent: Number(s.avg_recent) || 0,
+          minRecent: Number(s.min_recent) || 0,
+          min24h: Number(s.min_24h) || 0,
+          avg24h: Number(s.avg_24h) || 0,
+          pendingCount: Number(s.pending_count) || 0,
+        }));
+        const activeOps = ["Claro", "Tim", "Vivo"];
+        activeOps.forEach(op => {
+          if (!mapped.find(s => s.operadora.toLowerCase() === op.toLowerCase())) {
+            mapped.push({ operadora: op, avgRecent: 0, minRecent: 0, min24h: 0, avg24h: 0, pendingCount: 0 });
+          }
+        });
+        setStats(mapped);
+      } catch { /* */ }
+      setLoading(false);
+    })();
+  }, []);
+
+  const fmtTime = (s: number) => {
+    if (!s || s <= 0) return "—";
+    const mins = Math.floor(s / 60);
+    const secs = Math.round(s % 60);
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  };
+
+  const opColors: Record<string, { gradient: string; accent: string }> = {
+    CLARO: { gradient: "linear-gradient(135deg, #ef4444, #dc2626)", accent: "#ef4444" },
+    TIM: { gradient: "linear-gradient(135deg, #3b82f6, #2563eb)", accent: "#3b82f6" },
+    VIVO: { gradient: "linear-gradient(135deg, #a855f7, #9333ea)", accent: "#a855f7" },
+  };
+
+  const timeColor = (s: number) => s <= 120 ? "#4ade80" : s <= 300 ? "#facc15" : "#f87171";
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-6">
+        <Loader2 className="w-5 h-5 animate-spin" style={st.hint} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {stats.map((op, i) => {
+        const opName = op.operadora.toUpperCase();
+        const colors = opColors[opName] || { gradient: "linear-gradient(135deg, #6b7280, #4b5563)", accent: "#6b7280" };
+        const pendingIcon = op.pendingCount > 5 ? "⚠️" : "⏳";
+
+        return (
+          <motion.div key={op.operadora} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+            className="rounded-2xl overflow-hidden" style={{ border: st.borderSub }}>
+            {/* Colored header bar */}
+            <div className="px-4 py-3 flex items-center justify-between" style={{ background: colors.gradient }}>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                  <Smartphone className="h-3.5 w-3.5 text-white" />
+                </div>
+                <span className="font-bold text-white text-sm tracking-wide">{opName}</span>
+              </div>
+              <div className="text-right">
+                <p className="text-[9px] text-white/70 uppercase font-semibold tracking-wider">Pendentes</p>
+                <p className="text-lg font-black text-white">{op.pendingCount}</p>
+              </div>
+            </div>
+            {/* Body */}
+            <div className="p-3 space-y-2.5" style={st.secondaryBg}>
+              {/* Avg + Min recent */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#f87171" }}>Média Atual</p>
+                  <p className="text-lg font-black" style={{ color: timeColor(op.avgRecent) }}>{fmtTime(op.avgRecent)}</p>
+                  <p className="text-[8px]" style={st.hint}>Últimas 3</p>
+                </div>
+                <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#4ade80" }}>Tempo Min.</p>
+                  <p className="text-lg font-black" style={{ color: timeColor(op.minRecent) }}>{fmtTime(op.minRecent)}</p>
+                  <p className="text-[8px]" style={st.hint}>Últimas 3</p>
+                </div>
+              </div>
+              {/* Processing count */}
+              <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 6%, transparent)", border: st.borderSub }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{pendingIcon}</span>
+                  <span className="text-xs font-bold uppercase tracking-wide" style={st.text}>Processando</span>
+                </div>
+                <span className="text-base font-black" style={{ color: colors.accent }}>{op.pendingCount}</span>
+              </div>
+              {/* Consolidated 24h */}
+              <div className="pt-2" style={{ borderTop: st.borderSub }}>
+                <p className="text-[9px] uppercase tracking-[0.15em] font-semibold text-center mb-1.5" style={st.hint}>Consolidado 24 Horas</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-center">
+                    <p className="text-[9px] uppercase" style={st.hint}>Média Geral</p>
+                    <p className="text-sm font-bold" style={st.text}>{fmtTime(op.avg24h)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] uppercase" style={st.hint}>Mínimo (24h)</p>
+                    <p className="text-sm font-bold" style={st.text}>{fmtTime(op.min24h)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 function useTelegramTheme() {
   useEffect(() => {
     const root = document.documentElement;
@@ -1916,23 +2036,54 @@ export default function TelegramMiniApp() {
 
           {/* ── Status ── */}
           {section === "status" && (
-            <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-3">
-              {[
-                { name: "API de Recargas" },
-                { name: "Gateway de Pagamento" },
-                { name: "Bot do Telegram" },
-              ].map((item) => (
-                <div key={item.name} className="rounded-xl p-4 flex items-center justify-between" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-5 h-5" style={st.hint} />
-                    <span className="text-sm font-medium" style={st.text}>{item.name}</span>
+            <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-4">
+              {/* Header */}
+              <div>
+                <h2 className="text-lg font-bold" style={st.text}>Status do Sistema</h2>
+                <p className="text-xs" style={st.hint}>Tempo médio de processamento das recargas por operadora.</p>
+              </div>
+
+              {/* Service Status */}
+              <div className="space-y-2">
+                {[
+                  { name: "API de Recargas" },
+                  { name: "Gateway de Pagamento" },
+                  { name: "Bot do Telegram" },
+                ].map((item) => (
+                  <div key={item.name} className="rounded-xl p-3.5 flex items-center justify-between" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-4 h-4" style={st.hint} />
+                      <span className="text-sm font-medium" style={st.text}>{item.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4ade80" }} />
+                      <span className="text-xs" style={st.green}>Online</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4ade80" }} />
-                    <span className="text-xs" style={st.green}>Online</span>
+                ))}
+              </div>
+
+              {/* Operator timing cards */}
+              <StatusOperatorCards st={st} />
+
+              {/* Important observations */}
+              <div className="rounded-xl p-4 space-y-3" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: "color-mix(in srgb, var(--tg-accent, #6ab2f2) 15%, transparent)" }}>
+                    <AlertTriangle className="h-4 w-4" style={st.accent} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold mb-1" style={st.text}>Observações Importantes</p>
+                    <p className="text-xs leading-relaxed" style={st.hint}>
+                      O tempo de processamento e o volume em andamento são indicadores em tempo real para auxiliar sua operação. <span style={{ ...st.text, fontWeight: 600 }}>Todas as informações acima são estimativas baseadas em tráfego recente; o prazo formal das operadoras para a conclusão de recargas permanece de até 24 horas.</span>
+                    </p>
                   </div>
                 </div>
-              ))}
+                <div className="text-center pt-2" style={{ borderTop: st.borderSub }}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] font-semibold" style={st.hint}>Última Atualização</p>
+                  <p className="text-sm font-bold mt-0.5" style={st.text}>{new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p>
+                </div>
+              </div>
             </motion.div>
           )}
           {/* ── Atualizações ── */}
