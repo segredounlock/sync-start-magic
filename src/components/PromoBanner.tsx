@@ -7,6 +7,7 @@ interface PromoBannerProps {
   subtitle?: string;
   visible?: boolean;
   link?: string;
+  icon_url?: string;
   onClose?: () => void;
 }
 
@@ -15,6 +16,7 @@ export function PromoBanner({
   subtitle = "Consulte saldo, faça recargas e receba notificações direto no Telegram!",
   visible = true,
   link,
+  icon_url,
   onClose
 }: PromoBannerProps) {
   const [dismissed, setDismissed] = useState(false);
@@ -74,9 +76,13 @@ export function PromoBanner({
               <motion.div
                 animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 5, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="shrink-0 w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center"
+                className="shrink-0 w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center overflow-hidden"
               >
-                <Send className="h-5 w-5 text-primary" />
+                {icon_url ? (
+                  <img src={icon_url} alt="" className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                  <Send className="h-5 w-5 text-primary" />
+                )}
               </motion.div>
 
               {/* Text */}

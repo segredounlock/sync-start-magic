@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PromoBanner } from "./PromoBanner";
 import { PopupBanner } from "./PopupBanner";
 import { SlideBanner } from "./SlideBanner";
-import { ToggleLeft, ToggleRight, Zap, Save, Loader2, Plus, Trash2 } from "lucide-react";
+import { ToggleLeft, ToggleRight, Zap, Save, Loader2, Plus, Trash2, ImagePlus, X } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -15,6 +15,7 @@ interface BannerData {
   subtitle: string;
   link: string;
   enabled: boolean;
+  icon_url: string;
 }
 
 interface BannersManagerProps {
@@ -25,6 +26,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
   const [banners, setBanners] = useState<BannerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
+  const [uploadingIcon, setUploadingIcon] = useState<Record<number, boolean>>({});
   const [expandedBanner, setExpandedBanner] = useState<number | null>(null);
 
   const initialLoadDone = useRef(false);
@@ -39,6 +41,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
       setBanners((data || []).map(b => ({
         ...b,
         type: b.type as "banner" | "popup" | "slide",
+        icon_url: (b as any).icon_url || "",
       })));
     } catch {
       toast.error("Erro ao carregar banners");
@@ -82,8 +85,9 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
           title: banner.title,
           subtitle: banner.subtitle,
           link: banner.link,
+          icon_url: banner.icon_url || null,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", banner.id);
       if (error) throw error;
       toast.success(`Banner ${banner.position} salvo!`);
@@ -91,6 +95,28 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
       toast.error("Erro ao salvar banner");
     }
     setSaving(prev => ({ ...prev, [banner.position]: false }));
+  };
+
+  const handleIconUpload = async (banner: BannerData, file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ícone deve ter no máximo 2MB");
+      return;
+    }
+    setUploadingIcon(prev => ({ ...prev, [banner.position]: true }));
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `banner-icons/${banner.id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("broadcast-images").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("broadcast-images").getPublicUrl(path);
+      const url = urlData.publicUrl + "?t=" + Date.now();
+      updateBanner(banner.position, { icon_url: url });
+      toast.success("Ícone carregado!");
+    } catch {
+      toast.error("Erro ao carregar ícone");
+    } finally {
+      setUploadingIcon(prev => ({ ...prev, [banner.position]: false }));
+    }
   };
 
   const typeLabels: Record<string, { label: string; emoji: string }> = {
@@ -237,6 +263,44 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                       </div>
                     </div>
 
+                    {/* Icon upload */}
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">🖼️ Ícone (PNG)</label>
+                      <div className="flex items-center gap-3">
+                        {banner.icon_url ? (
+                          <div className="relative">
+                            <img src={banner.icon_url} alt="Ícone" className="w-11 h-11 rounded-xl object-cover border border-border" />
+                            <button
+                              onClick={() => updateBanner(banner.position, { icon_url: "" })}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-11 h-11 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted-foreground">
+                            <ImagePlus className="h-5 w-5" />
+                          </div>
+                        )}
+                        <label className="flex-1 cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/gif,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) handleIconUpload(banner, f);
+                              e.target.value = "";
+                            }}
+                          />
+                          <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/60 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors">
+                            {uploadingIcon[banner.position] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
+                            {uploadingIcon[banner.position] ? "Enviando..." : "Enviar ícone"}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Save button */}
                     <button
                       onClick={() => saveBanner(banner)}
@@ -266,7 +330,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                         </div>
                       ) : banner.type === "slide" ? (
                         <SlideBanner
-                          slides={[{ title: banner.title || "Título do slide", subtitle: banner.subtitle || "Subtítulo do slide", link: banner.link || undefined }]}
+                          slides={[{ title: banner.title || "Título do slide", subtitle: banner.subtitle || "Subtítulo do slide", link: banner.link || undefined, icon_url: banner.icon_url || undefined }]}
                           visible={true}
                         />
                       ) : (
@@ -274,6 +338,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                           title={banner.title || undefined}
                           subtitle={banner.subtitle || undefined}
                           link={banner.link || undefined}
+                          icon_url={banner.icon_url || undefined}
                           visible={true}
                         />
                       )}
