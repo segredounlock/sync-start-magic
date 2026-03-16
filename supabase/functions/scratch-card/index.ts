@@ -112,20 +112,32 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+
+    const body = await req.json();
+
+    // Dual auth: try JWT user first, fallback to service_role + user_id
+    let userId: string | null = null;
+
     const supabaseUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseUser.auth.getUser();
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
 
-    if (authError || !user) {
+    if (!authError && user) {
+      userId = user.id;
+    } else if (body?.user_id) {
+      // Verify it's a service_role call by checking the token matches service key
+      const token = authHeader.replace("Bearer ", "");
+      if (token === serviceKey) {
+        userId = body.user_id;
+      }
+    }
+
+    if (!userId) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: jsonHeaders });
     }
 
-    const body = await req.json();
     const { action } = body;
 
     const { enabled, tiers } = await getConfig(supabaseAdmin);
