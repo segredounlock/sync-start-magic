@@ -245,6 +245,7 @@ export default function Principal() {
   const globalConfigLoaded = useRef(false);
   const [globalConfigSaving, setGlobalConfigSaving] = useState(false);
   const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  const [configSection, setConfigSection] = useState<"geral" | "rede" | "jogos" | "notificacoes" | "banners">("geral");
 
   // Bot status
   const [botStatus, setBotStatus] = useState<{
