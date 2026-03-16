@@ -423,7 +423,7 @@ Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
 ⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
 
-const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg";
+const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg"; // kept for future optional use
 
 async function checkTermsAccepted(supabase: any, telegramId: string): Promise<boolean> {
   const { data } = await supabase
