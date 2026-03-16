@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
       const { data: existing } = await supabaseAdmin
         .from("scratch_cards")
         .select("id, is_scratched, prize_amount, is_won")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .eq("card_date", today)
         .maybeSingle();
 
