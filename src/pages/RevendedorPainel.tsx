@@ -2416,7 +2416,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "recarga", label: "Recarga", icon: Smartphone, color: "text-primary", animation: "bounce", elevated: true },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
-          { key: "addSaldo", label: "Saldo", icon: CreditCard, color: "text-success", animation: "pulse" },
+          { key: "addSaldo", label: "Saldo", icon: DollarSign, color: "text-success", animation: "pulse" },
           { key: "contatos", label: "Config", icon: Settings, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
