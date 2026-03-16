@@ -200,7 +200,7 @@ function StatusOperatorCards({ st }: { st: any }) {
               {/* Avg + Min recent */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
-                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#f87171" }}>Média Atual</p>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={st.dangerText}>Média Atual</p>
                   <p className="text-lg font-black" style={{ color: timeColor(op.avgRecent) }}>{fmtTime(op.avgRecent)}</p>
                   <p className="text-[8px]" style={st.hint}>Últimas 3</p>
                 </div>
