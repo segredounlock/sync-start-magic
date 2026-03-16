@@ -1553,10 +1553,34 @@ export default function TelegramMiniApp() {
                         <div className="flex justify-between"><span style={st.hint}>Valor</span><span className="font-bold" style={st.green}>{formatCurrency(selectedValor.userCost ?? selectedValor.cost)}</span></div>
                         <div className="flex justify-between text-sm"><span style={st.hint}>Saldo após</span><span style={st.text}>{formatCurrency(saldo - (selectedValor.userCost ?? selectedValor.cost))}</span></div>
                       </div>
+                      {/* Pending warning modal */}
+                      {pendingWarning && (
+                        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "color-mix(in srgb, #eab308 15%, transparent)", border: "1px solid color-mix(in srgb, #eab308 30%, transparent)" }}>
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: "#eab308" }} />
+                            <p className="text-sm font-semibold" style={{ color: "#eab308" }}>Recarga Pendente</p>
+                          </div>
+                          <p className="text-xs" style={st.hint}>
+                            Já existe {pendingWarning.count} recarga(s) pendente(s) para este número. Deseja continuar mesmo assim?
+                          </p>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleRecargaConfirm(true)}
+                              className="flex-1 rounded-xl py-2.5 font-semibold text-sm"
+                              style={{ backgroundColor: "#eab308", color: "#000" }}>
+                              Sim, continuar
+                            </button>
+                            <button onClick={() => setPendingWarning(null)}
+                              className="flex-1 rounded-xl py-2.5 font-semibold text-sm"
+                              style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {(selectedValor.userCost ?? selectedValor.cost) > saldo ? (
                         <p className="text-center text-sm" style={st.destructive}>Saldo insuficiente</p>
-                      ) : (
-                        <button onClick={handleRecargaConfirm} disabled={recargaLoading}
+                      ) : !pendingWarning && (
+                        <button onClick={() => handleRecargaConfirm()} disabled={recargaLoading}
                           className="w-full rounded-xl py-3.5 font-semibold transition disabled:opacity-50"
                           style={{ backgroundColor: "#4ade80", color: "#000" }}>
                           {recargaLoading ? "Processando..." : "✅ Confirmar Recarga"}
