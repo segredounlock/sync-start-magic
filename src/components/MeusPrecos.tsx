@@ -34,6 +34,8 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const [bulkProfit, setBulkProfit] = useState("");
   const [showBulk, setShowBulk] = useState(false);
   const [editedProfits, setEditedProfits] = useState<Record<string, string>>({});
+  const [showDiagram, setShowDiagram] = useState(false);
+  const [commissionConfig, setCommissionConfig] = useState({ direct: "100", indirect: "10" });
 
   const fetchPricing = useCallback(async () => {
     setLoading(true);
