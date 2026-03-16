@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "claim") {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayBR();
       const { data: existing } = await supabaseAdmin
         .from("scratch_cards")
         .select("id, is_scratched, prize_amount, is_won")
