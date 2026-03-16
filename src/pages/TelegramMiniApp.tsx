@@ -48,6 +48,8 @@ declare global {
           section_header_text_color?: string;
           bottom_bar_bg_color?: string;
         };
+        onEvent?: (eventType: string, cb: () => void) => void;
+        offEvent?: (eventType: string, cb: () => void) => void;
         BackButton?: { show: () => void; hide: () => void; onClick: (cb: () => void) => void; offClick: (cb: () => void) => void };
         MainButton?: { show: () => void; hide: () => void; setText: (t: string) => void; onClick: (cb: () => void) => void };
         HapticFeedback?: { impactOccurred: (s: string) => void; notificationOccurred: (s: string) => void };
@@ -56,7 +58,6 @@ declare global {
   }
 }
 
-// Telegram theme defaults per color scheme
 const TG_DARK_DEFAULTS = {
   bg_color: "#17212b",
   text_color: "#f5f5f5",
@@ -72,7 +73,7 @@ const TG_DARK_DEFAULTS = {
   subtitle_text_color: "#708499",
   section_header_text_color: "#6ab2f2",
   bottom_bar_bg_color: "#17212b",
-};
+} as const;
 
 const TG_LIGHT_DEFAULTS = {
   bg_color: "#ffffff",
@@ -81,47 +82,111 @@ const TG_LIGHT_DEFAULTS = {
   link_color: "#168acd",
   button_color: "#40a7e3",
   button_text_color: "#ffffff",
-  secondary_bg_color: "#f1f1f1",
+  secondary_bg_color: "#f1f3f5",
   section_bg_color: "#ffffff",
   accent_text_color: "#168acd",
   destructive_text_color: "#df3f40",
-  header_bg_color: "#527da3",
+  header_bg_color: "#ffffff",
   subtitle_text_color: "#999999",
   section_header_text_color: "#168acd",
-  bottom_bar_bg_color: "#f1f1f1",
+  bottom_bar_bg_color: "#f1f3f5",
+} as const;
+
+const hexToRgb = (hex?: string) => {
+  if (!hex) return null;
+  const value = hex.replace("#", "").trim();
+  if (![3, 6].includes(value.length)) return null;
+  const normalized = value.length === 3 ? value.split("").map((char) => char + char).join("") : value;
+  const int = Number.parseInt(normalized, 16);
+  if (Number.isNaN(int)) return null;
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
+};
+
+const isDarkTelegramPalette = (bgColor?: string, textColor?: string) => {
+  const bg = hexToRgb(bgColor);
+  const text = hexToRgb(textColor);
+  if (!bg) return false;
+
+  const bgLuma = (0.299 * bg.r + 0.587 * bg.g + 0.114 * bg.b) / 255;
+  const textLuma = text ? (0.299 * text.r + 0.587 * text.g + 0.114 * text.b) / 255 : 1;
+
+  return bgLuma < 0.45 && textLuma > bgLuma;
 };
 
 function useTelegramTheme() {
   useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    const tp = tg?.themeParams;
     const root = document.documentElement;
+    const body = document.body;
+    const tg = window.Telegram?.WebApp;
 
-    // Respect Telegram's actual color scheme instead of forcing dark
-    const isDark = tg?.colorScheme === "dark";
-    if (isDark) {
-      root.classList.add("dark");
-    } else {
+    const applyTelegramTheme = () => {
+      const liveTg = window.Telegram?.WebApp;
+      const tp = liveTg?.themeParams ?? {};
+      const hasTelegramColors = Boolean(tp.bg_color || tp.secondary_bg_color || tp.text_color);
+      const isDark = hasTelegramColors
+        ? isDarkTelegramPalette(tp.bg_color, tp.text_color)
+        : liveTg?.colorScheme === "dark";
+      const defaults = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
+      const theme = { ...defaults, ...tp };
+
       root.classList.remove("dark");
-    }
 
-    const defaults = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
-    const theme = { ...defaults, ...tp };
+      root.style.setProperty("--tg-bg", theme.bg_color);
+      root.style.setProperty("--tg-text", theme.text_color);
+      root.style.setProperty("--tg-hint", theme.hint_color);
+      root.style.setProperty("--tg-link", theme.link_color);
+      root.style.setProperty("--tg-btn", theme.button_color);
+      root.style.setProperty("--tg-btn-text", theme.button_text_color);
+      root.style.setProperty("--tg-secondary-bg", theme.secondary_bg_color);
+      root.style.setProperty("--tg-section-bg", theme.section_bg_color);
+      root.style.setProperty("--tg-accent", theme.accent_text_color);
+      root.style.setProperty("--tg-destructive", theme.destructive_text_color);
+      root.style.setProperty("--tg-header-bg", theme.header_bg_color);
+      root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
+      root.style.setProperty("--tg-section-header", theme.section_header_text_color);
+      root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color || theme.secondary_bg_color);
 
-    root.style.setProperty("--tg-bg", theme.bg_color);
-    root.style.setProperty("--tg-text", theme.text_color);
-    root.style.setProperty("--tg-hint", theme.hint_color);
-    root.style.setProperty("--tg-link", theme.link_color);
-    root.style.setProperty("--tg-btn", theme.button_color);
-    root.style.setProperty("--tg-btn-text", theme.button_text_color);
-    root.style.setProperty("--tg-secondary-bg", theme.secondary_bg_color);
-    root.style.setProperty("--tg-section-bg", theme.section_bg_color);
-    root.style.setProperty("--tg-accent", theme.accent_text_color);
-    root.style.setProperty("--tg-destructive", theme.destructive_text_color);
-    root.style.setProperty("--tg-header-bg", theme.header_bg_color);
-    root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
-    root.style.setProperty("--tg-section-header", theme.section_header_text_color);
-    root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color || theme.secondary_bg_color);
+      root.style.setProperty("--background", isDark ? "160 30% 4%" : "0 0% 100%");
+      root.style.setProperty("--foreground", isDark ? "150 15% 92%" : "222 47% 11%");
+      root.style.setProperty("--card", isDark ? "160 25% 8%" : "0 0% 100%");
+      root.style.setProperty("--card-foreground", isDark ? "150 15% 92%" : "222 47% 11%");
+      root.style.setProperty("--popover", isDark ? "160 25% 7%" : "0 0% 100%");
+      root.style.setProperty("--popover-foreground", isDark ? "150 15% 92%" : "222 47% 11%");
+      root.style.setProperty("--secondary", isDark ? "160 20% 11%" : "210 20% 96%");
+      root.style.setProperty("--secondary-foreground", isDark ? "150 12% 85%" : "222 47% 11%");
+      root.style.setProperty("--muted", isDark ? "160 18% 10%" : "210 16% 93%");
+      root.style.setProperty("--muted-foreground", isDark ? "150 8% 50%" : "215 16% 47%");
+      root.style.setProperty("--border", isDark ? "160 18% 14%" : "214 18% 89%");
+      root.style.setProperty("--input", isDark ? "160 18% 12%" : "214 18% 91%");
+      root.style.setProperty("--primary", isDark ? "207 48% 54%" : "201 73% 49%");
+      root.style.setProperty("--primary-foreground", isDark ? "0 0% 100%" : "0 0% 100%");
+      root.style.setProperty("--accent", isDark ? "203 82% 68%" : "201 73% 49%");
+      root.style.setProperty("--accent-foreground", isDark ? "0 0% 100%" : "0 0% 100%");
+      root.style.setProperty("--ring", isDark ? "207 48% 54%" : "201 73% 49%");
+      root.style.setProperty("--sidebar-background", isDark ? "160 30% 3%" : "210 20% 98%");
+      root.style.setProperty("--sidebar-foreground", isDark ? "150 12% 90%" : "222 47% 11%");
+      root.style.setProperty("--sidebar-primary", isDark ? "207 48% 54%" : "201 73% 49%");
+      root.style.setProperty("--sidebar-primary-foreground", "0 0% 100%");
+      root.style.setProperty("--sidebar-accent", isDark ? "160 20% 8%" : "210 20% 95%");
+      root.style.setProperty("--sidebar-accent-foreground", isDark ? "150 12% 90%" : "222 47% 11%");
+      root.style.setProperty("--sidebar-border", isDark ? "160 20% 10%" : "214 18% 89%");
+      root.style.setProperty("--sidebar-ring", isDark ? "207 48% 54%" : "201 73% 49%");
+      root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color || theme.bg_color})`);
+
+      body.style.background = theme.bg_color;
+      body.style.color = theme.text_color;
+    };
+
+    applyTelegramTheme();
+    tg?.onEvent?.("themeChanged", applyTelegramTheme);
+
+    return () => {
+      tg?.offEvent?.("themeChanged", applyTelegramTheme);
+    };
   }, []);
 }
 
