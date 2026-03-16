@@ -135,37 +135,13 @@ interface TgOperadora { id: string; nome: string; carrierId: string; valores: Va
 export default function TelegramMiniApp() {
   useTelegramTheme();
 
-  // Expand to full screen automatically
+  // Setup Telegram WebApp (simple expand, no fullscreen forcing)
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
 
-      // Retry expand aggressively to ensure full screen
-      const expandRetry = () => {
-        tg.expand();
-        if ((tg as any).requestFullscreen) {
-          try { (tg as any).requestFullscreen(); } catch {}
-        }
-      };
-      setTimeout(expandRetry, 50);
-      setTimeout(expandRetry, 200);
-      setTimeout(expandRetry, 500);
-      setTimeout(expandRetry, 1000);
-      setTimeout(expandRetry, 2000);
-
-      // Disable vertical swipe to close (keeps app fullscreen)
-      if ((tg as any).disableVerticalSwipes) {
-        (tg as any).disableVerticalSwipes();
-      }
-      // Listen for viewport changes and re-expand
-      if ((tg as any).onEvent) {
-        (tg as any).onEvent('viewportChanged', (e: any) => {
-          if (!e.isStateStable) return;
-          if (!(tg as any).isExpanded) tg.expand();
-        });
-      }
       // Set header/viewport color to match background
       if ((tg as any).setHeaderColor) {
         try { (tg as any).setHeaderColor("secondary_bg_color"); } catch {}
@@ -175,42 +151,7 @@ export default function TelegramMiniApp() {
       }
     }
 
-    // CSS fix: ensure full viewport on Telegram
-    document.documentElement.style.height = "100%";
-    document.body.style.height = "100%";
-    document.body.style.overflow = "hidden";
-
-    // Prevent zoom: update viewport meta tag
-    let viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
-    if (!viewportMeta) {
-      viewportMeta = document.createElement("meta");
-      viewportMeta.name = "viewport";
-      document.head.appendChild(viewportMeta);
-    }
-    const originalViewport = viewportMeta.content;
-    viewportMeta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
-
-    // Prevent pinch-to-zoom only (double-tap handled via CSS touch-action)
-    const preventZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) e.preventDefault();
-    };
-    document.addEventListener("touchstart", preventZoom, { passive: false });
-
-    // Prevent gesture zoom (Safari)
-    const preventGesture = (e: Event) => e.preventDefault();
-    document.addEventListener("gesturestart", preventGesture);
-    document.addEventListener("gesturechange", preventGesture);
-
-    return () => {
-      document.documentElement.style.height = "";
-      document.body.style.height = "";
-      document.body.style.overflow = "";
-      if (viewportMeta) viewportMeta.content = originalViewport;
-      document.removeEventListener("touchstart", preventZoom);
-      
-      document.removeEventListener("gesturestart", preventGesture);
-      document.removeEventListener("gesturechange", preventGesture);
-    };
+    return () => {};
   }, []);
 
   const { activeTheme, theme: seasonalTheme, emojis: seasonalEmojis, isActive: isSeasonalActive, transitioning } = useSeasonalTheme();
