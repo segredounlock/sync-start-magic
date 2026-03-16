@@ -2634,7 +2634,6 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   inputMode="numeric"
                   value={saqueValor}
                   onChange={(e) => {
-                    const { applyCurrencyMask } = require("@/lib/currencyMask");
                     setSaqueValor(applyCurrencyMask(e.target.value));
                   }}
                   placeholder="R$ Mínimo 5,00"
