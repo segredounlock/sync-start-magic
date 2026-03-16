@@ -771,68 +771,8 @@ export default function TelegramMiniApp() {
     return null;
   }, []);
 
-  // Auto-detect operator and proceed
-  const handleContinueWithDetect = useCallback(async () => {
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 10) return;
 
-    setDetectingOperator(true);
-    setDetectedOperatorName(null);
-    tgWebApp?.HapticFeedback?.impactOccurred("light");
 
-    // Load operadoras in parallel with detection
-    const opsPromise = loadOperadoras();
-
-    let matchedOp: TgOperadora | null = null;
-
-    // Try API detection first
-    try {
-      const { data: resp } = await supabase.functions.invoke("recarga-express", {
-        body: { action: "query-operator", phoneNumber: digits },
-      });
-      if (resp?.success && resp.data) {
-        const opName = (resp.data.carrier?.name || resp.data.operator || "").toUpperCase().trim();
-        if (opName) {
-          await opsPromise; // ensure operadoras are loaded
-          const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-          matchedOp = operadoras.find(o => normalize(o.nome) === normalize(opName)) || null;
-          if (!matchedOp) {
-            // Try partial match
-            matchedOp = operadoras.find(o => normalize(o.nome).includes(normalize(opName)) || normalize(opName).includes(normalize(o.nome))) || null;
-          }
-        }
-      }
-    } catch (err: any) {
-      console.warn("[MiniApp] Auto-detect operator API failed:", err.message);
-    }
-
-    // Fallback local detection
-    if (!matchedOp && digits.length === 11) {
-      const localName = detectOperatorLocally(digits);
-      if (localName) {
-        await opsPromise;
-        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-        matchedOp = operadoras.find(o => normalize(o.nome) === normalize(localName)) || null;
-      }
-    }
-
-    await opsPromise; // ensure loaded before proceeding
-    setDetectingOperator(false);
-
-    if (matchedOp) {
-      setDetectedOperatorName(matchedOp.nome);
-      setSelectedOp(matchedOp);
-      setPhoneCheckResult(null);
-      handleCheckPhone(matchedOp.carrierId);
-      setRecargaStep("check");
-      tgWebApp?.HapticFeedback?.notificationOccurred("success");
-      showToast(`Operadora detectada: ${matchedOp.nome}`, "success");
-    } else {
-      // Couldn't detect — show operator selection
-      setRecargaStep("op");
-      showToast("Selecione a operadora manualmente", "info");
-    }
-  }, [phone, operadoras, loadOperadoras, detectOperatorLocally, handleCheckPhone, tgWebApp, showToast]);
 
   const formatCooldownMsg = (msg?: string) => {
     if (!msg) return "";
