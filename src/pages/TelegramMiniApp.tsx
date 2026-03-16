@@ -2781,7 +2781,7 @@ export default function TelegramMiniApp() {
                       onClick={() => { setSection(item.id); setMoreOpen(false); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
                       className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl transition-colors"
                       style={{
-                        backgroundColor: isActive ? "rgba(82,136,193,0.15)" : "var(--tg-secondary-bg)",
+                        backgroundColor: isActive ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : "var(--tg-secondary-bg)",
                         color: isActive ? "var(--tg-accent)" : "var(--tg-text)",
                       }}
                       initial={{ opacity: 0, scale: 0.8 }}
