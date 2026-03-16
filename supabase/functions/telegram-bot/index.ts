@@ -1688,6 +1688,61 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 
   const { carrier_id, value_id, operadora_nome, valor, bot_msg_id, api_cost, valor_facial } = session.data || {};
 
+  // Check cooldown/blacklist BEFORE proceeding
+  try {
+    const checkResp = await fetch(
+      `${Deno.env.get("SUPABASE_URL")}/functions/v1/recarga-express`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          action: "check-phone",
+          user_id: user.id,
+          phoneNumber: telefone,
+          carrierId: carrier_id,
+        }),
+      }
+    );
+    const checkResult = await checkResp.json();
+    console.log(`[BOT] check-phone result for ${telefone}:`, JSON.stringify(checkResult));
+
+    if (checkResult?.success && checkResult.data) {
+      const phoneStatus = checkResult.data.status;
+      if (phoneStatus === "BLACKLISTED") {
+        clearSession(supabase, chatIdStr);
+        if (bot_msg_id) deleteMessageFire(token, chatId, bot_msg_id);
+        await sendMessageWithKeyboard(token, chatId,
+          `🚫 <b>Número Bloqueado</b>\n\n${checkResult.data.message || "Este número está na blacklist e não pode receber recargas."}`,
+          [[{ text: "📱 Tentar Outro Número", callback_data: `rec_op_${carrier_id}` }, { text: "📖 Menu", callback_data: "menu_main" }]]
+        );
+        return;
+      }
+      if (phoneStatus === "COOLDOWN") {
+        // Format cooldown message with readable date
+        let cooldownMsg = checkResult.data.message || "Cooldown ativo para este número.";
+        const isoMatch = cooldownMsg.match(/(\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
+        if (isoMatch) {
+          const d = new Date(isoMatch[1]);
+          const formatted = d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+          cooldownMsg = `⏳ Cooldown ativo! Nova recarga permitida após ${formatted}.`;
+        }
+        clearSession(supabase, chatIdStr);
+        if (bot_msg_id) deleteMessageFire(token, chatId, bot_msg_id);
+        await sendMessageWithKeyboard(token, chatId,
+          `⏳ <b>Cooldown Ativo</b>\n\n${cooldownMsg}`,
+          [[{ text: "📱 Tentar Outro Número", callback_data: `rec_op_${carrier_id}` }, { text: "📖 Menu", callback_data: "menu_main" }]]
+        );
+        return;
+      }
+    }
+  } catch (checkErr) {
+    console.error("[BOT] check-phone error:", checkErr);
+    // Continue anyway — don't block recharge if check fails
+  }
+
   // Check balance
   const { data: saldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").single();
   const saldoAtual = Number(saldo?.valor || 0);
