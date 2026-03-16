@@ -221,6 +221,33 @@ export function useChatMessages(conversationId: string | null) {
   const activeConversationRef = useRef<string | null>(null);
   const cachedNome = useRef<string | null>(null);
 
+  // Auto-join public groups if not a member
+  useEffect(() => {
+    if (!conversationId || !user) return;
+    (async () => {
+      // Check if this is a public group and user is not yet a member
+      const { data: conv } = await supabase
+        .from("chat_conversations")
+        .select("type, is_private")
+        .eq("id", conversationId)
+        .maybeSingle();
+      if (conv?.type === "group" && !conv?.is_private) {
+        const { data: membership } = await supabase
+          .from("chat_members")
+          .select("id")
+          .eq("conversation_id", conversationId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!membership) {
+          await supabase.from("chat_members").insert({
+            conversation_id: conversationId,
+            user_id: user.id,
+          });
+        }
+      }
+    })();
+  }, [conversationId, user]);
+
   // Reset on conversation change
   useEffect(() => {
     activeConversationRef.current = conversationId;
