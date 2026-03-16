@@ -1104,8 +1104,17 @@ export default function TelegramMiniApp() {
     dangerBg: { backgroundColor: "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" } as React.CSSProperties,
     inputBg: { backgroundColor: "color-mix(in srgb, var(--tg-text) 8%, var(--tg-bg))", color: "var(--tg-text)", border: "1px solid color-mix(in srgb, var(--tg-hint) 20%, transparent)" } as React.CSSProperties,
     overlay: { backgroundColor: "color-mix(in srgb, var(--tg-bg) 85%, transparent)" } as React.CSSProperties,
+    overlayDark: { backgroundColor: "rgba(0,0,0,0.6)" } as React.CSSProperties,
+    overlayDarkSoft: { backgroundColor: "rgba(0,0,0,0.5)" } as React.CSSProperties,
+    linkBg: { backgroundColor: "color-mix(in srgb, var(--tg-link) 15%, transparent)" } as React.CSSProperties,
+    hintBg: (opacity = 8) => ({ backgroundColor: `color-mix(in srgb, var(--tg-hint) ${opacity}%, transparent)` }) as React.CSSProperties,
+    accentBg: (opacity = 15) => ({ backgroundColor: `color-mix(in srgb, var(--tg-accent) ${opacity}%, transparent)` }) as React.CSSProperties,
     borderSub: "1px solid color-mix(in srgb, var(--tg-hint) 18%, transparent)",
     borderMain: "1px solid color-mix(in srgb, var(--tg-accent) 15%, transparent)",
+    borderLight: "1px solid color-mix(in srgb, var(--tg-text) 10%, transparent)",
+    loginCardBg: { backgroundColor: "color-mix(in srgb, var(--tg-secondary-bg) 75%, transparent)" } as React.CSSProperties,
+    loginGradientOverlay: { background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0.95) 100%)" } as React.CSSProperties,
+    loginBtn: { background: "linear-gradient(135deg, var(--tg-link) 0%, color-mix(in srgb, var(--tg-link) 80%, black) 100%)", color: "var(--tg-btn-text)" } as React.CSSProperties,
   };
 
   // ─── Splash / Loading ────────────────────────────────────
