@@ -2762,7 +2762,7 @@ export default function TelegramMiniApp() {
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-9 h-9 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
                     ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: "rgba(82,136,193,0.15)", color: "var(--tg-accent)" }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ ...st.accentBg(15), color: "var(--tg-accent)" }}>
                         {initials}
                       </div>
                     )}
