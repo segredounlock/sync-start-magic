@@ -13,6 +13,8 @@ import { ScratchCanvas } from "@/components/ScratchCanvas";
 
 interface ScratchCardProps {
   userId: string;
+  /** When true, passes user_id in edge function body for service_role auth (Telegram Mini App) */
+  noAuthMode?: boolean;
 }
 
 interface CardData {
