@@ -4,7 +4,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Info, CheckSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, ArrowDown, Smartphone, GitBranch } from "lucide-react";
 
 interface PricingValue {
   value: number;
