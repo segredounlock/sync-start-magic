@@ -2297,30 +2297,43 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
           {/* ===== TAB: CONTATOS (Minha Conta) — Instagram-style ===== */}
           {tab === "contatos" && (
-            <ProfileTab
-              user={user}
-              role={role}
-              avatarUrl={avatarUrl}
-              avatarError={avatarError}
-              setAvatarError={setAvatarError}
-              userLabel={userLabel}
-              userInitial={userInitial}
-              profileNome={profileNome}
-              setProfileNome={setProfileNome}
-              saldo={saldo}
-              loading={loading}
-              fmt={fmt}
-              telegramLinked={telegramLinked}
-              telegramUsername={telegramUsername}
-              whatsappNumber={whatsappNumber}
-              uploadingAvatar={uploadingAvatar}
-              handleAvatarUpload={handleAvatarUpload}
-              recargas={recargas}
-              recargasHoje={recargasHoje}
-              totalRecargas={totalRecargasCount}
-              selectTab={selectTab}
-              navigate={navigate}
-            />
+            <div className="space-y-6">
+              <ProfileTab
+                user={user}
+                role={role}
+                avatarUrl={avatarUrl}
+                avatarError={avatarError}
+                setAvatarError={setAvatarError}
+                userLabel={userLabel}
+                userInitial={userInitial}
+                profileNome={profileNome}
+                setProfileNome={setProfileNome}
+                saldo={saldo}
+                loading={loading}
+                fmt={fmt}
+                telegramLinked={telegramLinked}
+                telegramUsername={telegramUsername}
+                whatsappNumber={whatsappNumber}
+                uploadingAvatar={uploadingAvatar}
+                handleAvatarUpload={handleAvatarUpload}
+                recargas={recargas}
+                recargasHoje={recargasHoje}
+                totalRecargas={totalRecargasCount}
+                selectTab={selectTab}
+                navigate={navigate}
+              />
+
+              {/* Fee config - only for resellers, not clients */}
+              {!isClientMode && (role === "admin" || role === "revendedor") && user?.id && (
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-primary" />
+                    Taxa de Depósito da Rede
+                  </h3>
+                  <ResellerFeeConfig userId={user.id} />
+                </div>
+              )}
+            </div>
           )}
 
 
