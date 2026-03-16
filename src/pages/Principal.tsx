@@ -197,7 +197,8 @@ export default function Principal() {
 
   const [selectedRev, setSelectedRev] = useState<Revendedor | null>(null);
   const [revRecargas, setRevRecargas] = useState<RecargaHistorico[]>([]);
-  const [revTransactions, setRevTransactions] = useState<{ amount: number; created_at: string; status: string; type: string }[]>([]);
+  const [revTransactions, setRevTransactions] = useState<{ id: string; amount: number; created_at: string; status: string; type: string; payment_id?: string | null; metadata?: any }[]>([]);
+  const [expandedDepositId, setExpandedDepositId] = useState<string | null>(null);
   const [revLoading, setRevLoading] = useState(false);
   const [revGatewayConfig, setRevGatewayConfig] = useState<Record<string, string>>({});
   const [revGatewayLoading, setRevGatewayLoading] = useState(false);
