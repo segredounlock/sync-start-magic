@@ -147,7 +147,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
   };
 
   const checkTodayCard = async () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
     const { data } = await supabase
       .from("scratch_cards" as any)
       .select("*")
