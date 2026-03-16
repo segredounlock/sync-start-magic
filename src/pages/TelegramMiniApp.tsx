@@ -1196,7 +1196,7 @@ export default function TelegramMiniApp() {
                 <input type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                   className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
-                  style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "#f5f5f5", border: "1px solid rgba(255,255,255,0.12)" }} />
+                  style={st.inputBg} />
               </div>
             </div>
             {loginError && <p className="text-xs text-center" style={st.destructive}>{loginError}</p>}
