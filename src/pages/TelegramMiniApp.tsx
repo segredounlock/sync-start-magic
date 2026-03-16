@@ -1916,23 +1916,54 @@ export default function TelegramMiniApp() {
 
           {/* ── Status ── */}
           {section === "status" && (
-            <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-3">
-              {[
-                { name: "API de Recargas" },
-                { name: "Gateway de Pagamento" },
-                { name: "Bot do Telegram" },
-              ].map((item) => (
-                <div key={item.name} className="rounded-xl p-4 flex items-center justify-between" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-5 h-5" style={st.hint} />
-                    <span className="text-sm font-medium" style={st.text}>{item.name}</span>
+            <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-4">
+              {/* Header */}
+              <div>
+                <h2 className="text-lg font-bold" style={st.text}>Status do Sistema</h2>
+                <p className="text-xs" style={st.hint}>Tempo médio de processamento das recargas por operadora.</p>
+              </div>
+
+              {/* Service Status */}
+              <div className="space-y-2">
+                {[
+                  { name: "API de Recargas" },
+                  { name: "Gateway de Pagamento" },
+                  { name: "Bot do Telegram" },
+                ].map((item) => (
+                  <div key={item.name} className="rounded-xl p-3.5 flex items-center justify-between" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-4 h-4" style={st.hint} />
+                      <span className="text-sm font-medium" style={st.text}>{item.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4ade80" }} />
+                      <span className="text-xs" style={st.green}>Online</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4ade80" }} />
-                    <span className="text-xs" style={st.green}>Online</span>
+                ))}
+              </div>
+
+              {/* Operator timing cards */}
+              <StatusOperatorCards st={st} />
+
+              {/* Important observations */}
+              <div className="rounded-xl p-4 space-y-3" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: "color-mix(in srgb, var(--tg-accent, #6ab2f2) 15%, transparent)" }}>
+                    <AlertTriangle className="h-4 w-4" style={st.accent} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold mb-1" style={st.text}>Observações Importantes</p>
+                    <p className="text-xs leading-relaxed" style={st.hint}>
+                      O tempo de processamento e o volume em andamento são indicadores em tempo real para auxiliar sua operação. <span style={{ ...st.text, fontWeight: 600 }}>Todas as informações acima são estimativas baseadas em tráfego recente; o prazo formal das operadoras para a conclusão de recargas permanece de até 24 horas.</span>
+                    </p>
                   </div>
                 </div>
-              ))}
+                <div className="text-center pt-2" style={{ borderTop: st.borderSub }}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] font-semibold" style={st.hint}>Última Atualização</p>
+                  <p className="text-sm font-bold mt-0.5" style={st.text}>{new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p>
+                </div>
+              </div>
             </motion.div>
           )}
           {/* ── Atualizações ── */}
