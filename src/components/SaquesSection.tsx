@@ -26,6 +26,7 @@ interface SaqueTransaction {
   user_email?: string;
   user_avatar?: string;
   pix_key?: string;
+  pix_key_type?: string;
 }
 
 type SaqueFilter = "pending" | "approved" | "completed" | "rejected" | "all";
