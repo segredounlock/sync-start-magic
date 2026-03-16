@@ -2639,8 +2639,8 @@ export default function TelegramMiniApp() {
                       animate={{
                         scale: [1, 1.05, 1],
                         boxShadow: [
-                          "0 4px 14px rgba(34,197,94,0.3)",
-                          "0 6px 20px rgba(34,197,94,0.5)",
+                          "0 4px 14px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
+                          "0 6px 20px color-mix(in srgb, var(--tg-accent) 50%, transparent)",
                           "0 4px 14px rgba(34,197,94,0.3)",
                         ],
                       }}
