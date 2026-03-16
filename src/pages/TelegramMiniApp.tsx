@@ -1676,7 +1676,7 @@ export default function TelegramMiniApp() {
                       ) : !pendingWarning && (
                         <button onClick={() => handleRecargaConfirm()} disabled={recargaLoading}
                           className="w-full rounded-xl py-3.5 font-semibold transition disabled:opacity-50"
-                          style={{ backgroundColor: "#4ade80", color: "#000" }}>
+                          style={{ backgroundColor: "var(--tg-accent)", color: "var(--tg-bg)" }}>
                           {recargaLoading ? "Processando..." : "✅ Confirmar Recarga"}
                         </button>
                       )}
