@@ -2079,9 +2079,9 @@ export default function TelegramMiniApp() {
                         </p>
                       </div>
                       <div className="rounded-xl overflow-hidden" style={{ ...st.bg, border: st.borderSub }}>
-                        <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "rgba(74,222,128,0.05)" }}>
-                          <FileText className="w-3.5 h-3.5" style={{ color: "#4ade80" }} />
-                          <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: "#4ade80" }}>Comprovante</span>
+                        <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "color-mix(in srgb, var(--tg-accent) 5%, transparent)" }}>
+                          <FileText className="w-3.5 h-3.5" style={st.success} />
+                          <span className="text-[10px] font-bold tracking-wider uppercase" style={st.success}>Comprovante</span>
                         </div>
                         {[
                           { icon: Phone, label: "Telefone", value: formatPhone(viewingReceipt.telefone) },
