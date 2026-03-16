@@ -1906,12 +1906,12 @@ export default function TelegramMiniApp() {
             </motion.div>
           )}
           {/* ── Raspadinha ── */}
-          {section === "raspadinha" && userId && hasAuthSession && (
+          {section === "raspadinha" && userId && (
             <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
               <ScratchCard userId={userId} />
             </motion.div>
           )}
-          {section === "raspadinha" && (!userId || !hasAuthSession) && (
+          {section === "raspadinha" && !userId && (
             <motion.div key="raspadinha-login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
               <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "var(--tg-secondary-bg, #232e3c)" }}>
