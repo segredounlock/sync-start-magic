@@ -265,14 +265,14 @@ function useTelegramTheme() {
       root.style.setProperty("--tg-btn", theme.button_color);
       root.style.setProperty("--tg-btn-text", theme.button_text_color);
       root.style.setProperty("--tg-secondary-bg", theme.secondary_bg_color);
-      root.style.setProperty("--tg-section-bg", theme.section_bg_color || theme.bg_color);
-      root.style.setProperty("--tg-accent", theme.accent_text_color || theme.button_color);
+      root.style.setProperty("--tg-section-bg", theme.section_bg_color);
+      root.style.setProperty("--tg-accent", theme.accent_text_color);
       root.style.setProperty("--tg-destructive", theme.destructive_text_color);
-      root.style.setProperty("--tg-header-bg", theme.header_bg_color || theme.secondary_bg_color);
-      root.style.setProperty("--tg-subtitle", theme.subtitle_text_color || theme.hint_color);
-      root.style.setProperty("--tg-section-header", theme.section_header_text_color || theme.accent_text_color || theme.button_color);
-      root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color || theme.secondary_bg_color);
-      root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color || theme.bg_color})`);
+      root.style.setProperty("--tg-header-bg", theme.header_bg_color);
+      root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
+      root.style.setProperty("--tg-section-header", theme.section_header_text_color);
+      root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color);
+      root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color})`);
 
       body.style.background = theme.bg_color;
       body.style.color = theme.text_color;
