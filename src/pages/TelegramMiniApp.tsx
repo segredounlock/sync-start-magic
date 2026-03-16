@@ -13,9 +13,10 @@ import {
   ChevronRight, RefreshCw, Copy, Check,
   ArrowLeft, Shield, LogOut, Camera, Loader2,
   Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
-  AlertTriangle, CheckCircle2, XCircle, MessageCircle, Trophy
+  AlertTriangle, CheckCircle2, XCircle, MessageCircle
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
+import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { useSeasonalTheme, SEASONAL_BUTTON_EMOJIS } from "@/hooks/useSeasonalTheme";
 import { SEASONAL_THEMES, type SeasonalThemeKey } from "@/components/SeasonalEffects";
 import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR } from "@/lib/timezone";
@@ -218,8 +219,6 @@ export default function TelegramMiniApp() {
   const [refreshingExtrato, setRefreshingExtrato] = useState(false);
   const [refreshingRecargas, setRefreshingRecargas] = useState(false);
   const [showPriceTable, setShowPriceTable] = useState(false);
-  const [rankingData, setRankingData] = useState<{ user_id: string; nome: string; avatar_url: string | null; total_recargas: number }[]>([]);
-  const [rankingLoading, setRankingLoading] = useState(false);
 
   // Toast notifications
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info" }[]>([]);
@@ -442,18 +441,9 @@ export default function TelegramMiniApp() {
     setUploadingAvatar(false);
   };
 
-  const loadRanking = useCallback(async () => {
-    setRankingLoading(true);
-    try {
-      const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 10 });
-      if (data) setRankingData(data as any[]);
-    } catch (err) { console.error("loadRanking error:", err); }
-    setRankingLoading(false);
-  }, []);
-
   useEffect(() => {
     if (!userId) return;
-    if (section === "recarga") { loadOperadoras(); loadRecargas(); loadRanking(); }
+    if (section === "recarga") { loadOperadoras(); loadRecargas(); }
     if (section === "historico") loadRecargas();
     if (section === "extrato") loadTransactions();
     if (section === "recarga" || section === "deposito") refreshSaldo();
@@ -898,6 +888,8 @@ export default function TelegramMiniApp() {
           {/* ── Nova Recarga ── */}
           {section === "recarga" && (
             <motion.div key="recarga" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-4">
+              {/* Ranking no topo */}
+              {userId && <TopRankingPodium userId={userId} />}
               {recargaResult ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -1382,148 +1374,6 @@ export default function TelegramMiniApp() {
                     ))
                   )}
 
-                  {/* ── Ranking Top Recargas ── */}
-                  {!rankingLoading && rankingData.length >= 3 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="rounded-2xl p-4 space-y-4"
-                      style={{ ...st.secondaryBg, border: st.borderSub }}
-                    >
-                      {/* Title */}
-                      <div className="flex items-center justify-center gap-2">
-                        <motion.div
-                          animate={{ y: [0, -3, 0], rotate: [0, -5, 5, 0] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                          <Trophy className="w-5 h-5" style={{ color: "#fbbf24" }} />
-                        </motion.div>
-                        <h3 className="font-bold text-sm" style={st.text}>Top Recargas</h3>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "color-mix(in srgb, #fbbf24 15%, transparent)", color: "#fbbf24" }}>TOP 10</span>
-                      </div>
-
-                      {/* Podium: [2nd, 1st, 3rd] */}
-                      <div className="flex items-end justify-center gap-5 pt-2 pb-1">
-                        {[rankingData[1], rankingData[0], rankingData[2]].map((user, displayIdx) => {
-                          if (!user) return null;
-                          const isFirst = displayIdx === 1;
-                          const medals = ["🥈", "🥇", "🥉"];
-                          const ringColors = ["rgba(192,192,192,0.5)", "rgba(251,191,36,0.6)", "rgba(205,127,50,0.5)"];
-                          const glowColors = ["rgba(192,192,192,0.15)", "rgba(251,191,36,0.2)", "rgba(205,127,50,0.15)"];
-                          const sizes = [52, 64, 52];
-                          return (
-                            <motion.div
-                              key={user.user_id}
-                              className="flex flex-col items-center gap-1.5"
-                              style={{ marginBottom: isFirst ? 12 : 0 }}
-                              initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ delay: displayIdx === 1 ? 0 : displayIdx === 0 ? 0.15 : 0.25, type: "spring", damping: 20 }}
-                            >
-                              {/* Medal */}
-                              <span className="text-lg">{medals[displayIdx]}</span>
-                              {/* Avatar */}
-                              <div className="relative">
-                                {isFirst && (
-                                  <motion.div
-                                    className="absolute inset-[-6px] rounded-full"
-                                    style={{ background: `radial-gradient(circle, ${glowColors[displayIdx]}, transparent 70%)` }}
-                                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                                    transition={{ duration: 2, repeat: Infinity }}
-                                  />
-                                )}
-                                <div
-                                  className="rounded-full overflow-hidden"
-                                  style={{
-                                    width: sizes[displayIdx],
-                                    height: sizes[displayIdx],
-                                    border: `2.5px solid ${ringColors[displayIdx]}`,
-                                    boxShadow: `0 0 12px ${glowColors[displayIdx]}`,
-                                  }}
-                                >
-                                  {user.avatar_url ? (
-                                    <img src={user.avatar_url} alt={user.nome} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-base font-bold" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 30%, transparent)", color: "var(--tg-btn-text)" }}>
-                                      {(user.nome || "?")[0]?.toUpperCase()}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              {/* Name & count */}
-                              <p className="text-xs font-semibold text-center truncate max-w-[70px]" style={st.text}>
-                                {user.nome || "Usuário"}
-                              </p>
-                              <p className="text-[10px] font-mono" style={st.hint}>{user.total_recargas} recargas</p>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-
-                      {/* User position */}
-                      {userId && (() => {
-                        const userIdx = rankingData.findIndex(r => r.user_id === userId);
-                        if (userIdx < 0) return null;
-                        const userRank = rankingData[userIdx];
-                        return (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="flex items-center gap-3 rounded-xl px-3 py-2.5"
-                            style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--tg-btn) 25%, transparent)" }}
-                          >
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 20%, transparent)", color: "var(--tg-accent)" }}>
-                              #{userIdx + 1}
-                            </span>
-                            <div className="w-8 h-8 rounded-full overflow-hidden" style={{ border: "2px solid color-mix(in srgb, var(--tg-btn) 40%, transparent)" }}>
-                              {avatarUrl ? (
-                                <img src={avatarUrl} alt="Você" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 30%, transparent)", color: "var(--tg-btn-text)" }}>
-                                  {(userName || "?")[0]?.toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold truncate" style={st.text}>{userName || "Você"}</p>
-                              <p className="text-[10px]" style={st.hint}>{userRank.total_recargas} recargas</p>
-                            </div>
-                            <span className="text-[10px] font-medium" style={st.link}>Sua posição</span>
-                          </motion.div>
-                        );
-                      })()}
-
-                      {/* Rest of list (4th-10th) */}
-                      {rankingData.length > 3 && (
-                        <div className="space-y-1.5">
-                          {rankingData.slice(3).map((user, i) => (
-                            <div
-                              key={user.user_id}
-                              className="flex items-center gap-3 rounded-lg px-3 py-2"
-                              style={{ backgroundColor: user.user_id === userId ? "color-mix(in srgb, var(--tg-btn) 8%, transparent)" : "transparent" }}
-                            >
-                              <span className="text-xs font-bold w-5 text-center" style={st.hint}>
-                                {i + 4}
-                              </span>
-                              <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0" style={{ border: "1.5px solid color-mix(in srgb, var(--tg-hint) 30%, transparent)" }}>
-                                {user.avatar_url ? (
-                                  <img src={user.avatar_url} alt={user.nome} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 20%, transparent)", color: "var(--tg-hint)" }}>
-                                    {(user.nome || "?")[0]?.toUpperCase()}
-                                  </div>
-                                )}
-                              </div>
-                              <p className="text-xs font-medium flex-1 truncate" style={st.text}>{user.nome || "Usuário"}</p>
-                              <p className="text-[10px] font-mono" style={st.hint}>{user.total_recargas}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
                 </div>
               )}
             </motion.div>
