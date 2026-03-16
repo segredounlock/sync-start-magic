@@ -330,7 +330,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                         </div>
                       ) : banner.type === "slide" ? (
                         <SlideBanner
-                          slides={[{ title: banner.title || "Título do slide", subtitle: banner.subtitle || "Subtítulo do slide", link: banner.link || undefined }]}
+                          slides={[{ title: banner.title || "Título do slide", subtitle: banner.subtitle || "Subtítulo do slide", link: banner.link || undefined, icon_url: banner.icon_url || undefined }]}
                           visible={true}
                         />
                       ) : (
@@ -338,6 +338,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                           title={banner.title || undefined}
                           subtitle={banner.subtitle || undefined}
                           link={banner.link || undefined}
+                          icon_url={banner.icon_url || undefined}
                           visible={true}
                         />
                       )}

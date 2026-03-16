@@ -114,9 +114,13 @@ export function SlideBanner({
               <motion.div
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                className="shrink-0 w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center"
+                className="shrink-0 w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center overflow-hidden"
               >
-                <span className="text-lg">🎞️</span>
+                {slide.icon_url ? (
+                  <img src={slide.icon_url} alt="" className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                  <span className="text-lg">🎞️</span>
+                )}
               </motion.div>
 
               {/* Text */}
