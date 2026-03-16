@@ -447,7 +447,7 @@ async function recordTermsAcceptance(supabase: any, telegramId: string) {
 }
 
 async function sendTermsMessage(token: string, chatId: number) {
-  await sendPhoto(token, chatId, TERMS_IMAGE, TERMS_TEXT, [
+  await sendMessageWithKeyboard(token, chatId, TERMS_TEXT, [
     [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
     [{ text: "❌ Recusar", callback_data: "terms_decline" }],
   ]);
