@@ -2309,7 +2309,7 @@ export default function TelegramMiniApp() {
                     <div className="flex items-center gap-2">
                       <p className="font-bold truncate" style={st.text}>{userName}</p>
                       <button onClick={() => { setEditName(userName); setEditingName(true); }}
-                        className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+                        className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "color-mix(in srgb, var(--tg-text) 6%, transparent)" }}>
                         <Pencil className="w-3 h-3" style={st.hint} />
                       </button>
                     </div>
