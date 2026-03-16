@@ -2274,33 +2274,58 @@ export default function TelegramMiniApp() {
 
             if (isFab) {
               return (
-                <button key={item.id} onClick={() => { setSection(item.id); tgWebApp?.HapticFeedback?.impactOccurred("medium"); }}
-                  className="flex flex-col items-center -mt-7 relative z-10"
-                  style={{ color: isActive ? "#fff" : "var(--tg-hint)" }}>
-                  <motion.div
-                    className="w-14 h-14 rounded-full flex items-center justify-center relative"
-                    style={{
-                      background: isActive
-                        ? "linear-gradient(135deg, var(--tg-accent), var(--tg-btn))"
-                        : "var(--tg-secondary-bg)",
-                      border: isActive ? "2px solid var(--tg-accent)" : "2px solid color-mix(in srgb, var(--tg-hint) 30%, transparent)",
-                      boxShadow: isActive
-                        ? "0 4px 24px rgba(34,197,94,0.35), 0 0 12px rgba(34,197,94,0.2)"
-                        : "0 2px 12px rgba(0,0,0,0.2)",
-                    }}
-                    animate={{ ...iconAnimation, ...continuousAnim } as any}
-                    whileTap={{ scale: 0.85 }}
-                  >
-                    {/* Snake border SVG */}
-                    <svg className="absolute inset-[-3px] w-[calc(100%+6px)] h-[calc(100%+6px)]" viewBox="0 0 56 56" style={{ filter: isActive ? "drop-shadow(0 0 8px var(--tg-accent))" : "none" }}>
-                      <circle cx="28" cy="28" r="26" fill="none" stroke="var(--tg-accent)" strokeWidth="2" strokeDasharray="8 6" opacity={isActive ? 0.8 : 0.3}>
-                        <animateTransform attributeName="transform" type="rotate" from="0 28 28" to="360 28 28" dur="4s" repeatCount="indefinite" />
-                      </circle>
+                <motion.button key={item.id} onClick={() => { setSection(item.id); tgWebApp?.HapticFeedback?.impactOccurred("medium"); }}
+                  className="flex flex-col items-center justify-center -mt-7 relative z-10"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <div className="relative w-14 h-14 flex items-center justify-center">
+                    {/* Snake border animation - outer ring */}
+                    <svg className="absolute inset-0 w-14 h-14" viewBox="0 0 56 56" style={{ animation: "spin 3s linear infinite" }}>
+                      <circle
+                        cx="28" cy="28" r="25" fill="none"
+                        stroke="var(--tg-accent)"
+                        strokeWidth="2.5"
+                        strokeDasharray="40 118"
+                        strokeLinecap="round"
+                        opacity={isActive ? 0.8 : 0.4}
+                      />
                     </svg>
-                    <item.icon className="w-6 h-6" style={{ color: isActive ? "#fff" : "var(--tg-hint)" }} />
-                  </motion.div>
-                  <span className="text-[10px] font-bold mt-1.5 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
-                </button>
+                    {/* Snake border animation - inner ring (reverse) */}
+                    <svg className="absolute inset-0 w-14 h-14" viewBox="0 0 56 56" style={{ animation: "spin 3s linear infinite reverse" }}>
+                      <circle
+                        cx="28" cy="28" r="25" fill="none"
+                        stroke="var(--tg-accent)"
+                        strokeWidth="1.5"
+                        strokeDasharray="25 133"
+                        strokeLinecap="round"
+                        opacity={isActive ? 0.5 : 0.2}
+                      />
+                    </svg>
+                    {/* Glowing FAB circle */}
+                    <motion.div
+                      className="w-11 h-11 rounded-full flex items-center justify-center"
+                      style={{
+                        background: "var(--tg-accent)",
+                        boxShadow: isActive
+                          ? "0 4px 14px rgba(34,197,94,0.4), 0 0 20px rgba(34,197,94,0.2)"
+                          : "0 4px 14px rgba(34,197,94,0.3)",
+                        ...(isActive ? { outline: "2px solid rgba(34,197,94,0.3)", outlineOffset: "2px" } : {}),
+                      }}
+                      animate={{
+                        scale: [1, 1.05, 1],
+                        boxShadow: [
+                          "0 4px 14px rgba(34,197,94,0.3)",
+                          "0 6px 20px rgba(34,197,94,0.5)",
+                          "0 4px 14px rgba(34,197,94,0.3)",
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <item.icon className="h-5 w-5" style={{ color: "#fff" }} />
+                    </motion.div>
+                  </div>
+                  <span className="text-[10px] font-bold mt-0.5 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
+                </motion.button>
               );
             }
 
