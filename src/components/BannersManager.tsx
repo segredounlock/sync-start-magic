@@ -84,8 +84,9 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
           title: banner.title,
           subtitle: banner.subtitle,
           link: banner.link,
+          icon_url: banner.icon_url || null,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", banner.id);
       if (error) throw error;
       toast.success(`Banner ${banner.position} salvo!`);
