@@ -396,7 +396,7 @@ function generatePassword(): string {
 }
 
 // ===== TERMS OF SERVICE =====
-const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
+const TERMS_VALIDITY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const TERMS_TEXT = `📜 <b>TERMOS DE UTILIZAÇÃO</b>
 🌐 <b>Recargas Brasil</b> — https://recargasbrasill.com
@@ -440,7 +440,10 @@ async function checkTermsAccepted(supabase: any, telegramId: string): Promise<bo
 }
 
 async function recordTermsAcceptance(supabase: any, telegramId: string) {
-  await supabase.from("terms_acceptance").insert({ telegram_id: telegramId });
+  await supabase.from("terms_acceptance").upsert(
+    { telegram_id: telegramId, accepted_at: new Date().toISOString() },
+    { onConflict: "telegram_id" }
+  );
 }
 
 async function sendTermsMessage(token: string, chatId: number) {

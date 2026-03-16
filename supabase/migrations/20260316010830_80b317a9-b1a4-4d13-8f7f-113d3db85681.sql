@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS terms_acceptance_telegram_id_unique ON public.terms_acceptance (telegram_id);
