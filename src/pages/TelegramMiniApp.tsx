@@ -2013,40 +2013,55 @@ export default function TelegramMiniApp() {
           {/* ── Histórico ── */}
           {section === "historico" && (
             <motion.div key="historico" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-2">
+              {/* Filters (matches browser) */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={st.hint} />
+                  <input type="text" placeholder="Buscar por telefone..." value={histSearch} onChange={e => setHistSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm focus:outline-none"
+                    style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }} />
+                </div>
+                <div className="flex gap-2">
+                  <select value={histStatus} onChange={e => setHistStatus(e.target.value as any)}
+                    className="flex-1 px-3 py-2 rounded-xl text-sm focus:outline-none"
+                    style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
+                    <option value="all">Todos os status</option>
+                    <option value="completed">Concluída</option>
+                    <option value="pending">Processando</option>
+                    <option value="falha">Falha</option>
+                  </select>
+                  <select value={histOperadora} onChange={e => setHistOperadora(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl text-sm focus:outline-none"
+                    style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
+                    <option value="all">Todas operadoras</option>
+                    {Array.from(new Set(recargas.map(r => r.operadora).filter(Boolean))).map(op => (
+                      <option key={op} value={op}>{(op as string).toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               {/* Receipt Detail View */}
               <AnimatePresence>
                 {viewingReceipt && (
                   <>
-                    <motion.div
-                      className="fixed inset-0 z-[100]"
-                      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setViewingReceipt(null)}
-                    />
-                    <motion.div
-                      className="fixed inset-x-4 top-[15%] z-[101] rounded-2xl p-5 space-y-4 max-h-[75vh] overflow-y-auto"
+                    <motion.div className="fixed inset-0 z-[100]" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingReceipt(null)} />
+                    <motion.div className="fixed inset-x-4 top-[15%] z-[101] rounded-2xl p-5 space-y-4 max-h-[75vh] overflow-y-auto"
                       style={{ ...st.secondaryBg, border: `2px solid ${viewingReceipt.status === "completed" ? "#4ade80" : "#facc15"}` }}
-                      initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    >
-                      {/* Header */}
+                      initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}>
                       <div className="text-center">
                         <div className="w-14 h-14 rounded-full mx-auto mb-2 flex items-center justify-center"
-                          style={{ backgroundColor: viewingReceipt.status === "completed" ? "rgba(74,222,128,0.15)" : "rgba(250,204,21,0.15)" }}>
-                          {viewingReceipt.status === "completed"
-                            ? <Check className="w-7 h-7" style={{ color: "#4ade80" }} />
-                            : <Clock className="w-7 h-7" style={{ color: "#facc15" }} />}
+                          style={{ backgroundColor: viewingReceipt.status === "completed" ? "rgba(74,222,128,0.15)" : viewingReceipt.status === "pending" ? "rgba(250,204,21,0.15)" : "rgba(239,68,68,0.15)" }}>
+                          {viewingReceipt.status === "completed" ? <Check className="w-7 h-7" style={{ color: "#4ade80" }} />
+                            : viewingReceipt.status === "pending" ? <Clock className="w-7 h-7" style={{ color: "#facc15" }} />
+                            : <XCircle className="w-7 h-7" style={{ color: "#ef4444" }} />}
                         </div>
                         <p className="font-bold text-lg" style={st.text}>
                           {viewingReceipt.status === "completed" ? "Recarga Concluída" : viewingReceipt.status === "pending" ? "Processando..." : "Falha na Recarga"}
                         </p>
                       </div>
-
-                      {/* Details */}
                       <div className="rounded-xl overflow-hidden" style={{ ...st.bg, border: st.borderSub }}>
                         <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "rgba(74,222,128,0.05)" }}>
                           <FileText className="w-3.5 h-3.5" style={{ color: "#4ade80" }} />
@@ -2068,27 +2083,18 @@ export default function TelegramMiniApp() {
                           </div>
                         ))}
                       </div>
-
-                      {/* Actions */}
                       <div className="grid grid-cols-2 gap-3">
-                        <button
-                          onClick={async () => {
+                        <button onClick={async () => {
                             const text = `✅ Comprovante de Recarga\n\n📱 Telefone: ${formatPhone(viewingReceipt.telefone)}\n📡 Operadora: ${(viewingReceipt.operadora || "—").toUpperCase()}\n💰 Valor: ${formatCurrency(viewingReceipt.valor)}\n🆔 Pedido: ${viewingReceipt.external_id || viewingReceipt.id.slice(0, 8)}\n🕐 Data: ${formatFullDateTimeBR(viewingReceipt.created_at)}\n\nRecarga realizada com sucesso!`;
-                            try {
-                              if (navigator.share) await navigator.share({ title: "Comprovante de Recarga", text });
-                              else { await navigator.clipboard.writeText(text); tgWebApp?.HapticFeedback?.notificationOccurred("success"); }
-                            } catch {}
+                            try { if (navigator.share) await navigator.share({ title: "Comprovante de Recarga", text }); else { await navigator.clipboard.writeText(text); tgWebApp?.HapticFeedback?.notificationOccurred("success"); } } catch {}
                           }}
                           className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold"
-                          style={{ backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" }}
-                        >
+                          style={{ backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" }}>
                           <Share2 className="w-4 h-4" /> Enviar
                         </button>
-                        <button
-                          onClick={() => setViewingReceipt(null)}
+                        <button onClick={() => setViewingReceipt(null)}
                           className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold"
-                          style={{ ...st.bg, border: st.borderSub, color: "var(--tg-text)" }}
-                        >
+                          style={{ ...st.bg, border: st.borderSub, color: "var(--tg-text)" }}>
                           Fechar
                         </button>
                       </div>
@@ -2097,49 +2103,77 @@ export default function TelegramMiniApp() {
                 )}
               </AnimatePresence>
 
-              {recargas.length === 0 ? (
-                <p className="text-center py-12 text-sm" style={st.hint}>Nenhuma recarga encontrada</p>
-              ) : (() => {
-                let lastDate = "";
-                return recargas.map((r) => {
-                  const d = new Date(r.created_at);
-                  const dateLabel = formatDateLongUpperBR(r.created_at);
-                  const showSep = dateLabel !== lastDate;
-                  lastDate = dateLabel;
-                  return (
-                    <div key={r.id}>
-                      {showSep && (
-                        <div className="flex justify-center my-2">
-                          <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => { setViewingReceipt(r); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
-                        className="w-full rounded-xl p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
-                        style={{ ...st.secondaryBg, border: st.borderSub }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={st.bg}>
-                            <Smartphone className="w-4 h-4" style={st.hint} />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm" style={st.text}>{(r.operadora || "—").toUpperCase()}</p>
-                            <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
-                          </div>
-                        </div>
-                        <div className="text-right flex items-center gap-2">
-                          <div>
-                            <p className="font-semibold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
-                            <p className="text-[10px]" style={{ color: r.status === "completed" ? "#4ade80" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
-                              {r.status === "completed" ? "✅ Concluída" : r.status === "pending" ? "⏳ Processando" : "❌ Falha"}
-                            </p>
-                          </div>
-                          <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />
-                        </div>
-                      </button>
-                    </div>
-                  );
+              {(() => {
+                const filtered = recargas.filter(r => {
+                  if (histStatus !== "all") {
+                    if (histStatus === "completed" && r.status !== "completed" && r.status !== "concluida") return false;
+                    if (histStatus === "pending" && r.status !== "pending") return false;
+                    if (histStatus === "falha" && r.status !== "falha") return false;
+                  }
+                  if (histOperadora !== "all" && r.operadora !== histOperadora) return false;
+                  if (histSearch && !r.telefone.includes(histSearch.replace(/\D/g, ""))) return false;
+                  return true;
                 });
+
+                if (histSearch || histStatus !== "all" || histOperadora !== "all") {
+                  return (
+                    <>
+                      <div className="flex items-center gap-2 text-xs py-1" style={st.hint}>
+                        <Filter className="w-3.5 h-3.5" />
+                        <span>{filtered.length} de {recargas.length} resultados</span>
+                        <button onClick={() => { setHistSearch(""); setHistStatus("all"); setHistOperadora("all"); }}
+                          className="ml-auto text-xs font-semibold" style={st.accent}>Limpar filtros</button>
+                      </div>
+                      {filtered.length === 0 ? (
+                        <p className="text-center py-8 text-sm" style={st.hint}>Nenhuma recarga encontrada</p>
+                      ) : renderRecargaList(filtered)}
+                    </>
+                  );
+                }
+
+                return filtered.length === 0 ? (
+                  <p className="text-center py-12 text-sm" style={st.hint}>Nenhuma recarga encontrada</p>
+                ) : renderRecargaList(filtered);
+
+                function renderRecargaList(list: Recarga[]) {
+                  let lastDate = "";
+                  return list.map((r) => {
+                    const dateLabel = formatDateLongUpperBR(r.created_at);
+                    const showSep = dateLabel !== lastDate;
+                    lastDate = dateLabel;
+                    return (
+                      <div key={r.id}>
+                        {showSep && (
+                          <div className="flex justify-center my-2">
+                            <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
+                          </div>
+                        )}
+                        <button onClick={() => { setViewingReceipt(r); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                          className="w-full rounded-xl p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+                          style={{ ...st.secondaryBg, border: st.borderSub }}>
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={st.bg}>
+                              <Smartphone className="w-4 h-4" style={st.hint} />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm" style={st.text}>{(r.operadora || "—").toUpperCase()}</p>
+                              <p className="text-xs font-mono" style={st.hint}>{formatPhone(r.telefone)}</p>
+                            </div>
+                          </div>
+                          <div className="text-right flex items-center gap-2">
+                            <div>
+                              <p className="font-semibold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
+                              <p className="text-[10px]" style={{ color: r.status === "completed" ? "#4ade80" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
+                                {r.status === "completed" ? "✅ Concluída" : r.status === "pending" ? "⏳ Processando" : "❌ Falha"}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  });
+                }
               })()}
               <button onClick={async () => { setRefreshingRecargas(true); await loadRecargas(); setRefreshingRecargas(false); }} className="w-full text-center text-sm transition py-2 flex items-center justify-center gap-1" style={st.hint}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshingRecargas ? "animate-spin" : ""}`} /> Atualizar
@@ -2150,17 +2184,38 @@ export default function TelegramMiniApp() {
           {/* ── Extrato ── */}
           {section === "extrato" && (
             <motion.div key="extrato" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-2">
-              {transactions.length === 0 ? (
-                <p className="text-center py-12 text-sm" style={st.hint}>Nenhum depósito encontrado</p>
-              ) : (() => {
+              {(() => {
+                const DEPOSIT_EXPIRY_MS = 30 * 60 * 1000;
+                const enriched = transactions.map(t => {
+                  if (t.type === "deposit" && t.status === "pending" && (Date.now() - new Date(t.created_at).getTime()) > DEPOSIT_EXPIRY_MS) {
+                    return { ...t, status: "expired" };
+                  }
+                  return t;
+                });
+                if (enriched.length === 0) {
+                  return <p className="text-center py-12 text-sm" style={st.hint}>Nenhuma transação encontrada</p>;
+                }
                 let lastDate = "";
-                return transactions.map((t) => {
-                  const d = new Date(t.created_at);
+                return enriched.map((t: any) => {
                   const dateLabel = formatDateLongUpperBR(t.created_at);
                   const showSep = dateLabel !== lastDate;
                   lastDate = dateLabel;
                   const isPending = t.status === "pending";
+                  const isExpired = t.status === "expired";
+                  const isCompleted = t.status === "approved" || t.status === "completed";
                   const hasQr = isPending && t.metadata?.qr_code && t.metadata.qr_code !== "yes" && t.metadata.qr_code !== "no";
+                  const isDeposit = t.type === "deposit";
+                  const isSale = t.type === "sale" || t.type === "recarga";
+                  const isCommission = t.type === "commission" || t.type === "referral";
+                  const isWithdraw = t.type === "withdraw" || t.type === "saque";
+                  const txLabel = isDeposit ? "Depósito PIX" : isSale ? "Venda" : isCommission ? "Comissão" : isWithdraw ? "Saque" : t.type;
+                  const txIcon = isDeposit ? Landmark : isSale ? Smartphone : isCommission ? ArrowRightLeft : Wallet;
+                  const TxIcon = txIcon;
+                  const amountPrefix = isDeposit || isCommission ? "+" : isSale || isWithdraw ? "-" : "";
+                  const amountColor = isExpired ? "#ef4444" : isCompleted ? "#4ade80" : isPending ? "#facc15" : "var(--tg-text)";
+                  // Subtitle from metadata
+                  const subtitle = t.metadata?.operadora ? `${(t.metadata.operadora as string).toUpperCase()} • ${formatCurrency(t.metadata?.valor_recarga || t.amount)}` : null;
+
                   return (
                     <div key={t.id}>
                       {showSep && (
@@ -2168,39 +2223,30 @@ export default function TelegramMiniApp() {
                           <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
                         </div>
                       )}
-                      <button
-                        className="w-full rounded-xl p-3 flex items-center justify-between text-left"
+                      <button className="w-full rounded-xl p-3 flex items-center justify-between text-left"
                         style={{ ...st.secondaryBg, border: st.borderSub }}
                         onClick={() => {
                           if (hasQr) {
-                            setPixData({
-                              gateway: t.metadata?.gateway || "",
-                              payment_id: t.payment_id || "",
-                              qr_code: t.metadata.qr_code,
-                              qr_code_base64: null,
-                              payment_link: null,
-                              amount: t.amount,
-                              status: "pending",
-                            });
+                            setPixData({ gateway: t.metadata?.gateway || "", payment_id: t.payment_id || "", qr_code: t.metadata.qr_code, qr_code_base64: null, payment_link: null, amount: t.amount, status: "pending" });
                             setSection("deposito");
                             tgWebApp?.HapticFeedback?.impactOccurred("light");
                           }
-                        }}
-                      >
+                        }}>
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, #4ade80 10%, transparent)" }}>
-                            <Landmark className="w-4 h-4" style={st.green} />
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: isExpired ? "rgba(239,68,68,0.1)" : isDeposit ? "rgba(74,222,128,0.1)" : isSale ? "rgba(59,130,246,0.1)" : isCommission ? "rgba(250,204,21,0.1)" : "rgba(255,255,255,0.06)" }}>
+                            <TxIcon className="w-4 h-4" style={{ color: isExpired ? "#ef4444" : isDeposit ? "#4ade80" : isSale ? "#3b82f6" : isCommission ? "#facc15" : "var(--tg-hint)" }} />
                           </div>
                           <div>
-                            <p className="font-semibold text-sm" style={st.text}>Depósito PIX</p>
-                            <p className="text-xs" style={st.hint}>{formatTimeBR(t.created_at)}</p>
+                            <p className="font-semibold text-sm" style={st.text}>{txLabel}</p>
+                            {subtitle ? <p className="text-[10px]" style={st.hint}>{subtitle}</p> : <p className="text-xs" style={st.hint}>{formatTimeBR(t.created_at)}</p>}
                           </div>
                         </div>
                         <div className="text-right flex items-center gap-2">
                           <div>
-                            <p className="font-semibold text-sm" style={st.green}>+{formatCurrency(t.amount)}</p>
-                            <p className="text-[10px]" style={{ color: (t.status === "approved" || t.status === "completed") ? "#4ade80" : isPending ? "#facc15" : "var(--tg-destructive)" }}>
-                              {(t.status === "approved" || t.status === "completed") ? "✅ Confirmado" : isPending ? "⏳ Processando" : "❌ Falha"}
+                            <p className="font-semibold text-sm" style={{ color: amountColor }}>{amountPrefix}{formatCurrency(t.amount)}</p>
+                            <p className="text-[10px]" style={{ color: amountColor }}>
+                              {isCompleted ? "✅ Confirmado" : isPending ? "⏳ Processando" : isExpired ? "✕ Expirado" : "❌ Falha"}
                             </p>
                           </div>
                           {hasQr && <ChevronRight className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />}
@@ -2221,7 +2267,6 @@ export default function TelegramMiniApp() {
             <motion.div key="conta" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-4">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, type: "spring", damping: 20 }}
                 className="rounded-2xl p-5 flex items-center gap-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                {/* Avatar with upload */}
                 <label className="relative cursor-pointer group shrink-0">
                   <div className="w-[72px] h-[72px] rounded-full p-[3px] rgb-border flex items-center justify-center">
                     {avatarUrl ? (
@@ -2236,33 +2281,44 @@ export default function TelegramMiniApp() {
                   </div>
                   <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
                 </label>
-                <div>
-                  <p className="font-bold" style={st.text}>{userName}</p>
-                  <p className="text-sm" style={st.hint}>{userEmail}</p>
+                <div className="flex-1 min-w-0">
+                  {editingName ? (
+                    <div className="flex items-center gap-2">
+                      <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                        className="flex-1 rounded-lg px-2.5 py-1.5 text-sm font-bold focus:outline-none"
+                        style={{ ...st.bg, ...st.text, border: st.borderSub }} autoFocus />
+                      <button onClick={handleSaveProfile} disabled={savingProfile}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(74,222,128,0.15)" }}>
+                        {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" style={st.green} /> : <Save className="w-4 h-4" style={st.green} />}
+                      </button>
+                      <button onClick={() => setEditingName(false)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.15)" }}>
+                        <X className="w-4 h-4" style={st.destructive} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold truncate" style={st.text}>{userName}</p>
+                      <button onClick={() => { setEditName(userName); setEditingName(true); }}
+                        className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+                        <Pencil className="w-3 h-3" style={st.hint} />
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-sm truncate" style={st.hint}>{userEmail}</p>
                   <p className="text-xs mt-1" style={st.hint}>Toque na foto para alterar</p>
                 </div>
               </motion.div>
 
               {/* Telegram Vinculado */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, type: "spring", damping: 20 }}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, type: "spring", damping: 20 }}
                 className="rounded-2xl p-4 flex items-center gap-3 overflow-hidden relative"
-                style={{ ...st.secondaryBg, border: "1px solid rgba(34,197,94,0.3)" }}
-              >
-                <motion.div
-                  className="absolute inset-0 opacity-10"
+                style={{ ...st.secondaryBg, border: "1px solid rgba(34,197,94,0.3)" }}>
+                <motion.div className="absolute inset-0 opacity-10"
                   style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.3) 0%, transparent 60%)" }}
-                  animate={{ opacity: [0.05, 0.15, 0.05] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.div
-                  animate={{ rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: "rgba(34,197,94,0.15)" }}
-                >
+                  animate={{ opacity: [0.05, 0.15, 0.05] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
+                <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(34,197,94,0.15)" }}>
                   <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.28-.02-.12.03-2.02 1.28-5.69 3.77-.54.37-1.03.55-1.47.54-.48-.01-1.4-.27-2.09-.49-.84-.27-1.51-.42-1.45-.88.03-.24.37-.49 1.02-.74 4-1.73 6.67-2.88 8.02-3.44 3.82-1.6 4.62-1.87 5.13-1.88.11 0 .37.03.54.17.14.12.18.28.2.47-.01.06.01.24 0 .41z" fill="rgb(34,197,94)"/>
                   </svg>
@@ -2271,33 +2327,22 @@ export default function TelegramMiniApp() {
                   <p className="font-semibold text-sm" style={{ color: "rgb(34,197,94)" }}>Telegram Vinculado</p>
                   <p className="text-xs" style={st.hint}>Conta conectada com sucesso</p>
                 </div>
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
-                >
-                  <AnimatedCheck size={22} className="text-success" />
-                </motion.div>
+                <AnimatedCheck size={22} className="text-success" />
               </motion.div>
 
+              {/* Saldos (matches browser dual wallet) */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, type: "spring", damping: 20 }}
-                className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <motion.svg
-                    width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                    style={{ color: "rgb(34,197,94)" }}
-                    animate={{ rotateY: [0, 180, 360], scale: [1, 1.15, 1] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-                  </motion.svg>
-                  <p className="text-[11px] uppercase tracking-wider" style={st.hint}>Saldo de Revenda</p>
+                className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl p-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                  <p className="text-[10px] uppercase tracking-wider mb-1" style={st.hint}>Saldo de Revenda</p>
+                  <p className="text-xl font-bold" style={st.green}>{formatCurrency(saldo)}</p>
                 </div>
-                <p className="text-2xl font-bold" style={st.green}>{formatCurrency(saldo)}</p>
+                <div className="rounded-2xl p-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                  <p className="text-[10px] uppercase tracking-wider mb-1" style={st.hint}>Comissões</p>
+                  <p className="text-xl font-bold" style={st.accent}>{formatCurrency(saldoPessoal)}</p>
+                </div>
               </motion.div>
+
               <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, type: "spring", damping: 20 }}
                 onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm transition"
                 style={{ ...st.destructive, border: st.borderSub }}>
