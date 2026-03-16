@@ -272,9 +272,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center cursor-help transition-transform group-hover/avo:scale-110">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">👴 Avô</p>
-                      <p className="text-muted-foreground leading-relaxed">A pessoa que te trouxe pro sistema. Toda vez que você vende, ela ganha <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do seu lucro automaticamente.</p>
+                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
+                      <p className="font-bold mb-1.5 text-sm">👴 Avô — Seu Patrocinador</p>
+                      <p className="text-muted-foreground leading-relaxed mb-1.5">É a pessoa que te convidou pra plataforma. Cada vez que você fecha uma venda, ela recebe automaticamente <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do seu lucro.</p>
+                      <p className="text-muted-foreground leading-relaxed">💡 <em>Exemplo: se você lucra R$ 5,00 numa recarga, seu avô ganha R$ {(5 * Number(commissionConfig.indirect) / 100).toFixed(2)} sem fazer nada!</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Avô</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem te<br/>indicou</span>
