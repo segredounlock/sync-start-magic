@@ -312,7 +312,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                   <div className="flex flex-col items-center gap-0.5 -mt-8">
                     <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
                     <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
-                    <span className="text-[9px] text-muted-foreground">vende</span>
+                    <span className="text-[9px] text-muted-foreground">você vende</span>
                   </div>
 
                   {/* Cliente */}
