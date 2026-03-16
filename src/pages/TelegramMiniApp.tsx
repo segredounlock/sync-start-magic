@@ -341,8 +341,10 @@ export default function TelegramMiniApp() {
   const [recargaStep, setRecargaStep] = useState<"op" | "valor" | "phone" | "confirm" | "check">("phone");
   const [recargaLoading, setRecargaLoading] = useState(false);
   const [recargaResult, setRecargaResult] = useState<{ success: boolean; message: string; details?: { valor: number; telefone: string; operadora: string; novoSaldo: number; pedidoId: string | null; hora: string } } | null>(null);
-  const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
+   const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
   const [checkingPhone, setCheckingPhone] = useState(false);
+  const [detectingOperator, setDetectingOperator] = useState(false);
+  const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
 
   // Histórico & Extrato
   const [recargas, setRecargas] = useState<Recarga[]>([]);
