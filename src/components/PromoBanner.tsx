@@ -7,6 +7,7 @@ interface PromoBannerProps {
   subtitle?: string;
   visible?: boolean;
   link?: string;
+  icon_url?: string;
   onClose?: () => void;
 }
 
@@ -15,6 +16,7 @@ export function PromoBanner({
   subtitle = "Consulte saldo, faça recargas e receba notificações direto no Telegram!",
   visible = true,
   link,
+  icon_url,
   onClose
 }: PromoBannerProps) {
   const [dismissed, setDismissed] = useState(false);
