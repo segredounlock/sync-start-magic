@@ -252,7 +252,7 @@ function useTelegramTheme() {
       const hasTelegramColors = Boolean(tp.bg_color || tp.secondary_bg_color || tp.text_color || tp.button_color);
       const isDark = hasTelegramColors
         ? isDarkTelegramPalette(tp.bg_color, tp.text_color)
-        : liveTg?.colorScheme === "dark";
+        : (liveTg?.colorScheme === "light" ? false : true); // default to dark when outside Telegram
       // Always use the website's premium theme — ignore Telegram native colors
       const theme = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
 
