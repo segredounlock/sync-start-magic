@@ -821,7 +821,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[61] bg-card border-t border-border rounded-t-2xl shadow-2xl"
+              className="fixed bottom-0 left-0 right-0 z-[61] bg-card border-t border-border rounded-t-2xl shadow-2xl pb-[env(safe-area-inset-bottom,0px)]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Handle bar */}
