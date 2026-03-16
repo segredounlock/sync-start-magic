@@ -38,6 +38,8 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
   const [filter, setFilter] = useState<SaqueFilter>("pending");
   const [search, setSearch] = useState("");
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [userBalances, setUserBalances] = useState<Record<string, number>>({});
 
   const fetchSaques = useCallback(async () => {
     setLoading(true);
