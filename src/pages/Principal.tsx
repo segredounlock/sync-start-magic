@@ -4523,6 +4523,14 @@ export default function Principal() {
 
           {/* ===== BATE-PAPO ===== */}
           {view === "batepapo" && <ChatRoomManager globalConfig={globalConfig} setGlobalConfig={setGlobalConfig} saveGlobalConfig={saveGlobalConfig} />}
+
+
+          {/* ===== SAQUES ===== */}
+          {view === "saques" && <SaquesSection onCountUpdate={setPendingSaquesCount} />}
+
+          {/* ===== REDES ===== */}
+          {view === "redes" && <RedesSection />}
+
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
         </main>
