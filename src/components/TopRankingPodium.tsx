@@ -438,15 +438,15 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                 }}
                 whileHover={{ scale: 1.08 }}
               >
-                {/* Crown above avatar for 1st place only */}
+                {/* Crown above avatar for 1st place only — sits on top of avatar */}
                 {isCenter && (
                   <motion.div
-                    className="-mb-3 z-10"
+                    className="-mb-5 z-10"
                     initial={{ opacity: 0, y: -20, scale: 0 }}
                     animate={revealed ? { opacity: 1, y: 0, scale: 1 } : {}}
                     transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 12 }}
                   >
-                    <GoldFloatingCrown size={36} />
+                    <GoldFloatingCrown size={32} />
                   </motion.div>
                 )}
 
