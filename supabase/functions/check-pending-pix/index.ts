@@ -97,7 +97,10 @@ Deno.serve(async (req) => {
               `PixGo payment ${paymentId} confirmed! Crediting user ${tx.user_id}`
             );
 
-            // Calculate fee
+            // Resolve fee per user (reseller-specific → global fallback)
+            const { data: feeRows } = await supabase.rpc("get_deposit_fee_for_user", { _user_id: tx.user_id });
+            const taxaTipo = feeRows?.[0]?.fee_type || "fixo";
+            const taxaValor = Number(feeRows?.[0]?.fee_value) || 0;
             let fee = 0;
             if (taxaValor > 0) {
               fee =
