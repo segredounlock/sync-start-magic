@@ -1377,10 +1377,18 @@ export default function Principal() {
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                     }`}
                   >
-                    <FloatingMenuIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                    <div className="relative">
+                      <FloatingMenuIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                      {!!item.badge && item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">{item.badge}</span>
+                      )}
+                    </div>
                     <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
                       {item.label}
                     </motion.span>
+                    {!!item.badge && item.badge > 0 && !isActive && (
+                      <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold flex items-center justify-center">{item.badge}</span>
+                    )}
                     {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
                   </button>
                 </motion.div>
