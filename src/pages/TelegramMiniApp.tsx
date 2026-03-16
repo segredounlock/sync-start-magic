@@ -2236,7 +2236,7 @@ export default function TelegramMiniApp() {
                     <div key={t.id}>
                       {showSep && (
                         <div className="flex justify-center my-2">
-                          <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
+                          <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "color-mix(in srgb, var(--tg-text) 6%, transparent)", color: "var(--tg-hint)" }}>{dateLabel}</span>
                         </div>
                       )}
                       <button className="w-full rounded-xl p-3 flex items-center justify-between text-left"
