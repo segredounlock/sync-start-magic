@@ -4,7 +4,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Info, CheckSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, ArrowDown, Smartphone, GitBranch } from "lucide-react";
 
 interface PricingValue {
   value: number;
@@ -34,15 +34,18 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const [bulkProfit, setBulkProfit] = useState("");
   const [showBulk, setShowBulk] = useState(false);
   const [editedProfits, setEditedProfits] = useState<Record<string, string>>({});
+  const [showDiagram, setShowDiagram] = useState(false);
+  const [commissionConfig, setCommissionConfig] = useState({ direct: "100", indirect: "10" });
 
   const fetchPricing = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: marginConfig }] = await Promise.all([
+      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: marginConfig }, { data: commConfig }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", userId),
         supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
+        supabase.from("system_config").select("key, value").in("key", ["directCommissionPercent", "indirectCommissionPercent"]),
       ]);
 
       if (!ops) return;
@@ -53,6 +56,14 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
       const globalMarginEnabled = marginMap.defaultMarginEnabled === "true";
       const globalMarginType = marginMap.defaultMarginType || "fixo";
       const globalMarginValue = parseFloat(marginMap.defaultMarginValue || "0") || 0;
+
+      // Parse commission config
+      const commMap: Record<string, string> = {};
+      (commConfig || []).forEach((c: any) => { commMap[c.key] = c.value; });
+      setCommissionConfig({
+        direct: commMap.directCommissionPercent || "100",
+        indirect: commMap.indirectCommissionPercent || "10",
+      });
 
       // If reseller has ANY custom rules, global margin doesn't apply to price resolution
       // BUT the base cost shown should always reflect the actual cost (with global margin if enabled)
@@ -232,7 +243,100 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
         <span className="text-xs font-medium text-primary">Lucro é somado ao custo base.</span>
       </div>
 
-      {/* Operator Tabs */}
+      {/* Diagrama da cadeia de indicação - colapsável */}
+      <div className="rounded-xl border border-border overflow-hidden">
+        <button
+          onClick={() => setShowDiagram(!showDiagram)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <GitBranch className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Como funciona a cadeia de indicação</span>
+          </div>
+          {showDiagram ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </button>
+
+        <AnimatePresence>
+          {showDiagram && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 space-y-3 bg-muted/10">
+                {/* Horizontal flow */}
+                <div className="flex items-center justify-center gap-2 sm:gap-4">
+                  {/* Avô */}
+                  <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/avo relative">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center cursor-help transition-transform group-hover/avo:scale-110">
+                      <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
+                    </div>
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
+                      <p className="font-semibold mb-1">👴 Avô (Upline)</p>
+                      <p className="text-muted-foreground leading-relaxed">É quem indicou o revendedor. Recebe <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do lucro de cada venda feita pelo revendedor que ele indicou.</p>
+                    </div>
+                    <span className="text-xs font-semibold text-foreground">Avô</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem indicou<br/>o revendedor</span>
+                    <span className="mt-1 px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-bold">
+                      {commissionConfig.indirect}% do lucro
+                    </span>
+                    <span className="text-[9px] text-muted-foreground">Comissão Indireta</span>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex flex-col items-center gap-0.5 -mt-8">
+                    <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
+                    <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
+                    <span className="text-[9px] text-muted-foreground">indicou</span>
+                  </div>
+
+                  {/* Pai */}
+                  <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/pai relative">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center cursor-help transition-transform group-hover/pai:scale-110">
+                      <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                    </div>
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
+                      <p className="font-semibold mb-1">👨 Revendedor (Pai)</p>
+                      <p className="text-muted-foreground leading-relaxed">É o revendedor direto do cliente. Recebe <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro real em cada recarga vendida.</p>
+                    </div>
+                    <span className="text-xs font-semibold text-foreground">Revendedor</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Revend. imediato<br/>do cliente</span>
+                    <span className="mt-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
+                      {commissionConfig.direct}% do lucro
+                    </span>
+                    <span className="text-[9px] text-muted-foreground">Comissão Direta</span>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex flex-col items-center gap-0.5 -mt-8">
+                    <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
+                    <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
+                    <span className="text-[9px] text-muted-foreground">vende</span>
+                  </div>
+
+                  {/* Cliente */}
+                  <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/cli relative">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center cursor-help transition-transform group-hover/cli:scale-110">
+                      <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+                    </div>
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
+                      <p className="font-semibold mb-1">📱 Cliente</p>
+                      <p className="text-muted-foreground leading-relaxed">É o usuário final que faz a recarga. O valor pago gera o lucro que é distribuído entre o revendedor e o avô.</p>
+                    </div>
+                    <span className="text-xs font-semibold text-foreground">Cliente</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Faz a recarga<br/>no sistema</span>
+                    <span className="mt-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
+                      💰 Recarga
+                    </span>
+                    <span className="text-[9px] text-muted-foreground">Gera o lucro</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       <div className="flex gap-1 p-1 rounded-xl bg-muted/40 border border-border">
         {operadoras.map((op) => (
           <button
