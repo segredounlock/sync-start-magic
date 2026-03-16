@@ -610,6 +610,16 @@ serve(async (req) => {
           clearSession(supabase, chatIdStr);
         }
 
+        // Terms guard for linked users (except session flows)
+        if (isCommand && text !== "/start" && text !== "/menu" && text !== "/vincular") {
+          const termsOk = await checkTermsAccepted(supabase, telegramId);
+          if (!termsOk) {
+            await sendMessage(BOT_TOKEN, chatId, "⚠️ Você precisa aceitar os termos de utilização antes de continuar.");
+            await sendTermsMessage(BOT_TOKEN, chatId);
+            return;
+          }
+        }
+
         // Linked user session flows (only if NOT a command)
         if (!isCommand && session?.step === "awaiting_deposit_amount") {
           await handleDepositAmount(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
