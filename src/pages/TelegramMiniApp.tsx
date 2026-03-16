@@ -1642,10 +1642,10 @@ export default function TelegramMiniApp() {
                       </div>
                       {/* Pending warning modal */}
                       {pendingWarning && (
-                        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "color-mix(in srgb, #eab308 15%, transparent)", border: "1px solid color-mix(in srgb, #eab308 30%, transparent)" }}>
+                        <div className="rounded-xl p-4 space-y-3" style={{ ...st.warningBg, border: "1px solid color-mix(in srgb, var(--tg-warning, #facc15) 30%, transparent)" }}>
                           <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: "#eab308" }} />
-                            <p className="text-sm font-semibold" style={{ color: "#eab308" }}>Recarga Pendente</p>
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0" style={st.warningText} />
+                            <p className="text-sm font-semibold" style={st.warningText}>Recarga Pendente</p>
                           </div>
                           <p className="text-xs" style={st.hint}>
                             Já existe {pendingWarning.count} recarga(s) pendente(s) para este número. Deseja continuar mesmo assim?
