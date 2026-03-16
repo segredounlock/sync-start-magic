@@ -1120,6 +1120,27 @@ export type Database = {
         }
         Relationships: []
       }
+      terms_acceptance: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          id: string
+          telegram_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          telegram_id: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          telegram_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
