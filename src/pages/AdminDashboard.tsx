@@ -2226,7 +2226,8 @@ export default function AdminDashboard() {
                   ) : depositTransactions.filter(t =>
                     (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
-                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
+                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
+                    (t.payment_id || "").toLowerCase().includes(depositSearch.toLowerCase())
                   ).map((t, idx) => {
                     const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                     return (
