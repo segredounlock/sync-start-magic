@@ -272,16 +272,16 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center cursor-help transition-transform group-hover/avo:scale-110">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">👴 Avô (Upline)</p>
-                      <p className="text-muted-foreground leading-relaxed">É quem indicou o revendedor. Recebe <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do lucro de cada venda feita pelo revendedor que ele indicou.</p>
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
+                      <p className="font-semibold mb-1">👴 Avô</p>
+                      <p className="text-muted-foreground leading-relaxed">A pessoa que te trouxe pro sistema. Toda vez que você vende, ela ganha <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do seu lucro automaticamente.</p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Avô</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem indicou<br/>o revendedor</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem te<br/>indicou</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-bold">
-                      {commissionConfig.indirect}% do lucro
+                      Ganha {commissionConfig.indirect}%
                     </span>
-                    <span className="text-[9px] text-muted-foreground">Comissão Indireta</span>
+                    <span className="text-[9px] text-muted-foreground">do seu lucro</span>
                   </div>
 
                   {/* Arrow */}
