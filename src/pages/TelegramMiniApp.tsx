@@ -1796,7 +1796,7 @@ export default function TelegramMiniApp() {
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
-                          <p className="text-[11px] font-medium" style={{ color: r.status === "completed" ? "var(--tg-link)" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
+                          <p className="text-[11px] font-medium" style={{ color: r.status === "completed" ? "var(--tg-link)" : r.status === "pending" ? "var(--tg-warning, #facc15)" : "var(--tg-destructive)" }}>
                             {r.status === "completed" ? "Comprovante" : r.status === "pending" ? "Processando" : "Falha"}
                           </p>
                         </div>
