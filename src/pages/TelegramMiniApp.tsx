@@ -892,9 +892,9 @@ export default function TelegramMiniApp() {
     btn: { backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" } as React.CSSProperties,
     btnText: { color: "var(--tg-btn-text)" } as React.CSSProperties,
     destructive: { color: "var(--tg-destructive)" } as React.CSSProperties,
-    green: { color: "#4ade80" } as React.CSSProperties,
-    borderSub: "1px solid color-mix(in srgb, var(--tg-hint) 15%, transparent)",
-    borderMain: "1px solid color-mix(in srgb, var(--tg-hint) 20%, transparent)",
+    green: { color: "#22c55e" } as React.CSSProperties,
+    borderSub: "1px solid color-mix(in srgb, var(--tg-hint) 18%, transparent)",
+    borderMain: "1px solid color-mix(in srgb, var(--tg-accent) 15%, transparent)",
   };
 
   // ─── Splash / Loading ────────────────────────────────────
