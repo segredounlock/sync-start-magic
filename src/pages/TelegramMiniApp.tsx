@@ -1875,7 +1875,7 @@ export default function TelegramMiniApp() {
                       <motion.button onClick={copyPix}
                         className="w-full rounded-xl py-3 font-semibold transition flex items-center justify-center gap-2"
                         style={st.btn} whileTap={{ scale: 0.95 }}
-                        animate={copied ? { backgroundColor: "rgba(74,222,128,0.2)" } : {}}>
+                        animate={copied ? { backgroundColor: "color-mix(in srgb, var(--tg-accent) 20%, transparent)" } : {}}>
                         {copied ? <><Check className="w-4 h-4" /> Copiado!</> : <><Copy className="w-4 h-4" /> Copiar código PIX</>}
                       </motion.button>
                     </motion.div>
