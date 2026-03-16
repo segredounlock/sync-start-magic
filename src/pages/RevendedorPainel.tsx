@@ -1661,7 +1661,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         </motion.div>
                       )}
 
-                      <motion.button type="submit" disabled={sending || !selectedValue || !selectedCarrier || selectedValue.cost > saldo || (phoneCheckResult?.status === "BLACKLISTED")}
+                      <motion.button type="submit" disabled={sending || !selectedValue || !selectedCarrier || selectedValue.cost > saldo || (phoneCheckResult?.status === "BLACKLISTED") || (phoneCheckResult?.status === "COOLDOWN")}
                         whileTap={{ scale: 0.97 }}
                         className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:brightness-110 disabled:opacity-40 disabled:hover:brightness-100 transition-all shadow-lg shadow-primary/25 flex items-center justify-center gap-2.5">
                         {sending ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full" />
