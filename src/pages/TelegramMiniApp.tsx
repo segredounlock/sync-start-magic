@@ -1898,7 +1898,7 @@ export default function TelegramMiniApp() {
                   <div className="flex gap-2">
                     <button onClick={handleCheckPixStatus} disabled={checkingPix}
                       className="flex-1 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition disabled:opacity-50"
-                      style={{ backgroundColor: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ade80" }}>
+                      style={{ backgroundColor: "color-mix(in srgb, var(--tg-accent) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--tg-accent) 20%, transparent)", color: "var(--tg-accent)" }}>
                       {checkingPix ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                       Verificar Agora
                     </button>
