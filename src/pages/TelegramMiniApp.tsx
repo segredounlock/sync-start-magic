@@ -1908,7 +1908,7 @@ export default function TelegramMiniApp() {
           {/* ── Raspadinha ── */}
           {section === "raspadinha" && userId && (
             <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
-              <ScratchCard userId={userId} />
+              <ScratchCard userId={userId} noAuthMode={!hasAuthSession} />
             </motion.div>
           )}
           {section === "raspadinha" && !userId && (
