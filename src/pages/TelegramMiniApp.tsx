@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import recargasLogo from "@/assets/recargas-brasil-logo.jpeg";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  Smartphone, Plus, Clock, Landmark, User,
+  Smartphone, DollarSign, Clock, Landmark, User,
   ChevronRight, RefreshCw, Copy, Check,
   ArrowLeft, Shield, LogOut, Camera, Loader2,
   Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
