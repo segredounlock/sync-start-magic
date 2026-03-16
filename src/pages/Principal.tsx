@@ -1435,6 +1435,8 @@ export default function Principal() {
               {view === "broadcast" && "Envie mensagens em massa para usuários do Telegram."}
               {view === "enquetes" && "Crie enquetes e acompanhe a votação em tempo real."}
               {view === "batepapo" && "Crie, edite e gerencie as salas de bate-papo."}
+              {view === "saques" && "Gerencie solicitações de saque de toda a rede."}
+              {view === "redes" && "Visão consolidada de todos os donos de rede."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
