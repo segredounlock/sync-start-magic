@@ -26,6 +26,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
   const [banners, setBanners] = useState<BannerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
+  const [uploadingIcon, setUploadingIcon] = useState<Record<number, boolean>>({});
   const [expandedBanner, setExpandedBanner] = useState<number | null>(null);
 
   const initialLoadDone = useRef(false);
