@@ -10,6 +10,8 @@ import { FloatingMenuIcon, FloatingGridIcon } from "@/components/FloatingMenuIco
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from "@/components/ui";
 import { PromoBanner } from "@/components/PromoBanner";
+import { SaquesSection } from "@/components/SaquesSection";
+import { RedesSection } from "@/components/RedesSection";
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";

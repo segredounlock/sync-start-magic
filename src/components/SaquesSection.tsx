@@ -117,12 +117,7 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
         await supabase.rpc("increment_saldo", { p_user_id: saque.user_id, p_tipo: "pessoal", p_amount: saque.amount });
       }
 
-      await logAuditAction({
-        action: `saque_${newStatus}`,
-        targetType: "transaction",
-        targetId: saque.id,
-        details: { amount: saque.amount, user_nome: saque.user_nome, user_email: saque.user_email },
-      });
+      await logAudit(`saque_${newStatus}`, "transaction", saque.id, { amount: saque.amount, user_nome: saque.user_nome, user_email: saque.user_email });
 
       toast.success(`Saque ${newStatus === "completed" ? "pago" : newStatus === "approved" ? "aprovado" : "rejeitado"} com sucesso!`);
       fetchSaques();
