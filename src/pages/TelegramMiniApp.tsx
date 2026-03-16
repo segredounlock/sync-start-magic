@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import recargasLogo from "@/assets/recargas-brasil-logo.jpeg";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  Smartphone, Plus, Clock, Landmark, User,
+  Smartphone, DollarSign, Clock, Landmark, User,
   ChevronRight, RefreshCw, Copy, Check,
   ArrowLeft, Shield, LogOut, Camera, Loader2,
   Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
@@ -2568,7 +2568,7 @@ export default function TelegramMiniApp() {
           {([
             { id: "recarga" as Section, icon: Smartphone, label: seasonalEmojis.recarga ? `${seasonalEmojis.recarga}` : "Recarga", defaultLabel: "Recarga" },
             { id: "raspadinha" as Section, icon: Ticket, label: "Raspadinha", defaultLabel: "Raspadinha" },
-            { id: "deposito" as Section, icon: Plus, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo", isFab: true },
+            { id: "deposito" as Section, icon: DollarSign, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo", isFab: true },
             { id: "historico" as Section, icon: Clock, label: seasonalEmojis.historico ? `${seasonalEmojis.historico}` : "Pedidos", defaultLabel: "Pedidos" },
           ]).map((item) => {
             const isActive = section === item.id;
