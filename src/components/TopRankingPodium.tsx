@@ -457,7 +457,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             return (
               <motion.div
                 key={user.user_id}
-                className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""}`}
+                className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""} cursor-pointer`}
                 initial={{ opacity: 0, y: 60, scale: 0.5 }}
                 animate={revealed ? { opacity: 1, y: 0, scale: 1 } : {}}
                 transition={{
@@ -468,6 +468,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                   mass: isCenter ? 1.2 : 1,
                 }}
                 whileHover={{ scale: 1.08 }}
+                onClick={() => navigate(`/perfil/${user.user_id}`)}
               >
                 {/* Crown above avatar for 1st place only — sits on top of avatar */}
                 {isCenter && (
