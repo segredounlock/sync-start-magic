@@ -36,6 +36,7 @@ import {
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
 import { ScratchCard } from "@/components/ScratchCard";
+import { ResellerFeeConfig } from "@/components/ResellerFeeConfig";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
