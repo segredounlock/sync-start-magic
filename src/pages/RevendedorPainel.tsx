@@ -257,6 +257,18 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       setReferralCode(p?.referral_code || "");
       setAvatarUrl(p?.avatar_url || null);
       setProfileBadge((p?.verification_badge as BadgeType) || null);
+      // Fetch PIX key for withdrawals
+      const { data: pixData } = await supabase
+        .from("reseller_config")
+        .select("key, value")
+        .eq("user_id", user.id)
+        .in("key", ["pix_key_type", "pix_key_value"]);
+      if (pixData) {
+        for (const row of pixData) {
+          if (row.key === "pix_key_type" && row.value) setSaquePixKeyType(row.value);
+          if (row.key === "pix_key_value" && row.value) setSaquePixKey(row.value);
+        }
+      }
     });
   }, [user, runFetch]);
 
