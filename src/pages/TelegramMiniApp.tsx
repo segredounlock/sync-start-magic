@@ -1966,9 +1966,9 @@ export default function TelegramMiniApp() {
                     onClick={handleDeposit}
                     disabled={depositLoading || !depositAmount || parseFloat((depositAmount || "0").replace(",", ".")) < 10}
                     className="w-full rounded-2xl py-4 font-bold text-base transition disabled:opacity-40 flex items-center justify-center gap-3 relative overflow-hidden"
-                    style={{ backgroundColor: "#4ade80", color: "#000" }}
+                    style={{ backgroundColor: "var(--tg-accent)", color: "var(--tg-bg)" }}
                     whileTap={{ scale: 0.97 }}
-                    animate={{ boxShadow: ["0 0 0px rgba(74,222,128,0.3)", "0 0 20px rgba(74,222,128,0.5)", "0 0 0px rgba(74,222,128,0.3)"] }}
+                    animate={{ boxShadow: ["0 0 0px color-mix(in srgb, var(--tg-accent) 30%, transparent)", "0 0 20px color-mix(in srgb, var(--tg-accent) 50%, transparent)", "0 0 0px color-mix(in srgb, var(--tg-accent) 30%, transparent)"] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
                     <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
