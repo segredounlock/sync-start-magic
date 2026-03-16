@@ -2101,27 +2101,21 @@ export default function TelegramMiniApp() {
             { id: "recarga" as Section, icon: Smartphone, label: seasonalEmojis.recarga ? `${seasonalEmojis.recarga}` : "Recarga", defaultLabel: "Recarga" },
             { id: "raspadinha" as Section, icon: Ticket, label: "Raspadinha", defaultLabel: "Raspadinha" },
             { id: "deposito" as Section, icon: Plus, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo", isFab: true },
-            { id: "chat" as Section, icon: MessageCircle, label: seasonalEmojis.chat ? `${seasonalEmojis.chat}` : "Chat", defaultLabel: "Chat" },
             { id: "historico" as Section, icon: Clock, label: seasonalEmojis.historico ? `${seasonalEmojis.historico}` : "Pedidos", defaultLabel: "Pedidos" },
           ]).map((item) => {
             const isActive = section === item.id;
             const isFab = (item as any).isFab;
-            // Unique animation per icon
             const iconAnimations: Record<string, any> = {
               recarga: { rotate: [0, -15, 15, -10, 0], scale: [1, 1.15, 1], transition: { duration: 0.5, ease: "easeInOut" } },
               deposito: { scale: [1, 1.3, 1], rotate: [0, 90, 180, 270, 360], transition: { duration: 0.6, ease: "easeInOut" } },
               raspadinha: { rotate: [0, -10, 10, -5, 0], scale: [1, 1.2, 1], transition: { duration: 0.5, ease: "easeInOut" } },
-              chat: { scale: [1, 1.2, 1], y: [0, -4, 0], transition: { duration: 0.4, ease: "easeOut" } },
               historico: { rotate: [0, 360], transition: { duration: 0.8, ease: "easeInOut" } },
-              conta: { scale: [1, 1.2, 0.9, 1.1, 1], transition: { duration: 0.5, type: "spring" } },
             };
             const continuousAnimations: Record<string, any> = {
               recarga: { y: [0, -3, 0], transition: { repeat: Infinity, duration: 1.8, ease: "easeInOut" } },
               deposito: { rotate: [0, 8, -8, 0], transition: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } },
               raspadinha: { rotate: [0, 5, -5, 0], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
-              chat: { y: [0, -2, 0], scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               historico: { rotate: [0, 360], transition: { repeat: Infinity, duration: 4, ease: "linear" } },
-              conta: { scale: [1, 1.08, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
             };
             const iconAnimation = isActive ? (iconAnimations[item.id] || {}) : {};
             const continuousAnim = continuousAnimations[item.id] || {};
@@ -2177,8 +2171,139 @@ export default function TelegramMiniApp() {
               </button>
             );
           })}
+
+          {/* More button */}
+          {(() => {
+            const moreSections: Section[] = ["extrato", "conta", "chat", "status", "atualizacoes"];
+            const isActiveInMore = moreSections.includes(section);
+            return (
+              <button onClick={() => { setMoreOpen(true); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition min-w-[50px]"
+                style={{ color: isActiveInMore ? "var(--tg-accent)" : "var(--tg-hint)" }}>
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  whileTap={{ scale: 0.8 }}
+                >
+                  <MoreHorizontal className="w-5 h-5" />
+                </motion.div>
+                <span className="text-[10px] font-medium leading-tight">Mais</span>
+                {isActiveInMore && (
+                  <motion.div
+                    className="w-1.5 h-1.5 rounded-full mt-0.5"
+                    style={{ backgroundColor: "var(--tg-accent)" }}
+                  />
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
+
+      {/* More Bottom Sheet */}
+      <AnimatePresence>
+        {moreOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-[60]"
+              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+              onClick={() => setMoreOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+            <motion.div
+              className="fixed inset-x-0 bottom-0 z-[61] rounded-t-2xl shadow-2xl safe-area-bottom"
+              style={{ backgroundColor: "var(--tg-bg)", borderTop: st.borderMain }}
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            >
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-9 h-1 rounded-full" style={{ backgroundColor: "var(--tg-hint)", opacity: 0.3 }} />
+              </div>
+
+              <div className="flex items-center justify-between px-5 pb-3">
+                <h2 className="text-base font-bold" style={st.text}>Menu</h2>
+                <button
+                  onClick={() => setMoreOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "var(--tg-destructive)" }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* User info */}
+              {userName && (
+                <div className="mx-4 mb-3 p-3 rounded-xl" style={{ backgroundColor: "var(--tg-secondary-bg)" }}>
+                  <div className="flex items-center gap-3">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Avatar" className="w-9 h-9 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: "rgba(82,136,193,0.15)", color: "var(--tg-accent)" }}>
+                        {initials}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate" style={st.text}>{userName}</p>
+                      <p className="text-[11px]" style={st.hint}>Revendedor</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="px-4 pb-3 grid grid-cols-3 gap-2">
+                {([
+                  { id: "chat" as Section, icon: MessageCircle, label: "Bate-papo", color: "var(--tg-accent)" },
+                  { id: "extrato" as Section, icon: Landmark, label: "Carteira", color: "#4ade80" },
+                  { id: "conta" as Section, icon: Settings, label: "Conta", color: "var(--tg-accent)" },
+                  { id: "status" as Section, icon: Shield, label: "Status", color: "#facc15" },
+                  { id: "atualizacoes" as Section, icon: RefreshCw, label: "Novidades", color: "#a3e635" },
+                ]).map((item, index) => {
+                  const isActive = section === item.id;
+                  return (
+                    <motion.button
+                      key={item.id}
+                      onClick={() => { setSection(item.id); setMoreOpen(false); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
+                      className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl transition-colors"
+                      style={{
+                        backgroundColor: isActive ? "rgba(82,136,193,0.15)" : "var(--tg-secondary-bg)",
+                        color: isActive ? "var(--tg-accent)" : "var(--tg-text)",
+                      }}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.05 * index, type: "spring", stiffness: 300, damping: 20 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <motion.div
+                        animate={{ y: [0, -3, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.1 * index }}
+                      >
+                        <item.icon className="h-5 w-5" style={{ color: isActive ? "var(--tg-accent)" : item.color }} />
+                      </motion.div>
+                      <span className="text-[11px] font-semibold">{item.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {onSignOut && (
+                <div className="px-4 pb-5 pt-2">
+                  <button
+                    onClick={onSignOut}
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                    style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "var(--tg-destructive)" }}
+                  >
+                    <LogOut className="h-4 w-4" /> Sair
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
