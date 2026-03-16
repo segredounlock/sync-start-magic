@@ -2034,8 +2034,8 @@ export default function TelegramMiniApp() {
                     className="flex-1 px-3 py-2 rounded-xl text-sm focus:outline-none"
                     style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
                     <option value="all">Todas operadoras</option>
-                    {Array.from(new Set(recargas.map(r => r.operadora).filter(Boolean))).map(op => (
-                      <option key={op} value={op}>{(op as string).toUpperCase()}</option>
+                    {Array.from(new Set(recargas.map(r => r.operadora).filter(Boolean) as string[])).map(op => (
+                      <option key={op} value={op}>{op.toUpperCase()}</option>
                     ))}
                   </select>
                 </div>
