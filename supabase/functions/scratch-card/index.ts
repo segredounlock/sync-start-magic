@@ -127,10 +127,15 @@ Deno.serve(async (req) => {
     if (!authError && user) {
       userId = user.id;
     } else if (body?.user_id) {
-      // Verify it's a service_role call by checking the token matches service key
-      const token = authHeader.replace("Bearer ", "");
-      if (token === serviceKey) {
-        userId = body.user_id;
+      // Fallback for Telegram Mini App users without Supabase auth session
+      // Verify the user_id belongs to a real user with a linked Telegram account
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("id, telegram_id")
+        .eq("id", body.user_id)
+        .maybeSingle();
+      if (profile?.telegram_id) {
+        userId = profile.id;
       }
     }
 
