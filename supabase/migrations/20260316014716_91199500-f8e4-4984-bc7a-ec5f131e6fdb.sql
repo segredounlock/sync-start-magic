@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS scratch_cards_user_date_unique ON public.scratch_cards (user_id, card_date);
