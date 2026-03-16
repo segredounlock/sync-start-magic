@@ -2644,7 +2644,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     DISPONÍVEL: {fmt(saldoPessoal)}
                   </p>
                   <button
-                    onClick={() => setSaqueValor(String(saldoPessoal))}
+                    onClick={() => setSaqueValor(saldoPessoal.toFixed(2).replace(".", ","))}
                     className="text-[10px] font-bold text-primary hover:underline"
                   >
                     SACAR TUDO
