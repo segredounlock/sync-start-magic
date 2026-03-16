@@ -26,6 +26,7 @@ interface SaqueTransaction {
   user_email?: string;
   user_avatar?: string;
   pix_key?: string;
+  pix_key_type?: string;
 }
 
 type SaqueFilter = "pending" | "approved" | "completed" | "rejected" | "all";
@@ -64,21 +65,28 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
       // Fetch pix keys from reseller_config
       const { data: pixConfigs } = await supabase
         .from("reseller_config")
-        .select("user_id, value")
+        .select("user_id, key, value")
         .in("user_id", userIds)
-        .eq("key", "pix_key");
+        .in("key", ["pix_key_value", "pix_key_type"]);
 
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
-      const pixMap = new Map((pixConfigs || []).map(p => [p.user_id, p.value]));
+      const pixValueMap = new Map<string, string>();
+      const pixTypeMap = new Map<string, string>();
+      for (const p of pixConfigs || []) {
+        if (p.key === "pix_key_value") pixValueMap.set(p.user_id, p.value || "");
+        if (p.key === "pix_key_type") pixTypeMap.set(p.user_id, p.value || "");
+      }
 
       const enriched: SaqueTransaction[] = (data || []).map(t => {
         const profile = profileMap.get(t.user_id);
+        const meta = t.metadata as any;
         return {
           ...t,
           user_nome: profile?.nome || profile?.email?.split("@")[0] || "Usuário",
           user_email: profile?.email || "",
           user_avatar: profile?.avatar_url || "",
-          pix_key: pixMap.get(t.user_id) || (t.metadata as any)?.pix_key || "",
+          pix_key: pixValueMap.get(t.user_id) || meta?.pix_key || "",
+          pix_key_type: pixTypeMap.get(t.user_id) || meta?.pix_key_type || "",
         };
       });
 
@@ -246,7 +254,7 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
                         </span>
                         {saque.pix_key && (
                           <span className="flex items-center gap-1 text-primary font-medium">
-                            🔑 {saque.pix_key}
+                            🔑 {saque.pix_key_type ? <span className="uppercase text-[10px] opacity-70">{saque.pix_key_type}:</span> : null} {saque.pix_key}
                           </span>
                         )}
                       </div>
