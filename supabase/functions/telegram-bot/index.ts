@@ -1039,7 +1039,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     // Row 3: Conta + Web App
     const row3: any[] = [];
     if (btnMap.bot_btn_conta) row3.push({ text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" });
-    if (btnMap.bot_btn_webapp) row3.push({ text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } });
+    if (btnMap.bot_btn_webapp) row3.push({ text: `${se(em, "webapp")} Mini App`, web_app: { url: webAppUrl } });
     if (row3.length) kb.push(row3);
     // Migration row
     if (btnMap.bot_btn_migration && migrationConfig.enabled) {
