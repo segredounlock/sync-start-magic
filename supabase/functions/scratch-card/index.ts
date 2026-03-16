@@ -93,6 +93,11 @@ function rollPrize(tiers: Tier[]): { isWon: boolean; prizeAmount: number } {
   return { isWon: false, prizeAmount: 0 };
 }
 
+/** Get today's date in Brazil timezone (America/Sao_Paulo) */
+function getTodayBR(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
