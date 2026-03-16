@@ -142,9 +142,8 @@ Deno.serve(async (req) => {
             }
 
             // Credit balance atomically
-            const txMeta = meta;
-            const saldoTipo =
-              (txMeta.saldo_tipo as string) || "revenda";
+            // ALWAYS credit to "revenda" — never allow override
+            const saldoTipo = "revenda";
 
             const { data: newBalance } = await supabase.rpc("increment_saldo", {
               p_user_id: tx.user_id,
