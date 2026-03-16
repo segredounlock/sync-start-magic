@@ -412,6 +412,9 @@ async function sendBroadcastInBackground(
         blocked_count: blockedCount,
         completed_at: new Date().toISOString(),
       });
+
+      // Post to "Atualizações do Sistema" chat group
+      await postNotificationToChat(notification);
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
