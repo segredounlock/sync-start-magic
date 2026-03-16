@@ -1354,10 +1354,11 @@ export default function TelegramMiniApp() {
 
                   {recargaStep === "op" && (
                     <div className="space-y-3">
-                      <button onClick={() => setRecargaStep("phone")} className="flex items-center gap-1 text-sm" style={st.hint}>
+                      <button onClick={() => { setRecargaStep("phone"); setDetectedOperatorName(null); }} className="flex items-center gap-1 text-sm" style={st.hint}>
                         <ArrowLeft className="w-4 h-4" /> Voltar
                       </button>
                       <h2 className="text-lg font-bold" style={st.text}>Selecione a operadora</h2>
+                      <p className="text-xs" style={st.hint}>Não foi possível detectar automaticamente</p>
                       {operadoras.length === 0 ? (
                         <div className="text-center py-8" style={st.hint}>
                           <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
