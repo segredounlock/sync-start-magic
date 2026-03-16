@@ -1287,8 +1287,8 @@ export default function TelegramMiniApp() {
                       transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
                     >
                       {recargaResult.success ? (
-                        <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: "rgba(74, 222, 128, 0.15)" }}>
-                          <Check className="w-8 h-8" style={{ color: "#4ade80" }} />
+                        <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center" style={st.successBg}>
+                          <Check className="w-8 h-8" style={st.accent} />
                         </div>
                       ) : (
                         <p className="text-4xl mb-3">❌</p>
