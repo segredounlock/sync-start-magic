@@ -1903,9 +1903,29 @@ export default function TelegramMiniApp() {
             </motion.div>
           )}
           {/* ── Raspadinha ── */}
-          {section === "raspadinha" && userId && (
+          {section === "raspadinha" && userId && hasAuthSession && (
             <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
               <ScratchCard userId={userId} />
+            </motion.div>
+          )}
+          {section === "raspadinha" && (!userId || !hasAuthSession) && (
+            <motion.div key="raspadinha-login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "var(--tg-secondary-bg, #232e3c)" }}>
+                  <Ticket className="w-8 h-8" style={{ color: "var(--tg-accent, #6ab2f2)" }} />
+                </div>
+                <h3 className="text-lg font-bold" style={{ color: "var(--tg-text, #f5f5f5)" }}>Login Necessário</h3>
+                <p className="text-sm max-w-xs" style={{ color: "var(--tg-hint, #708499)" }}>
+                  Para usar a Raspadinha, faça login com sua conta na aba <strong>Conta</strong>.
+                </p>
+                <button
+                  onClick={() => setSection("conta")}
+                  className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                  style={{ background: "var(--tg-btn, #5288c1)", color: "var(--tg-btn-text, #fff)" }}
+                >
+                  Ir para Conta
+                </button>
+              </div>
             </motion.div>
           )}
           {/* ── Chat ── */}
