@@ -18,6 +18,7 @@ const ClientePortal = lazy(() => import("@/pages/ClientePortal"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const MaintenancePage = lazy(() => import("@/pages/MaintenancePage"));
 const InstallApp = lazy(() => import("@/pages/InstallApp"));
+const RegrasPage = lazy(() => import("@/pages/RegrasPage"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const RevendedorPainel = lazy(() => import("@/pages/RevendedorPainel"));
 const Principal = lazy(() => import("@/pages/Principal"));
@@ -139,6 +140,7 @@ function App() {
             <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
             <Route path="/loja/:slug" element={<LazyPage><ClientePortal /></LazyPage>} />
             <Route path="/miniapp" element={<LazyPage><TelegramMiniApp /></LazyPage>} />
+            <Route path="/regras" element={<LazyPage><RegrasPage /></LazyPage>} />
             <Route path="/instalar" element={<LazyPage><InstallApp /></LazyPage>} />
             <Route
               path="/admin"
