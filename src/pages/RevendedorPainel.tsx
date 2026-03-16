@@ -47,7 +47,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useFeePreview } from "@/hooks/useFeePreview";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
-import { applyCurrencyMask } from "@/lib/currencyMask";
+import { applyCurrencyMask, parseCurrencyMask } from "@/lib/currencyMask";
 import { handleExpiredSession } from "@/lib/sessionGuard";
 
 type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha";
@@ -2631,13 +2631,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Quanto deseja sacar?</label>
                 <input
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   value={saqueValor}
                   onChange={(e) => {
-                    const raw = e.target.value.replace(/[^\d.,]/g, "").replace(",", ".");
-                    setSaqueValor(raw);
+                    setSaqueValor(applyCurrencyMask(e.target.value));
                   }}
-                  placeholder="R$ Mínimo 5.00"
+                  placeholder="R$ Mínimo 5,00"
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                 />
                 <div className="flex justify-between items-center">
@@ -2645,7 +2644,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                     DISPONÍVEL: {fmt(saldoPessoal)}
                   </p>
                   <button
-                    onClick={() => setSaqueValor(String(saldoPessoal))}
+                    onClick={() => setSaqueValor(saldoPessoal.toFixed(2).replace(".", ","))}
                     className="text-[10px] font-bold text-primary hover:underline"
                   >
                     SACAR TUDO
@@ -2661,9 +2660,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   Cancelar
                 </button>
                 <button
-                  disabled={saqueLoading || !saqueValor || parseFloat(saqueValor) < 5 || parseFloat(saqueValor) > saldoPessoal || !saquePixKey}
+                  disabled={saqueLoading || !saqueValor || parseCurrencyMask(saqueValor) < 5 || parseCurrencyMask(saqueValor) > saldoPessoal || !saquePixKey}
                   onClick={async () => {
-                    const val = parseFloat(saqueValor);
+                    const val = parseCurrencyMask(saqueValor);
                     if (!val || val < 5 || val > saldoPessoal || !user || !saquePixKey) return;
                     setSaqueLoading(true);
                     try {
