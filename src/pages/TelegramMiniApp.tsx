@@ -2776,13 +2776,56 @@ export default function TelegramMiniApp() {
 
               <div className="flex items-center justify-between px-5 pb-3">
                 <h2 className="text-base font-bold" style={st.text}>Menu</h2>
-                <button
-                  onClick={() => setMoreOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "color-mix(in srgb, var(--tg-destructive) 10%, transparent)", color: "var(--tg-destructive)" }}
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Theme Toggle */}
+                  <button
+                    onClick={toggleTheme}
+                    className="relative w-14 h-7 rounded-full overflow-hidden transition-all duration-300"
+                    style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 20%, var(--tg-bg))", border: st.borderSub }}
+                    aria-label="Alternar tema"
+                  >
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      animate={{
+                        background: isDark
+                          ? "linear-gradient(135deg, var(--tg-bg), var(--tg-secondary-bg))"
+                          : "linear-gradient(135deg, color-mix(in srgb, var(--tg-warning, #eab308) 20%, var(--tg-bg)), color-mix(in srgb, var(--tg-link) 10%, var(--tg-bg)))",
+                      }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                    />
+                    <motion.span
+                      className="absolute top-0.5 w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: "var(--tg-btn)" }}
+                      animate={{
+                        left: isDark ? "calc(100% - 1.625rem)" : "0.125rem",
+                        boxShadow: isDark
+                          ? "0 0 12px color-mix(in srgb, var(--tg-accent) 50%, transparent)"
+                          : "0 0 8px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
+                      }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    >
+                      <AnimatePresence mode="wait">
+                        {isDark ? (
+                          <motion.div key="moon" initial={{ rotate: -90, opacity: 0, scale: 0.5 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: 90, opacity: 0, scale: 0.5 }} transition={{ duration: 0.25 }}>
+                            <Moon className="h-3.5 w-3.5" style={st.btnText} />
+                          </motion.div>
+                        ) : (
+                          <motion.div key="sun" initial={{ rotate: 90, opacity: 0, scale: 0.5 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: -90, opacity: 0, scale: 0.5 }} transition={{ duration: 0.25 }}>
+                            <Sun className="h-3.5 w-3.5" style={st.btnText} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.span>
+                  </button>
+                  {/* Close */}
+                  <button
+                    onClick={() => setMoreOpen(false)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "color-mix(in srgb, var(--tg-destructive) 10%, transparent)", color: "var(--tg-destructive)" }}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
               {/* User info */}
