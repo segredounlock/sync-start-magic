@@ -1306,9 +1306,9 @@ export default function TelegramMiniApp() {
                   {recargaResult.success && recargaResult.details && (
                     <>
                       <div className="rounded-2xl overflow-hidden" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                        <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "rgba(74, 222, 128, 0.05)" }}>
-                          <FileText className="w-4 h-4" style={{ color: "#4ade80" }} />
-                          <span className="text-xs font-bold tracking-wider uppercase" style={{ color: "#4ade80" }}>Comprovante de Recarga</span>
+                         <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "color-mix(in srgb, var(--tg-accent) 5%, transparent)" }}>
+                          <FileText className="w-4 h-4" style={st.accent} />
+                          <span className="text-xs font-bold tracking-wider uppercase" style={st.accent}>Comprovante de Recarga</span>
                         </div>
                         <div className="divide-y" style={{ borderColor: "var(--tg-secondary-bg)" }}>
                           {[
