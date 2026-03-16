@@ -440,7 +440,10 @@ async function checkTermsAccepted(supabase: any, telegramId: string): Promise<bo
 }
 
 async function recordTermsAcceptance(supabase: any, telegramId: string) {
-  await supabase.from("terms_acceptance").insert({ telegram_id: telegramId });
+  await supabase.from("terms_acceptance").upsert(
+    { telegram_id: telegramId, accepted_at: new Date().toISOString() },
+    { onConflict: "telegram_id" }
+  );
 }
 
 async function sendTermsMessage(token: string, chatId: number) {
