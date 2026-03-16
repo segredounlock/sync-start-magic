@@ -17,6 +17,7 @@ import {
   MoreHorizontal, X, Settings
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
+import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { ScratchCard } from "@/components/ScratchCard";
 import { Ticket } from "lucide-react";
