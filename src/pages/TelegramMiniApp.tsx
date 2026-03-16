@@ -2095,7 +2095,7 @@ export default function TelegramMiniApp() {
                               <row.icon className="w-3.5 h-3.5" style={{ color: "var(--tg-hint)" }} />
                               <span className="text-xs" style={{ color: "var(--tg-hint)" }}>{row.label}</span>
                             </div>
-                            <span className="text-sm font-semibold" style={{ color: row.highlight ? "#4ade80" : "var(--tg-text)" }}>{row.value}</span>
+                            <span className="text-sm font-semibold" style={{ color: row.highlight ? "var(--tg-accent)" : "var(--tg-text)" }}>{row.value}</span>
                           </div>
                         ))}
                       </div>
