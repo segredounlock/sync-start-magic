@@ -606,13 +606,23 @@ export default function TelegramMiniApp() {
     setUploadingAvatar(false);
   };
 
+  // OPTIMIZATION 5: Parallel data loading per section
   useEffect(() => {
     if (!userId) return;
-    if (section === "recarga") { loadOperadoras(); loadRecargas(); }
-    if (section === "historico") loadRecargas();
-    if (section === "extrato") loadTransactions();
-    if (section === "recarga" || section === "deposito") refreshSaldo();
-    if (section === "conta") loadAvatar();
+    const loads: Promise<void>[] = [];
+    if (section === "recarga") {
+      loads.push(loadOperadoras(), loadRecargas(), refreshSaldo());
+    } else if (section === "historico") {
+      loads.push(loadRecargas());
+    } else if (section === "extrato") {
+      loads.push(loadTransactions());
+    } else if (section === "deposito") {
+      loads.push(refreshSaldo());
+    } else if (section === "conta") {
+      loads.push(loadAvatar());
+    }
+    // Fire all in parallel
+    if (loads.length) Promise.all(loads).catch(() => {});
   }, [section, userId]);
 
   // Realtime subscriptions
