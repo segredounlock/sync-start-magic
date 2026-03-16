@@ -2297,8 +2297,8 @@ export default function TelegramMiniApp() {
                         className="flex-1 rounded-lg px-2.5 py-1.5 text-sm font-bold focus:outline-none"
                         style={{ ...st.bg, ...st.text, border: st.borderSub }} autoFocus />
                       <button onClick={handleSaveProfile} disabled={savingProfile}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(74,222,128,0.15)" }}>
-                        {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" style={st.green} /> : <Save className="w-4 h-4" style={st.green} />}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={st.successBg}>
+                        {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" style={st.accent} /> : <Save className="w-4 h-4" style={st.accent} />}
                       </button>
                       <button onClick={() => setEditingName(false)}
                         className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.15)" }}>
