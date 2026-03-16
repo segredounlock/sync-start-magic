@@ -2377,19 +2377,80 @@ export default function Principal() {
                       <div className="md:hidden space-y-2">
                         {revTransactions.slice(0, 20).map((t, i) => {
                           const isDeposit = t.type === "deposit" || t.type === "deposito";
+                          const meta = t.metadata as any;
+                          const payerName = meta?.payer_name || null;
+                          const payerDoc = meta?.payer_document || null;
+                          const isExpanded = expandedDepositId === t.id;
                           return (
-                            <div key={i} className="rounded-lg border border-border p-3">
-                              <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-foreground capitalize">{isDeposit ? "Depósito" : t.type}</p>
-                                <StatusBadge status={t.status} type="deposit" className="text-xs" />
-                              </div>
-                              <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                <span className="text-[10px] text-muted-foreground">{fmtDate(t.created_at)}</span>
-                                <div className="flex items-center gap-2">
-                                  <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></span>
-                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${getStatusLabel(t.status, "deposit")}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                            <div key={t.id || i} className="rounded-lg border border-border overflow-hidden cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setExpandedDepositId(isExpanded ? null : t.id)}>
+                              <div className="p-3">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-sm font-semibold text-foreground capitalize">{isDeposit ? "Depósito" : t.type}</p>
+                                  <StatusBadge status={t.status} type="deposit" className="text-xs" />
+                                </div>
+                                {payerName && (
+                                  <p className="text-[11px] text-muted-foreground truncate">👤 {payerName}{payerDoc ? ` · ${payerDoc}` : ""}</p>
+                                )}
+                                {t.payment_id && (
+                                  <p className="text-[10px] text-muted-foreground/70 font-mono truncate mt-0.5">ID: {t.payment_id.slice(0, 16)}...</p>
+                                )}
+                                <div className="flex items-center justify-between pt-2 border-t border-border/50 mt-2">
+                                  <span className="text-[10px] text-muted-foreground">{fmtDate(t.created_at)}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`font-bold font-mono text-sm ${isDeposit ? "text-success" : "text-foreground"}`}><AnimatedCounter value={t.amount} prefix="R$&nbsp;" duration={600} /></span>
+                                    <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${isDeposit ? "Depósito" : t.type} | ${fmt(t.amount)} | ${getStatusLabel(t.status, "deposit")}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                  </div>
                                 </div>
                               </div>
+                              {/* Expanded details */}
+                              {isExpanded && meta && (
+                                <div className="px-3 pb-3 pt-1 border-t border-border bg-muted/30 space-y-1.5 text-[11px]">
+                                  {t.payment_id && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">ID Pagamento:</span><span className="font-mono text-foreground break-all text-right max-w-[60%]">{t.payment_id}</span></div>
+                                  )}
+                                  {payerName && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Pagador:</span><span className="text-foreground font-medium">{payerName}</span></div>
+                                  )}
+                                  {payerDoc && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">CPF:</span><span className="font-mono text-foreground">{payerDoc}</span></div>
+                                  )}
+                                  {meta.gateway && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Gateway:</span><span className="text-foreground capitalize">{meta.gateway}</span></div>
+                                  )}
+                                  {meta.fee_applied != null && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Taxa:</span><span className="text-foreground">R$ {Number(meta.fee_applied).toFixed(2)}{meta.fee_type ? ` (${meta.fee_type})` : ""}</span></div>
+                                  )}
+                                  {meta.credited_amount != null && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Creditado:</span><span className="text-success font-bold">R$ {Number(meta.credited_amount).toFixed(2)}</span></div>
+                                  )}
+                                  {meta.saldo_tipo && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Tipo Saldo:</span><span className="text-foreground capitalize">{meta.saldo_tipo}</span></div>
+                                  )}
+                                  {meta.confirmed_at && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Confirmado em:</span><span className="text-foreground">{fmtDate(meta.confirmed_at)}</span></div>
+                                  )}
+                                  {meta.end_to_end_id && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">E2E ID:</span><span className="font-mono text-foreground text-right max-w-[60%] break-all">{meta.end_to_end_id}</span></div>
+                                  )}
+                                  <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    const info = [
+                                      `ID: ${t.payment_id || t.id}`,
+                                      `Pagador: ${payerName || "—"}`,
+                                      `CPF: ${payerDoc || "—"}`,
+                                      `Valor: R$ ${Number(t.amount).toFixed(2)}`,
+                                      `Creditado: R$ ${meta.credited_amount ? Number(meta.credited_amount).toFixed(2) : "—"}`,
+                                      `Gateway: ${meta.gateway || "—"}`,
+                                      `Status: ${t.status}`,
+                                      `Data: ${fmtDate(t.created_at)}`,
+                                    ].join("\n");
+                                    navigator.clipboard.writeText(info);
+                                    toast.success("Dados completos copiados!");
+                                  }} className="w-full mt-1 py-1.5 rounded-md bg-primary/10 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors flex items-center justify-center gap-1">
+                                    <Copy className="h-3 w-3" /> Copiar tudo
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
