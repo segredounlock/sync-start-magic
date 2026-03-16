@@ -794,7 +794,7 @@ export default function TelegramMiniApp() {
     setRecargaLoading(false);
   };
 
-  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); setDetectedOperatorName(null); };
+  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); setDetectedOperatorName(null); setPendingWarning(null); };
 
   // Local fallback: detect operator by Brazilian mobile prefix
   const detectOperatorLocally = useCallback((digits: string): string | null => {
