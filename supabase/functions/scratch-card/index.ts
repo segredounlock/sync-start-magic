@@ -268,7 +268,7 @@ Deno.serve(async (req) => {
         const { data: saldo } = await supabaseAdmin
           .from("saldos")
           .select("valor")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("tipo", "revenda")
           .single();
 
