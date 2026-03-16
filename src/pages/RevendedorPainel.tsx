@@ -47,7 +47,7 @@ import { usePixDeposit } from "@/hooks/usePixDeposit";
 import { useFeePreview } from "@/hooks/useFeePreview";
 import { useResilientFetch, guardedFetch } from "@/hooks/useAsync";
 import { operadoraColors, safeValor } from "@/lib/utils";
-import { applyCurrencyMask } from "@/lib/currencyMask";
+import { applyCurrencyMask, parseCurrencyMask } from "@/lib/currencyMask";
 import { handleExpiredSession } from "@/lib/sessionGuard";
 
 type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha";
