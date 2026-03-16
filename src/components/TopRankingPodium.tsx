@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Medal, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
@@ -10,6 +10,58 @@ interface RankUser {
   avatar_url: string | null;
   verification_badge: string | null;
   total_recargas: number;
+}
+
+/* ─── Skeleton for loading state ─── */
+function RankingSkeleton() {
+  return (
+    <div className="glass-card rounded-xl p-4 space-y-4 overflow-visible">
+      {/* Title skeleton */}
+      <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-muted/40 animate-pulse" />
+          <div className="h-6 w-36 bg-muted/40 rounded-lg animate-pulse" />
+          <div className="h-6 w-20 rounded-full bg-muted/40 animate-pulse" />
+        </div>
+      </div>
+
+      {/* Podium skeleton: [2nd, 1st, 3rd] */}
+      <div className="flex items-end justify-center gap-6 md:gap-10 pt-4 pb-2">
+        {[0, 1, 2].map((i) => {
+          const isCenter = i === 1;
+          return (
+            <motion.div
+              key={i}
+              className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              {isCenter && <div className="w-9 h-9 -mb-3" />}
+              <div className={`${isCenter ? "w-20 h-20 md:w-24 md:h-24" : "w-16 h-16 md:w-20 md:h-20"} rounded-full bg-muted/40 animate-pulse`} />
+              <div className="flex flex-col items-center gap-1">
+                <div className={`${isCenter ? "w-20" : "w-16"} h-3 bg-muted/40 rounded animate-pulse`} />
+                <div className="w-14 h-2.5 bg-muted/30 rounded animate-pulse" />
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* User position skeleton */}
+      <div className="flex items-center justify-center pt-2">
+        <div className="flex items-center gap-2 bg-muted/20 rounded-full px-5 py-2.5">
+          <div className="w-16 h-3 bg-muted/40 rounded animate-pulse" />
+          <div className="w-8 h-6 bg-muted/40 rounded-full animate-pulse" />
+          <div className="w-9 h-9 bg-muted/40 rounded-full animate-pulse" />
+          <div className="flex flex-col gap-1">
+            <div className="w-20 h-3 bg-muted/40 rounded animate-pulse" />
+            <div className="w-14 h-2 bg-muted/30 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ─── Gold Floating Crown (1st place) ─── */
@@ -201,6 +253,29 @@ function AvatarFlash({ index }: { index: number }) {
   );
 }
 
+/* ─── Animated Counter ─── */
+function CountUp({ value, delay = 0 }: { value: number; delay?: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const duration = 1200;
+      const steps = 30;
+      const increment = value / steps;
+      let current = 0;
+      let step = 0;
+      const interval = setInterval(() => {
+        step++;
+        current = Math.min(Math.round(increment * step), value);
+        setDisplay(current);
+        if (step >= steps) clearInterval(interval);
+      }, duration / steps);
+      return () => clearInterval(interval);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return <>{display}</>;
+}
+
 /* ─── Main Component ─── */
 interface TopRankingPodiumProps {
   userId: string;
@@ -210,17 +285,19 @@ interface TopRankingPodiumProps {
 export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) {
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [revealed, setRevealed] = useState(false);
 
   const loadRanking = async () => {
     setLoading(true);
     const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 10 });
     if (data) setRanking(data as RankUser[]);
     setLoading(false);
+    // Small delay before revealing podium for dramatic effect
+    setTimeout(() => setRevealed(true), 100);
   };
 
   useEffect(() => {
     loadRanking();
-    // Realtime updates
     const channel = supabase
       .channel("ranking-updates")
       .on(
@@ -232,23 +309,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="glass-card rounded-xl p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-yellow-500" />
-          <div className="h-4 w-32 bg-muted/60 rounded animate-pulse" />
-        </div>
-        {[1, 2, 3].map(i => (
-          <div key={i} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-muted/60 animate-pulse" />
-            <div className="flex-1 h-3 bg-muted/60 rounded animate-pulse" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
+  if (loading) return <RankingSkeleton />;
   if (ranking.length < 3) return null;
 
   const topUsers = ranking.slice(0, 3);
@@ -266,193 +327,251 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
     }
   };
 
+  // Staggered entrance: 1st appears first (center), then 2nd, then 3rd
+  const entranceOrder = [1, 0, 2]; // center first, then left, then right
+  const entranceDelays = [0, 0.25, 0.45];
+
   return (
-    <div className="glass-card rounded-xl p-4 space-y-4 overflow-visible">
-      {/* Title bar */}
-      <div className="flex items-center justify-center gap-3">
-        <div className="flex items-center gap-2.5">
-          {/* Trophy with ghost glow + bounce */}
-          <motion.div
-            animate={{ y: [0, -3, 0], rotate: [0, -5, 5, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
-            className="relative shrink-0"
-          >
-            <Trophy className="w-7 h-7 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+    <AnimatePresence>
+      <motion.div
+        className="glass-card rounded-xl p-4 space-y-4 overflow-visible"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        {/* Title bar */}
+        <motion.div
+          className="flex items-center justify-center gap-3"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+        >
+          <div className="flex items-center gap-2.5">
+            {/* Trophy with ghost glow + bounce */}
             <motion.div
-              className="absolute inset-0"
-              animate={{ opacity: [0.2, 0.6, 0.2] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              animate={{ y: [0, -3, 0], rotate: [0, -5, 5, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
+              className="relative shrink-0"
             >
-              <Trophy className="w-7 h-7 text-yellow-300 blur-[2px]" />
+              <Trophy className="w-7 h-7 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+              <motion.div
+                className="absolute inset-0"
+                animate={{ opacity: [0.2, 0.6, 0.2] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Trophy className="w-7 h-7 text-yellow-300 blur-[2px]" />
+              </motion.div>
             </motion.div>
-          </motion.div>
 
-          <h2 className="relative text-xl md:text-2xl font-extrabold overflow-hidden tracking-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
-              Top Recargas
-            </span>
-            <motion.span
-              className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
-              style={{
-                backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(255,255,255,0.9) 50%, transparent 65%, transparent 100%)",
-                backgroundSize: "200% 100%",
-                WebkitBackgroundClip: "text",
-              }}
-              animate={{ backgroundPosition: ["200% center", "-200% center"] }}
-              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
-            >
-              Top Recargas
-            </motion.span>
-          </h2>
-
-          {/* Ranking badge */}
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-amber-950 text-xs font-bold shadow-lg">
-            <Trophy className="w-3.5 h-3.5" />
-            Ranking
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          </span>
-        </div>
-
-        {onViewFull && (
-          <div className="relative shrink-0">
-            <motion.div
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-500/40 to-amber-500/40 blur-lg"
-              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <button
-              onClick={onViewFull}
-              className="relative bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-bold text-sm px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
-            >
-              <Trophy className="w-4 h-4" />
-              Ranking
-              <span className="relative ml-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative rounded-full h-2.5 w-2.5 bg-green-500" />
+            <h2 className="relative text-xl md:text-2xl font-extrabold overflow-hidden tracking-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
+                Top Recargas
               </span>
-            </button>
-          </div>
-        )}
-      </div>
+              <motion.span
+                className="absolute inset-0 text-transparent bg-clip-text pointer-events-none"
+                style={{
+                  backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(255,255,255,0.9) 50%, transparent 65%, transparent 100%)",
+                  backgroundSize: "200% 100%",
+                  WebkitBackgroundClip: "text",
+                }}
+                animate={{ backgroundPosition: ["200% center", "-200% center"] }}
+                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+              >
+                Top Recargas
+              </motion.span>
+            </h2>
 
-      {/* Podium: [2nd, 1st, 3rd] */}
-      <div className="flex items-end justify-center gap-6 md:gap-10 pt-4 pb-2">
-        {podiumOrder.map((user, displayIndex) => {
-          const config = getPodiumConfig(displayIndex);
-          const isCenter = displayIndex === 1;
-          return (
-            <motion.div
-              key={user.user_id}
-              className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""}`}
-              initial={{ opacity: 0, y: 30, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: displayIndex * 0.15, type: "spring", stiffness: 200, damping: 20 }}
-              whileHover={{ scale: 1.08 }}
+            {/* Ranking badge */}
+            <motion.span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-amber-950 text-xs font-bold shadow-lg"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 15 }}
             >
-              {/* Crown above avatar for 1st place only */}
-              {isCenter && (
-                <div className="-mb-3 z-10">
-                  <GoldFloatingCrown size={36} />
-                </div>
-              )}
+              <Trophy className="w-3.5 h-3.5" />
+              Ranking
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            </motion.span>
+          </div>
 
-              {/* Avatar container */}
-              <div className="relative">
-                {/* Golden aura glow for 1st place */}
+          {onViewFull && (
+            <div className="relative shrink-0">
+              <motion.div
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-500/40 to-amber-500/40 blur-lg"
+                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <button
+                onClick={onViewFull}
+                className="relative bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-bold text-sm px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
+              >
+                <Trophy className="w-4 h-4" />
+                Ranking
+                <span className="relative ml-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative rounded-full h-2.5 w-2.5 bg-green-500" />
+                </span>
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Podium: [2nd, 1st, 3rd] with dramatic entrance */}
+        <div className="flex items-end justify-center gap-6 md:gap-10 pt-4 pb-2">
+          {podiumOrder.map((user, displayIndex) => {
+            const config = getPodiumConfig(displayIndex);
+            const isCenter = displayIndex === 1;
+            const delay = entranceDelays[displayIndex];
+
+            return (
+              <motion.div
+                key={user.user_id}
+                className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""}`}
+                initial={{ opacity: 0, y: 60, scale: 0.5 }}
+                animate={revealed ? { opacity: 1, y: 0, scale: 1 } : {}}
+                transition={{
+                  delay,
+                  type: "spring",
+                  stiffness: 180,
+                  damping: 16,
+                  mass: isCenter ? 1.2 : 1,
+                }}
+                whileHover={{ scale: 1.08 }}
+              >
+                {/* Crown above avatar for 1st place only */}
                 {isCenter && (
-                  <>
-                    <motion.div
-                      className="absolute inset-[-12px] rounded-full"
-                      style={{
-                        background: "radial-gradient(circle, rgba(251,191,36,0.35) 0%, rgba(251,191,36,0.15) 40%, transparent 70%)",
-                      }}
-                      animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <motion.div
-                      className="absolute inset-[-6px] rounded-full"
-                      style={{
-                        background: "radial-gradient(circle, rgba(251,191,36,0.5) 0%, transparent 60%)",
-                        filter: "blur(8px)",
-                      }}
-                      animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
-                      transition={{ duration: 1.8, repeat: Infinity }}
-                    />
-                  </>
+                  <motion.div
+                    className="-mb-3 z-10"
+                    initial={{ opacity: 0, y: -20, scale: 0 }}
+                    animate={revealed ? { opacity: 1, y: 0, scale: 1 } : {}}
+                    transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 12 }}
+                  >
+                    <GoldFloatingCrown size={36} />
+                  </motion.div>
                 )}
 
-                <div className={`relative ${config.avatarSize} rounded-full ring-2 ${config.ringColor} overflow-visible`}>
-                  {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.nome}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-xl">
-                      {(user.nome?.[0] || "?").toUpperCase()}
-                    </div>
+                {/* Avatar container */}
+                <div className="relative">
+                  {/* Golden aura glow for 1st place */}
+                  {isCenter && (
+                    <>
+                      <motion.div
+                        className="absolute inset-[-12px] rounded-full"
+                        style={{
+                          background: "radial-gradient(circle, rgba(251,191,36,0.35) 0%, rgba(251,191,36,0.15) 40%, transparent 70%)",
+                        }}
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={revealed ? { scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] } : {}}
+                        transition={{ delay: 0.6, duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <motion.div
+                        className="absolute inset-[-6px] rounded-full"
+                        style={{
+                          background: "radial-gradient(circle, rgba(251,191,36,0.5) 0%, transparent 60%)",
+                          filter: "blur(8px)",
+                        }}
+                        initial={{ opacity: 0 }}
+                        animate={revealed ? { scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] } : {}}
+                        transition={{ delay: 0.7, duration: 1.8, repeat: Infinity }}
+                      />
+                    </>
                   )}
-                  <AvatarFlash index={config.position - 1} />
 
-                  {/* Medal badge on top-right for 2nd/3rd */}
-                  {!isCenter && (
-                    <div className="absolute -top-1 -right-1 z-10">
-                      {config.badge}
-                    </div>
-                  )}
+                  <motion.div
+                    className={`relative ${config.avatarSize} rounded-full ring-2 ${config.ringColor} overflow-visible`}
+                    initial={{ scale: 0 }}
+                    animate={revealed ? { scale: 1 } : {}}
+                    transition={{ delay: delay + 0.1, type: "spring", stiffness: 250, damping: 18 }}
+                  >
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.nome}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-xl">
+                        {(user.nome?.[0] || "?").toUpperCase()}
+                      </div>
+                    )}
+                    <AvatarFlash index={config.position - 1} />
 
-                  {user.verification_badge && (
-                    <div className="absolute -bottom-1 -right-1 z-10">
-                      <VerificationBadge badge={user.verification_badge as BadgeType} size="sm" />
-                    </div>
-                  )}
+                    {/* Medal badge on top-right for 2nd/3rd */}
+                    {!isCenter && (
+                      <motion.div
+                        className="absolute -top-1 -right-1 z-10"
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={revealed ? { opacity: 1, scale: 1 } : {}}
+                        transition={{ delay: delay + 0.3, type: "spring", stiffness: 300, damping: 15 }}
+                      >
+                        {config.badge}
+                      </motion.div>
+                    )}
+
+                    {user.verification_badge && (
+                      <div className="absolute -bottom-1 -right-1 z-10">
+                        <VerificationBadge badge={user.verification_badge as BadgeType} size="sm" />
+                      </div>
+                    )}
+                  </motion.div>
                 </div>
-              </div>
 
-              {/* Name + count */}
-              <div className="flex flex-col items-center">
-                <p className={`text-center font-semibold truncate max-w-[120px] md:max-w-[140px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`} title={user.nome}>
-                  {user.nome}
-                </p>
-                <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
-                  <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-base" : "text-sm"}`}>{user.total_recargas}</span>
-                  {" "}recargas
-                </span>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+                {/* Name + count with staggered fade */}
+                <motion.div
+                  className="flex flex-col items-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={revealed ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: delay + 0.3, duration: 0.3 }}
+                >
+                  <p className={`text-center font-semibold truncate max-w-[120px] md:max-w-[140px] ${isCenter ? "text-sm text-foreground" : "text-xs text-muted-foreground"}`} title={user.nome}>
+                    {user.nome}
+                  </p>
+                  <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
+                    <span className={`font-mono font-bold tabular-nums ${isCenter ? "text-base" : "text-sm"}`}>
+                      <CountUp value={user.total_recargas} delay={(delay + 0.4) * 1000} />
+                    </span>
+                    {" "}recargas
+                  </span>
+                </motion.div>
+              </motion.div>
+            );
+          })}
+        </div>
 
-      {/* User position bar */}
-      {userRank >= 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="flex items-center justify-center pt-2"
-        >
-          <div className="flex items-center gap-2 md:gap-3 bg-secondary/80 backdrop-blur-sm rounded-full px-3 md:px-5 py-1.5 md:py-2.5 border border-border shadow-lg">
-            <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Sua posição:</span>
-            <span className="bg-destructive text-destructive-foreground font-bold text-xs md:text-sm min-w-[24px] md:min-w-[32px] text-center px-2 md:px-2.5 py-0.5 md:py-1 rounded-full">
-              {userRank + 1}º
-            </span>
-            {ranking[userRank]?.avatar_url ? (
-              <img src={ranking[userRank].avatar_url!} alt="" className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border object-cover" />
-            ) : (
-              <div className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border bg-muted flex items-center justify-center text-foreground font-bold text-[10px] md:text-xs">
-                {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
+        {/* User position bar */}
+        {userRank >= 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.8, type: "spring", stiffness: 200, damping: 20 }}
+            className="flex items-center justify-center pt-2"
+          >
+            <div className="flex items-center gap-2 md:gap-3 bg-secondary/80 backdrop-blur-sm rounded-full px-3 md:px-5 py-1.5 md:py-2.5 border border-border shadow-lg">
+              <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Sua posição:</span>
+              <motion.span
+                className="bg-destructive text-destructive-foreground font-bold text-xs md:text-sm min-w-[24px] md:min-w-[32px] text-center px-2 md:px-2.5 py-0.5 md:py-1 rounded-full"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1, type: "spring", stiffness: 300, damping: 12 }}
+              >
+                {userRank + 1}º
+              </motion.span>
+              {ranking[userRank]?.avatar_url ? (
+                <img src={ranking[userRank].avatar_url!} alt="" className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border object-cover" />
+              ) : (
+                <div className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border bg-muted flex items-center justify-center text-foreground font-bold text-[10px] md:text-xs">
+                  {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
+                </div>
+              )}
+              <div className="flex flex-col">
+                <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">{ranking[userRank]?.nome}</span>
+                <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{ranking[userRank]?.total_recargas} recargas</span>
               </div>
-            )}
-            <div className="flex flex-col">
-              <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">{ranking[userRank]?.nome}</span>
-              <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{ranking[userRank]?.total_recargas} recargas</span>
+              <span className="text-[10px] md:text-xs bg-primary/20 text-primary px-1.5 md:px-2 py-0.5 rounded-full font-semibold">Você</span>
             </div>
-            <span className="text-[10px] md:text-xs bg-primary/20 text-primary px-1.5 md:px-2 py-0.5 rounded-full font-semibold">Você</span>
-          </div>
-        </motion.div>
-      )}
-    </div>
+          </motion.div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
