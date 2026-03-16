@@ -448,8 +448,9 @@ Deno.serve(async (req) => {
     }
 
     const parsedBody = (req as any).__parsedBody || await req.json();
-    const { amount, email, name, reseller_user_id, use_global, saldo_tipo } = parsedBody;
-    const saldoType = saldo_tipo || "revenda";
+    const { amount, email, name, reseller_user_id, use_global } = parsedBody;
+    // ALWAYS credit to "revenda" — never allow override to "pessoal"
+    const saldoType = "revenda";
     if (!amount || amount <= 0) {
       return new Response(JSON.stringify({ error: "Valor inválido" }), {
         status: 400,

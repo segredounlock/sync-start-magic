@@ -228,9 +228,8 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Determine which saldo type to credit from transaction metadata
-        const txMeta = (tx.metadata as Record<string, unknown>) || {};
-        const saldoTipo = (txMeta.saldo_tipo as string) || "revenda";
+        // ALWAYS credit to "revenda" — never allow override
+        const saldoTipo = "revenda";
 
         // Resolve fee using RPC (reseller-specific → global fallback)
         const { data: feeRows } = await supabase.rpc("get_deposit_fee_for_user", { _user_id: tx.user_id });
