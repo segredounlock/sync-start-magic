@@ -2661,7 +2661,7 @@ export default function TelegramMiniApp() {
                       }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <item.icon className="h-5 w-5" style={{ color: "#fff" }} />
+                      <item.icon className="h-5 w-5" style={st.btnText} />
                     </motion.div>
                   </div>
                   <span className="text-[10px] font-bold mt-0.5 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
