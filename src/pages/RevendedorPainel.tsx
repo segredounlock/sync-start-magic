@@ -2660,9 +2660,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   Cancelar
                 </button>
                 <button
-                  disabled={saqueLoading || !saqueValor || parseFloat(saqueValor) < 5 || parseFloat(saqueValor) > saldoPessoal || !saquePixKey}
+                  disabled={saqueLoading || !saqueValor || parseCurrencyMask(saqueValor) < 5 || parseCurrencyMask(saqueValor) > saldoPessoal || !saquePixKey}
                   onClick={async () => {
-                    const val = parseFloat(saqueValor);
+                    const val = parseCurrencyMask(saqueValor);
                     if (!val || val < 5 || val > saldoPessoal || !user || !saquePixKey) return;
                     setSaqueLoading(true);
                     try {
