@@ -83,24 +83,38 @@ async function generateCommissions(
       return;
     }
 
-    // Insert direct commission
-    await adminClient.from("referral_commissions").insert({
-      user_id: resellerId,
-      referred_user_id: userId,
-      recarga_id: recargaId || null,
-      type: "direct",
-      amount: profit,
-    });
-    console.log(`commissions: direct ${profit} to reseller ${resellerId} from user ${userId}`);
-
-    // Check indirect commission config
+    // Load all commission config at once
     const { data: cfgRows } = await adminClient
       .from("system_config")
       .select("key, value")
-      .in("key", ["indirectCommissionEnabled", "indirectCommissionPercent"]);
+      .in("key", [
+        "directCommissionEnabled", "directCommissionPercent",
+        "indirectCommissionEnabled", "indirectCommissionPercent",
+      ]);
     const cfg: Record<string, string> = {};
     (cfgRows || []).forEach((r: any) => { cfg[r.key] = r.value; });
 
+    // Direct commission
+    const directEnabled = (cfg.directCommissionEnabled ?? "true") === "true";
+    const directPercent = parseFloat(cfg.directCommissionPercent || "100");
+
+    if (directEnabled && directPercent > 0) {
+      const directAmount = Math.round(profit * (directPercent / 100) * 100) / 100;
+      if (directAmount > 0) {
+        await adminClient.from("referral_commissions").insert({
+          user_id: resellerId,
+          referred_user_id: userId,
+          recarga_id: recargaId || null,
+          type: "direct",
+          amount: directAmount,
+        });
+        console.log(`commissions: direct ${directAmount} (${directPercent}% of ${profit}) to reseller ${resellerId} from user ${userId}`);
+      }
+    } else {
+      console.log(`commissions: direct commission disabled or 0%, skipping`);
+    }
+
+    // Indirect commission
     if (cfg.indirectCommissionEnabled !== "true") return;
 
     const indirectPercent = parseFloat(cfg.indirectCommissionPercent || "0");
