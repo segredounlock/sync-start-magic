@@ -243,7 +243,7 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
 
     try {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
-        body: { action: "scratch", card_id: card.id },
+        body: { action: "scratch", card_id: card.id, ...(noAuthMode ? { user_id: userId } : {}) },
       });
 
       if (error) {
