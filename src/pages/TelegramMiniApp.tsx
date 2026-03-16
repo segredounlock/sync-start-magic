@@ -419,27 +419,36 @@ export default function TelegramMiniApp() {
       liveTg?.ready();
       liveTg?.expand();
 
-      // Check auth session first (used by chat RLS)
-      let existingSessionUserId: string | null = null;
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        existingSessionUserId = session?.user?.id ?? null;
-        if (!cancelled) setHasAuthSession(!!session?.user);
-      } catch (err) {
-        console.error("Mini App auth session precheck error:", err);
-        if (!cancelled) setHasAuthSession(false);
+      // OPTIMIZATION 1: Show cached session IMMEDIATELY (instant render)
+      const saved = loadSavedSession();
+      if (saved && !cancelled) {
+        applySession(saved);
+        if (saved.userId) setAvatarUrl(null); // will be refreshed below
+        setLoading(false); // UI renders instantly with cached data
       }
 
-      // 1) Try Telegram initData lookup
-      const tgUser = await (async () => {
-        for (let i = 0; i < 12; i++) {
-          const u = getTelegramUser();
-          if (u?.id) return u;
-          await new Promise(r => setTimeout(r, 250));
-        }
-        return null;
-      })();
+      // OPTIMIZATION 2: Start auth check & TG user detection IN PARALLEL
+      const [authResult, tgUser] = await Promise.all([
+        // Auth session check
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!cancelled) setHasAuthSession(!!session?.user);
+          return session?.user?.id ?? null;
+        }).catch(() => { if (!cancelled) setHasAuthSession(false); return null; }),
 
+        // TG user detection — reduced from 12×250ms to 6×150ms (max 900ms vs 3000ms)
+        (async () => {
+          for (let i = 0; i < 6; i++) {
+            const u = getTelegramUser();
+            if (u?.id) return u;
+            await new Promise(r => setTimeout(r, 150));
+          }
+          return null;
+        })(),
+      ]);
+
+      const existingSessionUserId = authResult as string | null;
+
+      // OPTIMIZATION 3: Telegram lookup (primary path)
       if (tgUser?.id && !cancelled) {
         try {
           const { data, error } = await supabase.functions.invoke("telegram-miniapp", {
@@ -450,39 +459,38 @@ export default function TelegramMiniApp() {
             applySession(sess);
             saveSession(sess);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
+            if (!cancelled) setLoading(false);
 
-            // Auto-create Supabase auth session if not already authenticated
-            if (!existingSessionUserId && !cancelled) {
-              try {
-                const { data: tokenData } = await supabase.functions.invoke("telegram-miniapp", {
-                  body: { action: "create_session", telegram_id: tgUser.id },
-                });
-                if (tokenData?.token_hash && tokenData?.email) {
-                  const { error: verifyErr } = await supabase.auth.verifyOtp({
-                    token_hash: tokenData.token_hash,
-                    type: "magiclink",
+            // OPTIMIZATION 4: Auto-auth in BACKGROUND (non-blocking)
+            if (!existingSessionUserId) {
+              (async () => {
+                try {
+                  const { data: tokenData } = await supabase.functions.invoke("telegram-miniapp", {
+                    body: { action: "create_session", telegram_id: tgUser.id },
                   });
-                  if (!verifyErr) {
-                    console.log("[MiniApp] Auto-session created successfully");
-                    if (!cancelled) setHasAuthSession(true);
-                  } else {
-                    console.warn("[MiniApp] Auto-session verify failed:", verifyErr.message);
+                  if (tokenData?.token_hash && tokenData?.email) {
+                    const { error: verifyErr } = await supabase.auth.verifyOtp({
+                      token_hash: tokenData.token_hash,
+                      type: "magiclink",
+                    });
+                    if (!verifyErr && !cancelled) {
+                      console.log("[MiniApp] Auto-session created successfully");
+                      setHasAuthSession(true);
+                    }
                   }
+                } catch (sessErr) {
+                  console.warn("[MiniApp] Auto-session creation failed:", sessErr);
                 }
-              } catch (sessErr) {
-                console.warn("[MiniApp] Auto-session creation failed:", sessErr);
-              }
-            } else if (existingSessionUserId && !cancelled) {
+              })();
+            } else if (!cancelled) {
               setHasAuthSession(true);
             }
-
-            if (!cancelled) setLoading(false);
             return;
           }
         } catch (err) { console.error("Mini App TG lookup error:", err); }
       }
 
-      // 2) Try existing auth user if available
+      // 2) Try existing auth user
       if (existingSessionUserId && !cancelled) {
         if (!cancelled) setHasAuthSession(true);
         try {
@@ -509,19 +517,8 @@ export default function TelegramMiniApp() {
         } catch (err) { console.error("Mini App auth session error:", err); }
       }
 
-      // 3) Try saved localStorage session (offline/fallback)
-      const saved = loadSavedSession();
-      if (saved && !cancelled) {
-        applySession(saved);
-        // Refresh saldo in background
-        supabase.functions.invoke("telegram-miniapp", { body: { action: "saldo", user_id: saved.userId } })
-          .then(({ data }) => { if (data?.saldo !== undefined) setSaldo(Number(data.saldo)); })
-          .catch(() => {});
-        if (!cancelled) setLoading(false);
-        return;
-      }
-
-      if (!cancelled) setLoading(false);
+      // 3) If no cached session was applied and nothing else worked
+      if (!saved && !cancelled) setLoading(false);
     }
 
     init();
@@ -609,13 +606,23 @@ export default function TelegramMiniApp() {
     setUploadingAvatar(false);
   };
 
+  // OPTIMIZATION 5: Parallel data loading per section
   useEffect(() => {
     if (!userId) return;
-    if (section === "recarga") { loadOperadoras(); loadRecargas(); }
-    if (section === "historico") loadRecargas();
-    if (section === "extrato") loadTransactions();
-    if (section === "recarga" || section === "deposito") refreshSaldo();
-    if (section === "conta") loadAvatar();
+    const loads: Promise<void>[] = [];
+    if (section === "recarga") {
+      loads.push(loadOperadoras(), loadRecargas(), refreshSaldo());
+    } else if (section === "historico") {
+      loads.push(loadRecargas());
+    } else if (section === "extrato") {
+      loads.push(loadTransactions());
+    } else if (section === "deposito") {
+      loads.push(refreshSaldo());
+    } else if (section === "conta") {
+      loads.push(loadAvatar());
+    }
+    // Fire all in parallel
+    if (loads.length) Promise.all(loads).catch(() => {});
   }, [section, userId]);
 
   // Realtime subscriptions
