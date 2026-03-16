@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
 import { TopRankingPodium } from "@/components/TopRankingPodium";
+import { ScratchCard } from "@/components/ScratchCard";
+import { Ticket } from "lucide-react";
 import { useSeasonalTheme, SEASONAL_BUTTON_EMOJIS } from "@/hooks/useSeasonalTheme";
 import { SEASONAL_THEMES, type SeasonalThemeKey } from "@/components/SeasonalEffects";
 import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR } from "@/lib/timezone";
@@ -97,7 +99,7 @@ function useTelegramTheme() {
   }, []);
 }
 
-type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat";
+type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha";
 
 import type { Recarga } from "@/types";
 
@@ -704,6 +706,7 @@ export default function TelegramMiniApp() {
   const sectionTitle: Record<Section, string> = {
     recarga: "Nova Recarga", deposito: "Adicionar Saldo", historico: "Histórico de Pedidos",
     extrato: "Extrato de Depósitos", conta: "Minha Conta", status: "Status do Sistema", chat: "Bate-papo",
+    raspadinha: "Raspadinha",
   };
 
   const initials = userName ? userName.slice(0, 2).toUpperCase() : "US";
@@ -1885,6 +1888,12 @@ export default function TelegramMiniApp() {
               ))}
             </motion.div>
           )}
+          {/* ── Raspadinha ── */}
+          {section === "raspadinha" && userId && (
+            <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              <ScratchCard userId={userId} />
+            </motion.div>
+          )}
           {/* ── Chat ── */}
           {section === "chat" && userId && hasAuthSession && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-[calc(100vh-180px)] tg-chat-theme">
@@ -2012,6 +2021,7 @@ export default function TelegramMiniApp() {
           {([
             { id: "recarga" as Section, icon: Smartphone, label: seasonalEmojis.recarga ? `${seasonalEmojis.recarga}` : "Recarga", defaultLabel: "Recarga" },
             { id: "deposito" as Section, icon: Plus, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo" },
+            { id: "raspadinha" as Section, icon: Ticket, label: "Raspadinha", defaultLabel: "Raspadinha" },
             { id: "chat" as Section, icon: MessageCircle, label: seasonalEmojis.chat ? `${seasonalEmojis.chat}` : "Chat", defaultLabel: "Chat" },
             { id: "historico" as Section, icon: Clock, label: seasonalEmojis.historico ? `${seasonalEmojis.historico}` : "Pedidos", defaultLabel: "Pedidos" },
             { id: "conta" as Section, icon: User, label: seasonalEmojis.conta ? `${seasonalEmojis.conta}` : "Conta", defaultLabel: "Conta" },
@@ -2021,6 +2031,7 @@ export default function TelegramMiniApp() {
             const iconAnimations: Record<string, any> = {
               recarga: { rotate: [0, -15, 15, -10, 0], scale: [1, 1.15, 1], transition: { duration: 0.5, ease: "easeInOut" } },
               deposito: { scale: [1, 1.3, 1], rotate: [0, 90, 180, 270, 360], transition: { duration: 0.6, ease: "easeInOut" } },
+              raspadinha: { rotate: [0, -10, 10, -5, 0], scale: [1, 1.2, 1], transition: { duration: 0.5, ease: "easeInOut" } },
               chat: { scale: [1, 1.2, 1], y: [0, -4, 0], transition: { duration: 0.4, ease: "easeOut" } },
               historico: { rotate: [0, 360], transition: { duration: 0.8, ease: "easeInOut" } },
               extrato: { y: [0, -6, 0], scale: [1, 1.1, 1], transition: { duration: 0.4, ease: "easeOut" } },
@@ -2029,6 +2040,7 @@ export default function TelegramMiniApp() {
             const continuousAnimations: Record<string, any> = {
               recarga: { y: [0, -3, 0], transition: { repeat: Infinity, duration: 1.8, ease: "easeInOut" } },
               deposito: { rotate: [0, 8, -8, 0], transition: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } },
+              raspadinha: { rotate: [0, 5, -5, 0], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               chat: { y: [0, -2, 0], scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               historico: { rotate: [0, 360], transition: { repeat: Infinity, duration: 4, ease: "linear" } },
               extrato: { y: [0, -2, 0, 2, 0], transition: { repeat: Infinity, duration: 2.2, ease: "easeInOut" } },
