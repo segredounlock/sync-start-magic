@@ -2243,8 +2243,8 @@ export default function TelegramMiniApp() {
                         }}>
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: isExpired ? "rgba(239,68,68,0.1)" : isDeposit ? "rgba(74,222,128,0.1)" : isSale ? "rgba(59,130,246,0.1)" : isCommission ? "rgba(250,204,21,0.1)" : "rgba(255,255,255,0.06)" }}>
-                            <TxIcon className="w-4 h-4" style={{ color: isExpired ? "#ef4444" : isDeposit ? "#4ade80" : isSale ? "#3b82f6" : isCommission ? "#facc15" : "var(--tg-hint)" }} />
+                            style={{ backgroundColor: isExpired ? "color-mix(in srgb, var(--tg-destructive) 10%, transparent)" : isDeposit ? "color-mix(in srgb, var(--tg-accent) 10%, transparent)" : isSale ? "color-mix(in srgb, var(--tg-link) 10%, transparent)" : isCommission ? "color-mix(in srgb, var(--tg-warning, #facc15) 10%, transparent)" : "color-mix(in srgb, var(--tg-text) 6%, transparent)" }}>
+                            <TxIcon className="w-4 h-4" style={{ color: isExpired ? "var(--tg-destructive)" : isDeposit ? "var(--tg-accent)" : isSale ? "var(--tg-link)" : isCommission ? "var(--tg-warning, #facc15)" : "var(--tg-hint)" }} />
                           </div>
                           <div>
                             <p className="font-semibold text-sm" style={st.text}>{txLabel}</p>
