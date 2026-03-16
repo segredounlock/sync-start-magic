@@ -396,7 +396,7 @@ function generatePassword(): string {
 }
 
 // ===== TERMS OF SERVICE =====
-const TERMS_VALIDITY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
 const TERMS_TEXT = `📜 <b>TERMOS DE UTILIZAÇÃO</b>
 🌐 <b>Recargas Brasil</b> — https://recargasbrasill.com
