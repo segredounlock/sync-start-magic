@@ -1849,7 +1849,7 @@ export default function TelegramMiniApp() {
                   <motion.div className="flex justify-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                     <div className="bg-white rounded-xl p-2.5 relative">
                       <motion.div className="absolute inset-0 rounded-xl"
-                        animate={{ boxShadow: ["0 0 0px rgba(74,222,128,0)", "0 0 16px rgba(74,222,128,0.25)", "0 0 0px rgba(74,222,128,0)"] }}
+                        animate={{ boxShadow: ["0 0 0px color-mix(in srgb, var(--tg-accent) 0%, transparent)", "0 0 16px color-mix(in srgb, var(--tg-accent) 25%, transparent)", "0 0 0px color-mix(in srgb, var(--tg-accent) 0%, transparent)"] }}
                         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
                       <QRCodeSVG value={pixData.qr_code || ""} size={160} />
                     </div>
