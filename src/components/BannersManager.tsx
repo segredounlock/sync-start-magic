@@ -40,6 +40,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
       setBanners((data || []).map(b => ({
         ...b,
         type: b.type as "banner" | "popup" | "slide",
+        icon_url: (b as any).icon_url || "",
       })));
     } catch {
       toast.error("Erro ao carregar banners");
