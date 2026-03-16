@@ -838,7 +838,7 @@ export default function TelegramMiniApp() {
 
   // ─── App ────────────────────────────────────────
   return (
-    <div className={`min-h-screen flex flex-col relative ${isSeasonalActive && !transitioning ? "pt-8" : ""}`} style={{ ...st.bg, ...st.text }}>
+    <div className={`h-[100dvh] flex flex-col relative overflow-hidden ${isSeasonalActive && !transitioning ? "pt-8" : ""}`} style={{ ...st.bg, ...st.text }}>
       {/* Toast Notifications */}
       <div className="fixed top-16 left-0 right-0 z-[200] flex flex-col items-center gap-2 pointer-events-none px-4">
         <AnimatePresence>
