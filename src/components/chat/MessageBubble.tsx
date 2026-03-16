@@ -232,8 +232,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
   const longPressTriggered = useRef(false);
   const swipeStartRef = useRef<{ x: number; y: number; locked: boolean; direction: 'none' | 'h' | 'v' } | null>(null);
   const x = useMotionValue(0);
-  const replyIconOpacity = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -10] : [10, SWIPE_THRESHOLD], [1, 0]);
-  const replyIconScale = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -5] : [5, SWIPE_THRESHOLD], [1, 0.2]);
+  const replyIconOpacity = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -10] : [10, SWIPE_THRESHOLD], isOwn ? [1, 0] : [0, 1]);
+  const replyIconScale = useTransform(x, isOwn ? [-SWIPE_THRESHOLD, -5] : [5, SWIPE_THRESHOLD], isOwn ? [1, 0.2] : [0.2, 1]);
 
   useEffect(() => {
     if (!showDropdown) return;
