@@ -2764,8 +2764,8 @@ export default function TelegramMiniApp() {
                   { id: "chat" as Section, icon: MessageCircle, label: "Bate-papo", color: "var(--tg-accent)" },
                   { id: "extrato" as Section, icon: Landmark, label: "Carteira", color: "var(--tg-accent)" },
                   { id: "conta" as Section, icon: Settings, label: "Conta", color: "var(--tg-accent)" },
-                  { id: "status" as Section, icon: Shield, label: "Status", color: "#facc15" },
-                  { id: "atualizacoes" as Section, icon: RefreshCw, label: "Novidades", color: "#a3e635" },
+                  { id: "status" as Section, icon: Shield, label: "Status", color: "var(--tg-warning, #facc15)" },
+                  { id: "atualizacoes" as Section, icon: RefreshCw, label: "Novidades", color: "var(--tg-accent)" },
                 ]).map((item, index) => {
                   const isActive = section === item.id;
                   return (
