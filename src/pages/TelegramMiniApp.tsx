@@ -166,7 +166,7 @@ function useTelegramTheme() {
   }, []);
 }
 
-type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha";
+type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha" | "atualizacoes";
 
 import type { Recarga } from "@/types";
 
