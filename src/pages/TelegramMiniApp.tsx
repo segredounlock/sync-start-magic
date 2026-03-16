@@ -1177,7 +1177,7 @@ export default function TelegramMiniApp() {
         {/* Background image */}
         <div className="absolute inset-0 z-0">
           <img src={recargasLogo} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0.95) 100%)" }} />
+          <div className="absolute inset-0" style={st.loginGradientOverlay} />
         </div>
         <div className="w-full max-w-sm relative z-10">
           {/* Logo & title */}
