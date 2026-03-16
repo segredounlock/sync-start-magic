@@ -1263,7 +1263,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             if (slideBanners.length === 0) return null;
             return (
               <SlideBanner
-                slides={slideBanners.map(b => ({ title: b.title || "", subtitle: b.subtitle || "", link: b.link || undefined }))}
+                slides={slideBanners.map(b => ({ title: b.title || "", subtitle: b.subtitle || "", link: b.link || undefined, icon_url: (b as any).icon_url || undefined }))}
                 visible={true}
                 onClose={() => {
                   slideBanners.forEach(b => setDismissedBanners(prev => new Set([...prev, b.position])));
