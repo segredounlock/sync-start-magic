@@ -325,8 +325,32 @@ export default function TelegramMiniApp() {
             applySession(sess);
             saveSession(sess);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
-            // If we have an existing Supabase session, mark it
-            if (existingSessionUserId && !cancelled) setHasAuthSession(true);
+
+            // Auto-create Supabase auth session if not already authenticated
+            if (!existingSessionUserId && !cancelled) {
+              try {
+                const { data: tokenData } = await supabase.functions.invoke("telegram-miniapp", {
+                  body: { action: "create_session", telegram_id: tgUser.id },
+                });
+                if (tokenData?.token_hash && tokenData?.email) {
+                  const { error: verifyErr } = await supabase.auth.verifyOtp({
+                    token_hash: tokenData.token_hash,
+                    type: "magiclink",
+                  });
+                  if (!verifyErr) {
+                    console.log("[MiniApp] Auto-session created successfully");
+                    if (!cancelled) setHasAuthSession(true);
+                  } else {
+                    console.warn("[MiniApp] Auto-session verify failed:", verifyErr.message);
+                  }
+                }
+              } catch (sessErr) {
+                console.warn("[MiniApp] Auto-session creation failed:", sessErr);
+              }
+            } else if (existingSessionUserId && !cancelled) {
+              setHasAuthSession(true);
+            }
+
             if (!cancelled) setLoading(false);
             return;
           }
