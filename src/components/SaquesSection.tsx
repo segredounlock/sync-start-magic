@@ -127,6 +127,27 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
 
       await logAudit(`saque_${newStatus}`, "transaction", saque.id, { amount: saque.amount, user_nome: saque.user_nome, user_email: saque.user_email });
 
+      // Send Telegram notification
+      supabase.functions.invoke("telegram-notify", {
+        body: {
+          type: `saque_${newStatus}`,
+          user_id: saque.user_id,
+          data: { amount: saque.amount, pix_key: saque.pix_key || "" },
+        },
+      }).catch(() => {});
+
+      // Send push notification
+      const pushLabels: Record<string, { title: string; body: string }> = {
+        approved: { title: "✅ Saque Aprovado", body: `Seu saque de R$ ${saque.amount.toFixed(2)} foi aprovado!` },
+        completed: { title: "🎉 Saque Pago!", body: `R$ ${saque.amount.toFixed(2)} enviado para sua chave PIX!` },
+        rejected: { title: "❌ Saque Rejeitado", body: `Seu saque de R$ ${saque.amount.toFixed(2)} foi rejeitado. Saldo estornado.` },
+      };
+      if (pushLabels[newStatus]) {
+        supabase.functions.invoke("send-push", {
+          body: { ...pushLabels[newStatus], user_ids: [saque.user_id] },
+        }).catch(() => {});
+      }
+
       toast.success(`Saque ${newStatus === "completed" ? "pago" : newStatus === "approved" ? "aprovado" : "rejeitado"} com sucesso!`);
       fetchSaques();
     } catch {

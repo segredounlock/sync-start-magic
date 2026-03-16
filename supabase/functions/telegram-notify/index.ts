@@ -440,6 +440,34 @@ Deno.serve(async (req) => {
       ].join("\n");
     } else if (type === "custom_message") {
       message = data.message || "Mensagem do sistema";
+    } else if (type === "saque_approved") {
+      message = [
+        "✅ <b>Saque Aprovado!</b>",
+        "",
+        `💰 Valor: <b>${fmt(data.amount)}</b>`,
+        "",
+        "⏳ Seu saque foi aprovado e será processado em breve.",
+        "Você receberá uma notificação quando o pagamento for efetuado.",
+      ].join("\n");
+    } else if (type === "saque_completed") {
+      message = [
+        "🎉 <b>Saque Pago!</b>",
+        "",
+        `💰 Valor: <b>${fmt(data.amount)}</b>`,
+        data.pix_key ? `🔑 Chave PIX: <code>${data.pix_key}</code>` : "",
+        "",
+        "✅ O valor foi enviado para sua conta PIX.",
+        "Confira seu extrato bancário!",
+      ].filter(Boolean).join("\n");
+    } else if (type === "saque_rejected") {
+      message = [
+        "❌ <b>Saque Rejeitado</b>",
+        "",
+        `💰 Valor: <b>${fmt(data.amount)}</b>`,
+        "",
+        "💳 <b>Saldo estornado automaticamente</b>",
+        "Entre em contato com o suporte para mais informações.",
+      ].join("\n");
     } else if (type === "admin_alert") {
       message = data.message || "⚠️ Alerta do sistema";
     } else {
