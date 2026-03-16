@@ -395,6 +395,56 @@ function generatePassword(): string {
   return pass;
 }
 
+// ===== TERMS OF SERVICE =====
+const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
+
+const TERMS_TEXT = `📜 <b>TERMOS DE UTILIZAÇÃO</b>
+
+Ao utilizar este bot, você concorda com as seguintes regras:
+
+1️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
+
+2️⃣ <b>Saldo e Pagamentos</b> — Depósitos via PIX são processados automaticamente. Recargas confirmadas <b>não podem ser estornadas</b>.
+
+3️⃣ <b>Dados Pessoais</b> — Seus dados são armazenados de forma segura e utilizados apenas para operação do serviço.
+
+4️⃣ <b>Responsabilidade</b> — O usuário é responsável por informar corretamente o número e operadora. Recargas para números errados não serão reembolsadas.
+
+5️⃣ <b>Disponibilidade</b> — O serviço pode sofrer interrupções para manutenção. Não nos responsabilizamos por indisponibilidades temporárias.
+
+6️⃣ <b>Proibições</b> — É proibido o uso de bots, scripts ou automações para interagir com este sistema.
+
+7️⃣ <b>Alterações</b> — Os termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação.
+
+⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
+
+const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg";
+
+async function checkTermsAccepted(supabase: any, telegramId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("terms_acceptance")
+    .select("accepted_at")
+    .eq("telegram_id", telegramId)
+    .order("accepted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return false;
+  const elapsed = Date.now() - new Date(data.accepted_at).getTime();
+  return elapsed < TERMS_VALIDITY_MS;
+}
+
+async function recordTermsAcceptance(supabase: any, telegramId: string) {
+  await supabase.from("terms_acceptance").insert({ telegram_id: telegramId });
+}
+
+async function sendTermsMessage(token: string, chatId: number) {
+  await sendPhoto(token, chatId, TERMS_IMAGE, TERMS_TEXT, [
+    [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
+    [{ text: "❌ Recusar", callback_data: "terms_decline" }],
+  ]);
+}
+
 // Send pending deposit notifications that weren't delivered yet
 async function sendPendingNotifications(supabase: any, token: string, chatId: number, userId: string) {
   try {
@@ -510,11 +560,8 @@ serve(async (req) => {
 
           if (text === "/start" || text === "/menu" || text === "/vincular") {
           if (linkedUser) {
-            // Send menu first for snappy UX, then send pending notifications in background
-            await sendMainMenu(BOT_TOKEN, chatId, linkedUser, supabase);
-            sendPendingNotifications(supabase, BOT_TOKEN, chatId, linkedUser.id).catch((e) =>
-              console.error("[PENDING] Background send failed:", e)
-            );
+            // Always show terms on /start
+            await sendTermsMessage(BOT_TOKEN, chatId);
           } else {
             // Check migration config
             const migration = await getMigrationConfig(supabase);
@@ -527,13 +574,8 @@ serve(async (req) => {
                 ]
               );
             } else {
-              await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
-              const botMsgId = await sendMessage(BOT_TOKEN, chatId,
-                `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
-              );
-              if (botMsgId) {
-                await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
-              }
+              // Show terms first for new users too
+              await sendTermsMessage(BOT_TOKEN, chatId);
             }
           }
           return;
@@ -566,6 +608,16 @@ serve(async (req) => {
         if (isCommand) {
           // Clear any active session when user sends a command
           clearSession(supabase, chatIdStr);
+        }
+
+        // Terms guard for linked users (except session flows)
+        if (isCommand && text !== "/start" && text !== "/menu" && text !== "/vincular") {
+          const termsOk = await checkTermsAccepted(supabase, telegramId);
+          if (!termsOk) {
+            await sendMessage(BOT_TOKEN, chatId, "⚠️ Você precisa aceitar os termos de utilização antes de continuar.");
+            await sendTermsMessage(BOT_TOKEN, chatId);
+            return;
+          }
         }
 
         // Linked user session flows (only if NOT a command)
@@ -1004,7 +1056,42 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     }).catch(() => {});
   }
 
-  let webAppUrl = "https://recargasbrasill.com/miniapp";
+  // ===== TERMS CALLBACKS =====
+  if (data === "terms_accept") {
+    await recordTermsAcceptance(supabase, telegramId);
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (user) {
+      await sendMessage(token, chatId, "✅ <b>Termos aceitos!</b> Bem-vindo de volta!");
+      await sendMainMenu(token, chatId, user, supabase);
+      sendPendingNotifications(supabase, token, chatId, user.id).catch(() => {});
+    } else {
+      // New user — start onboarding
+      const chatIdStr = String(chatId);
+      const telegramUsername = callback.from.username || "";
+      await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
+      const botMsgId = await sendMessage(token, chatId,
+        `✅ <b>Termos aceitos!</b>\n\n👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
+      );
+      if (botMsgId) {
+        await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
+      }
+    }
+    return;
+  }
+
+  if (data === "terms_decline") {
+    await sendMessage(token, chatId, "❌ Você precisa aceitar os termos para utilizar o bot.\n\nUse /start para tentar novamente.");
+    return;
+  }
+
+  // ===== TERMS GUARD — check if accepted within 5 minutes =====
+  const termsOk = await checkTermsAccepted(supabase, telegramId);
+  if (!termsOk) {
+    await sendMessage(token, chatId, "⚠️ Seus termos de utilização expiraram. Por favor, aceite novamente:");
+    await sendTermsMessage(token, chatId);
+    return;
+  }
+
   const [migrationConfig, em, webAppConfig, btnConfigs] = await Promise.all([
     getMigrationConfig(supabase),
     getSeasonalEmojis(supabase),
