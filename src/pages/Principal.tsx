@@ -1246,9 +1246,20 @@ export default function Principal() {
     } catch {}
   }, [broadcastProgressId, broadcastTitle]);
 
-  const menuItems: { key: string; icon: any; label: string; color: string; link?: string }[] = [
+  // Pending withdrawals count for badge
+  const [pendingSaquesCount, setPendingSaquesCount] = useState(0);
+  useEffect(() => {
+    (async () => {
+      const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("type", "saque").eq("status", "pending");
+      setPendingSaquesCount(count || 0);
+    })();
+  }, [view]);
+
+  const menuItems: { key: string; icon: any; label: string; color: string; link?: string; badge?: number }[] = [
     { key: "dashboard", icon: BarChart3, label: "Dashboard", color: "text-primary" },
     { key: "lista", icon: Users, label: "Usuários", color: "text-accent" },
+    { key: "saques", icon: Banknote, label: "Saques", color: "text-success", badge: pendingSaquesCount },
+    { key: "redes", icon: Network, label: "Redes", color: "text-[hsl(280,70%,60%)]" },
     { key: "relatorios", icon: FileText, label: "Relatórios", color: "text-warning" },
     { key: "precificacao", icon: Tag, label: "Precificação", color: "text-warning" },
     { key: "config-api", icon: Settings, label: "API Recarga", color: "text-[hsl(280,70%,60%)]" },
