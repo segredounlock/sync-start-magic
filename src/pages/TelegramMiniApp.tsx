@@ -325,8 +325,32 @@ export default function TelegramMiniApp() {
             applySession(sess);
             saveSession(sess);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
-            // If we have an existing Supabase session, mark it
-            if (existingSessionUserId && !cancelled) setHasAuthSession(true);
+
+            // Auto-create Supabase auth session if not already authenticated
+            if (!existingSessionUserId && !cancelled) {
+              try {
+                const { data: tokenData } = await supabase.functions.invoke("telegram-miniapp", {
+                  body: { action: "create_session", telegram_id: tgUser.id },
+                });
+                if (tokenData?.token_hash && tokenData?.email) {
+                  const { error: verifyErr } = await supabase.auth.verifyOtp({
+                    token_hash: tokenData.token_hash,
+                    type: "magiclink",
+                  });
+                  if (!verifyErr) {
+                    console.log("[MiniApp] Auto-session created successfully");
+                    if (!cancelled) setHasAuthSession(true);
+                  } else {
+                    console.warn("[MiniApp] Auto-session verify failed:", verifyErr.message);
+                  }
+                }
+              } catch (sessErr) {
+                console.warn("[MiniApp] Auto-session creation failed:", sessErr);
+              }
+            } else if (existingSessionUserId && !cancelled) {
+              setHasAuthSession(true);
+            }
+
             if (!cancelled) setLoading(false);
             return;
           }
@@ -1937,7 +1961,13 @@ export default function TelegramMiniApp() {
               <ChatPage onBack={() => setSection("recarga")} forceMobile />
             </motion.div>
           )}
-          {section === "chat" && (!userId || !hasAuthSession) && (
+          {section === "chat" && userId && !hasAuthSession && (
+            <motion.div key="chat-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
+              <Loader2 className="w-10 h-10 animate-spin mb-4" style={st.hint} />
+              <p className="text-sm" style={st.hint}>Conectando ao chat...</p>
+            </motion.div>
+          )}
+          {section === "chat" && !userId && (
             <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
               <MessageCircle className="w-14 h-14 mb-4" style={st.hint} />
               <p className="text-base font-bold mb-2" style={st.text}>Faça login para acessar o chat</p>

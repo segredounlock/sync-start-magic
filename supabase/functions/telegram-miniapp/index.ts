@@ -303,6 +303,51 @@ serve(async (req) => {
       }
     }
 
+    // Action: create_session - Generate a magic link for auto-login (Telegram-verified users only)
+    if (action === "create_session") {
+      if (!telegram_id) {
+        return new Response(JSON.stringify({ error: "telegram_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Find the user by telegram_id
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .eq("telegram_id", String(telegram_id))
+        .maybeSingle();
+
+      if (!profile?.email) {
+        return new Response(JSON.stringify({ error: "no_user", message: "Usuário não encontrado" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Generate a magic link using admin API
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email: profile.email,
+      });
+
+      if (linkError || !linkData?.properties?.hashed_token) {
+        console.error("[telegram-miniapp] generateLink error:", linkError);
+        return new Response(JSON.stringify({ error: "session_failed" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        token_hash: linkData.properties.hashed_token,
+        email: profile.email,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
