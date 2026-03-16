@@ -2412,11 +2412,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       <MobileBottomNav
         items={[
           { key: "dashboard", label: "Início", icon: Activity, color: "text-primary", animation: "pulse" },
-          { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-primary", animation: "bounce" },
-          { key: "recarga", label: "Recarga", icon: Smartphone, color: "text-primary", animation: "bounce", elevated: true },
+          { key: "recarga", label: "Recarga", icon: Smartphone, color: "text-primary", animation: "bounce" },
+          { key: "addSaldo", label: "Saldo", icon: DollarSign, color: "text-success", animation: "pulse", elevated: true },
           { key: "historico", label: "Pedidos", icon: History, color: "text-warning", animation: "wiggle" },
           { key: "chat", label: "Bate-papo", icon: MessageCircle, color: "text-primary", animation: "float" },
-          { key: "addSaldo", label: "Saldo", icon: DollarSign, color: "text-success", animation: "pulse" },
+          { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-primary", animation: "bounce" },
           { key: "contatos", label: "Config", icon: Settings, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
