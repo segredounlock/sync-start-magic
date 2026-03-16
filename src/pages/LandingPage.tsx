@@ -460,7 +460,7 @@ export default function LandingPage() {
             <div>
               <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Plataforma</p>
               <ul className="space-y-2">
-                {["Fazer Recarga", "Painel do Revendedor", "Suporte"].map((l) => (
+              {["Fazer Recarga", "Painel do Revendedor", "Suporte"].map((l) => (
                   <li key={l}>
                     <button
                       onClick={() => navigate("/login")}
@@ -470,6 +470,14 @@ export default function LandingPage() {
                     </button>
                   </li>
                 ))}
+                <li>
+                  <button
+                    onClick={() => navigate("/regras")}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Regras de Uso
+                  </button>
+                </li>
               </ul>
             </div>
 
