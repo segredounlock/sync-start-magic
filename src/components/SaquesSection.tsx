@@ -163,6 +163,7 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
     approved: { label: "Aprovado", color: "text-[hsl(200,80%,55%)]", bg: "bg-[hsl(200,80%,55%)]/10", icon: CheckCircle2 },
     completed: { label: "Pago", color: "text-success", bg: "bg-success/10", icon: CheckCircle2 },
     rejected: { label: "Rejeitado", color: "text-destructive", bg: "bg-destructive/10", icon: XCircle },
+    all: { label: "Todos", color: "text-primary", bg: "bg-primary/10", icon: Banknote },
   };
 
   const totalPending = saques.filter(s => s.status === "pending").reduce((a, s) => a + s.amount, 0);
