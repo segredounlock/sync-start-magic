@@ -2143,7 +2143,7 @@ export default function AdminDashboard() {
             {/* Busca */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <input type="text" value={depositSearch} onChange={e => setDepositSearch(e.target.value)} placeholder="Buscar por revendedor, módulo..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-[13px]" />
+              <input type="text" value={depositSearch} onChange={e => setDepositSearch(e.target.value)} placeholder="Buscar por revendedor, módulo, ID pagamento..." className="w-full pl-9 pr-3 py-2 rounded-lg glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-[13px]" />
             </div>
 
             {/* Mobile: Card Layout */}
@@ -2153,13 +2153,15 @@ export default function AdminDashboard() {
               ) : depositTransactions.filter(t =>
                 (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                 (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
-                (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
+                (t.module || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
+                (t.payment_id || "").toLowerCase().includes(depositSearch.toLowerCase())
               ).length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma transação encontrada</p>
               ) : depositTransactions.filter(t =>
                 (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                 (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
-                (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
+                (t.module || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
+                (t.payment_id || "").toLowerCase().includes(depositSearch.toLowerCase())
               ).map((t, idx) => {
                 const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                 // Status via plugin
@@ -2217,13 +2219,15 @@ export default function AdminDashboard() {
                   ) : depositTransactions.filter(t =>
                     (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
-                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
+                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
+                    (t.payment_id || "").toLowerCase().includes(depositSearch.toLowerCase())
                   ).length === 0 ? (
                     <tr><td colSpan={6} className="text-center py-8 text-muted-foreground text-sm">Nenhuma transação encontrada</td></tr>
                   ) : depositTransactions.filter(t =>
                     (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
-                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
+                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
+                    (t.payment_id || "").toLowerCase().includes(depositSearch.toLowerCase())
                   ).map((t, idx) => {
                     const initials = (t.user_nome || t.user_email || "?").slice(0, 2).toUpperCase();
                     return (
