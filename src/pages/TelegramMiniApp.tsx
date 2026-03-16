@@ -1816,8 +1816,8 @@ export default function TelegramMiniApp() {
               {pixConfirmed ? (
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl p-6 text-center space-y-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={{ backgroundColor: "rgba(74,222,128,0.15)" }}>
-                    <CheckCircle2 className="w-8 h-8" style={{ color: "#4ade80" }} />
+                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={st.successBg}>
+                    <CheckCircle2 className="w-8 h-8" style={st.success} />
                   </motion.div>
                   <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                     <h3 className="text-lg font-bold" style={st.text}>Pagamento Confirmado!</h3>
