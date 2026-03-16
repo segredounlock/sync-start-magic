@@ -1999,10 +1999,10 @@ export default function TelegramMiniApp() {
                           <div key={t.id} className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: st.borderSub }}>
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                                style={{ backgroundColor: t.status === "completed" ? "rgba(74,222,128,0.15)" : t.status === "expired" ? "rgba(239,68,68,0.15)" : "rgba(250,204,21,0.15)" }}>
-                                {t.status === "completed" ? <Check className="w-3.5 h-3.5" style={{ color: "#4ade80" }} />
-                                  : t.status === "expired" ? <XCircle className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
-                                  : <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "#facc15" }} />}
+                                style={{ backgroundColor: t.status === "completed" ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : t.status === "expired" ? "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" : "color-mix(in srgb, var(--tg-warning, #facc15) 15%, transparent)" }}>
+                                {t.status === "completed" ? <Check className="w-3.5 h-3.5" style={st.success} />
+                                  : t.status === "expired" ? <XCircle className="w-3.5 h-3.5" style={st.dangerText} />
+                                  : <Loader2 className="w-3.5 h-3.5 animate-spin" style={st.warningText} />}
                               </div>
                               <div>
                                 <p className="text-sm font-medium" style={st.text}>Depósito PIX</p>
