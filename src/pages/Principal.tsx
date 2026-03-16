@@ -3427,9 +3427,13 @@ export default function Principal() {
                         {/* Horizontal flow */}
                         <div className="flex items-center justify-center gap-2 sm:gap-4">
                           {/* Avô */}
-                          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/avo relative">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center cursor-help transition-transform group-hover/avo:scale-110">
                               <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
+                            </div>
+                            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
+                              <p className="font-semibold mb-1">👴 Avô (Upline)</p>
+                              <p className="text-muted-foreground leading-relaxed">É quem indicou o revendedor. Recebe <strong className="text-purple-400">{globalConfig.indirectCommissionPercent ?? "10"}%</strong> do lucro de cada venda feita pelo revendedor que ele indicou.</p>
                             </div>
                             <span className="text-xs font-semibold text-foreground">Avô</span>
                             <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem indicou<br/>o revendedor</span>
@@ -3447,9 +3451,13 @@ export default function Principal() {
                           </div>
 
                           {/* Pai */}
-                          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/pai relative">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center cursor-help transition-transform group-hover/pai:scale-110">
                               <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                            </div>
+                            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
+                              <p className="font-semibold mb-1">👨 Revendedor (Pai)</p>
+                              <p className="text-muted-foreground leading-relaxed">É o revendedor direto do cliente. Recebe <strong className="text-primary">{globalConfig.directCommissionPercent ?? "100"}%</strong> do lucro real em cada recarga vendida.</p>
                             </div>
                             <span className="text-xs font-semibold text-foreground">Revendedor</span>
                             <span className="text-[10px] text-muted-foreground text-center leading-tight">Revend. imediato<br/>do cliente</span>
@@ -3467,9 +3475,13 @@ export default function Principal() {
                           </div>
 
                           {/* Cliente */}
-                          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/cli relative">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center cursor-help transition-transform group-hover/cli:scale-110">
                               <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+                            </div>
+                            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
+                              <p className="font-semibold mb-1">📱 Cliente</p>
+                              <p className="text-muted-foreground leading-relaxed">É o usuário final que faz a recarga. O valor pago gera o lucro que é distribuído entre o revendedor e o avô.</p>
                             </div>
                             <span className="text-xs font-semibold text-foreground">Cliente</span>
                             <span className="text-[10px] text-muted-foreground text-center leading-tight">Faz a recarga<br/>no sistema</span>
