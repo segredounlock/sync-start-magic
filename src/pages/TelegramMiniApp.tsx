@@ -1743,7 +1743,7 @@ export default function TelegramMiniApp() {
                                         <div key={v.valueId} className="rounded-xl px-3 py-3.5 text-center min-h-[60px] flex flex-col items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--tg-hint) 15%, transparent)" }}>
                                           <p className="text-sm font-bold" style={st.text}>R$ {faceValue.toFixed(2).replace(".", ",")}</p>
                                           {hasDiff && (
-                                            <p className="text-xs font-medium mt-0.5" style={{ color: "#4ade80" }}>Paga R$ {displayCost.toFixed(2).replace(".", ",")}</p>
+                                            <p className="text-xs font-medium mt-0.5" style={st.accent}>Paga R$ {displayCost.toFixed(2).replace(".", ",")}</p>
                                           )}
                                         </div>
                                       );
