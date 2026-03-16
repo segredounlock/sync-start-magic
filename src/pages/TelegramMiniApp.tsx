@@ -345,6 +345,7 @@ export default function TelegramMiniApp() {
   const [checkingPhone, setCheckingPhone] = useState(false);
   const [detectingOperator, setDetectingOperator] = useState(false);
   const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
+  const [pendingWarning, setPendingWarning] = useState<{ phone: string; count: number } | null>(null);
 
   // Histórico & Extrato
   const [recargas, setRecargas] = useState<Recarga[]>([]);
