@@ -286,13 +286,43 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
+  const [userPosition, setUserPosition] = useState<{ rank: number; user: RankUser } | null>(null);
 
   const loadRanking = async () => {
     setLoading(true);
-    const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 10 });
-    if (data) setRanking(data as RankUser[]);
+    // Fetch larger set to find user's position
+    const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 50 });
+    const all = (data || []) as RankUser[];
+    setRanking(all.slice(0, 10));
+
+    // Find user position in full list
+    const idx = all.findIndex(r => r.user_id === userId);
+    if (idx >= 0) {
+      setUserPosition({ rank: idx, user: all[idx] });
+    } else {
+      // User not in top 50, try to get their count
+      const { data: countData } = await supabase.rpc("get_user_recargas_count" as any, { _user_id: userId });
+      if (countData !== null && countData !== undefined) {
+        // Find their approximate rank
+        const count = Number(countData);
+        const approxRank = all.filter(r => r.total_recargas > count).length;
+        const { data: profile } = await supabase.from("profiles").select("nome, avatar_url, verification_badge").eq("id", userId).maybeSingle();
+        setUserPosition({
+          rank: approxRank,
+          user: {
+            user_id: userId,
+            nome: profile?.nome || "Você",
+            avatar_url: profile?.avatar_url || null,
+            verification_badge: profile?.verification_badge || null,
+            total_recargas: count,
+          }
+        });
+      } else {
+        setUserPosition(null);
+      }
+    }
+
     setLoading(false);
-    // Small delay before revealing podium for dramatic effect
     setTimeout(() => setRevealed(true), 100);
   };
 
@@ -313,7 +343,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
   if (ranking.length < 3) return null;
 
   const topUsers = ranking.slice(0, 3);
-  const userRank = ranking.findIndex(r => r.user_id === userId);
+  const userRank = userPosition?.rank ?? -1;
 
   // Podium order: [2nd, 1st, 3rd]
   const podiumOrder = [topUsers[1], topUsers[0], topUsers[2]];
@@ -535,7 +565,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
         </div>
 
         {/* User position bar */}
-        {userRank >= 0 && (
+        {userRank >= 0 && userPosition && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -552,16 +582,16 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               >
                 {userRank + 1}º
               </motion.span>
-              {ranking[userRank]?.avatar_url ? (
-                <img src={ranking[userRank].avatar_url!} alt="" className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border object-cover" />
+              {userPosition.user.avatar_url ? (
+                <img src={userPosition.user.avatar_url} alt="" className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border object-cover" />
               ) : (
                 <div className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border bg-muted flex items-center justify-center text-foreground font-bold text-[10px] md:text-xs">
-                  {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
+                  {(userPosition.user.nome?.[0] || "?").toUpperCase()}
                 </div>
               )}
               <div className="flex flex-col">
-                <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">{ranking[userRank]?.nome}</span>
-                <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{ranking[userRank]?.total_recargas} recargas</span>
+                <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">{userPosition.user.nome}</span>
+                <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{userPosition.user.total_recargas} recargas</span>
               </div>
               <span className="text-[10px] md:text-xs bg-primary/20 text-primary px-1.5 md:px-2 py-0.5 rounded-full font-semibold">Você</span>
             </div>
