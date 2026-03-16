@@ -205,7 +205,7 @@ function StatusOperatorCards({ st }: { st: any }) {
                   <p className="text-[8px]" style={st.hint}>Últimas 3</p>
                 </div>
                 <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
-                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#4ade80" }}>Tempo Min.</p>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={st.success}>Tempo Min.</p>
                   <p className="text-lg font-black" style={{ color: timeColor(op.minRecent) }}>{fmtTime(op.minRecent)}</p>
                   <p className="text-[8px]" style={st.hint}>Últimas 3</p>
                 </div>
