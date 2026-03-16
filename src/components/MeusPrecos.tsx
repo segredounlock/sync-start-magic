@@ -296,16 +296,16 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center cursor-help transition-transform group-hover/pai:scale-110">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">👨 Revendedor (Pai)</p>
-                      <p className="text-muted-foreground leading-relaxed">É o revendedor direto do cliente. Recebe <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro real em cada recarga vendida.</p>
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
+                      <p className="font-semibold mb-1">👨 Você (Revendedor)</p>
+                      <p className="text-muted-foreground leading-relaxed">Você vende a recarga pro cliente e fica com <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro. O lucro é a diferença entre o que você cobra e o que você paga.</p>
                     </div>
-                    <span className="text-xs font-semibold text-foreground">Revendedor</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Revend. imediato<br/>do cliente</span>
+                    <span className="text-xs font-semibold text-foreground">Você</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Vende pro<br/>cliente</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
-                      {commissionConfig.direct}% do lucro
+                      Fica com {commissionConfig.direct}%
                     </span>
-                    <span className="text-[9px] text-muted-foreground">Comissão Direta</span>
+                    <span className="text-[9px] text-muted-foreground">do lucro</span>
                   </div>
 
                   {/* Arrow */}
