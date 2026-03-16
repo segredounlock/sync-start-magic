@@ -1339,11 +1339,15 @@ export default function TelegramMiniApp() {
                         placeholder="(00) 00000-0000"
                         className="w-full bg-transparent pb-3 text-2xl text-center font-mono focus:outline-none"
                         style={{ ...st.text, borderBottom: st.borderMain }} />
-                      <button onClick={() => { if (phone.replace(/\D/g, "").length >= 10) { loadOperadoras(); setRecargaStep("op"); } }}
-                        disabled={phone.replace(/\D/g, "").length < 10}
+                      <button onClick={() => { if (phone.replace(/\D/g, "").length >= 10) handleContinueWithDetect(); }}
+                        disabled={phone.replace(/\D/g, "").length < 10 || detectingOperator}
                         className="w-full rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2 disabled:opacity-40"
                         style={st.btn}>
-                        Continuar <ChevronRight className="w-4 h-4" />
+                        {detectingOperator ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Detectando operadora...</>
+                        ) : (
+                          <>Continuar <ChevronRight className="w-4 h-4" /></>
+                        )}
                       </button>
                     </div>
                   )}
