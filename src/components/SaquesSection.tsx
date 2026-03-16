@@ -66,7 +66,7 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
         .from("reseller_config")
         .select("user_id, value")
         .in("user_id", userIds)
-        .eq("key", "pix_key");
+        .eq("key", "pix_key_value");
 
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
       const pixMap = new Map((pixConfigs || []).map(p => [p.user_id, p.value]));
