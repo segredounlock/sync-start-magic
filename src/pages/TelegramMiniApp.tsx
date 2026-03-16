@@ -325,6 +325,8 @@ export default function TelegramMiniApp() {
             applySession(sess);
             saveSession(sess);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
+            // If we have an existing Supabase session, mark it
+            if (existingSessionUserId && !cancelled) setHasAuthSession(true);
             if (!cancelled) setLoading(false);
             return;
           }
