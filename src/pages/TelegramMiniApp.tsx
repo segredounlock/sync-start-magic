@@ -899,6 +899,8 @@ export default function TelegramMiniApp() {
           {/* ── Nova Recarga ── */}
           {section === "recarga" && (
             <motion.div key="recarga" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-4">
+              {/* Ranking no topo */}
+              {userId && <TopRankingPodium userId={userId} />}
               {recargaResult ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
