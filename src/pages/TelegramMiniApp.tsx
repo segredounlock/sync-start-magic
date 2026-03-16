@@ -2333,7 +2333,7 @@ export default function TelegramMiniApp() {
                   </svg>
                 </motion.div>
                 <div className="flex-1 relative z-10">
-                  <p className="font-semibold text-sm" style={{ color: "rgb(34,197,94)" }}>Telegram Vinculado</p>
+                  <p className="font-semibold text-sm" style={st.accent}>Telegram Vinculado</p>
                   <p className="text-xs" style={st.hint}>Conta conectada com sucesso</p>
                 </div>
                 <AnimatedCheck size={22} className="text-success" />
