@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PromoBanner } from "./PromoBanner";
 import { PopupBanner } from "./PopupBanner";
+import { SlideBanner } from "./SlideBanner";
 import { ToggleLeft, ToggleRight, Zap, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -263,6 +264,11 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                           </div>
                           <p className="text-center text-xs text-muted-foreground mt-2">Este banner abrirá como pop-up central</p>
                         </div>
+                      ) : banner.type === "slide" ? (
+                        <SlideBanner
+                          slides={[{ title: banner.title || "Título do slide", subtitle: banner.subtitle || "Subtítulo do slide", link: banner.link || undefined }]}
+                          visible={true}
+                        />
                       ) : (
                         <PromoBanner
                           title={banner.title || undefined}
