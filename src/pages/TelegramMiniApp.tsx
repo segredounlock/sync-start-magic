@@ -16,6 +16,7 @@ import {
   AlertTriangle, CheckCircle2, XCircle, MessageCircle, Trophy
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
+import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { useSeasonalTheme, SEASONAL_BUTTON_EMOJIS } from "@/hooks/useSeasonalTheme";
 import { SEASONAL_THEMES, type SeasonalThemeKey } from "@/components/SeasonalEffects";
 import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR } from "@/lib/timezone";
