@@ -1781,7 +1781,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           )}
 
           {/* ===== TAB: ADICIONAR SALDO ===== */}
-          {tab === "addSaldo" && <AddSaldoSection saldo={saldo} fmt={fmt} fmtDate={fmtDate} transactions={transactions} userEmail={user?.email} userName={userLabel} onDeposited={fetchData} fetchTransactions={fetchTransactions} resellerId={resellerId} saldoTipo={(role === "admin" || role === "revendedor") && !isClientMode ? "pessoal" : "revenda"} />}
+          {tab === "addSaldo" && <AddSaldoSection saldo={saldo} fmt={fmt} fmtDate={fmtDate} transactions={transactions} userEmail={user?.email} userName={userLabel} onDeposited={fetchData} fetchTransactions={fetchTransactions} resellerId={resellerId} saldoTipo="revenda" />}
 
           {/* ===== TAB: HISTORICO ===== */}
           {tab === "historico" && (
