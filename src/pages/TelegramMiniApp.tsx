@@ -442,9 +442,18 @@ export default function TelegramMiniApp() {
     setUploadingAvatar(false);
   };
 
+  const loadRanking = useCallback(async () => {
+    setRankingLoading(true);
+    try {
+      const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 10 });
+      if (data) setRankingData(data as any[]);
+    } catch (err) { console.error("loadRanking error:", err); }
+    setRankingLoading(false);
+  }, []);
+
   useEffect(() => {
     if (!userId) return;
-    if (section === "recarga") { loadOperadoras(); loadRecargas(); }
+    if (section === "recarga") { loadOperadoras(); loadRecargas(); loadRanking(); }
     if (section === "historico") loadRecargas();
     if (section === "extrato") loadTransactions();
     if (section === "recarga" || section === "deposito") refreshSaldo();
