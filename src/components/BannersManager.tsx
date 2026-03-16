@@ -264,6 +264,11 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                           </div>
                           <p className="text-center text-xs text-muted-foreground mt-2">Este banner abrirá como pop-up central</p>
                         </div>
+                      ) : banner.type === "slide" ? (
+                        <SlideBanner
+                          slides={[{ title: banner.title || "Título do slide", subtitle: banner.subtitle || "Subtítulo do slide", link: banner.link || undefined }]}
+                          visible={true}
+                        />
                       ) : (
                         <PromoBanner
                           title={banner.title || undefined}
