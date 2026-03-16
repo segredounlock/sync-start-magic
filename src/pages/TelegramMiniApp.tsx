@@ -272,8 +272,6 @@ export default function TelegramMiniApp() {
     setSaldo(data.saldo);
   }, []);
 
-  useEffect(() => { document.title = "Mini App"; }, []);
-
   useEffect(() => {
     let cancelled = false;
 
