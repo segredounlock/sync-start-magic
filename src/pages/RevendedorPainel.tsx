@@ -426,6 +426,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         title: b.title,
         subtitle: b.subtitle,
         link: b.link,
+        icon_url: b.icon_url,
       })));
     });
   }, [fetchData, fetchCatalog]);
