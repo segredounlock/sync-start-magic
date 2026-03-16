@@ -87,6 +87,7 @@ export type Database = {
         Row: {
           created_at: string
           enabled: boolean
+          icon_url: string | null
           id: string
           link: string
           position: number
@@ -98,6 +99,7 @@ export type Database = {
         Insert: {
           created_at?: string
           enabled?: boolean
+          icon_url?: string | null
           id?: string
           link?: string
           position?: number
@@ -109,6 +111,7 @@ export type Database = {
         Update: {
           created_at?: string
           enabled?: boolean
+          icon_url?: string | null
           id?: string
           link?: string
           position?: number
