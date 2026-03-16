@@ -100,7 +100,7 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
 
   const handleAction = async (saque: SaqueTransaction, newStatus: "approved" | "completed" | "rejected") => {
     const labels: Record<string, string> = { approved: "aprovar", completed: "marcar como pago", rejected: "rejeitar" };
-    const ok = await confirm({ title: `${labels[newStatus]?.replace(/^\w/, c => c.toUpperCase())} saque?`, description: `${saque.user_nome} — R$ ${saque.amount.toFixed(2)}`, confirmText: "Confirmar", cancelText: "Cancelar" });
+    const ok = await confirm(`${labels[newStatus]?.replace(/^\w/, c => c.toUpperCase())} saque de ${saque.user_nome} — R$ ${saque.amount.toFixed(2)}?`);
     if (!ok) return;
 
     setActionLoading(prev => ({ ...prev, [saque.id]: true }));
