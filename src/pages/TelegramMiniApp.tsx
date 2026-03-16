@@ -698,9 +698,9 @@ export default function TelegramMiniApp() {
     } else if (section === "extrato") {
       loads.push(loadTransactions());
     } else if (section === "deposito") {
-      loads.push(refreshSaldo());
+      loads.push(refreshSaldo(), loadTransactions());
     } else if (section === "conta") {
-      loads.push(loadAvatar());
+      loads.push(loadAvatar(), loadSaldoPessoal(), refreshSaldo());
     }
     // Fire all in parallel
     if (loads.length) Promise.all(loads).catch(() => {});
