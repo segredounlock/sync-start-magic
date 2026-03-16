@@ -728,7 +728,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               while ((btnMatch = inlineRegex.exec(raw)) !== null) {
                 buttons.push({ type: btnMatch[1] as any, label: btnMatch[2], path: btnMatch[3] });
               }
-              const textContent = raw.replace(/\[(btn|link|action):[^\]]+?:[^\]]+?\]/g, "").trimEnd();
+              const textContent = raw.replace(/\[(btn|link|action):[^\]]+?[:|][^\]]+?\]/g, "").trimEnd();
               return (
                 <>
                   <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
