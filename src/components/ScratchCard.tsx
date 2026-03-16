@@ -8,7 +8,7 @@ import {
 import { Currency } from "@/components/ui/Currency";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
-import confetti from "canvas-confetti";
+
 import { ScratchCanvas } from "@/components/ScratchCanvas";
 
 interface ScratchCardProps {
