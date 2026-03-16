@@ -286,13 +286,43 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
+  const [userPosition, setUserPosition] = useState<{ rank: number; user: RankUser } | null>(null);
 
   const loadRanking = async () => {
     setLoading(true);
-    const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 10 });
-    if (data) setRanking(data as RankUser[]);
+    // Fetch larger set to find user's position
+    const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 50 });
+    const all = (data || []) as RankUser[];
+    setRanking(all.slice(0, 10));
+
+    // Find user position in full list
+    const idx = all.findIndex(r => r.user_id === userId);
+    if (idx >= 0) {
+      setUserPosition({ rank: idx, user: all[idx] });
+    } else {
+      // User not in top 50, try to get their count
+      const { data: countData } = await supabase.rpc("get_user_recargas_count" as any, { _user_id: userId });
+      if (countData !== null && countData !== undefined) {
+        // Find their approximate rank
+        const count = Number(countData);
+        const approxRank = all.filter(r => r.total_recargas > count).length;
+        const { data: profile } = await supabase.from("profiles").select("nome, avatar_url, verification_badge").eq("id", userId).maybeSingle();
+        setUserPosition({
+          rank: approxRank,
+          user: {
+            user_id: userId,
+            nome: profile?.nome || "Você",
+            avatar_url: profile?.avatar_url || null,
+            verification_badge: profile?.verification_badge || null,
+            total_recargas: count,
+          }
+        });
+      } else {
+        setUserPosition(null);
+      }
+    }
+
     setLoading(false);
-    // Small delay before revealing podium for dramatic effect
     setTimeout(() => setRevealed(true), 100);
   };
 
@@ -313,7 +343,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
   if (ranking.length < 3) return null;
 
   const topUsers = ranking.slice(0, 3);
-  const userRank = ranking.findIndex(r => r.user_id === userId);
+  const userRank = userPosition?.rank ?? -1;
 
   // Podium order: [2nd, 1st, 3rd]
   const podiumOrder = [topUsers[1], topUsers[0], topUsers[2]];
