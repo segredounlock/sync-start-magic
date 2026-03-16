@@ -2382,8 +2382,8 @@ export default function TelegramMiniApp() {
                       <span className="text-sm font-medium" style={st.text}>{item.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4ade80" }} />
-                      <span className="text-xs" style={st.green}>Online</span>
+                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "var(--tg-accent)" }} />
+                      <span className="text-xs" style={st.accent}>Online</span>
                     </div>
                   </div>
                 ))}
