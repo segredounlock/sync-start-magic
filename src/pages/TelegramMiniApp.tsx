@@ -56,7 +56,7 @@ declare global {
   }
 }
 
-// Telegram dark theme defaults (matches Telegram's dark mode)
+// Telegram theme defaults per color scheme
 const TG_DARK_DEFAULTS = {
   bg_color: "#17212b",
   text_color: "#f5f5f5",
@@ -74,19 +74,39 @@ const TG_DARK_DEFAULTS = {
   bottom_bar_bg_color: "#17212b",
 };
 
+const TG_LIGHT_DEFAULTS = {
+  bg_color: "#ffffff",
+  text_color: "#000000",
+  hint_color: "#999999",
+  link_color: "#168acd",
+  button_color: "#40a7e3",
+  button_text_color: "#ffffff",
+  secondary_bg_color: "#f1f1f1",
+  section_bg_color: "#ffffff",
+  accent_text_color: "#168acd",
+  destructive_text_color: "#df3f40",
+  header_bg_color: "#527da3",
+  subtitle_text_color: "#999999",
+  section_header_text_color: "#168acd",
+  bottom_bar_bg_color: "#f1f1f1",
+};
+
 function useTelegramTheme() {
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     const tp = tg?.themeParams;
     const root = document.documentElement;
 
-    // Force dark mode for glass-card and other themed components
-    const isDark = !tg?.colorScheme || tg.colorScheme === "dark";
+    // Respect Telegram's actual color scheme instead of forcing dark
+    const isDark = tg?.colorScheme === "dark";
     if (isDark) {
       root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
     }
 
-    const theme = { ...TG_DARK_DEFAULTS, ...tp };
+    const defaults = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
+    const theme = { ...defaults, ...tp };
 
     root.style.setProperty("--tg-bg", theme.bg_color);
     root.style.setProperty("--tg-text", theme.text_color);
@@ -151,7 +171,7 @@ export default function TelegramMiniApp() {
         try { (tg as any).setHeaderColor("secondary_bg_color"); } catch {}
       }
       if ((tg as any).setBackgroundColor) {
-        try { (tg as any).setBackgroundColor("#17212b"); } catch {}
+        try { (tg as any).setBackgroundColor("bg_color"); } catch {}
       }
     }
 
