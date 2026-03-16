@@ -97,6 +97,28 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
     setSaving(prev => ({ ...prev, [banner.position]: false }));
   };
 
+  const handleIconUpload = async (banner: BannerData, file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ícone deve ter no máximo 2MB");
+      return;
+    }
+    setUploadingIcon(prev => ({ ...prev, [banner.position]: true }));
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `banner-icons/${banner.id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("broadcast-images").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("broadcast-images").getPublicUrl(path);
+      const url = urlData.publicUrl + "?t=" + Date.now();
+      updateBanner(banner.position, { icon_url: url });
+      toast.success("Ícone carregado!");
+    } catch {
+      toast.error("Erro ao carregar ícone");
+    } finally {
+      setUploadingIcon(prev => ({ ...prev, [banner.position]: false }));
+    }
+  };
+
   const typeLabels: Record<string, { label: string; emoji: string }> = {
     banner: { label: "Banner Topo", emoji: "📢" },
     popup: { label: "Pop-up Central", emoji: "💬" },
