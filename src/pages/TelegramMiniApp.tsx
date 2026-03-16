@@ -1961,7 +1961,13 @@ export default function TelegramMiniApp() {
               <ChatPage onBack={() => setSection("recarga")} forceMobile />
             </motion.div>
           )}
-          {section === "chat" && (!userId || !hasAuthSession) && (
+          {section === "chat" && userId && !hasAuthSession && (
+            <motion.div key="chat-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
+              <Loader2 className="w-10 h-10 animate-spin mb-4" style={st.hint} />
+              <p className="text-sm" style={st.hint}>Conectando ao chat...</p>
+            </motion.div>
+          )}
+          {section === "chat" && !userId && (
             <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
               <MessageCircle className="w-14 h-14 mb-4" style={st.hint} />
               <p className="text-base font-bold mb-2" style={st.text}>Faça login para acessar o chat</p>
