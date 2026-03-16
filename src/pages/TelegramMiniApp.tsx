@@ -97,7 +97,7 @@ function useTelegramTheme() {
   }, []);
 }
 
-type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat";
+type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha";
 
 import type { Recarga } from "@/types";
 
