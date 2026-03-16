@@ -1654,7 +1654,7 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
   if (row2.length) keyboard.push(row2);
   const row3: any[] = [];
   if (btnMap.bot_btn_conta) row3.push({ text: `${se(em, "conta")} Minha Conta`, callback_data: "menu_conta" });
-  if (btnMap.bot_btn_webapp) row3.push({ text: `${se(em, "webapp")} Abrir Web App`, web_app: { url: webAppUrl } });
+  if (btnMap.bot_btn_webapp) row3.push({ text: `${se(em, "webapp")} Mini App`, web_app: { url: webAppUrl } });
   if (row3.length) keyboard.push(row3);
   if (btnMap.bot_btn_migration && migrationEnabled) {
     keyboard.push([{ text: `${se(em, "migration")} Usar Saldo Antigo`, web_app: { url: migrationSiteUrl } }]);
