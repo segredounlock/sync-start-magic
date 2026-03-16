@@ -1284,10 +1284,15 @@ export default function TelegramMiniApp() {
               ) : (
                 <>
                   <div className="flex gap-1">
-                    {["phone", "op", "valor", "confirm"].map((step, i) => (
-                      <div key={step} className="flex-1 h-1 rounded-full"
-                        style={{ backgroundColor: ["phone", "op", "valor", "confirm"].indexOf(recargaStep) >= i ? "var(--tg-btn)" : "color-mix(in srgb, var(--tg-hint) 25%, transparent)" }} />
-                    ))}
+                    {["phone", "check", "valor", "confirm"].map((step, i) => {
+                      const stepOrder = ["phone", "op", "check", "valor", "confirm"];
+                      const currentIdx = stepOrder.indexOf(recargaStep);
+                      const barIdx = [0, 2, 3, 4]; // map 4 bars to step indices
+                      return (
+                        <div key={step} className="flex-1 h-1 rounded-full"
+                          style={{ backgroundColor: currentIdx >= barIdx[i] ? "var(--tg-btn)" : "color-mix(in srgb, var(--tg-hint) 25%, transparent)" }} />
+                      );
+                    })}
                   </div>
 
                   {recargaStep === "phone" && (
