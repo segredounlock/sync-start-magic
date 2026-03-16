@@ -351,6 +351,10 @@ export default function TelegramMiniApp() {
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [viewingReceipt, setViewingReceipt] = useState<Recarga | null>(null);
+  // Histórico filters (matching browser)
+  const [histSearch, setHistSearch] = useState("");
+  const [histStatus, setHistStatus] = useState<"all" | "completed" | "pending" | "falha">("all");
+  const [histOperadora, setHistOperadora] = useState("all");
 
   // Depósito
   const [depositAmount, setDepositAmount] = useState("");
@@ -358,11 +362,19 @@ export default function TelegramMiniApp() {
   const [pixData, setPixData] = useState<PixResult | null>(null);
   const { calcFee: feeCalc } = useFeePreview();
   const [copied, setCopied] = useState(false);
+  const [checkingPix, setCheckingPix] = useState(false);
+  const [pixConfirmed, setPixConfirmed] = useState(false);
+  const [confirmedPixAmount, setConfirmedPixAmount] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [refreshingExtrato, setRefreshingExtrato] = useState(false);
   const [refreshingRecargas, setRefreshingRecargas] = useState(false);
   const [showPriceTable, setShowPriceTable] = useState(false);
+  // Conta - profile editing
+  const [editingName, setEditingName] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [saldoPessoal, setSaldoPessoal] = useState(0);
 
   // Toast notifications
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info" }[]>([]);
