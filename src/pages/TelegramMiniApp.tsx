@@ -2031,6 +2031,7 @@ export default function TelegramMiniApp() {
             const iconAnimations: Record<string, any> = {
               recarga: { rotate: [0, -15, 15, -10, 0], scale: [1, 1.15, 1], transition: { duration: 0.5, ease: "easeInOut" } },
               deposito: { scale: [1, 1.3, 1], rotate: [0, 90, 180, 270, 360], transition: { duration: 0.6, ease: "easeInOut" } },
+              raspadinha: { rotate: [0, -10, 10, -5, 0], scale: [1, 1.2, 1], transition: { duration: 0.5, ease: "easeInOut" } },
               chat: { scale: [1, 1.2, 1], y: [0, -4, 0], transition: { duration: 0.4, ease: "easeOut" } },
               historico: { rotate: [0, 360], transition: { duration: 0.8, ease: "easeInOut" } },
               extrato: { y: [0, -6, 0], scale: [1, 1.1, 1], transition: { duration: 0.4, ease: "easeOut" } },
@@ -2039,6 +2040,7 @@ export default function TelegramMiniApp() {
             const continuousAnimations: Record<string, any> = {
               recarga: { y: [0, -3, 0], transition: { repeat: Infinity, duration: 1.8, ease: "easeInOut" } },
               deposito: { rotate: [0, 8, -8, 0], transition: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } },
+              raspadinha: { rotate: [0, 5, -5, 0], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               chat: { y: [0, -2, 0], scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 2, ease: "easeInOut" } },
               historico: { rotate: [0, 360], transition: { repeat: Infinity, duration: 4, ease: "linear" } },
               extrato: { y: [0, -2, 0, 2, 0], transition: { repeat: Infinity, duration: 2.2, ease: "easeInOut" } },
