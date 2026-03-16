@@ -272,6 +272,7 @@ function useTelegramTheme() {
       root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
       root.style.setProperty("--tg-section-header", theme.section_header_text_color);
       root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color);
+      root.style.setProperty("--tg-warning", isDark ? "#facc15" : "#eab308");
       root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color})`);
 
       body.style.background = theme.bg_color;
