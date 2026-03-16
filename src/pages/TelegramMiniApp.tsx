@@ -1204,7 +1204,7 @@ export default function TelegramMiniApp() {
                 <label className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5 block">Senha</label>
                 <input type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
+                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 transition-all" style={{ ...st.inputBg, boxShadow: "none" }}
                   style={st.inputBg} />
               </div>
             </div>
