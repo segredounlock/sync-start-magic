@@ -1625,7 +1625,7 @@ export default function TelegramMiniApp() {
                               {discount > 0 && (
                                 <div className="mt-2 pt-2" style={{ borderTop: st.borderSub }}>
                                   <span className="text-[11px]" style={st.hint}>Você paga </span>
-                                  <span className="text-sm font-bold" style={{ color: "#22c55e" }}>R$ {displayCost.toFixed(2)}</span>
+                                  <span className="text-sm font-bold" style={st.success}>R$ {displayCost.toFixed(2)}</span>
                                 </div>
                               )}
                             </button>
