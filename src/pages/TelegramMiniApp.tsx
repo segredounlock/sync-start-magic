@@ -2057,7 +2057,7 @@ export default function TelegramMiniApp() {
                     <motion.div className="fixed inset-0 z-[100]" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingReceipt(null)} />
                     <motion.div className="fixed inset-x-4 top-[15%] z-[101] rounded-2xl p-5 space-y-4 max-h-[75vh] overflow-y-auto"
-                      style={{ ...st.secondaryBg, border: `2px solid ${viewingReceipt.status === "completed" ? "#4ade80" : "#facc15"}` }}
+                      style={{ ...st.secondaryBg, border: `2px solid ${viewingReceipt.status === "completed" ? "var(--tg-accent)" : "var(--tg-warning, #facc15)"}` }}
                       initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}>
                       <div className="text-center">
