@@ -2383,6 +2383,58 @@ export default function TelegramMiniApp() {
                 <AnimatedCheck size={22} className="text-success" />
               </motion.div>
 
+              {/* Theme Toggle */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, type: "spring", damping: 20 }}
+                className="rounded-2xl p-4 flex items-center justify-between"
+                style={{ ...st.secondaryBg, border: st.borderSub }}>
+                <div className="flex items-center gap-3">
+                  {isDark ? <Moon className="w-5 h-5" style={st.accent} /> : <Sun className="w-5 h-5" style={{ color: "var(--tg-warning, #eab308)" }} />}
+                  <div>
+                    <p className="text-sm font-semibold" style={st.text}>Tema</p>
+                    <p className="text-xs" style={st.hint}>{isDark ? "Escuro" : "Claro"}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleTheme}
+                  className="relative w-14 h-7 rounded-full overflow-hidden transition-all duration-300"
+                  style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 20%, var(--tg-bg))", border: st.borderSub }}
+                  aria-label="Alternar tema"
+                >
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    animate={{
+                      background: isDark
+                        ? "linear-gradient(135deg, var(--tg-bg), var(--tg-secondary-bg))"
+                        : "linear-gradient(135deg, color-mix(in srgb, var(--tg-warning, #eab308) 20%, var(--tg-bg)), color-mix(in srgb, var(--tg-link) 10%, var(--tg-bg)))",
+                    }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  />
+                  <motion.span
+                    className="absolute top-0.5 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "var(--tg-btn)" }}
+                    animate={{
+                      left: isDark ? "calc(100% - 1.625rem)" : "0.125rem",
+                      boxShadow: isDark
+                        ? "0 0 12px color-mix(in srgb, var(--tg-accent) 50%, transparent)"
+                        : "0 0 8px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
+                    }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {isDark ? (
+                        <motion.div key="moon" initial={{ rotate: -90, opacity: 0, scale: 0.5 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: 90, opacity: 0, scale: 0.5 }} transition={{ duration: 0.25 }}>
+                          <Moon className="h-3.5 w-3.5" style={st.btnText} />
+                        </motion.div>
+                      ) : (
+                        <motion.div key="sun" initial={{ rotate: 90, opacity: 0, scale: 0.5 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: -90, opacity: 0, scale: 0.5 }} transition={{ duration: 0.25 }}>
+                          <Sun className="h-3.5 w-3.5" style={st.btnText} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.span>
+                </button>
+              </motion.div>
+
               {/* Saldos (matches browser dual wallet) */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, type: "spring", damping: 20 }}
                 className="grid grid-cols-2 gap-3">
