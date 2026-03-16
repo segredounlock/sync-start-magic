@@ -1548,19 +1548,19 @@ export default function TelegramMiniApp() {
                           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-3 py-2">
                             {phoneCheckResult.status === "CLEAR" ? (
                               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
-                                <CheckCircle2 className="w-12 h-12" style={{ color: "#22c55e" }} />
+                                <CheckCircle2 className="w-12 h-12" style={st.success} />
                               </motion.div>
                             ) : phoneCheckResult.status === "COOLDOWN" ? (
                               <motion.div animate={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
-                                <AlertTriangle className="w-12 h-12" style={{ color: "#eab308" }} />
+                                <AlertTriangle className="w-12 h-12" style={st.warningText} />
                               </motion.div>
                             ) : (
                               <motion.div animate={{ scale: [1, 1.15, 1, 1.1, 1], rotate: [0, -10, 10, -5, 0], opacity: [1, 0.7, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>
-                                <XCircle className="w-12 h-12 text-destructive drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                <XCircle className="w-12 h-12" style={{ color: "var(--tg-destructive)", filter: "drop-shadow(0 0 8px color-mix(in srgb, var(--tg-destructive) 50%, transparent))" }} />
                               </motion.div>
                             )}
                             <p className="text-sm font-semibold text-center" style={{
-                              color: phoneCheckResult.status === "CLEAR" ? "#22c55e" : phoneCheckResult.status === "COOLDOWN" ? "#eab308" : "#ef4444"
+                              color: phoneCheckResult.status === "CLEAR" ? "var(--tg-accent)" : phoneCheckResult.status === "COOLDOWN" ? "var(--tg-warning, #facc15)" : "var(--tg-destructive)"
                             }}>
                               {phoneCheckResult.status === "CLEAR" ? "Número Disponível" : phoneCheckResult.status === "COOLDOWN" ? "Cooldown Ativo" : "Número Bloqueado"}
                             </p>
