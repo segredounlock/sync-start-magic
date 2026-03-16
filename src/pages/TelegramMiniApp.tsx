@@ -1570,7 +1570,7 @@ export default function TelegramMiniApp() {
                             </button>
                           )}
                           {phoneCheckResult.status === "COOLDOWN" && (
-                            <button onClick={() => { setRecargaStep("num"); setPhoneCheckResult(null); setTelefone(""); }}
+                            <button onClick={() => { setRecargaStep("phone"); setPhoneCheckResult(null); setPhone(""); }}
                               className="flex-1 rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2"
                               style={{ backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" }}>
                               Tentar Outro Número
