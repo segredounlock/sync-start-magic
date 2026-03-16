@@ -2228,7 +2228,7 @@ export default function TelegramMiniApp() {
                   const txIcon = isDeposit ? Landmark : isSale ? Smartphone : isCommission ? ArrowRightLeft : Wallet;
                   const TxIcon = txIcon;
                   const amountPrefix = isDeposit || isCommission ? "+" : isSale || isWithdraw ? "-" : "";
-                  const amountColor = isExpired ? "#ef4444" : isCompleted ? "#4ade80" : isPending ? "#facc15" : "var(--tg-text)";
+                  const amountColor = isExpired ? "var(--tg-destructive)" : isCompleted ? "var(--tg-accent)" : isPending ? "var(--tg-warning, #facc15)" : "var(--tg-text)";
                   // Subtitle from metadata
                   const subtitle = t.metadata?.operadora ? `${(t.metadata.operadora as string).toUpperCase()} • ${formatCurrency(t.metadata?.valor_recarga || t.amount)}` : null;
 
