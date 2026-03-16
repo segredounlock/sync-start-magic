@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
           await supabaseAdmin
             .from("saldos")
             .update({ valor: Number(saldo.valor) + Number(card.prize_amount) })
-            .eq("user_id", user.id)
+            .eq("user_id", userId)
             .eq("tipo", "revenda");
         }
       }
