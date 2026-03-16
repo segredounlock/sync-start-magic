@@ -1252,6 +1252,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               subtitle={b.subtitle || undefined}
               visible={true}
               link={b.link || undefined}
+              icon_url={(b as any).icon_url || undefined}
               onClose={() => setDismissedBanners(prev => new Set([...prev, b.position]))}
             />
           ))}
