@@ -1835,9 +1835,9 @@ export default function TelegramMiniApp() {
                 >
                   <div className="text-center">
                     <motion.div className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
-                      style={{ backgroundColor: "rgba(74,222,128,0.15)" }}
+                      style={st.successBg}
                       initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.1 }}>
-                      <Check className="w-6 h-6" style={{ color: "#4ade80" }} />
+                      <Check className="w-6 h-6" style={st.accent} />
                     </motion.div>
                     <motion.h2 className="text-base font-bold" style={st.text} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                       PIX Gerado com Sucesso!
