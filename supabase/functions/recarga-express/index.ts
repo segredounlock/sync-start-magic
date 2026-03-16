@@ -245,19 +245,27 @@ Deno.serve(async (req) => {
         });
       }
     } else {
+      const token = authHeader!.replace("Bearer ", "");
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!,
         { global: { headers: { Authorization: authHeader! } } }
       );
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user?.id) {
-        return new Response(JSON.stringify({ error: "Token inválido" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims?.sub) {
+        // Fallback to getUser if getClaims fails
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+        if (userError || !user?.id) {
+          console.error("Auth failed:", claimsError?.message || userError?.message);
+          return new Response(JSON.stringify({ error: "Token inválido" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        userId = user.id;
+      } else {
+        userId = claimsData.claims.sub;
       }
-      userId = user.id;
     }
 
     const apiKey = await getApiKey(adminClient);
