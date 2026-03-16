@@ -1,40 +1,12 @@
 
 
-## Diagnóstico e Correção
+## Entendimento do Problema
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+Atualmente, a **taxa de depósito** (taxaTipo + taxaValor) é uma configuração **global única** armazenada em `system_config`, gerenciada exclusivamente pelo administrador. Isso significa que **todos os usuários** pagam a mesma taxa, independente de qual rede pertencem.
 
-### Plano
+O correto seria: **cada dono de rede (revendedor) configura a taxa que seus membros pagam** nos depósitos PIX.
 
-**1. Corrigir o mapeamento de status na sync function**
+## Como funciona hoje
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
-
+1. Admin configura `taxaTipo` e `taxaValor` em `system_config` (Painel Principal e AdminDashboard)
+2. Hook `useFeePre
