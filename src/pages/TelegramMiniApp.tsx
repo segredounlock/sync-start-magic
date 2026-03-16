@@ -1653,7 +1653,7 @@ export default function TelegramMiniApp() {
                           <div className="flex gap-2">
                             <button onClick={() => handleRecargaConfirm(true)}
                               className="flex-1 rounded-xl py-2.5 font-semibold text-sm"
-                              style={{ backgroundColor: "#eab308", color: "#000" }}>
+                              style={{ backgroundColor: "var(--tg-warning, #facc15)", color: "#000" }}>
                               Sim, continuar
                             </button>
                             <button onClick={() => setPendingWarning(null)}
