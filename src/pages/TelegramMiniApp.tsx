@@ -756,7 +756,83 @@ export default function TelegramMiniApp() {
     setRecargaLoading(false);
   };
 
-  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); };
+  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); setDetectedOperatorName(null); };
+
+  // Local fallback: detect operator by Brazilian mobile prefix
+  const detectOperatorLocally = useCallback((digits: string): string | null => {
+    if (digits.length !== 11) return null;
+    const prefix = parseInt(digits.substring(2, 6));
+    const vivoRanges = [[9611,9619],[9710,9719],[9810,9819],[9910,9919],[9960,9969],[9970,9979],[9980,9989],[9990,9999]];
+    const claroRanges = [[9100,9109],[9110,9119],[9200,9209],[9210,9219],[9300,9309],[9310,9319],[9400,9409],[9410,9419],[9500,9509],[9510,9519]];
+    const timRanges = [[9600,9610],[9700,9709],[9800,9809],[9900,9909],[9920,9929],[9930,9939],[9940,9949],[9950,9959]];
+    for (const [min, max] of vivoRanges) if (prefix >= min && prefix <= max) return "VIVO";
+    for (const [min, max] of claroRanges) if (prefix >= min && prefix <= max) return "CLARO";
+    for (const [min, max] of timRanges) if (prefix >= min && prefix <= max) return "TIM";
+    return null;
+  }, []);
+
+  // Auto-detect operator and proceed
+  const handleContinueWithDetect = useCallback(async () => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 10) return;
+
+    setDetectingOperator(true);
+    setDetectedOperatorName(null);
+    tgWebApp?.HapticFeedback?.impactOccurred("light");
+
+    // Load operadoras in parallel with detection
+    const opsPromise = loadOperadoras();
+
+    let matchedOp: TgOperadora | null = null;
+
+    // Try API detection first
+    try {
+      const { data: resp } = await supabase.functions.invoke("recarga-express", {
+        body: { action: "query-operator", phoneNumber: digits },
+      });
+      if (resp?.success && resp.data) {
+        const opName = (resp.data.carrier?.name || resp.data.operator || "").toUpperCase().trim();
+        if (opName) {
+          await opsPromise; // ensure operadoras are loaded
+          const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+          matchedOp = operadoras.find(o => normalize(o.nome) === normalize(opName)) || null;
+          if (!matchedOp) {
+            // Try partial match
+            matchedOp = operadoras.find(o => normalize(o.nome).includes(normalize(opName)) || normalize(opName).includes(normalize(o.nome))) || null;
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn("[MiniApp] Auto-detect operator API failed:", err.message);
+    }
+
+    // Fallback local detection
+    if (!matchedOp && digits.length === 11) {
+      const localName = detectOperatorLocally(digits);
+      if (localName) {
+        await opsPromise;
+        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        matchedOp = operadoras.find(o => normalize(o.nome) === normalize(localName)) || null;
+      }
+    }
+
+    await opsPromise; // ensure loaded before proceeding
+    setDetectingOperator(false);
+
+    if (matchedOp) {
+      setDetectedOperatorName(matchedOp.nome);
+      setSelectedOp(matchedOp);
+      setPhoneCheckResult(null);
+      handleCheckPhone(matchedOp.carrierId);
+      setRecargaStep("check");
+      tgWebApp?.HapticFeedback?.notificationOccurred("success");
+      showToast(`Operadora detectada: ${matchedOp.nome}`, "success");
+    } else {
+      // Couldn't detect — show operator selection
+      setRecargaStep("op");
+      showToast("Selecione a operadora manualmente", "info");
+    }
+  }, [phone, operadoras, loadOperadoras, detectOperatorLocally, handleCheckPhone, tgWebApp, showToast]);
 
   const formatCooldownMsg = (msg?: string) => {
     if (!msg) return "";
