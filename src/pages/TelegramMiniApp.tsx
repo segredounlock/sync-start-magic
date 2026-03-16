@@ -341,8 +341,10 @@ export default function TelegramMiniApp() {
   const [recargaStep, setRecargaStep] = useState<"op" | "valor" | "phone" | "confirm" | "check">("phone");
   const [recargaLoading, setRecargaLoading] = useState(false);
   const [recargaResult, setRecargaResult] = useState<{ success: boolean; message: string; details?: { valor: number; telefone: string; operadora: string; novoSaldo: number; pedidoId: string | null; hora: string } } | null>(null);
-  const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
+   const [phoneCheckResult, setPhoneCheckResult] = useState<{ status: string; message: string } | null>(null);
   const [checkingPhone, setCheckingPhone] = useState(false);
+  const [detectingOperator, setDetectingOperator] = useState(false);
+  const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
 
   // Histórico & Extrato
   const [recargas, setRecargas] = useState<Recarga[]>([]);
@@ -754,7 +756,23 @@ export default function TelegramMiniApp() {
     setRecargaLoading(false);
   };
 
-  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); };
+  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); setDetectedOperatorName(null); };
+
+  // Local fallback: detect operator by Brazilian mobile prefix
+  const detectOperatorLocally = useCallback((digits: string): string | null => {
+    if (digits.length !== 11) return null;
+    const prefix = parseInt(digits.substring(2, 6));
+    const vivoRanges = [[9611,9619],[9710,9719],[9810,9819],[9910,9919],[9960,9969],[9970,9979],[9980,9989],[9990,9999]];
+    const claroRanges = [[9100,9109],[9110,9119],[9200,9209],[9210,9219],[9300,9309],[9310,9319],[9400,9409],[9410,9419],[9500,9509],[9510,9519]];
+    const timRanges = [[9600,9610],[9700,9709],[9800,9809],[9900,9909],[9920,9929],[9930,9939],[9940,9949],[9950,9959]];
+    for (const [min, max] of vivoRanges) if (prefix >= min && prefix <= max) return "VIVO";
+    for (const [min, max] of claroRanges) if (prefix >= min && prefix <= max) return "CLARO";
+    for (const [min, max] of timRanges) if (prefix >= min && prefix <= max) return "TIM";
+    return null;
+  }, []);
+
+
+
 
   const formatCooldownMsg = (msg?: string) => {
     if (!msg) return "";
@@ -796,6 +814,67 @@ export default function TelegramMiniApp() {
     }
     setCheckingPhone(false);
   };
+
+  // Auto-detect operator and proceed
+  const handleContinueWithDetect = useCallback(async () => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 10) return;
+
+    setDetectingOperator(true);
+    setDetectedOperatorName(null);
+    tgWebApp?.HapticFeedback?.impactOccurred("light");
+
+    // Load operadoras in parallel with detection
+    const opsPromise = loadOperadoras();
+
+    let matchedOp: TgOperadora | null = null;
+
+    // Try API detection first
+    try {
+      const { data: resp } = await supabase.functions.invoke("recarga-express", {
+        body: { action: "query-operator", phoneNumber: digits },
+      });
+      if (resp?.success && resp.data) {
+        const opName = (resp.data.carrier?.name || resp.data.operator || "").toUpperCase().trim();
+        if (opName) {
+          await opsPromise;
+          const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+          matchedOp = operadoras.find(o => normalize(o.nome) === normalize(opName)) || null;
+          if (!matchedOp) {
+            matchedOp = operadoras.find(o => normalize(o.nome).includes(normalize(opName)) || normalize(opName).includes(normalize(o.nome))) || null;
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn("[MiniApp] Auto-detect operator API failed:", err.message);
+    }
+
+    // Fallback local detection
+    if (!matchedOp && digits.length === 11) {
+      const localName = detectOperatorLocally(digits);
+      if (localName) {
+        await opsPromise;
+        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        matchedOp = operadoras.find(o => normalize(o.nome) === normalize(localName)) || null;
+      }
+    }
+
+    await opsPromise;
+    setDetectingOperator(false);
+
+    if (matchedOp) {
+      setDetectedOperatorName(matchedOp.nome);
+      setSelectedOp(matchedOp);
+      setPhoneCheckResult(null);
+      handleCheckPhone(matchedOp.carrierId);
+      setRecargaStep("check");
+      tgWebApp?.HapticFeedback?.notificationOccurred("success");
+      showToast(`Operadora detectada: ${matchedOp.nome}`, "success");
+    } else {
+      setRecargaStep("op");
+      showToast("Selecione a operadora manualmente", "info");
+    }
+  }, [phone, operadoras, loadOperadoras, detectOperatorLocally, handleCheckPhone, tgWebApp, showToast]);
 
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount.replace(",", "."));
@@ -1205,10 +1284,15 @@ export default function TelegramMiniApp() {
               ) : (
                 <>
                   <div className="flex gap-1">
-                    {["phone", "op", "valor", "confirm"].map((step, i) => (
-                      <div key={step} className="flex-1 h-1 rounded-full"
-                        style={{ backgroundColor: ["phone", "op", "valor", "confirm"].indexOf(recargaStep) >= i ? "var(--tg-btn)" : "color-mix(in srgb, var(--tg-hint) 25%, transparent)" }} />
-                    ))}
+                    {["phone", "check", "valor", "confirm"].map((step, i) => {
+                      const stepOrder = ["phone", "op", "check", "valor", "confirm"];
+                      const currentIdx = stepOrder.indexOf(recargaStep);
+                      const barIdx = [0, 2, 3, 4]; // map 4 bars to step indices
+                      return (
+                        <div key={step} className="flex-1 h-1 rounded-full"
+                          style={{ backgroundColor: currentIdx >= barIdx[i] ? "var(--tg-btn)" : "color-mix(in srgb, var(--tg-hint) 25%, transparent)" }} />
+                      );
+                    })}
                   </div>
 
                   {recargaStep === "phone" && (
@@ -1260,21 +1344,26 @@ export default function TelegramMiniApp() {
                         placeholder="(00) 00000-0000"
                         className="w-full bg-transparent pb-3 text-2xl text-center font-mono focus:outline-none"
                         style={{ ...st.text, borderBottom: st.borderMain }} />
-                      <button onClick={() => { if (phone.replace(/\D/g, "").length >= 10) { loadOperadoras(); setRecargaStep("op"); } }}
-                        disabled={phone.replace(/\D/g, "").length < 10}
+                      <button onClick={() => { if (phone.replace(/\D/g, "").length >= 10) handleContinueWithDetect(); }}
+                        disabled={phone.replace(/\D/g, "").length < 10 || detectingOperator}
                         className="w-full rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2 disabled:opacity-40"
                         style={st.btn}>
-                        Continuar <ChevronRight className="w-4 h-4" />
+                        {detectingOperator ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Detectando operadora...</>
+                        ) : (
+                          <>Continuar <ChevronRight className="w-4 h-4" /></>
+                        )}
                       </button>
                     </div>
                   )}
 
                   {recargaStep === "op" && (
                     <div className="space-y-3">
-                      <button onClick={() => setRecargaStep("phone")} className="flex items-center gap-1 text-sm" style={st.hint}>
+                      <button onClick={() => { setRecargaStep("phone"); setDetectedOperatorName(null); }} className="flex items-center gap-1 text-sm" style={st.hint}>
                         <ArrowLeft className="w-4 h-4" /> Voltar
                       </button>
                       <h2 className="text-lg font-bold" style={st.text}>Selecione a operadora</h2>
+                      <p className="text-xs" style={st.hint}>Não foi possível detectar automaticamente</p>
                       {operadoras.length === 0 ? (
                         <div className="text-center py-8" style={st.hint}>
                           <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
@@ -1300,8 +1389,8 @@ export default function TelegramMiniApp() {
                   {/* Check step - blacklist/cooldown verification */}
                   {recargaStep === "check" && selectedOp && (
                     <div className="space-y-4">
-                      <button onClick={() => { setRecargaStep("op"); setPhoneCheckResult(null); }} className="flex items-center gap-1 text-sm" style={st.hint}>
-                        <ArrowLeft className="w-4 h-4" /> Voltar
+                      <button onClick={() => { loadOperadoras(); setRecargaStep("op"); setPhoneCheckResult(null); }} className="flex items-center gap-1 text-sm" style={st.hint}>
+                        <ArrowLeft className="w-4 h-4" /> Trocar Operadora
                       </button>
                       <div className="text-center">
                         <motion.div
@@ -1313,7 +1402,14 @@ export default function TelegramMiniApp() {
                           <Shield className="w-7 h-7" style={st.link} />
                         </motion.div>
                         <h2 className="text-lg font-bold" style={st.text}>Verificação de Número</h2>
-                        <p className="text-sm mt-1" style={st.hint}>{(selectedOp.nome || "").toUpperCase()} • {phone}</p>
+                        <div className="flex items-center justify-center gap-2 mt-1">
+                          {detectedOperatorName && (
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)", color: "var(--tg-accent)" }}>
+                              ✓ Detectada
+                            </span>
+                          )}
+                          <p className="text-sm" style={st.hint}>{(selectedOp.nome || "").toUpperCase()} • {formatPhone(phone)}</p>
+                        </div>
                       </div>
 
                       <div className="rounded-2xl p-5" style={{ ...st.secondaryBg, border: st.borderSub }}>
