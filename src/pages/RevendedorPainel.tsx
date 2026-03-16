@@ -2195,7 +2195,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                       valor: t.amount,
                       data: t.created_at,
                       status: t.status,
-                      isPositive: isDeposit || (isMover && !isDeposit && t.amount > 0) ? !isSaque : false,
+                      isPositive: isSaque ? false : (isDeposit || (isMover && !isDeposit && t.amount > 0)),
                     };
                   }),
                   // Commissions from referral_commissions
