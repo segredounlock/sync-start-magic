@@ -264,75 +264,74 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="p-4 space-y-3 bg-muted/10">
+              <div className="p-4 space-y-4 bg-muted/10">
                 {/* Horizontal flow */}
                 <div className="flex items-center justify-center gap-2 sm:gap-4">
                   {/* Avô */}
-                  <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/avo relative">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center cursor-help transition-transform group-hover/avo:scale-110">
+                  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
-                    </div>
-                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
-                      <p className="font-bold mb-1.5 text-sm">👴 Avô — Seu Patrocinador</p>
-                      <p className="text-muted-foreground leading-relaxed mb-1.5">É a pessoa que te convidou pra plataforma. Cada vez que você fecha uma venda, ela recebe automaticamente <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do seu lucro.</p>
-                      <p className="text-muted-foreground leading-relaxed">💡 <em>Exemplo: se você lucra R$ 5,00 numa recarga, seu avô ganha R$ {(5 * Number(commissionConfig.indirect) / 100).toFixed(2)} sem fazer nada!</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Avô</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem te<br/>indicou</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-bold">
                       Ganha {commissionConfig.indirect}%
                     </span>
-                    <span className="text-[9px] text-muted-foreground">do seu lucro</span>
                   </div>
 
-                  {/* Arrow */}
-                  <div className="flex flex-col items-center gap-0.5 -mt-8">
+                  <div className="flex flex-col items-center gap-0.5 -mt-6">
                     <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
                     <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
                     <span className="text-[9px] text-muted-foreground">te indicou</span>
                   </div>
 
-                  {/* Pai */}
-                  <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/pai relative">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center cursor-help transition-transform group-hover/pai:scale-110">
+                  {/* Você */}
+                  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                    </div>
-                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
-                      <p className="font-bold mb-1.5 text-sm">👨 Você — O Revendedor</p>
-                      <p className="text-muted-foreground leading-relaxed mb-1.5">Você define o preço final pro cliente e fica com <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro. Lucro = Preço que você cobra − Seu custo.</p>
-                      <p className="text-muted-foreground leading-relaxed">💡 <em>Exemplo: custo R$ 12, você cobra R$ 15 → lucro de R$ 3,00 direto no seu saldo!</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Você</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Vende pro<br/>cliente</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
                       Fica com {commissionConfig.direct}%
                     </span>
-                    <span className="text-[9px] text-muted-foreground">do lucro</span>
                   </div>
 
-                  {/* Arrow */}
-                  <div className="flex flex-col items-center gap-0.5 -mt-8">
+                  <div className="flex flex-col items-center gap-0.5 -mt-6">
                     <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
                     <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
                     <span className="text-[9px] text-muted-foreground">você vende</span>
                   </div>
 
                   {/* Cliente */}
-                  <div className="flex flex-col items-center gap-1.5 min-w-[80px] group/cli relative">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center cursor-help transition-transform group-hover/cli:scale-110">
+                  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center">
                       <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
-                    </div>
-                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
-                      <p className="font-bold mb-1.5 text-sm">📱 Cliente — Seu Comprador</p>
-                      <p className="text-muted-foreground leading-relaxed mb-1.5">É quem compra a recarga de você pelo preço que você definiu aqui embaixo. Quanto maior o preço, maior seu lucro!</p>
-                      <p className="text-muted-foreground leading-relaxed">💡 <em>Dica: você pode definir preços exclusivos pra cada cliente na aba "Minha Rede".</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Cliente</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Compra a<br/>recarga</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
                       💰 Paga o preço
                     </span>
-                    <span className="text-[9px] text-muted-foreground">que você definir</span>
+                  </div>
+                </div>
+
+                {/* Explicações claras abaixo do diagrama */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="rounded-lg bg-purple-500/5 border border-purple-500/15 p-2.5">
+                    <p className="font-bold text-purple-400 mb-1">👴 Avô</p>
+                    <p className="text-muted-foreground leading-relaxed">Te convidou pra plataforma. Ganha <strong>{commissionConfig.indirect}%</strong> do seu lucro em cada venda.</p>
+                    <p className="text-muted-foreground mt-1 italic">Ex: você lucra R$ 5 → ele ganha R$ {(5 * Number(commissionConfig.indirect) / 100).toFixed(2)}</p>
+                  </div>
+                  <div className="rounded-lg bg-primary/5 border border-primary/15 p-2.5">
+                    <p className="font-bold text-primary mb-1">👨 Você</p>
+                    <p className="text-muted-foreground leading-relaxed">Define o preço e fica com <strong>{commissionConfig.direct}%</strong> do lucro. Lucro = preço cobrado − seu custo.</p>
+                    <p className="text-muted-foreground mt-1 italic">Ex: custo R$ 12, cobra R$ 15 → lucro R$ 3</p>
+                  </div>
+                  <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/15 p-2.5">
+                    <p className="font-bold text-emerald-400 mb-1">📱 Cliente</p>
+                    <p className="text-muted-foreground leading-relaxed">Compra pelo preço que você definir abaixo. Maior preço = maior lucro!</p>
+                    <p className="text-muted-foreground mt-1 italic">Dica: preços exclusivos em "Minha Rede"</p>
                   </div>
                 </div>
               </div>
