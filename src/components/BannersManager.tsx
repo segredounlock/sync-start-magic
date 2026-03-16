@@ -263,6 +263,44 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
                       </div>
                     </div>
 
+                    {/* Icon upload */}
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">🖼️ Ícone (PNG)</label>
+                      <div className="flex items-center gap-3">
+                        {banner.icon_url ? (
+                          <div className="relative">
+                            <img src={banner.icon_url} alt="Ícone" className="w-11 h-11 rounded-xl object-cover border border-border" />
+                            <button
+                              onClick={() => updateBanner(banner.position, { icon_url: "" })}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-11 h-11 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted-foreground">
+                            <ImagePlus className="h-5 w-5" />
+                          </div>
+                        )}
+                        <label className="flex-1 cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/gif,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) handleIconUpload(banner, f);
+                              e.target.value = "";
+                            }}
+                          />
+                          <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/60 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors">
+                            {uploadingIcon[banner.position] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
+                            {uploadingIcon[banner.position] ? "Enviando..." : "Enviar ícone"}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Save button */}
                     <button
                       onClick={() => saveBanner(banner)}
