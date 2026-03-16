@@ -1562,11 +1562,18 @@ export default function TelegramMiniApp() {
 
                       {!checkingPhone && phoneCheckResult && (
                         <div className="flex gap-2">
-                          {phoneCheckResult.status !== "BLACKLISTED" && (
+                          {phoneCheckResult.status === "CLEAR" && (
                             <button onClick={() => setRecargaStep("valor")}
                               className="flex-1 rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2"
                               style={{ backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" }}>
                               Continuar <ChevronRight className="w-4 h-4" />
+                            </button>
+                          )}
+                          {phoneCheckResult.status === "COOLDOWN" && (
+                            <button onClick={() => { setRecargaStep("phone"); setPhoneCheckResult(null); setPhone(""); }}
+                              className="flex-1 rounded-xl py-3.5 font-semibold transition flex items-center justify-center gap-2"
+                              style={{ backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" }}>
+                              Tentar Outro Número
                             </button>
                           )}
                           <button onClick={() => { setRecargaStep("op"); setPhoneCheckResult(null); }}
