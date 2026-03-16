@@ -1,40 +1,26 @@
 
 
-## Diagnóstico e Correção
+## Plano: Adicionar Página de Regras e Termos de Uso ao Site
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### O que será feito
 
-### Plano
+Criar uma página pública `/regras` com as regras da plataforma, incluindo a política de reembolso/MED, e adicionar link para ela na Landing Page e no footer.
 
-**1. Corrigir o mapeamento de status na sync function**
+### Conteúdo das regras
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+Baseado nas conversas anteriores e na política do gateway, as regras incluirão:
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+1. **Política de Reembolso / MED** -- Solicitações de reembolso (MED/contestação) junto ao banco resultam em bloqueio permanente da conta bancária e da plataforma. Nenhum reembolso será concedido por esta via.
+2. **Suporte** -- Qualquer problema deve ser tratado exclusivamente pelo suporte da plataforma.
+3. **Depósitos expirados** -- PIX não pago dentro do prazo expira automaticamente. Se pagou após expirar, entrar em contato com o suporte.
+4. **Responsabilidade do revendedor** -- O revendedor é responsável pelo atendimento ao cliente final e deve verificar o extrato da operadora antes de acionar o suporte.
+5. **Prazo de processamento** -- Recargas podem levar até 1 hora; reclamações antes desse prazo não serão atendidas.
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+### Alterações técnicas
 
-**2. Corrigir manualmente o pedido preso**
+1. **Criar `src/pages/RegrasPage.tsx`** -- Página pública estilizada com as regras acima, usando o mesmo visual da Landing Page (glass cards, gradientes, animações suaves). Incluirá seções claras com ícones para cada regra.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+2. **Atualizar `src/AppRoot.tsx`** -- Adicionar rota `/regras` apontando para a nova página.
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+3. **Atualizar `src/pages/LandingPage.tsx`** -- Adicionar link "Regras de Uso" no footer (seção "Plataforma") apontando para `/regras`.
 
