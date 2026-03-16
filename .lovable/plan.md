@@ -1,37 +1,40 @@
 
 
-# Suporte a Tema Claro no Telegram Mini App com Toggle
+## Diagnóstico e Correção
 
-## O que será feito
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-Adicionar um toggle de tema (claro/escuro) na seção **Conta** do Mini App, similar ao toggle do site (imagem de referência), permitindo ao usuário alternar manualmente entre os temas. O tema escolhido será salvo no `localStorage`.
+### Plano
 
-## Mudanças
+**1. Corrigir o mapeamento de status na sync function**
 
-### 1. Refatorar `useTelegramTheme` para aceitar override manual
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-Atualmente o hook detecta o tema do Telegram automaticamente. Será convertido para:
-- Aceitar um parâmetro `themeOverride: "light" | "dark" | "auto"`
-- Quando `"auto"`, usar a lógica atual (detectar do Telegram)
-- Quando `"light"` ou `"dark"`, forçar o tema escolhido
-- Persistir a escolha em `localStorage` com chave `tg-theme-preference`
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-### 2. Adicionar estado de tema no componente principal
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-No `TelegramMiniApp`, adicionar:
-- Estado `themePreference` (`"auto" | "light" | "dark"`) inicializado do `localStorage`
-- Função `toggleTheme` que alterna entre `light` ↔ `dark`
-- Passar o override para `useTelegramTheme`
+**2. Corrigir manualmente o pedido preso**
 
-### 3. Criar toggle inline na seção Conta
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-Adicionar um toggle estilo switch (como o da imagem de referência com Sun/Moon) entre o card de "Telegram Vinculado" e os saldos, usando os tokens semânticos `st.*` existentes. Ícones: `Sun` e `Moon` do lucide-react (já importável).
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-### 4. Atualizar `useTelegramTheme` para retornar o `isDark` atual
+**3. Verificar se há outros pedidos presos**
 
-Para que o toggle saiba qual ícone mostrar.
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
 
-## Arquivos alterados
-
-- `src/pages/TelegramMiniApp.tsx` — refatorar hook, adicionar estado + toggle na seção Conta
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

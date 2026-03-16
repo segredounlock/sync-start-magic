@@ -14,7 +14,8 @@ import {
   ArrowLeft, Shield, LogOut, Camera, Loader2,
   Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
   AlertTriangle, CheckCircle2, XCircle, MessageCircle,
-  MoreHorizontal, X, Settings, Search, Filter, Save, Pencil, ArrowRightLeft
+  MoreHorizontal, X, Settings, Search, Filter, Save, Pencil, ArrowRightLeft,
+  Sun, Moon
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
@@ -240,23 +241,35 @@ function StatusOperatorCards({ st }: { st: any }) {
   );
 }
 
-function useTelegramTheme() {
+function useTelegramTheme(themeOverride: "auto" | "light" | "dark" = "auto") {
+  const [isDark, setIsDark] = useState(true);
+
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
     const tg = window.Telegram?.WebApp;
 
     const applyTelegramTheme = () => {
-      const liveTg = window.Telegram?.WebApp;
-      const tp = liveTg?.themeParams ?? {};
-      const hasTelegramColors = Boolean(tp.bg_color || tp.secondary_bg_color || tp.text_color || tp.button_color);
-      const isDark = hasTelegramColors
-        ? isDarkTelegramPalette(tp.bg_color, tp.text_color)
-        : (liveTg?.colorScheme === "light" ? false : true); // default to dark when outside Telegram
-      // Always use the website's premium theme — ignore Telegram native colors
-      const theme = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
+      let resolvedDark: boolean;
 
-      root.classList.toggle("dark", isDark);
+      if (themeOverride === "light") {
+        resolvedDark = false;
+      } else if (themeOverride === "dark") {
+        resolvedDark = true;
+      } else {
+        // auto: detect from Telegram
+        const liveTg = window.Telegram?.WebApp;
+        const tp = liveTg?.themeParams ?? {};
+        const hasTelegramColors = Boolean(tp.bg_color || tp.secondary_bg_color || tp.text_color || tp.button_color);
+        resolvedDark = hasTelegramColors
+          ? isDarkTelegramPalette(tp.bg_color, tp.text_color)
+          : (liveTg?.colorScheme === "light" ? false : true);
+      }
+
+      setIsDark(resolvedDark);
+      const theme = resolvedDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
+
+      root.classList.toggle("dark", resolvedDark);
 
       root.style.setProperty("--tg-bg", theme.bg_color);
       root.style.setProperty("--tg-text", theme.text_color);
@@ -272,7 +285,7 @@ function useTelegramTheme() {
       root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
       root.style.setProperty("--tg-section-header", theme.section_header_text_color);
       root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color);
-      root.style.setProperty("--tg-warning", isDark ? "#facc15" : "#eab308");
+      root.style.setProperty("--tg-warning", resolvedDark ? "#facc15" : "#eab308");
       root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color})`);
 
       body.style.background = theme.bg_color;
@@ -280,14 +293,18 @@ function useTelegramTheme() {
     };
 
     applyTelegramTheme();
-    tg?.onEvent?.("themeChanged", applyTelegramTheme);
+    if (themeOverride === "auto") {
+      tg?.onEvent?.("themeChanged", applyTelegramTheme);
+    }
 
     return () => {
       tg?.offEvent?.("themeChanged", applyTelegramTheme);
       body.style.background = "";
       body.style.color = "";
     };
-  }, []);
+  }, [themeOverride]);
+
+  return { isDark };
 }
 
 type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha" | "atualizacoes";
@@ -298,7 +315,19 @@ interface ValorItem { valueId: string; cost: number; userCost?: number; value?: 
 interface TgOperadora { id: string; nome: string; carrierId: string; valores: ValorItem[]; }
 
 export default function TelegramMiniApp() {
-  useTelegramTheme();
+  const [themePreference, setThemePreference] = useState<"auto" | "light" | "dark">(() => {
+    const saved = localStorage.getItem("tg-theme-preference");
+    return (saved === "light" || saved === "dark") ? saved : "auto";
+  });
+  const { isDark } = useTelegramTheme(themePreference);
+
+  const toggleTheme = useCallback(() => {
+    setThemePreference(prev => {
+      const next = (prev === "dark" || (prev === "auto" && isDark)) ? "light" : "dark";
+      localStorage.setItem("tg-theme-preference", next);
+      return next;
+    });
+  }, [isDark]);
 
   // Setup Telegram WebApp (simple expand, no fullscreen forcing)
   useEffect(() => {
@@ -2352,6 +2381,58 @@ export default function TelegramMiniApp() {
                   <p className="text-xs" style={st.hint}>Conta conectada com sucesso</p>
                 </div>
                 <AnimatedCheck size={22} className="text-success" />
+              </motion.div>
+
+              {/* Theme Toggle */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, type: "spring", damping: 20 }}
+                className="rounded-2xl p-4 flex items-center justify-between"
+                style={{ ...st.secondaryBg, border: st.borderSub }}>
+                <div className="flex items-center gap-3">
+                  {isDark ? <Moon className="w-5 h-5" style={st.accent} /> : <Sun className="w-5 h-5" style={{ color: "var(--tg-warning, #eab308)" }} />}
+                  <div>
+                    <p className="text-sm font-semibold" style={st.text}>Tema</p>
+                    <p className="text-xs" style={st.hint}>{isDark ? "Escuro" : "Claro"}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleTheme}
+                  className="relative w-14 h-7 rounded-full overflow-hidden transition-all duration-300"
+                  style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 20%, var(--tg-bg))", border: st.borderSub }}
+                  aria-label="Alternar tema"
+                >
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    animate={{
+                      background: isDark
+                        ? "linear-gradient(135deg, var(--tg-bg), var(--tg-secondary-bg))"
+                        : "linear-gradient(135deg, color-mix(in srgb, var(--tg-warning, #eab308) 20%, var(--tg-bg)), color-mix(in srgb, var(--tg-link) 10%, var(--tg-bg)))",
+                    }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  />
+                  <motion.span
+                    className="absolute top-0.5 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "var(--tg-btn)" }}
+                    animate={{
+                      left: isDark ? "calc(100% - 1.625rem)" : "0.125rem",
+                      boxShadow: isDark
+                        ? "0 0 12px color-mix(in srgb, var(--tg-accent) 50%, transparent)"
+                        : "0 0 8px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
+                    }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {isDark ? (
+                        <motion.div key="moon" initial={{ rotate: -90, opacity: 0, scale: 0.5 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: 90, opacity: 0, scale: 0.5 }} transition={{ duration: 0.25 }}>
+                          <Moon className="h-3.5 w-3.5" style={st.btnText} />
+                        </motion.div>
+                      ) : (
+                        <motion.div key="sun" initial={{ rotate: 90, opacity: 0, scale: 0.5 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: -90, opacity: 0, scale: 0.5 }} transition={{ duration: 0.25 }}>
+                          <Sun className="h-3.5 w-3.5" style={st.btnText} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.span>
+                </button>
               </motion.div>
 
               {/* Saldos (matches browser dual wallet) */}
