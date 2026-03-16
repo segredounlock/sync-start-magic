@@ -721,14 +721,14 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
 
             {message.type === "text" && (() => {
               const raw = message.content || "";
-              // Support: [btn:Label:/path] [link:Label:https://url] [action:Label:id]
-              const inlineRegex = /\[(btn|link|action):([^\]]+?):([^\]]+?)\]/g;
+              // Support: [btn:Label:/path] [btn:Label|/path] [link:Label:https://url] [action:Label:id]
+              const inlineRegex = /\[(btn|link|action):([^\]]+?)[:|]([^\]]+?)\]/g;
               const buttons: { type: "btn" | "link" | "action"; label: string; path: string }[] = [];
               let btnMatch: RegExpExecArray | null;
               while ((btnMatch = inlineRegex.exec(raw)) !== null) {
                 buttons.push({ type: btnMatch[1] as any, label: btnMatch[2], path: btnMatch[3] });
               }
-              const textContent = raw.replace(/\[(btn|link|action):[^\]]+?:[^\]]+?\]/g, "").trimEnd();
+              const textContent = raw.replace(/\[(btn|link|action):[^\]]+?[:|][^\]]+?\]/g, "").trimEnd();
               return (
                 <>
                   <p className="text-sm whitespace-pre-wrap break-all pr-4" style={{ wordBreak: "break-word", overflowWrap: "anywhere", maxWidth: "100%" }}>
