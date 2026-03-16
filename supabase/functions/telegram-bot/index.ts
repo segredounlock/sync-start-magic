@@ -1046,7 +1046,42 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     }).catch(() => {});
   }
 
-  let webAppUrl = "https://recargasbrasill.com/miniapp";
+  // ===== TERMS CALLBACKS =====
+  if (data === "terms_accept") {
+    await recordTermsAcceptance(supabase, telegramId);
+    const user = await findUserByTelegram(supabase, telegramId);
+    if (user) {
+      await sendMessage(token, chatId, "✅ <b>Termos aceitos!</b> Bem-vindo de volta!");
+      await sendMainMenu(token, chatId, user, supabase);
+      sendPendingNotifications(supabase, token, chatId, user.id).catch(() => {});
+    } else {
+      // New user — start onboarding
+      const chatIdStr = String(chatId);
+      const telegramUsername = callback.from.username || "";
+      await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
+      const botMsgId = await sendMessage(token, chatId,
+        `✅ <b>Termos aceitos!</b>\n\n👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
+      );
+      if (botMsgId) {
+        await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
+      }
+    }
+    return;
+  }
+
+  if (data === "terms_decline") {
+    await sendMessage(token, chatId, "❌ Você precisa aceitar os termos para utilizar o bot.\n\nUse /start para tentar novamente.");
+    return;
+  }
+
+  // ===== TERMS GUARD — check if accepted within 5 minutes =====
+  const termsOk = await checkTermsAccepted(supabase, telegramId);
+  if (!termsOk) {
+    await sendMessage(token, chatId, "⚠️ Seus termos de utilização expiraram. Por favor, aceite novamente:");
+    await sendTermsMessage(token, chatId);
+    return;
+  }
+
   const [migrationConfig, em, webAppConfig, btnConfigs] = await Promise.all([
     getMigrationConfig(supabase),
     getSeasonalEmojis(supabase),
