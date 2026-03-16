@@ -10,6 +10,8 @@ import { FloatingMenuIcon, FloatingGridIcon } from "@/components/FloatingMenuIco
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from "@/components/ui";
 import { PromoBanner } from "@/components/PromoBanner";
+import { SaquesSection } from "@/components/SaquesSection";
+import { RedesSection } from "@/components/RedesSection";
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -31,7 +33,7 @@ import {
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
-  Trophy, Check, KeyRound,
+  Trophy, Check, KeyRound, Banknote, Network, XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -49,7 +51,7 @@ import { confirm } from "@/lib/confirm";
 import { safeValor } from "@/lib/utils";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes";
 
 type ReportPeriod = "hoje" | "7dias" | "mes" | "total";
 
@@ -1246,9 +1248,20 @@ export default function Principal() {
     } catch {}
   }, [broadcastProgressId, broadcastTitle]);
 
-  const menuItems: { key: string; icon: any; label: string; color: string; link?: string }[] = [
+  // Pending withdrawals count for badge
+  const [pendingSaquesCount, setPendingSaquesCount] = useState(0);
+  useEffect(() => {
+    (async () => {
+      const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("type", "saque").eq("status", "pending");
+      setPendingSaquesCount(count || 0);
+    })();
+  }, [view]);
+
+  const menuItems: { key: string; icon: any; label: string; color: string; link?: string; badge?: number }[] = [
     { key: "dashboard", icon: BarChart3, label: "Dashboard", color: "text-primary" },
     { key: "lista", icon: Users, label: "Usuários", color: "text-accent" },
+    { key: "saques", icon: Banknote, label: "Saques", color: "text-success", badge: pendingSaquesCount },
+    { key: "redes", icon: Network, label: "Redes", color: "text-[hsl(280,70%,60%)]" },
     { key: "relatorios", icon: FileText, label: "Relatórios", color: "text-warning" },
     { key: "precificacao", icon: Tag, label: "Precificação", color: "text-warning" },
     { key: "config-api", icon: Settings, label: "API Recarga", color: "text-[hsl(280,70%,60%)]" },
@@ -1305,7 +1318,12 @@ export default function Principal() {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium transition-all group ${
                       isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/40"
                     }`}>
-                    <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                    <div className="relative">
+                      <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                      {!!item.badge && item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">{item.badge}</span>
+                      )}
+                    </div>
                     <span className="text-center leading-tight">{item.label}</span>
                   </button>
                 );
@@ -1361,10 +1379,18 @@ export default function Principal() {
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                     }`}
                   >
-                    <FloatingMenuIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                    <div className="relative">
+                      <FloatingMenuIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                      {!!item.badge && item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">{item.badge}</span>
+                      )}
+                    </div>
                     <motion.span whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
                       {item.label}
                     </motion.span>
+                    {!!item.badge && item.badge > 0 && !isActive && (
+                      <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold flex items-center justify-center">{item.badge}</span>
+                    )}
                     {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
                   </button>
                 </motion.div>
@@ -1424,6 +1450,8 @@ export default function Principal() {
               {view === "broadcast" && "Envie mensagens em massa para usuários do Telegram."}
               {view === "enquetes" && "Crie enquetes e acompanhe a votação em tempo real."}
               {view === "batepapo" && "Crie, edite e gerencie as salas de bate-papo."}
+              {view === "saques" && "Gerencie solicitações de saque de toda a rede."}
+              {view === "redes" && "Visão consolidada de todos os donos de rede."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
@@ -4497,6 +4525,14 @@ export default function Principal() {
 
           {/* ===== BATE-PAPO ===== */}
           {view === "batepapo" && <ChatRoomManager globalConfig={globalConfig} setGlobalConfig={setGlobalConfig} saveGlobalConfig={saveGlobalConfig} />}
+
+
+          {/* ===== SAQUES ===== */}
+          {view === "saques" && <SaquesSection onCountUpdate={setPendingSaquesCount} />}
+
+          {/* ===== REDES ===== */}
+          {view === "redes" && <RedesSection />}
+
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
         </main>
