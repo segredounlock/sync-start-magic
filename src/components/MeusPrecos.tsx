@@ -272,23 +272,23 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center cursor-help transition-transform group-hover/avo:scale-110">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">👴 Avô (Upline)</p>
-                      <p className="text-muted-foreground leading-relaxed">É quem indicou o revendedor. Recebe <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do lucro de cada venda feita pelo revendedor que ele indicou.</p>
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
+                      <p className="font-semibold mb-1">👴 Avô</p>
+                      <p className="text-muted-foreground leading-relaxed">A pessoa que te trouxe pro sistema. Toda vez que você vende, ela ganha <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do seu lucro automaticamente.</p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Avô</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem indicou<br/>o revendedor</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem te<br/>indicou</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-bold">
-                      {commissionConfig.indirect}% do lucro
+                      Ganha {commissionConfig.indirect}%
                     </span>
-                    <span className="text-[9px] text-muted-foreground">Comissão Indireta</span>
+                    <span className="text-[9px] text-muted-foreground">do seu lucro</span>
                   </div>
 
                   {/* Arrow */}
                   <div className="flex flex-col items-center gap-0.5 -mt-8">
                     <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
                     <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
-                    <span className="text-[9px] text-muted-foreground">indicou</span>
+                    <span className="text-[9px] text-muted-foreground">te indicou</span>
                   </div>
 
                   {/* Pai */}
@@ -296,23 +296,23 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center cursor-help transition-transform group-hover/pai:scale-110">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">👨 Revendedor (Pai)</p>
-                      <p className="text-muted-foreground leading-relaxed">É o revendedor direto do cliente. Recebe <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro real em cada recarga vendida.</p>
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
+                      <p className="font-semibold mb-1">👨 Você (Revendedor)</p>
+                      <p className="text-muted-foreground leading-relaxed">Você vende a recarga pro cliente e fica com <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro. O lucro é a diferença entre o que você cobra e o que você paga.</p>
                     </div>
-                    <span className="text-xs font-semibold text-foreground">Revendedor</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Revend. imediato<br/>do cliente</span>
+                    <span className="text-xs font-semibold text-foreground">Você</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Vende pro<br/>cliente</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
-                      {commissionConfig.direct}% do lucro
+                      Fica com {commissionConfig.direct}%
                     </span>
-                    <span className="text-[9px] text-muted-foreground">Comissão Direta</span>
+                    <span className="text-[9px] text-muted-foreground">do lucro</span>
                   </div>
 
                   {/* Arrow */}
                   <div className="flex flex-col items-center gap-0.5 -mt-8">
                     <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
                     <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
-                    <span className="text-[9px] text-muted-foreground">vende</span>
+                    <span className="text-[9px] text-muted-foreground">você vende</span>
                   </div>
 
                   {/* Cliente */}
@@ -320,16 +320,16 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center cursor-help transition-transform group-hover/cli:scale-110">
                       <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-52 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
                       <p className="font-semibold mb-1">📱 Cliente</p>
-                      <p className="text-muted-foreground leading-relaxed">É o usuário final que faz a recarga. O valor pago gera o lucro que é distribuído entre o revendedor e o avô.</p>
+                      <p className="text-muted-foreground leading-relaxed">É quem compra a recarga de você. O preço que ele paga menos o seu custo = seu lucro!</p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Cliente</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Faz a recarga<br/>no sistema</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Compra a<br/>recarga</span>
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
-                      💰 Recarga
+                      💰 Paga o preço
                     </span>
-                    <span className="text-[9px] text-muted-foreground">Gera o lucro</span>
+                    <span className="text-[9px] text-muted-foreground">que você definir</span>
                   </div>
                 </div>
               </div>
