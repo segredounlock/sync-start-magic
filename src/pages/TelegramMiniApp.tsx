@@ -1716,7 +1716,7 @@ export default function TelegramMiniApp() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           className="fixed inset-0 z-50"
-                          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                          style={st.overlayDark}
                           onClick={() => setShowPriceTable(false)}
                         />
                         <motion.div
