@@ -140,6 +140,7 @@ function App() {
             <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
             <Route path="/loja/:slug" element={<LazyPage><ClientePortal /></LazyPage>} />
             <Route path="/miniapp" element={<LazyPage><TelegramMiniApp /></LazyPage>} />
+            <Route path="/regras" element={<LazyPage><RegrasPage /></LazyPage>} />
             <Route path="/instalar" element={<LazyPage><InstallApp /></LazyPage>} />
             <Route
               path="/admin"
