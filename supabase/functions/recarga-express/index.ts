@@ -331,9 +331,12 @@ Deno.serve(async (req) => {
         }
 
         if (!order) {
+          console.log(`[order-status] external_id=${external_id} NOT FOUND in API`);
           result = { success: false, error: "Pedido não encontrado na API" };
           break;
         }
+
+        console.log(`[order-status] external_id=${external_id} raw_order=${JSON.stringify(order)}`);
 
         const localStatus = (order.status === "feita" || order.status === "completed") ? "completed"
           : (order.status === "falha" || order.status === "cancelada" || order.status === "expirada") ? "falha"
