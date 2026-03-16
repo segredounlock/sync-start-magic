@@ -8,7 +8,7 @@ import {
 import { Currency } from "@/components/ui/Currency";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
-import confetti from "canvas-confetti";
+
 import { ScratchCanvas } from "@/components/ScratchCanvas";
 
 interface ScratchCardProps {
@@ -267,7 +267,7 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
       const r = { prize_amount: Number(payload.prize_amount ?? 0), is_won: Boolean(payload.is_won) };
       setResult(r);
       if (r.is_won) {
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ["#10b981", "#f59e0b", "#8b5cf6"] });
+        import("canvas-confetti").then(m => m.default({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ["#10b981", "#f59e0b", "#8b5cf6"] }));
       }
       loadHistory();
       loadBalance();
