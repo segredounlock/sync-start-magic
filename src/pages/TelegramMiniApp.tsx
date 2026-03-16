@@ -162,7 +162,7 @@ function StatusOperatorCards({ st }: { st: any }) {
     VIVO: { gradient: "linear-gradient(135deg, #a855f7, #9333ea)", accent: "#a855f7" },
   };
 
-  const timeColor = (s: number) => s <= 120 ? "var(--tg-accent)" : s <= 300 ? "var(--tg-warning, #facc15)" : "var(--tg-destructive)";
+  const timeColor = (s: number) => s <= 120 ? "#4ade80" : s <= 300 ? "#facc15" : "#f87171";
 
   if (loading) {
     return (
@@ -200,12 +200,12 @@ function StatusOperatorCards({ st }: { st: any }) {
               {/* Avg + Min recent */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
-                   <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "var(--tg-destructive)" }}>Média Atual</p>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#f87171" }}>Média Atual</p>
                   <p className="text-lg font-black" style={{ color: timeColor(op.avgRecent) }}>{fmtTime(op.avgRecent)}</p>
                   <p className="text-[8px]" style={st.hint}>Últimas 3</p>
                 </div>
                 <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
-                   <p className="text-[9px] uppercase font-bold tracking-wider" style={st.accent}>Tempo Min.</p>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#4ade80" }}>Tempo Min.</p>
                   <p className="text-lg font-black" style={{ color: timeColor(op.minRecent) }}>{fmtTime(op.minRecent)}</p>
                   <p className="text-[8px]" style={st.hint}>Últimas 3</p>
                 </div>
@@ -272,7 +272,6 @@ function useTelegramTheme() {
       root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
       root.style.setProperty("--tg-section-header", theme.section_header_text_color);
       root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color);
-      root.style.setProperty("--tg-warning", isDark ? "#facc15" : "#eab308");
       root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color})`);
 
       body.style.background = theme.bg_color;
@@ -1095,15 +1094,7 @@ export default function TelegramMiniApp() {
     btn: { backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" } as React.CSSProperties,
     btnText: { color: "var(--tg-btn-text)" } as React.CSSProperties,
     destructive: { color: "var(--tg-destructive)" } as React.CSSProperties,
-    green: { color: "var(--tg-accent)" } as React.CSSProperties,
-    success: { color: "var(--tg-accent)" } as React.CSSProperties,
-    successBg: { backgroundColor: "color-mix(in srgb, var(--tg-accent) 15%, transparent)" } as React.CSSProperties,
-    warningText: { color: "var(--tg-warning, #facc15)" } as React.CSSProperties,
-    warningBg: { backgroundColor: "color-mix(in srgb, var(--tg-warning, #facc15) 15%, transparent)" } as React.CSSProperties,
-    dangerText: { color: "var(--tg-destructive)" } as React.CSSProperties,
-    dangerBg: { backgroundColor: "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" } as React.CSSProperties,
-    inputBg: { backgroundColor: "color-mix(in srgb, var(--tg-text) 8%, var(--tg-bg))", color: "var(--tg-text)", border: "1px solid color-mix(in srgb, var(--tg-hint) 20%, transparent)" } as React.CSSProperties,
-    overlay: { backgroundColor: "color-mix(in srgb, var(--tg-bg) 85%, transparent)" } as React.CSSProperties,
+    green: { color: "#22c55e" } as React.CSSProperties,
     borderSub: "1px solid color-mix(in srgb, var(--tg-hint) 18%, transparent)",
     borderMain: "1px solid color-mix(in srgb, var(--tg-accent) 15%, transparent)",
   };
@@ -1124,7 +1115,7 @@ export default function TelegramMiniApp() {
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           className="relative z-10"
         >
-          <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl" style={{ border: "1px solid color-mix(in srgb, var(--tg-text) 10%, transparent)", boxShadow: "0 0 40px color-mix(in srgb, var(--tg-accent) 30%, transparent)" }}>
+          <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl" style={{ border: "1px solid rgba(255,255,255,0.1)", boxShadow: `0 0 40px rgba(82,136,193,0.3)` }}>
             <img src={recargasLogo} alt="Recargas Brasil" className="w-full h-full object-cover" />
           </div>
         </motion.div>
@@ -1189,14 +1180,14 @@ export default function TelegramMiniApp() {
                 <label className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5 block">E-mail</label>
                 <input type="email" placeholder="seu@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
-                  style={st.inputBg} />
+                  style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "#f5f5f5", border: "1px solid rgba(255,255,255,0.12)" }} />
               </div>
               <div>
                 <label className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5 block">Senha</label>
                 <input type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                   className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
-                  style={st.inputBg} />
+                  style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "#f5f5f5", border: "1px solid rgba(255,255,255,0.12)" }} />
               </div>
             </div>
             {loginError && <p className="text-xs text-center" style={st.destructive}>{loginError}</p>}
@@ -1230,9 +1221,9 @@ export default function TelegramMiniApp() {
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               className="pointer-events-auto rounded-xl px-4 py-3 shadow-lg backdrop-blur-xl max-w-[90vw] text-center"
               style={{
-                backgroundColor: toast.type === "success" ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : toast.type === "error" ? "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" : "color-mix(in srgb, var(--tg-link) 15%, transparent)",
-                border: `1px solid ${toast.type === "success" ? "color-mix(in srgb, var(--tg-accent) 40%, transparent)" : toast.type === "error" ? "color-mix(in srgb, var(--tg-destructive) 40%, transparent)" : "color-mix(in srgb, var(--tg-link) 40%, transparent)"}`,
-                color: toast.type === "success" ? "var(--tg-accent)" : toast.type === "error" ? "var(--tg-destructive)" : "var(--tg-link)",
+                backgroundColor: toast.type === "success" ? "rgba(74,222,128,0.15)" : toast.type === "error" ? "rgba(239,68,68,0.15)" : "rgba(96,165,250,0.15)",
+                border: `1px solid ${toast.type === "success" ? "rgba(74,222,128,0.4)" : toast.type === "error" ? "rgba(239,68,68,0.4)" : "rgba(96,165,250,0.4)"}`,
+                color: toast.type === "success" ? "#4ade80" : toast.type === "error" ? "#ef4444" : "#60a5fa",
               }}
               onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
             >
@@ -1280,15 +1271,15 @@ export default function TelegramMiniApp() {
                   className="space-y-4"
                 >
                   {/* Status Header */}
-                  <div className="rounded-2xl p-6 text-center" style={{ ...st.secondaryBg, border: `2px solid ${recargaResult.success ? "var(--tg-accent)" : "var(--tg-destructive)"}` }}>
+                  <div className="rounded-2xl p-6 text-center" style={{ ...st.secondaryBg, border: `2px solid ${recargaResult.success ? "#4ade80" : "var(--tg-destructive)"}` }}>
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
                     >
                       {recargaResult.success ? (
-                        <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center" style={st.successBg}>
-                          <Check className="w-8 h-8" style={st.accent} />
+                        <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: "rgba(74, 222, 128, 0.15)" }}>
+                          <Check className="w-8 h-8" style={{ color: "#4ade80" }} />
                         </div>
                       ) : (
                         <p className="text-4xl mb-3">❌</p>
@@ -1306,9 +1297,9 @@ export default function TelegramMiniApp() {
                   {recargaResult.success && recargaResult.details && (
                     <>
                       <div className="rounded-2xl overflow-hidden" style={{ ...st.secondaryBg, border: st.borderSub }}>
-                         <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "color-mix(in srgb, var(--tg-accent) 5%, transparent)" }}>
-                          <FileText className="w-4 h-4" style={st.accent} />
-                          <span className="text-xs font-bold tracking-wider uppercase" style={st.accent}>Comprovante de Recarga</span>
+                        <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "rgba(74, 222, 128, 0.05)" }}>
+                          <FileText className="w-4 h-4" style={{ color: "#4ade80" }} />
+                          <span className="text-xs font-bold tracking-wider uppercase" style={{ color: "#4ade80" }}>Comprovante de Recarga</span>
                         </div>
                         <div className="divide-y" style={{ borderColor: "var(--tg-secondary-bg)" }}>
                           {[
@@ -1325,13 +1316,13 @@ export default function TelegramMiniApp() {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: 0.3 + i * 0.06 }}
                               className="flex items-center justify-between px-4 py-3"
-                              style={{ borderColor: "color-mix(in srgb, var(--tg-text) 5%, transparent)" }}
+                              style={{ borderColor: "rgba(255,255,255,0.05)" }}
                             >
                               <div className="flex items-center gap-2.5">
                                 <row.icon className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />
                                 <span className="text-xs" style={{ color: "var(--tg-hint)" }}>{row.label}</span>
                               </div>
-                              <span className={`text-sm font-semibold ${row.highlight ? "" : ""}`} style={{ color: row.highlight ? "var(--tg-accent)" : "var(--tg-text)" }}>
+                              <span className={`text-sm font-semibold ${row.highlight ? "" : ""}`} style={{ color: row.highlight ? "#4ade80" : "var(--tg-text)" }}>
                                 {row.value}
                               </span>
                             </motion.div>
@@ -1548,19 +1539,19 @@ export default function TelegramMiniApp() {
                           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-3 py-2">
                             {phoneCheckResult.status === "CLEAR" ? (
                               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
-                                <CheckCircle2 className="w-12 h-12" style={st.accent} />
+                                <CheckCircle2 className="w-12 h-12" style={{ color: "#22c55e" }} />
                               </motion.div>
                             ) : phoneCheckResult.status === "COOLDOWN" ? (
                               <motion.div animate={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
-                                <AlertTriangle className="w-12 h-12" style={st.warningText} />
+                                <AlertTriangle className="w-12 h-12" style={{ color: "#eab308" }} />
                               </motion.div>
                             ) : (
                               <motion.div animate={{ scale: [1, 1.15, 1, 1.1, 1], rotate: [0, -10, 10, -5, 0], opacity: [1, 0.7, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>
-                                <XCircle className="w-12 h-12" style={{ color: "var(--tg-destructive)", filter: "drop-shadow(0 0 8px color-mix(in srgb, var(--tg-destructive) 50%, transparent))" }} />
+                                <XCircle className="w-12 h-12 text-destructive drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                               </motion.div>
                             )}
                             <p className="text-sm font-semibold text-center" style={{
-                              color: phoneCheckResult.status === "CLEAR" ? "var(--tg-accent)" : phoneCheckResult.status === "COOLDOWN" ? "var(--tg-warning, #facc15)" : "var(--tg-destructive)"
+                              color: phoneCheckResult.status === "CLEAR" ? "#22c55e" : phoneCheckResult.status === "COOLDOWN" ? "#eab308" : "#ef4444"
                             }}>
                               {phoneCheckResult.status === "CLEAR" ? "Número Disponível" : phoneCheckResult.status === "COOLDOWN" ? "Cooldown Ativo" : "Número Bloqueado"}
                             </p>
@@ -1606,7 +1597,7 @@ export default function TelegramMiniApp() {
                               style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
                               {discount > 0 && (
                                 <span className="absolute -top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
-                                  style={{ background: discount >= 30 ? "var(--tg-accent)" : discount >= 20 ? "var(--tg-accent)" : "var(--tg-link)" }}>
+                                  style={{ background: discount >= 30 ? "#22c55e" : discount >= 20 ? "#10b981" : "#3b82f6" }}>
                                   {discount}% OFF
                                 </span>
                               )}
@@ -1618,7 +1609,7 @@ export default function TelegramMiniApp() {
                               {discount > 0 && (
                                 <div className="mt-2 pt-2" style={{ borderTop: st.borderSub }}>
                                   <span className="text-[11px]" style={st.hint}>Você paga </span>
-                                  <span className="text-sm font-bold" style={st.accent}>R$ {displayCost.toFixed(2)}</span>
+                                  <span className="text-sm font-bold" style={{ color: "#22c55e" }}>R$ {displayCost.toFixed(2)}</span>
                                 </div>
                               )}
                             </button>
@@ -1642,10 +1633,10 @@ export default function TelegramMiniApp() {
                       </div>
                       {/* Pending warning modal */}
                       {pendingWarning && (
-                        <div className="rounded-xl p-4 space-y-3" style={{ ...st.warningBg, border: "1px solid color-mix(in srgb, var(--tg-warning, #facc15) 30%, transparent)" }}>
+                        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "color-mix(in srgb, #eab308 15%, transparent)", border: "1px solid color-mix(in srgb, #eab308 30%, transparent)" }}>
                           <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 flex-shrink-0" style={st.warningText} />
-                            <p className="text-sm font-semibold" style={st.warningText}>Recarga Pendente</p>
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: "#eab308" }} />
+                            <p className="text-sm font-semibold" style={{ color: "#eab308" }}>Recarga Pendente</p>
                           </div>
                           <p className="text-xs" style={st.hint}>
                             Já existe {pendingWarning.count} recarga(s) pendente(s) para este número. Deseja continuar mesmo assim?
@@ -1653,7 +1644,7 @@ export default function TelegramMiniApp() {
                           <div className="flex gap-2">
                             <button onClick={() => handleRecargaConfirm(true)}
                               className="flex-1 rounded-xl py-2.5 font-semibold text-sm"
-                              style={{ backgroundColor: "var(--tg-warning, #facc15)", color: "#000" }}>
+                              style={{ backgroundColor: "#eab308", color: "#000" }}>
                               Sim, continuar
                             </button>
                             <button onClick={() => setPendingWarning(null)}
@@ -1669,7 +1660,7 @@ export default function TelegramMiniApp() {
                       ) : !pendingWarning && (
                         <button onClick={() => handleRecargaConfirm()} disabled={recargaLoading}
                           className="w-full rounded-xl py-3.5 font-semibold transition disabled:opacity-50"
-                          style={{ backgroundColor: "var(--tg-accent)", color: "var(--tg-bg)" }}>
+                          style={{ backgroundColor: "#4ade80", color: "#000" }}>
                           {recargaLoading ? "Processando..." : "✅ Confirmar Recarga"}
                         </button>
                       )}
@@ -1743,7 +1734,7 @@ export default function TelegramMiniApp() {
                                         <div key={v.valueId} className="rounded-xl px-3 py-3.5 text-center min-h-[60px] flex flex-col items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--tg-hint) 15%, transparent)" }}>
                                           <p className="text-sm font-bold" style={st.text}>R$ {faceValue.toFixed(2).replace(".", ",")}</p>
                                           {hasDiff && (
-                                            <p className="text-xs font-medium mt-0.5" style={st.accent}>Paga R$ {displayCost.toFixed(2).replace(".", ",")}</p>
+                                            <p className="text-xs font-medium mt-0.5" style={{ color: "#4ade80" }}>Paga R$ {displayCost.toFixed(2).replace(".", ",")}</p>
                                           )}
                                         </div>
                                       );
@@ -1809,8 +1800,8 @@ export default function TelegramMiniApp() {
               {pixConfirmed ? (
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl p-6 text-center space-y-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={st.successBg}>
-                    <CheckCircle2 className="w-8 h-8" style={st.accent} />
+                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={{ backgroundColor: "rgba(74,222,128,0.15)" }}>
+                    <CheckCircle2 className="w-8 h-8" style={{ color: "#4ade80" }} />
                   </motion.div>
                   <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                     <h3 className="text-lg font-bold" style={st.text}>Pagamento Confirmado!</h3>
@@ -1835,9 +1826,9 @@ export default function TelegramMiniApp() {
                 >
                   <div className="text-center">
                     <motion.div className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
-                      style={st.successBg}
+                      style={{ backgroundColor: "rgba(74,222,128,0.15)" }}
                       initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.1 }}>
-                      <Check className="w-6 h-6" style={st.accent} />
+                      <Check className="w-6 h-6" style={{ color: "#4ade80" }} />
                     </motion.div>
                     <motion.h2 className="text-base font-bold" style={st.text} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                       PIX Gerado com Sucesso!
@@ -1849,7 +1840,7 @@ export default function TelegramMiniApp() {
                   <motion.div className="flex justify-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                     <div className="bg-white rounded-xl p-2.5 relative">
                       <motion.div className="absolute inset-0 rounded-xl"
-                        animate={{ boxShadow: ["0 0 0px color-mix(in srgb, var(--tg-accent) 0%, transparent)", "0 0 16px color-mix(in srgb, var(--tg-accent) 25%, transparent)", "0 0 0px color-mix(in srgb, var(--tg-accent) 0%, transparent)"] }}
+                        animate={{ boxShadow: ["0 0 0px rgba(74,222,128,0)", "0 0 16px rgba(74,222,128,0.25)", "0 0 0px rgba(74,222,128,0)"] }}
                         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
                       <QRCodeSVG value={pixData.qr_code || ""} size={160} />
                     </div>
@@ -1875,7 +1866,7 @@ export default function TelegramMiniApp() {
                       <motion.button onClick={copyPix}
                         className="w-full rounded-xl py-3 font-semibold transition flex items-center justify-center gap-2"
                         style={st.btn} whileTap={{ scale: 0.95 }}
-                        animate={copied ? { backgroundColor: "color-mix(in srgb, var(--tg-accent) 20%, transparent)" } : {}}>
+                        animate={copied ? { backgroundColor: "rgba(74,222,128,0.2)" } : {}}>
                         {copied ? <><Check className="w-4 h-4" /> Copiado!</> : <><Copy className="w-4 h-4" /> Copiar código PIX</>}
                       </motion.button>
                     </motion.div>
@@ -1891,7 +1882,7 @@ export default function TelegramMiniApp() {
                   <div className="flex gap-2">
                     <button onClick={handleCheckPixStatus} disabled={checkingPix}
                       className="flex-1 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition disabled:opacity-50"
-                      style={{ backgroundColor: "color-mix(in srgb, var(--tg-accent) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--tg-accent) 20%, transparent)", color: "var(--tg-accent)" }}>
+                      style={{ backgroundColor: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ade80" }}>
                       {checkingPix ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                       Verificar Agora
                     </button>
@@ -1959,9 +1950,9 @@ export default function TelegramMiniApp() {
                     onClick={handleDeposit}
                     disabled={depositLoading || !depositAmount || parseFloat((depositAmount || "0").replace(",", ".")) < 10}
                     className="w-full rounded-2xl py-4 font-bold text-base transition disabled:opacity-40 flex items-center justify-center gap-3 relative overflow-hidden"
-                    style={{ backgroundColor: "var(--tg-accent)", color: "var(--tg-bg)" }}
+                    style={{ backgroundColor: "#4ade80", color: "#000" }}
                     whileTap={{ scale: 0.97 }}
-                    animate={{ boxShadow: ["0 0 0px color-mix(in srgb, var(--tg-accent) 30%, transparent)", "0 0 20px color-mix(in srgb, var(--tg-accent) 50%, transparent)", "0 0 0px color-mix(in srgb, var(--tg-accent) 30%, transparent)"] }}
+                    animate={{ boxShadow: ["0 0 0px rgba(74,222,128,0.3)", "0 0 20px rgba(74,222,128,0.5)", "0 0 0px rgba(74,222,128,0.3)"] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
                     <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
@@ -1992,10 +1983,10 @@ export default function TelegramMiniApp() {
                           <div key={t.id} className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: st.borderSub }}>
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                                style={{ backgroundColor: t.status === "completed" ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : t.status === "expired" ? "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" : "color-mix(in srgb, var(--tg-warning, #facc15) 15%, transparent)" }}>
-                                {t.status === "completed" ? <Check className="w-3.5 h-3.5" style={st.accent} />
-                                  : t.status === "expired" ? <XCircle className="w-3.5 h-3.5" style={st.destructive} />
-                                  : <Loader2 className="w-3.5 h-3.5 animate-spin" style={st.warningText} />}
+                                style={{ backgroundColor: t.status === "completed" ? "rgba(74,222,128,0.15)" : t.status === "expired" ? "rgba(239,68,68,0.15)" : "rgba(250,204,21,0.15)" }}>
+                                {t.status === "completed" ? <Check className="w-3.5 h-3.5" style={{ color: "#4ade80" }} />
+                                  : t.status === "expired" ? <XCircle className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
+                                  : <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "#facc15" }} />}
                               </div>
                               <div>
                                 <p className="text-sm font-medium" style={st.text}>Depósito PIX</p>
@@ -2003,9 +1994,9 @@ export default function TelegramMiniApp() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-bold" style={{ color: t.status === "completed" ? "var(--tg-accent)" : t.status === "expired" ? "var(--tg-destructive)" : "var(--tg-warning, #facc15)" }}>+{formatCurrency(t.amount)}</p>
+                              <p className="text-sm font-bold" style={{ color: t.status === "completed" ? "#4ade80" : t.status === "expired" ? "#ef4444" : "#facc15" }}>+{formatCurrency(t.amount)}</p>
                               <span className="text-[9px] font-semibold uppercase tracking-wide"
-                                style={{ color: t.status === "completed" ? "var(--tg-accent)" : t.status === "expired" ? "var(--tg-destructive)" : "var(--tg-warning, #facc15)" }}>
+                                style={{ color: t.status === "completed" ? "#4ade80" : t.status === "expired" ? "#ef4444" : "#facc15" }}>
                                 {t.status === "completed" ? "✓ Confirmado" : t.status === "expired" ? "✕ Expirado" : "⏳ Processando"}
                               </span>
                             </div>
@@ -2057,24 +2048,24 @@ export default function TelegramMiniApp() {
                     <motion.div className="fixed inset-0 z-[100]" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingReceipt(null)} />
                     <motion.div className="fixed inset-x-4 top-[15%] z-[101] rounded-2xl p-5 space-y-4 max-h-[75vh] overflow-y-auto"
-                      style={{ ...st.secondaryBg, border: `2px solid ${viewingReceipt.status === "completed" ? "var(--tg-accent)" : "var(--tg-warning, #facc15)"}` }}
+                      style={{ ...st.secondaryBg, border: `2px solid ${viewingReceipt.status === "completed" ? "#4ade80" : "#facc15"}` }}
                       initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}>
                       <div className="text-center">
                         <div className="w-14 h-14 rounded-full mx-auto mb-2 flex items-center justify-center"
-                          style={{ backgroundColor: viewingReceipt.status === "completed" ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : viewingReceipt.status === "pending" ? "color-mix(in srgb, var(--tg-warning, #facc15) 15%, transparent)" : "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" }}>
-                          {viewingReceipt.status === "completed" ? <Check className="w-7 h-7" style={st.accent} />
-                            : viewingReceipt.status === "pending" ? <Clock className="w-7 h-7" style={st.warningText} />
-                            : <XCircle className="w-7 h-7" style={st.destructive} />}
+                          style={{ backgroundColor: viewingReceipt.status === "completed" ? "rgba(74,222,128,0.15)" : viewingReceipt.status === "pending" ? "rgba(250,204,21,0.15)" : "rgba(239,68,68,0.15)" }}>
+                          {viewingReceipt.status === "completed" ? <Check className="w-7 h-7" style={{ color: "#4ade80" }} />
+                            : viewingReceipt.status === "pending" ? <Clock className="w-7 h-7" style={{ color: "#facc15" }} />
+                            : <XCircle className="w-7 h-7" style={{ color: "#ef4444" }} />}
                         </div>
                         <p className="font-bold text-lg" style={st.text}>
                           {viewingReceipt.status === "completed" ? "Recarga Concluída" : viewingReceipt.status === "pending" ? "Processando..." : "Falha na Recarga"}
                         </p>
                       </div>
                       <div className="rounded-xl overflow-hidden" style={{ ...st.bg, border: st.borderSub }}>
-                        <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "color-mix(in srgb, var(--tg-accent) 5%, transparent)" }}>
-                          <FileText className="w-3.5 h-3.5" style={st.accent} />
-                          <span className="text-[10px] font-bold tracking-wider uppercase" style={st.accent}>Comprovante</span>
+                        <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: st.borderSub, backgroundColor: "rgba(74,222,128,0.05)" }}>
+                          <FileText className="w-3.5 h-3.5" style={{ color: "#4ade80" }} />
+                          <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: "#4ade80" }}>Comprovante</span>
                         </div>
                         {[
                           { icon: Phone, label: "Telefone", value: formatPhone(viewingReceipt.telefone) },
@@ -2083,12 +2074,12 @@ export default function TelegramMiniApp() {
                           { icon: Hash, label: "ID do Pedido", value: viewingReceipt.external_id || viewingReceipt.id.slice(0, 8) },
                           { icon: Clock, label: "Data", value: formatDateTimeBR(viewingReceipt.created_at) },
                         ].map((row) => (
-                          <div key={row.label} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid color-mix(in srgb, var(--tg-text) 5%, transparent)" }}>
+                          <div key={row.label} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                             <div className="flex items-center gap-2">
                               <row.icon className="w-3.5 h-3.5" style={{ color: "var(--tg-hint)" }} />
                               <span className="text-xs" style={{ color: "var(--tg-hint)" }}>{row.label}</span>
                             </div>
-                            <span className="text-sm font-semibold" style={{ color: row.highlight ? "var(--tg-accent)" : "var(--tg-text)" }}>{row.value}</span>
+                            <span className="text-sm font-semibold" style={{ color: row.highlight ? "#4ade80" : "var(--tg-text)" }}>{row.value}</span>
                           </div>
                         ))}
                       </div>
@@ -2154,7 +2145,7 @@ export default function TelegramMiniApp() {
                       <div key={r.id}>
                         {showSep && (
                           <div className="flex justify-center my-2">
-                            <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "color-mix(in srgb, var(--tg-text) 6%, transparent)", color: "var(--tg-hint)" }}>{dateLabel}</span>
+                            <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
                           </div>
                         )}
                         <button onClick={() => { setViewingReceipt(r); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
@@ -2172,7 +2163,7 @@ export default function TelegramMiniApp() {
                           <div className="text-right flex items-center gap-2">
                             <div>
                               <p className="font-semibold text-sm" style={st.text}>{formatCurrency(r.valor)}</p>
-                              <p className="text-[10px]" style={{ color: r.status === "completed" ? "var(--tg-accent)" : r.status === "pending" ? "var(--tg-warning, #facc15)" : "var(--tg-destructive)" }}>
+                              <p className="text-[10px]" style={{ color: r.status === "completed" ? "#4ade80" : r.status === "pending" ? "#facc15" : "var(--tg-destructive)" }}>
                                 {r.status === "completed" ? "✅ Concluída" : r.status === "pending" ? "⏳ Processando" : "❌ Falha"}
                               </p>
                             </div>
@@ -2221,7 +2212,7 @@ export default function TelegramMiniApp() {
                   const txIcon = isDeposit ? Landmark : isSale ? Smartphone : isCommission ? ArrowRightLeft : Wallet;
                   const TxIcon = txIcon;
                   const amountPrefix = isDeposit || isCommission ? "+" : isSale || isWithdraw ? "-" : "";
-                  const amountColor = isExpired ? "var(--tg-destructive)" : isCompleted ? "var(--tg-accent)" : isPending ? "var(--tg-warning, #facc15)" : "var(--tg-text)";
+                  const amountColor = isExpired ? "#ef4444" : isCompleted ? "#4ade80" : isPending ? "#facc15" : "var(--tg-text)";
                   // Subtitle from metadata
                   const subtitle = t.metadata?.operadora ? `${(t.metadata.operadora as string).toUpperCase()} • ${formatCurrency(t.metadata?.valor_recarga || t.amount)}` : null;
 
@@ -2229,7 +2220,7 @@ export default function TelegramMiniApp() {
                     <div key={t.id}>
                       {showSep && (
                         <div className="flex justify-center my-2">
-                          <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "color-mix(in srgb, var(--tg-text) 6%, transparent)", color: "var(--tg-hint)" }}>{dateLabel}</span>
+                          <span className="text-[10px] px-3 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--tg-hint)" }}>{dateLabel}</span>
                         </div>
                       )}
                       <button className="w-full rounded-xl p-3 flex items-center justify-between text-left"
@@ -2243,8 +2234,8 @@ export default function TelegramMiniApp() {
                         }}>
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: isExpired ? "color-mix(in srgb, var(--tg-destructive) 10%, transparent)" : isDeposit ? "color-mix(in srgb, var(--tg-accent) 10%, transparent)" : isSale ? "color-mix(in srgb, var(--tg-link) 10%, transparent)" : isCommission ? "color-mix(in srgb, var(--tg-warning, #facc15) 10%, transparent)" : "color-mix(in srgb, var(--tg-text) 6%, transparent)" }}>
-                            <TxIcon className="w-4 h-4" style={{ color: isExpired ? "var(--tg-destructive)" : isDeposit ? "var(--tg-accent)" : isSale ? "var(--tg-link)" : isCommission ? "var(--tg-warning, #facc15)" : "var(--tg-hint)" }} />
+                            style={{ backgroundColor: isExpired ? "rgba(239,68,68,0.1)" : isDeposit ? "rgba(74,222,128,0.1)" : isSale ? "rgba(59,130,246,0.1)" : isCommission ? "rgba(250,204,21,0.1)" : "rgba(255,255,255,0.06)" }}>
+                            <TxIcon className="w-4 h-4" style={{ color: isExpired ? "#ef4444" : isDeposit ? "#4ade80" : isSale ? "#3b82f6" : isCommission ? "#facc15" : "var(--tg-hint)" }} />
                           </div>
                           <div>
                             <p className="font-semibold text-sm" style={st.text}>{txLabel}</p>
@@ -2297,11 +2288,11 @@ export default function TelegramMiniApp() {
                         className="flex-1 rounded-lg px-2.5 py-1.5 text-sm font-bold focus:outline-none"
                         style={{ ...st.bg, ...st.text, border: st.borderSub }} autoFocus />
                       <button onClick={handleSaveProfile} disabled={savingProfile}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={st.successBg}>
-                        {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" style={st.accent} /> : <Save className="w-4 h-4" style={st.accent} />}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(74,222,128,0.15)" }}>
+                        {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" style={st.green} /> : <Save className="w-4 h-4" style={st.green} />}
                       </button>
                       <button onClick={() => setEditingName(false)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={st.dangerBg}>
+                        className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.15)" }}>
                         <X className="w-4 h-4" style={st.destructive} />
                       </button>
                     </div>
@@ -2309,7 +2300,7 @@ export default function TelegramMiniApp() {
                     <div className="flex items-center gap-2">
                       <p className="font-bold truncate" style={st.text}>{userName}</p>
                       <button onClick={() => { setEditName(userName); setEditingName(true); }}
-                        className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "color-mix(in srgb, var(--tg-text) 6%, transparent)" }}>
+                        className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
                         <Pencil className="w-3 h-3" style={st.hint} />
                       </button>
                     </div>
@@ -2322,18 +2313,18 @@ export default function TelegramMiniApp() {
               {/* Telegram Vinculado */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, type: "spring", damping: 20 }}
                 className="rounded-2xl p-4 flex items-center gap-3 overflow-hidden relative"
-                style={{ ...st.secondaryBg, border: "1px solid color-mix(in srgb, var(--tg-accent) 30%, transparent)" }}>
+                style={{ ...st.secondaryBg, border: "1px solid rgba(34,197,94,0.3)" }}>
                 <motion.div className="absolute inset-0 opacity-10"
-                  style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--tg-accent) 30%, transparent) 0%, transparent 60%)" }}
+                  style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.3) 0%, transparent 60%)" }}
                   animate={{ opacity: [0.05, 0.15, 0.05] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
                 <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={st.successBg}>
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(34,197,94,0.15)" }}>
                   <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.28-.02-.12.03-2.02 1.28-5.69 3.77-.54.37-1.03.55-1.47.54-.48-.01-1.4-.27-2.09-.49-.84-.27-1.51-.42-1.45-.88.03-.24.37-.49 1.02-.74 4-1.73 6.67-2.88 8.02-3.44 3.82-1.6 4.62-1.87 5.13-1.88.11 0 .37.03.54.17.14.12.18.28.2.47-.01.06.01.24 0 .41z" fill="currentColor" style={{ color: "var(--tg-accent)" }}/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.28-.02-.12.03-2.02 1.28-5.69 3.77-.54.37-1.03.55-1.47.54-.48-.01-1.4-.27-2.09-.49-.84-.27-1.51-.42-1.45-.88.03-.24.37-.49 1.02-.74 4-1.73 6.67-2.88 8.02-3.44 3.82-1.6 4.62-1.87 5.13-1.88.11 0 .37.03.54.17.14.12.18.28.2.47-.01.06.01.24 0 .41z" fill="rgb(34,197,94)"/>
                   </svg>
                 </motion.div>
                 <div className="flex-1 relative z-10">
-                  <p className="font-semibold text-sm" style={st.accent}>Telegram Vinculado</p>
+                  <p className="font-semibold text-sm" style={{ color: "rgb(34,197,94)" }}>Telegram Vinculado</p>
                   <p className="text-xs" style={st.hint}>Conta conectada com sucesso</p>
                 </div>
                 <AnimatedCheck size={22} className="text-success" />
@@ -2382,8 +2373,8 @@ export default function TelegramMiniApp() {
                       <span className="text-sm font-medium" style={st.text}>{item.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "var(--tg-accent)" }} />
-                      <span className="text-xs" style={st.accent}>Online</span>
+                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4ade80" }} />
+                      <span className="text-xs" style={st.green}>Online</span>
                     </div>
                   </div>
                 ))}
@@ -2460,7 +2451,7 @@ export default function TelegramMiniApp() {
             <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
               <MessageCircle className="w-14 h-14 mb-4" style={st.hint} />
               <p className="text-base font-bold mb-2" style={st.text}>Faça login para acessar o chat</p>
-              <div className="rounded-xl p-4 mt-2 text-left space-y-2" style={{ background: "color-mix(in srgb, var(--tg-text) 5%, transparent)", border: st.borderMain }}>
+              <div className="rounded-xl p-4 mt-2 text-left space-y-2" style={{ background: "rgba(255,255,255,0.05)", border: st.borderMain }}>
                 <p className="text-xs font-semibold" style={st.text}>📋 Como acessar:</p>
                 <p className="text-xs" style={st.hint}>1. Toque na aba <strong style={st.text}>"Conta"</strong> no menu inferior</p>
                 <p className="text-xs" style={st.hint}>2. Se já estiver logado, toque em <strong style={st.text}>"Sair"</strong> e entre novamente</p>
@@ -2632,16 +2623,16 @@ export default function TelegramMiniApp() {
                       style={{
                         background: "var(--tg-accent)",
                         boxShadow: isActive
-                          ? "0 4px 14px color-mix(in srgb, var(--tg-accent) 40%, transparent), 0 0 20px color-mix(in srgb, var(--tg-accent) 20%, transparent)"
-                          : "0 4px 14px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
-                        ...(isActive ? { outline: "2px solid color-mix(in srgb, var(--tg-accent) 30%, transparent)", outlineOffset: "2px" } : {}),
+                          ? "0 4px 14px rgba(34,197,94,0.4), 0 0 20px rgba(34,197,94,0.2)"
+                          : "0 4px 14px rgba(34,197,94,0.3)",
+                        ...(isActive ? { outline: "2px solid rgba(34,197,94,0.3)", outlineOffset: "2px" } : {}),
                       }}
                       animate={{
                         scale: [1, 1.05, 1],
                         boxShadow: [
-                          "0 4px 14px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
-                          "0 6px 20px color-mix(in srgb, var(--tg-accent) 50%, transparent)",
-                          "0 4px 14px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
+                          "0 4px 14px rgba(34,197,94,0.3)",
+                          "0 6px 20px rgba(34,197,94,0.5)",
+                          "0 4px 14px rgba(34,197,94,0.3)",
                         ],
                       }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -2711,7 +2702,7 @@ export default function TelegramMiniApp() {
           <>
             <motion.div
               className="fixed inset-0 z-[60]"
-              style={{ backgroundColor: "color-mix(in srgb, var(--tg-bg) 50%, rgba(0,0,0,0.5))" }}
+              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
               onClick={() => setMoreOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -2734,7 +2725,7 @@ export default function TelegramMiniApp() {
                 <button
                   onClick={() => setMoreOpen(false)}
                   className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "color-mix(in srgb, var(--tg-destructive) 10%, transparent)", color: "var(--tg-destructive)" }}
+                  style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "var(--tg-destructive)" }}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -2747,7 +2738,7 @@ export default function TelegramMiniApp() {
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-9 h-9 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
                     ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: "color-mix(in srgb, var(--tg-accent) 15%, transparent)", color: "var(--tg-accent)" }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: "rgba(82,136,193,0.15)", color: "var(--tg-accent)" }}>
                         {initials}
                       </div>
                     )}
@@ -2762,10 +2753,10 @@ export default function TelegramMiniApp() {
               <div className="px-4 pb-3 grid grid-cols-3 gap-2">
                 {([
                   { id: "chat" as Section, icon: MessageCircle, label: "Bate-papo", color: "var(--tg-accent)" },
-                  { id: "extrato" as Section, icon: Landmark, label: "Carteira", color: "var(--tg-accent)" },
+                  { id: "extrato" as Section, icon: Landmark, label: "Carteira", color: "#4ade80" },
                   { id: "conta" as Section, icon: Settings, label: "Conta", color: "var(--tg-accent)" },
-                  { id: "status" as Section, icon: Shield, label: "Status", color: "var(--tg-warning, #facc15)" },
-                  { id: "atualizacoes" as Section, icon: RefreshCw, label: "Novidades", color: "var(--tg-accent)" },
+                  { id: "status" as Section, icon: Shield, label: "Status", color: "#facc15" },
+                  { id: "atualizacoes" as Section, icon: RefreshCw, label: "Novidades", color: "#a3e635" },
                 ]).map((item, index) => {
                   const isActive = section === item.id;
                   return (
@@ -2774,7 +2765,7 @@ export default function TelegramMiniApp() {
                       onClick={() => { setSection(item.id); setMoreOpen(false); tgWebApp?.HapticFeedback?.impactOccurred("light"); }}
                       className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl transition-colors"
                       style={{
-                        backgroundColor: isActive ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : "var(--tg-secondary-bg)",
+                        backgroundColor: isActive ? "rgba(82,136,193,0.15)" : "var(--tg-secondary-bg)",
                         color: isActive ? "var(--tg-accent)" : "var(--tg-text)",
                       }}
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -2799,7 +2790,7 @@ export default function TelegramMiniApp() {
                   <button
                     onClick={() => { handleLogout(); setMoreOpen(false); }}
                     className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
-                    style={{ backgroundColor: "color-mix(in srgb, var(--tg-destructive) 10%, transparent)", color: "var(--tg-destructive)" }}
+                    style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "var(--tg-destructive)" }}
                   >
                     <LogOut className="h-4 w-4" /> Sair
                   </button>
