@@ -2604,6 +2604,27 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 </div>
               </div>
 
+              {/* PIX Key display/warning */}
+              {saquePixKey ? (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Chave PIX para recebimento</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-primary uppercase">{saquePixKeyType || "PIX"}</span>
+                    <span className="text-sm font-bold text-foreground">{saquePixKey}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-5 flex items-start gap-2.5">
+                  <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-foreground mb-0.5">CHAVE PIX NÃO CONFIGURADA</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Configure sua chave PIX nas configurações do perfil antes de solicitar um saque.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-1.5 mb-5">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Quanto deseja sacar?</label>
                 <input
@@ -2638,19 +2659,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                   Cancelar
                 </button>
                 <button
-                  disabled={saqueLoading || !saqueValor || parseFloat(saqueValor) < 5 || parseFloat(saqueValor) > saldoPessoal}
+                  disabled={saqueLoading || !saqueValor || parseFloat(saqueValor) < 5 || parseFloat(saqueValor) > saldoPessoal || !saquePixKey}
                   onClick={async () => {
                     const val = parseFloat(saqueValor);
-                    if (!val || val < 5 || val > saldoPessoal || !user) return;
+                    if (!val || val < 5 || val > saldoPessoal || !user || !saquePixKey) return;
                     setSaqueLoading(true);
                     try {
-                      // Create withdrawal transaction
+                      // Create withdrawal transaction with PIX key in metadata
                       const { error } = await supabase.from("transactions").insert({
                         user_id: user.id,
                         amount: val,
                         type: "saque",
                         status: "pending",
                         module: "comissoes",
+                        metadata: { pix_key: saquePixKey, pix_key_type: saquePixKeyType },
                       });
                       if (error) throw error;
                       // Debit comissões
