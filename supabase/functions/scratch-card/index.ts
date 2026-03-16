@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
 
     if (action === "scratch") {
       const cardId = body?.card_id as string | undefined;
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayBR();
 
       let card: any = null;
 
