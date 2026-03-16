@@ -272,9 +272,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center cursor-help transition-transform group-hover/avo:scale-110">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">👴 Avô</p>
-                      <p className="text-muted-foreground leading-relaxed">A pessoa que te trouxe pro sistema. Toda vez que você vende, ela ganha <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do seu lucro automaticamente.</p>
+                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/avo:opacity-100 group-hover/avo:visible transition-all z-10 pointer-events-none">
+                      <p className="font-bold mb-1.5 text-sm">👴 Avô — Seu Patrocinador</p>
+                      <p className="text-muted-foreground leading-relaxed mb-1.5">É a pessoa que te convidou pra plataforma. Cada vez que você fecha uma venda, ela recebe automaticamente <strong className="text-purple-400">{commissionConfig.indirect}%</strong> do seu lucro.</p>
+                      <p className="text-muted-foreground leading-relaxed">💡 <em>Exemplo: se você lucra R$ 5,00 numa recarga, seu avô ganha R$ {(5 * Number(commissionConfig.indirect) / 100).toFixed(2)} sem fazer nada!</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Avô</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem te<br/>indicou</span>
@@ -296,9 +297,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center cursor-help transition-transform group-hover/pai:scale-110">
                       <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">👨 Você (Revendedor)</p>
-                      <p className="text-muted-foreground leading-relaxed">Você vende a recarga pro cliente e fica com <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro. O lucro é a diferença entre o que você cobra e o que você paga.</p>
+                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/pai:opacity-100 group-hover/pai:visible transition-all z-10 pointer-events-none">
+                      <p className="font-bold mb-1.5 text-sm">👨 Você — O Revendedor</p>
+                      <p className="text-muted-foreground leading-relaxed mb-1.5">Você define o preço final pro cliente e fica com <strong className="text-primary">{commissionConfig.direct}%</strong> do lucro. Lucro = Preço que você cobra − Seu custo.</p>
+                      <p className="text-muted-foreground leading-relaxed">💡 <em>Exemplo: custo R$ 12, você cobra R$ 15 → lucro de R$ 3,00 direto no seu saldo!</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Você</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Vende pro<br/>cliente</span>
@@ -320,9 +322,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center cursor-help transition-transform group-hover/cli:scale-110">
                       <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">📱 Cliente</p>
-                      <p className="text-muted-foreground leading-relaxed">É quem compra a recarga de você. O preço que ele paga menos o seu custo = seu lucro!</p>
+                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
+                      <p className="font-bold mb-1.5 text-sm">📱 Cliente — Seu Comprador</p>
+                      <p className="text-muted-foreground leading-relaxed mb-1.5">É quem compra a recarga de você pelo preço que você definiu aqui embaixo. Quanto maior o preço, maior seu lucro!</p>
+                      <p className="text-muted-foreground leading-relaxed">💡 <em>Dica: você pode definir preços exclusivos pra cada cliente na aba "Minha Rede".</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Cliente</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Compra a<br/>recarga</span>
