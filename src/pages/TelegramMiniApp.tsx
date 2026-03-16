@@ -574,26 +574,92 @@ export default function TelegramMiniApp() {
     try {
       const { data } = await supabase
         .from("transactions")
-        .select("id, amount, status, type, created_at, payment_id, metadata")
+        .select("id, amount, status, type, created_at, payment_id, metadata, module")
         .eq("user_id", userId)
-        .eq("type", "deposit")
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(50);
       setTransactions(data || []);
     } catch (err) { console.error("loadTransactions error:", err); }
+  }, [userId]);
+
+  const loadSaldoPessoal = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const { data } = await supabase
+        .from("saldos")
+        .select("valor")
+        .eq("user_id", userId)
+        .eq("tipo", "pessoal")
+        .maybeSingle();
+      setSaldoPessoal(data?.valor || 0);
+    } catch {}
   }, [userId]);
 
   // Load avatar on mount
   const loadAvatar = useCallback(async () => {
     if (!userId) return;
     try {
-      // Use edge function (service role) to bypass RLS
       const { data } = await supabase.functions.invoke("telegram-miniapp", {
         body: { action: "lookup_by_user_id", user_id: userId },
       });
       if (data?.avatar_url) setAvatarUrl(data.avatar_url);
     } catch {}
   }, [userId]);
+
+  const handleSaveProfile = async () => {
+    if (!userId || !editName.trim()) return;
+    setSavingProfile(true);
+    try {
+      await supabase.from("profiles").update({ nome: editName.trim() } as any).eq("id", userId);
+      setUserName(editName.trim());
+      setEditingName(false);
+      tgWebApp?.HapticFeedback?.notificationOccurred("success");
+    } catch {}
+    setSavingProfile(false);
+  };
+
+  const handleCheckPixStatus = async () => {
+    if (!pixData?.payment_id) return;
+    setCheckingPix(true);
+    try {
+      const { data } = await supabase.functions.invoke("check-pending-pix", { body: {} });
+      // Reload transactions and saldo to check
+      await Promise.all([loadTransactions(), refreshSaldo()]);
+      // Check if this specific transaction was confirmed
+      const { data: tx } = await supabase
+        .from("transactions")
+        .select("status, amount")
+        .eq("payment_id", pixData.payment_id)
+        .maybeSingle();
+      if (tx?.status === "completed" || tx?.status === "approved") {
+        setPixConfirmed(true);
+        setConfirmedPixAmount(tx.amount);
+        tgWebApp?.HapticFeedback?.notificationOccurred("success");
+      }
+    } catch {}
+    setCheckingPix(false);
+  };
+
+  // Auto-poll PIX payment status
+  useEffect(() => {
+    if (!pixData?.payment_id || pixConfirmed) return;
+    const interval = setInterval(async () => {
+      try {
+        const { data: tx } = await supabase
+          .from("transactions")
+          .select("status, amount")
+          .eq("payment_id", pixData.payment_id)
+          .maybeSingle();
+        if (tx?.status === "completed" || tx?.status === "approved") {
+          setPixConfirmed(true);
+          setConfirmedPixAmount(tx.amount);
+          await refreshSaldo();
+          tgWebApp?.HapticFeedback?.notificationOccurred("success");
+        }
+      } catch {}
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [pixData, pixConfirmed, refreshSaldo]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
