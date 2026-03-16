@@ -1189,9 +1189,9 @@ export default function TelegramMiniApp() {
           {/* Form card */}
           <div className="rounded-2xl p-5 space-y-4 backdrop-blur-xl"
             style={{ 
-              backgroundColor: "rgba(23, 33, 43, 0.75)", 
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)"
+              ...st.loginCardBg,
+              border: st.borderLight,
+              boxShadow: "0 8px 32px color-mix(in srgb, var(--tg-bg) 40%, transparent), inset 0 1px 0 color-mix(in srgb, var(--tg-text) 5%, transparent)"
             }}>
             <div className="space-y-3">
               <div>
