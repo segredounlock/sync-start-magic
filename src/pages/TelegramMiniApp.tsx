@@ -1197,7 +1197,7 @@ export default function TelegramMiniApp() {
               <div>
                 <label className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5 block">E-mail</label>
                 <input type="email" placeholder="seu@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 transition-all" style={{ ...st.inputBg, boxShadow: "none" }}
+                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 transition-all"
                   style={st.inputBg} />
               </div>
               <div>
