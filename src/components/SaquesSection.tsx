@@ -254,7 +254,7 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
                         </span>
                         {saque.pix_key && (
                           <span className="flex items-center gap-1 text-primary font-medium">
-                            🔑 {saque.pix_key}
+                            🔑 {saque.pix_key_type ? <span className="uppercase text-[10px] opacity-70">{saque.pix_key_type}:</span> : null} {saque.pix_key}
                           </span>
                         )}
                       </div>
