@@ -2726,7 +2726,7 @@ export default function TelegramMiniApp() {
           <>
             <motion.div
               className="fixed inset-0 z-[60]"
-              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+              style={st.overlayDarkSoft}
               onClick={() => setMoreOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
