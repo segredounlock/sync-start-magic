@@ -2219,7 +2219,8 @@ export default function AdminDashboard() {
                   ) : depositTransactions.filter(t =>
                     (t.user_nome || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
                     (t.user_email || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
-                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase())
+                    (t.module || "").toLowerCase().includes(depositSearch.toLowerCase()) ||
+                    (t.payment_id || "").toLowerCase().includes(depositSearch.toLowerCase())
                   ).length === 0 ? (
                     <tr><td colSpan={6} className="text-center py-8 text-muted-foreground text-sm">Nenhuma transação encontrada</td></tr>
                   ) : depositTransactions.filter(t =>
