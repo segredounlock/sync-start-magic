@@ -171,7 +171,7 @@ export default function TelegramMiniApp() {
         try { (tg as any).setHeaderColor("secondary_bg_color"); } catch {}
       }
       if ((tg as any).setBackgroundColor) {
-        try { (tg as any).setBackgroundColor("#17212b"); } catch {}
+        try { (tg as any).setBackgroundColor("bg_color"); } catch {}
       }
     }
 
