@@ -2710,14 +2710,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                         metadata: { pix_key: saquePixKey, pix_key_type: saquePixKeyType },
                       });
                       if (error) throw error;
-                      // Debit comissões
-                      const { error: e2 } = await supabase
-                        .from("saldos")
-                        .update({ valor: saldoPessoal - val })
-                        .eq("user_id", user.id)
-                        .eq("tipo", "pessoal");
+                      // Debit comissões using atomic RPC
+                      const { error: e2 } = await supabase.rpc("increment_saldo", {
+                        p_user_id: user.id,
+                        p_tipo: "pessoal",
+                        p_amount: -val,
+                      });
                       if (e2) throw e2;
-                      setSaldoPessoal(saldoPessoal - val);
+                      setSaldoPessoal(prev => prev - val);
                       toast.success(`Saque de ${fmt(val)} solicitado com sucesso!`);
                       setShowSaque(false);
                     } catch {
