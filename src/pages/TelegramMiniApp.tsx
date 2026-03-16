@@ -876,7 +876,7 @@ export default function TelegramMiniApp() {
     }
   }, [phone, operadoras, loadOperadoras, detectOperatorLocally, handleCheckPhone, tgWebApp, showToast]);
 
-
+  const handleDeposit = async () => {
     const amount = parseFloat(depositAmount.replace(",", "."));
     if (isNaN(amount) || amount <= 0 || !userId) return;
     setDepositLoading(true);
