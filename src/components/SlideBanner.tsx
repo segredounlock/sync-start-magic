@@ -6,6 +6,7 @@ interface SlideItem {
   title: string;
   subtitle: string;
   link?: string;
+  icon_url?: string;
 }
 
 interface SlideBannerProps {
