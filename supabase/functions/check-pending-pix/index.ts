@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load system config for gateway keys and fees
+    // Load system config for gateway keys
     const { data: configRows } = await supabase
       .from("system_config")
       .select("key, value");
@@ -50,11 +50,6 @@ Deno.serve(async (req) => {
     configRows?.forEach((r: { key: string; value: string | null }) => {
       config[r.key] = r.value || "";
     });
-
-    // Load fee config
-    const taxaTipo = config.taxaTipo || "fixo";
-    const taxaValor =
-      Number((config.taxaValor || "0").replace(",", ".")) || 0;
 
     let confirmed = 0;
     let checked = 0;

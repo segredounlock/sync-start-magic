@@ -232,20 +232,11 @@ Deno.serve(async (req) => {
         const txMeta = (tx.metadata as Record<string, unknown>) || {};
         const saldoTipo = (txMeta.saldo_tipo as string) || "revenda";
 
-        // Load system config for fees
-        const { data: feeConfigRows } = await supabase
-          .from("system_config")
-          .select("key, value")
-          .in("key", ["taxaTipo", "taxaValor"]);
-        const feeConfig: Record<string, string> = {};
-        feeConfigRows?.forEach((r: { key: string; value: string | null }) => {
-          feeConfig[r.key] = r.value || "";
-        });
-
-        // Calculate fee
+        // Resolve fee using RPC (reseller-specific → global fallback)
+        const { data: feeRows } = await supabase.rpc("get_deposit_fee_for_user", { _user_id: tx.user_id });
         let fee = 0;
-        const taxaTipo = feeConfig.taxaTipo || "fixo";
-        const taxaValor = Number((feeConfig.taxaValor || "0").replace(",", ".")) || 0;
+        const taxaTipo = feeRows?.[0]?.fee_type || "fixo";
+        const taxaValor = Number(feeRows?.[0]?.fee_value) || 0;
         if (taxaValor > 0) {
           if (taxaTipo === "percentual") {
             fee = Number(tx.amount) * (taxaValor / 100);
