@@ -565,7 +565,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
         </div>
 
         {/* User position bar */}
-        {userRank >= 0 && (
+        {userRank >= 0 && userPosition && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -582,16 +582,16 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
               >
                 {userRank + 1}º
               </motion.span>
-              {ranking[userRank]?.avatar_url ? (
-                <img src={ranking[userRank].avatar_url!} alt="" className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border object-cover" />
+              {userPosition.user.avatar_url ? (
+                <img src={userPosition.user.avatar_url} alt="" className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border object-cover" />
               ) : (
                 <div className="h-7 w-7 md:h-9 md:w-9 rounded-full ring-1 md:ring-2 ring-border bg-muted flex items-center justify-center text-foreground font-bold text-[10px] md:text-xs">
-                  {(ranking[userRank]?.nome?.[0] || "?").toUpperCase()}
+                  {(userPosition.user.nome?.[0] || "?").toUpperCase()}
                 </div>
               )}
               <div className="flex flex-col">
-                <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">{ranking[userRank]?.nome}</span>
-                <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{ranking[userRank]?.total_recargas} recargas</span>
+                <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">{userPosition.user.nome}</span>
+                <span className="text-[9px] md:text-[10px] text-muted-foreground leading-tight">{userPosition.user.total_recargas} recargas</span>
               </div>
               <span className="text-[10px] md:text-xs bg-primary/20 text-primary px-1.5 md:px-2 py-0.5 rounded-full font-semibold">Você</span>
             </div>
