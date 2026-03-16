@@ -1212,9 +1212,8 @@ export default function TelegramMiniApp() {
             <button onClick={handleLogin} disabled={loginLoading || !loginEmail || !loginPassword}
               className="w-full rounded-xl py-3.5 font-bold text-sm transition-all disabled:opacity-40 active:scale-[0.98]"
               style={{ 
-                background: "linear-gradient(135deg, #5288c1 0%, #3a6fa8 100%)", 
-                color: "#fff",
-                boxShadow: "0 4px 15px rgba(82, 136, 193, 0.4), inset 0 1px 0 rgba(255,255,255,0.15)"
+                ...st.loginBtn,
+                boxShadow: "0 4px 15px color-mix(in srgb, var(--tg-link) 40%, transparent), inset 0 1px 0 color-mix(in srgb, var(--tg-text) 15%, transparent)"
               }}>
               {loginLoading ? "Entrando..." : "Entrar"}
             </button>
