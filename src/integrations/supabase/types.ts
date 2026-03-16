@@ -935,6 +935,48 @@ export type Database = {
         }
         Relationships: []
       }
+      reseller_deposit_fees: {
+        Row: {
+          created_at: string
+          fee_type: string
+          fee_value: number
+          id: string
+          reseller_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fee_type?: string
+          fee_value?: number
+          id?: string
+          reseller_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fee_type?: string
+          fee_value?: number
+          id?: string
+          reseller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_deposit_fees_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_deposit_fees_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reseller_pricing_rules: {
         Row: {
           created_at: string
@@ -1319,6 +1361,13 @@ export type Database = {
       export_schema_info: { Args: never; Returns: Json }
       get_chat_enabled: { Args: never; Returns: boolean }
       get_chat_new_conv_filter: { Args: never; Returns: string }
+      get_deposit_fee_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          fee_type: string
+          fee_value: number
+        }[]
+      }
       get_follow_counts: {
         Args: { _user_id: string }
         Returns: {
