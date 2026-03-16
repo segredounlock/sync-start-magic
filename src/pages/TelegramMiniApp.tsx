@@ -119,6 +119,126 @@ const isDarkTelegramPalette = (bgColor?: string, textColor?: string) => {
   return bgLuma < 0.45 && textLuma > bgLuma;
 };
 
+/** Operator timing cards for Status section — mirrors RevendedorPainel */
+function StatusOperatorCards({ st }: { st: any }) {
+  const [stats, setStats] = useState<{ operadora: string; avgRecent: number; minRecent: number; min24h: number; avg24h: number; pendingCount: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: rpcStats } = await supabase.rpc("get_operator_stats" as any);
+        const mapped = (Array.isArray(rpcStats) ? rpcStats : []).map((s: any) => ({
+          operadora: s.operadora || "",
+          avgRecent: Number(s.avg_recent) || 0,
+          minRecent: Number(s.min_recent) || 0,
+          min24h: Number(s.min_24h) || 0,
+          avg24h: Number(s.avg_24h) || 0,
+          pendingCount: Number(s.pending_count) || 0,
+        }));
+        const activeOps = ["Claro", "Tim", "Vivo"];
+        activeOps.forEach(op => {
+          if (!mapped.find(s => s.operadora.toLowerCase() === op.toLowerCase())) {
+            mapped.push({ operadora: op, avgRecent: 0, minRecent: 0, min24h: 0, avg24h: 0, pendingCount: 0 });
+          }
+        });
+        setStats(mapped);
+      } catch { /* */ }
+      setLoading(false);
+    })();
+  }, []);
+
+  const fmtTime = (s: number) => {
+    if (!s || s <= 0) return "—";
+    const mins = Math.floor(s / 60);
+    const secs = Math.round(s % 60);
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  };
+
+  const opColors: Record<string, { gradient: string; accent: string }> = {
+    CLARO: { gradient: "linear-gradient(135deg, #ef4444, #dc2626)", accent: "#ef4444" },
+    TIM: { gradient: "linear-gradient(135deg, #3b82f6, #2563eb)", accent: "#3b82f6" },
+    VIVO: { gradient: "linear-gradient(135deg, #a855f7, #9333ea)", accent: "#a855f7" },
+  };
+
+  const timeColor = (s: number) => s <= 120 ? "#4ade80" : s <= 300 ? "#facc15" : "#f87171";
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-6">
+        <Loader2 className="w-5 h-5 animate-spin" style={st.hint} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {stats.map((op, i) => {
+        const opName = op.operadora.toUpperCase();
+        const colors = opColors[opName] || { gradient: "linear-gradient(135deg, #6b7280, #4b5563)", accent: "#6b7280" };
+        const pendingIcon = op.pendingCount > 5 ? "⚠️" : "⏳";
+
+        return (
+          <motion.div key={op.operadora} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+            className="rounded-2xl overflow-hidden" style={{ border: st.borderSub }}>
+            {/* Colored header bar */}
+            <div className="px-4 py-3 flex items-center justify-between" style={{ background: colors.gradient }}>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                  <Smartphone className="h-3.5 w-3.5 text-white" />
+                </div>
+                <span className="font-bold text-white text-sm tracking-wide">{opName}</span>
+              </div>
+              <div className="text-right">
+                <p className="text-[9px] text-white/70 uppercase font-semibold tracking-wider">Pendentes</p>
+                <p className="text-lg font-black text-white">{op.pendingCount}</p>
+              </div>
+            </div>
+            {/* Body */}
+            <div className="p-3 space-y-2.5" style={st.secondaryBg}>
+              {/* Avg + Min recent */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#f87171" }}>Média Atual</p>
+                  <p className="text-lg font-black" style={{ color: timeColor(op.avgRecent) }}>{fmtTime(op.avgRecent)}</p>
+                  <p className="text-[8px]" style={st.hint}>Últimas 3</p>
+                </div>
+                <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 8%, transparent)", border: st.borderSub }}>
+                  <p className="text-[9px] uppercase font-bold tracking-wider" style={{ color: "#4ade80" }}>Tempo Min.</p>
+                  <p className="text-lg font-black" style={{ color: timeColor(op.minRecent) }}>{fmtTime(op.minRecent)}</p>
+                  <p className="text-[8px]" style={st.hint}>Últimas 3</p>
+                </div>
+              </div>
+              {/* Processing count */}
+              <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ backgroundColor: "color-mix(in srgb, var(--tg-hint, #708499) 6%, transparent)", border: st.borderSub }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{pendingIcon}</span>
+                  <span className="text-xs font-bold uppercase tracking-wide" style={st.text}>Processando</span>
+                </div>
+                <span className="text-base font-black" style={{ color: colors.accent }}>{op.pendingCount}</span>
+              </div>
+              {/* Consolidated 24h */}
+              <div className="pt-2" style={{ borderTop: st.borderSub }}>
+                <p className="text-[9px] uppercase tracking-[0.15em] font-semibold text-center mb-1.5" style={st.hint}>Consolidado 24 Horas</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-center">
+                    <p className="text-[9px] uppercase" style={st.hint}>Média Geral</p>
+                    <p className="text-sm font-bold" style={st.text}>{fmtTime(op.avg24h)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] uppercase" style={st.hint}>Mínimo (24h)</p>
+                    <p className="text-sm font-bold" style={st.text}>{fmtTime(op.min24h)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 function useTelegramTheme() {
   useEffect(() => {
     const root = document.documentElement;
