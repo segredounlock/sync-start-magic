@@ -712,14 +712,51 @@ export default function TelegramMiniApp() {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
-  const handleRecargaConfirm = async () => {
+  const handleRecargaConfirm = async (skipPendingCheck = false) => {
     if (!userId || !selectedOp || !selectedValor || !phone) return;
     const tel = phone.replace(/\D/g, "");
     if (tel.length < 10) return;
+
+    // Check for pending recargas on same number (same as browser)
+    if (!skipPendingCheck) {
+      try {
+        const { count } = await supabase
+          .from("recargas")
+          .select("id", { count: "exact", head: true })
+          .eq("telefone", tel)
+          .eq("status", "pending");
+        if (count && count > 0) {
+          setPendingWarning({ phone: tel, count });
+          return;
+        }
+      } catch { /* ignore */ }
+    }
+    setPendingWarning(null);
+
     setRecargaLoading(true);
     try {
+      // Pre-recheck: re-validate blacklist/cooldown right before submitting (same as browser)
+      const { data: precheckResp } = await supabase.functions.invoke("recarga-express", {
+        body: { action: "check-phone", phoneNumber: tel, carrierId: selectedOp.carrierId },
+      });
+      if (precheckResp?.success && precheckResp.data) {
+        const precheckResult = {
+          status: precheckResp.data.status,
+          message: precheckResp.data.status === "COOLDOWN"
+            ? formatCooldownMsg(precheckResp.data.message)
+            : (precheckResp.data.message || ""),
+        };
+        setPhoneCheckResult(precheckResult);
+        if (precheckResult.status === "BLACKLISTED" || precheckResult.status === "COOLDOWN") {
+          tgWebApp?.HapticFeedback?.notificationOccurred("error");
+          setRecargaStep("check");
+          setRecargaLoading(false);
+          return;
+        }
+      }
+
       const { data: result, error } = await supabase.functions.invoke("recarga-express", {
-        body: { action: "recharge", carrierId: selectedOp.carrierId, phoneNumber: tel, valueId: selectedValor.valueId },
+        body: { action: "recharge", carrierId: selectedOp.carrierId, phoneNumber: tel, valueId: selectedValor.valueId, saldo_tipo: "revenda" },
       });
       if (error) throw error;
       if (!result?.success) throw new Error(result?.error || "Erro ao processar recarga");
@@ -752,7 +789,7 @@ export default function TelegramMiniApp() {
       });
     } catch (err: any) {
       tgWebApp?.HapticFeedback?.notificationOccurred("error");
-      setRecargaResult({ success: false, message: err.message || "Erro ao processar recarga" });
+      setRecargaResult({ success: false, message: formatCooldownMsg(err.message) || "Erro ao processar recarga" });
     }
     setRecargaLoading(false);
   };
