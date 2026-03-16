@@ -2641,7 +2641,7 @@ export default function TelegramMiniApp() {
                         boxShadow: [
                           "0 4px 14px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
                           "0 6px 20px color-mix(in srgb, var(--tg-accent) 50%, transparent)",
-                          "0 4px 14px rgba(34,197,94,0.3)",
+                          "0 4px 14px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
                         ],
                       }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
