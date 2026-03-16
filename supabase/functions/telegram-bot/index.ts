@@ -560,11 +560,8 @@ serve(async (req) => {
 
           if (text === "/start" || text === "/menu" || text === "/vincular") {
           if (linkedUser) {
-            // Send menu first for snappy UX, then send pending notifications in background
-            await sendMainMenu(BOT_TOKEN, chatId, linkedUser, supabase);
-            sendPendingNotifications(supabase, BOT_TOKEN, chatId, linkedUser.id).catch((e) =>
-              console.error("[PENDING] Background send failed:", e)
-            );
+            // Always show terms on /start
+            await sendTermsMessage(BOT_TOKEN, chatId);
           } else {
             // Check migration config
             const migration = await getMigrationConfig(supabase);
@@ -577,13 +574,8 @@ serve(async (req) => {
                 ]
               );
             } else {
-              await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
-              const botMsgId = await sendMessage(BOT_TOKEN, chatId,
-                `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
-              );
-              if (botMsgId) {
-                await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
-              }
+              // Show terms first for new users too
+              await sendTermsMessage(BOT_TOKEN, chatId);
             }
           }
           return;
