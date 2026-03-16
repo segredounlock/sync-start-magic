@@ -322,9 +322,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center cursor-help transition-transform group-hover/cli:scale-110">
                       <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
                     </div>
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-56 p-2.5 rounded-lg bg-popover border border-border shadow-lg text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
-                      <p className="font-semibold mb-1">📱 Cliente</p>
-                      <p className="text-muted-foreground leading-relaxed">É quem compra a recarga de você. O preço que ele paga menos o seu custo = seu lucro!</p>
+                    <div className="absolute -top-[7.5rem] left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-popover border border-border shadow-xl text-[11px] text-popover-foreground opacity-0 invisible group-hover/cli:opacity-100 group-hover/cli:visible transition-all z-10 pointer-events-none">
+                      <p className="font-bold mb-1.5 text-sm">📱 Cliente — Seu Comprador</p>
+                      <p className="text-muted-foreground leading-relaxed mb-1.5">É quem compra a recarga de você pelo preço que você definiu aqui embaixo. Quanto maior o preço, maior seu lucro!</p>
+                      <p className="text-muted-foreground leading-relaxed">💡 <em>Dica: você pode definir preços exclusivos pra cada cliente na aba "Minha Rede".</em></p>
                     </div>
                     <span className="text-xs font-semibold text-foreground">Cliente</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Compra a<br/>recarga</span>
