@@ -93,6 +93,11 @@ function rollPrize(tiers: Tier[]): { isWon: boolean; prizeAmount: number } {
   return { isWon: false, prizeAmount: 0 };
 }
 
+/** Get today's date in Brazil timezone (America/Sao_Paulo) */
+function getTodayBR(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -155,7 +160,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "claim") {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayBR();
       const { data: existing } = await supabaseAdmin
         .from("scratch_cards")
         .select("id, is_scratched, prize_amount, is_won")
@@ -207,7 +212,7 @@ Deno.serve(async (req) => {
 
     if (action === "scratch") {
       const cardId = body?.card_id as string | undefined;
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayBR();
 
       let card: any = null;
 
