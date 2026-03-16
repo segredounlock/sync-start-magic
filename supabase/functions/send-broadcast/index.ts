@@ -458,6 +458,47 @@ async function flushUnblockedUsers(telegramIds: number[]) {
 }
 
 
+const UPDATES_CONVERSATION_ID = '00000000-0000-0000-0000-000000000003';
+const SYSTEM_ADMIN_ID = 'f5501acc-79f3-460f-bc3e-493280ea84f0';
+
+async function postNotificationToChat(notification: any) {
+  try {
+    // Build message content similar to Telegram format
+    let content = `📢 **${notification.title}**\n\n${notification.message}`;
+
+    // Add buttons as links
+    const buttons = Array.isArray(notification.buttons) ? notification.buttons : [];
+    if (buttons.length > 0) {
+      content += '\n\n' + buttons.map((btn: any) => `[btn:${btn.text || btn.label}|${btn.url}]`).join('\n');
+    }
+
+    // Insert as chat message
+    const insertData: Record<string, any> = {
+      conversation_id: UPDATES_CONVERSATION_ID,
+      sender_id: SYSTEM_ADMIN_ID,
+      content,
+      type: 'text',
+    };
+
+    // If notification has image, send as image type
+    if (notification.image_url) {
+      insertData.image_url = notification.image_url;
+      insertData.type = 'image';
+    }
+
+    const { error } = await supabase.from('chat_messages').insert(insertData);
+    if (error) {
+      console.error('[BROADCAST] Failed to post to chat:', error.message);
+    } else {
+      console.log('[BROADCAST] Posted notification to Atualizações do Sistema chat');
+      // Update conversation preview
+      await supabase.rpc('sync_chat_conversation_preview', { _conversation_id: UPDATES_CONVERSATION_ID });
+    }
+  } catch (err) {
+    console.error('[BROADCAST] Chat post error:', err);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
