@@ -2632,8 +2632,8 @@ export default function TelegramMiniApp() {
                       style={{
                         background: "var(--tg-accent)",
                         boxShadow: isActive
-                          ? "0 4px 14px rgba(34,197,94,0.4), 0 0 20px rgba(34,197,94,0.2)"
-                          : "0 4px 14px rgba(34,197,94,0.3)",
+                          ? "0 4px 14px color-mix(in srgb, var(--tg-accent) 40%, transparent), 0 0 20px color-mix(in srgb, var(--tg-accent) 20%, transparent)"
+                          : "0 4px 14px color-mix(in srgb, var(--tg-accent) 30%, transparent)",
                         ...(isActive ? { outline: "2px solid rgba(34,197,94,0.3)", outlineOffset: "2px" } : {}),
                       }}
                       animate={{
