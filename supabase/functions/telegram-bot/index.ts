@@ -681,8 +681,7 @@ serve(async (req) => {
     })();
 
     // Return 200 immediately to Telegram, but keep processing alive
-    // Deno Deploy keeps the isolate alive while promises are pending
-    (globalThis as any).__processPromise = processPromise;
+    EdgeRuntime.waitUntil(processPromise);
 
     console.log(`[TIMING] response sent in ${Date.now() - t0}ms | update_id=${update?.update_id}`);
     return new Response("ok", { headers: corsHeaders });
