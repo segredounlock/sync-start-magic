@@ -1316,7 +1316,12 @@ export default function Principal() {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium transition-all group ${
                       isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/40"
                     }`}>
-                    <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                    <div className="relative">
+                      <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                      {!!item.badge && item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">{item.badge}</span>
+                      )}
+                    </div>
                     <span className="text-center leading-tight">{item.label}</span>
                   </button>
                 );
