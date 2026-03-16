@@ -113,7 +113,7 @@ function parsePayload<T>(payload: unknown): T | null {
   return payload as T;
 }
 
-export function ScratchCard({ userId }: ScratchCardProps) {
+export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [revealedCells, setRevealedCells] = useState<Set<number>>(new Set());
