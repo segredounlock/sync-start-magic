@@ -1796,69 +1796,62 @@ export default function TelegramMiniApp() {
           {/* ── Adicionar Saldo ── */}
           {section === "deposito" && (
             <motion.div key="deposito" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-4">
-              {pixData ? (
+              {/* Payment Confirmed Screen (matches browser) */}
+              {pixConfirmed ? (
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl p-6 text-center space-y-4" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={{ backgroundColor: "rgba(74,222,128,0.15)" }}>
+                    <CheckCircle2 className="w-8 h-8" style={{ color: "#4ade80" }} />
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                    <h3 className="text-lg font-bold" style={st.text}>Pagamento Confirmado!</h3>
+                    <p className="text-sm" style={st.hint}>Seu depósito foi processado com sucesso</p>
+                  </motion.div>
+                  <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="text-3xl font-bold" style={st.green}>+{formatCurrency(confirmedPixAmount)}</motion.p>
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                    className="text-sm" style={st.hint}>Crédito adicionado ao seu saldo</motion.p>
+                  <motion.button initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                    onClick={() => { setPixData(null); setDepositAmount(""); setPixConfirmed(false); setConfirmedPixAmount(0); }}
+                    className="px-6 py-3 rounded-xl font-bold text-sm" style={st.btn}>
+                    Fazer Novo Depósito
+                  </motion.button>
+                </motion.div>
+              ) : pixData ? (
                 <motion.div
                   className="space-y-3 overflow-y-auto max-h-[calc(100vh-180px)] pb-4"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
-                  {/* Success badge */}
                   <div className="text-center">
-                    <motion.div
-                      className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
+                    <motion.div className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
                       style={{ backgroundColor: "rgba(74,222,128,0.15)" }}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.1 }}
-                    >
+                      initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.1 }}>
                       <Check className="w-6 h-6" style={{ color: "#4ade80" }} />
                     </motion.div>
-                    <motion.h2
-                      className="text-base font-bold"
-                      style={st.text}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
+                    <motion.h2 className="text-base font-bold" style={st.text} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                       PIX Gerado com Sucesso!
                     </motion.h2>
+                    <motion.p className="text-xs" style={st.hint} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+                      Escaneie o QR Code ou copie o código abaixo
+                    </motion.p>
                   </div>
-
-                  {/* QR Code compact */}
-                  <motion.div
-                    className="flex justify-center"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
+                  <motion.div className="flex justify-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                     <div className="bg-white rounded-xl p-2.5 relative">
-                      <motion.div
-                        className="absolute inset-0 rounded-xl"
+                      <motion.div className="absolute inset-0 rounded-xl"
                         animate={{ boxShadow: ["0 0 0px rgba(74,222,128,0)", "0 0 16px rgba(74,222,128,0.25)", "0 0 0px rgba(74,222,128,0)"] }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                      />
+                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
                       <QRCodeSVG value={pixData.qr_code || ""} size={160} />
                     </div>
                   </motion.div>
-
-                  {/* Amount */}
-                  <motion.p
-                    className="text-center text-xl font-bold"
-                    style={st.green}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.4 }}
-                  >
+                  <motion.p className="text-center text-xl font-bold" style={st.green}
+                    initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.4 }}>
                     {formatCurrency(pixData.amount)}
                   </motion.p>
                   {pixData.fee_amount && pixData.fee_amount > 0 ? (
-                    <motion.div
-                      className="text-center space-y-0.5"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 }}
-                    >
+                    <motion.div className="text-center space-y-0.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
                       <p className="text-xs" style={st.hint}>
                         Taxa: <span className="font-mono" style={{ color: "var(--tg-destructive, #ec3942)" }}>-{formatCurrency(pixData.fee_amount)}</span>
                         {pixData.fee_type === "percentual" && pixData.fee_value ? ` (${pixData.fee_value}%)` : ""}
@@ -1868,36 +1861,37 @@ export default function TelegramMiniApp() {
                       </p>
                     </motion.div>
                   ) : null}
-
-                  {/* Copy section */}
                   {pixData.qr_code && (
-                    <motion.div
-                      className="space-y-2"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}
-                    >
-                      <motion.button
-                        onClick={copyPix}
+                    <motion.div className="space-y-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                      <motion.button onClick={copyPix}
                         className="w-full rounded-xl py-3 font-semibold transition flex items-center justify-center gap-2"
-                        style={st.btn}
-                        whileTap={{ scale: 0.95 }}
-                        animate={copied ? { backgroundColor: "rgba(74,222,128,0.2)" } : {}}
-                      >
+                        style={st.btn} whileTap={{ scale: 0.95 }}
+                        animate={copied ? { backgroundColor: "rgba(74,222,128,0.2)" } : {}}>
                         {copied ? <><Check className="w-4 h-4" /> Copiado!</> : <><Copy className="w-4 h-4" /> Copiar código PIX</>}
                       </motion.button>
                     </motion.div>
                   )}
-                  <motion.button
-                    onClick={() => { setPixData(null); setDepositAmount(""); }}
-                    className="w-full text-center text-sm flex items-center justify-center gap-1"
-                    style={st.hint}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <ArrowLeft className="w-4 h-4" /> Voltar
-                  </motion.button>
+                  {/* Auto-polling indicator (matches browser) */}
+                  <div className="flex items-center justify-center gap-2 py-2">
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+                      <RefreshCw className="w-3.5 h-3.5" style={st.hint} />
+                    </motion.div>
+                    <p className="text-xs" style={st.hint}>Verificando pagamento automaticamente...</p>
+                  </div>
+                  {/* Actions (matches browser) */}
+                  <div className="flex gap-2">
+                    <button onClick={handleCheckPixStatus} disabled={checkingPix}
+                      className="flex-1 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition disabled:opacity-50"
+                      style={{ backgroundColor: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ade80" }}>
+                      {checkingPix ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      Verificar Agora
+                    </button>
+                    <button onClick={() => { setPixData(null); setDepositAmount(""); setPixConfirmed(false); }}
+                      className="px-4 py-2.5 rounded-xl text-sm font-medium transition"
+                      style={{ ...st.secondaryBg, border: st.borderSub, ...st.hint }}>
+                      Novo PIX
+                    </button>
+                  </div>
                 </motion.div>
               ) : (
                 <div className="space-y-4">
@@ -1911,10 +1905,10 @@ export default function TelegramMiniApp() {
                       <button key={v} onClick={() => setDepositAmount(v.toFixed(2).replace(".", ","))}
                         className="rounded-xl py-3.5 text-center font-semibold transition"
                         style={{
-                          ...(depositAmount === String(v) ? { backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)", color: "var(--tg-link)" } : { ...st.secondaryBg, ...st.text }),
-                          border: depositAmount === String(v) ? "1px solid var(--tg-btn)" : st.borderSub,
+                          ...(depositAmount === v.toFixed(2).replace(".", ",") ? { backgroundColor: "color-mix(in srgb, var(--tg-btn) 15%, transparent)", color: "var(--tg-link)" } : { ...st.secondaryBg, ...st.text }),
+                          border: depositAmount === v.toFixed(2).replace(".", ",") ? "1px solid var(--tg-btn)" : st.borderSub,
                         }}>
-                        R$ {v}
+                        R$ {v.toFixed(2).replace(".", ",")}
                       </button>
                     ))}
                   </div>
@@ -1929,7 +1923,6 @@ export default function TelegramMiniApp() {
                       <p className="text-xs" style={{ color: "var(--tg-destructive, #ec3942)" }}>Valor mínimo: R$ 10,00</p>
                     )}
                   </div>
-                  {/* Fee preview */}
                   {(() => {
                     const val = parseFloat((depositAmount || "0").replace(",", "."));
                     const preview = feeCalc(val);
@@ -1962,21 +1955,56 @@ export default function TelegramMiniApp() {
                     animate={{ boxShadow: ["0 0 0px rgba(74,222,128,0.3)", "0 0 20px rgba(74,222,128,0.5)", "0 0 0px rgba(74,222,128,0.3)"] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <motion.div
-                      animate={{ y: [0, -2, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
+                    <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
                       <Landmark className="w-5 h-5" />
                     </motion.div>
                     {depositLoading ? "Gerando PIX..." : "💰 Gerar PIX Agora"}
-                    <motion.div
-                      className="absolute right-4"
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
-                    >
+                    <motion.div className="absolute right-4" animate={{ x: [0, 4, 0] }} transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}>
                       <ChevronRight className="w-5 h-5" />
                     </motion.div>
                   </motion.button>
+
+                  {/* Últimos depósitos (matches browser) */}
+                  {(() => {
+                    const DEPOSIT_EXPIRY_MS = 30 * 60 * 1000;
+                    const depositTxs = transactions.filter(t => t.type === "deposit").map(t => {
+                      if (t.status === "pending" && (Date.now() - new Date(t.created_at).getTime()) > DEPOSIT_EXPIRY_MS) {
+                        return { ...t, status: "expired" };
+                      }
+                      return t;
+                    });
+                    if (depositTxs.length === 0) return null;
+                    return (
+                      <div className="rounded-2xl overflow-hidden" style={{ ...st.secondaryBg, border: st.borderSub }}>
+                        <div className="px-4 py-3" style={{ borderBottom: st.borderSub }}>
+                          <h3 className="font-bold text-sm" style={st.text}>Últimos Depósitos</h3>
+                        </div>
+                        {depositTxs.slice(0, 5).map((t: any) => (
+                          <div key={t.id} className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: st.borderSub }}>
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                                style={{ backgroundColor: t.status === "completed" ? "rgba(74,222,128,0.15)" : t.status === "expired" ? "rgba(239,68,68,0.15)" : "rgba(250,204,21,0.15)" }}>
+                                {t.status === "completed" ? <Check className="w-3.5 h-3.5" style={{ color: "#4ade80" }} />
+                                  : t.status === "expired" ? <XCircle className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
+                                  : <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "#facc15" }} />}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium" style={st.text}>Depósito PIX</p>
+                                <p className="text-[10px]" style={st.hint}>{formatDateTimeBR(t.created_at)}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-bold" style={{ color: t.status === "completed" ? "#4ade80" : t.status === "expired" ? "#ef4444" : "#facc15" }}>+{formatCurrency(t.amount)}</p>
+                              <span className="text-[9px] font-semibold uppercase tracking-wide"
+                                style={{ color: t.status === "completed" ? "#4ade80" : t.status === "expired" ? "#ef4444" : "#facc15" }}>
+                                {t.status === "completed" ? "✓ Confirmado" : t.status === "expired" ? "✕ Expirado" : "⏳ Processando"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </motion.div>
