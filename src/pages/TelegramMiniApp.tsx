@@ -1331,7 +1331,7 @@ export default function TelegramMiniApp() {
                                 <row.icon className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />
                                 <span className="text-xs" style={{ color: "var(--tg-hint)" }}>{row.label}</span>
                               </div>
-                              <span className={`text-sm font-semibold ${row.highlight ? "" : ""}`} style={{ color: row.highlight ? "#4ade80" : "var(--tg-text)" }}>
+                              <span className={`text-sm font-semibold ${row.highlight ? "" : ""}`} style={{ color: row.highlight ? "var(--tg-accent)" : "var(--tg-text)" }}>
                                 {row.value}
                               </span>
                             </motion.div>
