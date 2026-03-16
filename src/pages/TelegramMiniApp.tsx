@@ -116,21 +116,29 @@ export default function TelegramMiniApp() {
       tg.ready();
       tg.expand();
 
-      // Retry expand after short delays to ensure it takes effect
-      setTimeout(() => tg.expand(), 100);
-      setTimeout(() => tg.expand(), 500);
+      // Retry expand aggressively to ensure full screen
+      const expandRetry = () => {
+        tg.expand();
+        if ((tg as any).requestFullscreen) {
+          try { (tg as any).requestFullscreen(); } catch {}
+        }
+      };
+      setTimeout(expandRetry, 50);
+      setTimeout(expandRetry, 200);
+      setTimeout(expandRetry, 500);
+      setTimeout(expandRetry, 1000);
+      setTimeout(expandRetry, 2000);
 
       // Disable vertical swipe to close (keeps app fullscreen)
       if ((tg as any).disableVerticalSwipes) {
         (tg as any).disableVerticalSwipes();
       }
-      // Request fullscreen if available (Telegram Bot API 8.0+)
-      if ((tg as any).requestFullscreen) {
-        try { (tg as any).requestFullscreen(); } catch {}
-      }
-      // Force viewport height to 100%
-      if ((tg as any).isExpanded === false) {
-        setTimeout(() => tg.expand(), 1000);
+      // Listen for viewport changes and re-expand
+      if ((tg as any).onEvent) {
+        (tg as any).onEvent('viewportChanged', (e: any) => {
+          if (!e.isStateStable) return;
+          if (!(tg as any).isExpanded) tg.expand();
+        });
       }
       // Set header/viewport color to match background
       if ((tg as any).setHeaderColor) {
