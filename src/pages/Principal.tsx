@@ -2462,24 +2462,36 @@ export default function Principal() {
                             <tr className="border-b border-border">
                               <th className="text-left px-3 py-2 font-medium text-muted-foreground">Data</th>
                               <th className="text-left px-3 py-2 font-medium text-muted-foreground">Tipo</th>
+                              <th className="text-left px-3 py-2 font-medium text-muted-foreground">Pagador</th>
+                              <th className="text-left px-3 py-2 font-medium text-muted-foreground">ID Pagamento</th>
                               <th className="text-right px-3 py-2 font-medium text-muted-foreground">Valor</th>
                               <th className="text-center px-3 py-2 font-medium text-muted-foreground">Status</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {revTransactions.slice(0, 20).map((t, i) => (
-                              <tr key={i} className="border-b border-border last:border-0">
-                                <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
-                                <td className="px-3 py-2 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
-                                <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={t.amount} duration={600} /></td>
-                                <td className="px-3 py-2 text-center">
-                                  <StatusBadge status={t.status} type="deposit" className="text-xs" />
-                                </td>
-                                <td className="px-1 py-2">
-                                  <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(t.created_at)} | ${(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type} | ${fmt(t.amount)} | ${(t.status === "completed" || t.status === "confirmado") ? "Confirmado" : t.status === "expired" ? "Expirado" : t.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
-                                </td>
-                              </tr>
-                            ))}
+                            {revTransactions.slice(0, 20).map((t, i) => {
+                              const meta = t.metadata as any;
+                              const payerName = meta?.payer_name || "—";
+                              const payerDoc = meta?.payer_document || "";
+                              return (
+                                <tr key={t.id || i} className="border-b border-border last:border-0 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => setExpandedDepositId(expandedDepositId === t.id ? null : t.id)}>
+                                  <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(t.created_at)}</td>
+                                  <td className="px-3 py-2 text-foreground capitalize">{(t.type === "deposit" || t.type === "deposito") ? "Depósito" : t.type === "withdrawal" ? "Saque" : t.type}</td>
+                                  <td className="px-3 py-2 text-foreground text-xs">
+                                    <div>{payerName}</div>
+                                    {payerDoc && <div className="text-[10px] text-muted-foreground font-mono">{payerDoc}</div>}
+                                  </td>
+                                  <td className="px-3 py-2 text-[10px] font-mono text-muted-foreground">{t.payment_id ? t.payment_id.slice(0, 16) + "..." : "—"}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={t.amount} duration={600} /></td>
+                                  <td className="px-3 py-2 text-center">
+                                    <StatusBadge status={t.status} type="deposit" className="text-xs" />
+                                  </td>
+                                  <td className="px-1 py-2">
+                                    <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${fmtDate(t.created_at)} | Depósito | ${fmt(t.amount)} | ${payerName} | ${t.payment_id || ""}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
