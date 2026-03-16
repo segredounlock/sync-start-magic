@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PromoBanner } from "./PromoBanner";
 import { PopupBanner } from "./PopupBanner";
+import { SlideBanner } from "./SlideBanner";
 import { ToggleLeft, ToggleRight, Zap, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { motion, AnimatePresence } from "framer-motion";
