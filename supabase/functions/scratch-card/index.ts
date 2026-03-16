@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
     const { data: spendingData } = await supabaseAdmin
       .from("recargas")
       .select("custo")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("status", "completed");
 
     const totalSpent = (spendingData || []).reduce((sum: number, r: any) => sum + Number(r.custo || 0), 0);
