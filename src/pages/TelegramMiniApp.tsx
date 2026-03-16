@@ -2289,10 +2289,10 @@ export default function TelegramMiniApp() {
                 })}
               </div>
 
-              {onSignOut && (
+              {userId && (
                 <div className="px-4 pb-5 pt-2">
                   <button
-                    onClick={onSignOut}
+                    onClick={() => { handleLogout(); setMoreOpen(false); }}
                     className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
                     style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "var(--tg-destructive)" }}
                   >
