@@ -60,38 +60,39 @@ declare global {
   }
 }
 
+// Premium Dark Green theme — matches the website's design system
 const TG_DARK_DEFAULTS = {
-  bg_color: "#17212b",
-  text_color: "#f5f5f5",
-  hint_color: "#708499",
-  link_color: "#6ab3f3",
-  button_color: "#5288c1",
-  button_text_color: "#ffffff",
-  secondary_bg_color: "#232e3c",
-  section_bg_color: "#17212b",
-  accent_text_color: "#6ab2f2",
-  destructive_text_color: "#ec3942",
-  header_bg_color: "#17212b",
-  subtitle_text_color: "#708499",
-  section_header_text_color: "#6ab2f2",
-  bottom_bar_bg_color: "#17212b",
+  bg_color: "#070d0b",         // hsl(160 30% 4%)
+  text_color: "#e3ede8",       // hsl(150 15% 92%)
+  hint_color: "#708c82",       // hsl(150 8% 50%)
+  link_color: "#22c55e",       // hsl(152 72% 46%)
+  button_color: "#22c55e",     // primary green
+  button_text_color: "#070d0b",// dark on green button
+  secondary_bg_color: "#0f1a16",// hsl(160 25% 8%)
+  section_bg_color: "#070d0b",
+  accent_text_color: "#22c55e",
+  destructive_text_color: "#ef4444",
+  header_bg_color: "#0f1a16",
+  subtitle_text_color: "#708c82",
+  section_header_text_color: "#22c55e",
+  bottom_bar_bg_color: "#070d0b",
 } as const;
 
 const TG_LIGHT_DEFAULTS = {
-  bg_color: "#ffffff",
-  text_color: "#000000",
-  hint_color: "#999999",
-  link_color: "#168acd",
-  button_color: "#40a7e3",
+  bg_color: "#f0f5f2",         // hsl(160 10% 96%)
+  text_color: "#0a1a12",       // hsl(160 30% 8%)
+  hint_color: "#6b7f75",       // hsl(160 8% 45%)
+  link_color: "#1a9a4a",       // hsl(152 70% 38%)
+  button_color: "#1a9a4a",
   button_text_color: "#ffffff",
-  secondary_bg_color: "#f1f3f5",
-  section_bg_color: "#ffffff",
-  accent_text_color: "#168acd",
-  destructive_text_color: "#df3f40",
-  header_bg_color: "#ffffff",
-  subtitle_text_color: "#999999",
-  section_header_text_color: "#168acd",
-  bottom_bar_bg_color: "#f1f3f5",
+  secondary_bg_color: "#e6ece9",// hsl(160 12% 92%)
+  section_bg_color: "#f0f5f2",
+  accent_text_color: "#1a9a4a",
+  destructive_text_color: "#ef4444",
+  header_bg_color: "#e6ece9",
+  subtitle_text_color: "#6b7f75",
+  section_header_text_color: "#1a9a4a",
+  bottom_bar_bg_color: "#f0f5f2",
 } as const;
 
 const hexToRgb = (hex?: string) => {
@@ -252,8 +253,8 @@ function useTelegramTheme() {
       const isDark = hasTelegramColors
         ? isDarkTelegramPalette(tp.bg_color, tp.text_color)
         : liveTg?.colorScheme === "dark";
-      const defaults = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
-      const theme = { ...defaults, ...tp };
+      // Always use the website's premium theme — ignore Telegram native colors
+      const theme = isDark ? TG_DARK_DEFAULTS : TG_LIGHT_DEFAULTS;
 
       root.classList.toggle("dark", isDark);
 
@@ -264,14 +265,14 @@ function useTelegramTheme() {
       root.style.setProperty("--tg-btn", theme.button_color);
       root.style.setProperty("--tg-btn-text", theme.button_text_color);
       root.style.setProperty("--tg-secondary-bg", theme.secondary_bg_color);
-      root.style.setProperty("--tg-section-bg", theme.section_bg_color || theme.bg_color);
-      root.style.setProperty("--tg-accent", theme.accent_text_color || theme.button_color);
+      root.style.setProperty("--tg-section-bg", theme.section_bg_color);
+      root.style.setProperty("--tg-accent", theme.accent_text_color);
       root.style.setProperty("--tg-destructive", theme.destructive_text_color);
-      root.style.setProperty("--tg-header-bg", theme.header_bg_color || theme.secondary_bg_color);
-      root.style.setProperty("--tg-subtitle", theme.subtitle_text_color || theme.hint_color);
-      root.style.setProperty("--tg-section-header", theme.section_header_text_color || theme.accent_text_color || theme.button_color);
-      root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color || theme.secondary_bg_color);
-      root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color || theme.bg_color})`);
+      root.style.setProperty("--tg-header-bg", theme.header_bg_color);
+      root.style.setProperty("--tg-subtitle", theme.subtitle_text_color);
+      root.style.setProperty("--tg-section-header", theme.section_header_text_color);
+      root.style.setProperty("--tg-bottom-bar", theme.bottom_bar_bg_color);
+      root.style.setProperty("--gradient-bg", `linear-gradient(160deg, ${theme.bg_color}, ${theme.secondary_bg_color}, ${theme.section_bg_color})`);
 
       body.style.background = theme.bg_color;
       body.style.color = theme.text_color;
@@ -891,9 +892,9 @@ export default function TelegramMiniApp() {
     btn: { backgroundColor: "var(--tg-btn)", color: "var(--tg-btn-text)" } as React.CSSProperties,
     btnText: { color: "var(--tg-btn-text)" } as React.CSSProperties,
     destructive: { color: "var(--tg-destructive)" } as React.CSSProperties,
-    green: { color: "#4ade80" } as React.CSSProperties,
-    borderSub: "1px solid color-mix(in srgb, var(--tg-hint) 15%, transparent)",
-    borderMain: "1px solid color-mix(in srgb, var(--tg-hint) 20%, transparent)",
+    green: { color: "#22c55e" } as React.CSSProperties,
+    borderSub: "1px solid color-mix(in srgb, var(--tg-hint) 18%, transparent)",
+    borderMain: "1px solid color-mix(in srgb, var(--tg-accent) 15%, transparent)",
   };
 
   // ─── Splash / Loading ────────────────────────────────────
