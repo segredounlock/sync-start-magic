@@ -723,7 +723,7 @@ export default function Principal() {
     try {
       const [{ data: recData }, { data: transData }, { data: rpRules }] = await Promise.all([
         supabase.from("recargas").select("*").eq("user_id", rev.id).order("created_at", { ascending: false }).limit(100),
-        supabase.from("transactions").select("amount, created_at, status, type").eq("user_id", rev.id).order("created_at", { ascending: false }).limit(100),
+        supabase.from("transactions").select("id, amount, created_at, status, type, payment_id, metadata").eq("user_id", rev.id).order("created_at", { ascending: false }).limit(100),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", rev.id),
       ]);
       setRevRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo) })));
