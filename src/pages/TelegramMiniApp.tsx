@@ -2021,6 +2021,7 @@ export default function TelegramMiniApp() {
           {([
             { id: "recarga" as Section, icon: Smartphone, label: seasonalEmojis.recarga ? `${seasonalEmojis.recarga}` : "Recarga", defaultLabel: "Recarga" },
             { id: "deposito" as Section, icon: Plus, label: seasonalEmojis.deposito ? `${seasonalEmojis.deposito}` : "Saldo", defaultLabel: "Saldo" },
+            { id: "raspadinha" as Section, icon: Ticket, label: "Raspadinha", defaultLabel: "Raspadinha" },
             { id: "chat" as Section, icon: MessageCircle, label: seasonalEmojis.chat ? `${seasonalEmojis.chat}` : "Chat", defaultLabel: "Chat" },
             { id: "historico" as Section, icon: Clock, label: seasonalEmojis.historico ? `${seasonalEmojis.historico}` : "Pedidos", defaultLabel: "Pedidos" },
             { id: "conta" as Section, icon: User, label: seasonalEmojis.conta ? `${seasonalEmojis.conta}` : "Conta", defaultLabel: "Conta" },
