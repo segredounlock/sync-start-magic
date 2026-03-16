@@ -2010,9 +2010,9 @@ export default function TelegramMiniApp() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-bold" style={{ color: t.status === "completed" ? "#4ade80" : t.status === "expired" ? "#ef4444" : "#facc15" }}>+{formatCurrency(t.amount)}</p>
+                              <p className="text-sm font-bold" style={{ color: t.status === "completed" ? "var(--tg-accent)" : t.status === "expired" ? "var(--tg-destructive)" : "var(--tg-warning, #facc15)" }}>+{formatCurrency(t.amount)}</p>
                               <span className="text-[9px] font-semibold uppercase tracking-wide"
-                                style={{ color: t.status === "completed" ? "#4ade80" : t.status === "expired" ? "#ef4444" : "#facc15" }}>
+                                style={{ color: t.status === "completed" ? "var(--tg-accent)" : t.status === "expired" ? "var(--tg-destructive)" : "var(--tg-warning, #facc15)" }}>
                                 {t.status === "completed" ? "✓ Confirmado" : t.status === "expired" ? "✕ Expirado" : "⏳ Processando"}
                               </span>
                             </div>
