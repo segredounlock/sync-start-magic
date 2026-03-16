@@ -335,6 +335,7 @@ export default function TelegramMiniApp() {
 
       // 2) Try existing auth user if available
       if (existingSessionUserId && !cancelled) {
+        if (!cancelled) setHasAuthSession(true);
         try {
           const { data, error } = await supabase.functions.invoke("telegram-miniapp", {
             body: { action: "lookup_by_user_id", user_id: existingSessionUserId },
