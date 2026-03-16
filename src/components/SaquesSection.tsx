@@ -163,6 +163,7 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
     approved: { label: "Aprovado", color: "text-[hsl(200,80%,55%)]", bg: "bg-[hsl(200,80%,55%)]/10", icon: CheckCircle2 },
     completed: { label: "Pago", color: "text-success", bg: "bg-success/10", icon: CheckCircle2 },
     rejected: { label: "Rejeitado", color: "text-destructive", bg: "bg-destructive/10", icon: XCircle },
+    all: { label: "Todos", color: "text-primary", bg: "bg-primary/10", icon: Banknote },
   };
 
   const totalPending = saques.filter(s => s.status === "pending").reduce((a, s) => a + s.amount, 0);
@@ -219,25 +220,41 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-          {(["pending", "approved", "completed", "rejected", "all"] as SaqueFilter[]).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                filter === f ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground hover:bg-muted"
-              }`}>
-              {f === "all" ? "Todos" : statusConfig[f]?.label || f}
-            </button>
-          ))}
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-5 gap-1.5 bg-muted/40 rounded-xl p-1.5">
+          {(["pending", "approved", "completed", "rejected", "all"] as SaqueFilter[]).map(f => {
+            const active = filter === f;
+            const sc = statusConfig[f];
+            const Icon = sc?.icon || Clock;
+            const count = f === "all" ? saques.length : saques.filter(s => s.status === f).length;
+            return (
+              <button key={f} onClick={() => setFilter(f)}
+                className={`relative flex flex-col items-center gap-0.5 py-2.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
+                  active
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`}>
+                <Icon className={`h-4 w-4 ${active ? (sc?.color || "text-primary") : ""}`} />
+                <span className="leading-tight">{f === "all" ? "Todos" : sc?.label || f}</span>
+                {count > 0 && (
+                  <span className={`absolute -top-1 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[9px] font-bold px-1 ${
+                    active ? `${sc?.bg || "bg-primary/10"} ${sc?.color || "text-primary"}` : "bg-muted text-muted-foreground"
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-        <div className="flex gap-2 flex-1">
+        <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Buscar por nome, email..."
-              className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
-          <button onClick={fetchSaques} className="p-2 rounded-lg border border-input hover:bg-muted/60 transition-colors">
+          <button onClick={fetchSaques} className="p-2.5 rounded-xl border border-input hover:bg-muted/60 transition-colors">
             <RefreshCw className={`h-4 w-4 text-muted-foreground ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
