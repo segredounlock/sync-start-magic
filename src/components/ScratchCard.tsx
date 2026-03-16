@@ -13,6 +13,8 @@ import { ScratchCanvas } from "@/components/ScratchCanvas";
 
 interface ScratchCardProps {
   userId: string;
+  /** When true, passes user_id in edge function body for service_role auth (Telegram Mini App) */
+  noAuthMode?: boolean;
 }
 
 interface CardData {
@@ -111,7 +113,7 @@ function parsePayload<T>(payload: unknown): T | null {
   return payload as T;
 }
 
-export function ScratchCard({ userId }: ScratchCardProps) {
+export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [revealedCells, setRevealedCells] = useState<Set<number>>(new Set());
@@ -193,7 +195,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
-        body: { action: "claim" },
+        body: { action: "claim", ...(noAuthMode ? { user_id: userId } : {}) },
       });
       const payload = parsePayload<ClaimResponse & { total_spent?: number; min_required?: number }>(data);
       if (error) throw error;
@@ -241,7 +243,7 @@ export function ScratchCard({ userId }: ScratchCardProps) {
 
     try {
       const { data, error } = await supabase.functions.invoke("scratch-card", {
-        body: { action: "scratch", card_id: card.id },
+        body: { action: "scratch", card_id: card.id, ...(noAuthMode ? { user_id: userId } : {}) },
       });
 
       if (error) {

@@ -112,20 +112,37 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+
+    const body = await req.json();
+
+    // Dual auth: try JWT user first, fallback to service_role + user_id
+    let userId: string | null = null;
+
     const supabaseUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseUser.auth.getUser();
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
 
-    if (authError || !user) {
+    if (!authError && user) {
+      userId = user.id;
+    } else if (body?.user_id) {
+      // Fallback for Telegram Mini App users without Supabase auth session
+      // Verify the user_id belongs to a real user with a linked Telegram account
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("id, telegram_id")
+        .eq("id", body.user_id)
+        .maybeSingle();
+      if (profile?.telegram_id) {
+        userId = profile.id;
+      }
+    }
+
+    if (!userId) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: jsonHeaders });
     }
 
-    const body = await req.json();
     const { action } = body;
 
     const { enabled, tiers } = await getConfig(supabaseAdmin);
@@ -142,7 +159,7 @@ Deno.serve(async (req) => {
     const { data: spendingData } = await supabaseAdmin
       .from("recargas")
       .select("custo")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("status", "completed");
 
     const totalSpent = (spendingData || []).reduce((sum: number, r: any) => sum + Number(r.custo || 0), 0);
@@ -164,7 +181,7 @@ Deno.serve(async (req) => {
       const { data: existing } = await supabaseAdmin
         .from("scratch_cards")
         .select("id, is_scratched, prize_amount, is_won")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .eq("card_date", today)
         .maybeSingle();
 
@@ -189,7 +206,7 @@ Deno.serve(async (req) => {
       const { data: card, error: insertError } = await supabaseAdmin
         .from("scratch_cards")
         .insert({
-          user_id: user.id,
+          user_id: userId,
           prize_amount: prizeAmount,
           is_won: isWon,
           card_date: today,
@@ -221,7 +238,7 @@ Deno.serve(async (req) => {
           .from("scratch_cards")
           .select("*")
           .eq("id", cardId)
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("is_scratched", false)
           .maybeSingle();
 
@@ -232,7 +249,7 @@ Deno.serve(async (req) => {
         const byDate = await supabaseAdmin
           .from("scratch_cards")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("card_date", today)
           .eq("is_scratched", false)
           .maybeSingle();
@@ -256,7 +273,7 @@ Deno.serve(async (req) => {
         const { data: saldo } = await supabaseAdmin
           .from("saldos")
           .select("valor")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("tipo", "revenda")
           .single();
 
@@ -264,7 +281,7 @@ Deno.serve(async (req) => {
           await supabaseAdmin
             .from("saldos")
             .update({ valor: Number(saldo.valor) + Number(card.prize_amount) })
-            .eq("user_id", user.id)
+            .eq("user_id", userId)
             .eq("tipo", "revenda");
         }
       }
