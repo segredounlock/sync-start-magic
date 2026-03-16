@@ -1,40 +1,28 @@
 
 
-## Diagnóstico e Correção
+# Mover Diagrama de Comissões para "Meus Preços"
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Contexto
+O diagrama da cadeia de indicação (Avô → Revendedor → Cliente) está atualmente no Painel Principal (admin). O usuário corretamente observou que essa informação pertence ao painel do revendedor, na seção "Meus Preços", pois é lá que o dono da rede define seus lucros e precificações.
 
-### Plano
+## Mudanças
 
-**1. Corrigir o mapeamento de status na sync function**
+### 1. Remover diagrama do Principal.tsx
+- Remover o bloco do diagrama visual (linhas ~3423-3494) da seção "Comissões da Rede" no Painel Principal
+- Manter os controles de configuração de comissão (Direta/Indireta) que são funções administrativas
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### 2. Adicionar diagrama no MeusPrecos.tsx
+- Inserir o diagrama visual logo após o header "Meus Preços" e o info badge, antes das tabs de operadoras
+- Buscar os valores de `directCommissionPercent` e `indirectCommissionPercent` do `system_config` (já faz fetch de configs na mesma query)
+- Adicionar imports de `Users`, `ArrowRight`, `ArrowDown`, `Smartphone` do lucide-react
+- Manter tooltips com hover e design responsivo idêntico ao atual
+- O diagrama será colapsável (toggle mostrar/ocultar) para não ocupar espaço permanente
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+### 3. Adaptar dados
+- Estender o fetch existente em `MeusPrecos` para também buscar as keys `directCommissionPercent` e `indirectCommissionPercent` do `system_config`
+- Usar esses valores dinâmicos nos badges do diagrama
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+## Arquivos afetados
+- `src/pages/Principal.tsx` — remover diagrama
+- `src/components/MeusPrecos.tsx` — adicionar diagrama com tooltips
 
