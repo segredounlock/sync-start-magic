@@ -315,7 +315,19 @@ interface ValorItem { valueId: string; cost: number; userCost?: number; value?: 
 interface TgOperadora { id: string; nome: string; carrierId: string; valores: ValorItem[]; }
 
 export default function TelegramMiniApp() {
-  useTelegramTheme();
+  const [themePreference, setThemePreference] = useState<"auto" | "light" | "dark">(() => {
+    const saved = localStorage.getItem("tg-theme-preference");
+    return (saved === "light" || saved === "dark") ? saved : "auto";
+  });
+  const { isDark } = useTelegramTheme(themePreference);
+
+  const toggleTheme = useCallback(() => {
+    setThemePreference(prev => {
+      const next = (prev === "dark" || (prev === "auto" && isDark)) ? "light" : "dark";
+      localStorage.setItem("tg-theme-preference", next);
+      return next;
+    });
+  }, [isDark]);
 
   // Setup Telegram WebApp (simple expand, no fullscreen forcing)
   useEffect(() => {
