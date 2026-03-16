@@ -80,6 +80,12 @@ function useTelegramTheme() {
     const tp = tg?.themeParams;
     const root = document.documentElement;
 
+    // Force dark mode for glass-card and other themed components
+    const isDark = !tg?.colorScheme || tg.colorScheme === "dark";
+    if (isDark) {
+      root.classList.add("dark");
+    }
+
     const theme = { ...TG_DARK_DEFAULTS, ...tp };
 
     root.style.setProperty("--tg-bg", theme.bg_color);
