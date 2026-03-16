@@ -1230,9 +1230,9 @@ export default function TelegramMiniApp() {
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               className="pointer-events-auto rounded-xl px-4 py-3 shadow-lg backdrop-blur-xl max-w-[90vw] text-center"
               style={{
-                backgroundColor: toast.type === "success" ? "rgba(74,222,128,0.15)" : toast.type === "error" ? "rgba(239,68,68,0.15)" : "rgba(96,165,250,0.15)",
-                border: `1px solid ${toast.type === "success" ? "rgba(74,222,128,0.4)" : toast.type === "error" ? "rgba(239,68,68,0.4)" : "rgba(96,165,250,0.4)"}`,
-                color: toast.type === "success" ? "#4ade80" : toast.type === "error" ? "#ef4444" : "#60a5fa",
+                backgroundColor: toast.type === "success" ? "color-mix(in srgb, var(--tg-accent) 15%, transparent)" : toast.type === "error" ? "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" : "color-mix(in srgb, var(--tg-link) 15%, transparent)",
+                border: `1px solid ${toast.type === "success" ? "color-mix(in srgb, var(--tg-accent) 40%, transparent)" : toast.type === "error" ? "color-mix(in srgb, var(--tg-destructive) 40%, transparent)" : "color-mix(in srgb, var(--tg-link) 40%, transparent)"}`,
+                color: toast.type === "success" ? "var(--tg-accent)" : toast.type === "error" ? "var(--tg-destructive)" : "var(--tg-link)",
               }}
               onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
             >
