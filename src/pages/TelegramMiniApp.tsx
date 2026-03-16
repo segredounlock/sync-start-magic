@@ -1280,7 +1280,7 @@ export default function TelegramMiniApp() {
                   className="space-y-4"
                 >
                   {/* Status Header */}
-                  <div className="rounded-2xl p-6 text-center" style={{ ...st.secondaryBg, border: `2px solid ${recargaResult.success ? "#4ade80" : "var(--tg-destructive)"}` }}>
+                   <div className="rounded-2xl p-6 text-center" style={{ ...st.secondaryBg, border: `2px solid ${recargaResult.success ? "var(--tg-accent)" : "var(--tg-destructive)"}` }}>
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
