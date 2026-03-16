@@ -2050,10 +2050,10 @@ export default function TelegramMiniApp() {
             if (isFab) {
               return (
                 <button key={item.id} onClick={() => { setSection(item.id); tgWebApp?.HapticFeedback?.impactOccurred("medium"); }}
-                  className="flex flex-col items-center -mt-8 relative z-10"
+                  className="flex flex-col items-center -mt-5 relative z-10"
                   style={{ color: isActive ? "#fff" : "var(--tg-hint)" }}>
                   <motion.div
-                    className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg relative"
+                    className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg relative"
                     style={{
                       background: isActive
                         ? "linear-gradient(135deg, var(--tg-accent), var(--tg-btn))"
@@ -2064,13 +2064,12 @@ export default function TelegramMiniApp() {
                     animate={{ ...iconAnimation, ...continuousAnim } as any}
                     whileTap={{ scale: 0.85 }}
                   >
-                    {/* Snake border animation */}
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56" style={{ filter: isActive ? "drop-shadow(0 0 6px var(--tg-accent))" : "none" }}>
-                      <circle cx="28" cy="28" r="26" fill="none" stroke="var(--tg-accent)" strokeWidth="2" strokeDasharray="8 6" opacity={isActive ? 0.7 : 0.25}>
-                        <animateTransform attributeName="transform" type="rotate" from="0 28 28" to="360 28 28" dur="4s" repeatCount="indefinite" />
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 44 44" style={{ filter: isActive ? "drop-shadow(0 0 6px var(--tg-accent))" : "none" }}>
+                      <circle cx="22" cy="22" r="20" fill="none" stroke="var(--tg-accent)" strokeWidth="2" strokeDasharray="6 5" opacity={isActive ? 0.7 : 0.25}>
+                        <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="4s" repeatCount="indefinite" />
                       </circle>
                     </svg>
-                    <item.icon className="w-7 h-7" style={{ color: isActive ? "#fff" : "var(--tg-hint)" }} />
+                    <item.icon className="w-5 h-5" style={{ color: isActive ? "#fff" : "var(--tg-hint)" }} />
                   </motion.div>
                   <span className="text-[10px] font-bold mt-1 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
                 </button>
