@@ -17,7 +17,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    // Add smooth transition for theme changes
+    const isMiniAppRoute = window.location.pathname.startsWith("/miniapp");
+
+    if (isMiniAppRoute) {
+      root.style.transition = "";
+      root.classList.remove("dark");
+      return;
+    }
+
     root.style.transition = "background-color 0.5s ease, color 0.4s ease";
     if (theme === "dark") {
       root.classList.add("dark");
@@ -25,8 +32,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.classList.remove("dark");
     }
     localStorage.setItem("theme", theme);
-    
-    // Remove transition after it completes to avoid interfering with other animations
+
     const timer = setTimeout(() => {
       root.style.transition = "";
     }, 600);
