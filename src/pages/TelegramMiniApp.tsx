@@ -2069,7 +2069,7 @@ export default function TelegramMiniApp() {
               <AnimatePresence>
                 {viewingReceipt && (
                   <>
-                    <motion.div className="fixed inset-0 z-[100]" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                    <motion.div className="fixed inset-0 z-[100]" style={st.overlayDark}
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingReceipt(null)} />
                     <motion.div className="fixed inset-x-4 top-[15%] z-[101] rounded-2xl p-5 space-y-4 max-h-[75vh] overflow-y-auto"
                       style={{ ...st.secondaryBg, border: `2px solid ${viewingReceipt.status === "completed" ? "var(--tg-accent)" : "var(--tg-warning, #facc15)"}` }}
