@@ -148,7 +148,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [referralCode, setReferralCode] = useState("");
 
   // Banner config from banners table
-  const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string }[]>([]);
+  const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string; icon_url: string | null }[]>([]);
   const [dismissedBanners, setDismissedBanners] = useState<Set<number>>(new Set());
   const [totalRecargasCount, setTotalRecargasCount] = useState(0);
   const [totalCompletedCount, setTotalCompletedCount] = useState(0);
