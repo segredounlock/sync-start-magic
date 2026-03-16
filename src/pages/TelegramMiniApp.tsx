@@ -162,7 +162,7 @@ function StatusOperatorCards({ st }: { st: any }) {
     VIVO: { gradient: "linear-gradient(135deg, #a855f7, #9333ea)", accent: "#a855f7" },
   };
 
-  const timeColor = (s: number) => s <= 120 ? "#4ade80" : s <= 300 ? "#facc15" : "#f87171";
+  const timeColor = (s: number) => s <= 120 ? "var(--tg-accent)" : s <= 300 ? "var(--tg-warning, #facc15)" : "var(--tg-destructive)";
 
   if (loading) {
     return (
