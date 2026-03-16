@@ -345,6 +345,7 @@ export default function TelegramMiniApp() {
   const [checkingPhone, setCheckingPhone] = useState(false);
   const [detectingOperator, setDetectingOperator] = useState(false);
   const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
+  const [pendingWarning, setPendingWarning] = useState<{ phone: string; count: number } | null>(null);
 
   // Histórico & Extrato
   const [recargas, setRecargas] = useState<Recarga[]>([]);
@@ -711,14 +712,51 @@ export default function TelegramMiniApp() {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
-  const handleRecargaConfirm = async () => {
+  const handleRecargaConfirm = async (skipPendingCheck = false) => {
     if (!userId || !selectedOp || !selectedValor || !phone) return;
     const tel = phone.replace(/\D/g, "");
     if (tel.length < 10) return;
+
+    // Check for pending recargas on same number (same as browser)
+    if (!skipPendingCheck) {
+      try {
+        const { count } = await supabase
+          .from("recargas")
+          .select("id", { count: "exact", head: true })
+          .eq("telefone", tel)
+          .eq("status", "pending");
+        if (count && count > 0) {
+          setPendingWarning({ phone: tel, count });
+          return;
+        }
+      } catch { /* ignore */ }
+    }
+    setPendingWarning(null);
+
     setRecargaLoading(true);
     try {
+      // Pre-recheck: re-validate blacklist/cooldown right before submitting (same as browser)
+      const { data: precheckResp } = await supabase.functions.invoke("recarga-express", {
+        body: { action: "check-phone", phoneNumber: tel, carrierId: selectedOp.carrierId },
+      });
+      if (precheckResp?.success && precheckResp.data) {
+        const precheckResult = {
+          status: precheckResp.data.status,
+          message: precheckResp.data.status === "COOLDOWN"
+            ? formatCooldownMsg(precheckResp.data.message)
+            : (precheckResp.data.message || ""),
+        };
+        setPhoneCheckResult(precheckResult);
+        if (precheckResult.status === "BLACKLISTED" || precheckResult.status === "COOLDOWN") {
+          tgWebApp?.HapticFeedback?.notificationOccurred("error");
+          setRecargaStep("check");
+          setRecargaLoading(false);
+          return;
+        }
+      }
+
       const { data: result, error } = await supabase.functions.invoke("recarga-express", {
-        body: { action: "recharge", carrierId: selectedOp.carrierId, phoneNumber: tel, valueId: selectedValor.valueId },
+        body: { action: "recharge", carrierId: selectedOp.carrierId, phoneNumber: tel, valueId: selectedValor.valueId, saldo_tipo: "revenda" },
       });
       if (error) throw error;
       if (!result?.success) throw new Error(result?.error || "Erro ao processar recarga");
@@ -751,12 +789,12 @@ export default function TelegramMiniApp() {
       });
     } catch (err: any) {
       tgWebApp?.HapticFeedback?.notificationOccurred("error");
-      setRecargaResult({ success: false, message: err.message || "Erro ao processar recarga" });
+      setRecargaResult({ success: false, message: formatCooldownMsg(err.message) || "Erro ao processar recarga" });
     }
     setRecargaLoading(false);
   };
 
-  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); setDetectedOperatorName(null); };
+  const resetRecarga = () => { setSelectedOp(null); setSelectedValor(null); setPhone(""); setRecargaStep("phone"); setRecargaResult(null); setPhoneCheckResult(null); setDetectedOperatorName(null); setPendingWarning(null); };
 
   // Local fallback: detect operator by Brazilian mobile prefix
   const detectOperatorLocally = useCallback((digits: string): string | null => {
@@ -1515,10 +1553,34 @@ export default function TelegramMiniApp() {
                         <div className="flex justify-between"><span style={st.hint}>Valor</span><span className="font-bold" style={st.green}>{formatCurrency(selectedValor.userCost ?? selectedValor.cost)}</span></div>
                         <div className="flex justify-between text-sm"><span style={st.hint}>Saldo após</span><span style={st.text}>{formatCurrency(saldo - (selectedValor.userCost ?? selectedValor.cost))}</span></div>
                       </div>
+                      {/* Pending warning modal */}
+                      {pendingWarning && (
+                        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "color-mix(in srgb, #eab308 15%, transparent)", border: "1px solid color-mix(in srgb, #eab308 30%, transparent)" }}>
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: "#eab308" }} />
+                            <p className="text-sm font-semibold" style={{ color: "#eab308" }}>Recarga Pendente</p>
+                          </div>
+                          <p className="text-xs" style={st.hint}>
+                            Já existe {pendingWarning.count} recarga(s) pendente(s) para este número. Deseja continuar mesmo assim?
+                          </p>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleRecargaConfirm(true)}
+                              className="flex-1 rounded-xl py-2.5 font-semibold text-sm"
+                              style={{ backgroundColor: "#eab308", color: "#000" }}>
+                              Sim, continuar
+                            </button>
+                            <button onClick={() => setPendingWarning(null)}
+                              className="flex-1 rounded-xl py-2.5 font-semibold text-sm"
+                              style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {(selectedValor.userCost ?? selectedValor.cost) > saldo ? (
                         <p className="text-center text-sm" style={st.destructive}>Saldo insuficiente</p>
-                      ) : (
-                        <button onClick={handleRecargaConfirm} disabled={recargaLoading}
+                      ) : !pendingWarning && (
+                        <button onClick={() => handleRecargaConfirm()} disabled={recargaLoading}
                           className="w-full rounded-xl py-3.5 font-semibold transition disabled:opacity-50"
                           style={{ backgroundColor: "#4ade80", color: "#000" }}>
                           {recargaLoading ? "Processando..." : "✅ Confirmar Recarga"}
