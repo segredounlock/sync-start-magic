@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { formatFullDateTimeBR } from "@/lib/timezone";
 import { confirm } from "@/lib/confirm";
-import { logAuditAction } from "@/lib/auditLog";
+import { logAudit } from "@/lib/auditLog";
 
 interface SaqueTransaction {
   id: string;
