@@ -33,7 +33,7 @@ import {
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
-  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image,
+  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image, ArrowRight, ArrowDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -3417,6 +3417,67 @@ export default function Principal() {
                         <div>
                           <h4 className="font-semibold text-foreground">Comissões da Rede</h4>
                           <p className="text-xs text-muted-foreground">Configure lucro direto e indireto dos revendedores</p>
+                      </div>
+                      </div>
+
+                      {/* Diagrama visual da cadeia de indicação */}
+                      <div className="rounded-xl bg-muted/20 border border-border p-4 space-y-3">
+                        <p className="text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">Como funciona a cadeia de indicação</p>
+                        
+                        {/* Horizontal flow */}
+                        <div className="flex items-center justify-center gap-2 sm:gap-4">
+                          {/* Avô */}
+                          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center">
+                              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
+                            </div>
+                            <span className="text-xs font-semibold text-foreground">Avô</span>
+                            <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem indicou<br/>o revendedor</span>
+                            <span className="mt-1 px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-bold">
+                              {globalConfig.indirectCommissionPercent ?? "10"}% do lucro
+                            </span>
+                            <span className="text-[9px] text-muted-foreground">Comissão Indireta</span>
+                          </div>
+
+                          {/* Arrow */}
+                          <div className="flex flex-col items-center gap-0.5 -mt-8">
+                            <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
+                            <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
+                            <span className="text-[9px] text-muted-foreground">indicou</span>
+                          </div>
+
+                          {/* Pai */}
+                          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
+                              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                            </div>
+                            <span className="text-xs font-semibold text-foreground">Revendedor</span>
+                            <span className="text-[10px] text-muted-foreground text-center leading-tight">Revend. imediato<br/>do cliente</span>
+                            <span className="mt-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
+                              {globalConfig.directCommissionPercent ?? "100"}% do lucro
+                            </span>
+                            <span className="text-[9px] text-muted-foreground">Comissão Direta</span>
+                          </div>
+
+                          {/* Arrow */}
+                          <div className="flex flex-col items-center gap-0.5 -mt-8">
+                            <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
+                            <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
+                            <span className="text-[9px] text-muted-foreground">vende</span>
+                          </div>
+
+                          {/* Cliente */}
+                          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center">
+                              <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+                            </div>
+                            <span className="text-xs font-semibold text-foreground">Cliente</span>
+                            <span className="text-[10px] text-muted-foreground text-center leading-tight">Faz a recarga<br/>no sistema</span>
+                            <span className="mt-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
+                              💰 Recarga
+                            </span>
+                            <span className="text-[9px] text-muted-foreground">Gera o lucro</span>
+                          </div>
                         </div>
                       </div>
 
