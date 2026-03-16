@@ -706,6 +706,7 @@ export default function TelegramMiniApp() {
   const sectionTitle: Record<Section, string> = {
     recarga: "Nova Recarga", deposito: "Adicionar Saldo", historico: "Histórico de Pedidos",
     extrato: "Extrato de Depósitos", conta: "Minha Conta", status: "Status do Sistema", chat: "Bate-papo",
+    raspadinha: "Raspadinha",
   };
 
   const initials = userName ? userName.slice(0, 2).toUpperCase() : "US";
