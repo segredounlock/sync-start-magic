@@ -508,11 +508,6 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                       </motion.div>
                     )}
 
-                    {user.verification_badge && (
-                      <div className="absolute -bottom-1 -right-1 z-10">
-                        <VerificationBadge badge={user.verification_badge as BadgeType} size="sm" />
-                      </div>
-                    )}
                   </motion.div>
                 </div>
 
