@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
       const { data: card, error: insertError } = await supabaseAdmin
         .from("scratch_cards")
         .insert({
-          user_id: user.id,
+          user_id: userId,
           prize_amount: prizeAmount,
           is_won: isWon,
           card_date: today,
