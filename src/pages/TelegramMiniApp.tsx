@@ -1935,6 +1935,12 @@ export default function TelegramMiniApp() {
               ))}
             </motion.div>
           )}
+          {/* ── Atualizações ── */}
+          {section === "atualizacoes" && (
+            <motion.div key="atualizacoes" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              <AtualizacoesSection />
+            </motion.div>
+          )}
           {/* ── Raspadinha ── */}
           {section === "raspadinha" && userId && (
             <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
