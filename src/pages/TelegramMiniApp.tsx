@@ -2475,7 +2475,7 @@ export default function TelegramMiniApp() {
             <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
               <MessageCircle className="w-14 h-14 mb-4" style={st.hint} />
               <p className="text-base font-bold mb-2" style={st.text}>Faça login para acessar o chat</p>
-              <div className="rounded-xl p-4 mt-2 text-left space-y-2" style={{ background: "rgba(255,255,255,0.05)", border: st.borderMain }}>
+              <div className="rounded-xl p-4 mt-2 text-left space-y-2" style={{ backgroundColor: "color-mix(in srgb, var(--tg-text) 5%, transparent)", border: st.borderMain }}>
                 <p className="text-xs font-semibold" style={st.text}>📋 Como acessar:</p>
                 <p className="text-xs" style={st.hint}>1. Toque na aba <strong style={st.text}>"Conta"</strong> no menu inferior</p>
                 <p className="text-xs" style={st.hint}>2. Se já estiver logado, toque em <strong style={st.text}>"Sair"</strong> e entre novamente</p>
