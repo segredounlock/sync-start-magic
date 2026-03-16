@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
           .from("scratch_cards")
           .select("*")
           .eq("id", cardId)
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("is_scratched", false)
           .maybeSingle();
 
