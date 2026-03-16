@@ -2090,7 +2090,7 @@ export default function TelegramMiniApp() {
                           { icon: Hash, label: "ID do Pedido", value: viewingReceipt.external_id || viewingReceipt.id.slice(0, 8) },
                           { icon: Clock, label: "Data", value: formatDateTimeBR(viewingReceipt.created_at) },
                         ].map((row) => (
-                          <div key={row.label} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <div key={row.label} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid color-mix(in srgb, var(--tg-text) 5%, transparent)" }}>
                             <div className="flex items-center gap-2">
                               <row.icon className="w-3.5 h-3.5" style={{ color: "var(--tg-hint)" }} />
                               <span className="text-xs" style={{ color: "var(--tg-hint)" }}>{row.label}</span>
