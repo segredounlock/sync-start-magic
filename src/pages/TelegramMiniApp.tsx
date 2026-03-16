@@ -1606,7 +1606,7 @@ export default function TelegramMiniApp() {
                               style={{ ...st.secondaryBg, ...st.text, border: st.borderSub }}>
                               {discount > 0 && (
                                 <span className="absolute -top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
-                                  style={{ background: discount >= 30 ? "#22c55e" : discount >= 20 ? "#10b981" : "#3b82f6" }}>
+                                  style={{ background: discount >= 30 ? "var(--tg-accent)" : discount >= 20 ? "var(--tg-accent)" : "var(--tg-link)" }}>
                                   {discount}% OFF
                                 </span>
                               )}
