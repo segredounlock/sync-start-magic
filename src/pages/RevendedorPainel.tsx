@@ -1230,8 +1230,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           </div>
           )}
 
-          {/* Banners Promocionais */}
-          {bannersList.filter(b => b.enabled && b.type !== "popup" && !dismissedBanners.has(b.position)).map(b => (
+          {/* Banners Promocionais — Banner Topo */}
+          {bannersList.filter(b => b.enabled && b.type === "banner" && !dismissedBanners.has(b.position)).map(b => (
             <PromoBanner
               key={b.id}
               title={b.title || undefined}
@@ -1241,6 +1241,21 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               onClose={() => setDismissedBanners(prev => new Set([...prev, b.position]))}
             />
           ))}
+
+          {/* Slide Banners — Carrossel animado */}
+          {(() => {
+            const slideBanners = bannersList.filter(b => b.enabled && b.type === "slide" && !dismissedBanners.has(b.position));
+            if (slideBanners.length === 0) return null;
+            return (
+              <SlideBanner
+                slides={slideBanners.map(b => ({ title: b.title || "", subtitle: b.subtitle || "", link: b.link || undefined }))}
+                visible={true}
+                onClose={() => {
+                  slideBanners.forEach(b => setDismissedBanners(prev => new Set([...prev, b.position])));
+                }}
+              />
+            );
+          })()}
 
           {/* Popup Banners */}
           {bannersList.filter(b => b.enabled && b.type === "popup" && !dismissedBanners.has(b.position)).map(b => (
