@@ -445,6 +445,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       })
       .subscribe();
     return () => { supabase.removeChannel(txChannel); };
+  }, [user, fetchData, fetchTransactions]);
 
   useEffect(() => {
     // Parallel initial load: data + catalog + banners
