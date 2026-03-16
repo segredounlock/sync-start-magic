@@ -399,22 +399,27 @@ function generatePassword(): string {
 const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
 const TERMS_TEXT = `📜 <b>TERMOS DE UTILIZAÇÃO</b>
+🌐 <b>Recargas Brasil</b> — https://recargasbrasill.com
 
-Ao utilizar este bot, você concorda com as seguintes regras:
+Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
-1️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
+1️⃣ <b>Sobre o Serviço</b> — O <b>Recargas Brasil</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site https://recargasbrasill.com.
 
-2️⃣ <b>Saldo e Pagamentos</b> — Depósitos via PIX são processados automaticamente. Recargas confirmadas <b>não podem ser estornadas</b>.
+2️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
 
-3️⃣ <b>Dados Pessoais</b> — Seus dados são armazenados de forma segura e utilizados apenas para operação do serviço.
+3️⃣ <b>Saldo e Pagamentos</b> — Depósitos via PIX são processados automaticamente. Recargas confirmadas <b>não podem ser estornadas</b>.
 
-4️⃣ <b>Responsabilidade</b> — O usuário é responsável por informar corretamente o número e operadora. Recargas para números errados não serão reembolsadas.
+4️⃣ <b>Dados Pessoais</b> — Seus dados são armazenados de forma segura e utilizados apenas para operação do serviço, conforme a LGPD.
 
-5️⃣ <b>Disponibilidade</b> — O serviço pode sofrer interrupções para manutenção. Não nos responsabilizamos por indisponibilidades temporárias.
+5️⃣ <b>Responsabilidade</b> — O usuário é responsável por informar corretamente o número e operadora. Recargas para números errados não serão reembolsadas.
 
-6️⃣ <b>Proibições</b> — É proibido o uso de bots, scripts ou automações para interagir com este sistema.
+6️⃣ <b>Disponibilidade</b> — O serviço pode sofrer interrupções para manutenção. Não nos responsabilizamos por indisponibilidades temporárias.
 
-7️⃣ <b>Alterações</b> — Os termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação.
+7️⃣ <b>Proibições</b> — É proibido o uso de bots, scripts ou automações para interagir com este sistema.
+
+8️⃣ <b>Suporte</b> — Em caso de dúvidas, utilize o botão "Ajuda / Suporte" ou acesse https://recargasbrasill.com.
+
+9️⃣ <b>Alterações</b> — Os termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação.
 
 ⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
 
