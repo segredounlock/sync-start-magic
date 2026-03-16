@@ -185,7 +185,7 @@ function StatusOperatorCards({ st }: { st: any }) {
             {/* Colored header bar */}
             <div className="px-4 py-3 flex items-center justify-between" style={{ background: colors.gradient }}>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, white 20%, transparent)" }}>
                   <Smartphone className="h-3.5 w-3.5 text-white" />
                 </div>
                 <span className="font-bold text-white text-sm tracking-wide">{opName}</span>
@@ -1104,8 +1104,17 @@ export default function TelegramMiniApp() {
     dangerBg: { backgroundColor: "color-mix(in srgb, var(--tg-destructive) 15%, transparent)" } as React.CSSProperties,
     inputBg: { backgroundColor: "color-mix(in srgb, var(--tg-text) 8%, var(--tg-bg))", color: "var(--tg-text)", border: "1px solid color-mix(in srgb, var(--tg-hint) 20%, transparent)" } as React.CSSProperties,
     overlay: { backgroundColor: "color-mix(in srgb, var(--tg-bg) 85%, transparent)" } as React.CSSProperties,
+    overlayDark: { backgroundColor: "rgba(0,0,0,0.6)" } as React.CSSProperties,
+    overlayDarkSoft: { backgroundColor: "rgba(0,0,0,0.5)" } as React.CSSProperties,
+    linkBg: { backgroundColor: "color-mix(in srgb, var(--tg-link) 15%, transparent)" } as React.CSSProperties,
+    hintBg: (opacity = 8) => ({ backgroundColor: `color-mix(in srgb, var(--tg-hint) ${opacity}%, transparent)` }) as React.CSSProperties,
+    accentBg: (opacity = 15) => ({ backgroundColor: `color-mix(in srgb, var(--tg-accent) ${opacity}%, transparent)` }) as React.CSSProperties,
     borderSub: "1px solid color-mix(in srgb, var(--tg-hint) 18%, transparent)",
     borderMain: "1px solid color-mix(in srgb, var(--tg-accent) 15%, transparent)",
+    borderLight: "1px solid color-mix(in srgb, var(--tg-text) 10%, transparent)",
+    loginCardBg: { backgroundColor: "color-mix(in srgb, var(--tg-secondary-bg) 75%, transparent)" } as React.CSSProperties,
+    loginGradientOverlay: { background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0.95) 100%)" } as React.CSSProperties,
+    loginBtn: { background: "linear-gradient(135deg, var(--tg-link) 0%, color-mix(in srgb, var(--tg-link) 80%, black) 100%)", color: "var(--tg-btn-text)" } as React.CSSProperties,
   };
 
   // ─── Splash / Loading ────────────────────────────────────
@@ -1124,7 +1133,7 @@ export default function TelegramMiniApp() {
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           className="relative z-10"
         >
-          <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl" style={{ border: "1px solid rgba(255,255,255,0.1)", boxShadow: `0 0 40px rgba(82,136,193,0.3)` }}>
+          <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl" style={{ border: st.borderLight, boxShadow: `0 0 40px color-mix(in srgb, var(--tg-link) 30%, transparent)` }}>
             <img src={recargasLogo} alt="Recargas Brasil" className="w-full h-full object-cover" />
           </div>
         </motion.div>
@@ -1168,7 +1177,7 @@ export default function TelegramMiniApp() {
         {/* Background image */}
         <div className="absolute inset-0 z-0">
           <img src={recargasLogo} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0.95) 100%)" }} />
+          <div className="absolute inset-0" style={st.loginGradientOverlay} />
         </div>
         <div className="w-full max-w-sm relative z-10">
           {/* Logo & title */}
@@ -1180,22 +1189,22 @@ export default function TelegramMiniApp() {
           {/* Form card */}
           <div className="rounded-2xl p-5 space-y-4 backdrop-blur-xl"
             style={{ 
-              backgroundColor: "rgba(23, 33, 43, 0.75)", 
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)"
+              ...st.loginCardBg,
+              border: st.borderLight,
+              boxShadow: "0 8px 32px color-mix(in srgb, var(--tg-bg) 40%, transparent), inset 0 1px 0 color-mix(in srgb, var(--tg-text) 5%, transparent)"
             }}>
             <div className="space-y-3">
               <div>
                 <label className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5 block">E-mail</label>
                 <input type="email" placeholder="seu@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
+                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 transition-all"
                   style={st.inputBg} />
               </div>
               <div>
                 <label className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5 block">Senha</label>
                 <input type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
+                  className="w-full rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 transition-all"
                   style={st.inputBg} />
               </div>
             </div>
@@ -1203,9 +1212,8 @@ export default function TelegramMiniApp() {
             <button onClick={handleLogin} disabled={loginLoading || !loginEmail || !loginPassword}
               className="w-full rounded-xl py-3.5 font-bold text-sm transition-all disabled:opacity-40 active:scale-[0.98]"
               style={{ 
-                background: "linear-gradient(135deg, #5288c1 0%, #3a6fa8 100%)", 
-                color: "#fff",
-                boxShadow: "0 4px 15px rgba(82, 136, 193, 0.4), inset 0 1px 0 rgba(255,255,255,0.15)"
+                ...st.loginBtn,
+                boxShadow: "0 4px 15px color-mix(in srgb, var(--tg-link) 40%, transparent), inset 0 1px 0 color-mix(in srgb, var(--tg-text) 15%, transparent)"
               }}>
               {loginLoading ? "Entrando..." : "Entrar"}
             </button>
@@ -1708,7 +1716,7 @@ export default function TelegramMiniApp() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           className="fixed inset-0 z-50"
-                          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                          style={st.overlayDark}
                           onClick={() => setShowPriceTable(false)}
                         />
                         <motion.div
@@ -2061,7 +2069,7 @@ export default function TelegramMiniApp() {
               <AnimatePresence>
                 {viewingReceipt && (
                   <>
-                    <motion.div className="fixed inset-0 z-[100]" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                    <motion.div className="fixed inset-0 z-[100]" style={st.overlayDark}
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingReceipt(null)} />
                     <motion.div className="fixed inset-x-4 top-[15%] z-[101] rounded-2xl p-5 space-y-4 max-h-[75vh] overflow-y-auto"
                       style={{ ...st.secondaryBg, border: `2px solid ${viewingReceipt.status === "completed" ? "var(--tg-accent)" : "var(--tg-warning, #facc15)"}` }}
@@ -2467,7 +2475,7 @@ export default function TelegramMiniApp() {
             <motion.div key="chat-no-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: "50vh" }}>
               <MessageCircle className="w-14 h-14 mb-4" style={st.hint} />
               <p className="text-base font-bold mb-2" style={st.text}>Faça login para acessar o chat</p>
-              <div className="rounded-xl p-4 mt-2 text-left space-y-2" style={{ background: "rgba(255,255,255,0.05)", border: st.borderMain }}>
+              <div className="rounded-xl p-4 mt-2 text-left space-y-2" style={{ backgroundColor: "color-mix(in srgb, var(--tg-text) 5%, transparent)", border: st.borderMain }}>
                 <p className="text-xs font-semibold" style={st.text}>📋 Como acessar:</p>
                 <p className="text-xs" style={st.hint}>1. Toque na aba <strong style={st.text}>"Conta"</strong> no menu inferior</p>
                 <p className="text-xs" style={st.hint}>2. Se já estiver logado, toque em <strong style={st.text}>"Sair"</strong> e entre novamente</p>
@@ -2653,7 +2661,7 @@ export default function TelegramMiniApp() {
                       }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <item.icon className="h-5 w-5" style={{ color: "#fff" }} />
+                      <item.icon className="h-5 w-5" style={st.btnText} />
                     </motion.div>
                   </div>
                   <span className="text-[10px] font-bold mt-0.5 leading-tight" style={{ color: isActive ? "var(--tg-accent)" : "var(--tg-hint)" }}>{item.label}</span>
@@ -2718,7 +2726,7 @@ export default function TelegramMiniApp() {
           <>
             <motion.div
               className="fixed inset-0 z-[60]"
-              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+              style={st.overlayDarkSoft}
               onClick={() => setMoreOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -2754,7 +2762,7 @@ export default function TelegramMiniApp() {
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-9 h-9 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
                     ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: "rgba(82,136,193,0.15)", color: "var(--tg-accent)" }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ ...st.accentBg(15), color: "var(--tg-accent)" }}>
                         {initials}
                       </div>
                     )}
