@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Medal, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -283,6 +284,7 @@ interface TopRankingPodiumProps {
 }
 
 export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) {
+  const navigate = useNavigate();
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
@@ -456,7 +458,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             return (
               <motion.div
                 key={user.user_id}
-                className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""}`}
+                className={`flex flex-col items-center gap-2 ${isCenter ? "mb-6" : ""} cursor-pointer`}
                 initial={{ opacity: 0, y: 60, scale: 0.5 }}
                 animate={revealed ? { opacity: 1, y: 0, scale: 1 } : {}}
                 transition={{
@@ -467,6 +469,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
                   mass: isCenter ? 1.2 : 1,
                 }}
                 whileHover={{ scale: 1.08 }}
+                onClick={() => navigate(`/perfil/${user.user_id}`)}
               >
                 {/* Crown above avatar for 1st place only — sits on top of avatar */}
                 {isCenter && (
