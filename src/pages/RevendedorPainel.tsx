@@ -148,7 +148,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [referralCode, setReferralCode] = useState("");
 
   // Banner config from banners table
-  const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string }[]>([]);
+  const [bannersList, setBannersList] = useState<{ id: string; position: number; type: string; enabled: boolean; title: string; subtitle: string; link: string; icon_url: string | null }[]>([]);
   const [dismissedBanners, setDismissedBanners] = useState<Set<number>>(new Set());
   const [totalRecargasCount, setTotalRecargasCount] = useState(0);
   const [totalCompletedCount, setTotalCompletedCount] = useState(0);
@@ -426,6 +426,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         title: b.title,
         subtitle: b.subtitle,
         link: b.link,
+        icon_url: b.icon_url,
       })));
     });
   }, [fetchData, fetchCatalog]);
@@ -1252,7 +1253,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               subtitle={b.subtitle || undefined}
               visible={true}
               link={b.link || undefined}
-              icon_url={(b as any).icon_url || undefined}
+              icon_url={b.icon_url || undefined}
               onClose={() => setDismissedBanners(prev => new Set([...prev, b.position]))}
             />
           ))}
@@ -1263,7 +1264,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             if (slideBanners.length === 0) return null;
             return (
               <SlideBanner
-                slides={slideBanners.map(b => ({ title: b.title || "", subtitle: b.subtitle || "", link: b.link || undefined, icon_url: (b as any).icon_url || undefined }))}
+                slides={slideBanners.map(b => ({ title: b.title || "", subtitle: b.subtitle || "", link: b.link || undefined, icon_url: b.icon_url || undefined }))}
                 visible={true}
                 onClose={() => {
                   slideBanners.forEach(b => setDismissedBanners(prev => new Set([...prev, b.position])));
