@@ -75,6 +75,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [showSaque, setShowSaque] = useState(false);
   const [saqueValor, setSaqueValor] = useState("");
   const [saqueLoading, setSaqueLoading] = useState(false);
+  const [saquePixKey, setSaquePixKey] = useState("");
+  const [saquePixKeyType, setSaquePixKeyType] = useState("");
   const [recargas, setRecargas] = useState<Recarga[]>([]);
   const { loading, runFetch } = useResilientFetch();
   const [tab, setTab] = useState<PainelTab>("dashboard");
