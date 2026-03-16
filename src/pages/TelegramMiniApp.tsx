@@ -1325,7 +1325,7 @@ export default function TelegramMiniApp() {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: 0.3 + i * 0.06 }}
                               className="flex items-center justify-between px-4 py-3"
-                              style={{ borderColor: "rgba(255,255,255,0.05)" }}
+                              style={{ borderColor: "color-mix(in srgb, var(--tg-text) 5%, transparent)" }}
                             >
                               <div className="flex items-center gap-2.5">
                                 <row.icon className="w-4 h-4" style={{ color: "var(--tg-hint)" }} />
