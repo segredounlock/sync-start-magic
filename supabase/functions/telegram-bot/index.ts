@@ -421,6 +421,17 @@ Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
 9️⃣ <b>Alterações</b> — Os termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação.
 
+💠 <b>PERGUNTAS FREQUENTES</b> 💠
+
+❶ <b>Qual o tempo máximo que a recarga pode cair?</b>
+A recarga pode ser efetivada em até <b>24 horas</b> após o envio ao sistema.
+
+❷ <b>Vocês fazem reembolso via PIX?</b>
+Não. Há custos operacionais no sistema e o serviço é voltado para <b>revendedores</b>. O valor é devolvido em <b>saldo</b> caso a recarga seja cancelada.
+
+❸ <b>O que fazer se minha recarga for cancelada?</b>
+O saldo é devolvido automaticamente. Reembolse seu cliente e envie para outro número.
+
 ⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
 
 const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg"; // kept for future optional use
