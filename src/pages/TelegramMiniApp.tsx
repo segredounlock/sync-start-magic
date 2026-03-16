@@ -1133,7 +1133,7 @@ export default function TelegramMiniApp() {
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           className="relative z-10"
         >
-          <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl" style={{ border: "1px solid rgba(255,255,255,0.1)", boxShadow: `0 0 40px rgba(82,136,193,0.3)` }}>
+          <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl" style={{ border: st.borderLight, boxShadow: `0 0 40px color-mix(in srgb, var(--tg-link) 30%, transparent)` }}>
             <img src={recargasLogo} alt="Recargas Brasil" className="w-full h-full object-cover" />
           </div>
         </motion.div>
