@@ -536,9 +536,17 @@ export default function AdminSupport() {
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-border space-y-2">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-cyan-500" />
-          <h2 className="text-sm font-bold text-foreground flex-1">Central de Suporte</h2>
+          <Flag className="w-5 h-5 text-primary" />
+          <h2 className="text-sm font-bold text-foreground">Suporte</h2>
+          {stats.open > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold min-w-[20px] text-center">
+              {stats.open}
+            </span>
+          )}
+          <span className="flex-1" />
+          <span className="text-[10px] text-muted-foreground">Ativo</span>
         </div>
+        <p className="text-[10px] text-muted-foreground -mt-1">Central de atendimento ao cliente</p>
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
