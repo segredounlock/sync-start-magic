@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Clock, XCircle, Smartphone } from "lucide-react";
-import { formatTimeBR, getRecargaTime } from "@/lib/timezone";
+import { formatTimeBR } from "@/lib/timezone";
 
 interface TickerRecarga {
   id: string;
