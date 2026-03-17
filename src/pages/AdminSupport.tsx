@@ -447,9 +447,9 @@ export default function AdminSupport() {
         origin: "web",
       });
 
-      // Auto-progress from open to in_progress
+      // Auto-progress from open to in_progress (silent — no extra system message or Telegram notification)
       if (selectedTicket.status === "open") {
-        updateStatus("in_progress");
+        updateStatus("in_progress", true);
       }
 
       // Forward to Telegram if user has telegram_chat_id
