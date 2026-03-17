@@ -295,7 +295,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
     // Fetch larger set to find user's position
     const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 50 });
     const all = (data || []) as RankUser[];
-    setRanking(all.slice(0, 10));
+    setRanking(all.slice(0, 20));
 
     // Find user position in full list
     const idx = all.findIndex(r => r.user_id === userId);
