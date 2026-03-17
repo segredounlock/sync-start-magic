@@ -284,7 +284,7 @@ interface TopRankingPodiumProps {
   showPodium?: boolean;
 }
 
-export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) {
+export function TopRankingPodium({ userId, onViewFull, showPodium = true }: TopRankingPodiumProps) {
   const navigate = useNavigate();
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
