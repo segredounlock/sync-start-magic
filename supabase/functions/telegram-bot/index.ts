@@ -1977,10 +1977,10 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
   const existingTicket = existingTickets?.[0];
 
   if (existingTicket) {
-    // Append to existing ticket
+    // Append to existing ticket and reopen if it was answered
     const separator = "\n───\n";
     const updatedMessage = existingTicket.message + separator + messageText;
-    const updateData: any = { message: updatedMessage, updated_at: new Date().toISOString() };
+    const updateData: any = { message: updatedMessage, status: "open", updated_at: new Date().toISOString() };
     if (imageUrl) updateData.image_url = imageUrl;
     const { error } = await supabase.from("support_tickets").update(updateData).eq("id", existingTicket.id);
     if (error) {
