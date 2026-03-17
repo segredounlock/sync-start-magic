@@ -186,17 +186,19 @@ function BronzeFireBadge({ size = 36 }: { size?: number }) {
       animate={{ y: [0, -2, 0] }}
       transition={{ duration: 1.5, repeat: Infinity }}
     >
-      {/* Rising embers */}
+      {/* Orbiting embers around medal */}
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
           className="absolute"
-          style={{ top: "60%", left: `${40 + (i % 3) * 10}%` }}
+          style={{ top: "50%", left: "50%", overflow: "visible" }}
           animate={{
-            y: [0, -30 - i * 5], x: [0, i % 2 === 0 ? 8 : -8],
-            opacity: [0, 1, 0], scale: [0.8, 1.2, 0],
+            x: [0, Math.cos((i * 60 * Math.PI) / 180) * 22],
+            y: [0, Math.sin((i * 60 * Math.PI) / 180) * 22],
+            scale: [0, 1.2, 0],
+            opacity: [0, 1, 0],
           }}
-          transition={{ duration: 1.5 + i * 0.2, repeat: Infinity, delay: i * 0.25 }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.25 }}
         >
           <div className="w-1 h-1 rounded-full bg-gradient-to-t from-orange-600 via-yellow-400 to-yellow-200 shadow-[0_0_4px_2px_rgba(255,150,50,0.8)]" />
         </motion.div>
@@ -212,12 +214,6 @@ function BronzeFireBadge({ size = 36 }: { size?: number }) {
 
       {/* Medal icon only */}
       <div className="relative flex items-center justify-center">
-        <motion.div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(0deg, rgba(255,100,0,0.3) 0%, transparent 50%, rgba(255,200,100,0.2) 100%)" }}
-          animate={{ opacity: [0.3, 0.7, 0.4, 0.8, 0.3] }}
-          transition={{ duration: 0.8, repeat: Infinity }}
-        />
         <motion.div
           animate={{ scale: [1, 1.1, 1.05, 1.12, 1], rotate: [0, -3, 3, -2, 0] }}
           transition={{ duration: 1.2, repeat: Infinity }}
