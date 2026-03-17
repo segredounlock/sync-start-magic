@@ -31,12 +31,13 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, DollarSign, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
-  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info,
+  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info, Headphones,
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
 import { ScratchCard } from "@/components/ScratchCard";
 import { ResellerFeeConfig } from "@/components/ResellerFeeConfig";
+import { SupportTab } from "@/components/settings/SupportTab";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -51,7 +52,7 @@ import { operadoraColors, safeValor } from "@/lib/utils";
 import { applyCurrencyMask, parseCurrencyMask } from "@/lib/currencyMask";
 import { handleExpiredSession } from "@/lib/sessionGuard";
 
-type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha";
+type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha" | "suporte";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -856,7 +857,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const tabTitle: Record<PainelTab, string> = {
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
     extrato: "Carteira", contatos: "Configurações", status: "Status do Sistema",
-    atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede", raspadinha: "Raspadinha",
+    atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede", raspadinha: "Raspadinha", suporte: "Suporte",
   };
 
   const selectTab = (nextTab: PainelTab) => { setTab(nextTab); setMenuOpen(false); setRecargaResult(null); };
@@ -926,7 +927,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       <div className={`${size} rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold ${textSize} shrink-0`}>
         {userInitial}
       </div>
-    )
+          )
   );
 
   return (
@@ -2336,6 +2337,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
           )}
 
+          {/* ===== TAB: SUPORTE ===== */}
+          {tab === "suporte" && user && (
+            <div className="space-y-6">
+              <SupportTab userId={user.id} />
+            </div>
+          )}
 
           {/* ===== TAB: STATUS ===== */}
           {tab === "status" && (
@@ -2501,6 +2508,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
+          { key: "suporte", label: "Suporte", icon: Headphones, color: "text-primary", animation: "float" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
           
         ] as NavItem[]}
