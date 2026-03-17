@@ -31,11 +31,12 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, DollarSign, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
-  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info, Headphones,
+  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info, Headphones, Trophy,
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
 import { ScratchCard } from "@/components/ScratchCard";
+import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { ResellerFeeConfig } from "@/components/ResellerFeeConfig";
 import { SupportTab } from "@/components/settings/SupportTab";
 const ClientSupport = lazy(() => import("@/pages/ClientSupport"));
@@ -53,7 +54,7 @@ import { operadoraColors, safeValor } from "@/lib/utils";
 import { applyCurrencyMask, parseCurrencyMask } from "@/lib/currencyMask";
 import { handleExpiredSession } from "@/lib/sessionGuard";
 
-type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha" | "suporte";
+type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "ranking" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha" | "suporte";
 
 interface RevendedorPainelProps {
   resellerId?: string;
@@ -843,6 +844,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "recarga", label: "Fazer Recarga", icon: Send, color: "text-blue-400" },
     { key: "historico", label: "Meus Pedidos", icon: History, color: "text-yellow-400" },
     { key: "extrato", label: "Carteira", icon: Landmark, color: "text-emerald-400" },
+    { key: "ranking", label: "Ranking", icon: Trophy, color: "text-yellow-400" },
     { key: "addSaldo", label: "Depositar", icon: CreditCard, color: "text-cyan-400", dashed: true },
     { key: "contatos", label: "Configurações", icon: Settings, color: "text-purple-400" },
     { key: "status", label: "Status do Sistema", icon: Activity, color: "text-sky-400" },
@@ -858,7 +860,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const tabTitle: Record<PainelTab, string> = {
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
-    extrato: "Carteira", contatos: "Configurações", status: "Status do Sistema",
+    extrato: "Carteira", ranking: "Ranking", contatos: "Configurações", status: "Status do Sistema",
     atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede", raspadinha: "Raspadinha", suporte: "Suporte",
   };
 
@@ -2475,6 +2477,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <div className="space-y-6">
               <AtualizacoesSection />
             </div>
+          )}
+
+          {/* ===== TAB: RANKING ===== */}
+          {tab === "ranking" && user && (
+            <TopRankingPodium userId={user.id} />
           )}
 
           {/* ===== TAB: RASPADINHA ===== */}
