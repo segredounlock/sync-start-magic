@@ -599,7 +599,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   }`}
                 >
                   <span className={`text-[10px] font-semibold w-4 text-right ${isTopThree ? "text-foreground" : "text-muted-foreground"}`}>{position}</span>
-                  <div className="relative">
+                  <div className="relative" style={{ overflow: "visible" }}>
                     {user.avatar_url ? (
                       <img src={user.avatar_url} alt="" className={`${isTopThree ? "w-11 h-11" : "w-9 h-9"} rounded-full object-cover ring-1 ring-border`} />
                     ) : (
@@ -608,6 +608,22 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       </div>
                     )}
                     {isTopThree && <AvatarFlash index={i} />}
+                    {/* Badges for top 3 */}
+                    {i === 0 && (
+                      <motion.div className="absolute -top-3 -right-1 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 15 }}>
+                        <GoldFloatingCrown size={22} />
+                      </motion.div>
+                    )}
+                    {i === 1 && (
+                      <motion.div className="absolute -top-1 -right-1 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 15 }}>
+                        <SilverIceBadge size={20} />
+                      </motion.div>
+                    )}
+                    {i === 2 && (
+                      <motion.div className="absolute -top-1 -right-1 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 15 }}>
+                        <BronzeFireBadge size={20} />
+                      </motion.div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
