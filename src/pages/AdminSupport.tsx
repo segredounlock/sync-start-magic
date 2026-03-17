@@ -206,6 +206,7 @@ export default function AdminSupport() {
 
   // Profiles
   const [senderProfiles, setSenderProfiles] = useState<Record<string, SenderProfile>>({});
+  const [ticketProfiles, setTicketProfiles] = useState<Record<string, SenderProfile>>({});
 
   // Message input
   const [msgText, setMsgText] = useState("");
