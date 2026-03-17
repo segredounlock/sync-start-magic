@@ -11,6 +11,7 @@ import {
   Shield, Send, ArrowLeft, Loader2, Image, X, Search, Filter,
   ChevronRight, PanelRightClose, PanelRightOpen, Clock, Activity,
   CheckCircle2, XCircle, CornerDownRight, BadgeCheck, User as UserIcon,
+  MoreVertical, Settings2, Zap, Flag,
 } from "lucide-react";
 
 /* ═══ Types ═══ */
@@ -193,6 +194,8 @@ export default function AdminSupport() {
 
   // Info panel
   const [showInfoPanel, setShowInfoPanel] = useState(true);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
 
   // Unread counts
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
@@ -278,6 +281,16 @@ export default function AdminSupport() {
   }, []);
 
   useEffect(() => { fetchTickets(); fetchUnreadCounts(); }, [fetchTickets, fetchUnreadCounts]);
+
+  // Close header menu on click outside
+  useEffect(() => {
+    if (!showHeaderMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target as Node)) setShowHeaderMenu(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showHeaderMenu]);
 
   /* ─── Deep linking ─── */
   useEffect(() => {
@@ -523,9 +536,17 @@ export default function AdminSupport() {
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-border space-y-2">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-cyan-500" />
-          <h2 className="text-sm font-bold text-foreground flex-1">Central de Suporte</h2>
+          <Flag className="w-5 h-5 text-primary" />
+          <h2 className="text-sm font-bold text-foreground">Suporte</h2>
+          {stats.open > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold min-w-[20px] text-center">
+              {stats.open}
+            </span>
+          )}
+          <span className="flex-1" />
+          <span className="text-[10px] text-muted-foreground">Ativo</span>
         </div>
+        <p className="text-[10px] text-muted-foreground -mt-1">Central de atendimento ao cliente</p>
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -577,14 +598,68 @@ export default function AdminSupport() {
         <button onClick={() => { setMobileView("list"); setSelectedTicket(null); }} className="md:hidden p-1.5 rounded-lg hover:bg-muted">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate">{selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário"}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.subject || "Sem assunto"}</p>
+        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+          {(selectedTicket.telegram_first_name || selectedTicket.telegram_username || "U").charAt(0).toUpperCase()}
         </div>
-        <button onClick={() => { setShowInfoPanel(!showInfoPanel); if (isMobile) setMobileView("info"); }}
-          className="p-2 rounded-lg hover:bg-muted transition-colors">
-          {showInfoPanel ? <PanelRightClose className="w-4 h-4 text-muted-foreground" /> : <PanelRightOpen className="w-4 h-4 text-muted-foreground" />}
-        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground truncate">{selectedTicket.subject || "Sem assunto"}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário"}</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-muted/50 border border-border/50">
+            <span className={`h-1.5 w-1.5 rounded-full ${STATUS_CONFIG[selectedTicket.status]?.dot || "bg-muted-foreground"}`} />
+            <span className={STATUS_CONFIG[selectedTicket.status]?.color || "text-muted-foreground"}>{STATUS_CONFIG[selectedTicket.status]?.label || selectedTicket.status}</span>
+          </span>
+          {/* Dropdown menu */}
+          <div className="relative" ref={headerMenuRef}>
+            <button onClick={() => setShowHeaderMenu(!showHeaderMenu)} className="p-2 rounded-lg hover:bg-muted transition-colors">
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <AnimatePresence>
+              {showHeaderMenu && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-1 w-52 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-2">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider px-2 py-1.5">Mudar status</p>
+                    {Object.entries(STATUS_CONFIG).map(([k, v]) => (
+                      <button
+                        key={k}
+                        onClick={() => { updateStatus(k); setShowHeaderMenu(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:bg-muted ${selectedTicket.status === k ? "bg-muted" : ""}`}
+                      >
+                        <span className={`h-2 w-2 rounded-full ${v.dot}`} />
+                        <span className={v.color}>{v.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-border p-2">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider px-2 py-1.5">Encaminhar para</p>
+                    {Object.entries(DEPARTMENTS).map(([k, v]) => (
+                      <button
+                        key={k}
+                        onClick={() => { forwardToDepartment(k); setShowHeaderMenu(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:bg-muted ${selectedTicket.department === k ? "bg-muted" : ""}`}
+                      >
+                        <span>{v.icon}</span>
+                        <span className={v.color}>{v.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <button onClick={() => { setShowInfoPanel(!showInfoPanel); if (isMobile) setMobileView("info"); }}
+            className="p-2 rounded-lg hover:bg-muted transition-colors">
+            <Settings2 className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -640,85 +715,112 @@ export default function AdminSupport() {
   );
 
   /* ─── Info Panel ─── */
-  const infoPanel = selectedTicket ? (
-    <div className="h-full overflow-y-auto p-4 space-y-4 border-l border-border">
-      <div className="flex items-center gap-2 md:hidden">
-        <button onClick={() => setMobileView("chat")} className="p-1.5 rounded-lg hover:bg-muted">
-          <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <p className="text-sm font-bold text-foreground">Detalhes</p>
-      </div>
+  const infoPanel = selectedTicket ? (() => {
+    const statusCfg = STATUS_CONFIG[selectedTicket.status] || STATUS_CONFIG.open;
+    const deptCfg = DEPARTMENTS[selectedTicket.department] || DEPARTMENTS.support;
+    const userName = selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário";
+    const priorityLabel: Record<string, string> = { low: "Baixa", medium: "Média", high: "Alta", urgent: "Urgente" };
+    const timeSince = (d: string) => {
+      const diff = Date.now() - new Date(d).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `há ${mins} min`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `há ${hours}h`;
+      const days = Math.floor(hours / 24);
+      return `há ${days} dia${days > 1 ? "s" : ""}`;
+    };
 
-      {/* User info */}
-      <div className="text-center space-y-2">
-        <div className="w-14 h-14 rounded-full bg-muted mx-auto flex items-center justify-center">
-          <UserIcon className="w-7 h-7 text-muted-foreground" />
+    return (
+      <div className="h-full overflow-y-auto border-l border-border">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2 md:hidden mb-2">
+            <button onClick={() => setMobileView("chat")} className="p-1.5 rounded-lg hover:bg-muted">
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+          <h3 className="text-sm font-bold text-foreground">Detalhes do Ticket</h3>
         </div>
-        <p className="text-sm font-bold text-foreground">{selectedTicket.telegram_first_name || "Usuário"}</p>
-        {selectedTicket.telegram_username && (
-          <p className="text-[10px] text-muted-foreground">@{selectedTicket.telegram_username}</p>
-        )}
-      </div>
 
-      {/* Status */}
-      <div className="space-y-2">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Status</p>
-        <select
-          value={selectedTicket.status}
-          onChange={(e) => updateStatus(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        >
-          {Object.entries(STATUS_CONFIG).map(([k, v]) => (
-            <option key={k} value={k}>{v.label}</option>
-          ))}
-        </select>
-      </div>
+        <div className="p-4 space-y-5">
+          {/* User card */}
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/50">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-foreground truncate">{userName}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {selectedTicket.telegram_username ? `@${selectedTicket.telegram_username}` : "Cliente"}
+              </p>
+            </div>
+          </div>
 
-      {/* Department */}
-      <div className="space-y-2">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Departamento</p>
-        <select
-          value={selectedTicket.department}
-          onChange={(e) => forwardToDepartment(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        >
-          {Object.entries(DEPARTMENTS).map(([k, v]) => (
-            <option key={k} value={k}>{v.icon} {v.label}</option>
-          ))}
-        </select>
-      </div>
+          {/* Status */}
+          <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Status</p>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50">
+              <span className={`h-2.5 w-2.5 rounded-full ${statusCfg.dot}`} />
+              <span className={`text-xs font-semibold ${statusCfg.color}`}>{statusCfg.label}</span>
+            </div>
+          </div>
 
-      {/* Metadata */}
-      <div className="space-y-1.5 text-[10px] text-muted-foreground">
-        <p>📅 Criado: {formatDateTimeBR(selectedTicket.created_at)}</p>
-        <p>🔄 Atualizado: {formatDateTimeBR(selectedTicket.updated_at)}</p>
-        {selectedTicket.resolved_at && <p>✅ Resolvido: {formatDateTimeBR(selectedTicket.resolved_at)}</p>}
-        <p>⚡ Prioridade: {selectedTicket.priority}</p>
-      </div>
+          {/* Department */}
+          <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Setor</p>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50">
+              <span>{deptCfg.icon}</span>
+              <span className="text-xs font-semibold text-foreground">{deptCfg.label}</span>
+            </div>
+          </div>
 
-      {/* Quick actions */}
-      <div className="space-y-2">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Ações Rápidas</p>
-        <div className="grid grid-cols-2 gap-1.5">
-          <button onClick={() => updateStatus("in_progress")} className="px-2 py-2 rounded-lg bg-warning/10 text-warning text-[10px] font-bold hover:bg-warning/20">
-            <Clock className="w-3 h-3 mx-auto mb-0.5" /> Em Andamento
-          </button>
-          <button onClick={() => updateStatus("resolved")} className="px-2 py-2 rounded-lg bg-success/10 text-success text-[10px] font-bold hover:bg-success/20">
-            <CheckCircle2 className="w-3 h-3 mx-auto mb-0.5" /> Resolvido
-          </button>
-          <button onClick={() => updateStatus("closed")} className="px-2 py-2 rounded-lg bg-destructive/10 text-destructive text-[10px] font-bold hover:bg-destructive/20">
-            <XCircle className="w-3 h-3 mx-auto mb-0.5" /> Fechar
-          </button>
-          <button onClick={() => updateStatus("open")} className="px-2 py-2 rounded-lg bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/20">
-            <CornerDownRight className="w-3 h-3 mx-auto mb-0.5" /> Reabrir
-          </button>
+          {/* Metadata */}
+          <div className="space-y-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground/60">📅</span>
+              <span>Aberto em: {formatDateTimeBR(selectedTicket.created_at)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground/60">🕐</span>
+              <span>Atualizado: {timeSince(selectedTicket.updated_at)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground/60">◇</span>
+              <span>Prioridade: {priorityLabel[selectedTicket.priority] || selectedTicket.priority}</span>
+            </div>
+          </div>
+
+          {/* Quick actions */}
+          <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Ações Rápidas</p>
+            <div className="space-y-1.5">
+              <button onClick={() => updateStatus("resolved")}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted/30 border border-border/50 text-xs font-bold text-foreground hover:bg-success/10 hover:border-success/30 transition-colors">
+                <CheckCircle2 className="w-4 h-4 text-success" />
+                Marcar como Resolvido
+              </button>
+              <button onClick={() => updateStatus("closed")}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted/30 border border-border/50 text-xs font-bold text-foreground hover:bg-destructive/10 hover:border-destructive/30 transition-colors">
+                <XCircle className="w-4 h-4 text-destructive" />
+                Fechar Ticket
+              </button>
+              <button onClick={() => updateStatus("in_progress")}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted/30 border border-border/50 text-xs font-bold text-foreground hover:bg-warning/10 hover:border-warning/30 transition-colors">
+                <Zap className="w-4 h-4 text-warning" />
+                Em Andamento
+              </button>
+            </div>
+          </div>
+
+          {/* Templates */}
+          <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Respostas Rápidas</p>
+            <SupportTemplates onSelectTemplate={(t) => setMsgText(t)} />
+          </div>
         </div>
       </div>
-
-      {/* Templates */}
-      <SupportTemplates onSelectTemplate={(t) => setMsgText(t)} />
-    </div>
-  ) : null;
+    );
+  })() : null;
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-background rounded-2xl border border-border overflow-hidden">
