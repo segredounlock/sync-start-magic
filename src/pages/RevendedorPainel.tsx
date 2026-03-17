@@ -51,7 +51,7 @@ import { operadoraColors, safeValor } from "@/lib/utils";
 import { applyCurrencyMask, parseCurrencyMask } from "@/lib/currencyMask";
 import { handleExpiredSession } from "@/lib/sessionGuard";
 
-type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha";
+type PainelTab = "dashboard" | "recarga" | "addSaldo" | "historico" | "extrato" | "contatos" | "status" | "atualizacoes" | "meusprecos" | "minharede" | "raspadinha" | "suporte";
 
 interface RevendedorPainelProps {
   resellerId?: string;
