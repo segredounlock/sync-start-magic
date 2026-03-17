@@ -2001,7 +2001,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <motion.tr key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                               className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
                               onClick={() => setSelectedRecarga(r)}>
-                              <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
+                              <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(getRecargaTime(r))}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "—").toUpperCase()}</span></td>
                               <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
