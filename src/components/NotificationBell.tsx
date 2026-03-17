@@ -107,13 +107,25 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // Group by date
-  const grouped = notifications.reduce<Record<string, AppNotification[]>>((acc, n) => {
+  // Sort notifications by created_at descending, then group by date
+  const sorted = [...notifications].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  
+  const grouped: [string, AppNotification[]][] = [];
+  const groupMap = new Map<string, AppNotification[]>();
+  const groupOrder: string[] = [];
+  
+  for (const n of sorted) {
     const key = fmtDate(n.created_at);
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(n);
-    return acc;
-  }, {});
+    if (!groupMap.has(key)) {
+      groupMap.set(key, []);
+      groupOrder.push(key);
+    }
+    groupMap.get(key)!.push(n);
+  }
+  
+  for (const key of groupOrder) {
+    grouped.push([key, groupMap.get(key)!]);
+  }
 
   return (
     <div className="relative" ref={panelRef}>
