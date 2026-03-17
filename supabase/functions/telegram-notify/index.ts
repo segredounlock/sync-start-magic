@@ -492,7 +492,8 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Sending ${type} text notification to telegram_id=${targetTelegramId}`);
-    const sent = await sendTelegramMessage(BOT_TOKEN, targetTelegramId, message);
+    const effectId = data?.message_effect_id || undefined;
+    const sent = await sendTelegramMessage(BOT_TOKEN, targetTelegramId, message, { message_effect_id: effectId });
 
     return new Response(
       JSON.stringify({ success: sent }),
