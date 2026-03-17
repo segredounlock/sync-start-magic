@@ -606,7 +606,7 @@ export default function AdminSupport() {
           <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário"}</p>
         </div>
         <div className="flex items-center gap-1">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold ${STATUS_CONFIG[selectedTicket.status]?.dot || "bg-muted"} bg-opacity-20`}>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-muted/50 border border-border/50">
             <span className={`h-1.5 w-1.5 rounded-full ${STATUS_CONFIG[selectedTicket.status]?.dot || "bg-muted-foreground"}`} />
             <span className={STATUS_CONFIG[selectedTicket.status]?.color || "text-muted-foreground"}>{STATUS_CONFIG[selectedTicket.status]?.label || selectedTicket.status}</span>
           </span>
