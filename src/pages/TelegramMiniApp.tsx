@@ -24,7 +24,7 @@ import { ScratchCard } from "@/components/ScratchCard";
 import { Ticket } from "lucide-react";
 import { useSeasonalTheme, SEASONAL_BUTTON_EMOJIS } from "@/hooks/useSeasonalTheme";
 import { SEASONAL_THEMES, type SeasonalThemeKey } from "@/components/SeasonalEffects";
-import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR } from "@/lib/timezone";
+import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR, getRecargaTime } from "@/lib/timezone";
 
 declare global {
   interface Window {
@@ -2125,7 +2125,7 @@ export default function TelegramMiniApp() {
                           { icon: Zap, label: "Operadora", value: (viewingReceipt.operadora || "—").toUpperCase() },
                           { icon: Wallet, label: "Valor", value: formatCurrency(viewingReceipt.valor), highlight: true },
                           { icon: Hash, label: "ID do Pedido", value: viewingReceipt.external_id || viewingReceipt.id.slice(0, 8) },
-                          { icon: Clock, label: "Data", value: formatDateTimeBR(viewingReceipt.created_at) },
+                          { icon: Clock, label: "Data", value: formatDateTimeBR(getRecargaTime(viewingReceipt)) },
                         ].map((row) => (
                           <div key={row.label} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid color-mix(in srgb, var(--tg-text) 5%, transparent)" }}>
                             <div className="flex items-center gap-2">

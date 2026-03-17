@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
-import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateFullBR, formatTimeBR, formatFullDateTimeBR } from "@/lib/timezone";
+import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateFullBR, formatTimeBR, formatFullDateTimeBR, getRecargaTime } from "@/lib/timezone";
 import { useEffect, useState, useCallback, useMemo, useRef, lazy, Suspense } from "react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { styledToast as toast } from "@/lib/toast";
@@ -704,7 +704,7 @@ export default function Principal() {
     analyticsLoaded.current = true;
     try {
       const [recData, txRows] = await Promise.all([
-        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
+        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at, user_id", orderBy: { column: "created_at", ascending: false } }),
         fetchAllRows("transactions", {
           select: "amount, status, type",
           filters: (q: any) => q.eq("status", "completed").eq("type", "deposit"),
@@ -1576,7 +1576,7 @@ export default function Principal() {
                               <p className="text-xs font-medium text-foreground truncate">
                                 {rev?.nome || rev?.email?.split("@")[0] || "—"} • <span className={r.operadora?.toLowerCase().includes("tim") ? "text-blue-400" : r.operadora?.toLowerCase().includes("vivo") ? "text-purple-400" : r.operadora?.toLowerCase().includes("claro") ? "text-red-400" : "text-foreground"}>{(r.operadora || "—").toUpperCase()}</span>
                               </p>
-                              <p className="text-[10px] text-muted-foreground">{r.telefone} • {fmtDate(r.created_at)}</p>
+                              <p className="text-[10px] text-muted-foreground">{r.telefone} • {fmtDate(getRecargaTime(r))}</p>
                             </div>
                             <span className="text-sm font-bold font-mono text-foreground shrink-0"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></span>
                           </div>
@@ -2319,10 +2319,10 @@ export default function Principal() {
                                   <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                  <span className="text-[10px] text-muted-foreground">{fmtDate(r.created_at)}</span>
+                                  <span className="text-[10px] text-muted-foreground">{fmtDate(getRecargaTime(r))}</span>
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold font-mono text-sm text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></span>
-                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(getRecargaTime(r))} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
@@ -2350,7 +2350,7 @@ export default function Principal() {
                             <tbody>
                               {filteredRecs.slice(0, 25).map(r => (
                                 <tr key={r.id} className="border-b border-border last:border-0">
-                                  <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
+                                  <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(getRecargaTime(r))}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
                                   <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
@@ -2360,7 +2360,7 @@ export default function Principal() {
                                     <StatusBadge status={r.status} type="recarga" className="text-xs" />
                                   </td>
                                   <td className="px-1 py-2">
-                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(getRecargaTime(r))} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                   </td>
                                 </tr>
                               ))}
@@ -4159,7 +4159,7 @@ export default function Principal() {
                               <span className="text-muted-foreground">{r.operadora || "—"} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
                               <span className="font-bold font-mono tabular-nums text-foreground">{fmt(Number(r.valor))}</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(r.created_at)}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(getRecargaTime(r))}</p>
                           </motion.div>
                         ))}
                       </div>

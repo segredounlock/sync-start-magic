@@ -241,3 +241,15 @@ export function formatLastSeenBR(dateInput: string | Date): string {
   if (diffH < 24) return `há ${diffH}h`;
   return formatDateShortBR(d) + " " + formatTimeBR(d);
 }
+
+/**
+ * Returns the most relevant timestamp for a recarga:
+ * - completed_at for completed/concluida (with fallback to created_at)
+ * - created_at for pending/falha
+ */
+export function getRecargaTime(r: { status: string; completed_at?: string | null; created_at: string }): string {
+  if ((r.status === "completed" || r.status === "concluida") && r.completed_at) {
+    return r.completed_at;
+  }
+  return r.created_at;
+}

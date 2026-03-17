@@ -44,7 +44,7 @@ const ClientSupport = lazy(() => import("@/pages/ClientSupport"));
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { appToast, styledToast as toast } from "@/lib/toast";
-import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
+import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey, getRecargaTime } from "@/lib/timezone";
 
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
@@ -1831,7 +1831,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "Operadora").toUpperCase()}</span>
                             </div>
                             <p className="text-sm text-muted-foreground font-mono">{r.telefone}</p>
-                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(getRecargaTime(r))}</p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="font-bold text-foreground"><Currency value={safeValor(r)} duration={600} /></p>
@@ -1962,7 +1962,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                   <StatusBadge status={r.status} type="recarga" className="px-2.5 py-1 text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-border">
-                                  <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
+                                  <span className="text-xs text-muted-foreground">{fmtDate(getRecargaTime(r))}</span>
                                   <div className="flex items-center gap-2">
                                     {(r.status === "completed" || r.status === "concluida") && (
                                       <button
@@ -2001,7 +2001,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                             <motion.tr key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                               className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
                               onClick={() => setSelectedRecarga(r)}>
-                              <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
+                              <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(getRecargaTime(r))}</td>
                               <td className="px-4 py-3 font-mono text-foreground">{r.telefone}</td>
                               <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "—").toUpperCase()}</span></td>
                               <td className="px-4 py-3 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
@@ -2072,7 +2072,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Data</span>
-                            <span className="text-sm text-foreground">{fmtDate(r.created_at)}</span>
+                            <span className="text-sm text-foreground">{fmtDate(getRecargaTime(r))}</span>
                           </div>
                           <div className="flex justify-between items-center py-2">
                             <span className="text-sm text-muted-foreground">ID</span>
