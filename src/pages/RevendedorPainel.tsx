@@ -2481,7 +2481,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
           {/* ===== TAB: RANKING ===== */}
           {tab === "ranking" && user && (
-            <TopRankingPodium userId={user.id} />
+            <TopRankingPodium userId={user.id} showPodium={false} />
           )}
 
           {/* ===== TAB: RASPADINHA ===== */}
