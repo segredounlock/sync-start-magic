@@ -201,6 +201,10 @@ export default function AdminSupport() {
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const headerMenuRef = useRef<HTMLDivElement>(null);
 
+  // Support enabled toggle
+  const [supportEnabled, setSupportEnabled] = useState(true);
+  const [togglingSupport, setTogglingSupport] = useState(false);
+
   // Unread counts
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
 
