@@ -2340,6 +2340,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: SUPORTE ===== */}
           {tab === "suporte" && user && (
             <div className="space-y-6">
+              <MyTickets userId={user.id} />
               <SupportTab userId={user.id} />
             </div>
           )}
