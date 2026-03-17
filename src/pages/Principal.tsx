@@ -4722,6 +4722,9 @@ export default function Principal() {
           {/* ===== REDES ===== */}
           {view === "redes" && <RedesSection />}
 
+          {/* ===== SUPORTE ===== */}
+          {view === "suporte" && <SupportSection onCountUpdate={setPendingSupportCount} />}
+
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
         </main>
