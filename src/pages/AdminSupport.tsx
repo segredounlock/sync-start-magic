@@ -151,8 +151,18 @@ function AdminMessageBubble({ msg, profile, isAdmin }: { msg: Message; profile?:
   if (lastIdx < msg.message.length) parts.push(msg.message.slice(lastIdx));
 
   return (
-    <div className={`flex ${isStaff ? "justify-end" : "justify-start"} mb-2`}>
-      <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isStaff ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted/60 text-foreground rounded-bl-md"}`}>
+    <div className={`flex ${isStaff ? "justify-end" : "justify-start"} mb-3 gap-2`}>
+      {/* Avatar for client (left side) */}
+      {!isStaff && (
+        profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 mt-1" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-foreground shrink-0 mt-1">
+            {senderName.charAt(0).toUpperCase()}
+          </div>
+        )
+      )}
+      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${isStaff ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted/60 text-foreground rounded-bl-md"}`}>
         <div className="flex items-center gap-1.5 mb-1">
           <span className="text-[11px] font-semibold">{senderName}</span>
           {roleCfg && (
@@ -177,6 +187,16 @@ function AdminMessageBubble({ msg, profile, isAdmin }: { msg: Message; profile?:
           {msg.is_read && " ✓✓"}
         </p>
       </div>
+      {/* Avatar for staff (right side) */}
+      {isStaff && (
+        profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 mt-1" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 mt-1">
+            {senderName.charAt(0).toUpperCase()}
+          </div>
+        )
+      )}
     </div>
   );
 }
