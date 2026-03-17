@@ -116,6 +116,7 @@ function DeferredEffects() {
     <Suspense fallback={null}>
       <SeasonalEffects />
       <PullToRefresh />
+      <FloatingSupportButton />
     </Suspense>
   );
 }
