@@ -303,7 +303,8 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { type, user_id, telegram_id: direct_telegram_id, data } = await req.json();
+    const body = await req.json();
+    const { type, user_id, telegram_id: direct_telegram_id, data, chat_id: direct_chat_id, message: direct_message, message_effect_id: direct_effect_id } = body;
 
     // Resolve bot token
     const { data: tokenRow } = await supabase
