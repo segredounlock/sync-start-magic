@@ -1962,7 +1962,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                   <StatusBadge status={r.status} type="recarga" className="px-2.5 py-1 text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-border">
-                                  <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
+                                  <span className="text-xs text-muted-foreground">{fmtDate(getRecargaTime(r))}</span>
                                   <div className="flex items-center gap-2">
                                     {(r.status === "completed" || r.status === "concluida") && (
                                       <button
