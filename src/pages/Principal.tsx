@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { renderTelegramHtml } from "@/components/TextFormatToolbar";
 import { PinProtection } from "@/components/PinProtection";
 import AdminBankDashboard from "@/components/BankDashboard";
 import { SkeletonRow, SkeletonCard, SkeletonPricingGrid } from "@/components/Skeleton";
