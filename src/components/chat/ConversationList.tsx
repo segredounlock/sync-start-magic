@@ -110,7 +110,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
             <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">{fmtTime(conv.last_message_at)}</span>
           </div>
           <div className="flex items-center justify-between mt-0.5">
-            <span className="text-xs text-muted-foreground truncate">{conv.last_message_text || "Nova conversa"}</span>
+            <span className="text-xs text-muted-foreground truncate">{(conv.last_message_text || "Nova conversa").replace(/<[^>]*>/g, '')}</span>
           </div>
         </div>
       </motion.button>
