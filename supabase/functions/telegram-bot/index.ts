@@ -1923,7 +1923,7 @@ async function handleAjuda(supabase: any, token: string, chatId: number, telegra
 }
 
 async function handleSupportMessage(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number, photoFileId?: string | null) {
-  clearSession(supabase, chatIdStr);
+  // DO NOT clear session — keep support mode open until user sends /menu or a command
 
   let imageUrl: string | null = null;
 
@@ -1960,26 +1960,49 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
     return;
   }
 
-  // Save ticket to DB
-  const { error } = await supabase.from("support_tickets").insert({
-    telegram_chat_id: chatIdStr,
-    telegram_username: session.data?.telegram_username || null,
-    telegram_first_name: session.data?.telegram_first_name || null,
-    user_id: user?.id || null,
-    message: messageText,
-    image_url: imageUrl,
-    status: "open",
-  });
+  // Check if there's an existing open ticket for this user — append or create new
+  const { data: existingTickets } = await supabase.from("support_tickets")
+    .select("id, message")
+    .eq("telegram_chat_id", chatIdStr)
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-  if (error) {
-    console.error("[SUPPORT] Error saving ticket:", error.message);
-    await sendMessage(token, chatId, "❌ Erro ao enviar mensagem. Tente novamente.");
-    return;
+  const existingTicket = existingTickets?.[0];
+
+  if (existingTicket) {
+    // Append to existing ticket
+    const separator = "\n───\n";
+    const updatedMessage = existingTicket.message + separator + messageText;
+    const updateData: any = { message: updatedMessage, updated_at: new Date().toISOString() };
+    if (imageUrl) updateData.image_url = imageUrl;
+    const { error } = await supabase.from("support_tickets").update(updateData).eq("id", existingTicket.id);
+    if (error) {
+      console.error("[SUPPORT] Error updating ticket:", error.message);
+      await sendMessage(token, chatId, "❌ Erro ao enviar mensagem. Tente novamente.");
+      return;
+    }
+  } else {
+    // Create new ticket
+    const { error } = await supabase.from("support_tickets").insert({
+      telegram_chat_id: chatIdStr,
+      telegram_username: session.data?.telegram_username || null,
+      telegram_first_name: session.data?.telegram_first_name || null,
+      user_id: user?.id || null,
+      message: messageText,
+      image_url: imageUrl,
+      status: "open",
+    });
+    if (error) {
+      console.error("[SUPPORT] Error saving ticket:", error.message);
+      await sendMessage(token, chatId, "❌ Erro ao enviar mensagem. Tente novamente.");
+      return;
+    }
   }
 
   await sendMessageWithKeyboard(token, chatId,
-    "✅ <b>Mensagem enviada ao suporte!</b>\n\nAguarde a resposta. Você será notificado aqui mesmo no Telegram.",
-    [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+    "✅ <b>Mensagem enviada ao suporte!</b>\n\nVocê pode continuar enviando mensagens ou fotos.\nPara sair do suporte, use /menu ou clique abaixo.",
+    [[{ text: "❌ Sair do Suporte", callback_data: "menu_main" }, { text: "📖 Menu", callback_data: "menu_main" }]]
   );
 
   // Notify admin via Telegram (fire-and-forget)
@@ -1988,8 +2011,9 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
   const userTag = session.data?.telegram_username ? ` (@${session.data.telegram_username})` : "";
   const photoTag = imageUrl ? "\n📷 <i>Com imagem anexada</i>" : "";
   const msgPreview = messageText.length > 300 ? messageText.slice(0, 300) + "…" : messageText;
+  const ticketLabel = existingTicket ? "📩 <b>Nova mensagem no Suporte</b>" : "🆘 <b>Novo Ticket de Suporte</b>";
   sendMessage(token, adminChatId,
-    `🆘 <b>Novo Ticket de Suporte</b>\n\n👤 ${userName}${userTag}\n\n💬 <i>${msgPreview}</i>${photoTag}`
+    `${ticketLabel}\n\n👤 ${userName}${userTag}\n\n💬 <i>${msgPreview}</i>${photoTag}`
   ).catch(() => {});
 }
 
