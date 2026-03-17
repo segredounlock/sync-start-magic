@@ -13,7 +13,7 @@ import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from 
 import { PromoBanner } from "@/components/PromoBanner";
 import { SaquesSection } from "@/components/SaquesSection";
 import { RedesSection } from "@/components/RedesSection";
-import { SupportSection } from "@/components/SupportSection";
+const AdminSupport = lazy(() => import("@/pages/AdminSupport"));
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
