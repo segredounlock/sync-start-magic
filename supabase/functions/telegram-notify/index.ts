@@ -244,11 +244,14 @@ async function generateReceiptPng(data: any): Promise<Uint8Array | null> {
 }
 
 // ── Telegram helpers ────────────────────────────────────
-async function sendTelegramMessage(token: string, chatId: string | number, text: string) {
+async function sendTelegramMessage(token: string, chatId: string | number, text: string, opts?: { message_effect_id?: string; reply_markup?: any }) {
+  const body: any = { chat_id: chatId, text, parse_mode: "HTML" };
+  if (opts?.message_effect_id) body.message_effect_id = opts.message_effect_id;
+  if (opts?.reply_markup) body.reply_markup = opts.reply_markup;
   const resp = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+    body: JSON.stringify(body),
   });
   if (!resp.ok) {
     const errBody = await resp.text();
