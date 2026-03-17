@@ -615,22 +615,22 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       </motion.div>
                     )}
                     {i === 1 && (
-                      <motion.div className="absolute -top-1 -left-2 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 15 }}>
-                        <SilverIceBadge size={20} />
+                      <motion.div className="absolute -top-1 -left-1.5 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 15 }}>
+                        <SilverIceBadge size={16} />
                       </motion.div>
                     )}
                     {i === 2 && (
-                      <motion.div className="absolute -top-1 -left-2 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 15 }}>
-                        <BronzeFireBadge size={20} />
+                      <motion.div className="absolute -top-1 -left-1.5 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 15 }}>
+                        <BronzeFireBadge size={16} />
                       </motion.div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
-                      {user.nome}
+                      <span className="truncate">{user.nome}</span>
                       {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
                       {isCurrentUser && (
-                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold ml-1">Você</span>
+                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0">Você</span>
                       )}
                     </p>
                   </div>
