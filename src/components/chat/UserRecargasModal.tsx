@@ -55,7 +55,41 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
     { value: "elite", label: "Elite", icon: "🏆" },
   ];
 
-  useEffect(() => {
+  const AVAILABLE_ROLES = [
+    { value: "admin", label: "Admin", color: "text-red-400", bg: "bg-red-500/15" },
+    { value: "revendedor", label: "Revendedor", color: "text-blue-400", bg: "bg-blue-500/15" },
+    { value: "suporte", label: "Suporte", color: "text-amber-400", bg: "bg-amber-500/15" },
+    { value: "cliente", label: "Cliente", color: "text-emerald-400", bg: "bg-emerald-500/15" },
+    { value: "usuario", label: "Usuário", color: "text-muted-foreground", bg: "bg-muted" },
+  ];
+
+  const handleChangeRole = async (newRole: string) => {
+    if (changingRole || newRole === userRole) { setShowRoleDropdown(false); return; }
+    setChangingRole(true);
+    setShowRoleDropdown(false);
+    try {
+      if (userRole && userRole !== "usuario") {
+        await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: userId, role: userRole, action: "remove" },
+        });
+      }
+      if (newRole !== "usuario") {
+        const res = await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: userId, role: newRole, action: "add" },
+        });
+        if (res.error) throw new Error(res.error.message);
+        const data = res.data as any;
+        if (data?.error) throw new Error(data.error);
+      }
+      setUserRole(newRole);
+      toast.success(`Cargo alterado para ${AVAILABLE_ROLES.find(r => r.value === newRole)?.label || newRole}`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar cargo");
+    } finally {
+      setChangingRole(false);
+    }
+  };
+
     const fetchData = async () => {
       const [recargasRes, saldoRes, profileRes, roleRes] = await Promise.all([
         supabase
