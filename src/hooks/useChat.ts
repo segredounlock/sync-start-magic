@@ -665,14 +665,17 @@ export function useChatMessages(conversationId: string | null) {
       throw err;
     }
 
-    const msgPreview = type === "text" ? content : type === "audio" ? "🎤 Áudio" : "📷 Imagem";
+    const msgPreview = type === "text" ? content.replace(/<[^>]*>/g, '') : type === "audio" ? "🎤 Áudio" : "📷 Imagem";
     const previewText = `${senderName}: ${msgPreview}`;
 
     // Non-blocking conversation update
     supabase.from("chat_conversations").update({
       last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + "…" : previewText,
       last_message_at: now,
-    }).eq("id", conversationId).then(() => {});
+      updated_at: now,
+    }).eq("id", conversationId).then(({ error }) => {
+      if (error) console.error("[CHAT] Failed to update conversation preview:", error.message);
+    });
   }, [conversationId, user, messages]);
 
   const toggleReaction = useCallback(async (messageId: string, emoji: string) => {
