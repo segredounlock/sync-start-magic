@@ -4627,7 +4627,7 @@ export default function Principal() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-foreground">{h.title}</h4>
-                              {h.message && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: h.message.replace(/</g, '&lt;').replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>').replace(/&lt;i&gt;/g, '<i>').replace(/&lt;\/i&gt;/g, '</i>') }} />}
+                              {h.message && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap [&_b]:font-bold [&_i]:italic [&_s]:line-through [&_code]:bg-muted/50 [&_code]:px-1 [&_code]:rounded [&_a]:text-primary [&_a]:underline" dangerouslySetInnerHTML={{ __html: renderTelegramHtml(h.message) }} />}
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
