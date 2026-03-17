@@ -704,7 +704,7 @@ export default function Principal() {
     analyticsLoaded.current = true;
     try {
       const [recData, txRows] = await Promise.all([
-        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, user_id", orderBy: { column: "created_at", ascending: false } }),
+        fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at, user_id", orderBy: { column: "created_at", ascending: false } }),
         fetchAllRows("transactions", {
           select: "amount, status, type",
           filters: (q: any) => q.eq("status", "completed").eq("type", "deposit"),
