@@ -670,7 +670,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-sm font-bold text-destructive">{user.total_recargas}</span>
-                    <p className="text-[9px] text-muted-foreground uppercase">compras</p>
+                    <p className="text-[9px] text-muted-foreground uppercase">recargas</p>
                   </div>
                 </motion.div>
               );
