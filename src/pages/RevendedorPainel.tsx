@@ -843,6 +843,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "recarga", label: "Fazer Recarga", icon: Send, color: "text-blue-400" },
     { key: "historico", label: "Meus Pedidos", icon: History, color: "text-yellow-400" },
     { key: "extrato", label: "Carteira", icon: Landmark, color: "text-emerald-400" },
+    { key: "ranking", label: "Ranking", icon: Trophy, color: "text-yellow-400" },
     { key: "addSaldo", label: "Depositar", icon: CreditCard, color: "text-cyan-400", dashed: true },
     { key: "contatos", label: "Configurações", icon: Settings, color: "text-purple-400" },
     { key: "status", label: "Status do Sistema", icon: Activity, color: "text-sky-400" },
