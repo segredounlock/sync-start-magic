@@ -11,6 +11,7 @@ import {
   Shield, Send, ArrowLeft, Loader2, Image, X, Search, Filter,
   ChevronRight, PanelRightClose, PanelRightOpen, Clock, Activity,
   CheckCircle2, XCircle, CornerDownRight, BadgeCheck, User as UserIcon,
+  MoreVertical, Settings2, Zap, Flag,
 } from "lucide-react";
 
 /* ═══ Types ═══ */
