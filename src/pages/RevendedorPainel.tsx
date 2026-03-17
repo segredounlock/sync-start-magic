@@ -2518,6 +2518,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-primary", animation: "bounce" },
           { key: "contatos", label: "Config", icon: Settings, color: "text-accent", animation: "float" },
           { key: "extrato", label: "Extrato", icon: Landmark, color: "text-success", animation: "bounce" },
+          { key: "ranking", label: "Ranking", icon: Trophy, color: "text-yellow-400", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
           { key: "suporte", label: "Suporte", icon: Headphones, color: "text-primary", animation: "float" },
