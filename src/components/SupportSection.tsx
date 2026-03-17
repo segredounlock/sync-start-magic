@@ -16,6 +16,7 @@ interface SupportTicket {
   telegram_first_name: string | null;
   user_id: string | null;
   message: string;
+  image_url: string | null;
   status: string;
   admin_reply: string | null;
   replied_at: string | null;
