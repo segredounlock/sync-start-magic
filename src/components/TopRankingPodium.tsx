@@ -281,9 +281,10 @@ function CountUp({ value, delay = 0 }: { value: number; delay?: number }) {
 interface TopRankingPodiumProps {
   userId: string;
   onViewFull?: () => void;
+  showPodium?: boolean;
 }
 
-export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) {
+export function TopRankingPodium({ userId, onViewFull, showPodium = true }: TopRankingPodiumProps) {
   const navigate = useNavigate();
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -449,6 +450,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
         </motion.div>
 
         {/* Podium: [2nd, 1st, 3rd] with dramatic entrance */}
+        {showPodium && (
         <div className="flex items-end justify-center gap-3 sm:gap-6 md:gap-10 pt-4 pb-2">
           {podiumOrder.map((user, displayIndex) => {
             const config = getPodiumConfig(displayIndex);
@@ -566,6 +568,68 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             );
           })}
         </div>
+        )}
+
+        {/* Full list when podium is hidden — show all positions including top 3 */}
+        {!showPodium && ranking.length > 0 && (
+          <div className="space-y-1 pt-2">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-foreground px-1 pb-2">
+              <Trophy className="w-4 h-4 text-yellow-500" />
+              Top {Math.min(ranking.length, 20)} Compradores
+            </h3>
+            {ranking.map((user, i) => {
+              const position = i + 1;
+              const isCurrentUser = user.user_id === userId;
+              const isTopThree = i < 3;
+              const rowStyles = [
+                "bg-gradient-to-r from-yellow-500/15 to-transparent border-l-2 border-l-yellow-500",
+                "bg-gradient-to-r from-gray-400/10 to-transparent border-l-2 border-l-gray-400",
+                "bg-gradient-to-r from-amber-600/10 to-transparent border-l-2 border-l-amber-600",
+              ];
+              return (
+                <motion.div
+                  key={user.user_id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  onClick={() => navigate(`/perfil/${user.user_id}`)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                    isCurrentUser
+                      ? "bg-primary/10 border border-primary/30"
+                      : isTopThree
+                      ? rowStyles[i]
+                      : "hover:bg-secondary/60"
+                  }`}
+                >
+                  <span className={`text-[10px] font-semibold w-4 text-right ${isTopThree ? "text-foreground" : "text-muted-foreground"}`}>{position}</span>
+                  <div className="relative">
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt="" className={`${isTopThree ? "w-11 h-11" : "w-9 h-9"} rounded-full object-cover ring-1 ring-border`} />
+                    ) : (
+                      <div className={`${isTopThree ? "w-11 h-11" : "w-9 h-9"} rounded-full bg-destructive/80 flex items-center justify-center text-destructive-foreground font-bold text-sm ring-1 ring-border`}>
+                        {(user.nome?.[0] || "?").toUpperCase()}
+                      </div>
+                    )}
+                    {isTopThree && <AvatarFlash index={i} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
+                      {user.nome}
+                      {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
+                      {isCurrentUser && (
+                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold ml-1">Você</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className={`font-bold ${isTopThree ? "text-base" : "text-sm"} text-destructive`}>{user.total_recargas}</span>
+                    <p className="text-[9px] text-muted-foreground uppercase">compras</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Top 20 List (positions 4-20) */}
         {ranking.length > 3 && (
