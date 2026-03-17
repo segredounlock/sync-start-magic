@@ -1966,44 +1966,56 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
     return;
   }
 
-  // Check if there's an existing open/answered ticket for this user — append or create new
+  // Find or create ticket
   const { data: existingTickets } = await supabase.from("support_tickets")
     .select("id, message, status")
     .eq("telegram_chat_id", chatIdStr)
-    .in("status", ["open", "answered"])
+    .in("status", ["open", "in_progress", "answered"])
     .order("created_at", { ascending: false })
     .limit(1);
 
+  let ticketId: string;
   const existingTicket = existingTickets?.[0];
 
   if (existingTicket) {
-    // Append to existing ticket and reopen if it was answered
-    const separator = "\n───\n";
-    const updatedMessage = existingTicket.message + separator + messageText;
-    const updateData: any = { message: updatedMessage, status: "open", updated_at: new Date().toISOString() };
-    if (imageUrl) updateData.image_url = imageUrl;
-    const { error } = await supabase.from("support_tickets").update(updateData).eq("id", existingTicket.id);
-    if (error) {
-      console.error("[SUPPORT] Error updating ticket:", error.message);
-      await sendMessage(token, chatId, "❌ Erro ao enviar mensagem. Tente novamente.");
-      return;
-    }
+    ticketId = existingTicket.id;
+    // Reopen if answered and update timestamp
+    await supabase.from("support_tickets").update({
+      status: "open",
+      updated_at: new Date().toISOString(),
+    }).eq("id", ticketId);
   } else {
     // Create new ticket
-    const { error } = await supabase.from("support_tickets").insert({
+    const { data: newTicket, error } = await supabase.from("support_tickets").insert({
       telegram_chat_id: chatIdStr,
       telegram_username: session.data?.telegram_username || null,
       telegram_first_name: session.data?.telegram_first_name || null,
       user_id: user?.id || null,
       message: messageText,
+      subject: messageText.length > 100 ? messageText.slice(0, 100) + "…" : messageText,
       image_url: imageUrl,
       status: "open",
-    });
-    if (error) {
-      console.error("[SUPPORT] Error saving ticket:", error.message);
+    }).select("id").single();
+    if (error || !newTicket) {
+      console.error("[SUPPORT] Error creating ticket:", error?.message);
       await sendMessage(token, chatId, "❌ Erro ao enviar mensagem. Tente novamente.");
       return;
     }
+    ticketId = newTicket.id;
+  }
+
+  // ✅ Write message to support_messages (unified history)
+  const senderId = user?.id || "00000000-0000-0000-0000-000000000000";
+  const { error: msgError } = await supabase.from("support_messages").insert({
+    ticket_id: ticketId,
+    sender_id: senderId,
+    sender_role: "client",
+    message: messageText,
+    image_url: imageUrl,
+    origin: "telegram",
+  });
+  if (msgError) {
+    console.error("[SUPPORT] Error saving message:", msgError.message);
   }
 
   await sendMessageWithKeyboard(token, chatId,
