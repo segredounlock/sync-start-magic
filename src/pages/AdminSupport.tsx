@@ -24,6 +24,7 @@ interface Ticket {
   assigned_to: string | null;
   telegram_first_name: string | null;
   telegram_username: string | null;
+  telegram_chat_id: string | null;
   created_at: string;
   updated_at: string;
   resolved_at: string | null;

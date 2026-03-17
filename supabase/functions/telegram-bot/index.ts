@@ -588,8 +588,8 @@ serve(async (req) => {
         const ADMIN_CHAT_ID = 1901426549;
         if (chatId === ADMIN_CHAT_ID && message.reply_to_message && text) {
           const repliedText = message.reply_to_message.text || message.reply_to_message.caption || "";
-          if (repliedText.includes("🆘") && repliedText.includes("Ticket de Suporte")) {
-            // Find the most recent open ticket matching the username in the notification
+          if ((repliedText.includes("🆘") && repliedText.includes("Ticket de Suporte")) || (repliedText.includes("📩") && repliedText.includes("Suporte"))) {
+            // Find the most recent open/in_progress ticket matching the username in the notification
             const usernameMatch = repliedText.match(/@(\w+)/);
             const nameMatch = repliedText.match(/👤\s*([^\n(]+)/);
             let ticket: any = null;
@@ -597,6 +597,7 @@ serve(async (req) => {
             if (usernameMatch) {
               const { data } = await supabase.from("support_tickets")
                 .select("*").eq("telegram_username", usernameMatch[1])
+                .in("status", ["open", "in_progress", "answered"])
                 .order("created_at", { ascending: false }).limit(1);
               ticket = data?.[0];
             }
@@ -604,6 +605,7 @@ serve(async (req) => {
               const name = nameMatch[1].trim();
               const { data } = await supabase.from("support_tickets")
                 .select("*").eq("telegram_first_name", name)
+                .in("status", ["open", "in_progress", "answered"])
                 .order("created_at", { ascending: false }).limit(1);
               ticket = data?.[0];
             }
@@ -619,9 +621,19 @@ serve(async (req) => {
                 telegram_first_name: ticket.telegram_first_name || "",
                 user_id: ticket.user_id || null,
               });
-              // Update ticket in DB
+              // ✅ Write admin reply to support_messages (unified history)
+              // Use a placeholder admin UUID — the actual admin user
+              const adminUserId = ticket.assigned_to || "00000000-0000-0000-0000-000000000001";
+              await supabase.from("support_messages").insert({
+                ticket_id: ticket.id,
+                sender_id: adminUserId,
+                sender_role: "admin",
+                message: text,
+                origin: "telegram",
+              });
+              // Update ticket status
               await supabase.from("support_tickets")
-                .update({ status: "answered", admin_reply: text, replied_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+                .update({ status: "in_progress", updated_at: new Date().toISOString() })
                 .eq("id", ticket.id);
               await sendMessage(BOT_TOKEN, chatId, "✅ Resposta enviada! Sessão de suporte reaberta para o usuário.");
               return;
