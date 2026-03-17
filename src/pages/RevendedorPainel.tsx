@@ -90,6 +90,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [profileBadge, setProfileBadge] = useState<BadgeType | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
+  const [supportEnabled, setSupportEnabled] = useState(true);
 
   // Recarga form
   const [telefone, setTelefone] = useState("");
