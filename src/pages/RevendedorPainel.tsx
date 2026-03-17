@@ -927,7 +927,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       <div className={`${size} rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold ${textSize} shrink-0`}>
         {userInitial}
       </div>
-    )
+          )}
+
+          {/* ===== TAB: SUPORTE ===== */}
+          {tab === "suporte" && user && (
+            <div className="space-y-6">
+              <SupportTab userId={user.id} />
+            </div>
+          )}
   );
 
   return (
