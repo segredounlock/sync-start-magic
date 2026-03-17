@@ -8,7 +8,7 @@ import { TicketListSkeleton, ChatSkeleton } from "@/components/support/SupportSk
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, Plus, Send, ArrowLeft, CheckCircle2, Clock, XCircle,
-  Loader2, Image, X, Activity,
+  Loader2, Image, X, Activity, HeadphoneOff,
 } from "lucide-react";
 
 /* ═══ Types ═══ */
@@ -149,6 +149,7 @@ export default function ClientSupport() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [supportEnabled, setSupportEnabled] = useState(true);
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
   // New ticket
@@ -201,6 +202,27 @@ export default function ClientSupport() {
   }, []);
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
+
+  useEffect(() => {
+    const loadSupportEnabled = async () => {
+      const { data } = await (supabase.from("system_config") as any)
+        .select("value")
+        .eq("key", "supportEnabled")
+        .maybeSingle();
+      setSupportEnabled(data?.value !== "false");
+    };
+
+    loadSupportEnabled();
+
+    const ch = supabase
+      .channel("client-support-enabled")
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.supportEnabled" }, (payload: any) => {
+        setSupportEnabled(payload.new?.value !== "false");
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, []);
 
   /* ─── Realtime: tickets ─── */
   useEffect(() => {
@@ -409,10 +431,11 @@ export default function ClientSupport() {
           </div>
         </div>
         <button
-          onClick={() => setShowCreate(true)}
-          className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          onClick={() => supportEnabled && setShowCreate(true)}
+          disabled={!supportEnabled}
+          className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:hover:opacity-100 disabled:cursor-not-allowed"
         >
-          <Plus className="w-4 h-4" /> Novo Ticket
+          <Plus className="w-4 h-4" /> {supportEnabled ? "Novo Ticket" : "Suporte indisponível"}
         </button>
       </div>
 
@@ -567,40 +590,50 @@ export default function ClientSupport() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background rounded-2xl border border-border overflow-hidden">
-      {/* Desktop layout */}
-      <div className="hidden md:flex w-full h-full">
-        <div className="w-[320px] border-r border-border flex flex-col">{ticketListContent}</div>
-        <div className="flex-1 flex flex-col">{chatContent}</div>
-      </div>
+      {!supportEnabled ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+          <HeadphoneOff className="w-16 h-16 text-muted-foreground/30 mb-4" />
+          <p className="text-base font-semibold text-foreground">Suporte temporariamente pausado</p>
+          <p className="text-sm text-muted-foreground mt-2 max-w-md">No momento não é possível abrir novos tickets nem continuar o atendimento pelo painel. Tente novamente mais tarde.</p>
+        </div>
+      ) : (
+        <>
+          {/* Desktop layout */}
+          <div className="hidden md:flex w-full h-full">
+            <div className="w-[320px] border-r border-border flex flex-col">{ticketListContent}</div>
+            <div className="flex-1 flex flex-col">{chatContent}</div>
+          </div>
 
-      {/* Mobile layout */}
-      <div className="md:hidden w-full h-full">
-        <AnimatePresence mode="wait">
-          {mobileView === "list" ? (
-            <motion.div
-              key="list"
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="h-full"
-            >
-              {ticketListContent}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="chat"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 20, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="h-full"
-            >
-              {chatContent}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          {/* Mobile layout */}
+          <div className="md:hidden w-full h-full">
+            <AnimatePresence mode="wait">
+              {mobileView === "list" ? (
+                <motion.div
+                  key="list"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -20, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="h-full"
+                >
+                  {ticketListContent}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="chat"
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 20, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="h-full"
+                >
+                  {chatContent}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -31,7 +31,7 @@ import {
   Menu, X, User, Activity, Landmark, CreditCard, DollarSign, CheckCircle2, XCircle,
   Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
   QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
-  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info, Headphones, Trophy,
+  Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info, Headphones, HeadphoneOff, Trophy,
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
@@ -90,6 +90,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [profileBadge, setProfileBadge] = useState<BadgeType | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
+  const [supportEnabled, setSupportEnabled] = useState(true);
 
   // Recarga form
   const [telefone, setTelefone] = useState("");
@@ -118,6 +119,28 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [telegramUsername, setTelegramUsername] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [telegramBotToken, setTelegramBotToken] = useState("");
+  useEffect(() => {
+    const loadSupportEnabled = async () => {
+      const { data } = await (supabase.from("system_config") as any)
+        .select("value")
+        .eq("key", "supportEnabled")
+        .maybeSingle();
+      setSupportEnabled(data?.value !== "false");
+    };
+
+    loadSupportEnabled();
+
+    const ch = supabase
+      .channel("reseller-panel-support-enabled")
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.supportEnabled" }, (payload: any) => {
+        const isEnabled = payload.new?.value !== "false";
+        setSupportEnabled(isEnabled);
+        if (!isEnabled && tab === "suporte") setTab("dashboard");
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [tab]);
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [showBotToken, setShowBotToken] = useState(false);
   const [savingContacts, setSavingContacts] = useState(false);
@@ -850,7 +873,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "status", label: "Status do Sistema", icon: Activity, color: "text-sky-400" },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw, color: "text-lime-400" },
     { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-orange-400" },
-    { key: "suporte", label: "Suporte", icon: Headphones, color: "text-teal-400" },
+    { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte off", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-teal-400" : "text-muted-foreground" },
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && (role === "admin" || salesToolsEnabled)) ? [
@@ -2344,10 +2367,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: SUPORTE ===== */}
           {tab === "suporte" && user && (
             <div className="space-y-6">
-              <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
-                <ClientSupport />
-              </Suspense>
-              <SupportTab userId={user.id} />
+              {supportEnabled ? (
+                <>
+                  <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+                    <ClientSupport />
+                  </Suspense>
+                  <SupportTab userId={user.id} />
+                </>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card p-8 text-center">
+                  <HeadphoneOff className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-bold text-foreground">Suporte pausado</h3>
+                  <p className="text-sm text-muted-foreground mt-2">O atendimento está temporariamente indisponível para os revendedores.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -2521,7 +2554,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "ranking", label: "Ranking", icon: Trophy, color: "text-yellow-400", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
-          { key: "suporte", label: "Suporte", icon: Headphones, color: "text-primary", animation: "float" },
+          { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte off", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-primary" : "text-muted-foreground", animation: "float" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
           
         ] as NavItem[]}
