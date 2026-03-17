@@ -44,6 +44,8 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userBadge, setUserBadge] = useState<string | null>(null);
   const [showBadgePicker, setShowBadgePicker] = useState(false);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
 
   const badgeOptions: { value: string | null; label: string; icon: string }[] = [
     { value: null, label: "Nenhum", icon: "❌" },
