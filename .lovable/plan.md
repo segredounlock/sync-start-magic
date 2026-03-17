@@ -1,40 +1,22 @@
 
 
-## Diagnóstico e Correção
+## Plan: Add "Meus Tickets" section to the reseller support tab
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### What changes
 
-### Plano
+1. **Create `src/components/MyTickets.tsx`** — A new read-only component that fetches and displays the current user's support tickets from `support_tickets` table (filtered by `user_id = auth.uid()`). It will show:
+   - List of tickets with status badge (Aberto/Respondido/Fechado), message preview, creation date
+   - Expandable detail view showing full message, admin reply (if any), and replied_at timestamp
+   - Filter by status (all/open/answered/closed)
+   - Real-time updates via Supabase channel subscription
+   - Empty state when no tickets exist
 
-**1. Corrigir o mapeamento de status na sync function**
+2. **Update `src/pages/RevendedorPainel.tsx`** — In the `tab === "suporte"` section, add the `MyTickets` component above or below the existing `SupportTab` (support channel configuration). This gives resellers both their ticket history and their support channel settings in one tab.
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### Technical details
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+- The RLS policy `"Users can view own tickets"` (just created) already ensures users only see their own tickets via `user_id = auth.uid()`.
+- Query: `supabase.from("support_tickets").select("*").eq("user_id", userId).order("created_at", { ascending: false })`
+- Reuse the same `STATUS_MAP` pattern from `SupportSection.tsx` for consistent status badges.
+- No database changes needed — the existing table and RLS policy are sufficient.
 
