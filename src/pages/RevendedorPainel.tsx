@@ -859,7 +859,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const tabTitle: Record<PainelTab, string> = {
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
-    extrato: "Carteira", contatos: "Configurações", status: "Status do Sistema",
+    extrato: "Carteira", ranking: "Ranking", contatos: "Configurações", status: "Status do Sistema",
     atualizacoes: "Atualizações", meusprecos: "Meus Preços", minharede: "Minha Rede", raspadinha: "Raspadinha", suporte: "Suporte",
   };
 
