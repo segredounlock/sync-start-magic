@@ -610,7 +610,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                     {isTopThree && <AvatarFlash index={i} />}
                     {/* Badges for top 3 */}
                     {i === 0 && (
-                      <motion.div className="absolute -top-3 left-[40%] -translate-x-1/2 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 15 }}>
+                      <motion.div className="absolute -top-2.5 inset-x-0 flex justify-center z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 15 }}>
                         <GoldFloatingCrown size={22} />
                       </motion.div>
                     )}
