@@ -142,10 +142,16 @@ export function SupportSection({ onCountUpdate }: Props) {
       const { error: fnError } = await supabase.functions.invoke("telegram-notify", {
         body: {
           chat_id: Number(ticket.telegram_chat_id),
-          message: `💬 <b>Resposta do Suporte</b>\n\n${text}`,
+          message: `💬 <b>Resposta do Suporte</b>\n\n${text}\n\n<i>💡 Você pode responder diretamente aqui.</i>`,
           message_effect_id: r.effectId !== "none" ? r.effectId : undefined,
           image_url: r.enableImage ? r.imageUrl : undefined,
           buttons: validButtons.length > 0 ? validButtons : undefined,
+          reopen_support_session: true,
+          session_data: {
+            telegram_username: ticket.telegram_username || "",
+            telegram_first_name: ticket.telegram_first_name || "",
+            user_id: ticket.user_id || null,
+          },
         },
       });
       if (fnError) throw fnError;

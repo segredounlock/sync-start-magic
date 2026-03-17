@@ -349,6 +349,13 @@ Deno.serve(async (req) => {
             if (replyMarkup) form.append("reply_markup", JSON.stringify(replyMarkup));
             const photoResp = await fetch(`${TELEGRAM_API}${BOT_TOKEN}/sendPhoto`, { method: "POST", body: form });
             if (photoResp.ok) {
+              // Reopen support session so user can reply back
+              if (body.reopen_support_session) {
+                await supabase.from("telegram_sessions").upsert(
+                  { chat_id: String(direct_chat_id), step: "awaiting_support_message", data: body.session_data || {}, updated_at: new Date().toISOString() },
+                  { onConflict: "chat_id" }
+                );
+              }
               return new Response(JSON.stringify({ success: true, method: "photo" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
             console.warn("sendPhoto failed, falling back to text");
@@ -360,6 +367,15 @@ Deno.serve(async (req) => {
         message_effect_id: direct_effect_id || undefined,
         reply_markup: replyMarkup,
       });
+
+      // Reopen support session so user can reply back
+      if (sent && body.reopen_support_session) {
+        await supabase.from("telegram_sessions").upsert(
+          { chat_id: String(direct_chat_id), step: "awaiting_support_message", data: body.session_data || {}, updated_at: new Date().toISOString() },
+          { onConflict: "chat_id" }
+        );
+      }
+
       return new Response(
         JSON.stringify({ success: sent }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -611,13 +611,19 @@ serve(async (req) => {
             if (ticket) {
               // Send reply to user via Telegram
               await sendMessage(BOT_TOKEN, Number(ticket.telegram_chat_id),
-                `💬 <b>Resposta do Suporte</b>\n\n${text}`
+                `💬 <b>Resposta do Suporte</b>\n\n${text}\n\n<i>💡 Você pode responder diretamente aqui.</i>`
               );
+              // Reopen support session so user can reply back
+              await setSession(supabase, ticket.telegram_chat_id, "awaiting_support_message", {
+                telegram_username: ticket.telegram_username || "",
+                telegram_first_name: ticket.telegram_first_name || "",
+                user_id: ticket.user_id || null,
+              });
               // Update ticket in DB
               await supabase.from("support_tickets")
                 .update({ status: "answered", admin_reply: text, replied_at: new Date().toISOString(), updated_at: new Date().toISOString() })
                 .eq("id", ticket.id);
-              await sendMessage(BOT_TOKEN, chatId, "✅ Resposta enviada ao usuário!");
+              await sendMessage(BOT_TOKEN, chatId, "✅ Resposta enviada! Sessão de suporte reaberta para o usuário.");
               return;
             } else {
               await sendMessage(BOT_TOKEN, chatId, "❌ Não foi possível encontrar o ticket correspondente.");
