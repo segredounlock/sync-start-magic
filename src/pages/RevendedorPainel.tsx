@@ -2342,7 +2342,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: SUPORTE ===== */}
           {tab === "suporte" && user && (
             <div className="space-y-6">
-              <MyTickets userId={user.id} />
+              <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+                <ClientSupport />
+              </Suspense>
               <SupportTab userId={user.id} />
             </div>
           )}
