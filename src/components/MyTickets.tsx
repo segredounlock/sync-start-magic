@@ -28,7 +28,7 @@ const STATUS_MAP: Record<string, { label: string; icon: any; color: string }> = 
 export function MyTickets({ userId }: { userId: string }) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "open" | "answered" | "closed">("all");
+  const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // New ticket form
@@ -44,7 +44,8 @@ export function MyTickets({ userId }: { userId: string }) {
     let q = (supabase.from("support_tickets") as any)
       .select("id, message, image_url, status, admin_reply, replied_at, created_at")
       .order("created_at", { ascending: false });
-    if (filter !== "all") q = q.eq("status", filter);
+    if (filter === "open") q = q.in("status", ["open", "answered"]);
+    else if (filter === "closed") q = q.eq("status", "closed");
     const { data } = await q.limit(50);
     setTickets(data || []);
     setLoading(false);
@@ -188,10 +189,10 @@ export function MyTickets({ userId }: { userId: string }) {
 
       {/* Filters */}
       <div className="flex gap-1.5 flex-wrap">
-        {(["all", "open", "answered", "closed"] as const).map((f) => (
+        {(["all", "open", "closed"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
-            {f === "all" ? "Todos" : f === "open" ? "Abertos" : f === "answered" ? "Respondidos" : "Fechados"}
+            {f === "all" ? "Todos" : f === "open" ? "Abertos" : "Fechados"}
           </button>
         ))}
       </div>
