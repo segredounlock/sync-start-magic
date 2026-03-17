@@ -590,7 +590,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
                   onClick={() => navigate(`/perfil/${user.user_id}`)}
-                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors overflow-hidden ${
+                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
                     isCurrentUser
                       ? "bg-primary/10 border border-primary/30"
                       : isTopThree
