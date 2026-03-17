@@ -94,8 +94,9 @@ export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
                   )}
                   <h2 className="text-lg font-bold text-foreground">Conversas</h2>
                 </div>
-                <button onClick={() => setShowNewChat(true)} className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors">
-                  <Plus className="h-5 w-5 text-primary" />
+                <button onClick={() => setShowNewChat(true)} className="flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/30 hover:brightness-110 active:scale-95 transition-all" style={{ touchAction: "manipulation" }}>
+                  <Plus className="h-5 w-5" />
+                  <span>Nova</span>
                 </button>
               </div>
               <ConversationList
