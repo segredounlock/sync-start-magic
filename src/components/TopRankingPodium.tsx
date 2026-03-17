@@ -295,7 +295,7 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
     // Fetch larger set to find user's position
     const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 50 });
     const all = (data || []) as RankUser[];
-    setRanking(all.slice(0, 10));
+    setRanking(all.slice(0, 20));
 
     // Find user position in full list
     const idx = all.findIndex(r => r.user_id === userId);
@@ -566,6 +566,56 @@ export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) 
             );
           })}
         </div>
+
+        {/* Top 20 List (positions 4-20) */}
+        {ranking.length > 3 && (
+          <div className="space-y-1 pt-2">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-foreground px-1 pb-2">
+              <Trophy className="w-4 h-4 text-yellow-500" />
+              Top {Math.min(ranking.length, 20)} Compradores
+            </h3>
+            {ranking.slice(3).map((user, i) => {
+              const position = i + 4;
+              const isCurrentUser = user.user_id === userId;
+              return (
+                <motion.div
+                  key={user.user_id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + i * 0.03 }}
+                  onClick={() => navigate(`/perfil/${user.user_id}`)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                    isCurrentUser
+                      ? "bg-primary/10 border border-primary/30"
+                      : "hover:bg-secondary/60"
+                  }`}
+                >
+                  <span className="text-[10px] text-muted-foreground font-semibold w-4 text-right">{position}</span>
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover ring-1 ring-border" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-destructive/80 flex items-center justify-center text-destructive-foreground font-bold text-sm ring-1 ring-border">
+                      {(user.nome?.[0] || "?").toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
+                      {user.nome}
+                      {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
+                      {isCurrentUser && (
+                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold ml-1">Você</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-sm font-bold text-destructive">{user.total_recargas}</span>
+                    <p className="text-[9px] text-muted-foreground uppercase">compras</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* User position bar */}
         {userRank >= 0 && userPosition && (
