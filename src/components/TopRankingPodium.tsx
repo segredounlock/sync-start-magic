@@ -168,15 +168,15 @@ function SilverIceBadge({ size = 36 }: { size?: number }) {
         transition={{ duration: 2.5, repeat: Infinity }}
       />
 
-      {/* Badge with shimmer */}
-      <div className="relative w-9 h-9 rounded-full bg-gradient-to-r from-gray-300 to-slate-400 flex items-center justify-center overflow-hidden">
+      {/* Medal icon only */}
+      <div className="relative flex items-center justify-center">
         <motion.div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%)" }}
+          style={{ background: "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)" }}
           animate={{ x: ["-100%", "200%"] }}
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
         />
-        <Medal className="w-5 h-5 text-white drop-shadow-[0_0_4px_rgba(200,220,255,0.8)]" strokeWidth={2.5} />
+        <Medal className="w-4 h-4 text-gray-300 drop-shadow-[0_0_4px_rgba(200,220,255,0.8)]" strokeWidth={2.5} />
       </div>
     </motion.div>
   );
