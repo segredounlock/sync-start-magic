@@ -44,7 +44,7 @@ const ClientSupport = lazy(() => import("@/pages/ClientSupport"));
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { appToast, styledToast as toast } from "@/lib/toast";
-import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey } from "@/lib/timezone";
+import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey, getRecargaTime } from "@/lib/timezone";
 
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";

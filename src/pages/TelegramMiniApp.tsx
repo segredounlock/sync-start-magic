@@ -24,7 +24,7 @@ import { ScratchCard } from "@/components/ScratchCard";
 import { Ticket } from "lucide-react";
 import { useSeasonalTheme, SEASONAL_BUTTON_EMOJIS } from "@/hooks/useSeasonalTheme";
 import { SEASONAL_THEMES, type SeasonalThemeKey } from "@/components/SeasonalEffects";
-import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR } from "@/lib/timezone";
+import { formatFullDateTimeBR, formatDateTimeBR, formatDateLongUpperBR, formatTimeBR, getRecargaTime } from "@/lib/timezone";
 
 declare global {
   interface Window {
