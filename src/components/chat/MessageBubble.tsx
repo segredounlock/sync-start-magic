@@ -427,8 +427,8 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
           </a>
         );
       } else {
-        // Apply bold formatting to non-email segments
-        const boldRegex = /\*\*(.+?)\*\*/g;
+        // Apply bold formatting: **text** or <b>text</b>
+        const boldRegex = /\*\*(.+?)\*\*|<b>(.+?)<\/b>/g;
         let lastIndex = 0;
         let match: RegExpExecArray | null;
         while ((match = boldRegex.exec(segment)) !== null) {
@@ -436,7 +436,7 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
             result.push(segment.slice(lastIndex, match.index));
           }
           result.push(
-            <strong key={`${keyPrefix}-b-${key++}`} className="font-bold">{match[1]}</strong>
+            <strong key={`${keyPrefix}-b-${key++}`} className="font-bold">{match[1] || match[2]}</strong>
           );
           lastIndex = match.index + match[0].length;
         }
