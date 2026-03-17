@@ -307,7 +307,7 @@ function useTelegramTheme(themeOverride: "auto" | "light" | "dark" = "auto") {
   return { isDark };
 }
 
-type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha" | "atualizacoes";
+type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha" | "atualizacoes" | "ranking";
 
 import type { Recarga } from "@/types";
 
