@@ -113,8 +113,7 @@ export function FloatingSupportButton() {
               exit={{ opacity: 0, y: 8, scale: 0.9 }}
               className="absolute bottom-full right-0 mb-2 w-52 p-3 rounded-xl bg-card border border-border shadow-xl z-[61]"
             >
-              <p className="text-xs font-semibold text-foreground">🔴 Suporte Offline</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">O atendimento está offline no momento. Tente novamente mais tarde.</p>
+              <p className="text-xs text-muted-foreground">O atendimento está temporariamente indisponível.</p>
               <div className="absolute bottom-[-6px] right-5 w-3 h-3 bg-card border-b border-r border-border rotate-45" />
             </motion.div>
           )}
