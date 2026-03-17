@@ -1459,6 +1459,7 @@ export default function Principal() {
               {view === "saques" && "Gerencie solicitações de saque de toda a rede."}
               {view === "redes" && "Visão consolidada de todos os donos de rede."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
+              {view === "suporte" && "Gerencie tickets de suporte recebidos via Telegram."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
           </div>
