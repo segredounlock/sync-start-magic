@@ -1,34 +1,40 @@
 
 
-## Problema
+## Diagnóstico e Correção
 
-1. **Balão de suporte aparece no painel admin (`/principal`)** — o admin é quem responde, não precisa do botão flutuante de suporte.
-2. **Verificar se o toggle de desligar suporte funciona** — o toggle está em `AdminSupport.tsx` (renderizado dentro de `/principal` na view "suporte") e grava `supportEnabled` na tabela `system_config`. O `RevendedorPainel` já escuta esse valor em tempo real. A lógica parece correta.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Plano
+### Plano
 
-### 1. Esconder o botão flutuante de suporte para admins
+**1. Corrigir o mapeamento de status na sync function**
 
-Em `src/components/support/FloatingSupportButton.tsx`, adicionar uma verificação de role:
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-- Se `role === "admin"`, retornar `null` (não renderizar o botão).
-- Isso é mais limpo do que adicionar rotas ao `hiddenRoutes`, pois cobre qualquer página que o admin acessar.
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-Alternativa: adicionar `/principal` ao `hiddenRoutes`. Mas a abordagem por role é mais robusta.
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-### 2. Confirmar funcionamento do toggle
+**2. Corrigir manualmente o pedido preso**
 
-O fluxo já está implementado:
-- **Admin** desliga em `AdminSupport.tsx` → grava `supportEnabled = "false"` na `system_config`
-- **Revendedor** escuta via realtime channel `reseller-panel-support-enabled` → muda `supportEnabled` state → aba mostra "Suporte pausado"
-- **FloatingSupportButton** escuta via channel `support-enabled-toggle` → mostra botão cinza offline
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-Nenhuma mudança adicional necessária no toggle — ele já funciona. A única alteração é esconder o botão flutuante para o admin.
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-### Alteração
+**3. Verificar se há outros pedidos presos**
 
-**Arquivo:** `src/components/support/FloatingSupportButton.tsx`
-- Linha ~87: mudar de `if (!user || shouldHide) return null;` para `if (!user || shouldHide || role === "admin") return null;`
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
 
-Uma única linha de mudança.
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

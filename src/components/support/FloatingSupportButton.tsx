@@ -84,7 +84,7 @@ export function FloatingSupportButton() {
     setUnreadCount(count);
   }, []);
 
-  if (!user || shouldHide) return null;
+  if (!user || shouldHide || role === "admin") return null;
 
   // When disabled, show offline button with tooltip
   if (!enabled) {
