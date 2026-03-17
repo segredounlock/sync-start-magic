@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   ArrowLeft, UserPlus, UserMinus, Loader2, Shield, Smartphone,
   TrendingUp, Calendar, Send, MessageCircle, Settings, Camera,
-  Pencil, Save, X, Check,
+  Pencil, Save, X, Check, ChevronDown,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR } from "@/lib/timezone";
