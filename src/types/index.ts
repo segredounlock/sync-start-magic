@@ -28,6 +28,7 @@ export interface RecargaHistorico {
   custo_api?: number;
   status: string;
   created_at: string;
+  completed_at?: string | null;
   user_nome?: string | null;
   user_email?: string | null;
 }
