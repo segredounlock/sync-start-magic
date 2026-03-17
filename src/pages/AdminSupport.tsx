@@ -80,7 +80,7 @@ function DotBadge({ status }: { status: string }) {
   return <span className={`h-2 w-2 rounded-full ${cfg.dot} shrink-0`} />;
 }
 
-function AdminTicketItem({ ticket, selected, onClick, unread }: { ticket: Ticket; selected: boolean; onClick: () => void; unread: number }) {
+function AdminTicketItem({ ticket, selected, onClick, unread, avatarUrl }: { ticket: Ticket; selected: boolean; onClick: () => void; unread: number; avatarUrl?: string | null }) {
   const dept = DEPARTMENTS[ticket.department] || DEPARTMENTS.support;
   const name = ticket.telegram_first_name || ticket.telegram_username || "Usuário";
   return (
@@ -89,9 +89,13 @@ function AdminTicketItem({ ticket, selected, onClick, unread }: { ticket: Ticket
       className={`w-full text-left px-4 py-3 border-b border-border/50 transition-colors hover:bg-muted/30 ${selected ? "bg-primary/10 border-l-2 border-l-primary" : ""}`}
     >
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground shrink-0">
-          {name.charAt(0).toUpperCase()}
-        </div>
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground shrink-0">
+            {name.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-semibold text-foreground truncate">{name}</p>
@@ -202,6 +206,7 @@ export default function AdminSupport() {
 
   // Profiles
   const [senderProfiles, setSenderProfiles] = useState<Record<string, SenderProfile>>({});
+  const [ticketProfiles, setTicketProfiles] = useState<Record<string, SenderProfile>>({});
 
   // Message input
   const [msgText, setMsgText] = useState("");
@@ -234,6 +239,17 @@ export default function AdminSupport() {
     );
     setTickets(sortedTickets);
     setLoading(false);
+
+    // Fetch avatar profiles for ticket owners
+    const userIds = [...new Set((sortedTickets as Ticket[]).map(t => t.user_id).filter(Boolean))] as string[];
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles")
+        .select("id, nome, avatar_url, verification_badge")
+        .in("id", userIds);
+      const map: Record<string, SenderProfile> = {};
+      (profiles || []).forEach((p: any) => { map[p.id] = p; });
+      setTicketProfiles(prev => ({ ...prev, ...map }));
+    }
   }, []);
 
   /* ─── Fetch messages ─── */
@@ -584,7 +600,7 @@ export default function AdminSupport() {
           </div>
         ) : (
           filteredTickets.map((t) => (
-            <AdminTicketItem key={t.id} ticket={t} selected={selectedTicket?.id === t.id} onClick={() => selectTicket(t)} unread={unreadMap[t.id] || 0} />
+            <AdminTicketItem key={t.id} ticket={t} selected={selectedTicket?.id === t.id} onClick={() => selectTicket(t)} unread={unreadMap[t.id] || 0} avatarUrl={t.user_id ? ticketProfiles[t.user_id]?.avatar_url : null} />
           ))
         )}
       </div>
@@ -598,9 +614,13 @@ export default function AdminSupport() {
         <button onClick={() => { setMobileView("list"); setSelectedTicket(null); }} className="md:hidden p-1.5 rounded-lg hover:bg-muted">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-          {(selectedTicket.telegram_first_name || selectedTicket.telegram_username || "U").charAt(0).toUpperCase()}
-        </div>
+        {selectedTicket.user_id && ticketProfiles[selectedTicket.user_id]?.avatar_url ? (
+          <img src={ticketProfiles[selectedTicket.user_id].avatar_url!} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+            {(selectedTicket.telegram_first_name || selectedTicket.telegram_username || "U").charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground truncate">{selectedTicket.subject || "Sem assunto"}</p>
           <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário"}</p>
@@ -745,9 +765,13 @@ export default function AdminSupport() {
         <div className="p-4 space-y-5">
           {/* User card */}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/50">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-              {userName.charAt(0).toUpperCase()}
-            </div>
+            {selectedTicket.user_id && ticketProfiles[selectedTicket.user_id]?.avatar_url ? (
+              <img src={ticketProfiles[selectedTicket.user_id].avatar_url!} alt={userName} className="w-10 h-10 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-sm font-bold text-foreground truncate">{userName}</p>
               <p className="text-[10px] text-muted-foreground">
