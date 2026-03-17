@@ -149,6 +149,7 @@ export default function ClientSupport() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [supportEnabled, setSupportEnabled] = useState(true);
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
   // New ticket
