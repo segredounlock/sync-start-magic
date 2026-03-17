@@ -606,7 +606,12 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       </div>
                     </div>
                   )}
-                  <span className={`text-[10px] font-semibold w-4 text-right ${isTopThree ? "text-foreground" : "text-muted-foreground"}`}>{position}</span>
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                    i === 0 ? "bg-yellow-500/20 text-yellow-400" :
+                    i === 1 ? "bg-gray-400/20 text-gray-300" :
+                    i === 2 ? "bg-orange-500/20 text-orange-400" :
+                    "bg-muted text-muted-foreground"
+                  }`}>{position}</span>
                   <div className="relative" style={{ overflow: "visible" }}>
                     {user.avatar_url ? (
                       <img src={user.avatar_url} alt="" className={`${isTopThree ? "w-11 h-11" : "w-9 h-9"} rounded-full object-cover ring-1 ring-border`} />
