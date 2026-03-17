@@ -325,7 +325,41 @@ Deno.serve(async (req) => {
     // Direct chat_id + message shortcut (used by support replies)
     if (direct_chat_id && direct_message) {
       console.log(`Sending direct message to chat_id=${direct_chat_id}`);
-      const sent = await sendTelegramMessage(BOT_TOKEN, direct_chat_id, direct_message, { message_effect_id: direct_effect_id || undefined });
+
+      // Build inline keyboard from buttons array
+      let replyMarkup: any = undefined;
+      if (body.buttons && Array.isArray(body.buttons) && body.buttons.length > 0) {
+        replyMarkup = {
+          inline_keyboard: body.buttons.map((b: any) => [{ text: b.text, url: b.url }]),
+        };
+      }
+
+      // If image_url is provided, send as photo
+      if (body.image_url) {
+        try {
+          const imgResp = await fetch(body.image_url);
+          if (imgResp.ok) {
+            const imageData = new Uint8Array(await imgResp.arrayBuffer());
+            const form = new FormData();
+            form.append("chat_id", String(direct_chat_id));
+            form.append("photo", new Blob([imageData], { type: "image/png" }), "support.png");
+            form.append("caption", direct_message);
+            form.append("parse_mode", "HTML");
+            if (direct_effect_id) form.append("message_effect_id", direct_effect_id);
+            if (replyMarkup) form.append("reply_markup", JSON.stringify(replyMarkup));
+            const photoResp = await fetch(`${TELEGRAM_API}${BOT_TOKEN}/sendPhoto`, { method: "POST", body: form });
+            if (photoResp.ok) {
+              return new Response(JSON.stringify({ success: true, method: "photo" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+            console.warn("sendPhoto failed, falling back to text");
+          }
+        } catch (e) { console.warn("Image fetch failed:", e); }
+      }
+
+      const sent = await sendTelegramMessage(BOT_TOKEN, direct_chat_id, direct_message, {
+        message_effect_id: direct_effect_id || undefined,
+        reply_markup: replyMarkup,
+      });
       return new Response(
         JSON.stringify({ success: sent }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
