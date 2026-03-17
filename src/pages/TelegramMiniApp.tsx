@@ -15,7 +15,7 @@ import {
   Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
   AlertTriangle, CheckCircle2, XCircle, MessageCircle,
   MoreHorizontal, X, Settings, Search, Filter, Save, Pencil, ArrowRightLeft,
-  Sun, Moon
+  Sun, Moon, Trophy
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
@@ -307,7 +307,7 @@ function useTelegramTheme(themeOverride: "auto" | "light" | "dark" = "auto") {
   return { isDark };
 }
 
-type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha" | "atualizacoes";
+type Section = "recarga" | "deposito" | "historico" | "extrato" | "conta" | "status" | "chat" | "raspadinha" | "atualizacoes" | "ranking";
 
 import type { Recarga } from "@/types";
 
@@ -1104,7 +1104,7 @@ export default function TelegramMiniApp() {
   const sectionTitle: Record<Section, string> = {
     recarga: "Nova Recarga", deposito: "Adicionar Saldo", historico: "Histórico de Pedidos",
     extrato: "Extrato de Depósitos", conta: "Minha Conta", status: "Status do Sistema", chat: "Bate-papo",
-    raspadinha: "Raspadinha", atualizacoes: "Atualizações",
+    raspadinha: "Raspadinha", atualizacoes: "Atualizações", ranking: "Ranking",
   };
 
   const [moreOpen, setMoreOpen] = useState(false);
@@ -2463,6 +2463,12 @@ export default function TelegramMiniApp() {
               <AtualizacoesSection />
             </motion.div>
           )}
+          {/* ── Ranking ── */}
+          {section === "ranking" && userId && (
+            <motion.div key="ranking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              <TopRankingPodium userId={userId} showPodium={false} />
+            </motion.div>
+          )}
           {/* ── Raspadinha ── */}
           {section === "raspadinha" && userId && (
             <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
@@ -2853,6 +2859,7 @@ export default function TelegramMiniApp() {
                   { id: "extrato" as Section, icon: Landmark, label: "Carteira", color: "var(--tg-accent)" },
                   { id: "conta" as Section, icon: Settings, label: "Conta", color: "var(--tg-accent)" },
                   { id: "status" as Section, icon: Shield, label: "Status", color: "var(--tg-warning, #facc15)" },
+                  { id: "ranking" as Section, icon: Trophy, label: "Ranking", color: "#facc15" },
                   { id: "atualizacoes" as Section, icon: RefreshCw, label: "Novidades", color: "var(--tg-accent)" },
                 ]).map((item, index) => {
                   const isActive = section === item.id;
