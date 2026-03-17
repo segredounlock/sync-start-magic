@@ -15,7 +15,7 @@ import {
   Share2, FileText, MapPin, Hash, Wallet, Phone, Zap,
   AlertTriangle, CheckCircle2, XCircle, MessageCircle,
   MoreHorizontal, X, Settings, Search, Filter, Save, Pencil, ArrowRightLeft,
-  Sun, Moon
+  Sun, Moon, Trophy
 } from "lucide-react";
 import { ChatPage } from "@/components/chat/ChatPage";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
