@@ -151,8 +151,18 @@ function AdminMessageBubble({ msg, profile, isAdmin }: { msg: Message; profile?:
   if (lastIdx < msg.message.length) parts.push(msg.message.slice(lastIdx));
 
   return (
-    <div className={`flex ${isStaff ? "justify-end" : "justify-start"} mb-2`}>
-      <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isStaff ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted/60 text-foreground rounded-bl-md"}`}>
+    <div className={`flex ${isStaff ? "justify-end" : "justify-start"} mb-3 gap-2`}>
+      {/* Avatar for client (left side) */}
+      {!isStaff && (
+        profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 mt-1" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-foreground shrink-0 mt-1">
+            {senderName.charAt(0).toUpperCase()}
+          </div>
+        )
+      )}
+      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${isStaff ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted/60 text-foreground rounded-bl-md"}`}>
         <div className="flex items-center gap-1.5 mb-1">
           <span className="text-[11px] font-semibold">{senderName}</span>
           {roleCfg && (
@@ -177,6 +187,16 @@ function AdminMessageBubble({ msg, profile, isAdmin }: { msg: Message; profile?:
           {msg.is_read && " ✓✓"}
         </p>
       </div>
+      {/* Avatar for staff (right side) */}
+      {isStaff && (
+        profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 mt-1" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 mt-1">
+            {senderName.charAt(0).toUpperCase()}
+          </div>
+        )
+      )}
     </div>
   );
 }
@@ -200,6 +220,10 @@ export default function AdminSupport() {
   const [showInfoPanel, setShowInfoPanel] = useState(true);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const headerMenuRef = useRef<HTMLDivElement>(null);
+
+  // Support enabled toggle
+  const [supportEnabled, setSupportEnabled] = useState(true);
+  const [togglingSupport, setTogglingSupport] = useState(false);
 
   // Unread counts
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
@@ -297,6 +321,26 @@ export default function AdminSupport() {
   }, []);
 
   useEffect(() => { fetchTickets(); fetchUnreadCounts(); }, [fetchTickets, fetchUnreadCounts]);
+
+  // Fetch support enabled state
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("system_config").select("value").eq("key", "supportEnabled").maybeSingle();
+      setSupportEnabled(data?.value !== "false");
+    })();
+  }, []);
+
+  const toggleSupport = async () => {
+    setTogglingSupport(true);
+    const newVal = !supportEnabled;
+    await (supabase.from("system_config") as any).upsert(
+      { key: "supportEnabled", value: String(newVal), updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    setSupportEnabled(newVal);
+    setTogglingSupport(false);
+    toast.success(newVal ? "Suporte ativado" : "Suporte desativado");
+  };
 
   // Close header menu on click outside
   useEffect(() => {
@@ -560,7 +604,16 @@ export default function AdminSupport() {
             </span>
           )}
           <span className="flex-1" />
-          <span className="text-[10px] text-muted-foreground">Ativo</span>
+          <button
+            onClick={toggleSupport}
+            disabled={togglingSupport}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${supportEnabled ? "bg-primary" : "bg-muted-foreground/30"}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${supportEnabled ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+          <span className={`text-[10px] font-medium ${supportEnabled ? "text-primary" : "text-muted-foreground"}`}>
+            {supportEnabled ? "Ativo" : "Inativo"}
+          </span>
         </div>
         <p className="text-[10px] text-muted-foreground -mt-1">Central de atendimento ao cliente</p>
         <div className="relative">
