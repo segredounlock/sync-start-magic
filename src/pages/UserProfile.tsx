@@ -82,20 +82,19 @@ export default function UserProfile() {
     if (!resolvedId) return;
     setLoading(true);
     try {
-      const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleData }] = await Promise.all([
+      const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleRows }] = await Promise.all([
         supabase.from("profiles").select("id, nome, email, avatar_url, bio, slug, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", resolvedId).single(),
         supabase.rpc("get_follow_counts", { _user_id: resolvedId }),
         supabase.rpc("get_user_recargas_count" as any, { _user_id: resolvedId }),
         user?.id && user.id !== resolvedId
           ? supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", resolvedId).maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase.rpc("has_role", { _user_id: resolvedId, _role: "admin" }),
+        supabase.from("user_roles").select("role").eq("user_id", resolvedId),
       ]);
 
       if (profileData) {
         setProfile(profileData as any);
         setBioText((profileData as any).bio || "");
-        // If we navigated via UUID but profile has a slug, redirect to clean URL
         if ((profileData as any).slug && paramId && isUUID(paramId)) {
           navigate(`/perfil/${(profileData as any).slug}`, { replace: true });
         }
@@ -106,7 +105,11 @@ export default function UserProfile() {
       }
       setRecargasCount(Number(recargaResult.data) || 0);
       setIsFollowing(!!followData);
-      if (roleData === true) setProfileRole("admin");
+      // Resolve role with priority
+      const roles = (roleRows as any[] || []).map((r: any) => r.role);
+      const priority = ["admin", "revendedor", "suporte", "cliente", "usuario"];
+      const topRole = priority.find(r => roles.includes(r)) || "usuario";
+      setProfileRole(topRole);
     } catch (e) {
       console.error("Error loading profile:", e);
     } finally {
