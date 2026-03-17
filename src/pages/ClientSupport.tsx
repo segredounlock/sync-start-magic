@@ -298,8 +298,22 @@ export default function ClientSupport() {
         sender_role: "client",
         message: sanitizeText(finalMsg),
         image_url: imageUrl,
+        origin: "web",
       });
       if (error) throw error;
+
+      // Notify admin via Telegram (fire-and-forget)
+      const adminChatId = 1901426549;
+      const plainText = sanitizeText(text).replace(/\[img:[^\]]+\]/g, "").trim();
+      if (plainText || imageUrl) {
+        supabase.functions.invoke("telegram-notify", {
+          body: {
+            chat_id: String(adminChatId),
+            message: `📩 <b>Nova mensagem no Suporte</b>\n\n👤 ${selectedTicket.subject || "Ticket"}\n\n💬 <i>${plainText.slice(0, 300)}</i>${imageUrl ? "\n📷 <i>Com imagem</i>" : ""}`,
+          },
+        }).catch(() => {});
+      }
+
       setMsgText("");
       setImageUrl(null);
     } catch (e: any) {
