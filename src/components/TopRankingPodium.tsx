@@ -625,12 +625,12 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       </motion.div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
-                      {user.nome}
+                      <span className="truncate">{user.nome}</span>
                       {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
                       {isCurrentUser && (
-                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold ml-1">Você</span>
+                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0">Você</span>
                       )}
                     </p>
                   </div>
