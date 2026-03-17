@@ -664,9 +664,10 @@ serve(async (req) => {
           return;
         }
 
-        // Support message flow
+        // Support message flow (text and/or photo)
         if (!isCommand && session?.step === "awaiting_support_message") {
-          await handleSupportMessage(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
+          const photoFileId = message.photo?.length ? message.photo[message.photo.length - 1].file_id : null;
+          await handleSupportMessage(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id, photoFileId);
           return;
         }
 
