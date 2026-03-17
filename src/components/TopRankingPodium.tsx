@@ -140,21 +140,24 @@ function SilverIceBadge({ size = 36 }: { size?: number }) {
   return (
     <motion.div
       className="relative inline-flex items-center justify-center"
-      style={{ width: size, height: size, contain: "layout style" }}
+      style={{ width: size, height: size, contain: "layout style", overflow: "visible" }}
       animate={{ y: [0, -2, 0], rotate: [0, 2, -2, 0] }}
       transition={{ duration: 3, repeat: Infinity }}
     >
-      {/* Ice crystals rising */}
+      {/* Orbiting ice crystals around medal */}
       {[...Array(5)].map((_, i) => (
         <motion.div
           key={i}
           className="absolute"
-          style={{ top: "60%", left: `${35 + i * 8}%` }}
+          style={{ top: "50%", left: "50%", overflow: "visible" }}
           animate={{
-            y: [0, -25], x: [(i - 2) * 4, (i - 2) * 6],
-            opacity: [0, 1, 0], scale: [0.5, 1, 0.3], rotate: [0, 180],
+            x: [0, Math.cos((i * 72 * Math.PI) / 180) * 22],
+            y: [0, Math.sin((i * 72 * Math.PI) / 180) * 22],
+            scale: [0, 1, 0],
+            opacity: [0, 1, 0],
+            rotate: [0, 180],
           }}
-          transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.4 }}
+          transition={{ duration: 2, repeat: Infinity, delay: i * 0.35 }}
         >
           <div className="w-1.5 h-1.5 bg-gradient-to-br from-white to-blue-200 rotate-45 shadow-[0_0_6px_2px_rgba(200,220,255,0.7)]" />
         </motion.div>
