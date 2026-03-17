@@ -222,7 +222,7 @@ export default function AdminSupport() {
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     const { data } = await (supabase.from("support_tickets") as any)
-      .select("id, user_id, subject, status, priority, department, assigned_to, telegram_first_name, telegram_username, created_at, updated_at, resolved_at")
+      .select("id, user_id, subject, status, priority, department, assigned_to, telegram_first_name, telegram_username, telegram_chat_id, created_at, updated_at, resolved_at")
       .order("created_at", { ascending: false });
 
     const sortedTickets = (data || []).sort((a: Ticket, b: Ticket) =>
