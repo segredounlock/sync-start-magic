@@ -1966,11 +1966,11 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
     return;
   }
 
-  // Check if there's an existing open ticket for this user — append or create new
+  // Check if there's an existing open/answered ticket for this user — append or create new
   const { data: existingTickets } = await supabase.from("support_tickets")
-    .select("id, message")
+    .select("id, message, status")
     .eq("telegram_chat_id", chatIdStr)
-    .eq("status", "open")
+    .in("status", ["open", "answered"])
     .order("created_at", { ascending: false })
     .limit(1);
 
