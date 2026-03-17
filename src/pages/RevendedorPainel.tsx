@@ -38,6 +38,7 @@ import { MinhaRede } from "@/components/MinhaRede";
 import { ScratchCard } from "@/components/ScratchCard";
 import { ResellerFeeConfig } from "@/components/ResellerFeeConfig";
 import { SupportTab } from "@/components/settings/SupportTab";
+import { MyTickets } from "@/components/MyTickets";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
