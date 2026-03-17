@@ -119,6 +119,28 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [telegramUsername, setTelegramUsername] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [telegramBotToken, setTelegramBotToken] = useState("");
+  useEffect(() => {
+    const loadSupportEnabled = async () => {
+      const { data } = await (supabase.from("system_config") as any)
+        .select("value")
+        .eq("key", "supportEnabled")
+        .maybeSingle();
+      setSupportEnabled(data?.value !== "false");
+    };
+
+    loadSupportEnabled();
+
+    const ch = supabase
+      .channel("reseller-panel-support-enabled")
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.supportEnabled" }, (payload: any) => {
+        const isEnabled = payload.new?.value !== "false";
+        setSupportEnabled(isEnabled);
+        if (!isEnabled && tab === "suporte") setTab("dashboard");
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [tab]);
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [showBotToken, setShowBotToken] = useState(false);
   const [savingContacts, setSavingContacts] = useState(false);

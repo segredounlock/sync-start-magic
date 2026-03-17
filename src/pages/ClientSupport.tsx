@@ -203,6 +203,27 @@ export default function ClientSupport() {
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
+  useEffect(() => {
+    const loadSupportEnabled = async () => {
+      const { data } = await (supabase.from("system_config") as any)
+        .select("value")
+        .eq("key", "supportEnabled")
+        .maybeSingle();
+      setSupportEnabled(data?.value !== "false");
+    };
+
+    loadSupportEnabled();
+
+    const ch = supabase
+      .channel("client-support-enabled")
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.supportEnabled" }, (payload: any) => {
+        setSupportEnabled(payload.new?.value !== "false");
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
   /* ─── Realtime: tickets ─── */
   useEffect(() => {
     if (!userId) return;
