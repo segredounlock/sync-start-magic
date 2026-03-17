@@ -2478,6 +2478,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
           )}
 
+          {/* ===== TAB: RANKING ===== */}
+          {tab === "ranking" && user && (
+            <TopRankingPodium userId={user.id} />
+          )}
+
           {/* ===== TAB: RASPADINHA ===== */}
           {tab === "raspadinha" && user && (
             <ScratchCard userId={user.id} />
