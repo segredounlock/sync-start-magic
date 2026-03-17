@@ -239,6 +239,17 @@ export default function AdminSupport() {
     );
     setTickets(sortedTickets);
     setLoading(false);
+
+    // Fetch avatar profiles for ticket owners
+    const userIds = [...new Set((sortedTickets as Ticket[]).map(t => t.user_id).filter(Boolean))] as string[];
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles")
+        .select("id, nome, avatar_url, verification_badge")
+        .in("id", userIds);
+      const map: Record<string, SenderProfile> = {};
+      (profiles || []).forEach((p: any) => { map[p.id] = p; });
+      setTicketProfiles(prev => ({ ...prev, ...map }));
+    }
   }, []);
 
   /* ─── Fetch messages ─── */
