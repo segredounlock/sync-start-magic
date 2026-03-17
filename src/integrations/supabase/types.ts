@@ -1086,6 +1086,7 @@ export type Database = {
           admin_reply: string | null
           created_at: string
           id: string
+          image_url: string | null
           message: string
           replied_at: string | null
           status: string
@@ -1099,6 +1100,7 @@ export type Database = {
           admin_reply?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           message: string
           replied_at?: string | null
           status?: string
@@ -1112,6 +1114,7 @@ export type Database = {
           admin_reply?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           message?: string
           replied_at?: string | null
           status?: string

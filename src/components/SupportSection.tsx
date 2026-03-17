@@ -16,6 +16,7 @@ interface SupportTicket {
   telegram_first_name: string | null;
   user_id: string | null;
   message: string;
+  image_url: string | null;
   status: string;
   admin_reply: string | null;
   replied_at: string | null;
@@ -224,7 +225,12 @@ export function SupportSection({ onCountUpdate }: Props) {
                   </div>
 
                   {/* Message */}
-                  <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                    {ticket.image_url && (
+                      <a href={ticket.image_url} target="_blank" rel="noopener noreferrer">
+                        <img src={ticket.image_url} alt="Anexo" className="max-h-48 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity" />
+                      </a>
+                    )}
                     <p className="text-sm text-foreground whitespace-pre-wrap">{ticket.message}</p>
                   </div>
 
