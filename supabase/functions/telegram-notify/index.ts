@@ -376,6 +376,11 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Close support session (ticket closed/resolved) — return to main menu
+      if (sent && body.close_support_session) {
+        await supabase.from("telegram_sessions").delete().eq("chat_id", String(direct_chat_id));
+      }
+
       return new Response(
         JSON.stringify({ success: sent }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
