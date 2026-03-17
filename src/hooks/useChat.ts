@@ -690,9 +690,9 @@ export function useChatMessages(conversationId: string | null) {
   const deleteMessage = useCallback(async (messageId: string, isAdmin = false) => {
     if (!user) return;
     if (isAdmin) {
-      await supabase.from("chat_messages").update({ is_deleted: true, content: null, deleted_by: user.id }).eq("id", messageId);
+      await supabase.from("chat_messages").update({ is_deleted: true, deleted_by: user.id }).eq("id", messageId);
     } else {
-      await supabase.from("chat_messages").update({ is_deleted: true, content: null, deleted_by: user.id }).eq("id", messageId).eq("sender_id", user.id);
+      await supabase.from("chat_messages").update({ is_deleted: true, deleted_by: user.id }).eq("id", messageId).eq("sender_id", user.id);
     }
   }, [user]);
 
