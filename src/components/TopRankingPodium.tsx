@@ -615,13 +615,13 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       </motion.div>
                     )}
                     {i === 1 && (
-                      <motion.div className="absolute -top-1 -left-2 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 15 }}>
-                        <SilverIceBadge size={20} />
+                      <motion.div className="absolute -top-1 -left-1.5 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 15 }}>
+                        <SilverIceBadge size={16} />
                       </motion.div>
                     )}
                     {i === 2 && (
-                      <motion.div className="absolute -top-1 -left-2 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 15 }}>
-                        <BronzeFireBadge size={20} />
+                      <motion.div className="absolute -top-1 -left-1.5 z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 15 }}>
+                        <BronzeFireBadge size={16} />
                       </motion.div>
                     )}
                   </div>
