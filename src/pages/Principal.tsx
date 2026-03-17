@@ -2322,7 +2322,7 @@ export default function Principal() {
                                   <span className="text-[10px] text-muted-foreground">{fmtDate(getRecargaTime(r))}</span>
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold font-mono text-sm text-foreground"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></span>
-                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(r.created_at)} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
+                                    <button onClick={() => { navigator.clipboard.writeText(`${fmtDate(getRecargaTime(r))} | ${r.telefone} | ${r.operadora || "—"} | ${fmt(safeValor(r))} | ${r.status}`); toast.success("Copiado!"); }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3 w-3" /></button>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
