@@ -2,6 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
+const AVAILABLE_ROLES = [
+  { value: "admin", label: "Admin", color: "text-red-400", bg: "bg-red-500/15" },
+  { value: "revendedor", label: "Revendedor", color: "text-blue-400", bg: "bg-blue-500/15" },
+  { value: "suporte", label: "Suporte", color: "text-amber-400", bg: "bg-amber-500/15" },
+  { value: "cliente", label: "Cliente", color: "text-emerald-400", bg: "bg-emerald-500/15" },
+  { value: "usuario", label: "Usuário", color: "text-muted-foreground", bg: "bg-muted" },
+] as const;
 import { motion, AnimatePresence } from "framer-motion";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { AnimatedPage } from "@/components/AnimatedPage";
