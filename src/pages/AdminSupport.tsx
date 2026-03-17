@@ -580,14 +580,68 @@ export default function AdminSupport() {
         <button onClick={() => { setMobileView("list"); setSelectedTicket(null); }} className="md:hidden p-1.5 rounded-lg hover:bg-muted">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate">{selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário"}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.subject || "Sem assunto"}</p>
+        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+          {(selectedTicket.telegram_first_name || selectedTicket.telegram_username || "U").charAt(0).toUpperCase()}
         </div>
-        <button onClick={() => { setShowInfoPanel(!showInfoPanel); if (isMobile) setMobileView("info"); }}
-          className="p-2 rounded-lg hover:bg-muted transition-colors">
-          {showInfoPanel ? <PanelRightClose className="w-4 h-4 text-muted-foreground" /> : <PanelRightOpen className="w-4 h-4 text-muted-foreground" />}
-        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground truncate">{selectedTicket.subject || "Sem assunto"}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário"}</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold ${STATUS_CONFIG[selectedTicket.status]?.dot || "bg-muted"} bg-opacity-20`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${STATUS_CONFIG[selectedTicket.status]?.dot || "bg-muted-foreground"}`} />
+            <span className={STATUS_CONFIG[selectedTicket.status]?.color || "text-muted-foreground"}>{STATUS_CONFIG[selectedTicket.status]?.label || selectedTicket.status}</span>
+          </span>
+          {/* Dropdown menu */}
+          <div className="relative" ref={headerMenuRef}>
+            <button onClick={() => setShowHeaderMenu(!showHeaderMenu)} className="p-2 rounded-lg hover:bg-muted transition-colors">
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <AnimatePresence>
+              {showHeaderMenu && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-1 w-52 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-2">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider px-2 py-1.5">Mudar status</p>
+                    {Object.entries(STATUS_CONFIG).map(([k, v]) => (
+                      <button
+                        key={k}
+                        onClick={() => { updateStatus(k); setShowHeaderMenu(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:bg-muted ${selectedTicket.status === k ? "bg-muted" : ""}`}
+                      >
+                        <span className={`h-2 w-2 rounded-full ${v.dot}`} />
+                        <span className={v.color}>{v.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-border p-2">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider px-2 py-1.5">Encaminhar para</p>
+                    {Object.entries(DEPARTMENTS).map(([k, v]) => (
+                      <button
+                        key={k}
+                        onClick={() => { forwardToDepartment(k); setShowHeaderMenu(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:bg-muted ${selectedTicket.department === k ? "bg-muted" : ""}`}
+                      >
+                        <span>{v.icon}</span>
+                        <span className={v.color}>{v.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <button onClick={() => { setShowInfoPanel(!showInfoPanel); if (isMobile) setMobileView("info"); }}
+            className="p-2 rounded-lg hover:bg-muted transition-colors">
+            <Settings2 className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
