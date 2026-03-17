@@ -600,7 +600,7 @@ export default function AdminSupport() {
           </div>
         ) : (
           filteredTickets.map((t) => (
-            <AdminTicketItem key={t.id} ticket={t} selected={selectedTicket?.id === t.id} onClick={() => selectTicket(t)} unread={unreadMap[t.id] || 0} />
+            <AdminTicketItem key={t.id} ticket={t} selected={selectedTicket?.id === t.id} onClick={() => selectTicket(t)} unread={unreadMap[t.id] || 0} avatarUrl={t.user_id ? ticketProfiles[t.user_id]?.avatar_url : null} />
           ))
         )}
       </div>
