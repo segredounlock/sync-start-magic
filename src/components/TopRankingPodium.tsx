@@ -281,6 +281,7 @@ function CountUp({ value, delay = 0 }: { value: number; delay?: number }) {
 interface TopRankingPodiumProps {
   userId: string;
   onViewFull?: () => void;
+  showPodium?: boolean;
 }
 
 export function TopRankingPodium({ userId, onViewFull }: TopRankingPodiumProps) {
