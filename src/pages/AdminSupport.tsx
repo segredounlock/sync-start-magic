@@ -765,9 +765,13 @@ export default function AdminSupport() {
         <div className="p-4 space-y-5">
           {/* User card */}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/50">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-              {userName.charAt(0).toUpperCase()}
-            </div>
+            {selectedTicket.user_id && ticketProfiles[selectedTicket.user_id]?.avatar_url ? (
+              <img src={ticketProfiles[selectedTicket.user_id].avatar_url!} alt={userName} className="w-10 h-10 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-sm font-bold text-foreground truncate">{userName}</p>
               <p className="text-[10px] text-muted-foreground">
