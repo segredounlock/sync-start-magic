@@ -90,6 +90,7 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
     }
   };
 
+  useEffect(() => {
     const fetchData = async () => {
       const [recargasRes, saldoRes, profileRes, roleRes] = await Promise.all([
         supabase
