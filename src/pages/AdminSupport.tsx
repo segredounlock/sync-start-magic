@@ -584,7 +584,16 @@ export default function AdminSupport() {
             </span>
           )}
           <span className="flex-1" />
-          <span className="text-[10px] text-muted-foreground">Ativo</span>
+          <button
+            onClick={toggleSupport}
+            disabled={togglingSupport}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${supportEnabled ? "bg-primary" : "bg-muted-foreground/30"}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${supportEnabled ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+          <span className={`text-[10px] font-medium ${supportEnabled ? "text-primary" : "text-muted-foreground"}`}>
+            {supportEnabled ? "Ativo" : "Inativo"}
+          </span>
         </div>
         <p className="text-[10px] text-muted-foreground -mt-1">Central de atendimento ao cliente</p>
         <div className="relative">
