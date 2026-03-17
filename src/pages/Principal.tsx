@@ -1254,6 +1254,7 @@ export default function Principal() {
 
   // Pending withdrawals count for badge
   const [pendingSaquesCount, setPendingSaquesCount] = useState(0);
+  const [pendingSupportCount, setPendingSupportCount] = useState(0);
   useEffect(() => {
     (async () => {
       const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("type", "saque").eq("status", "pending");
