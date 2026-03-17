@@ -663,6 +663,12 @@ serve(async (req) => {
           return;
         }
 
+        // Support message flow
+        if (!isCommand && session?.step === "awaiting_support_message") {
+          await handleSupportMessage(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
+          return;
+        }
+
         if (text === "/saldo") {
           await handleSaldo(supabase, BOT_TOKEN, chatId, linkedUser);
         } else if (text === "/recargas" || text === "/historico") {
@@ -695,9 +701,9 @@ serve(async (req) => {
             ]
           );
         } else if (text === "/ajuda" || text === "/help") {
-          await handleAjuda(BOT_TOKEN, chatId);
+          await handleAjuda(supabase, BOT_TOKEN, chatId, telegramId);
         } else {
-          await handleAjuda(BOT_TOKEN, chatId);
+          await handleAjuda(supabase, BOT_TOKEN, chatId, telegramId);
         }
       } catch (err) {
         console.error(`[ERROR] processUpdate:`, err);
@@ -1198,7 +1204,19 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   }
 
   if (data === "menu_ajuda") {
-    await handleAjuda(token, chatId);
+    await handleAjuda(supabase, token, chatId, telegramId);
+    return;
+  }
+
+  if (data === "support_talk") {
+    const chatIdStr = String(chatId);
+    const user = await findUserByTelegram(supabase, telegramId);
+    await setSession(supabase, chatIdStr, "awaiting_support_message", {
+      user_id: user?.id || null,
+      telegram_username: callback.from.username || "",
+      telegram_first_name: callback.from.first_name || "",
+    });
+    await sendMessage(token, chatId, "📝 <b>Falar com Suporte</b>\n\nDigite sua mensagem abaixo. Ela será enviada diretamente ao administrador.\n\n<i>Para cancelar, use /menu</i>");
     return;
   }
 
@@ -1843,10 +1861,12 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
   );
 }
 
-async function handleAjuda(token: string, chatId: number) {
+async function handleAjuda(supabase: any, token: string, chatId: number, telegramId: string) {
   await sendMessageWithKeyboard(token, chatId,
-    `❓ <b>Menu de Ajuda</b>\n\n<b>Recarga:</b> use o botão 📱 Fazer Recarga\n<b>Depósito:</b> /deposito`,
+    `❓ <b>Menu de Ajuda</b>\n\n<b>Recarga:</b> use o botão 📱 Fazer Recarga\n<b>Depósito:</b> /deposito\n\n💬 Precisa falar com o suporte? Clique no botão abaixo:`,
     [[
+      { text: "💬 Falar com Suporte", callback_data: "support_talk" },
+    ], [
       { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
       { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
     ], [
@@ -1856,6 +1876,39 @@ async function handleAjuda(token: string, chatId: number) {
       { text: "📖 Menu", callback_data: "menu_main" },
     ]]
   );
+}
+
+async function handleSupportMessage(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number) {
+  clearSession(supabase, chatIdStr);
+
+  // Save ticket to DB
+  const { error } = await supabase.from("support_tickets").insert({
+    telegram_chat_id: chatIdStr,
+    telegram_username: session.data?.telegram_username || null,
+    telegram_first_name: session.data?.telegram_first_name || null,
+    user_id: user?.id || null,
+    message: text,
+    status: "open",
+  });
+
+  if (error) {
+    console.error("[SUPPORT] Error saving ticket:", error.message);
+    await sendMessage(token, chatId, "❌ Erro ao enviar mensagem. Tente novamente.");
+    return;
+  }
+
+  await sendMessageWithKeyboard(token, chatId,
+    "✅ <b>Mensagem enviada ao suporte!</b>\n\nAguarde a resposta. Você será notificado aqui mesmo no Telegram.",
+    [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+  );
+
+  // Notify admin via Telegram (fire-and-forget)
+  const adminChatId = 1901426549;
+  const userName = session.data?.telegram_first_name || session.data?.telegram_username || "Usuário";
+  const userTag = session.data?.telegram_username ? ` (@${session.data.telegram_username})` : "";
+  sendMessage(token, adminChatId,
+    `🆘 <b>Novo Ticket de Suporte</b>\n\n👤 ${userName}${userTag}\n\n💬 <i>${text.length > 300 ? text.slice(0, 300) + "…" : text}</i>`
+  ).catch(() => {});
 }
 
 // ===== DEPOSIT HANDLER =====

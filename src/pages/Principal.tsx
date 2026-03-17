@@ -13,6 +13,7 @@ import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from 
 import { PromoBanner } from "@/components/PromoBanner";
 import { SaquesSection } from "@/components/SaquesSection";
 import { RedesSection } from "@/components/RedesSection";
+import { SupportSection } from "@/components/SupportSection";
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -34,7 +35,7 @@ import {
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
-  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image, ArrowRight, ArrowDown,
+  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image, ArrowRight, ArrowDown, Headphones,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -52,7 +53,7 @@ import { confirm } from "@/lib/confirm";
 import { safeValor } from "@/lib/utils";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte";
 
 type ReportPeriod = "hoje" | "7dias" | "mes" | "total";
 
@@ -1253,6 +1254,7 @@ export default function Principal() {
 
   // Pending withdrawals count for badge
   const [pendingSaquesCount, setPendingSaquesCount] = useState(0);
+  const [pendingSupportCount, setPendingSupportCount] = useState(0);
   useEffect(() => {
     (async () => {
       const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("type", "saque").eq("status", "pending");
@@ -1274,6 +1276,7 @@ export default function Principal() {
     { key: "broadcast", icon: Megaphone, label: "Broadcast", color: "text-warning" },
     { key: "enquetes", icon: BarChart3, label: "Enquetes", color: "text-accent" },
     { key: "batepapo", icon: Send, label: "Bate-Papo", color: "text-destructive" },
+    { key: "suporte", icon: Headphones, label: "Suporte", color: "text-[hsl(30,90%,55%)]", badge: pendingSupportCount },
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
@@ -1456,6 +1459,7 @@ export default function Principal() {
               {view === "saques" && "Gerencie solicitações de saque de toda a rede."}
               {view === "redes" && "Visão consolidada de todos os donos de rede."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
+              {view === "suporte" && "Gerencie tickets de suporte recebidos via Telegram."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
           </div>
@@ -4717,6 +4721,9 @@ export default function Principal() {
 
           {/* ===== REDES ===== */}
           {view === "redes" && <RedesSection />}
+
+          {/* ===== SUPORTE ===== */}
+          {view === "suporte" && <SupportSection onCountUpdate={setPendingSupportCount} />}
 
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
