@@ -5,7 +5,7 @@ import { useNotificationSound } from "@/hooks/useNotificationSound";
 import { styledToast as toast } from "@/lib/toast";
 import { SupportChatWidget } from "./SupportChatWidget";
 import { motion, AnimatePresence } from "framer-motion";
-import { Headphones, HeadphonesOff } from "lucide-react";
+import { Headphones, HeadphoneOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 export function FloatingSupportButton() {
