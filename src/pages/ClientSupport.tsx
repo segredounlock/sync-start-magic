@@ -8,7 +8,7 @@ import { TicketListSkeleton, ChatSkeleton } from "@/components/support/SupportSk
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, Plus, Send, ArrowLeft, CheckCircle2, Clock, XCircle,
-  Loader2, Image, X, Activity,
+  Loader2, Image, X, Activity, HeadphoneOff,
 } from "lucide-react";
 
 /* ═══ Types ═══ */

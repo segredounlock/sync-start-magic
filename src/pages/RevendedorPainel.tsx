@@ -2367,10 +2367,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: SUPORTE ===== */}
           {tab === "suporte" && user && (
             <div className="space-y-6">
-              <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
-                <ClientSupport />
-              </Suspense>
-              <SupportTab userId={user.id} />
+              {supportEnabled ? (
+                <>
+                  <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+                    <ClientSupport />
+                  </Suspense>
+                  <SupportTab userId={user.id} />
+                </>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card p-8 text-center">
+                  <HeadphoneOff className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-bold text-foreground">Suporte pausado</h3>
+                  <p className="text-sm text-muted-foreground mt-2">O atendimento está temporariamente indisponível para os revendedores.</p>
+                </div>
+              )}
             </div>
           )}
 
