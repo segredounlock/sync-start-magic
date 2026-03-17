@@ -614,9 +614,13 @@ export default function AdminSupport() {
         <button onClick={() => { setMobileView("list"); setSelectedTicket(null); }} className="md:hidden p-1.5 rounded-lg hover:bg-muted">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-          {(selectedTicket.telegram_first_name || selectedTicket.telegram_username || "U").charAt(0).toUpperCase()}
-        </div>
+        {selectedTicket.user_id && ticketProfiles[selectedTicket.user_id]?.avatar_url ? (
+          <img src={ticketProfiles[selectedTicket.user_id].avatar_url!} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+            {(selectedTicket.telegram_first_name || selectedTicket.telegram_username || "U").charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground truncate">{selectedTicket.subject || "Sem assunto"}</p>
           <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.telegram_first_name || selectedTicket.telegram_username || "Usuário"}</p>
