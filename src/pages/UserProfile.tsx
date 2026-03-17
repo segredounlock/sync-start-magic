@@ -2,6 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
+const AVAILABLE_ROLES = [
+  { value: "admin", label: "Admin", color: "text-red-400", bg: "bg-red-500/15" },
+  { value: "revendedor", label: "Revendedor", color: "text-blue-400", bg: "bg-blue-500/15" },
+  { value: "suporte", label: "Suporte", color: "text-amber-400", bg: "bg-amber-500/15" },
+  { value: "cliente", label: "Cliente", color: "text-emerald-400", bg: "bg-emerald-500/15" },
+  { value: "usuario", label: "Usuário", color: "text-muted-foreground", bg: "bg-muted" },
+] as const;
 import { motion, AnimatePresence } from "framer-motion";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { AnimatedPage } from "@/components/AnimatedPage";
@@ -9,7 +17,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   ArrowLeft, UserPlus, UserMinus, Loader2, Shield, Smartphone,
   TrendingUp, Calendar, Send, MessageCircle, Settings, Camera,
-  Pencil, Save, X, Check,
+  Pencil, Save, X, Check, ChevronDown,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import { formatDateTimeBR } from "@/lib/timezone";
@@ -33,7 +41,7 @@ const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-
 
 export default function UserProfile() {
   const { userId: paramId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, role: myRole } = useAuth();
   const navigate = useNavigate();
 
   const [resolvedId, setResolvedId] = useState<string | null>(null);
@@ -52,6 +60,8 @@ export default function UserProfile() {
   const [editingBio, setEditingBio] = useState(false);
   const [bioText, setBioText] = useState("");
   const [savingBio, setSavingBio] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   // Follower list modal
   const [showFollowers, setShowFollowers] = useState(false);
@@ -82,20 +92,19 @@ export default function UserProfile() {
     if (!resolvedId) return;
     setLoading(true);
     try {
-      const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleData }] = await Promise.all([
+      const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleRows }] = await Promise.all([
         supabase.from("profiles").select("id, nome, email, avatar_url, bio, slug, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", resolvedId).single(),
         supabase.rpc("get_follow_counts", { _user_id: resolvedId }),
         supabase.rpc("get_user_recargas_count" as any, { _user_id: resolvedId }),
         user?.id && user.id !== resolvedId
           ? supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", resolvedId).maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase.rpc("has_role", { _user_id: resolvedId, _role: "admin" }),
+        supabase.from("user_roles").select("role").eq("user_id", resolvedId),
       ]);
 
       if (profileData) {
         setProfile(profileData as any);
         setBioText((profileData as any).bio || "");
-        // If we navigated via UUID but profile has a slug, redirect to clean URL
         if ((profileData as any).slug && paramId && isUUID(paramId)) {
           navigate(`/perfil/${(profileData as any).slug}`, { replace: true });
         }
@@ -106,7 +115,11 @@ export default function UserProfile() {
       }
       setRecargasCount(Number(recargaResult.data) || 0);
       setIsFollowing(!!followData);
-      if (roleData === true) setProfileRole("admin");
+      // Resolve role with priority
+      const roles = (roleRows as any[] || []).map((r: any) => r.role);
+      const priority = ["admin", "revendedor", "suporte", "cliente", "usuario"];
+      const topRole = priority.find(r => roles.includes(r)) || "usuario";
+      setProfileRole(topRole);
     } catch (e) {
       console.error("Error loading profile:", e);
     } finally {
@@ -150,6 +163,34 @@ export default function UserProfile() {
       toast.error("Erro ao salvar bio");
     } finally {
       setSavingBio(false);
+    }
+  };
+
+  const handleChangeRole = async (newRole: string) => {
+    if (!resolvedId || changingRole || newRole === profileRole) return;
+    setChangingRole(true);
+    setShowRoleDropdown(false);
+    try {
+      // Remove old role first, then add new
+      if (profileRole && profileRole !== "usuario") {
+        await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: resolvedId, role: profileRole, action: "remove" },
+        });
+      }
+      if (newRole !== "usuario") {
+        const res = await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: resolvedId, role: newRole, action: "add" },
+        });
+        if (res.error) throw new Error(res.error.message);
+        const data = res.data as any;
+        if (data?.error) throw new Error(data.error);
+      }
+      setProfileRole(newRole);
+      toast.success(`Cargo alterado para ${AVAILABLE_ROLES.find(r => r.value === newRole)?.label || newRole}`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar cargo");
+    } finally {
+      setChangingRole(false);
     }
   };
 
@@ -273,6 +314,54 @@ export default function UserProfile() {
                   <VerificationBadge badge={profile.verification_badge as BadgeType} size="md" />
                 </div>
 
+                {/* Role badge / selector (admin only) */}
+                {profileRole && (
+                  <div className="relative flex justify-center md:justify-start mt-1.5">
+                    {myRole === "admin" && !isOwnProfile ? (
+                      <button
+                        onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                        disabled={changingRole}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-border/50 hover:border-primary/30 transition-all ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.bg || "bg-muted"} ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.color || "text-muted-foreground"}`}
+                      >
+                        {changingRole ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
+                        {AVAILABLE_ROLES.find(r => r.value === profileRole)?.label || profileRole}
+                        <ChevronDown className={`h-3 w-3 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
+                      </button>
+                    ) : (
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.bg || "bg-muted"} ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.color || "text-muted-foreground"}`}>
+                        <Shield className="h-3 w-3" />
+                        {AVAILABLE_ROLES.find(r => r.value === profileRole)?.label || profileRole}
+                      </span>
+                    )}
+                    {/* Dropdown */}
+                    <AnimatePresence>
+                      {showRoleDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowRoleDropdown(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[160px]"
+                          >
+                            {AVAILABLE_ROLES.map((r) => (
+                              <button
+                                key={r.value}
+                                onClick={() => handleChangeRole(r.value)}
+                                className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50 ${profileRole === r.value ? "bg-primary/10 text-primary" : "text-foreground"}`}
+                              >
+                                <Shield className={`h-3.5 w-3.5 ${r.color}`} />
+                                {r.label}
+                                {profileRole === r.value && <Check className="h-3.5 w-3.5 ml-auto text-primary" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
                 {/* Bio */}
                 <div className="mt-1.5 md:mt-2 md:max-w-md">
                   {editingBio ? (
