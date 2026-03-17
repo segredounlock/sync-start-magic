@@ -244,11 +244,14 @@ async function generateReceiptPng(data: any): Promise<Uint8Array | null> {
 }
 
 // ── Telegram helpers ────────────────────────────────────
-async function sendTelegramMessage(token: string, chatId: string | number, text: string) {
+async function sendTelegramMessage(token: string, chatId: string | number, text: string, opts?: { message_effect_id?: string; reply_markup?: any }) {
+  const body: any = { chat_id: chatId, text, parse_mode: "HTML" };
+  if (opts?.message_effect_id) body.message_effect_id = opts.message_effect_id;
+  if (opts?.reply_markup) body.reply_markup = opts.reply_markup;
   const resp = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+    body: JSON.stringify(body),
   });
   if (!resp.ok) {
     const errBody = await resp.text();
@@ -300,7 +303,8 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { type, user_id, telegram_id: direct_telegram_id, data } = await req.json();
+    const body = await req.json();
+    const { type, user_id, telegram_id: direct_telegram_id, data, chat_id: direct_chat_id, message: direct_message, message_effect_id: direct_effect_id } = body;
 
     // Resolve bot token
     const { data: tokenRow } = await supabase
@@ -314,6 +318,16 @@ Deno.serve(async (req) => {
       console.error("No Telegram bot token found");
       return new Response(
         JSON.stringify({ success: false, reason: "no_bot_token" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Direct chat_id + message shortcut (used by support replies)
+    if (direct_chat_id && direct_message) {
+      console.log(`Sending direct message to chat_id=${direct_chat_id}`);
+      const sent = await sendTelegramMessage(BOT_TOKEN, direct_chat_id, direct_message, { message_effect_id: direct_effect_id || undefined });
+      return new Response(
+        JSON.stringify({ success: sent }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -478,7 +492,8 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Sending ${type} text notification to telegram_id=${targetTelegramId}`);
-    const sent = await sendTelegramMessage(BOT_TOKEN, targetTelegramId, message);
+    const effectId = data?.message_effect_id || undefined;
+    const sent = await sendTelegramMessage(BOT_TOKEN, targetTelegramId, message, { message_effect_id: effectId });
 
     return new Response(
       JSON.stringify({ success: sent }),
