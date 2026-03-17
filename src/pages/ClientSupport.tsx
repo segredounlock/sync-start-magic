@@ -592,7 +592,7 @@ export default function ClientSupport() {
     <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background rounded-2xl border border-border overflow-hidden">
       {!supportEnabled ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-          <HeadphonesOff className="w-16 h-16 text-muted-foreground/30 mb-4" />
+          <HeadphoneOff className="w-16 h-16 text-muted-foreground/30 mb-4" />
           <p className="text-base font-semibold text-foreground">Suporte temporariamente pausado</p>
           <p className="text-sm text-muted-foreground mt-2 max-w-md">No momento não é possível abrir novos tickets nem continuar o atendimento pelo painel. Tente novamente mais tarde.</p>
         </div>
