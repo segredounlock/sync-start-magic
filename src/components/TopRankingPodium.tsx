@@ -633,7 +633,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
           <div className="space-y-1 pt-2">
             <h3 className="flex items-center gap-2 text-sm font-bold text-foreground px-1 pb-2">
               <Trophy className="w-4 h-4 text-yellow-500" />
-              Top {Math.min(ranking.length, 20)} Compradores
+              Top {Math.min(ranking.length, 20)} Recargas
             </h3>
             {ranking.slice(3).map((user, i) => {
               const position = i + 4;
