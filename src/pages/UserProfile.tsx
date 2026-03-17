@@ -193,6 +193,8 @@ export default function UserProfile() {
       setChangingRole(false);
     }
   };
+
+  const loadFollowersList = async () => {
     setListLoading(true);
     setShowFollowers(true);
     try {
