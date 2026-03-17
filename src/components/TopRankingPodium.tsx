@@ -629,12 +629,12 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                     <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
                       <span className="truncate">{user.nome}</span>
                       {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
-                      {isCurrentUser && (
-                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0">Você</span>
-                      )}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="relative text-right shrink-0">
+                    {isCurrentUser && (
+                      <span className="absolute -top-3 -right-1 text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-bold z-10">Você</span>
+                    )}
                     <span className={`font-bold ${isTopThree ? "text-base" : "text-sm"} text-destructive`}>{user.total_recargas}</span>
                     <p className="text-[9px] text-muted-foreground uppercase">recargas</p>
                   </div>
