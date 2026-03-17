@@ -1831,7 +1831,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "Operadora").toUpperCase()}</span>
                             </div>
                             <p className="text-sm text-muted-foreground font-mono">{r.telefone}</p>
-                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(r.created_at)}</p>
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(getRecargaTime(r))}</p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="font-bold text-foreground"><Currency value={safeValor(r)} duration={600} /></p>
