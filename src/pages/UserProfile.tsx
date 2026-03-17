@@ -314,6 +314,54 @@ export default function UserProfile() {
                   <VerificationBadge badge={profile.verification_badge as BadgeType} size="md" />
                 </div>
 
+                {/* Role badge / selector (admin only) */}
+                {profileRole && (
+                  <div className="relative flex justify-center md:justify-start mt-1.5">
+                    {myRole === "admin" && !isOwnProfile ? (
+                      <button
+                        onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                        disabled={changingRole}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-border/50 hover:border-primary/30 transition-all ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.bg || "bg-muted"} ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.color || "text-muted-foreground"}`}
+                      >
+                        {changingRole ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
+                        {AVAILABLE_ROLES.find(r => r.value === profileRole)?.label || profileRole}
+                        <ChevronDown className={`h-3 w-3 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
+                      </button>
+                    ) : (
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.bg || "bg-muted"} ${AVAILABLE_ROLES.find(r => r.value === profileRole)?.color || "text-muted-foreground"}`}>
+                        <Shield className="h-3 w-3" />
+                        {AVAILABLE_ROLES.find(r => r.value === profileRole)?.label || profileRole}
+                      </span>
+                    )}
+                    {/* Dropdown */}
+                    <AnimatePresence>
+                      {showRoleDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowRoleDropdown(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[160px]"
+                          >
+                            {AVAILABLE_ROLES.map((r) => (
+                              <button
+                                key={r.value}
+                                onClick={() => handleChangeRole(r.value)}
+                                className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50 ${profileRole === r.value ? "bg-primary/10 text-primary" : "text-foreground"}`}
+                              >
+                                <Shield className={`h-3.5 w-3.5 ${r.color}`} />
+                                {r.label}
+                                {profileRole === r.value && <Check className="h-3.5 w-3.5 ml-auto text-primary" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
                 {/* Bio */}
                 <div className="mt-1.5 md:mt-2 md:max-w-md">
                   {editingBio ? (
