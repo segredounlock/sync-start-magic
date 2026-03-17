@@ -1271,6 +1271,13 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   }
 
   if (data === "support_talk") {
+    // Check if support is enabled
+    const { data: supportCfg } = await supabase.from("system_config").select("value").eq("key", "supportEnabled").maybeSingle();
+    if (supportCfg?.value === "false") {
+      await sendMessage(token, chatId, "⚠️ <b>Suporte Temporariamente Indisponível</b>\n\nO atendimento está pausado no momento. Por favor, tente novamente mais tarde.");
+      return;
+    }
+
     const chatIdStr = String(chatId);
     const user = await findUserByTelegram(supabase, telegramId);
     await setSession(supabase, chatIdStr, "awaiting_support_message", {
