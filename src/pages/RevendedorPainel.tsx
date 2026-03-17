@@ -2554,7 +2554,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "ranking", label: "Ranking", icon: Trophy, color: "text-yellow-400", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
-          { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte off", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-primary" : "text-muted-foreground", animation: "float" },
+          { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte offline", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-primary" : "text-muted-foreground", animation: "float" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
           
         ] as NavItem[]}

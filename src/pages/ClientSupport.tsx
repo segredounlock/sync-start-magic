@@ -435,7 +435,7 @@ export default function ClientSupport() {
           disabled={!supportEnabled}
           className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:hover:opacity-100 disabled:cursor-not-allowed"
         >
-          <Plus className="w-4 h-4" /> {supportEnabled ? "Novo Ticket" : "Suporte indisponível"}
+          <Plus className="w-4 h-4" /> {supportEnabled ? "Novo Ticket" : "Suporte offline"}
         </button>
       </div>
 
