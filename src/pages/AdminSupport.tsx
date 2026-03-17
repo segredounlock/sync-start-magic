@@ -250,7 +250,7 @@ export default function AdminSupport() {
     if (senderIds.length > 0) {
       const { data: profiles } = await supabase.from("profiles")
         .select("id, nome, avatar_url, verification_badge")
-        .in("id", senderIds);
+        .in("id", senderIds as string[]);
       const map: Record<string, SenderProfile> = {};
       (profiles || []).forEach((p: any) => { map[p.id] = p; });
       setSenderProfiles(map);

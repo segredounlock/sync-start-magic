@@ -47,7 +47,7 @@ interface Props {
 
 export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
   const { user, role } = useAuth();
-  const isAdmin = role === "admin" || role === "suporte";
+  const isAdmin = role === "admin";
   const userId = user?.id;
 
   const [view, setView] = useState<"list" | "chat" | "create">("list");

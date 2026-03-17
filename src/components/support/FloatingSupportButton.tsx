@@ -41,7 +41,7 @@ export function FloatingSupportButton() {
   // Listen for new messages (notifications)
   useEffect(() => {
     if (!user?.id) return;
-    const isAdmin = role === "admin" || role === "suporte";
+    const isAdmin = role === "admin";
     const trackRole = isAdmin ? "client" : "admin";
 
     const ch = supabase
