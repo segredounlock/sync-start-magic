@@ -575,7 +575,8 @@ serve(async (req) => {
           return;
         }
 
-        if (!message?.text) return;
+        // Support photo+text: allow messages with photo but no text
+        if (!message?.text && !message?.photo) return;
 
         const chatId = message.chat.id;
         const text = message.text.trim();
