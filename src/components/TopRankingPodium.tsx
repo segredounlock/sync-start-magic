@@ -168,15 +168,15 @@ function SilverIceBadge({ size = 36 }: { size?: number }) {
         transition={{ duration: 2.5, repeat: Infinity }}
       />
 
-      {/* Badge with shimmer */}
-      <div className="relative w-9 h-9 rounded-full bg-gradient-to-r from-gray-300 to-slate-400 flex items-center justify-center overflow-hidden">
+      {/* Medal icon only */}
+      <div className="relative flex items-center justify-center">
         <motion.div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%)" }}
+          style={{ background: "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)" }}
           animate={{ x: ["-100%", "200%"] }}
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
         />
-        <Medal className="w-5 h-5 text-white drop-shadow-[0_0_4px_rgba(200,220,255,0.8)]" strokeWidth={2.5} />
+        <Medal className="w-4 h-4 text-gray-300 drop-shadow-[0_0_4px_rgba(200,220,255,0.8)]" strokeWidth={2.5} />
       </div>
     </motion.div>
   );
@@ -215,11 +215,11 @@ function BronzeFireBadge({ size = 36 }: { size?: number }) {
         transition={{ duration: 1.5, repeat: Infinity }}
       />
 
-      {/* Badge with flame overlay */}
-      <div className="relative w-9 h-9 rounded-full bg-gradient-to-r from-orange-600 to-amber-700 flex items-center justify-center overflow-hidden">
+      {/* Medal icon only */}
+      <div className="relative flex items-center justify-center">
         <motion.div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(0deg, rgba(255,100,0,0.4) 0%, transparent 50%, rgba(255,200,100,0.3) 100%)" }}
+          style={{ background: "linear-gradient(0deg, rgba(255,100,0,0.3) 0%, transparent 50%, rgba(255,200,100,0.2) 100%)" }}
           animate={{ opacity: [0.3, 0.7, 0.4, 0.8, 0.3] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
@@ -227,7 +227,7 @@ function BronzeFireBadge({ size = 36 }: { size?: number }) {
           animate={{ scale: [1, 1.1, 1.05, 1.12, 1], rotate: [0, -3, 3, -2, 0] }}
           transition={{ duration: 1.2, repeat: Infinity }}
         >
-          <Medal className="w-5 h-5 text-white drop-shadow-[0_0_6px_rgba(255,120,50,0.9)]" strokeWidth={2.5} />
+          <Medal className="w-4 h-4 text-orange-400 drop-shadow-[0_0_6px_rgba(255,120,50,0.9)]" strokeWidth={2.5} />
         </motion.div>
       </div>
     </motion.div>
