@@ -620,7 +620,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   </div>
                   <div className="text-right shrink-0">
                     <span className={`font-bold ${isTopThree ? "text-base" : "text-sm"} text-destructive`}>{user.total_recargas}</span>
-                    <p className="text-[9px] text-muted-foreground uppercase">compras</p>
+                    <p className="text-[9px] text-muted-foreground uppercase">recargas</p>
                   </div>
                 </motion.div>
               );
@@ -633,7 +633,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
           <div className="space-y-1 pt-2">
             <h3 className="flex items-center gap-2 text-sm font-bold text-foreground px-1 pb-2">
               <Trophy className="w-4 h-4 text-yellow-500" />
-              Top {Math.min(ranking.length, 20)} Compradores
+              Top {Math.min(ranking.length, 20)} Recargas
             </h3>
             {ranking.slice(3).map((user, i) => {
               const position = i + 4;
@@ -670,7 +670,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-sm font-bold text-destructive">{user.total_recargas}</span>
-                    <p className="text-[9px] text-muted-foreground uppercase">compras</p>
+                    <p className="text-[9px] text-muted-foreground uppercase">recargas</p>
                   </div>
                 </motion.div>
               );
