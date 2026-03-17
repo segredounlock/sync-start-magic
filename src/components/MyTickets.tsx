@@ -44,7 +44,8 @@ export function MyTickets({ userId }: { userId: string }) {
     let q = (supabase.from("support_tickets") as any)
       .select("id, message, image_url, status, admin_reply, replied_at, created_at")
       .order("created_at", { ascending: false });
-    if (filter !== "all") q = q.eq("status", filter);
+    if (filter === "open") q = q.in("status", ["open", "answered"]);
+    else if (filter === "closed") q = q.eq("status", "closed");
     const { data } = await q.limit(50);
     setTickets(data || []);
     setLoading(false);
