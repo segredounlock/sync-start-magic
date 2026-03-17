@@ -189,10 +189,10 @@ export function MyTickets({ userId }: { userId: string }) {
 
       {/* Filters */}
       <div className="flex gap-1.5 flex-wrap">
-        {(["all", "open", "answered", "closed"] as const).map((f) => (
+        {(["all", "open", "closed"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
-            {f === "all" ? "Todos" : f === "open" ? "Abertos" : f === "answered" ? "Respondidos" : "Fechados"}
+            {f === "all" ? "Todos" : f === "open" ? "Abertos" : "Fechados"}
           </button>
         ))}
       </div>
