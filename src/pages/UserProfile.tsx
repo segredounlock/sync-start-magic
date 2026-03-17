@@ -166,7 +166,33 @@ export default function UserProfile() {
     }
   };
 
-  const loadFollowersList = async () => {
+  const handleChangeRole = async (newRole: string) => {
+    if (!resolvedId || changingRole || newRole === profileRole) return;
+    setChangingRole(true);
+    setShowRoleDropdown(false);
+    try {
+      // Remove old role first, then add new
+      if (profileRole && profileRole !== "usuario") {
+        await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: resolvedId, role: profileRole, action: "remove" },
+        });
+      }
+      if (newRole !== "usuario") {
+        const res = await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: resolvedId, role: newRole, action: "add" },
+        });
+        if (res.error) throw new Error(res.error.message);
+        const data = res.data as any;
+        if (data?.error) throw new Error(data.error);
+      }
+      setProfileRole(newRole);
+      toast.success(`Cargo alterado para ${AVAILABLE_ROLES.find(r => r.value === newRole)?.label || newRole}`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar cargo");
+    } finally {
+      setChangingRole(false);
+    }
+  };
     setListLoading(true);
     setShowFollowers(true);
     try {
