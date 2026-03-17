@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Target, Wallet, Check, Shield } from "lucide-react";
+import { X, Phone, Clock, CheckCircle, XCircle, Loader2, Signal, Plus, Minus, Target, Wallet, Check, Shield, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { styledToast as toast } from "@/lib/toast";
@@ -44,6 +44,8 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userBadge, setUserBadge] = useState<string | null>(null);
   const [showBadgePicker, setShowBadgePicker] = useState(false);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
 
   const badgeOptions: { value: string | null; label: string; icon: string }[] = [
     { value: null, label: "Nenhum", icon: "❌" },
@@ -52,6 +54,41 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
     { value: "top", label: "Top", icon: "🔥" },
     { value: "elite", label: "Elite", icon: "🏆" },
   ];
+
+  const AVAILABLE_ROLES = [
+    { value: "admin", label: "Admin", color: "text-red-400", bg: "bg-red-500/15" },
+    { value: "revendedor", label: "Revendedor", color: "text-blue-400", bg: "bg-blue-500/15" },
+    { value: "suporte", label: "Suporte", color: "text-amber-400", bg: "bg-amber-500/15" },
+    { value: "cliente", label: "Cliente", color: "text-emerald-400", bg: "bg-emerald-500/15" },
+    { value: "usuario", label: "Usuário", color: "text-muted-foreground", bg: "bg-muted" },
+  ];
+
+  const handleChangeRole = async (newRole: string) => {
+    if (changingRole || newRole === userRole) { setShowRoleDropdown(false); return; }
+    setChangingRole(true);
+    setShowRoleDropdown(false);
+    try {
+      if (userRole && userRole !== "usuario") {
+        await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: userId, role: userRole, action: "remove" },
+        });
+      }
+      if (newRole !== "usuario") {
+        const res = await supabase.functions.invoke("admin-toggle-role", {
+          body: { user_id: userId, role: newRole, action: "add" },
+        });
+        if (res.error) throw new Error(res.error.message);
+        const data = res.data as any;
+        if (data?.error) throw new Error(data.error);
+      }
+      setUserRole(newRole);
+      toast.success(`Cargo alterado para ${AVAILABLE_ROLES.find(r => r.value === newRole)?.label || newRole}`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar cargo");
+    } finally {
+      setChangingRole(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -252,13 +289,53 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                 {userEmail && (
                   <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
                 )}
-                <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${
-                  userRole === "admin" ? "bg-primary/15 text-primary" :
-                  userRole === "revendedor" ? "bg-blue-500/15 text-blue-400" :
-                  "bg-muted text-muted-foreground"
-                }`}>
-                  {userRole === "admin" ? "Admin" : userRole === "revendedor" ? "Revendedor" : "Usuário"}
-                </span>
+                {isAdmin ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                      disabled={changingRole}
+                      className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wide border border-border/50 hover:border-primary/30 transition-all ${AVAILABLE_ROLES.find(r => r.value === userRole)?.bg || "bg-muted"} ${AVAILABLE_ROLES.find(r => r.value === userRole)?.color || "text-muted-foreground"}`}
+                    >
+                      {changingRole ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Shield className="h-2.5 w-2.5" />}
+                      {AVAILABLE_ROLES.find(r => r.value === userRole)?.label || userRole}
+                      <ChevronDown className={`h-2.5 w-2.5 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
+                    </button>
+                    <AnimatePresence>
+                      {showRoleDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowRoleDropdown(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[140px]"
+                          >
+                            {AVAILABLE_ROLES.map((r) => (
+                              <button
+                                key={r.value}
+                                onClick={() => handleChangeRole(r.value)}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors hover:bg-muted/50 ${userRole === r.value ? "bg-primary/10 text-primary" : "text-foreground"}`}
+                              >
+                                <Shield className={`h-3 w-3 ${r.color}`} />
+                                {r.label}
+                                {userRole === r.value && <Check className="h-3 w-3 ml-auto text-primary" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${
+                    userRole === "admin" ? "bg-primary/15 text-primary" :
+                    userRole === "revendedor" ? "bg-blue-500/15 text-blue-400" :
+                    "bg-muted text-muted-foreground"
+                  }`}>
+                    {AVAILABLE_ROLES.find(r => r.value === userRole)?.label || userRole}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <p className="text-[10px] text-muted-foreground">Últimas 10 recargas</p>
