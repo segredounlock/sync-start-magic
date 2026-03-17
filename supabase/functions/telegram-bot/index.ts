@@ -1204,7 +1204,19 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   }
 
   if (data === "menu_ajuda") {
-    await handleAjuda(token, chatId);
+    await handleAjuda(supabase, token, chatId, telegramId);
+    return;
+  }
+
+  if (data === "support_talk") {
+    const chatIdStr = String(chatId);
+    const user = await findUserByTelegram(supabase, telegramId);
+    await setSession(supabase, chatIdStr, "awaiting_support_message", {
+      user_id: user?.id || null,
+      telegram_username: callback.from.username || "",
+      telegram_first_name: callback.from.first_name || "",
+    });
+    await sendMessage(token, chatId, "📝 <b>Falar com Suporte</b>\n\nDigite sua mensagem abaixo. Ela será enviada diretamente ao administrador.\n\n<i>Para cancelar, use /menu</i>");
     return;
   }
 
