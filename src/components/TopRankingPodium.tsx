@@ -590,7 +590,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
                   onClick={() => navigate(`/perfil/${user.user_id}`)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors overflow-hidden ${
                     isCurrentUser
                       ? "bg-primary/10 border border-primary/30"
                       : isTopThree
@@ -598,6 +598,14 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       : "hover:bg-secondary/60"
                   }`}
                 >
+                  {/* Ribbon "Você" */}
+                  {isCurrentUser && (
+                    <div className="absolute top-0 right-0 z-20">
+                      <div className="bg-primary text-primary-foreground text-[8px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-bl-lg shadow-sm">
+                        Você
+                      </div>
+                    </div>
+                  )}
                   <span className={`text-[10px] font-semibold w-4 text-right ${isTopThree ? "text-foreground" : "text-muted-foreground"}`}>{position}</span>
                   <div className="relative" style={{ overflow: "visible" }}>
                     {user.avatar_url ? (
@@ -608,7 +616,6 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       </div>
                     )}
                     {isTopThree && <AvatarFlash index={i} />}
-                    {/* Badges for top 3 */}
                     {i === 0 && (
                       <motion.div className="absolute -top-4 inset-x-0 flex justify-center z-10" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 15 }}>
                         <GoldFloatingCrown size={22} />
@@ -631,10 +638,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                       {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
                     </p>
                   </div>
-                  <div className="relative text-right shrink-0">
-                    {isCurrentUser && (
-                      <span className="absolute -top-3 -right-1 text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-bold z-10">Você</span>
-                    )}
+                  <div className="text-right shrink-0">
                     <span className={`font-bold ${isTopThree ? "text-base" : "text-sm"} text-destructive`}>{user.total_recargas}</span>
                     <p className="text-[9px] text-muted-foreground uppercase">recargas</p>
                   </div>
