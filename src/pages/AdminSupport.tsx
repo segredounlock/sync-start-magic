@@ -349,50 +349,62 @@ export default function AdminSupport() {
   };
 
   /* ─── Update status ─── */
-  const updateStatus = async (newStatus: string) => {
+  const updatingStatusRef = useRef(false);
+  const updateStatus = async (newStatus: string, silent = false) => {
     if (!selectedTicket || !userId) return;
+    // Prevent duplicate calls & no-op if same status
+    if (updatingStatusRef.current || selectedTicket.status === newStatus) return;
+    updatingStatusRef.current = true;
+
     const statusLabel = STATUS_CONFIG[newStatus]?.label || newStatus;
-    await (supabase.from("support_tickets") as any)
-      .update({
-        status: newStatus,
-        ...(newStatus === "resolved" || newStatus === "closed" ? { resolved_at: new Date().toISOString() } : {}),
-      })
-      .eq("id", selectedTicket.id);
-    await (supabase.from("support_messages") as any).insert({
-      ticket_id: selectedTicket.id,
-      sender_id: userId,
-      sender_role: "system",
-      message: `[status:${newStatus}] Ticket alterado para ${statusLabel}`,
-      origin: "web",
-    });
+    try {
+      await (supabase.from("support_tickets") as any)
+        .update({
+          status: newStatus,
+          ...(newStatus === "resolved" || newStatus === "closed" ? { resolved_at: new Date().toISOString() } : {}),
+        })
+        .eq("id", selectedTicket.id);
 
-    // Notify user via Telegram
-    if (selectedTicket.telegram_chat_id && !selectedTicket.telegram_chat_id.startsWith("web-")) {
-      const statusEmoji: Record<string, string> = {
-        in_progress: "⏳",
-        resolved: "✅",
-        closed: "🔒",
-        open: "🔄",
-      };
-      const emoji = statusEmoji[newStatus] || "ℹ️";
-      let tgMessage = `${emoji} <b>Suporte - Status Atualizado</b>\n\nSeu ticket foi alterado para: <b>${statusLabel}</b>`;
-      if (newStatus === "closed") {
-        tgMessage += `\n\n🔒 Este atendimento foi encerrado.\nPara abrir um novo chamado, use /suporte.`;
-      } else if (newStatus === "resolved") {
-        tgMessage += `\n\n✅ Problema resolvido! Caso precise de mais ajuda, responda aqui.`;
+      if (!silent) {
+        await (supabase.from("support_messages") as any).insert({
+          ticket_id: selectedTicket.id,
+          sender_id: userId,
+          sender_role: "system",
+          message: `[status:${newStatus}] Ticket alterado para ${statusLabel}`,
+          origin: "web",
+        });
       }
-      supabase.functions.invoke("telegram-notify", {
-        body: {
-          chat_id: selectedTicket.telegram_chat_id,
-          message: tgMessage,
-          ...(newStatus === "closed" ? { close_support_session: true } : {}),
-        },
-      }).catch(() => {});
-    }
 
-    setSelectedTicket(prev => prev ? { ...prev, status: newStatus } : null);
-    fetchTickets();
-    toast.success(`Status alterado para ${statusLabel}`);
+      // Notify user via Telegram
+      if (selectedTicket.telegram_chat_id && !selectedTicket.telegram_chat_id.startsWith("web-")) {
+        const statusEmoji: Record<string, string> = {
+          in_progress: "⏳",
+          resolved: "✅",
+          closed: "🔒",
+          open: "🔄",
+        };
+        const emoji = statusEmoji[newStatus] || "ℹ️";
+        let tgMessage = `${emoji} <b>Suporte - Status Atualizado</b>\n\nSeu ticket foi alterado para: <b>${statusLabel}</b>`;
+        if (newStatus === "closed") {
+          tgMessage += `\n\n🔒 Este atendimento foi encerrado.\nPara abrir um novo chamado, use /suporte.`;
+        } else if (newStatus === "resolved") {
+          tgMessage += `\n\n✅ Problema resolvido! Caso precise de mais ajuda, responda aqui.`;
+        }
+        supabase.functions.invoke("telegram-notify", {
+          body: {
+            chat_id: selectedTicket.telegram_chat_id,
+            message: tgMessage,
+            ...(newStatus === "closed" ? { close_support_session: true } : {}),
+          },
+        }).catch(() => {});
+      }
+
+      setSelectedTicket(prev => prev ? { ...prev, status: newStatus } : null);
+      fetchTickets();
+      if (!silent) toast.success(`Status alterado para ${statusLabel}`);
+    } finally {
+      updatingStatusRef.current = false;
+    }
   };
 
   /* ─── Forward to department ─── */
@@ -435,9 +447,9 @@ export default function AdminSupport() {
         origin: "web",
       });
 
-      // Auto-progress from open to in_progress
+      // Auto-progress from open to in_progress (silent — no extra system message or Telegram notification)
       if (selectedTicket.status === "open") {
-        updateStatus("in_progress");
+        updateStatus("in_progress", true);
       }
 
       // Forward to Telegram if user has telegram_chat_id
