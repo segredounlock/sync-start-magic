@@ -346,16 +346,22 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
 
   if (message.is_deleted) {
     const deletedByAdmin = message.deleted_by && message.deleted_by !== message.sender_id;
-    return (
-      <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1`}>
-        <div className="px-3 py-2 rounded-2xl bg-muted/30 border border-border/50 max-w-[75%]">
-          <p className="text-xs text-muted-foreground italic">
-            {deletedByAdmin ? "🛡️ Removido pelo Admin" : "🚫 Mensagem apagada"}
-          </p>
+    // Admins can still see the original content
+    if (isCurrentUserAdmin && (message.content || message.audio_url || message.image_url)) {
+      // Don't return early — render normally below but with a "deleted" indicator
+    } else {
+      return (
+        <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1`}>
+          <div className="px-3 py-2 rounded-2xl bg-muted/30 border border-border/50 max-w-[75%]">
+            <p className="text-xs text-muted-foreground italic">
+              {deletedByAdmin ? "🛡️ Removido pelo Admin" : "🚫 Mensagem apagada"}
+            </p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
+  const isDeletedButVisibleToAdmin = message.is_deleted && isCurrentUserAdmin;
 
   const dateTime = new Date(message.created_at);
   const time = formatTimeBR(dateTime);
