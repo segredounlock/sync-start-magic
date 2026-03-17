@@ -3,7 +3,7 @@ import { DashboardSection } from "@/components/DashboardSection";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
