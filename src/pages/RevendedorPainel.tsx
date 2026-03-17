@@ -44,7 +44,7 @@ const ClientSupport = lazy(() => import("@/pages/ClientSupport"));
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { appToast, styledToast as toast } from "@/lib/toast";
-import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey, getRecargaTime } from "@/lib/timezone";
+import { formatDateTimeBR, formatFullDateTimeBR, formatDateLongUpperBR, toLocalDateKey, getTodayLocalKey, getRecargaTime, getRecargaTimeLabel } from "@/lib/timezone";
 
 import type { Recarga, CatalogValue, CatalogCarrier, Transaction } from "@/types";
 import { usePixDeposit } from "@/hooks/usePixDeposit";
@@ -1831,7 +1831,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                               <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${operadoraColors(r.operadora).bg} ${operadoraColors(r.operadora).text} ${operadoraColors(r.operadora).border}`}>{(r.operadora || "Operadora").toUpperCase()}</span>
                             </div>
                             <p className="text-sm text-muted-foreground font-mono">{r.telefone}</p>
-                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{fmtDate(getRecargaTime(r))}</p>
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="font-bold text-foreground"><Currency value={safeValor(r)} duration={600} /></p>
@@ -1962,7 +1962,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                                   <StatusBadge status={r.status} type="recarga" className="px-2.5 py-1 text-xs" />
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-border">
-                                  <span className="text-xs text-muted-foreground">{fmtDate(getRecargaTime(r))}</span>
+                                  <span className="text-xs text-muted-foreground">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</span>
                                   <div className="flex items-center gap-2">
                                     {(r.status === "completed" || r.status === "concluida") && (
                                       <button
@@ -2072,7 +2072,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Data</span>
-                            <span className="text-sm text-foreground">{fmtDate(getRecargaTime(r))}</span>
+                            <span className="text-sm text-foreground">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</span>
                           </div>
                           <div className="flex justify-between items-center py-2">
                             <span className="text-sm text-muted-foreground">ID</span>

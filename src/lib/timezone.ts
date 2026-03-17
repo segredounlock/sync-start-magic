@@ -253,3 +253,12 @@ export function getRecargaTime(r: { status: string; completed_at?: string | null
   }
   return r.created_at;
 }
+
+/** Returns "Concluída às" or "Pedida às" based on recarga status */
+export function getRecargaTimeLabel(r: { status: string; completed_at?: string | null }): string {
+  if ((r.status === "completed" || r.status === "concluida") && r.completed_at) {
+    return "Concluída às";
+  }
+  if (r.status === "pending") return "Pedida às";
+  return "Pedida às";
+}
