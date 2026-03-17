@@ -579,7 +579,7 @@ serve(async (req) => {
         if (!message?.text && !message?.photo) return;
 
         const chatId = message.chat.id;
-        const text = message.text.trim();
+        const text = (message.text || message.caption || "").trim();
         const telegramId = String(message.from.id);
         const telegramUsername = message.from.username || "";
         const chatIdStr = String(chatId);
