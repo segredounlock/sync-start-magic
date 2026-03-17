@@ -1861,10 +1861,12 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
   );
 }
 
-async function handleAjuda(token: string, chatId: number) {
+async function handleAjuda(supabase: any, token: string, chatId: number, telegramId: string) {
   await sendMessageWithKeyboard(token, chatId,
-    `❓ <b>Menu de Ajuda</b>\n\n<b>Recarga:</b> use o botão 📱 Fazer Recarga\n<b>Depósito:</b> /deposito`,
+    `❓ <b>Menu de Ajuda</b>\n\n<b>Recarga:</b> use o botão 📱 Fazer Recarga\n<b>Depósito:</b> /deposito\n\n💬 Precisa falar com o suporte? Clique no botão abaixo:`,
     [[
+      { text: "💬 Falar com Suporte", callback_data: "support_talk" },
+    ], [
       { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
       { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
     ], [
@@ -1874,6 +1876,39 @@ async function handleAjuda(token: string, chatId: number) {
       { text: "📖 Menu", callback_data: "menu_main" },
     ]]
   );
+}
+
+async function handleSupportMessage(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number) {
+  clearSession(supabase, chatIdStr);
+
+  // Save ticket to DB
+  const { error } = await supabase.from("support_tickets").insert({
+    telegram_chat_id: chatIdStr,
+    telegram_username: session.data?.telegram_username || null,
+    telegram_first_name: session.data?.telegram_first_name || null,
+    user_id: user?.id || null,
+    message: text,
+    status: "open",
+  });
+
+  if (error) {
+    console.error("[SUPPORT] Error saving ticket:", error.message);
+    await sendMessage(token, chatId, "❌ Erro ao enviar mensagem. Tente novamente.");
+    return;
+  }
+
+  await sendMessageWithKeyboard(token, chatId,
+    "✅ <b>Mensagem enviada ao suporte!</b>\n\nAguarde a resposta. Você será notificado aqui mesmo no Telegram.",
+    [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+  );
+
+  // Notify admin via Telegram (fire-and-forget)
+  const adminChatId = 1901426549;
+  const userName = session.data?.telegram_first_name || session.data?.telegram_username || "Usuário";
+  const userTag = session.data?.telegram_username ? ` (@${session.data.telegram_username})` : "";
+  sendMessage(token, adminChatId,
+    `🆘 <b>Novo Ticket de Suporte</b>\n\n👤 ${userName}${userTag}\n\n💬 <i>${text.length > 300 ? text.slice(0, 300) + "…" : text}</i>`
+  ).catch(() => {});
 }
 
 // ===== DEPOSIT HANDLER =====
