@@ -1196,7 +1196,7 @@ export default function Principal() {
   // Broadcast functions
   const fetchBroadcastHistory = useCallback(async () => {
     const { data } = await (supabase.from('notifications' as any) as any)
-      .select('id, title, message, sent_count, created_at')
+      .select('id, title, message, image_url, buttons, sent_count, created_at')
       .order('created_at', { ascending: false })
       .limit(20);
     if (data) {
