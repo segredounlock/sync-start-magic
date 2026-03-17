@@ -16,6 +16,7 @@ export function FloatingSupportButton() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [enabled, setEnabled] = useState(true);
+  const [showOfflineTooltip, setShowOfflineTooltip] = useState(false);
   const isOpenRef = useRef(false);
   const unreadCountRef = useRef(0);
 
