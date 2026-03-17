@@ -2337,6 +2337,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             </div>
           )}
 
+          {/* ===== TAB: SUPORTE ===== */}
+          {tab === "suporte" && user && (
+            <div className="space-y-6">
+              <SupportTab userId={user.id} />
+            </div>
+          )}
 
           {/* ===== TAB: STATUS ===== */}
           {tab === "status" && (
