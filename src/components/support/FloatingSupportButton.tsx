@@ -84,7 +84,40 @@ export function FloatingSupportButton() {
     setUnreadCount(count);
   }, []);
 
-  if (!user || !enabled || shouldHide) return null;
+  if (!user || shouldHide) return null;
+
+  // When disabled, show offline button with tooltip
+  if (!enabled) {
+    return (
+      <div className="fixed bottom-24 md:bottom-4 right-4 z-50">
+        <motion.button
+          onClick={() => {
+            setShowOfflineTooltip(true);
+            setTimeout(() => setShowOfflineTooltip(false), 3000);
+          }}
+          whileTap={{ scale: 0.95 }}
+          className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-muted/60 text-muted-foreground shadow-lg flex items-center justify-center cursor-not-allowed opacity-70"
+        >
+          <HeadphoneOff className="w-5 h-5 md:w-6 md:h-6" />
+        </motion.button>
+
+        <AnimatePresence>
+          {showOfflineTooltip && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.9 }}
+              className="absolute bottom-full right-0 mb-2 w-52 p-3 rounded-xl bg-card border border-border shadow-xl"
+            >
+              <p className="text-xs font-semibold text-foreground">⏸️ Suporte Pausado</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">O atendimento está temporariamente indisponível. Tente novamente mais tarde.</p>
+              <div className="absolute bottom-[-6px] right-5 w-3 h-3 bg-card border-b border-r border-border rotate-45" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <>
