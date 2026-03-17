@@ -4723,7 +4723,7 @@ export default function Principal() {
           {view === "redes" && <RedesSection />}
 
           {/* ===== SUPORTE ===== */}
-          {view === "suporte" && <SupportSection onCountUpdate={setPendingSupportCount} />}
+          {view === "suporte" && <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>}
 
           {/* ===== BACKUP ===== */}
           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
