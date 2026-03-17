@@ -289,13 +289,53 @@ export function UserRecargasModal({ userId, userName, avatarUrl, onClose }: User
                 {userEmail && (
                   <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
                 )}
-                <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${
-                  userRole === "admin" ? "bg-primary/15 text-primary" :
-                  userRole === "revendedor" ? "bg-blue-500/15 text-blue-400" :
-                  "bg-muted text-muted-foreground"
-                }`}>
-                  {userRole === "admin" ? "Admin" : userRole === "revendedor" ? "Revendedor" : "Usuário"}
-                </span>
+                {isAdmin ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                      disabled={changingRole}
+                      className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wide border border-border/50 hover:border-primary/30 transition-all ${AVAILABLE_ROLES.find(r => r.value === userRole)?.bg || "bg-muted"} ${AVAILABLE_ROLES.find(r => r.value === userRole)?.color || "text-muted-foreground"}`}
+                    >
+                      {changingRole ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Shield className="h-2.5 w-2.5" />}
+                      {AVAILABLE_ROLES.find(r => r.value === userRole)?.label || userRole}
+                      <ChevronDown className={`h-2.5 w-2.5 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
+                    </button>
+                    <AnimatePresence>
+                      {showRoleDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowRoleDropdown(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[140px]"
+                          >
+                            {AVAILABLE_ROLES.map((r) => (
+                              <button
+                                key={r.value}
+                                onClick={() => handleChangeRole(r.value)}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors hover:bg-muted/50 ${userRole === r.value ? "bg-primary/10 text-primary" : "text-foreground"}`}
+                              >
+                                <Shield className={`h-3 w-3 ${r.color}`} />
+                                {r.label}
+                                {userRole === r.value && <Check className="h-3 w-3 ml-auto text-primary" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${
+                    userRole === "admin" ? "bg-primary/15 text-primary" :
+                    userRole === "revendedor" ? "bg-blue-500/15 text-blue-400" :
+                    "bg-muted text-muted-foreground"
+                  }`}>
+                    {AVAILABLE_ROLES.find(r => r.value === userRole)?.label || userRole}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <p className="text-[10px] text-muted-foreground">Últimas 10 recargas</p>
