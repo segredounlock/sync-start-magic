@@ -2350,7 +2350,7 @@ export default function Principal() {
                             <tbody>
                               {filteredRecs.slice(0, 25).map(r => (
                                 <tr key={r.id} className="border-b border-border last:border-0">
-                                  <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(r.created_at)}</td>
+                                  <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(getRecargaTime(r))}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
                                   <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
                                   <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
