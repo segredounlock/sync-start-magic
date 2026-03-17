@@ -80,7 +80,7 @@ function DotBadge({ status }: { status: string }) {
   return <span className={`h-2 w-2 rounded-full ${cfg.dot} shrink-0`} />;
 }
 
-function AdminTicketItem({ ticket, selected, onClick, unread }: { ticket: Ticket; selected: boolean; onClick: () => void; unread: number }) {
+function AdminTicketItem({ ticket, selected, onClick, unread, avatarUrl }: { ticket: Ticket; selected: boolean; onClick: () => void; unread: number; avatarUrl?: string | null }) {
   const dept = DEPARTMENTS[ticket.department] || DEPARTMENTS.support;
   const name = ticket.telegram_first_name || ticket.telegram_username || "Usuário";
   return (
@@ -89,9 +89,13 @@ function AdminTicketItem({ ticket, selected, onClick, unread }: { ticket: Ticket
       className={`w-full text-left px-4 py-3 border-b border-border/50 transition-colors hover:bg-muted/30 ${selected ? "bg-primary/10 border-l-2 border-l-primary" : ""}`}
     >
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground shrink-0">
-          {name.charAt(0).toUpperCase()}
-        </div>
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground shrink-0">
+            {name.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-semibold text-foreground truncate">{name}</p>
