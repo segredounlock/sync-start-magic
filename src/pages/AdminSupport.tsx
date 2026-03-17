@@ -282,6 +282,16 @@ export default function AdminSupport() {
 
   useEffect(() => { fetchTickets(); fetchUnreadCounts(); }, [fetchTickets, fetchUnreadCounts]);
 
+  // Close header menu on click outside
+  useEffect(() => {
+    if (!showHeaderMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target as Node)) setShowHeaderMenu(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showHeaderMenu]);
+
   /* ─── Deep linking ─── */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
