@@ -873,7 +873,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "status", label: "Status do Sistema", icon: Activity, color: "text-sky-400" },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw, color: "text-lime-400" },
     { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-orange-400" },
-    { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte off", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-teal-400" : "text-muted-foreground" },
+    { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte offline", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-teal-400" : "text-muted-foreground" },
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && (role === "admin" || salesToolsEnabled)) ? [
@@ -2377,7 +2377,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               ) : (
                 <div className="rounded-2xl border border-border bg-card p-8 text-center">
                   <HeadphoneOff className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
-                  <h3 className="text-lg font-bold text-foreground">Suporte pausado</h3>
+                   <h3 className="text-lg font-bold text-foreground">Suporte Offline</h3>
                   <p className="text-sm text-muted-foreground mt-2">O atendimento está temporariamente indisponível para os revendedores.</p>
                 </div>
               )}
@@ -2554,7 +2554,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           { key: "ranking", label: "Ranking", icon: Trophy, color: "text-yellow-400", animation: "bounce" },
           { key: "status", label: "Status", icon: Activity, color: "text-warning", animation: "pulse" },
           { key: "atualizacoes", label: "Novidades", icon: RefreshCw, color: "text-primary", animation: "float" },
-          { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte off", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-primary" : "text-muted-foreground", animation: "float" },
+          { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte offline", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-primary" : "text-muted-foreground", animation: "float" },
           ...salesMenuItems.map(item => ({ key: item.key, label: item.label, icon: item.icon, color: "text-primary", animation: "float" as const })),
           
         ] as NavItem[]}
