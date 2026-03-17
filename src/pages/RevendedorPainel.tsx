@@ -851,7 +851,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "status", label: "Status do Sistema", icon: Activity, color: "text-sky-400" },
     { key: "atualizacoes", label: "Atualizações", icon: RefreshCw, color: "text-lime-400" },
     { key: "raspadinha", label: "Raspadinha", icon: Ticket, color: "text-orange-400" },
-    { key: "suporte", label: "Suporte", icon: Headphones, color: "text-teal-400" },
+    { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte off", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-teal-400" : "text-muted-foreground" },
   ];
 
   const salesMenuItems: MenuItem[] = (!isClientMode && (role === "admin" || salesToolsEnabled)) ? [
