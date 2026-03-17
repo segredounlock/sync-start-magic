@@ -13,6 +13,7 @@ import { Currency, IntVal, StatusBadge, getStatusLabel, getStatusClasses } from 
 import { PromoBanner } from "@/components/PromoBanner";
 import { SaquesSection } from "@/components/SaquesSection";
 import { RedesSection } from "@/components/RedesSection";
+import { lazy, Suspense } from "react";
 const AdminSupport = lazy(() => import("@/pages/AdminSupport"));
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -40,7 +41,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
 import { getLocalDayStartUTC, getLocalMonthStartUTC, toLocalDateKey, getTodayLocalKey, formatDateFullBR, formatTimeBR, formatFullDateTimeBR, getRecargaTime, getRecargaTimeLabel } from "@/lib/timezone";
-import { useEffect, useState, useCallback, useMemo, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { styledToast as toast } from "@/lib/toast";
 import { unlockAudio, playCashRegisterSound } from "@/lib/sounds";
