@@ -28,7 +28,7 @@ const STATUS_MAP: Record<string, { label: string; icon: any; color: string }> = 
 export function MyTickets({ userId }: { userId: string }) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "open" | "answered" | "closed">("all");
+  const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // New ticket form
