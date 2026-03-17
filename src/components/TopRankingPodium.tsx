@@ -574,10 +574,6 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
         {/* Full list when podium is hidden — show all positions including top 3 */}
         {!showPodium && ranking.length > 0 && (
           <div className="space-y-1 pt-2">
-            <h3 className="flex items-center gap-2 text-sm font-bold text-foreground px-1 pb-2">
-              <Trophy className="w-4 h-4 text-yellow-500" />
-              Top {Math.min(ranking.length, 20)} Compradores
-            </h3>
             {ranking.map((user, i) => {
               const position = i + 1;
               const isCurrentUser = user.user_id === userId;
