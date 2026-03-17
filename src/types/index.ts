@@ -41,6 +41,7 @@ export interface Recarga {
   custo_api: number;
   status: string;
   created_at: string;
+  completed_at?: string | null;
   external_id?: string | null;
 }
 
