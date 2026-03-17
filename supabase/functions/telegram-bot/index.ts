@@ -701,9 +701,9 @@ serve(async (req) => {
             ]
           );
         } else if (text === "/ajuda" || text === "/help") {
-          await handleAjuda(BOT_TOKEN, chatId);
+          await handleAjuda(supabase, BOT_TOKEN, chatId, telegramId);
         } else {
-          await handleAjuda(BOT_TOKEN, chatId);
+          await handleAjuda(supabase, BOT_TOKEN, chatId, telegramId);
         }
       } catch (err) {
         console.error(`[ERROR] processUpdate:`, err);
