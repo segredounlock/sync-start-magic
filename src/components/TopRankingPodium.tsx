@@ -169,15 +169,7 @@ function SilverIceBadge({ size = 36 }: { size?: number }) {
       />
 
       {/* Medal icon only */}
-      <div className="relative flex items-center justify-center">
-        <motion.div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)" }}
-          animate={{ x: ["-100%", "200%"] }}
-          transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
-        />
-        <Medal className="w-4 h-4 text-gray-300 drop-shadow-[0_0_4px_rgba(200,220,255,0.8)]" strokeWidth={2.5} />
-      </div>
+      <Medal className="w-4 h-4 text-gray-300 drop-shadow-[0_0_4px_rgba(200,220,255,0.8)]" strokeWidth={2.5} />
     </motion.div>
   );
 }
