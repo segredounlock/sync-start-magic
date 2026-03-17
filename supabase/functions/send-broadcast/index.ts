@@ -491,8 +491,13 @@ async function postNotificationToChat(notification: any) {
       console.error('[BROADCAST] Failed to post to chat:', error.message);
     } else {
       console.log('[BROADCAST] Posted notification to Atualizações do Sistema chat');
-      // Update conversation preview
-      await supabase.rpc('sync_chat_conversation_preview', { _conversation_id: UPDATES_CONVERSATION_ID });
+      // Update conversation preview directly (service role can't use auth.uid()-based RPC)
+      const previewText = `Admin: 📢 ${notification.title}`;
+      await supabase.from('chat_conversations').update({
+        last_message_text: previewText.length > 100 ? previewText.slice(0, 100) + '…' : previewText,
+        last_message_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq('id', UPDATES_CONVERSATION_ID);
     }
   } catch (err) {
     console.error('[BROADCAST] Chat post error:', err);
