@@ -663,6 +663,12 @@ serve(async (req) => {
           return;
         }
 
+        // Support message flow
+        if (!isCommand && session?.step === "awaiting_support_message") {
+          await handleSupportMessage(supabase, BOT_TOKEN, chatId, chatIdStr, linkedUser, text, session, message.message_id);
+          return;
+        }
+
         if (text === "/saldo") {
           await handleSaldo(supabase, BOT_TOKEN, chatId, linkedUser);
         } else if (text === "/recargas" || text === "/historico") {
