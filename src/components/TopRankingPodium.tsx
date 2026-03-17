@@ -282,9 +282,10 @@ interface TopRankingPodiumProps {
   userId: string;
   onViewFull?: () => void;
   showPodium?: boolean;
+  hideList?: boolean;
 }
 
-export function TopRankingPodium({ userId, onViewFull, showPodium = true }: TopRankingPodiumProps) {
+export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideList = false }: TopRankingPodiumProps) {
   const navigate = useNavigate();
   const [ranking, setRanking] = useState<RankUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -632,7 +633,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true }: TopR
         )}
 
         {/* Top 20 List (positions 4-20) — only when podium is shown */}
-        {showPodium && ranking.length > 3 && (
+        {showPodium && !hideList && ranking.length > 3 && (
           <div className="space-y-1 pt-2">
             <h3 className="flex items-center gap-2 text-sm font-bold text-foreground px-1 pb-2">
               <Trophy className="w-4 h-4 text-yellow-500" />
