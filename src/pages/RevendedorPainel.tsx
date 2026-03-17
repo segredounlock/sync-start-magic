@@ -38,6 +38,7 @@ import { MinhaRede } from "@/components/MinhaRede";
 import { ScratchCard } from "@/components/ScratchCard";
 import { ResellerFeeConfig } from "@/components/ResellerFeeConfig";
 import { SupportTab } from "@/components/settings/SupportTab";
+import { MyTickets } from "@/components/MyTickets";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -2340,6 +2341,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: SUPORTE ===== */}
           {tab === "suporte" && user && (
             <div className="space-y-6">
+              <MyTickets userId={user.id} />
               <SupportTab userId={user.id} />
             </div>
           )}
