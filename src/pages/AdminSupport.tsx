@@ -194,6 +194,8 @@ export default function AdminSupport() {
 
   // Info panel
   const [showInfoPanel, setShowInfoPanel] = useState(true);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
 
   // Unread counts
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
