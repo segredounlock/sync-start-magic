@@ -778,6 +778,13 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               </div>
             )}
 
+            {/* Deleted indicator for admin */}
+            {isDeletedButVisibleToAdmin && (
+              <div className="flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-destructive/15 border border-destructive/20 w-fit">
+                <span className="text-[9px] font-semibold text-destructive">🗑️ Apagada{message.deleted_by && message.deleted_by !== message.sender_id ? " pelo Admin" : " pelo usuário"}</span>
+              </div>
+            )}
+
             {/* Date, Time & status */}
              <div className={`flex items-center gap-1.5 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
               <span className={`text-[9px] ${isOwn ? "text-white/50" : "text-muted-foreground/70"}`}>{date}</span>
