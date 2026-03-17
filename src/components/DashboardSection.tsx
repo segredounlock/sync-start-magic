@@ -332,7 +332,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
       </div>
 
       {/* Ranking */}
-      <TopRankingPodium userId={userId} />
+      <TopRankingPodium userId={userId} hideList />
 
       {/* Relatório de Desempenho */}
       <div>
