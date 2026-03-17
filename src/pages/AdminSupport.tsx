@@ -302,6 +302,26 @@ export default function AdminSupport() {
 
   useEffect(() => { fetchTickets(); fetchUnreadCounts(); }, [fetchTickets, fetchUnreadCounts]);
 
+  // Fetch support enabled state
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("system_config").select("value").eq("key", "supportEnabled").maybeSingle();
+      setSupportEnabled(data?.value !== "false");
+    })();
+  }, []);
+
+  const toggleSupport = async () => {
+    setTogglingSupport(true);
+    const newVal = !supportEnabled;
+    await (supabase.from("system_config") as any).upsert(
+      { key: "supportEnabled", value: String(newVal), updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    setSupportEnabled(newVal);
+    setTogglingSupport(false);
+    toast.success(newVal ? "Suporte ativado" : "Suporte desativado");
+  };
+
   // Close header menu on click outside
   useEffect(() => {
     if (!showHeaderMenu) return;
