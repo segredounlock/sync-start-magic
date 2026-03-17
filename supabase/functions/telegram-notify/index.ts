@@ -322,6 +322,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Direct chat_id + message shortcut (used by support replies)
+    if (direct_chat_id && direct_message) {
+      console.log(`Sending direct message to chat_id=${direct_chat_id}`);
+      const sent = await sendTelegramMessage(BOT_TOKEN, direct_chat_id, direct_message, { message_effect_id: direct_effect_id || undefined });
+      return new Response(
+        JSON.stringify({ success: sent }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Support direct telegram_id or lookup from user profile
     let targetTelegramId = direct_telegram_id || null;
     let profileName = "";
