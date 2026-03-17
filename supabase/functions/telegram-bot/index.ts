@@ -584,6 +584,48 @@ serve(async (req) => {
         const telegramUsername = message.from.username || "";
         const chatIdStr = String(chatId);
 
+        // Admin reply-to-ticket: when admin replies to a ticket notification, forward to user
+        const ADMIN_CHAT_ID = 1901426549;
+        if (chatId === ADMIN_CHAT_ID && message.reply_to_message && text) {
+          const repliedText = message.reply_to_message.text || message.reply_to_message.caption || "";
+          if (repliedText.includes("🆘") && repliedText.includes("Ticket de Suporte")) {
+            // Find the most recent open ticket matching the username in the notification
+            const usernameMatch = repliedText.match(/@(\w+)/);
+            const nameMatch = repliedText.match(/👤\s*([^\n(]+)/);
+            let ticket: any = null;
+
+            if (usernameMatch) {
+              const { data } = await supabase.from("support_tickets")
+                .select("*").eq("telegram_username", usernameMatch[1])
+                .order("created_at", { ascending: false }).limit(1);
+              ticket = data?.[0];
+            }
+            if (!ticket && nameMatch) {
+              const name = nameMatch[1].trim();
+              const { data } = await supabase.from("support_tickets")
+                .select("*").eq("telegram_first_name", name)
+                .order("created_at", { ascending: false }).limit(1);
+              ticket = data?.[0];
+            }
+
+            if (ticket) {
+              // Send reply to user via Telegram
+              await sendMessage(BOT_TOKEN, Number(ticket.telegram_chat_id),
+                `💬 <b>Resposta do Suporte</b>\n\n${text}`
+              );
+              // Update ticket in DB
+              await supabase.from("support_tickets")
+                .update({ status: "answered", admin_reply: text, replied_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+                .eq("id", ticket.id);
+              await sendMessage(BOT_TOKEN, chatId, "✅ Resposta enviada ao usuário!");
+              return;
+            } else {
+              await sendMessage(BOT_TOKEN, chatId, "❌ Não foi possível encontrar o ticket correspondente.");
+              return;
+            }
+          }
+        }
+
         // Parallel: find user + session + register telegram_user
         const [linkedUser, session] = await Promise.all([
           findUserByTelegram(supabase, telegramId),
