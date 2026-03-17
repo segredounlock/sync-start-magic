@@ -2377,7 +2377,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               ) : (
                 <div className="rounded-2xl border border-border bg-card p-8 text-center">
                   <HeadphoneOff className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
-                  <h3 className="text-lg font-bold text-foreground">Suporte pausado</h3>
+                   <h3 className="text-lg font-bold text-foreground">Suporte Offline</h3>
                   <p className="text-sm text-muted-foreground mt-2">O atendimento está temporariamente indisponível para os revendedores.</p>
                 </div>
               )}
