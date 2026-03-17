@@ -41,7 +41,7 @@ const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-
 
 export default function UserProfile() {
   const { userId: paramId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, role: myRole } = useAuth();
   const navigate = useNavigate();
 
   const [resolvedId, setResolvedId] = useState<string | null>(null);
