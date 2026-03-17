@@ -1880,8 +1880,43 @@ async function handleAjuda(supabase: any, token: string, chatId: number, telegra
   );
 }
 
-async function handleSupportMessage(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number) {
+async function handleSupportMessage(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number, photoFileId?: string | null) {
   clearSession(supabase, chatIdStr);
+
+  let imageUrl: string | null = null;
+
+  // Download photo from Telegram and upload to Supabase storage
+  if (photoFileId) {
+    try {
+      const fileResp = await fetch(`${TELEGRAM_API}${token}/getFile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file_id: photoFileId }),
+      });
+      const fileData = await fileResp.json();
+      if (fileData?.ok && fileData.result?.file_path) {
+        const downloadResp = await fetch(`https://api.telegram.org/file/bot${token}/${fileData.result.file_path}`);
+        if (downloadResp.ok) {
+          const fileBytes = await downloadResp.arrayBuffer();
+          const ext = fileData.result.file_path.split(".").pop() || "jpg";
+          const fileName = `support/${chatIdStr}/${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from("chat-images").upload(fileName, fileBytes, { contentType: `image/${ext}` });
+          if (!upErr) {
+            const { data: { publicUrl } } = supabase.storage.from("chat-images").getPublicUrl(fileName);
+            imageUrl = publicUrl;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[SUPPORT] Photo download/upload error:", e);
+    }
+  }
+
+  const messageText = text || (imageUrl ? "[Imagem]" : "");
+  if (!messageText && !imageUrl) {
+    await sendMessage(token, chatId, "❌ Envie uma mensagem de texto ou imagem.");
+    return;
+  }
 
   // Save ticket to DB
   const { error } = await supabase.from("support_tickets").insert({
@@ -1889,7 +1924,8 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
     telegram_username: session.data?.telegram_username || null,
     telegram_first_name: session.data?.telegram_first_name || null,
     user_id: user?.id || null,
-    message: text,
+    message: messageText,
+    image_url: imageUrl,
     status: "open",
   });
 
@@ -1908,8 +1944,10 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
   const adminChatId = 1901426549;
   const userName = session.data?.telegram_first_name || session.data?.telegram_username || "Usuário";
   const userTag = session.data?.telegram_username ? ` (@${session.data.telegram_username})` : "";
+  const photoTag = imageUrl ? "\n📷 <i>Com imagem anexada</i>" : "";
+  const msgPreview = messageText.length > 300 ? messageText.slice(0, 300) + "…" : messageText;
   sendMessage(token, adminChatId,
-    `🆘 <b>Novo Ticket de Suporte</b>\n\n👤 ${userName}${userTag}\n\n💬 <i>${text.length > 300 ? text.slice(0, 300) + "…" : text}</i>`
+    `🆘 <b>Novo Ticket de Suporte</b>\n\n👤 ${userName}${userTag}\n\n💬 <i>${msgPreview}</i>${photoTag}`
   ).catch(() => {});
 }
 
