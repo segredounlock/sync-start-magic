@@ -234,7 +234,7 @@ export function NotificationBell({ listenTo, revendedores }: NotificationBellPro
                     <p className="text-xs mt-1 opacity-70">Notificações em tempo real aparecerão aqui</p>
                   </div>
                 ) : (
-                  Object.entries(grouped).map(([dateLabel, items]) => (
+                  grouped.map(([dateLabel, items]) => (
                     <div key={dateLabel}>
                       {/* Date separator */}
                       <div className="sticky top-0 bg-background/90 backdrop-blur-sm px-4 py-1.5 border-b border-border/30">
