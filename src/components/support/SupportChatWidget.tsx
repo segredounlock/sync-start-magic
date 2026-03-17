@@ -217,7 +217,41 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
         sender_id: userId,
         sender_role: isAdmin ? "admin" : "client",
         message: sanitizeText(text),
+        origin: "web",
       });
+
+      // Forward to Telegram
+      if (isAdmin) {
+        // Admin replying — forward to user's Telegram
+        const { data: ticket } = await (supabase.from("support_tickets") as any)
+          .select("telegram_chat_id, telegram_username, telegram_first_name, user_id")
+          .eq("id", selectedTicket.id)
+          .single();
+        if (ticket?.telegram_chat_id && !ticket.telegram_chat_id.startsWith("web-")) {
+          supabase.functions.invoke("telegram-notify", {
+            body: {
+              chat_id: ticket.telegram_chat_id,
+              message: `💬 <b>Resposta do Suporte</b>\n\n${sanitizeText(text)}\n\n<i>💡 Você pode responder diretamente aqui.</i>`,
+              reopen_support_session: true,
+              session_data: {
+                telegram_username: ticket.telegram_username || "",
+                telegram_first_name: ticket.telegram_first_name || "",
+                user_id: ticket.user_id || null,
+              },
+            },
+          }).catch(() => {});
+        }
+      } else {
+        // Client replying — notify admin on Telegram
+        const adminChatId = 1901426549;
+        supabase.functions.invoke("telegram-notify", {
+          body: {
+            chat_id: String(adminChatId),
+            message: `📩 <b>Nova mensagem no Suporte</b>\n\n👤 ${selectedTicket.subject || "Ticket"}\n\n💬 <i>${text.slice(0, 300)}</i>`,
+          },
+        }).catch(() => {});
+      }
+
       setMsgText("");
     } catch (e: any) { toast.error(e.message || "Erro"); }
     setSending(false);

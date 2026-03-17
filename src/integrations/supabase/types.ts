@@ -1088,6 +1088,7 @@ export type Database = {
           image_url: string | null
           is_read: boolean
           message: string
+          origin: string
           sender_id: string
           sender_role: string
           ticket_id: string
@@ -1098,6 +1099,7 @@ export type Database = {
           image_url?: string | null
           is_read?: boolean
           message: string
+          origin?: string
           sender_id: string
           sender_role?: string
           ticket_id: string
@@ -1108,6 +1110,7 @@ export type Database = {
           image_url?: string | null
           is_read?: boolean
           message?: string
+          origin?: string
           sender_id?: string
           sender_role?: string
           ticket_id?: string

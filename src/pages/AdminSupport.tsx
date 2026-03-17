@@ -24,6 +24,7 @@ interface Ticket {
   assigned_to: string | null;
   telegram_first_name: string | null;
   telegram_username: string | null;
+  telegram_chat_id: string | null;
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
@@ -222,7 +223,7 @@ export default function AdminSupport() {
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     const { data } = await (supabase.from("support_tickets") as any)
-      .select("id, user_id, subject, status, priority, department, assigned_to, telegram_first_name, telegram_username, created_at, updated_at, resolved_at")
+      .select("id, user_id, subject, status, priority, department, assigned_to, telegram_first_name, telegram_username, telegram_chat_id, created_at, updated_at, resolved_at")
       .order("created_at", { ascending: false });
 
     const sortedTickets = (data || []).sort((a: Ticket, b: Ticket) =>
@@ -403,11 +404,32 @@ export default function AdminSupport() {
         sender_role: role === "admin" ? "admin" : "support",
         message: sanitizeText(finalMsg),
         image_url: imageUrl,
+        origin: "web",
       });
 
       // Auto-progress from open to in_progress
       if (selectedTicket.status === "open") {
         updateStatus("in_progress");
+      }
+
+      // Forward to Telegram if user has telegram_chat_id
+      const telegramChatId = (selectedTicket as any).telegram_chat_id;
+      if (telegramChatId && !telegramChatId.startsWith("web-")) {
+        const plainText = sanitizeText(text).replace(/\[img:[^\]]+\]/g, "").trim();
+        const telegramMsg = `💬 <b>Resposta do Suporte</b>\n\n${plainText}\n\n<i>💡 Você pode responder diretamente aqui.</i>`;
+        supabase.functions.invoke("telegram-notify", {
+          body: {
+            chat_id: telegramChatId,
+            message: telegramMsg,
+            image_url: imageUrl || undefined,
+            reopen_support_session: true,
+            session_data: {
+              telegram_username: selectedTicket.telegram_username || "",
+              telegram_first_name: selectedTicket.telegram_first_name || "",
+              user_id: selectedTicket.user_id || null,
+            },
+          },
+        }).catch((e: any) => console.error("Telegram forward failed:", e));
       }
 
       setMsgText("");
