@@ -461,13 +461,14 @@ export default function AdminSupport() {
         if (newStatus === "closed") {
           tgMessage += `\n\n🔒 Este atendimento foi encerrado.\nPara abrir um novo chamado, use /suporte.`;
         } else if (newStatus === "resolved") {
-          tgMessage += `\n\n✅ Problema resolvido! Caso precise de mais ajuda, responda aqui.`;
+          tgMessage += `\n\n✅ Problema resolvido! Caso precise de mais ajuda, abra um novo chamado com /suporte.`;
         }
+        const shouldCloseSession = newStatus === "closed" || newStatus === "resolved";
         supabase.functions.invoke("telegram-notify", {
           body: {
             chat_id: selectedTicket.telegram_chat_id,
             message: tgMessage,
-            ...(newStatus === "closed" ? { close_support_session: true } : {}),
+            ...(shouldCloseSession ? { close_support_session: true } : {}),
           },
         }).catch(() => {});
       }
