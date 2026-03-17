@@ -1081,15 +1081,97 @@ export type Database = {
         }
         Relationships: []
       }
-      support_tickets: {
+      support_messages: {
         Row: {
-          admin_reply: string | null
           created_at: string
           id: string
           image_url: string | null
+          is_read: boolean
           message: string
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_read?: boolean
+          message: string
+          sender_id: string
+          sender_role?: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_read?: boolean
+          message?: string
+          sender_id?: string
+          sender_role?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          shortcut: string | null
+          title: string
+          updated_at: string
+          usage_count: number
+          variables: Json | null
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          shortcut?: string | null
+          title: string
+          updated_at?: string
+          usage_count?: number
+          variables?: Json | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          shortcut?: string | null
+          title?: string
+          updated_at?: string
+          usage_count?: number
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          admin_reply: string | null
+          assigned_to: string | null
+          created_at: string
+          department: string
+          id: string
+          image_url: string | null
+          message: string
+          priority: string
           replied_at: string | null
+          resolved_at: string | null
           status: string
+          subject: string | null
           telegram_chat_id: string
           telegram_first_name: string | null
           telegram_username: string | null
@@ -1098,12 +1180,17 @@ export type Database = {
         }
         Insert: {
           admin_reply?: string | null
+          assigned_to?: string | null
           created_at?: string
+          department?: string
           id?: string
           image_url?: string | null
           message: string
+          priority?: string
           replied_at?: string | null
+          resolved_at?: string | null
           status?: string
+          subject?: string | null
           telegram_chat_id: string
           telegram_first_name?: string | null
           telegram_username?: string | null
@@ -1112,12 +1199,17 @@ export type Database = {
         }
         Update: {
           admin_reply?: string | null
+          assigned_to?: string | null
           created_at?: string
+          department?: string
           id?: string
           image_url?: string | null
           message?: string
+          priority?: string
           replied_at?: string | null
+          resolved_at?: string | null
           status?: string
+          subject?: string | null
           telegram_chat_id?: string
           telegram_first_name?: string | null
           telegram_username?: string | null

@@ -1,0 +1,128 @@
+import { useEffect, useState, useRef, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
+import { styledToast as toast } from "@/lib/toast";
+import { SupportChatWidget } from "./SupportChatWidget";
+import { motion, AnimatePresence } from "framer-motion";
+import { Headphones } from "lucide-react";
+import { useLocation } from "react-router-dom";
+
+export function FloatingSupportButton() {
+  const { user, role } = useAuth();
+  const location = useLocation();
+  const { playSound } = useNotificationSound();
+  const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [enabled, setEnabled] = useState(true);
+  const isOpenRef = useRef(false);
+  const unreadCountRef = useRef(0);
+
+  isOpenRef.current = isOpen;
+  unreadCountRef.current = unreadCount;
+
+  // Check if support is enabled
+  useEffect(() => {
+    const check = async () => {
+      const { data } = await (supabase.from("system_config") as any)
+        .select("value")
+        .eq("key", "support_enabled")
+        .single();
+      setEnabled(data?.value !== "false");
+    };
+    check();
+  }, []);
+
+  // Hide on certain routes
+  const hiddenRoutes = ["/chat", "/admin/support"];
+  const shouldHide = hiddenRoutes.some(r => location.pathname.startsWith(r));
+
+  // Listen for new messages (notifications)
+  useEffect(() => {
+    if (!user?.id) return;
+    const isAdmin = role === "admin";
+    const trackRole = isAdmin ? "client" : "admin";
+
+    const ch = supabase
+      .channel("support-unread-notifications")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, (payload: any) => {
+        const msg = payload.new;
+        if (msg.sender_role === trackRole && msg.sender_id !== user.id) {
+          if (!isOpenRef.current) {
+            setUnreadCount(prev => prev + 1);
+            setHasNewMessage(true);
+            setTimeout(() => setHasNewMessage(false), 3000);
+            playSound("message");
+
+            const preview = msg.message?.includes("[img:") ? "📷 Imagem" : (msg.message?.slice(0, 80) || "Nova mensagem");
+            toast.info("💬 Nova mensagem do suporte", {
+              description: preview + (msg.message?.length > 80 ? "..." : ""),
+              action: { label: "Abrir", onClick: () => setIsOpen(true) },
+            });
+          }
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, role, playSound]);
+
+  const handleUnreadChange = useCallback((count: number) => {
+    setUnreadCount(count);
+  }, []);
+
+  if (!user || !enabled || shouldHide) return null;
+
+  return (
+    <>
+      {/* Floating button */}
+      <div className="fixed bottom-24 md:bottom-4 right-4 z-50">
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground shadow-xl flex items-center justify-center"
+        >
+          <Headphones className="w-5 h-5 md:w-6 md:h-6" />
+
+          {/* Pulse ring */}
+          <AnimatePresence>
+            {hasNewMessage && (
+              <motion.span
+                initial={{ scale: 1, opacity: 0.5 }}
+                animate={{ scale: 2.5, opacity: 0 }}
+                transition={{ duration: 1.5, repeat: 2, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full bg-destructive pointer-events-none"
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Badge */}
+          <AnimatePresence>
+            {unreadCount > 0 && (
+              <motion.span
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                className="absolute -top-1.5 -right-1.5 h-5 min-w-5 px-1 rounded-full bg-white text-destructive text-[11px] font-bold flex items-center justify-center"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      </div>
+
+      {/* Widget */}
+      <AnimatePresence>
+        {isOpen && (
+          <SupportChatWidget
+            onClose={() => setIsOpen(false)}
+            onUnreadChange={handleUnreadChange}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

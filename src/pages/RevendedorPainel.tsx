@@ -3,7 +3,7 @@ import { DashboardSection } from "@/components/DashboardSection";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import RecargasTicker from "@/components/RecargasTicker";
 import BrandedQRCode from "@/components/BrandedQRCode";
@@ -38,7 +38,7 @@ import { MinhaRede } from "@/components/MinhaRede";
 import { ScratchCard } from "@/components/ScratchCard";
 import { ResellerFeeConfig } from "@/components/ResellerFeeConfig";
 import { SupportTab } from "@/components/settings/SupportTab";
-import { MyTickets } from "@/components/MyTickets";
+const ClientSupport = lazy(() => import("@/pages/ClientSupport"));
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -2342,7 +2342,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: SUPORTE ===== */}
           {tab === "suporte" && user && (
             <div className="space-y-6">
-              <MyTickets userId={user.id} />
+              <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+                <ClientSupport />
+              </Suspense>
               <SupportTab userId={user.id} />
             </div>
           )}

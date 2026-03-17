@@ -28,6 +28,7 @@ const UserProfile = lazy(() => import("@/pages/UserProfile"));
 // Lazy load non-critical global components
 const SeasonalEffects = lazy(() => import("@/components/SeasonalEffects"));
 const PullToRefresh = lazy(() => import("@/components/PullToRefresh"));
+const FloatingSupportButton = lazy(() => import("@/components/support/FloatingSupportButton").then(m => ({ default: m.FloatingSupportButton })));
 
 // ── Prefetch common routes after initial paint ──
 function usePrefetchRoutes() {
@@ -115,6 +116,7 @@ function DeferredEffects() {
     <Suspense fallback={null}>
       <SeasonalEffects />
       <PullToRefresh />
+      <FloatingSupportButton />
     </Suspense>
   );
 }
