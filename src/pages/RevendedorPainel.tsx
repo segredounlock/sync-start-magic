@@ -2072,7 +2072,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-border">
                             <span className="text-sm text-muted-foreground">Data</span>
-                            <span className="text-sm text-foreground">{fmtDate(r.created_at)}</span>
+                            <span className="text-sm text-foreground">{fmtDate(getRecargaTime(r))}</span>
                           </div>
                           <div className="flex justify-between items-center py-2">
                             <span className="text-sm text-muted-foreground">ID</span>
