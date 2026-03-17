@@ -36,6 +36,7 @@ import {
 import { MeusPrecos } from "@/components/MeusPrecos";
 import { MinhaRede } from "@/components/MinhaRede";
 import { ScratchCard } from "@/components/ScratchCard";
+import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { ResellerFeeConfig } from "@/components/ResellerFeeConfig";
 import { SupportTab } from "@/components/settings/SupportTab";
 const ClientSupport = lazy(() => import("@/pages/ClientSupport"));
