@@ -2468,6 +2468,7 @@ export default function TelegramMiniApp() {
             <motion.div key="ranking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
               <TopRankingPodium userId={userId} showPodium={false} />
             </motion.div>
+          )}
           {/* ── Raspadinha ── */}
           {section === "raspadinha" && userId && (
             <motion.div key="raspadinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
