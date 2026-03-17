@@ -60,6 +60,8 @@ export default function UserProfile() {
   const [editingBio, setEditingBio] = useState(false);
   const [bioText, setBioText] = useState("");
   const [savingBio, setSavingBio] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   // Follower list modal
   const [showFollowers, setShowFollowers] = useState(false);
