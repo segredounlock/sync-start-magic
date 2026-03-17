@@ -872,7 +872,7 @@ export default function AdminDashboard() {
 
   const fetchBroadcastHistory = useCallback(async () => {
     const { data } = await (supabase.from('notifications' as any) as any)
-      .select('id, title, message, sent_count, created_at')
+      .select('id, title, message, image_url, buttons, sent_count, created_at')
       .order('created_at', { ascending: false })
       .limit(20);
     if (data) {
@@ -3623,14 +3623,20 @@ export default function AdminDashboard() {
                               setBroadcastSending(true);
                               setBroadcastTitle(h.title);
                               try {
+                                // Duplicate notification so resend appears as new entry
+                                const { data: newNotif, error: dupError } = await (supabase.from('notifications' as any) as any)
+                                  .insert({ title: h.title, message: h.message, image_url: h.image_url, buttons: h.buttons || [], status: 'sending', sent_count: 0, failed_count: 0 })
+                                  .select('id').single();
+                                if (dupError) throw dupError;
                                 const { data: result, error } = await supabase.functions.invoke('send-broadcast', {
-                                  body: { notification_id: h.id, include_unregistered: false },
+                                  body: { notification_id: newNotif.id, include_unregistered: false },
                                 });
                                 if (error) throw error;
                                 if (result?.progress_id) {
                                   setBroadcastProgressId(result.progress_id);
                                   toast.success(`Reenviando para ${result.total || 0} usuários!`);
                                 }
+                                fetchBroadcastHistory();
                               } catch (err: any) {
                                 toast.error('Erro: ' + (err.message || 'Erro desconhecido'));
                               } finally {
