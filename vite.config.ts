@@ -81,15 +81,12 @@ export default defineConfig({
     sourceHashPlugin(),
     react(),
     VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: "auto",
+      registerType: "prompt",
+      injectRegister: false,
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}"],
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
-        // Cleanup old caches from previous versions automatically
         cleanupOutdatedCaches: true,
-        // Skip waiting to activate new SW immediately
-        skipWaiting: true,
         clientsClaim: true,
         // Limit precache size
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB max per file

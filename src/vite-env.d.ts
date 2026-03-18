@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/react" />
 
 declare module "virtual:source-hashes" {
   const hashes: Record<string, string>;
