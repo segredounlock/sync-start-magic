@@ -119,6 +119,7 @@ interface SendResult {
   error_code?: number;
   description?: string;
   parameters?: { retry_after?: number };
+  message_id?: number;
 }
 
 async function sendTelegramMessage(
@@ -186,6 +187,7 @@ async function sendTelegramMessage(
         error_code: result.error_code,
         description: result.description,
         parameters: result.parameters,
+        message_id: result.result?.message_id,
       };
     } catch (err) {
       if (attempt === retries) {
@@ -282,6 +284,7 @@ async function sendBroadcastInBackground(
     // Collect status changes for batch update
     const blockedUpdates: Array<{ telegram_id: number; reason: string }> = [];
     const unblockedIds: number[] = []; // Users that succeeded but were previously blocked
+    const messageRecords: Array<{ notification_id: string; telegram_id: number; message_id: number }> = [];
 
     const batches: typeof users[] = [];
     for (let i = 0; i < totalUsers; i += BATCH_SIZE) {
@@ -342,6 +345,10 @@ async function sendBroadcastInBackground(
       for (const result of results) {
         if (result.ok) {
           sentCount++;
+          // Save message_id for future delete/edit
+          if (result.message_id) {
+            messageRecords.push({ notification_id: notificationId, telegram_id: result.telegramId, message_id: result.message_id });
+          }
           // If this user was previously blocked, unblock them (they unblocked the bot!)
           if (result.wasBlocked) {
             unblockedIds.push(result.telegramId);
@@ -363,12 +370,15 @@ async function sendBroadcastInBackground(
         }
       }
 
-      // Flush blocked/unblocked users in batches of 50
+      // Flush blocked/unblocked/message records in batches of 50
       if (blockedUpdates.length >= 50) {
         await flushBlockedUsers(blockedUpdates.splice(0, 50));
       }
       if (unblockedIds.length >= 50) {
         await flushUnblockedUsers(unblockedIds.splice(0, 50));
+      }
+      if (messageRecords.length >= 50) {
+        await flushMessageRecords(messageRecords.splice(0, 50));
       }
 
       const elapsedMs = Date.now() - startTime;
@@ -396,12 +406,15 @@ async function sendBroadcastInBackground(
       }
     }
 
-    // Flush remaining blocked/unblocked users
+    // Flush remaining blocked/unblocked/message records
     if (blockedUpdates.length > 0) {
       await flushBlockedUsers(blockedUpdates);
     }
     if (unblockedIds.length > 0) {
       await flushUnblockedUsers(unblockedIds);
+    }
+    if (messageRecords.length > 0) {
+      await flushMessageRecords(messageRecords);
     }
 
     // Only mark completed if not already cancelled
@@ -462,6 +475,15 @@ async function flushUnblockedUsers(telegramIds: number[]) {
     .update({ is_blocked: false, block_reason: null })
     .in('telegram_id', telegramIds);
   console.log(`[BROADCAST] Unblocked ${telegramIds.length} users (they unblocked the bot)`);
+}
+
+async function flushMessageRecords(records: Array<{ notification_id: string; telegram_id: number; message_id: number }>) {
+  const { error } = await supabase.from('broadcast_messages').upsert(records, { onConflict: 'notification_id,telegram_id' });
+  if (error) {
+    console.error(`[BROADCAST] Failed to save ${records.length} message records:`, error.message);
+  } else {
+    console.log(`[BROADCAST] Saved ${records.length} message records`);
+  }
 }
 
 
