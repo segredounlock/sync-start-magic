@@ -29,9 +29,9 @@ export default function UpdatePrompt() {
       // Only update when page is hidden (user switched tab/minimized)
       if (document.hidden) {
         timerRef.current = setTimeout(() => {
-          console.log("[UpdatePrompt] App inactive for 2min, applying update silently");
+          console.log("[UpdatePrompt] App inactive for 5min, applying update silently");
           updateServiceWorker(true);
-        }, 2 * 60 * 1000); // 2 minutes of inactivity
+        }, 5 * 60 * 1000); // 5 minutes of inactivity
       }
     };
 
