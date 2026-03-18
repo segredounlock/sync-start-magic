@@ -37,8 +37,10 @@ function isValidUUID(value: unknown): boolean {
 }
 
 function isPermanentError(errorCode: number, description?: string): boolean {
+  // 403 is always a permanent block
   if (PERMANENT_BLOCK_CODES.has(errorCode)) return true;
-  if (description) {
+  // For 400 errors, only treat as permanent if the description matches known user-level failures
+  if (errorCode === 400 && description) {
     const lower = description.toLowerCase();
     return PERMANENT_ERROR_DESCRIPTIONS.some(d => lower.includes(d));
   }
