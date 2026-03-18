@@ -1,40 +1,43 @@
 
 
-## Diagnóstico e Correção
+## Plano: Atualizar preços personalizados para margem de R$ 0,50
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Situação Atual
 
-### Plano
+| Usuário | Email | Regras | Exemplo atual (CLARO R$20) |
+|---------|-------|--------|---------------------------|
+| Recargas Brasil | ericaferreiradutra@icloud.com | 20 | custo R$11 → paga R$10,50 (margem -R$0,50) |
+| João Victor Peral | sanperal002@gmail.com | 18 | custo R$11 → paga R$10,50 (margem -R$0,50) |
+| Neverland - Recargas | ferreiragreg180@gmail.com | 18 | custo R$11 → paga R$10,50 (margem -R$0,50) |
 
-**1. Corrigir o mapeamento de status na sync function**
+Alguns valores estão com margem **negativa** (abaixo do custo global), outros com +R$0,50.
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### Ação
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+Uma única query UPDATE que ajusta todas as 56 regras dos 3 usuários para `regra_valor = custo_global + 0.50`:
 
 ```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+UPDATE reseller_pricing_rules rpr
+SET regra_valor = pr.custo + 0.50, updated_at = now()
+FROM pricing_rules pr
+WHERE pr.operadora_id = rpr.operadora_id
+  AND pr.valor_recarga = rpr.valor_recarga
+  AND rpr.user_id IN (
+    'd74ea4f9-e831-4b14-a48f-75ef2d6ac5d3',
+    '6c137356-238a-413d-bc75-924c35d55eb6',
+    'dee05f2d-29b8-4590-9873-eb5aeb42ce59'
+  );
 ```
 
-**3. Verificar se há outros pedidos presos**
+### Resultado
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+| Operadora | Valor | Custo Global | Novo Preço (regra_valor) | Margem |
+|-----------|-------|-------------|--------------------------|--------|
+| CLARO | R$20 | R$11 | R$11,50 | +R$0,50 |
+| CLARO | R$25 | R$12 | R$12,50 | +R$0,50 |
+| TIM | R$15 | R$7 | R$7,50 | +R$0,50 |
+| VIVO | R$15 | R$11 | R$11,50 | +R$0,50 |
+| ... | ... | ... | ... | +R$0,50 |
 
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Todos os 3 usuários passarão a pagar **custo global + R$ 0,50** em todas as operadoras. Nenhuma alteração de código necessária.
 
