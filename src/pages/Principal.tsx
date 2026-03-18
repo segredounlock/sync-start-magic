@@ -4688,6 +4688,22 @@ export default function Principal() {
                             >
                               <RefreshCw className="w-3 h-3" /> {h.broadcast_failed ? '⚠️ Reenviar Agora' : 'Reenviar'}
                             </button>
+                            {!h.broadcast_failed && h.sent_count > 0 && (
+                              <button
+                                onClick={async () => {
+                                  if (!confirm(`Deletar ${h.sent_count} mensagens enviadas do Telegram? Isso só funciona para broadcasts recentes (últimas 48h).`)) return;
+                                  try {
+                                    const { data, error } = await supabase.functions.invoke('delete-broadcast', { body: { notification_id: h.id } });
+                                    if (error) throw error;
+                                    if (data?.error) { toast.error(data.error); return; }
+                                    toast.success(`${data.deleted || 0} mensagens deletadas, ${data.failed || 0} falharam`);
+                                  } catch (err: any) { toast.error('Erro: ' + (err.message || 'Erro')); }
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs glass text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" /> Deletar
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
