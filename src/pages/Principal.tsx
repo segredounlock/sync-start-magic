@@ -713,6 +713,7 @@ export default function Principal() {
   const fetchAnalytics = useCallback(async () => {
     if (analyticsLoaded.current) return;
     analyticsLoaded.current = true;
+    const t0 = performance.now();
     try {
       const [recData, txRows] = await Promise.all([
         fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at, user_id", orderBy: { column: "created_at", ascending: false } }),
