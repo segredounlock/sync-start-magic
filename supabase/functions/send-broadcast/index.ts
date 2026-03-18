@@ -284,6 +284,7 @@ async function sendBroadcastInBackground(
     // Collect status changes for batch update
     const blockedUpdates: Array<{ telegram_id: number; reason: string }> = [];
     const unblockedIds: number[] = []; // Users that succeeded but were previously blocked
+    const messageRecords: Array<{ notification_id: string; telegram_id: number; message_id: number }> = [];
 
     const batches: typeof users[] = [];
     for (let i = 0; i < totalUsers; i += BATCH_SIZE) {
