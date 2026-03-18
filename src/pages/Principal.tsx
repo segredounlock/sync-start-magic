@@ -4653,7 +4653,13 @@ export default function Principal() {
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                            <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
+                            {h.broadcast_failed ? (
+                              <span className="text-xs font-bold text-destructive flex items-center gap-1">
+                                <AlertTriangle className="w-3.5 h-3.5" /> Falhou ({h.bp_failed_count}/{h.bp_total_users})
+                              </span>
+                            ) : (
+                              <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
+                            )}
                             <span className="text-xs text-muted-foreground">
                               {formatFullDateTimeBR(h.created_at)}
                             </span>
@@ -4662,7 +4668,6 @@ export default function Principal() {
                                 setBroadcastSending(true);
                                 setBroadcastTitle(h.title);
                                 try {
-                                  // Duplicate notification so resend appears as new entry
                                   const { data: newNotif, error: dupError } = await (supabase.from('notifications' as any) as any)
                                     .insert({ title: h.title, message: h.message, image_url: h.image_url, buttons: h.buttons || [], status: 'sending', sent_count: 0, failed_count: 0 })
                                     .select('id').single();
@@ -4675,9 +4680,13 @@ export default function Principal() {
                                 finally { setBroadcastSending(false); }
                               }}
                               disabled={broadcastSending}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors mt-1 ${
+                                h.broadcast_failed
+                                  ? 'bg-destructive/20 text-destructive hover:bg-destructive/30 font-bold animate-pulse'
+                                  : 'glass text-muted-foreground hover:text-foreground'
+                              }`}
                             >
-                              <RefreshCw className="w-3 h-3" /> Reenviar
+                              <RefreshCw className="w-3 h-3" /> {h.broadcast_failed ? '⚠️ Reenviar Agora' : 'Reenviar'}
                             </button>
                           </div>
                         </div>
