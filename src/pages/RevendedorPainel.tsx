@@ -107,6 +107,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [detectingOperator, setDetectingOperator] = useState(false);
   const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
   const lastDetectedPhoneRef = useRef<string>("");
+  const notifiedRecargaIds = useRef<Set<string>>(new Set());
   const [selectedRecarga, setSelectedRecarga] = useState<Recarga | null>(null);
   const [receiptRecarga, setReceiptRecarga] = useState<Recarga | null>(null);
 
