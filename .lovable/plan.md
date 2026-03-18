@@ -1,40 +1,47 @@
 
 
-## Diagnóstico e Correção
+## Enviar Mensagem Direta no Telegram
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Situação
+
+Identifiquei a usuária: **Maiara Vitoria Alves do Nascimento** (Telegram ID: `5330912097`). Porém, não há uma edge function dedicada para envio de mensagens diretas pelo admin — o bot existente (`telegram-bot`) é voltado para receber webhooks.
 
 ### Plano
 
-**1. Corrigir o mapeamento de status na sync function**
+**1. Criar edge function `telegram-send-dm/index.ts`**
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+Uma função simples que recebe `chat_id` e `text`, e envia via Telegram Bot API usando o token do `system_config`.
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+**2. Enviar a mensagem para a Maiara**
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+Após deploy, chamar a função com a seguinte mensagem:
+
+```
+Olá Maiara! 👋
+
+Aqui é da equipe Recargas Brasil.
+
+Gostaríamos de informar que nosso sistema passou por uma lentidão
+temporária, e por isso o seu PIX de R$ 20,00 não foi confirmado
+de forma imediata. Pedimos desculpas pelo transtorno!
+
+✅ Trabalhamos com seriedade e transparência. Todo pagamento
+confirmado é creditado automaticamente no seu saldo.
+
+📢 Temos um grupo de suporte onde você pode tirar dúvidas
+e acompanhar novidades em tempo real.
+
+💬 Se precisar de qualquer ajuda, estamos à disposição!
+
+Atenciosamente,
+🇧🇷 Equipe Recargas Brasil
 ```
 
-**2. Corrigir manualmente o pedido preso**
+### Arquivo criado
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+| Arquivo | Descrição |
+|---------|-----------|
+| `supabase/functions/telegram-send-dm/index.ts` | Edge function para enviar mensagens diretas via bot do Telegram |
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
-
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Essa função ficará disponível para uso futuro sempre que precisar enviar mensagens individuais a usuários.
 
