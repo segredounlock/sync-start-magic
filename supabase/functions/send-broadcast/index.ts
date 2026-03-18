@@ -12,9 +12,10 @@ const BATCH_SIZE = 25;
 const BATCH_DELAY = 1100;
 
 // Error codes that indicate the user permanently can't receive messages
+// NOTE: 400 is NOT included here because many 400 errors are formatting issues (e.g. invalid keyboard),
+// not user blocks. 400 errors are only treated as permanent if the description matches known patterns.
 const PERMANENT_BLOCK_CODES = new Set([
   403, // Forbidden - user blocked the bot
-  400, // Bad Request - chat not found, user deactivated, bot kicked
 ]);
 
 // Telegram error descriptions indicating permanent failures
