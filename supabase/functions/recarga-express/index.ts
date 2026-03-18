@@ -737,10 +737,18 @@ Deno.serve(async (req) => {
           : "nenhuma regra encontrada";
         console.log(`pricing: role=${userRole} | source=${pricingSource} | ${ruleLog} | apiCost=${apiCost} | chargedCost=${chargedCost} | catalogValue=${catalogValue} | userId=${userId} | resellerId=${resellerId || "null"}`);
 
-        // Safety: never allow cost below API cost (prevents loss)
-        if (chargedCost <= 0 || chargedCost < apiCost) {
-          console.warn(`PRICING SAFETY: chargedCost=${chargedCost} is below apiCost=${apiCost} for user=${userId} operator=${resolvedOperator} amount=${resolvedAmount}. Forcing apiCost as minimum.`);
-          chargedCost = apiCost;
+        // Safety floor: never allow cost below the GLOBAL admin price (protects admin profit)
+        const globalRuleForFloor = await getGlobalRule();
+        let globalFloor = apiCost;
+        if (globalRuleForFloor) {
+          const globalPrice = globalRuleForFloor.tipo_regra === "fixo"
+            ? (Number(globalRuleForFloor.regra_valor) > 0 ? Number(globalRuleForFloor.regra_valor) : Number(globalRuleForFloor.custo))
+            : Number(globalRuleForFloor.custo) * (1 + Number(globalRuleForFloor.regra_valor) / 100);
+          globalFloor = Math.max(apiCost, globalPrice);
+        }
+        if (chargedCost <= 0 || chargedCost < globalFloor) {
+          console.warn(`PRICING SAFETY: chargedCost=${chargedCost} is below globalFloor=${globalFloor} (apiCost=${apiCost}) for user=${userId} operator=${resolvedOperator} amount=${resolvedAmount}. Forcing globalFloor as minimum.`);
+          chargedCost = globalFloor;
           pricingSource += "(safety_floor)";
         }
 

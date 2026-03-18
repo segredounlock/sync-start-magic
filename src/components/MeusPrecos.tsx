@@ -137,6 +137,10 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const saveRule = async (pv: PricingValue) => {
     const key = `${pv.operadoraId}_${pv.value}`;
     const profit = getDisplayProfit(pv);
+    if (profit < 0) {
+      toast.error("Seu preço não pode ser inferior ao preço base");
+      return;
+    }
     const finalPrice = pv.cost + profit;
     setSaving(key);
     try {

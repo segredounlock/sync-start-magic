@@ -1,54 +1,40 @@
 
 
-## Problema
+## Diagnóstico e Correção
 
-Atualmente, revendedores podem definir `regra_valor` (preço final) **abaixo** do custo global definido pelo admin. Isso significa que o lucro do admin (margem global) pode ser ignorado. O "safety floor" no backend só impede venda abaixo do custo da API (`custo`), não abaixo do preço com margem do admin.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-**Exemplo:**
-- API custo: R$ 11,00
-- Admin define regra global: R$ 13,00 (lucro admin = R$ 2,00)
-- Revendedor define: R$ 11,50 → Admin perde R$ 1,50 do seu lucro
+### Plano
 
-## Solução
+**1. Corrigir o mapeamento de status na sync function**
 
-Garantir que o preço do revendedor SEMPRE seja **igual ou acima** do preço global do admin. O revendedor só pode adicionar margem em cima, nunca reduzir.
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-### 1. Frontend — `MeusPrecos.tsx`
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-- Impedir que o campo "lucro" aceite valores negativos (já faz `Math.max(0, profit)` na exibição, mas não no salvamento)
-- No `saveRule`, validar que `profit >= 0` antes de salvar
-- Mostrar mensagem clara: "Seu preço não pode ser inferior ao preço base"
-
-### 2. Backend — `recarga-express/index.ts`
-
-- Atualizar o safety floor para usar o **preço global do admin** como piso mínimo, não apenas o `custo` da API
-- Lógica: se `chargedCost < globalRulePrice`, forçar `chargedCost = globalRulePrice`
-- Isso protege contra manipulação direta no banco
-
-### 3. Correção dos dados existentes
-
-- Executar UPDATE para corrigir as 70 regras dos outros 7 revendedores que possam ter preços abaixo do global:
-```sql
-UPDATE reseller_pricing_rules rpr
-SET regra_valor = GREATEST(rpr.regra_valor, pr.regra_valor),
-    updated_at = now()
-FROM pricing_rules pr
-WHERE pr.operadora_id = rpr.operadora_id
-  AND pr.valor_recarga = rpr.valor_recarga
-  AND rpr.regra_valor < pr.regra_valor;
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-### Arquivos modificados
+**2. Corrigir manualmente o pedido preso**
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/MeusPrecos.tsx` | Validação de lucro >= 0 no save, UI feedback |
-| `supabase/functions/recarga-express/index.ts` | Safety floor usando preço global como mínimo |
-| Migração SQL | Corrigir dados existentes abaixo do preço global |
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-### Resultado
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-- Revendedores veem o preço base do admin e só podem adicionar margem positiva
-- Backend rejeita qualquer tentativa de cobrar abaixo do preço global
-- Dados existentes corrigidos automaticamente
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
