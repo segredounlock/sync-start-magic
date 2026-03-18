@@ -345,6 +345,10 @@ async function sendBroadcastInBackground(
       for (const result of results) {
         if (result.ok) {
           sentCount++;
+          // Save message_id for future delete/edit
+          if (result.message_id) {
+            messageRecords.push({ notification_id: notificationId, telegram_id: result.telegramId, message_id: result.message_id });
+          }
           // If this user was previously blocked, unblock them (they unblocked the bot!)
           if (result.wasBlocked) {
             unblockedIds.push(result.telegramId);
