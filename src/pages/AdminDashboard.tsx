@@ -363,6 +363,7 @@ export default function AdminDashboard() {
         setRevendedores(list);
       }
     });
+    console.log(`[AdminDashboard] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms`);
   }, [role, user?.id, runFetch]);
 
   // Heavy analytics load: recargas + transactions (deferred, loaded once)
