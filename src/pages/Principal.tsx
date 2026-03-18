@@ -491,9 +491,11 @@ export default function Principal() {
       ]);
       setPricingOps((ops || []).map((o: any) => ({ ...o, valores: o.valores || [] })));
       setPricingRules((rules || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
+      pricingSynced.current = true;
     } catch (err) { console.error(err); toast.error("Erro ao carregar precificação"); }
     pricingLoaded.current = true;
     setPricingLoading(false);
+    console.log(`[Principal] fetchPricingData completed in ${(performance.now() - t0).toFixed(0)}ms`);
   }, []);
 
   const savePricingRule = async (rule: PricingRule) => {
