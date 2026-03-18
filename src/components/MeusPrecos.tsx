@@ -138,10 +138,15 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
     const key = `${pv.operadoraId}_${pv.value}`;
     const profit = getDisplayProfit(pv);
     if (profit < 0) {
-      toast.error("Seu preço não pode ser inferior ao preço base");
+      toast.error("Seu lucro não pode ser negativo. O preço mínimo é o seu custo base.");
       return;
     }
     const finalPrice = pv.cost + profit;
+    // Extra safety: never allow final price below API cost (pv.apiCost)
+    if (finalPrice < pv.apiCost) {
+      toast.error("O preço final não pode ficar abaixo do custo da API.");
+      return;
+    }
     setSaving(key);
     try {
       const { error } = await (supabase.from("reseller_pricing_rules") as any).upsert({
@@ -155,7 +160,6 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
 
       if (error) throw error;
       toast.success(`Preço de R$ ${pv.value} atualizado!`);
-      // Update local state
       setEditedProfits((prev) => {
         const next = { ...prev };
         delete next[key];
