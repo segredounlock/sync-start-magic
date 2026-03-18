@@ -370,6 +370,7 @@ export default function AdminDashboard() {
   const fetchAnalytics = useCallback(async () => {
     if (analyticsLoaded.current) return;
     analyticsLoaded.current = true;
+    const t0 = performance.now();
     try {
       if (role === "revendedor") {
         const clientIds = revendedores.map(r => r.id);
