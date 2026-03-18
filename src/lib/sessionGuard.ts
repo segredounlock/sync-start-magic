@@ -55,7 +55,7 @@ export async function invokeWithSessionGuard<T = any>(
         const parsed = JSON.parse(result.data);
         if (parsed.error) {
           msg = parsed.error;
-          result.error = new Error(msg);
+          result.error = new Error(msg) as any;
         }
       } catch { /* not JSON */ }
     }
