@@ -509,7 +509,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         if (cancelled) break;
         try {
           const resp = await callApi("order-status", { external_id: (r as any).external_id });
-          if (resp?.success && resp.data?.localStatus === "completed") {
+          if (resp?.success && resp.data?.localStatus === "completed" && !notifiedRecargaIds.current.has(r.id)) {
+            notifiedRecargaIds.current.add(r.id);
             appToast.recargaCompleted(`Recarga ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)} para ${r.telefone} concluída!`);
             playSuccessSound();
             fetchData();
