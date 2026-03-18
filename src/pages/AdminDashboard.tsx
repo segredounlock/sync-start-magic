@@ -883,14 +883,18 @@ export default function AdminDashboard() {
     if (data) {
       const ids = data.map((n: any) => n.id);
       const { data: progresses } = await (supabase.from('broadcast_progress' as any) as any)
-        .select('notification_id, status')
+        .select('notification_id, status, sent_count, failed_count, total_users')
         .in('notification_id', ids)
         .order('created_at', { ascending: false });
       
-      const statusMap: Record<string, string> = {};
-      progresses?.forEach((p: any) => { if (!statusMap[p.notification_id]) statusMap[p.notification_id] = p.status; });
+      const progressMap: Record<string, any> = {};
+      progresses?.forEach((p: any) => { if (!progressMap[p.notification_id]) progressMap[p.notification_id] = p; });
       
-      setBroadcastHistory(data.map((n: any) => ({ ...n, status: statusMap[n.id] || 'pending' })));
+      setBroadcastHistory(data.map((n: any) => {
+        const prog = progressMap[n.id];
+        const isFailed = prog?.status === 'completed' && (prog?.sent_count || 0) === 0 && (prog?.failed_count || 0) > 0;
+        return { ...n, status: prog?.status || 'pending', broadcast_failed: isFailed, bp_failed_count: prog?.failed_count || 0, bp_total_users: prog?.total_users || 0 };
+      }));
     }
 
     // Fetch interrupted broadcasts
