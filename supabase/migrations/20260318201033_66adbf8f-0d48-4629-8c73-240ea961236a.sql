@@ -1,0 +1,1 @@
+UPDATE system_config SET value = '3', updated_at = now() WHERE key = 'maxPendingPix';
