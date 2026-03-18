@@ -706,6 +706,7 @@ export default function Principal() {
         setMeuSaldo(Number(mySaldo?.valor || 0));
       }
     });
+    console.log(`[Principal] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms, ${revendedores.length} users`);
   }, [runFetch, user?.id]);
 
   // Heavy load: recargas + transactions (deferred)
