@@ -107,6 +107,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [detectingOperator, setDetectingOperator] = useState(false);
   const [detectedOperatorName, setDetectedOperatorName] = useState<string | null>(null);
   const lastDetectedPhoneRef = useRef<string>("");
+  const notifiedRecargaIds = useRef<Set<string>>(new Set());
   const [selectedRecarga, setSelectedRecarga] = useState<Recarga | null>(null);
   const [receiptRecarga, setReceiptRecarga] = useState<Recarga | null>(null);
 
@@ -418,7 +419,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       }, (payload) => {
         const newRow = payload.new as any;
         const oldRow = payload.old as any;
-        if (newRow.status === "completed" && oldRow?.status !== "completed") {
+        if (newRow.status === "completed" && oldRow?.status !== "completed" && !notifiedRecargaIds.current.has(newRow.id)) {
+          notifiedRecargaIds.current.add(newRow.id);
           appToast.recargaCompleted(`Recarga ${(newRow.operadora || "").toUpperCase()} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
           playSuccessSound();
           fetchData();
@@ -507,7 +509,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         if (cancelled) break;
         try {
           const resp = await callApi("order-status", { external_id: (r as any).external_id });
-          if (resp?.success && resp.data?.localStatus === "completed") {
+          if (resp?.success && resp.data?.localStatus === "completed" && !notifiedRecargaIds.current.has(r.id)) {
+            notifiedRecargaIds.current.add(r.id);
             appToast.recargaCompleted(`Recarga ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)} para ${r.telefone} concluída!`);
             playSuccessSound();
             fetchData();
@@ -797,6 +800,9 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           externalId,
         });
         if (orderStatus === "feita" || orderStatus === "completed") {
+          // Mark as notified to prevent duplicate toasts from Realtime/polling
+          if (resp.data?.recargaId) notifiedRecargaIds.current.add(resp.data.recargaId);
+          if (externalId) notifiedRecargaIds.current.add(externalId);
           toast.success(`✅ Recarga concluída! ${fmt(selectedValue.value)} (${selectedCarrier.name}) para ${telefone}. Novo saldo: ${fmt(newBalance)}`);
           playSuccessSound();
         }
