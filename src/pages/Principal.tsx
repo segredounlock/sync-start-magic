@@ -1217,12 +1217,16 @@ export default function Principal() {
     if (data) {
       const ids = data.map((n: any) => n.id);
       const { data: progresses } = await (supabase.from('broadcast_progress' as any) as any)
-        .select('notification_id, status')
+        .select('notification_id, status, sent_count, failed_count, total_users')
         .in('notification_id', ids)
         .order('created_at', { ascending: false });
-      const statusMap: Record<string, string> = {};
-      progresses?.forEach((p: any) => { if (!statusMap[p.notification_id]) statusMap[p.notification_id] = p.status; });
-      setBroadcastHistory(data.map((n: any) => ({ ...n, status: statusMap[n.id] || 'pending' })));
+      const progressMap: Record<string, any> = {};
+      progresses?.forEach((p: any) => { if (!progressMap[p.notification_id]) progressMap[p.notification_id] = p; });
+      setBroadcastHistory(data.map((n: any) => {
+        const prog = progressMap[n.id];
+        const isFailed = prog?.status === 'completed' && (prog?.sent_count || 0) === 0 && (prog?.failed_count || 0) > 0;
+        return { ...n, status: prog?.status || 'pending', broadcast_failed: isFailed, bp_failed_count: prog?.failed_count || 0, bp_total_users: prog?.total_users || 0 };
+      }));
     }
 
     // Fetch interrupted broadcasts
@@ -4649,7 +4653,13 @@ export default function Principal() {
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                            <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
+                            {h.broadcast_failed ? (
+                              <span className="text-xs font-bold text-destructive flex items-center gap-1">
+                                <AlertTriangle className="w-3.5 h-3.5" /> Falhou ({h.bp_failed_count}/{h.bp_total_users})
+                              </span>
+                            ) : (
+                              <span className="text-sm font-bold text-green-400">{h.sent_count} enviados</span>
+                            )}
                             <span className="text-xs text-muted-foreground">
                               {formatFullDateTimeBR(h.created_at)}
                             </span>
@@ -4658,7 +4668,6 @@ export default function Principal() {
                                 setBroadcastSending(true);
                                 setBroadcastTitle(h.title);
                                 try {
-                                  // Duplicate notification so resend appears as new entry
                                   const { data: newNotif, error: dupError } = await (supabase.from('notifications' as any) as any)
                                     .insert({ title: h.title, message: h.message, image_url: h.image_url, buttons: h.buttons || [], status: 'sending', sent_count: 0, failed_count: 0 })
                                     .select('id').single();
@@ -4671,9 +4680,13 @@ export default function Principal() {
                                 finally { setBroadcastSending(false); }
                               }}
                               disabled={broadcastSending}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors mt-1 ${
+                                h.broadcast_failed
+                                  ? 'bg-destructive/20 text-destructive hover:bg-destructive/30 font-bold animate-pulse'
+                                  : 'glass text-muted-foreground hover:text-foreground'
+                              }`}
                             >
-                              <RefreshCw className="w-3 h-3" /> Reenviar
+                              <RefreshCw className="w-3 h-3" /> {h.broadcast_failed ? '⚠️ Reenviar Agora' : 'Reenviar'}
                             </button>
                           </div>
                         </div>
