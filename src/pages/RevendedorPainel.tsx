@@ -799,7 +799,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           message: `Pedido de ${fmt(selectedValue.value)} (${selectedCarrier.name}) para ${telefone} enviado com sucesso! Novo saldo: ${fmt(newBalance)}`,
           externalId,
         });
-        if (orderStatus === "feita" || orderStatus === "completed") {
+        if ((orderStatus === "feita" || orderStatus === "completed") && externalId) {
+          notifiedRecargaIds.current.add(externalId);
           toast.success(`✅ Recarga concluída! ${fmt(selectedValue.value)} (${selectedCarrier.name}) para ${telefone}. Novo saldo: ${fmt(newBalance)}`);
           playSuccessSound();
         }
