@@ -431,6 +431,7 @@ export default function BackupSection() {
       setExportProgress(100);
       setExportStage("Concluído!");
       toast.success(`Backup exportado! ${includeDb ? "BD + " : ""}${includeSource ? "Código" : ""}`);
+      console.log(`[Backup] export completed in ${(performance.now() - t0).toFixed(0)}ms`);
     } catch (err: any) { toast.error(`Erro: ${err.message}`); setExportStage(""); }
     setExporting(false);
   };
