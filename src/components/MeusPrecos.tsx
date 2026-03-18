@@ -89,14 +89,14 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
               ? (Number(gRule.regra_valor) > 0 ? Number(gRule.regra_valor) : apiCost)
               : apiCost * (1 + Number(gRule.regra_valor) / 100);
           } else {
-            baseCost = v;
+            baseCost = apiCost; // No global rule = use API cost (not face value)
           }
 
           const hasCustom = !!rRule;
           const profit = hasCustom ? Number(rRule!.regra_valor) - baseCost : 0;
           const userCost = hasCustom ? Number(rRule!.regra_valor) : baseCost;
 
-          return { value: v, cost: baseCost, userCost, profit: Math.max(0, profit), operadoraId: op.id, hasCustom };
+          return { value: v, cost: baseCost, apiCost, userCost, profit: Math.max(0, profit), operadoraId: op.id, hasCustom };
         });
         return { id: op.id, nome: op.nome, values };
       });

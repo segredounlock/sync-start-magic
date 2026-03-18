@@ -73,7 +73,7 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
               ? (Number(gRule.regra_valor) > 0 ? Number(gRule.regra_valor) : apiCost)
               : apiCost * (1 + Number(gRule.regra_valor) / 100);
           } else {
-            baseCost = v;
+            baseCost = apiCost; // No global rule = use API cost (not face value)
           }
 
           // Default profit = reseller's standard markup
