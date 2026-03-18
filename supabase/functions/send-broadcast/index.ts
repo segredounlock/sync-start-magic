@@ -370,12 +370,15 @@ async function sendBroadcastInBackground(
         }
       }
 
-      // Flush blocked/unblocked users in batches of 50
+      // Flush blocked/unblocked/message records in batches of 50
       if (blockedUpdates.length >= 50) {
         await flushBlockedUsers(blockedUpdates.splice(0, 50));
       }
       if (unblockedIds.length >= 50) {
         await flushUnblockedUsers(unblockedIds.splice(0, 50));
+      }
+      if (messageRecords.length >= 50) {
+        await flushMessageRecords(messageRecords.splice(0, 50));
       }
 
       const elapsedMs = Date.now() - startTime;
