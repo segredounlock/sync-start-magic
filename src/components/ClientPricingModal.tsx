@@ -131,6 +131,11 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
           const edited = editedProfits[key];
           if (edited !== undefined) {
             const lucro = parseFloat(edited) || 0;
+            if (lucro < 0) {
+              toast.error(`Lucro não pode ser negativo (${op.nome} R$ ${pv.value})`);
+              setSaving(false);
+              return;
+            }
             upserts.push({
               reseller_id: resellerId,
               client_id: clientId,
