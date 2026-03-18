@@ -87,6 +87,7 @@ serve(async (req) => {
       "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config",
       "transactions", "disabled_recharge_values", "referral_commissions",
       "scratch_cards", "client_pricing_rules", "push_subscriptions",
+      "support_tickets", "support_messages", "reseller_deposit_fees",
     ]);
 
     const getExistingProfileIds = async () => {
