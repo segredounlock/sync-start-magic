@@ -1,40 +1,27 @@
 
 
-## Diagnóstico e Correção
+## Diagnóstico: Página recarrega ao voltar de outra aba
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Causa raiz
 
-### Plano
+A configuração do **PWA (Service Worker)** no `vite.config.ts` está com:
 
-**1. Corrigir o mapeamento de status na sync function**
+- `registerType: "autoUpdate"` — recarrega automaticamente quando detecta nova versão
+- `skipWaiting: true` + `clientsClaim: true` — ativa o novo SW imediatamente sem esperar
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+Quando você troca de aba e volta, o navegador verifica se há um novo Service Worker. Como cada deploy gera um novo SW, ele encontra a atualização e **recarrega a página automaticamente** sem perguntar.
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+### Solução
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+1. **Mudar `registerType` para `"prompt"`** no `vite.config.ts` — em vez de recarregar sozinho, vai mostrar um aviso discreto ("Nova versão disponível") com um botão para atualizar quando o usuário quiser.
 
-**2. Corrigir manualmente o pedido preso**
+2. **Criar um componente `UpdatePrompt`** que aparece como um toast/banner pequeno no topo quando há atualização disponível, com botão "Atualizar agora".
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+3. **Remover `skipWaiting: true`** da config do workbox — o novo SW só ativa quando o usuário aceitar.
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+### Resultado esperado
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+- Trocar de aba e voltar **não recarrega mais** a página
+- Quando houver atualização real, aparece um aviso discreto
+- O usuário decide quando atualizar
 
