@@ -726,6 +726,7 @@ export default function Principal() {
       const deposited = (txRows || []).reduce((s: number, t: any) => s + Number(t.amount), 0);
       setGlobalTxDeposited(deposited);
       setGlobalTxCount((txRows || []).length);
+      console.log(`[Principal] fetchAnalytics completed in ${(performance.now() - t0).toFixed(0)}ms, ${recData?.length || 0} recargas`);
     } catch (err) {
       console.error("fetchAnalytics error:", err);
       analyticsLoaded.current = false;

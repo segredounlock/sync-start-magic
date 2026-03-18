@@ -298,6 +298,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         }
       }
     });
+    console.log(`[RevendedorPainel] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms`);
   }, [user, runFetch]);
 
   const [commissions, setCommissions] = useState<{ id: string; amount: number; type: string; created_at: string; recarga_id: string | null; referred_user_id: string }[]>([]);

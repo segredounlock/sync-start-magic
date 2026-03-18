@@ -403,6 +403,7 @@ export default function AdminDashboard() {
         })));
         setAllTransactions((transData || []).map(t => ({ ...t, amount: Number(t.amount) })));
       }
+      console.log(`[AdminDashboard] fetchAnalytics completed in ${(performance.now() - t0).toFixed(0)}ms`);
     } catch (err) {
       console.error("fetchAnalytics error:", err);
       analyticsLoaded.current = false;
