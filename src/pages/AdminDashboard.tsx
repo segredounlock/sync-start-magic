@@ -305,6 +305,7 @@ export default function AdminDashboard() {
 
   // Light initial load: only profiles, roles, saldos (fast)
   const fetchData = useCallback(async () => {
+    const t0 = performance.now();
     await runFetch(async () => {
       if (role === "revendedor") {
         const [clientProfiles, ownSaldos, clientSaldos] = await Promise.all([
