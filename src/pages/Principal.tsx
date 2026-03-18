@@ -367,13 +367,19 @@ export default function Principal() {
     setConfigSaving(false);
   };
 
+  const pricingSynced = useRef(false);
+
   const fetchPricingData = useCallback(async () => {
+    const t0 = performance.now();
     if (!pricingLoaded.current) setPricingLoading(true);
     try {
-      // 1. Fetch catalog from API to sync operadoras
-      const { data: catData, error: catError } = await supabase.functions.invoke("recarga-express", {
-        body: { action: "catalog" },
-      });
+      // 1. Fetch catalog from API to sync operadoras (only once per session)
+      if (pricingSynced.current) {
+        console.log("[Principal] fetchPricingData: skipping API sync (already synced)");
+      }
+      const { data: catData, error: catError } = pricingSynced.current
+        ? { data: null, error: null }
+        : await supabase.functions.invoke("recarga-express", { body: { action: "catalog" } });
 
       if (!catError && catData?.success && catData.data?.length > 0) {
         // Sync each carrier from API into operadoras table + update costs in pricing_rules
