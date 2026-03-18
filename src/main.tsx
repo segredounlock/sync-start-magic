@@ -28,6 +28,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
+        <UpdatePrompt />
         <Toaster
           position="top-center"
           toastOptions={{
