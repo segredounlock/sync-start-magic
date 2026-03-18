@@ -663,6 +663,7 @@ export default function Principal() {
 
   // Light load: profiles, roles, saldos only
   const fetchData = useCallback(async () => {
+    const t0 = performance.now();
     await runFetch(async () => {
       const [roles, profiles, saldos] = await Promise.all([
         fetchAllRows("user_roles", { select: "user_id, role" }),
