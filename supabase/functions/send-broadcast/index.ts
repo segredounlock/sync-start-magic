@@ -119,6 +119,7 @@ interface SendResult {
   error_code?: number;
   description?: string;
   parameters?: { retry_after?: number };
+  message_id?: number;
 }
 
 async function sendTelegramMessage(
