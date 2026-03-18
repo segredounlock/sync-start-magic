@@ -9,6 +9,7 @@ import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, Arr
 interface PricingValue {
   value: number;
   cost: number; // base cost from global pricing_rules
+  apiCost: number; // raw API cost (custo field from pricing_rules)
   userCost: number; // reseller's custom cost (regra_valor)
   profit: number; // margin the reseller adds
   operadoraId: string;
@@ -88,14 +89,14 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
               ? (Number(gRule.regra_valor) > 0 ? Number(gRule.regra_valor) : apiCost)
               : apiCost * (1 + Number(gRule.regra_valor) / 100);
           } else {
-            baseCost = v;
+            baseCost = apiCost; // No global rule = use API cost (not face value)
           }
 
           const hasCustom = !!rRule;
           const profit = hasCustom ? Number(rRule!.regra_valor) - baseCost : 0;
           const userCost = hasCustom ? Number(rRule!.regra_valor) : baseCost;
 
-          return { value: v, cost: baseCost, userCost, profit: Math.max(0, profit), operadoraId: op.id, hasCustom };
+          return { value: v, cost: baseCost, apiCost, userCost, profit: Math.max(0, profit), operadoraId: op.id, hasCustom };
         });
         return { id: op.id, nome: op.nome, values };
       });
@@ -138,10 +139,15 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
     const key = `${pv.operadoraId}_${pv.value}`;
     const profit = getDisplayProfit(pv);
     if (profit < 0) {
-      toast.error("Seu preço não pode ser inferior ao preço base");
+      toast.error("Seu lucro não pode ser negativo. O preço mínimo é o seu custo base.");
       return;
     }
     const finalPrice = pv.cost + profit;
+    // Extra safety: never allow final price below API cost (pv.apiCost)
+    if (finalPrice < pv.apiCost) {
+      toast.error("O preço final não pode ficar abaixo do custo da API.");
+      return;
+    }
     setSaving(key);
     try {
       const { error } = await (supabase.from("reseller_pricing_rules") as any).upsert({
@@ -155,7 +161,6 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
 
       if (error) throw error;
       toast.success(`Preço de R$ ${pv.value} atualizado!`);
-      // Update local state
       setEditedProfits((prev) => {
         const next = { ...prev };
         delete next[key];

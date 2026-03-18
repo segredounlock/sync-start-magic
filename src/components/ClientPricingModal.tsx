@@ -73,7 +73,7 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
               ? (Number(gRule.regra_valor) > 0 ? Number(gRule.regra_valor) : apiCost)
               : apiCost * (1 + Number(gRule.regra_valor) / 100);
           } else {
-            baseCost = v;
+            baseCost = apiCost; // No global rule = use API cost (not face value)
           }
 
           // Default profit = reseller's standard markup
@@ -131,6 +131,11 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
           const edited = editedProfits[key];
           if (edited !== undefined) {
             const lucro = parseFloat(edited) || 0;
+            if (lucro < 0) {
+              toast.error(`Lucro não pode ser negativo (${op.nome} R$ ${pv.value})`);
+              setSaving(false);
+              return;
+            }
             upserts.push({
               reseller_id: resellerId,
               client_id: clientId,

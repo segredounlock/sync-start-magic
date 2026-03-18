@@ -737,18 +737,36 @@ Deno.serve(async (req) => {
           : "nenhuma regra encontrada";
         console.log(`pricing: role=${userRole} | source=${pricingSource} | ${ruleLog} | apiCost=${apiCost} | chargedCost=${chargedCost} | catalogValue=${catalogValue} | userId=${userId} | resellerId=${resellerId || "null"}`);
 
-        // Safety floor: never allow cost below the GLOBAL admin price (protects admin profit)
+        // Hierarchical safety floor: API cost < global price < reseller price
+        // 1. Absolute minimum: API cost
+        let floor = apiCost;
+
+        // 2. Global admin price (if exists)
         const globalRuleForFloor = await getGlobalRule();
-        let globalFloor = apiCost;
         if (globalRuleForFloor) {
           const globalPrice = globalRuleForFloor.tipo_regra === "fixo"
             ? (Number(globalRuleForFloor.regra_valor) > 0 ? Number(globalRuleForFloor.regra_valor) : Number(globalRuleForFloor.custo))
             : Number(globalRuleForFloor.custo) * (1 + Number(globalRuleForFloor.regra_valor) / 100);
-          globalFloor = Math.max(apiCost, globalPrice);
+          floor = Math.max(floor, globalPrice);
         }
-        if (chargedCost <= 0 || chargedCost < globalFloor) {
-          console.warn(`PRICING SAFETY: chargedCost=${chargedCost} is below globalFloor=${globalFloor} (apiCost=${apiCost}) for user=${userId} operator=${resolvedOperator} amount=${resolvedAmount}. Forcing globalFloor as minimum.`);
-          chargedCost = globalFloor;
+
+        // 3. For clients: reseller's custom price is the floor (client can't undercut reseller)
+        if (userRole === "cliente" && resellerId) {
+          const { data: resellerFloorRule } = await adminClient
+            .from("reseller_pricing_rules")
+            .select("regra_valor")
+            .eq("user_id", resellerId)
+            .eq("operadora_id", operadoraId)
+            .eq("valor_recarga", catalogValue)
+            .maybeSingle();
+          if (resellerFloorRule && Number(resellerFloorRule.regra_valor) > floor) {
+            floor = Number(resellerFloorRule.regra_valor);
+          }
+        }
+
+        if (chargedCost <= 0 || chargedCost < floor) {
+          console.warn(`PRICING SAFETY: chargedCost=${chargedCost} is below floor=${floor} (apiCost=${apiCost}) for user=${userId} role=${userRole} operator=${resolvedOperator} amount=${resolvedAmount}. Forcing floor as minimum.`);
+          chargedCost = floor;
           pricingSource += "(safety_floor)";
         }
 
