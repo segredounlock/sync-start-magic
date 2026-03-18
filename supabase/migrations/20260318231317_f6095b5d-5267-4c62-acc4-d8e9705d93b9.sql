@@ -1,0 +1,1 @@
+UPDATE notifications SET buttons = jsonb_build_array(jsonb_build_object('label', 'Ver Termos de Uso', 'url', 'https://recargasbrasill.com/regras')) WHERE id IN ('fe330193-5fb9-4be5-8e51-2ad319d3a0dd', 'c5120ca6-ad26-48e0-ada8-57b3b5c39c81', '9d6bd223-087d-4878-9c7a-4ef0df4b4050');

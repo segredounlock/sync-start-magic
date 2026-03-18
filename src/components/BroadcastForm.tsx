@@ -96,9 +96,14 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
     }
   };
 
+  const CUSTOM_DOMAIN = 'https://recargasbrasill.com';
+  const fixUrl = (url: string) => url.replace(/https?:\/\/[^/]*lovable\.app/gi, CUSTOM_DOMAIN);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const validButtons = formData.buttons.filter(b => b.text.trim() && b.url.trim());
+    const validButtons = formData.buttons
+      .filter(b => b.text.trim() && b.url.trim())
+      .map(b => ({ ...b, url: fixUrl(b.url) }));
     onSubmit({
       ...formData,
       image_url: enableImage ? formData.image_url : null,
