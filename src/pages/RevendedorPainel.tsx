@@ -419,7 +419,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       }, (payload) => {
         const newRow = payload.new as any;
         const oldRow = payload.old as any;
-        if (newRow.status === "completed" && oldRow?.status !== "completed") {
+        if (newRow.status === "completed" && oldRow?.status !== "completed" && !notifiedRecargaIds.current.has(newRow.id)) {
+          notifiedRecargaIds.current.add(newRow.id);
           appToast.recargaCompleted(`Recarga ${(newRow.operadora || "").toUpperCase()} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
           playSuccessSound();
           fetchData();
