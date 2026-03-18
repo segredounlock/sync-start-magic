@@ -477,6 +477,15 @@ async function flushUnblockedUsers(telegramIds: number[]) {
   console.log(`[BROADCAST] Unblocked ${telegramIds.length} users (they unblocked the bot)`);
 }
 
+async function flushMessageRecords(records: Array<{ notification_id: string; telegram_id: number; message_id: number }>) {
+  const { error } = await supabase.from('broadcast_messages').upsert(records, { onConflict: 'notification_id,telegram_id' });
+  if (error) {
+    console.error(`[BROADCAST] Failed to save ${records.length} message records:`, error.message);
+  } else {
+    console.log(`[BROADCAST] Saved ${records.length} message records`);
+  }
+}
+
 
 const UPDATES_CONVERSATION_ID = '00000000-0000-0000-0000-000000000003';
 const SYSTEM_ADMIN_ID = 'f5501acc-79f3-460f-bc3e-493280ea84f0';
