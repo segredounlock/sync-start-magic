@@ -146,6 +146,38 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcast_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: number
+          notification_id: string
+          telegram_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: number
+          notification_id: string
+          telegram_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: number
+          notification_id?: string
+          telegram_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_messages_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broadcast_progress: {
         Row: {
           blocked_count: number
