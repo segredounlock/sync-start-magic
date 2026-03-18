@@ -12,9 +12,10 @@ const BATCH_SIZE = 25;
 const BATCH_DELAY = 1100;
 
 // Error codes that indicate the user permanently can't receive messages
+// NOTE: 400 is NOT included here because many 400 errors are formatting issues (e.g. invalid keyboard),
+// not user blocks. 400 errors are only treated as permanent if the description matches known patterns.
 const PERMANENT_BLOCK_CODES = new Set([
   403, // Forbidden - user blocked the bot
-  400, // Bad Request - chat not found, user deactivated, bot kicked
 ]);
 
 // Telegram error descriptions indicating permanent failures
@@ -36,8 +37,10 @@ function isValidUUID(value: unknown): boolean {
 }
 
 function isPermanentError(errorCode: number, description?: string): boolean {
+  // 403 is always a permanent block
   if (PERMANENT_BLOCK_CODES.has(errorCode)) return true;
-  if (description) {
+  // For 400 errors, only treat as permanent if the description matches known user-level failures
+  if (errorCode === 400 && description) {
     const lower = description.toLowerCase();
     return PERMANENT_ERROR_DESCRIPTIONS.some(d => lower.includes(d));
   }
@@ -313,7 +316,11 @@ async function sendBroadcastInBackground(
         await new Promise(resolve => setTimeout(resolve, index * 40));
 
         const message = `📢 <b>${notification.title}</b>\n\n${notification.message}`;
-        const buttons = Array.isArray(notification.buttons) ? notification.buttons : [];
+        const rawButtons = Array.isArray(notification.buttons) ? notification.buttons : [];
+        // Normalize buttons: support both {text, url} and {label, url} formats
+        const buttons = rawButtons
+          .filter((btn: any) => btn && (btn.text || btn.label) && btn.url)
+          .map((btn: any) => ({ text: btn.text || btn.label, url: btn.url }));
 
         const result = await sendTelegramMessage(
           botToken, user.telegram_id, message,
