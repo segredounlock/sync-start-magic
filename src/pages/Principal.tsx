@@ -367,13 +367,19 @@ export default function Principal() {
     setConfigSaving(false);
   };
 
+  const pricingSynced = useRef(false);
+
   const fetchPricingData = useCallback(async () => {
+    const t0 = performance.now();
     if (!pricingLoaded.current) setPricingLoading(true);
     try {
-      // 1. Fetch catalog from API to sync operadoras
-      const { data: catData, error: catError } = await supabase.functions.invoke("recarga-express", {
-        body: { action: "catalog" },
-      });
+      // 1. Fetch catalog from API to sync operadoras (only once per session)
+      if (pricingSynced.current) {
+        console.log("[Principal] fetchPricingData: skipping API sync (already synced)");
+      }
+      const { data: catData, error: catError } = pricingSynced.current
+        ? { data: null, error: null }
+        : await supabase.functions.invoke("recarga-express", { body: { action: "catalog" } });
 
       if (!catError && catData?.success && catData.data?.length > 0) {
         // Sync each carrier from API into operadoras table + update costs in pricing_rules
@@ -485,9 +491,11 @@ export default function Principal() {
       ]);
       setPricingOps((ops || []).map((o: any) => ({ ...o, valores: o.valores || [] })));
       setPricingRules((rules || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
+      pricingSynced.current = true;
     } catch (err) { console.error(err); toast.error("Erro ao carregar precificação"); }
     pricingLoaded.current = true;
     setPricingLoading(false);
+    console.log(`[Principal] fetchPricingData completed in ${(performance.now() - t0).toFixed(0)}ms`);
   }, []);
 
   const savePricingRule = async (rule: PricingRule) => {
@@ -655,6 +663,7 @@ export default function Principal() {
 
   // Light load: profiles, roles, saldos only
   const fetchData = useCallback(async () => {
+    const t0 = performance.now();
     await runFetch(async () => {
       const [roles, profiles, saldos] = await Promise.all([
         fetchAllRows("user_roles", { select: "user_id, role" }),
@@ -697,12 +706,14 @@ export default function Principal() {
         setMeuSaldo(Number(mySaldo?.valor || 0));
       }
     });
+    console.log(`[Principal] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms, ${revendedores.length} users`);
   }, [runFetch, user?.id]);
 
   // Heavy load: recargas + transactions (deferred)
   const fetchAnalytics = useCallback(async () => {
     if (analyticsLoaded.current) return;
     analyticsLoaded.current = true;
+    const t0 = performance.now();
     try {
       const [recData, txRows] = await Promise.all([
         fetchAllRows("recargas", { select: "id, telefone, operadora, valor, custo, custo_api, status, created_at, completed_at, user_id", orderBy: { column: "created_at", ascending: false } }),
@@ -715,6 +726,7 @@ export default function Principal() {
       const deposited = (txRows || []).reduce((s: number, t: any) => s + Number(t.amount), 0);
       setGlobalTxDeposited(deposited);
       setGlobalTxCount((txRows || []).length);
+      console.log(`[Principal] fetchAnalytics completed in ${(performance.now() - t0).toFixed(0)}ms, ${recData?.length || 0} recargas`);
     } catch (err) {
       console.error("fetchAnalytics error:", err);
       analyticsLoaded.current = false;

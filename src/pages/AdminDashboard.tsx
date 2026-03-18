@@ -305,6 +305,7 @@ export default function AdminDashboard() {
 
   // Light initial load: only profiles, roles, saldos (fast)
   const fetchData = useCallback(async () => {
+    const t0 = performance.now();
     await runFetch(async () => {
       if (role === "revendedor") {
         const [clientProfiles, ownSaldos, clientSaldos] = await Promise.all([
@@ -362,12 +363,14 @@ export default function AdminDashboard() {
         setRevendedores(list);
       }
     });
+    console.log(`[AdminDashboard] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms`);
   }, [role, user?.id, runFetch]);
 
   // Heavy analytics load: recargas + transactions (deferred, loaded once)
   const fetchAnalytics = useCallback(async () => {
     if (analyticsLoaded.current) return;
     analyticsLoaded.current = true;
+    const t0 = performance.now();
     try {
       if (role === "revendedor") {
         const clientIds = revendedores.map(r => r.id);
@@ -400,6 +403,7 @@ export default function AdminDashboard() {
         })));
         setAllTransactions((transData || []).map(t => ({ ...t, amount: Number(t.amount) })));
       }
+      console.log(`[AdminDashboard] fetchAnalytics completed in ${(performance.now() - t0).toFixed(0)}ms`);
     } catch (err) {
       console.error("fetchAnalytics error:", err);
       analyticsLoaded.current = false;

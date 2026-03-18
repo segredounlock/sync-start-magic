@@ -87,6 +87,7 @@ serve(async (req) => {
       "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config",
       "transactions", "disabled_recharge_values", "referral_commissions",
       "scratch_cards", "client_pricing_rules", "push_subscriptions",
+      "support_tickets", "support_messages", "reseller_deposit_fees",
     ]);
 
     const getExistingProfileIds = async () => {
@@ -109,10 +110,11 @@ serve(async (req) => {
     // Define restore order: known tables first in dependency order, then any new/unknown tables
     const knownOrder = [
       "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
-      "telegram_users", "telegram_sessions", "profiles", "user_roles", "saldos",
-      "pricing_rules", "reseller_pricing_rules", "reseller_config", "disabled_recharge_values",
-      "client_pricing_rules", "transactions", "recargas", "referral_commissions",
-      "admin_notifications", "banners", "polls", "poll_votes", "follows", "audit_logs",
+      "telegram_users", "telegram_sessions", "terms_acceptance", "profiles", "user_roles", "saldos",
+      "pricing_rules", "reseller_pricing_rules", "reseller_config", "reseller_deposit_fees",
+      "disabled_recharge_values", "client_pricing_rules", "transactions", "recargas",
+      "referral_commissions", "admin_notifications", "banners", "polls", "poll_votes",
+      "follows", "audit_logs", "support_templates", "support_tickets", "support_messages",
       "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
       "push_subscriptions", "update_history", "scratch_cards",
     ];

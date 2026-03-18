@@ -338,6 +338,8 @@ export default function BackupSection() {
 
   const handleExport = async () => {
     if (!includeDb && !includeSource && !includeSchema) { toast.error("Selecione pelo menos uma opção"); return; }
+    const t0 = performance.now();
+    console.log("[Backup] export started");
     setExporting(true); setExportProgress(0); setExportStage("Iniciando...");
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -429,6 +431,7 @@ export default function BackupSection() {
       setExportProgress(100);
       setExportStage("Concluído!");
       toast.success(`Backup exportado! ${includeDb ? "BD + " : ""}${includeSource ? "Código" : ""}`);
+      console.log(`[Backup] export completed in ${(performance.now() - t0).toFixed(0)}ms`);
     } catch (err: any) { toast.error(`Erro: ${err.message}`); setExportStage(""); }
     setExporting(false);
   };

@@ -259,6 +259,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
 
   const fetchData = useCallback(async () => {
     if (!user) return;
+    const t0 = performance.now();
     await runFetch(async () => {
       const [{ data: saldoData }, { data: saldoPessoalData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }, { count: recargasTotalCount }, { count: recargasCompletedCount }] = await Promise.all([
         supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
@@ -297,6 +298,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         }
       }
     });
+    console.log(`[RevendedorPainel] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms`);
   }, [user, runFetch]);
 
   const [commissions, setCommissions] = useState<{ id: string; amount: number; type: string; created_at: string; recarga_id: string | null; referred_user_id: string }[]>([]);
