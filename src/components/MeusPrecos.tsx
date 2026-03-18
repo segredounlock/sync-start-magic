@@ -9,6 +9,7 @@ import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, Arr
 interface PricingValue {
   value: number;
   cost: number; // base cost from global pricing_rules
+  apiCost: number; // raw API cost (custo field from pricing_rules)
   userCost: number; // reseller's custom cost (regra_valor)
   profit: number; // margin the reseller adds
   operadoraId: string;
