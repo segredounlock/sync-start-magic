@@ -40,10 +40,25 @@ export async function invokeWithSessionGuard<T = any>(
 ): Promise<{ data: T | null; error: any }> {
   const result = await supabase.functions.invoke(functionName, options);
 
-  // Supabase client wraps non-2xx as FunctionsHttpError
+  // Supabase client wraps non-2xx as FunctionsHttpError with generic message.
+  // Try to extract the real error from the response body.
   if (result.error) {
-    const msg = result.error?.message || "";
+    let msg = result.error?.message || "";
     const status = (result.error as any)?.status || (result.error as any)?.context?.status;
+
+    // If the data contains the real error message from our edge function, use it
+    if (result.data && typeof result.data === "object" && (result.data as any).error) {
+      msg = (result.data as any).error;
+      result.error = new Error(msg);
+    } else if (result.data && typeof result.data === "string") {
+      try {
+        const parsed = JSON.parse(result.data);
+        if (parsed.error) {
+          msg = parsed.error;
+          result.error = new Error(msg);
+        }
+      } catch { /* not JSON */ }
+    }
 
     if (status === 401 || status === 403 || msg.includes("session_not_found") || msg.includes("Invalid JWT") || msg.includes("Token inválido")) {
       handleExpiredSession();
