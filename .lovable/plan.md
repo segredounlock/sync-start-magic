@@ -1,29 +1,27 @@
 
 
-## Enviar Mensagem Direta no Telegram
+## Enviar mensagem para Erica (Recargas Brasil)
 
 ### Situação
+- Usuária: **Erica Ferreira Dutra** (Recargas Brasil)
+- Telegram ID: `6363075028`
+- Atraso confirmado: depósito de R$ 50,00 levou ~16 minutos para confirmar (19:48 → 20:04)
+- Depósito de R$ 15,00 expirou sem pagamento
 
-Identifiquei a usuária: **Maiara Vitoria Alves do Nascimento** (Telegram ID: `5330912097`). Porém, não há uma edge function dedicada para envio de mensagens diretas pelo admin — o bot existente (`telegram-bot`) é voltado para receber webhooks.
+**Observação:** Este perfil (d74ea4f9) é o mesmo que aparece como "Recargas Brasil" — possivelmente sua própria conta admin.
 
 ### Plano
+Enviar mensagem via `telegram-notify` Edge Function com a mesma abordagem usada para a Maiara, adaptada com o valor correto (R$ 50,00).
 
-**1. Criar edge function `telegram-send-dm/index.ts`**
-
-Uma função simples que recebe `chat_id` e `text`, e envia via Telegram Bot API usando o token do `system_config`.
-
-**2. Enviar a mensagem para a Maiara**
-
-Após deploy, chamar a função com a seguinte mensagem:
-
+### Mensagem
 ```
-Olá Maiara! 👋
+Olá Erica! 👋
 
 Aqui é da equipe Recargas Brasil.
 
-Gostaríamos de informar que nosso sistema passou por uma lentidão
-temporária, e por isso o seu PIX de R$ 20,00 não foi confirmado
-de forma imediata. Pedimos desculpas pelo transtorno!
+Informamos que nosso sistema passou por uma lentidão temporária,
+e por isso o seu PIX de R$ 50,00 demorou alguns minutos a mais
+para ser confirmado. Pedimos desculpas pelo transtorno!
 
 ✅ Trabalhamos com seriedade e transparência. Todo pagamento
 confirmado é creditado automaticamente no seu saldo.
@@ -37,11 +35,6 @@ Atenciosamente,
 🇧🇷 Equipe Recargas Brasil
 ```
 
-### Arquivo criado
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `supabase/functions/telegram-send-dm/index.ts` | Edge function para enviar mensagens diretas via bot do Telegram |
-
-Essa função ficará disponível para uso futuro sempre que precisar enviar mensagens individuais a usuários.
+### Execução
+Chamar a Edge Function `telegram-notify` com `chat_id: "6363075028"` e a mensagem acima.
 
