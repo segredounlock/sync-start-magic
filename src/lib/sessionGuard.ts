@@ -49,7 +49,7 @@ export async function invokeWithSessionGuard<T = any>(
     // If the data contains the real error message from our edge function, use it
     if (result.data && typeof result.data === "object" && (result.data as any).error) {
       msg = (result.data as any).error;
-      result.error = new Error(msg);
+      result.error = new Error(msg) as any;
     } else if (result.data && typeof result.data === "string") {
       try {
         const parsed = JSON.parse(result.data);
