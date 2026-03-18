@@ -316,7 +316,11 @@ async function sendBroadcastInBackground(
         await new Promise(resolve => setTimeout(resolve, index * 40));
 
         const message = `📢 <b>${notification.title}</b>\n\n${notification.message}`;
-        const buttons = Array.isArray(notification.buttons) ? notification.buttons : [];
+        const rawButtons = Array.isArray(notification.buttons) ? notification.buttons : [];
+        // Normalize buttons: support both {text, url} and {label, url} formats
+        const buttons = rawButtons
+          .filter((btn: any) => btn && (btn.text || btn.label) && btn.url)
+          .map((btn: any) => ({ text: btn.text || btn.label, url: btn.url }));
 
         const result = await sendTelegramMessage(
           botToken, user.telegram_id, message,
