@@ -187,6 +187,7 @@ async function sendTelegramMessage(
         error_code: result.error_code,
         description: result.description,
         parameters: result.parameters,
+        message_id: result.result?.message_id,
       };
     } catch (err) {
       if (attempt === retries) {
