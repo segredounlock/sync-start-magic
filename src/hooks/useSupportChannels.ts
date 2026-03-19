@@ -75,12 +75,12 @@ export function useSupportChannels(userId: string | undefined): UseSupportChanne
           }
 
           // Go up one level
-          const nextReseller = await supabase
+          const nextReseller: string | null = await supabase
             .from("profiles")
             .select("reseller_id")
             .eq("id", currentResellerId!)
             .single()
-            .then(r => r.data?.reseller_id as string | null);
+            .then(r => (r.data?.reseller_id as string | null) ?? null);
 
           currentResellerId = nextReseller;
         }
