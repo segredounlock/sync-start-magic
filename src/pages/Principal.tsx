@@ -38,7 +38,7 @@ import {
   Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
   Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
-  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image, ArrowRight, ArrowDown, Headphones,
+  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image, ArrowRight, ArrowDown, Headphones, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -1508,6 +1508,13 @@ export default function Principal() {
           {/* ===== DASHBOARD ===== */}
           {view === "dashboard" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              {/* Info Card - Dashboard */}
+              <InfoCard title="Painel de Controle" items={[
+                { icon: TrendingUp, iconColor: "text-success", label: "Lucro", description: "diferença entre o valor cobrado dos clientes e o custo da API de recargas." },
+                { icon: Activity, iconColor: "text-primary", label: "Métricas", description: "recargas realizadas, taxa de sucesso, ticket médio e volume total." },
+                { icon: Clock, iconColor: "text-warning", label: "Tempo Real", description: "os dados são atualizados automaticamente conforme novas recargas são processadas." },
+              ]} />
+
               {/* Bank-style Dashboard */}
               {(() => {
                 const allCompleted = allRecargas.filter(r => r.status === "completed" || r.status === "concluida");
@@ -1718,8 +1725,15 @@ export default function Principal() {
           )}
 
           {/* ===== LISTA ===== */}
-          {view === "lista" && (
+           {view === "lista" && (
             <>
+              {/* Info Card - Lista */}
+              <InfoCard title="Gestão de Usuários" items={[
+                { icon: Users, iconColor: "text-primary", label: "Usuários", description: "todos os revendedores e clientes cadastrados no sistema." },
+                { icon: UserCheck, iconColor: "text-success", label: "Ativar/Desativar", description: "controle de acesso individual. Usuários inativos não conseguem operar." },
+                { icon: Shield, iconColor: "text-warning", label: "Cargos", description: "defina permissões: admin (acesso total), revendedor (vende) ou cliente (compra)." },
+              ]} />
+
                <div className="grid grid-cols-4 gap-2">
                 {[
                   { icon: Users, label: "Total", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10" },
@@ -2037,8 +2051,15 @@ export default function Principal() {
           )}
 
           {/* ===== DETALHE REVENDEDOR ===== */}
-          {view === "detalhe" && selectedRev && (
+           {view === "detalhe" && selectedRev && (
             <>
+              {/* Info Card - Detalhe */}
+              <InfoCard title="Detalhes do Revendedor" items={[
+                { icon: User, iconColor: "text-primary", label: "Perfil", description: "dados cadastrais, badge de verificação e status de atividade." },
+                { icon: Wallet, iconColor: "text-success", label: "Saldos", description: "saldo de revenda (para recargas) e saldo pessoal (comissões recebidas)." },
+                { icon: Activity, iconColor: "text-warning", label: "Desempenho", description: "total de recargas, volume vendido e histórico completo de operações." },
+              ]} />
+
               {/* Profile Card */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-4 sm:p-6">
                 <div className="flex items-start gap-4">
@@ -3813,6 +3834,13 @@ export default function Principal() {
           {/* ===== RELATÓRIOS ===== */}
           {view === "relatorios" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+              {/* Info Card - Relatórios */}
+              <InfoCard title="Relatórios de Lucro" items={[
+                { icon: FileText, iconColor: "text-warning", label: "Lucro por Revendedor", description: "mostra o preço cobrado vs custo real da API, com lucro líquido por venda." },
+                { icon: TrendingUp, iconColor: "text-success", label: "Períodos", description: "filtre por Hoje, 7 dias, 30 dias ou período personalizado." },
+                { icon: DollarSign, iconColor: "text-primary", label: "Exportação", description: "baixe os dados em formato CSV para análise em planilhas." },
+              ]} />
+
               {/* Header compact */}
               <div className="glass-card rounded-2xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">

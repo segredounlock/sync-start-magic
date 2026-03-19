@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { InfoCard } from "@/components/InfoCard";
 import { DashboardSection } from "@/components/DashboardSection";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
@@ -1379,6 +1380,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: RECARGA ===== */}
           {tab === "recarga" && (
             <>
+              {/* Info Card - Recarga */}
+              <InfoCard title="Como Recarregar" items={[
+                { icon: Smartphone, iconColor: "text-primary", label: "Número", description: "digite o telefone do cliente. A operadora é detectada automaticamente." },
+                { icon: DollarSign, iconColor: "text-success", label: "Valor", description: "selecione o valor da recarga. O custo será descontado do seu saldo." },
+                { icon: Send, iconColor: "text-warning", label: "Enviar", description: "confirme e aguarde a recarga ser processada em segundos." },
+              ]} />
+
               {/* Success/Error overlay */}
               <AnimatePresence>
                 {recargaResult && (
@@ -1894,6 +1902,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: HISTORICO ===== */}
           {tab === "historico" && (
             <>
+              {/* Info Card - Histórico */}
+              <InfoCard title="Histórico de Recargas" items={[
+                { icon: History, iconColor: "text-primary", label: "Todas as Recargas", description: "lista completa de recargas com status, operadora e valor." },
+                { icon: Filter, iconColor: "text-warning", label: "Filtros", description: "filtre por status (concluída, pendente, falha) e por operadora." },
+              ]} />
+
               {/* Filters */}
               {(() => {
                 const operadoras = Array.from(new Set(recargas.map(r => r.operadora).filter(Boolean))) as string[];
@@ -2157,6 +2171,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           )}
           {tab === "extrato" && (
             <>
+              {/* Info Card - Extrato */}
+              <InfoCard title="Minha Carteira" items={[
+                { icon: Wallet, iconColor: "text-primary", label: "Saldo", description: "saldo disponível para realizar recargas e operações." },
+                { icon: ArrowRightLeft, iconColor: "text-success", label: "Transações", description: "depósitos, recargas e comissões movimentam sua carteira." },
+                { icon: Banknote, iconColor: "text-warning", label: "Saques", description: "solicite a retirada do saldo pessoal (comissões) via PIX." },
+              ]} />
               {/* Wallet Header */}
               <div className="mb-5">
                 <h2 className="text-xl font-bold text-foreground">Minha Carteira</h2>
@@ -2339,6 +2359,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: CONTATOS (Minha Conta) — Instagram-style ===== */}
           {tab === "contatos" && (
             <div className="space-y-6">
+              {/* Info Card - Perfil */}
+              <InfoCard title="Minha Conta" items={[
+                { icon: User, iconColor: "text-primary", label: "Perfil", description: "atualize seu nome, foto, telefone e informações pessoais." },
+                { icon: Settings, iconColor: "text-warning", label: "Configurações", description: "gerencie chave PIX, notificações e preferências da conta." },
+              ]} />
               <ProfileTab
                 user={user}
                 role={role}
@@ -2400,6 +2425,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: STATUS ===== */}
           {tab === "status" && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+              {/* Info Card - Status */}
+              <InfoCard title="Status do Sistema" items={[
+                { icon: Activity, iconColor: "text-success", label: "Tempo de Processamento", description: "média de tempo que cada operadora leva para confirmar a recarga." },
+                { icon: Server, iconColor: "text-primary", label: "Disponibilidade", description: "indica se a API de recargas está respondendo normalmente." },
+              ]} />
               {/* Header */}
               <div>
                 <h2 className="text-lg font-bold text-foreground">Status do Sistema</h2>
