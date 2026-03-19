@@ -17,23 +17,14 @@ interface ResellerProfile {
 }
 
 interface PricingItem {
-  operadora_id: string;
   operadora_nome: string;
   valor_recarga: number;
-  regra_valor: number;
-  tipo_regra: string;
+  preco_cliente: number;
 }
 
 interface GroupedPricing {
   operadora: string;
   items: { valor: number; preco: number }[];
-}
-
-function computePrice(valor: number, regra_valor: number, tipo_regra: string): number {
-  if (tipo_regra === "percentual") {
-    return +(valor - valor * (regra_valor / 100)).toFixed(2);
-  }
-  return +(valor - regra_valor).toFixed(2);
 }
 
 export default function PublicProfile() {
