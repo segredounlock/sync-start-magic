@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { appToast } from "@/lib/toast";
 import { Navigate } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, User, Download, Smartphone, CheckCircle } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Download, Smartphone, CheckCircle, TicketCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
@@ -43,6 +43,7 @@ export default function Auth() {
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
+  const [referralCode, setReferralCode] = useState(refParam);
   const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
   const [phase, setPhase] = useState<LoginPhase>("form");
@@ -200,17 +201,28 @@ export default function Auth() {
 
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
+        // Validate referral code is provided
+        if (!referralCode.trim()) {
+          appToast.error("Código de indicação é obrigatório para criar conta");
+          setSubmitting(false);
+          return;
+        }
+
         // Resolve referral code to reseller ID
         let resellerId: string | null = null;
-        if (refParam) {
-          // If it's a UUID, use directly; otherwise resolve referral code
-          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refParam);
-          if (isUuid) {
-            resellerId = refParam;
-          } else {
-            const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: refParam });
-            if (resolvedId) resellerId = resolvedId as string;
-          }
+        const code = referralCode.trim();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
+        if (isUuid) {
+          resellerId = code;
+        } else {
+          const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: code });
+          if (resolvedId) resellerId = resolvedId as string;
+        }
+
+        if (!resellerId) {
+          appToast.error("Código de indicação inválido. Verifique e tente novamente.");
+          setSubmitting(false);
+          return;
         }
 
         const { data: signUpData, error } = await supabase.auth.signUp({
@@ -336,6 +348,27 @@ export default function Auth() {
                     />
                   </div>
                 </div>
+
+                {!isLogin && (
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                    <label className="block text-xs font-semibold text-primary uppercase tracking-wider mb-1.5">Código de Indicação</label>
+                    <div className="relative">
+                      <TicketCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
+                      <input
+                        type="text"
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value)}
+                        required={!isLogin}
+                        readOnly={!!refParam}
+                        className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm uppercase ${refParam ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        placeholder="OBRIGATÓRIO"
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                      <span>ℹ️</span> Este código vincula você a um vendedor oficial.
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Senha</label>
                   <div className="relative">
