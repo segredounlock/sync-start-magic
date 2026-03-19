@@ -1380,6 +1380,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: RECARGA ===== */}
           {tab === "recarga" && (
             <>
+              {/* Info Card - Recarga */}
+              <InfoCard title="Como Recarregar" items={[
+                { icon: Smartphone, iconColor: "text-primary", label: "Número", description: "digite o telefone do cliente. A operadora é detectada automaticamente." },
+                { icon: DollarSign, iconColor: "text-success", label: "Valor", description: "selecione o valor da recarga. O custo será descontado do seu saldo." },
+                { icon: Send, iconColor: "text-warning", label: "Enviar", description: "confirme e aguarde a recarga ser processada em segundos." },
+              ]} />
+
               {/* Success/Error overlay */}
               <AnimatePresence>
                 {recargaResult && (
