@@ -2629,6 +2629,11 @@ export default function Principal() {
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <PinProtection configKey="adminPin">
+                  <InfoCard title="Gateway de Pagamento" items={[
+                    { icon: CreditCard, iconColor: "text-primary", label: "Gateway Principal", description: "provedor que gera os QR Codes PIX para depósitos no sistema." },
+                    { icon: Shield, iconColor: "text-warning", label: "Credenciais", description: "tokens de acesso do provedor selecionado. Mantenha em sigilo." },
+                    { icon: KeyRound, iconColor: "text-success", label: "Webhook", description: "URL que recebe confirmações automáticas de pagamento." },
+                  ]} />
                   <div className="glass-card rounded-2xl p-6 md:p-8 space-y-5">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center">
