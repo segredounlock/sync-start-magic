@@ -54,6 +54,7 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
     const isAdmin = conv.other_user?.role === 'admin';
     const hasSpecialNameEffect = isAdmin || !!conv.other_user?.verification_badge;
     const isDmOnline = !isGroup && conv.other_user?.id && onlineSet.has(conv.other_user.id);
+    const unreadCount = isActive ? 0 : (conv.unread_count || 0);
 
     return (
       <motion.button
@@ -76,9 +77,9 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
                 )}
               </div>
             )}
-            {(conv.unread_count || 0) > 0 && (
+            {unreadCount > 0 && (
               <div className="absolute -top-0.5 -left-0.5 min-w-[20px] h-[20px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
-                <span className="text-[10px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
+                <span className="text-[10px] font-bold text-primary-foreground px-0.5">{unreadCount}</span>
               </div>
             )}
           </div>
@@ -91,9 +92,9 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
                 {initial}
               </div>
             )}
-            {(conv.unread_count || 0) > 0 ? (
+            {unreadCount > 0 ? (
               <div className="absolute -top-0.5 -left-0.5 min-w-[20px] h-[20px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
-                <span className="text-[10px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
+                <span className="text-[10px] font-bold text-primary-foreground px-0.5">{unreadCount}</span>
               </div>
             ) : isDmOnline ? (
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-success border-2 border-card" />
