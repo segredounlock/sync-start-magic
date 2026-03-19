@@ -2327,7 +2327,7 @@ export default function Principal() {
                                             valor={valor}
                                             savedTipo={localTipo}
                                             savedValor={localValor}
-                                            savedCusto={apiCost}
+                                            savedCusto={localCusto}
                                             label={globalPreco > 0 ? `Global: ${fmtCurrency(globalPreco)}` : "—"}
                                             highlight={hasCustom}
                                             onSave={(data) => {
