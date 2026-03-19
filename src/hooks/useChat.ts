@@ -67,6 +67,7 @@ export function useConversations() {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loading, setLoading] = useState(false);
   const initialLoadDone = useRef(false);
+  const activeConvoRef = useRef<string | null>(null);
 
   const fetchConversations = useCallback(async () => {
     if (!user) return;
