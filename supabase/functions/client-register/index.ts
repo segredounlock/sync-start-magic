@@ -21,30 +21,17 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Verify reseller exists and has permission to own a public store
-    const [
-      { data: isRevendedor, error: revendedorRoleError },
-      { data: isAdmin, error: adminRoleError },
-    ] = await Promise.all([
-      adminClient.rpc("has_role", { _user_id: reseller_id, _role: "revendedor" }),
-      adminClient.rpc("has_role", { _user_id: reseller_id, _role: "admin" }),
-    ]);
-
-    if (revendedorRoleError || adminRoleError) {
-      throw new Error("Falha ao validar permissões do revendedor");
-    }
-
-    if (!isRevendedor && !isAdmin) {
-      throw new Error("Revendedor não encontrado");
-    }
-
-    // Check reseller is active
-    const { data: resellerProfile } = await adminClient
+    // Verify reseller exists (any authenticated user can have a referral network)
+    const { data: resellerProfile, error: profileError } = await adminClient
       .from("profiles")
       .select("active")
       .eq("id", reseller_id)
       .single();
-    if (!resellerProfile?.active) throw new Error("Revendedor inativo");
+
+    if (profileError || !resellerProfile) {
+      throw new Error("Revendedor não encontrado");
+    }
+    if (!resellerProfile.active) throw new Error("Revendedor inativo");
 
     // Create user
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
