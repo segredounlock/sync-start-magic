@@ -666,52 +666,61 @@ export default function Principal() {
 
   const analyticsLoaded = useRef(false);
 
+  const dataFetchInFlightRef = useRef(false);
+
   // Light load: profiles, roles, saldos only
   const fetchData = useCallback(async () => {
+    if (dataFetchInFlightRef.current) return;
+    dataFetchInFlightRef.current = true;
     const t0 = performance.now();
-    await runFetch(async () => {
-      const [roles, profiles, saldos] = await Promise.all([
-        fetchAllRows("user_roles", { select: "user_id, role" }),
-        fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url, verification_badge" }),
-        fetchAllRows("saldos", { select: "user_id, valor", filters: (q: any) => q.eq("tipo", "revenda") }),
-      ]);
+    try {
+      await runFetch(async () => {
+        const [roles, profiles, saldos] = await Promise.all([
+          fetchAllRows("user_roles", { select: "user_id, role" }),
+          fetchAllRows("profiles", { select: "id, nome, email, active, created_at, telegram_username, whatsapp_number, avatar_url, verification_badge" }),
+          fetchAllRows("saldos", { select: "user_id, valor", filters: (q: any) => q.eq("tipo", "revenda") }),
+        ]);
 
-      setAllUsers((profiles || []).map(p => ({ id: p.id, active: p.active, created_at: p.created_at })));
+        setAllUsers((profiles || []).map(p => ({ id: p.id, active: p.active, created_at: p.created_at })));
 
-      const roleMap: Record<string, string> = {};
-      (roles || []).forEach(r => {
-        const current = roleMap[r.user_id];
-        if (!current || r.role === "admin") roleMap[r.user_id] = r.role;
+        const roleMap: Record<string, string> = {};
+        (roles || []).forEach(r => {
+          const current = roleMap[r.user_id];
+          if (!current || r.role === "admin") roleMap[r.user_id] = r.role;
+        });
+
+        const saldoMap: Record<string, number> = {};
+        saldos?.forEach(s => { saldoMap[s.user_id] = Number(s.valor); });
+
+        const list: Revendedor[] = (profiles || []).map(p => {
+          const raw = String(roleMap[p.id] || "").toLowerCase();
+          const resolvedRole: Revendedor["role"] =
+            raw === "user" ? "usuario" :
+            (["admin", "revendedor", "cliente", "usuario"].includes(raw) ? raw as Revendedor["role"] : "sem_role");
+          return {
+            id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
+            saldo: saldoMap[p.id] ?? 0, telefone: p.whatsapp_number || null,
+            telegram_username: p.telegram_username, whatsapp_number: p.whatsapp_number,
+            isRevendedor: roleMap[p.id] === "revendedor",
+            role: resolvedRole,
+            avatar_url: p.avatar_url || null,
+            verification_badge: (p as any).verification_badge || null,
+          };
+        });
+
+        setRevendedores(list);
+
+        // Fetch meuSaldo (admin's own balance)
+        if (user?.id) {
+          const { data: mySaldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle();
+          setMeuSaldo(Number(mySaldo?.valor || 0));
+        }
+
+        console.log(`[Principal] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms, ${list.length} users`);
       });
-
-      const saldoMap: Record<string, number> = {};
-      saldos?.forEach(s => { saldoMap[s.user_id] = Number(s.valor); });
-
-      const list: Revendedor[] = (profiles || []).map(p => {
-        const raw = String(roleMap[p.id] || "").toLowerCase();
-        const resolvedRole: Revendedor["role"] =
-          raw === "user" ? "usuario" :
-          (["admin", "revendedor", "cliente", "usuario"].includes(raw) ? raw as Revendedor["role"] : "sem_role");
-        return {
-          id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
-          saldo: saldoMap[p.id] ?? 0, telefone: p.whatsapp_number || null,
-          telegram_username: p.telegram_username, whatsapp_number: p.whatsapp_number,
-          isRevendedor: roleMap[p.id] === "revendedor",
-          role: resolvedRole,
-          avatar_url: p.avatar_url || null,
-          verification_badge: (p as any).verification_badge || null,
-        };
-      });
-
-      setRevendedores(list);
-
-      // Fetch meuSaldo (admin's own balance)
-      if (user?.id) {
-        const { data: mySaldo } = await supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle();
-        setMeuSaldo(Number(mySaldo?.valor || 0));
-      }
-    });
-    console.log(`[Principal] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms, ${revendedores.length} users`);
+    } finally {
+      dataFetchInFlightRef.current = false;
+    }
   }, [runFetch, user?.id]);
 
   // Heavy load: recargas + transactions (deferred)
