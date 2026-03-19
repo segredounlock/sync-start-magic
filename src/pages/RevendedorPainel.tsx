@@ -1902,6 +1902,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: HISTORICO ===== */}
           {tab === "historico" && (
             <>
+              {/* Info Card - Histórico */}
+              <InfoCard title="Histórico de Recargas" items={[
+                { icon: History, iconColor: "text-primary", label: "Todas as Recargas", description: "lista completa de recargas com status, operadora e valor." },
+                { icon: Filter, iconColor: "text-warning", label: "Filtros", description: "filtre por status (concluída, pendente, falha) e por operadora." },
+              ]} />
+
               {/* Filters */}
               {(() => {
                 const operadoras = Array.from(new Set(recargas.map(r => r.operadora).filter(Boolean))) as string[];
