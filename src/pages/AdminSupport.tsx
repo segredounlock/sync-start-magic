@@ -954,5 +954,6 @@ export default function AdminSupport() {
         </AnimatePresence>
       </div>
     </div>
+    </div>
   );
 }
