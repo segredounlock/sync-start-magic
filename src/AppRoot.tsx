@@ -10,6 +10,7 @@ import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
 import { useCacheCleanup } from "@/hooks/useCacheCleanup";
+import { usePresenceTracker } from "@/hooks/usePresence";
 
 // Lazy load ALL pages
 const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
