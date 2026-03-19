@@ -84,6 +84,8 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
   const [loading, setLoading] = useState(true);
   const profileCache = useRef<Record<string, { nome: string | null; email: string | null }>>({});
   const knownIds = useRef<Set<string>>(new Set());
+  const revendedoresRef = useRef(revendedores);
+  revendedoresRef.current = revendedores;
 
   // Load persisted notifications
   useEffect(() => {
