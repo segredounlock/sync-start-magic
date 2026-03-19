@@ -4,7 +4,8 @@ import { styledToast as toast } from "@/lib/toast";
 import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link2, Users, TrendingUp, BarChart3, Search, User, MoreVertical, Tag, ArrowUpCircle } from "lucide-react";
+import { Link2, Users, TrendingUp, BarChart3, Search, User, MoreVertical, Tag, ArrowUpCircle, UserPlus, DollarSign } from "lucide-react";
+import { InfoCard } from "@/components/InfoCard";
 import { ClientPricingModal } from "@/components/ClientPricingModal";
 
 interface NetworkStats {
