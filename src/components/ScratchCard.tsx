@@ -432,24 +432,25 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.4, type: "spring" }}
                           >
-                            {result.is_won ? (
-                              <>
-                                <Trophy className="h-12 w-12 text-warning mx-auto mb-2" />
-                                <h3 className="text-lg font-extrabold text-success">🎉 Parabéns!</h3>
-                                <p className="text-2xl font-black text-primary mt-1">
-                                  + R$ {result.prize_amount.toFixed(2)}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-2">Crédito adicionado!</p>
-                              </>
-                            ) : (
-                              <>
-                                <Frown className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
-                                <h3 className="text-lg font-bold text-foreground">Não foi dessa vez</h3>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  Tente novamente amanhã ou jogue a Gold!
-                                </p>
-                              </>
-                            )}
+                             {result.is_won ? (
+                               <>
+                                 <Trophy className="h-12 w-12 text-warning mx-auto mb-2" />
+                                 <h3 className="text-lg font-extrabold text-success">🎉 Parabéns!</h3>
+                                 <p className="text-2xl font-black text-primary mt-1">
+                                   + R$ {result.prize_amount.toFixed(2)}
+                                 </p>
+                                 <p className="text-xs text-muted-foreground mt-2">Crédito adicionado!</p>
+                               </>
+                             ) : (
+                               <>
+                                 <Frown className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
+                                 <h3 className="text-lg font-bold text-foreground">Não foi dessa vez</h3>
+                                 <p className="text-sm text-muted-foreground mt-1">
+                                   Tente novamente amanhã ou jogue a Gold!
+                                 </p>
+                               </>
+                             )}
+                             <ComeBackTomorrow />
                           </motion.div>
                         </motion.div>
                       )}
