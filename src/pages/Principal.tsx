@@ -2406,7 +2406,7 @@ export default function Principal() {
                                 <tr key={r.id} className="border-b border-border last:border-0">
                                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{fmtDate(getRecargaTime(r))}</td>
                                   <td className="px-3 py-2 font-mono text-foreground">{r.telefone}</td>
-                                  <td className="px-3 py-2 text-foreground">{r.operadora || "—"}</td>
+                                  <td className="px-3 py-2 text-foreground">{(r.operadora || "—").toUpperCase()}</td>
                                   <td className="px-3 py-2 text-right font-mono font-medium text-foreground"><Currency value={safeValor(r)} duration={600} /></td>
                                   <td className="px-3 py-2 text-right font-mono text-muted-foreground">{fmt(r.custo ?? 0)}</td>
                                   <td className="px-3 py-2 text-right font-mono text-muted-foreground">{fmt(r.custo_api ?? 0)}</td>
@@ -4176,7 +4176,7 @@ export default function Principal() {
                               {statusBadge(r.status)}
                             </div>
                             <div className="flex items-center justify-between text-[12px]">
-                              <span className="text-muted-foreground">{r.operadora || "—"} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
+                              <span className="text-muted-foreground">{(r.operadora || "—").toUpperCase()} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
                               <span className="font-bold font-mono tabular-nums text-foreground">{fmt(Number(r.valor))}</span>
                             </div>
                             <p className="text-[10px] text-muted-foreground mt-0.5">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
@@ -4206,7 +4206,7 @@ export default function Principal() {
                                   <p className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{r.user_nome || "Usuário"}</p>
                                 </td>
                                 <td className="px-2 py-2 font-mono text-[12px] text-muted-foreground">{r.telefone}</td>
-                                <td className="px-2 py-2 text-[13px] text-foreground">{r.operadora || "—"}</td>
+                                <td className="px-2 py-2 text-[13px] text-foreground">{(r.operadora || "—").toUpperCase()}</td>
                                 <td className="px-2 py-2 text-right font-mono font-bold text-[13px] tabular-nums text-foreground">{fmt(Number(r.valor))}</td>
                                 <td className="px-3 py-2 text-center">{statusBadge(r.status)}</td>
                               </motion.tr>
