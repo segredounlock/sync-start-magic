@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Smartphone, Users, Banknote, Share2,
   TrendingUp, DollarSign, ShoppingCart, UserPlus, AlertCircle,
-  HelpCircle, X, Copy, MessageCircle,
+  HelpCircle, X, Copy, MessageCircle, BarChart3,
 } from "lucide-react";
+import { InfoCard } from "@/components/InfoCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { supabase } from "@/integrations/supabase/client";
