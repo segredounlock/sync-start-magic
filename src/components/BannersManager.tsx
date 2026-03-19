@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { InfoCard } from "@/components/InfoCard";
 import { supabase } from "@/integrations/supabase/client";
 import { PromoBanner } from "./PromoBanner";
 import { PopupBanner } from "./PopupBanner";
