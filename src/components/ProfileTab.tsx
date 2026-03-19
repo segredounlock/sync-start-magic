@@ -100,6 +100,7 @@ export function ProfileTab({
         setBadge(((profile as any).verification_badge as BadgeType) || null);
         setSlug((profile as any).slug || "");
         setSlugText((profile as any).slug || "");
+        setReferralCode((profile as any).referral_code || "");
         setNomeText((profile as any).nome || profileNome || "");
         setEmailText(user?.email || "");
       }
