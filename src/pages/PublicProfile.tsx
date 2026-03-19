@@ -56,10 +56,9 @@ export default function PublicProfile() {
         // Group by operadora
         const grouped = new Map<string, { valor: number; preco: number }[]>();
         items.forEach((item) => {
-          const price = computePrice(item.valor_recarga, item.regra_valor, item.tipo_regra);
-          if (price <= 0) return;
+          if (item.preco_cliente <= 0) return;
           if (!grouped.has(item.operadora_nome)) grouped.set(item.operadora_nome, []);
-          grouped.get(item.operadora_nome)!.push({ valor: item.valor_recarga, preco: price });
+          grouped.get(item.operadora_nome)!.push({ valor: item.valor_recarga, preco: item.preco_cliente });
         });
 
         const result: GroupedPricing[] = [];
