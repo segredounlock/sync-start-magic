@@ -1,40 +1,44 @@
 
 
-## Diagnóstico e Correção
+# Plano: Reimplementar Configuração de Comissões da Rede
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Situação Atual
 
-### Plano
+A funcionalidade **já existe** inline no arquivo `src/pages/Principal.tsx` (linhas 3507-3600), dentro da aba "Rede" das Configurações do admin. Porém está embutida diretamente no mega-arquivo Principal.tsx (~5187 linhas), sem validação robusta, sem estado de loading/saving dedicado, e sem feedback visual claro de salvamento.
 
-**1. Corrigir o mapeamento de status na sync function**
+## O que será feito
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### 1. Criar componente dedicado `NetworkCommissionConfig.tsx`
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+**Arquivo:** `src/components/NetworkCommissionConfig.tsx`
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+Componente standalone com:
+- Estado próprio de loading (ao buscar config) e saving (ao salvar)
+- Busca as 4 chaves do `system_config` ao montar: `directCommissionEnabled`, `directCommissionPercent`, `indirectCommissionEnabled`, `indirectCommissionPercent`
+- Toggles para ativar/desativar cada comissão
+- Inputs numéricos com validação (min 0, max 100, sem negativos)
+- Botão "Salvar" explícito com feedback visual (toast de sucesso/erro)
+- Upsert idempotente no `system_config` (cria a chave se não existir)
+- Card de resumo explicativo no topo
+- Layout organizado com cards separados para direta e indireta
+
+### 2. Substituir o bloco inline em Principal.tsx
+
+Remover as linhas 3507-3600 do Principal.tsx e substituir por:
+```tsx
+<NetworkCommissionConfig />
 ```
 
-**2. Corrigir manualmente o pedido preso**
+### 3. Localização na tela
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+Painel Admin → Configurações → aba **Rede** → seção "Configurações de Comissão da Rede" (mesma posição atual, mas agora como componente dedicado e mais completo).
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+### Chaves utilizadas (sem alteração)
+- `directCommissionEnabled` (padrão: `"true"`)
+- `directCommissionPercent` (padrão: `"100"`)
+- `indirectCommissionEnabled` (padrão: `"true"`)
+- `indirectCommissionPercent` (padrão: `"10"`)
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Compatibilidade
+Nenhuma mudança no banco de dados. Mesmas chaves do `system_config` já usadas pela Edge Function `recarga-express`.
 
