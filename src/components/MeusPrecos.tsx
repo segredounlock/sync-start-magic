@@ -205,7 +205,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
     const activeOp = operadoras.find((o) => o.id === activeTab);
     if (!activeOp) return;
 
-    const toUpdate = activeOp.values.filter((v) => selectedValues.has(`${v.operadoraId}_${v.value}`) && !v.setByAdmin);
+    const toUpdate = activeOp.values.filter((v) => selectedValues.has(`${v.operadoraId}_${v.value}`));
     if (toUpdate.length === 0) {
       toast.error("Selecione ao menos um valor");
       return;
