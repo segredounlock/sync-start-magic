@@ -2535,7 +2535,7 @@ export default function AdminDashboard() {
                         <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg glass-card cursor-pointer hover:bg-muted/40 transition-colors text-sm font-medium text-foreground">
                           {storeLogoUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                           {storeLogoUploading ? "Enviando..." : "Enviar Logo"}
-                          <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleLogoUpload} className="hidden" />
                         </label>
                         {storeLogoUrl && <button onClick={() => setStoreLogoUrl("")} className="ml-2 text-xs text-destructive hover:underline">Remover</button>}
                       </div>
