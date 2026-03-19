@@ -14,6 +14,7 @@ import { usePresenceTracker } from "@/hooks/usePresence";
 
 // Lazy load ALL pages
 const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
+const PublicProfile = lazy(() => import("@/pages/PublicProfile"));
 const TelegramMiniApp = lazy(() => import("@/pages/TelegramMiniApp"));
 const ClientePortal = lazy(() => import("@/pages/ClientePortal"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
