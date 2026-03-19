@@ -1658,6 +1658,7 @@ export type Database = {
           vote_count: number
         }[]
       }
+      get_public_reseller_pricing: { Args: { _slug: string }; Returns: Json }
       get_public_store_by_slug: {
         Args: { _slug: string }
         Returns: {
