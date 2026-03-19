@@ -113,6 +113,46 @@ function parsePayload<T>(payload: unknown): T | null {
   return payload as T;
 }
 
+/** Countdown to next day in Brazil timezone */
+function ComeBackTomorrow() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const calc = () => {
+      const now = new Date();
+      // Get current date in São Paulo
+      const brDate = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      // Next day midnight in BR = brDate + 1 day at 00:00 São Paulo time
+      const [y, m, d] = brDate.split("-").map(Number);
+      const tomorrow = new Date(Date.UTC(y, m - 1, d + 1, 3, 0, 0)); // UTC-3
+      const diff = tomorrow.getTime() - now.getTime();
+      if (diff <= 0) { setTimeLeft("Disponível agora!"); return; }
+      const h = Math.floor(diff / 3600000);
+      const min = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border">
+      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+        <Clock className="h-4 w-4" />
+        <span className="text-xs font-medium">
+          {timeLeft === "Disponível agora!" ? (
+            <span className="text-primary font-bold">{timeLeft}</span>
+          ) : (
+            <>Volte amanhã em <span className="font-bold text-foreground">{timeLeft}</span></>
+          )}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(false);
