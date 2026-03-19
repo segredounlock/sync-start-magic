@@ -91,11 +91,13 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
                 {initial}
               </div>
             )}
-            {(conv.unread_count || 0) > 0 && (
+            {(conv.unread_count || 0) > 0 ? (
               <div className="absolute -top-0.5 -left-0.5 min-w-[20px] h-[20px] rounded-full bg-primary border-2 border-card flex items-center justify-center">
                 <span className="text-[10px] font-bold text-primary-foreground px-0.5">{conv.unread_count}</span>
               </div>
-            )}
+            ) : isDmOnline ? (
+              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-success border-2 border-card" />
+            ) : null}
           </div>
         )}
         <div className="flex-1 min-w-0">
