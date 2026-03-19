@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { InfoCard } from "@/components/InfoCard";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Download, Upload, Database, Loader2, CheckCircle2, AlertTriangle,
