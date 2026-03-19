@@ -108,7 +108,12 @@ async function generateCommissions(
           type: "direct",
           amount: directAmount,
         });
-        console.log(`commissions: direct ${directAmount} (${directPercent}% of ${profit}) to reseller ${resellerId} from user ${userId}`);
+        await adminClient.rpc("increment_saldo", {
+          p_user_id: resellerId,
+          p_tipo: "pessoal",
+          p_amount: directAmount,
+        });
+        console.log(`commissions: direct ${directAmount} (${directPercent}% of ${profit}) to reseller ${resellerId} from user ${userId} — credited to pessoal`);
       }
     } else {
       console.log(`commissions: direct commission disabled or 0%, skipping`);
