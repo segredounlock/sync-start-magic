@@ -169,6 +169,8 @@ function TestConsultaButton({ url, apiKey }: { url: string; apiKey: string }) {
   );
 }
 
+const LISTEN_TO_TYPES: ("deposit" | "recarga" | "new_user")[] = ["deposit", "recarga", "new_user"];
+
 export default function Principal() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
