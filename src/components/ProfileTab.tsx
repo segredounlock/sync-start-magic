@@ -88,7 +88,7 @@ export function ProfileTab({
     const load = async () => {
       const [{ data: counts }, { data: profile }] = await Promise.all([
         supabase.rpc("get_follow_counts", { _user_id: user.id }),
-        supabase.from("profiles").select("bio, verification_badge, slug, nome, email").eq("id", user.id).single(),
+        supabase.from("profiles").select("bio, verification_badge, slug, nome, email, referral_code").eq("id", user.id).single(),
       ]);
       if (counts && Array.isArray(counts) && counts.length > 0) {
         setFollowersCount(Number(counts[0].followers_count) || 0);
