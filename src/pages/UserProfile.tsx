@@ -55,8 +55,7 @@ export default function UserProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const { isOnline: presenceOnline } = useUserPresence(resolvedId ?? undefined);
-  const avatarError_state = useState(false);
-  const [avatarError, setAvatarError] = [avatarError_state[0], avatarError_state[1]];
+  const [avatarError, setAvatarError] = useState(false);
 
   // Edit mode (only for own profile)
   const isOwnProfile = user?.id === resolvedId;
