@@ -334,7 +334,7 @@ export function ProfileTab({
                         </p>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-xs text-muted-foreground truncate font-mono">
-                            https://recargasbrasill.com/loja/{slug}
+                            https://recargasbrasill.com/p/{slug}
                           </div>
                           <button
                             onClick={() => {
