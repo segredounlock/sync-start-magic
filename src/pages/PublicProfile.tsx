@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Smartphone, Zap, Shield, UserPlus, Loader2, Wifi } from "lucide-react";
-import { VerificationBadge } from "@/components/VerificationBadge";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface ResellerProfile {
   id: string;
@@ -12,6 +12,8 @@ interface ResellerProfile {
   store_logo_url: string | null;
   store_primary_color: string | null;
   active: boolean;
+  avatar_url: string | null;
+  verification_badge: string | null;
 }
 
 interface PricingItem {
@@ -126,9 +128,9 @@ export default function PublicProfile() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-card rounded-2xl shadow-xl p-6 text-center border border-border"
         >
-          {profile.store_logo_url ? (
+          {(profile.avatar_url || profile.store_logo_url) ? (
             <img
-              src={profile.store_logo_url}
+              src={profile.avatar_url || profile.store_logo_url!}
               alt={storeName}
               className="w-20 h-20 rounded-full mx-auto object-cover border-4 border-background shadow-lg"
             />
@@ -142,7 +144,7 @@ export default function PublicProfile() {
           )}
           <div className="mt-3 flex items-center justify-center gap-1">
             <h2 className="text-lg font-bold text-foreground">{storeName}</h2>
-            <VerificationBadge badge={null} size="sm" />
+            <VerificationBadge badge={profile.verification_badge as BadgeType} size="sm" />
           </div>
           <p className="text-xs text-muted-foreground">@{slug}</p>
           <Link

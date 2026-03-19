@@ -1663,12 +1663,14 @@ export type Database = {
         Args: { _slug: string }
         Returns: {
           active: boolean
+          avatar_url: string
           id: string
           nome: string
           store_logo_url: string
           store_name: string
           store_primary_color: string
           store_secondary_color: string
+          verification_badge: string
         }[]
       }
       get_public_tables: {
