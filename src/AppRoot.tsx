@@ -151,6 +151,7 @@ function App() {
             <Route path="/recarga" element={<LazyPage><RecargaPublica /></LazyPage>} />
             <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
             <Route path="/loja/:slug" element={<LazyPage><ClientePortal /></LazyPage>} />
+            <Route path="/p/:slug" element={<LazyPage><PublicProfile /></LazyPage>} />
             <Route path="/miniapp" element={<LazyPage><TelegramMiniApp /></LazyPage>} />
             <Route path="/regras" element={<LazyPage><RegrasPage /></LazyPage>} />
             <Route path="/instalar" element={<LazyPage><InstallApp /></LazyPage>} />
