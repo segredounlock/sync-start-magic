@@ -556,8 +556,8 @@ export default function Principal() {
   };
 
   const resetResellerPricingRule = async (userId: string, operadora_id: string, valor_recarga: number) => {
-    const existing = resellerPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga)
-      || revDetailPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
+    const existing = resellerPricingRules.find(r => r.operadora_id === operadora_id && Number(r.valor_recarga) === Number(valor_recarga))
+      || revDetailPricingRules.find(r => r.operadora_id === operadora_id && Number(r.valor_recarga) === Number(valor_recarga));
     if (!existing?.id) return;
     try {
       await (supabase.from("reseller_base_pricing_rules" as any) as any).delete().eq("id", existing.id);
