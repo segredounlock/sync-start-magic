@@ -122,6 +122,52 @@ Deno.serve(async (req) => {
               regra_valor: 0,
             });
             console.log(`[Sync] Nova regra: ${nome} R$${faceValue}`);
+
+            // Auto-propagate to users with existing reseller_base_pricing_rules for this carrier
+            const { data: usersWithRules } = await adminClient
+              .from("reseller_base_pricing_rules")
+              .select("user_id")
+              .eq("operadora_id", opId);
+
+            if (usersWithRules?.length) {
+              const distinctUsers = [...new Set(usersWithRules.map((r: any) => r.user_id))];
+              for (const uid of distinctUsers) {
+                // Check if user already has a rule for this value
+                const { data: existing } = await adminClient
+                  .from("reseller_base_pricing_rules")
+                  .select("id")
+                  .eq("user_id", uid)
+                  .eq("operadora_id", opId)
+                  .eq("valor_recarga", faceValue)
+                  .maybeSingle();
+
+                if (!existing) {
+                  // Calculate average margin from user's existing rules for this carrier
+                  const { data: userRules } = await adminClient
+                    .from("reseller_base_pricing_rules")
+                    .select("regra_valor, custo")
+                    .eq("user_id", uid)
+                    .eq("operadora_id", opId);
+
+                  let avgMargin = 0.5; // fallback
+                  if (userRules?.length) {
+                    const margins = userRules.map((r: any) => Number(r.regra_valor) - Number(r.custo));
+                    avgMargin = margins.reduce((a: number, b: number) => a + b, 0) / margins.length;
+                    if (avgMargin <= 0) avgMargin = 0.5;
+                  }
+
+                  await adminClient.from("reseller_base_pricing_rules").insert({
+                    user_id: uid,
+                    operadora_id: opId,
+                    valor_recarga: faceValue,
+                    custo: apiCost,
+                    tipo_regra: "fixo",
+                    regra_valor: apiCost + avgMargin,
+                  });
+                  console.log(`[Sync] Auto-propagado: ${nome} R$${faceValue} → user ${uid} (margem R$${avgMargin.toFixed(2)})`);
+                }
+              }
+            }
           }
         }
       }
