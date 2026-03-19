@@ -1,40 +1,33 @@
 
 
-## Diagnóstico e Correção
+## Corrigir preços customizados não sendo exibidos no Painel do Revendedor
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Problema
 
-### Plano
+O usuário `ferreiragreg180@gmail.com` (Neverland-Recargas) tem preços customizados pelo administrador na tabela `reseller_base_pricing_rules` (ex: CLARO R$20 → custo R$11,50), mas o painel está exibindo os preços globais (R$14,30).
 
-**1. Corrigir o mapeamento de status na sync function**
+**Causa raiz**: A função `fetchCatalog` no `RevendedorPainel.tsx` (linha 207-260) busca apenas `reseller_pricing_rules` (margens próprias do revendedor) e `pricing_rules` (global). Ela **nunca consulta** `reseller_base_pricing_rules` (custos base customizados pelo admin). Como Neverland-Recargas não tem nenhuma entrada em `reseller_pricing_rules`, o sistema cai no fallback global.
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### Hierarquia correta de preços (que já funciona no `recarga-express` e `MeusPrecos`)
 
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+1. `reseller_pricing_rules` — margem definida pelo próprio revendedor
+2. `reseller_base_pricing_rules` — custo base customizado pelo admin
+3. `pricing_rules` com margem padrão global — fallback
+4. `pricing_rules` direto — último fallback
 
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
+### Correção
 
-**2. Corrigir manualmente o pedido preso**
+**Arquivo**: `src/pages/RevendedorPainel.tsx` — função `fetchCatalog` (~linhas 207-260)
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+1. Adicionar fetch de `reseller_base_pricing_rules` para o `pricingUserId` no `Promise.all`
+2. Na resolução de preço de cada valor, aplicar a hierarquia correta:
+   - Se tem `reseller_pricing_rules` → usa como preço final
+   - Senão, se tem `reseller_base_pricing_rules` → usa `regra_valor` como custo
+   - Senão → usa `pricing_rules` global (com ou sem margem padrão)
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+### Impacto
 
-**3. Verificar se há outros pedidos presos**
-
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+- Neverland-Recargas e os outros 2 usuários com preços customizados passarão a ver R$11,50 (CLARO R$20) em vez de R$14,30
+- Nenhum outro usuário é afetado (quem não tem `reseller_base_pricing_rules` continua vendo preço global)
+- A cobrança real na `recarga-express` já usa a hierarquia correta — esta correção alinha o frontend
 
