@@ -454,6 +454,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
               <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-success border-2 border-card" />
             )}
           </div>
+        )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground flex items-center gap-1">
             <span className={shouldShimmerName ? "shimmer-letters" : ""}>{name}</span>
