@@ -81,7 +81,14 @@ export function ProfileTab({
   const [savingProfile, setSavingProfile] = useState(false);
   const [nomeText, setNomeText] = useState("");
 
-  const recargasCompleted = recargas.filter((r) => r.status === "completed").length;
+  const [recargasCompleted, setRecargasCompleted] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.rpc("get_user_recargas_count", { _user_id: user.id }).then(({ data }) => {
+      if (typeof data === "number") setRecargasCompleted(data);
+    });
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
