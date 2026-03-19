@@ -1,39 +1,40 @@
 
 
-## Diagnóstico
+## Diagnóstico e Correção
 
-A aba "Configurações de Suporte" **salva** os canais no banco de dados (`reseller_config` com chaves `custom_support_enabled` e `support_channels`), porém **nenhum outro componente lê esses dados**. Ou seja:
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-- O `FloatingSupportButton` (balão flutuante) **não consulta** os canais configurados pelo revendedor
-- O portal do cliente (`ClientePortal`) **não exibe** os canais personalizados
-- A `SupportChatWidget` **não usa** essa configuração
+### Plano
 
-**Resultado:** A configuração é funcional no sentido de salvar/ler dados, mas **não tem efeito prático** — os indicados nunca veem os canais configurados.
+**1. Corrigir o mapeamento de status na sync function**
 
----
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-## Plano de Correção
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-### 1. Criar hook `useSupportChannels`
-- Novo hook que, dado um `resellerId`, busca na `reseller_config` se o revendedor tem `custom_support_enabled = true` e quais `support_channels` estão configurados
-- Se o revendedor direto não tiver suporte personalizado, subir na cadeia (reseller do reseller) até encontrar um que tenha, ou usar o suporte padrão do sistema
-- Retorna `{ channels, bubbleChannel, isCustom, loading }`
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-### 2. Integrar no `FloatingSupportButton`
-- Quando o usuário (cliente/revendedor) tem um `reseller_id`, usar o hook para buscar os canais do seu revendedor
-- Se houver canal marcado como `showInBubble`, exibir esse canal diretamente no botão flutuante (ex: abrir WhatsApp ao clicar)
-- Manter o comportamento atual (chat de suporte do sistema) como fallback quando não há suporte personalizado
+**2. Corrigir manualmente o pedido preso**
 
-### 3. Integrar no `ClientePortal`
-- Na seção de suporte do portal do cliente, exibir os canais personalizados do revendedor (ícone + label + link) em vez do suporte genérico do sistema
-- Cada canal abre o respectivo link (WhatsApp, Telegram, Instagram, etc.)
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-### 4. Exibir canais na página de suporte do cliente (`ClientSupport`)
-- Mostrar os canais personalizados do revendedor no topo da página de suporte, antes do chat
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-### Arquivos afetados
-- **Novo:** `src/hooks/useSupportChannels.ts`
-- **Editar:** `src/components/support/FloatingSupportButton.tsx`
-- **Editar:** `src/pages/ClientePortal.tsx`
-- **Editar:** `src/pages/ClientSupport.tsx`
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

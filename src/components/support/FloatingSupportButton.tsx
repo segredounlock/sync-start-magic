@@ -2,21 +2,33 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
+import { useSupportChannels } from "@/hooks/useSupportChannels";
 import { styledToast as toast } from "@/lib/toast";
 import { SupportChatWidget } from "./SupportChatWidget";
 import { motion, AnimatePresence } from "framer-motion";
-import { Headphones, HeadphoneOff } from "lucide-react";
+import { Headphones, HeadphoneOff, ExternalLink } from "lucide-react";
 import { useLocation } from "react-router-dom";
+
+const CHANNEL_ICONS: Record<string, string> = {
+  whatsapp: "💬",
+  telegram: "✈️",
+  email: "📧",
+  telefone: "📞",
+  link: "🔗",
+  instagram: "📸",
+};
 
 export function FloatingSupportButton() {
   const { user, role } = useAuth();
   const location = useLocation();
   const { playSound } = useNotificationSound();
+  const { channels, bubbleChannel, isCustom, loading: channelsLoading } = useSupportChannels(user?.id);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [enabled, setEnabled] = useState(true);
   const [showOfflineTooltip, setShowOfflineTooltip] = useState(false);
+  const [showChannelsPopup, setShowChannelsPopup] = useState(false);
   const isOpenRef = useRef(false);
   const unreadCountRef = useRef(0);
 
@@ -34,17 +46,12 @@ export function FloatingSupportButton() {
 
   useEffect(() => {
     checkEnabled();
-
-    // Poll every 30s as fallback
     const pollId = setInterval(checkEnabled, 30000);
-
-    // Re-check on tab visibility change
     const handleVisibility = () => {
       if (document.visibilityState === "visible") checkEnabled();
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // Listen for realtime changes
     const ch = supabase
       .channel("support-enabled-toggle")
       .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.supportEnabled" }, (payload: any) => {
@@ -64,9 +71,9 @@ export function FloatingSupportButton() {
   const hiddenRoutes = ["/chat", "/admin/support"];
   const shouldHide = hiddenRoutes.some(r => location.pathname.startsWith(r));
 
-  // Listen for new messages (notifications)
+  // Listen for new messages (notifications) — only for system support (not custom channels)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || isCustom) return;
     const isAdmin = role === "admin";
     const trackRole = isAdmin ? "client" : "admin";
 
@@ -92,16 +99,29 @@ export function FloatingSupportButton() {
       .subscribe();
 
     return () => { supabase.removeChannel(ch); };
-  }, [user?.id, role, playSound]);
+  }, [user?.id, role, playSound, isCustom]);
 
   const handleUnreadChange = useCallback((count: number) => {
     setUnreadCount(count);
   }, []);
 
-  if (!user || shouldHide || role === "admin") return null;
+  const handleBubbleClick = () => {
+    if (isCustom && bubbleChannel) {
+      // If there are multiple channels, show popup; if only 1, open directly
+      if (channels.length > 1) {
+        setShowChannelsPopup(prev => !prev);
+      } else {
+        window.open(bubbleChannel.link, "_blank", "noopener");
+      }
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
 
-  // When disabled, show offline button with tooltip
-  if (!enabled) {
+  if (!user || shouldHide || role === "admin" || channelsLoading) return null;
+
+  // When disabled AND no custom channels, show offline button
+  if (!enabled && !isCustom) {
     return (
       <div className="fixed bottom-24 md:bottom-4 right-4 z-[60]">
         <motion.button
@@ -115,7 +135,6 @@ export function FloatingSupportButton() {
           className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-muted text-muted-foreground shadow-lg flex items-center justify-center border border-border"
         >
           <HeadphoneOff className="w-5 h-5 md:w-6 md:h-6" />
-          {/* Blinking red offline dot */}
           <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-destructive border-2 border-muted animate-pulse" />
         </motion.button>
 
@@ -142,13 +161,17 @@ export function FloatingSupportButton() {
       {/* Floating button */}
       <div className="fixed bottom-24 md:bottom-4 right-4 z-50">
         <motion.button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleBubbleClick}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground shadow-xl flex items-center justify-center"
         >
-          <Headphones className="w-5 h-5 md:w-6 md:h-6" />
-          {/* Blinking green online dot */}
+          {isCustom && bubbleChannel ? (
+            <span className="text-lg">{CHANNEL_ICONS[bubbleChannel.icon] || "🔗"}</span>
+          ) : (
+            <Headphones className="w-5 h-5 md:w-6 md:h-6" />
+          )}
+          {/* Green online dot */}
           <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-background animate-pulse" />
 
           {/* Pulse ring */}
@@ -165,7 +188,7 @@ export function FloatingSupportButton() {
 
           {/* Badge */}
           <AnimatePresence>
-            {unreadCount > 0 && (
+            {unreadCount > 0 && !isCustom && (
               <motion.span
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -177,17 +200,51 @@ export function FloatingSupportButton() {
             )}
           </AnimatePresence>
         </motion.button>
+
+        {/* Custom channels popup */}
+        <AnimatePresence>
+          {showChannelsPopup && isCustom && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.9 }}
+              className="absolute bottom-full right-0 mb-2 w-56 rounded-xl bg-card border border-border shadow-xl z-[61] overflow-hidden"
+            >
+              <div className="p-3 border-b border-border">
+                <p className="text-xs font-bold text-foreground">📞 Canais de Suporte</p>
+              </div>
+              <div className="p-2 space-y-1">
+                {channels.map((ch, i) => (
+                  <a
+                    key={i}
+                    href={ch.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowChannelsPopup(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors group"
+                  >
+                    <span className="text-base">{CHANNEL_ICONS[ch.icon] || "🔗"}</span>
+                    <span className="text-xs font-medium text-foreground flex-1 truncate">{ch.label}</span>
+                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Widget */}
-      <AnimatePresence>
-        {isOpen && (
-          <SupportChatWidget
-            onClose={() => setIsOpen(false)}
-            onUnreadChange={handleUnreadChange}
-          />
-        )}
-      </AnimatePresence>
+      {/* Widget (only for system support, not custom channels) */}
+      {!isCustom && (
+        <AnimatePresence>
+          {isOpen && (
+            <SupportChatWidget
+              onClose={() => setIsOpen(false)}
+              onUnreadChange={handleUnreadChange}
+            />
+          )}
+        </AnimatePresence>
+      )}
     </>
   );
 }
