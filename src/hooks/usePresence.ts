@@ -98,8 +98,8 @@ class PresenceManager {
 const presenceManager = new PresenceManager();
 
 /**
- * Tracks the current user's presence on the chat page.
- * Only active while the chat page is mounted.
+ * Tracks the current user's presence globally (any page).
+ * Mounted once in AppRoot's GlobalPresence component.
  */
 export function usePresenceTracker() {
   const { user } = useAuth();
