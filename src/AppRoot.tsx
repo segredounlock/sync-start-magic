@@ -101,6 +101,12 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// ── Global presence tracker (runs for all authenticated users) ──
+function GlobalPresence() {
+  usePresenceTracker();
+  return null;
+}
+
 // ── Deferred non-critical effects ──
 function DeferredEffects() {
   const [ready, setReady] = useState(false);
