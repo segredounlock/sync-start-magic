@@ -2051,8 +2051,15 @@ export default function Principal() {
           )}
 
           {/* ===== DETALHE REVENDEDOR ===== */}
-          {view === "detalhe" && selectedRev && (
+           {view === "detalhe" && selectedRev && (
             <>
+              {/* Info Card - Detalhe */}
+              <InfoCard title="Detalhes do Revendedor" items={[
+                { icon: User, iconColor: "text-primary", label: "Perfil", description: "dados cadastrais, badge de verificação e status de atividade." },
+                { icon: Wallet, iconColor: "text-success", label: "Saldos", description: "saldo de revenda (para recargas) e saldo pessoal (comissões recebidas)." },
+                { icon: Activity, iconColor: "text-warning", label: "Desempenho", description: "total de recargas, volume vendido e histórico completo de operações." },
+              ]} />
+
               {/* Profile Card */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-4 sm:p-6">
                 <div className="flex items-start gap-4">
