@@ -42,10 +42,11 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const fetchPricing = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: marginConfig }, { data: commConfig }] = await Promise.all([
+      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: resellerBaseRules }, { data: marginConfig }, { data: commConfig }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", userId),
+        (supabase.from("reseller_base_pricing_rules" as any) as any).select("*").eq("user_id", userId),
         supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
         supabase.from("system_config").select("key, value").in("key", ["directCommissionPercent", "indirectCommissionPercent"]),
       ]);

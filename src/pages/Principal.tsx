@@ -528,7 +528,7 @@ export default function Principal() {
 
   const fetchResellerPricingRules = useCallback(async (userId: string) => {
     try {
-      const { data } = await supabase.from("reseller_pricing_rules").select("*").eq("user_id", userId);
+      const { data } = await (supabase.from("reseller_base_pricing_rules" as any) as any).select("*").eq("user_id", userId);
       const mapped = (data || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" }));
       setResellerPricingRules(mapped);
       setRevDetailPricingRules(mapped);
@@ -539,18 +539,17 @@ export default function Principal() {
     const key = `r-${rule.operadora_id}-${rule.valor_recarga}`;
     setResellerPricingSaving(prev => ({ ...prev, [key]: true }));
     try {
-      const { error } = await supabase.from("reseller_pricing_rules").upsert({
+      const { error } = await (supabase.from("reseller_base_pricing_rules" as any) as any).upsert({
         user_id: userId,
         operadora_id: rule.operadora_id,
         valor_recarga: rule.valor_recarga,
         custo: rule.custo,
         tipo_regra: rule.tipo_regra,
         regra_valor: rule.regra_valor,
-        set_by_admin: true,
         updated_at: new Date().toISOString(),
-      } as any, { onConflict: "user_id,operadora_id,valor_recarga" } as any);
+      }, { onConflict: "user_id,operadora_id,valor_recarga" });
       if (error) throw error;
-      toast.success(`Preço para R$ ${rule.valor_recarga.toFixed(2)} salvo!`);
+      toast.success(`Preço base para R$ ${rule.valor_recarga.toFixed(2)} salvo!`);
       fetchResellerPricingRules(userId);
     } catch (err: any) { toast.error(err.message || "Erro ao salvar"); }
     setResellerPricingSaving(prev => ({ ...prev, [key]: false }));
@@ -561,11 +560,11 @@ export default function Principal() {
       || revDetailPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
     if (!existing?.id) return;
     try {
-      await (supabase.from("reseller_pricing_rules" as any) as any).delete().eq("id", existing.id);
+      await (supabase.from("reseller_base_pricing_rules" as any) as any).delete().eq("id", existing.id);
       const filter = (rules: PricingRule[]) => rules.filter(r => r.id !== existing.id);
       setResellerPricingRules(prev => filter(prev));
       setRevDetailPricingRules(prev => filter(prev));
-      toast.success("Preço removido (usará preço global)");
+      toast.success("Preço base removido (usará preço global)");
     } catch (err: any) { toast.error(err.message || "Erro"); }
   };
 
