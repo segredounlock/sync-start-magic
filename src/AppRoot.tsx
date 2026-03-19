@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -135,6 +135,12 @@ function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>;
 }
 
+function RegisterRedirect() {
+  const [searchParams] = useSearchParams();
+  const ref = searchParams.get("ref") || "";
+  return <Navigate to={`/login${ref ? `?ref=${ref}` : ""}`} replace />;
+}
+
 function App() {
   useCacheCleanup();
   usePrefetchRoutes();
@@ -148,6 +154,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Auth />} />
+            <Route path="/registrar" element={<RegisterRedirect />} />
             <Route path="/recarga" element={<LazyPage><RecargaPublica /></LazyPage>} />
             <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
             <Route path="/loja/:slug" element={<LazyPage><ClientePortal /></LazyPage>} />
