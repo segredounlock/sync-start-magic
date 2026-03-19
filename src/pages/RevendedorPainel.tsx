@@ -407,22 +407,27 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   // Realtime: saldo updates
   useEffect(() => {
     if (!user) return;
+    const uid = user?.id;
+    if (!uid) return;
     const saldoChannel = supabase
-      .channel(`saldo-realtime-${user.id}`)
+      .channel(`saldo-realtime-${uid}`)
       .on("postgres_changes", {
         event: "*",
         schema: "public",
         table: "saldos",
-        filter: `user_id=eq.${user.id}`,
+        filter: `user_id=eq.${uid}`,
       }, (payload) => {
         const row = payload.new as any;
         if (row?.tipo === "revenda" && row?.valor !== undefined) {
           setSaldo(Number(row.valor));
         }
+        if (row?.tipo === "pessoal" && row?.valor !== undefined) {
+          setSaldoPessoal(Number(row.valor));
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(saldoChannel); };
-  }, [user]);
+  }, [user?.id]);
 
   // Realtime: recargas status updates
   useEffect(() => {
