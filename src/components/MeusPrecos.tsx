@@ -95,10 +95,11 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
           }
 
           const hasCustom = !!rRule;
+          const setByAdmin = hasCustom ? !!(rRule as any).set_by_admin : false;
           const profit = hasCustom ? Number(rRule!.regra_valor) - baseCost : 0;
           const userCost = hasCustom ? Number(rRule!.regra_valor) : baseCost;
 
-          return { value: v, cost: baseCost, apiCost, userCost, profit: Math.max(0, profit), operadoraId: op.id, hasCustom };
+          return { value: v, cost: baseCost, apiCost, userCost, profit: Math.max(0, profit), operadoraId: op.id, hasCustom, setByAdmin };
         });
         return { id: op.id, nome: op.nome, values };
       });
