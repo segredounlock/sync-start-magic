@@ -492,7 +492,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
       if (pollTimer) clearTimeout(pollTimer);
       channels.forEach(ch => supabase.removeChannel(ch));
     };
-  }, [listenTo, addNotification, getProfile]);
+  }, [stableListenTo, addNotification, getProfile]);
 
   const markAllRead = useCallback(async () => {
     setUnreadCount(0);
