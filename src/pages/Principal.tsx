@@ -491,7 +491,7 @@ export default function Principal() {
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
       ]);
-      setPricingOps((ops || []).map((o: any) => ({ ...o, valores: o.valores || [] })));
+      setPricingOps((ops || []).map((o: any) => ({ ...o, valores: Array.isArray(o.valores) ? o.valores.map((v: any) => Number(v)) : [] })));
       setPricingRules((rules || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
       pricingSynced.current = true;
     } catch (err) { console.error(err); toast.error("Erro ao carregar precificação"); }
@@ -521,7 +521,7 @@ export default function Principal() {
 
   const { remove: removePricingRule } = useCrud("pricing_rules", { onRefresh: fetchPricingData, messages: { deleted: "Regra removida" } });
   const resetPricingRule = async (operadora_id: string, valor_recarga: number) => {
-    const existing = pricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
+    const existing = pricingRules.find(r => r.operadora_id === operadora_id && Number(r.valor_recarga) === Number(valor_recarga));
     if (!existing?.id) return;
     await removePricingRule(existing.id);
   };
@@ -556,8 +556,8 @@ export default function Principal() {
   };
 
   const resetResellerPricingRule = async (userId: string, operadora_id: string, valor_recarga: number) => {
-    const existing = resellerPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga)
-      || revDetailPricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
+    const existing = resellerPricingRules.find(r => r.operadora_id === operadora_id && Number(r.valor_recarga) === Number(valor_recarga))
+      || revDetailPricingRules.find(r => r.operadora_id === operadora_id && Number(r.valor_recarga) === Number(valor_recarga));
     if (!existing?.id) return;
     try {
       await (supabase.from("reseller_base_pricing_rules" as any) as any).delete().eq("id", existing.id);
@@ -2287,8 +2287,9 @@ export default function Principal() {
                                   return (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                       {activeOp.valores.sort((a: number, b: number) => a - b).map((valor: number) => {
-                                        const rule = revDetailPricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
-                                        const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                                        const normalizedValor = Number(valor);
+                                        const rule = revDetailPricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
+                                        const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
                                         const localTipo = rule?.tipo_regra || globalRule?.tipo_regra || "fixo";
                                         const localValor = rule?.regra_valor ?? globalRule?.regra_valor ?? 0;
                                         const localCusto = rule?.custo ?? globalRule?.custo ?? 0;
@@ -4443,8 +4444,9 @@ export default function Principal() {
                             return (
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {activeOp.valores.sort((a, b) => a - b).map(valor => {
-                                  const resellerRule = resellerPricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
-                                  const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                                  const normalizedValor = Number(valor);
+                                  const resellerRule = resellerPricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
+                                  const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
                                   const hasCustom = !!resellerRule;
                                   const rule = resellerRule || globalRule;
                                   const savedTipo = rule?.tipo_regra || "fixo";
