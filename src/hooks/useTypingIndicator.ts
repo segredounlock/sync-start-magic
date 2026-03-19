@@ -81,7 +81,7 @@ export function useTypingIndicator(conversationId: string | null) {
     (nome: string, activity: ActivityType = "typing") => {
       if (!channelRef.current || !user || !subscribedRef.current) return;
       const now = Date.now();
-      if (now - lastSent.current < 2000) return;
+      if (now - lastSent.current < 1000) return;
       lastSent.current = now;
       channelRef.current.send({
         type: "broadcast",
