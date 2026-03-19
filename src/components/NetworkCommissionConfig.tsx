@@ -125,22 +125,10 @@ export default function NetworkCommissionConfig() {
       </div>
 
       {/* Resumo explicativo */}
-      <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 space-y-2">
-        <div className="flex items-center gap-2 text-primary">
-          <Info className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-medium">Como funciona</span>
-        </div>
-        <div className="grid gap-2 text-xs text-muted-foreground">
-          <div className="flex items-start gap-2">
-            <Users className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success" />
-            <span><strong className="text-foreground">Comissão Direta:</strong> percentual do lucro da venda que vai para o vendedor que realizou a recarga.</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <GitBranch className="h-3.5 w-3.5 mt-0.5 shrink-0 text-warning" />
-            <span><strong className="text-foreground">Comissão Indireta:</strong> percentual do lucro da venda que vai para quem indicou o vendedor (upline / avô).</span>
-          </div>
-        </div>
-      </div>
+      <InfoCard items={[
+        { icon: Users, iconColor: "text-success", label: "Comissão Direta", description: "percentual do lucro da venda que vai para o vendedor que realizou a recarga." },
+        { icon: GitBranch, iconColor: "text-warning", label: "Comissão Indireta", description: "percentual do lucro da venda que vai para quem indicou o vendedor (upline / avô)." },
+      ]} />
 
       {/* Comissão Direta */}
       <motion.div
