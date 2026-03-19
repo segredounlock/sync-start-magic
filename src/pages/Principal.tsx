@@ -4198,6 +4198,13 @@ export default function Principal() {
           {/* ===== PRECIFICAÇÃO ===== */}
           {view === "precificacao" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+              {/* Info Card - Precificação */}
+              <InfoCard title="Precificação" items={[
+                { icon: Tag, iconColor: "text-warning", label: "Preço Global", description: "regras padrão de margem aplicadas a todos os revendedores." },
+                { icon: Users, iconColor: "text-primary", label: "Preço Personalizado", description: "regras específicas por revendedor que sobrepõem o preço global." },
+                { icon: Shield, iconColor: "text-destructive", label: "Piso de Segurança", description: "impede que qualquer venda seja feita abaixo do custo base da API." },
+              ]} />
+
               {/* Header */}
               <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
