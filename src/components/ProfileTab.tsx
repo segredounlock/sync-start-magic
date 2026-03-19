@@ -6,7 +6,7 @@ import {
   Wallet, History, Send, Landmark, Smartphone, Shield, Activity,
   CheckCircle2, Loader2, Camera, Pencil, Calendar, Clock,
   X, Check, ChevronDown, ChevronUp, Lock, LogOut, User,
-  Key, QrCode, BarChart3, HeadphonesIcon, Bell,
+  Key, QrCode, BarChart3, HeadphonesIcon, Bell, Globe, Copy, ExternalLink,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import type { Recarga } from "@/types";
@@ -315,6 +315,43 @@ export function ProfileTab({
                     Apenas letras minúsculas, números, pontos e sublinhados.
                   </p>
                 </div>
+
+                {/* Perfil Público */}
+                {slug && (
+                  <div className="bg-muted/30 rounded-xl p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-bold text-foreground">Perfil Público</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Seus clientes podem ver seus produtos neste link.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-xs text-muted-foreground truncate font-mono">
+                        https://recargasbrasill.com/p/{slug}
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`https://recargasbrasill.com/p/${slug}`);
+                          toast.success("Link copiado!");
+                        }}
+                        className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                        title="Copiar link"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </button>
+                      <a
+                        href={`/r/${slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                        title="Abrir perfil"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t border-border pt-4 flex justify-end">
                   <button
