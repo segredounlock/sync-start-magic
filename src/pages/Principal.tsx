@@ -4206,7 +4206,7 @@ export default function Principal() {
                                   <p className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{r.user_nome || "Usuário"}</p>
                                 </td>
                                 <td className="px-2 py-2 font-mono text-[12px] text-muted-foreground">{r.telefone}</td>
-                                <td className="px-2 py-2 text-[13px] text-foreground">{r.operadora || "—"}</td>
+                                <td className="px-2 py-2 text-[13px] text-foreground">{(r.operadora || "—").toUpperCase()}</td>
                                 <td className="px-2 py-2 text-right font-mono font-bold text-[13px] tabular-nums text-foreground">{fmt(Number(r.valor))}</td>
                                 <td className="px-3 py-2 text-center">{statusBadge(r.status)}</td>
                               </motion.tr>
