@@ -338,7 +338,7 @@ export function ProfileTab({
                           </div>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`https://recargasbrasill.com/loja/${slug}`);
+                              navigator.clipboard.writeText(`https://recargasbrasill.com/p/${slug}`);
                               toast.success("Link copiado!");
                             }}
                             className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
