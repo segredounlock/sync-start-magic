@@ -303,7 +303,8 @@ export default function UserProfile() {
                     {userInitial}
                   </div>
                 )}
-                {presenceOnline && (
+                {/* Online/Last seen indicator */}
+                {presenceOnline ? (
                   <div className="absolute -bottom-1 -right-1 md:bottom-1 md:right-1 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full pl-1 pr-2 py-0.5 ring-1 ring-border/30">
                     <span className="relative flex h-3 w-3">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -311,7 +312,12 @@ export default function UserProfile() {
                     </span>
                     <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">Online</span>
                   </div>
-                )}
+                ) : lastSeen ? (
+                  <div className="absolute -bottom-1 -right-1 md:bottom-1 md:right-1 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full pl-1 pr-2 py-0.5 ring-1 ring-border/30">
+                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-muted-foreground/40" />
+                    <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">{formatLastSeen(lastSeen)}</span>
+                  </div>
+                ) : null}
               </div>
 
               {/* Info column */}
