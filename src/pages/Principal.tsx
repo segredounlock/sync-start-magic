@@ -789,24 +789,35 @@ export default function Principal() {
   // Load analytics after profiles are ready (deferred)
   useEffect(() => { if (revendedores.length > 0) fetchAnalytics(); }, [revendedores.length, fetchAnalytics]);
 
-  // Realtime: atualiza usuários automaticamente (debounced to prevent storm)
+  // Realtime: atualiza usuários automaticamente (throttled to prevent flickering)
   useEffect(() => {
     let dataTimer: ReturnType<typeof setTimeout> | null = null;
     let analyticsTimer: ReturnType<typeof setTimeout> | null = null;
-    const debouncedFetchData = () => {
-      if (dataFetchInFlightRef.current) return; // skip if fetch already running
+    let lastDataFetch = 0;
+    let lastAnalyticsFetch = 0;
+    const THROTTLE_DATA = 30000; // 30s minimum between data refreshes
+    const THROTTLE_ANALYTICS = 30000; // 30s minimum between analytics refreshes
+
+    const throttledFetchData = () => {
+      if (dataFetchInFlightRef.current) return;
+      const now = Date.now();
+      const elapsed = now - lastDataFetch;
       if (dataTimer) clearTimeout(dataTimer);
-      dataTimer = setTimeout(() => fetchData(), 5000);
+      const delay = Math.max(THROTTLE_DATA - elapsed, 5000);
+      dataTimer = setTimeout(() => { lastDataFetch = Date.now(); fetchData(); }, delay);
     };
-    const debouncedFetchAnalytics = () => {
+    const throttledFetchAnalytics = () => {
+      const now = Date.now();
+      const elapsed = now - lastAnalyticsFetch;
       if (analyticsTimer) clearTimeout(analyticsTimer);
-      analyticsTimer = setTimeout(() => { analyticsLoaded.current = false; fetchAnalytics(); }, 5000);
+      const delay = Math.max(THROTTLE_ANALYTICS - elapsed, 5000);
+      analyticsTimer = setTimeout(() => { lastAnalyticsFetch = Date.now(); analyticsLoaded.current = false; fetchAnalytics(); }, delay);
     };
     const channel = supabase.channel('principal-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, debouncedFetchData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'saldos' }, debouncedFetchData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, debouncedFetchData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, debouncedFetchAnalytics)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, throttledFetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'saldos' }, throttledFetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, throttledFetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'recargas' }, throttledFetchAnalytics)
       .subscribe();
     return () => {
       if (dataTimer) clearTimeout(dataTimer);
