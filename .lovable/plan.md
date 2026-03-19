@@ -1,40 +1,57 @@
 
 
-## Diagnóstico e Correção
+# Plano: Conta sempre começa como Usuário — Revendedor só por ativação manual
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Resumo
 
-### Plano
+Por padrão, toda conta criada (app, bot, site, mobile, desktop) será **usuario**. O cargo **revendedor** só é atribuído quando um admin (ou dono da rede) ativa manualmente essa função no usuário. Somente revendedores acessam o `/admin` (bot, clientes, loja). Usuários comuns acessam apenas as ferramentas de venda (Minha Rede, Meus Preços) no `/painel`.
 
-**1. Corrigir o mapeamento de status na sync function**
+## O que muda
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+### 1. Edge Function `admin-create-user` — default para `usuario`
+
+**Arquivo:** `supabase/functions/admin-create-user/index.ts`
+
+Atualmente o role padrão é `revendedor`. Mudar para `usuario`:
 
 ```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+// ANTES
+const assignRole = validRoles.includes(role) ? role : "revendedor";
+// DEPOIS
+const assignRole = validRoles.includes(role) ? role : "usuario";
 ```
 
-**2. Corrigir manualmente o pedido preso**
+O admin ainda pode escolher o cargo ao criar, mas se não especificar, será `usuario`.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+### 2. Trigger `handle_new_user` — já correto
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+O trigger já atribui `usuario` por padrão (ou `cliente` se vier com `reseller_id`). Sem alteração necessária.
 
-**3. Verificar se há outros pedidos presos**
+### 3. Painel `/painel` — link do Admin só para revendedor/admin
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+**Arquivo:** `src/pages/RevendedorPainel.tsx`
 
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+Já está correto — o link "Painel Admin" e seção de administração só aparecem quando `role === "admin" || role === "revendedor"`. Sem alteração.
+
+### 4. Ferramentas de Venda — visíveis para todos (quando ativado pelo admin)
+
+Já está correto — "Meus Preços" e "Minha Rede" aparecem para todos os cargos quando `salesToolsEnabled` está ativo. Sem alteração.
+
+### 5. Rota `/admin` — já restrita
+
+Já está correto — `allowedRoles={["admin", "revendedor"]}`. Usuários comuns são redirecionados. Sem alteração.
+
+## Arquivo modificado
+
+1. **`supabase/functions/admin-create-user/index.ts`** — Mudar role padrão de `revendedor` para `usuario`
+
+## Resumo de acesso
+
+| Recurso | Usuario (padrão) | Revendedor (ativado) | Admin |
+|---|---|---|---|
+| Minha Rede | Sim (se ativado) | Sim (se ativado) | Sim |
+| Meus Preços | Sim (se ativado) | Sim (se ativado) | Sim |
+| Painel Admin (/admin) | Não | Sim | Sim |
+| Bot próprio | Não | Sim | Sim |
+| Promover a revendedor | Não | Não | Sim |
 
