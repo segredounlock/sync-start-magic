@@ -89,6 +89,13 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
   const knownIds = useRef<Set<string>>(new Set());
   const revendedoresRef = useRef(revendedores);
   revendedoresRef.current = revendedores;
+  // Keep toast/sound flags in refs so the realtime effect doesn't re-run when they change
+  const showDepositRef = useRef(showDeposit);
+  showDepositRef.current = showDeposit;
+  const showRecargaRef = useRef(showRecarga);
+  showRecargaRef.current = showRecarga;
+  const showNewUserRef = useRef(showNewUser);
+  showNewUserRef.current = showNewUser;
 
   // Load persisted notifications
   useEffect(() => {
