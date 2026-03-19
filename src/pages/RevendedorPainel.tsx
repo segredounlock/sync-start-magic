@@ -887,10 +887,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const salesMenuItems: MenuItem[] = (() => {
     if (isClientMode) return [];
     const items: MenuItem[] = [];
-    // Meus Preços: only for admin/revendedor
-    if (role === "admin" || role === "revendedor") {
-      items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
-    }
+    // Meus Preços: available to all users (admin price floor enforced by backend)
+    items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
     // Minha Rede: visible to all authenticated users
     items.push({ key: "minharede", label: "Minha Rede", icon: UsersIcon, color: "text-indigo-400" });
     return items;
