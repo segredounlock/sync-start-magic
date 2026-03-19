@@ -1,40 +1,40 @@
 
 
-# Converter 475 Revendedores para Usuários
+## Diagnóstico e Correção
 
-## Resumo
-Atualizar todos os registros com role `revendedor` na tabela `user_roles` para `usuario`, e restringir a rota `/admin` apenas para admins.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-## Impacto
-- 475 usuários perderão acesso ao painel `/admin`
-- Permissões de rede (Minha Rede, Meus Preços) continuam funcionando para todos
-- RLS policies que checam `has_role(uid, 'revendedor')` deixarão de aplicar — mas as policies genéricas por `auth.uid()` cobrem as mesmas funcionalidades
+### Plano
 
-## Passos
+**1. Corrigir o mapeamento de status na sync function**
 
-### 1. Atualizar roles no banco de dados
-Executar via insert tool (data update):
-```sql
-UPDATE user_roles SET role = 'usuario' WHERE role = 'revendedor';
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
+
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
 ```
 
-### 2. Atualizar a rota `/admin` no AppRoot.tsx
-Restringir `allowedRoles` de `["admin", "revendedor"]` para apenas `["admin"]`.
+**2. Corrigir manualmente o pedido preso**
 
-### 3. Atualizar o trigger `handle_new_user`
-Atualmente, novos cadastros com `reseller_id` recebem role `cliente`. Sem revendedores, manter essa lógica ou simplificar para sempre atribuir `usuario`.
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
 
-### 4. Atualizar a edge function `admin-toggle-role`
-Remover a lógica que permite revendedores gerenciar roles na sua rede, já que não existirão mais revendedores.
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
 
-### 5. Atualizar RLS policy de `pricing_rules`
-A policy "Admins and resellers can read pricing rules" checa `has_role('revendedor')`. Atualizar para permitir todos os autenticados (já existe uma policy separada que faz isso, então pode ser removida).
+**3. Verificar se há outros pedidos presos**
 
-### 6. Revisar referências no código
-Buscar por `revendedor` no frontend para remover/ajustar condicionais que mostram UI específica para esse cargo.
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
 
-## Detalhes técnicos
-- A conversão é feita via UPDATE (insert tool), não migration
-- Policies RLS existentes com `auth.uid() = user_id` já cobrem as funcionalidades de pricing e rede para qualquer usuário autenticado
-- O cargo `revendedor` no enum `app_role` pode ser mantido no banco para compatibilidade, mas não será mais atribuído
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

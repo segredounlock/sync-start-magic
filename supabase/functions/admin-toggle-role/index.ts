@@ -27,25 +27,14 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check if caller is admin OR reseller managing own network
+    // Only admins can toggle roles
     const { data: roleData } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id);
     const callerRoles = (roleData || []).map((r: any) => r.role);
     const isAdmin = callerRoles.includes("admin");
-    const isReseller = callerRoles.includes("revendedor");
 
-    if (!isAdmin && !isReseller) throw new Error("Acesso negado");
+    if (!isAdmin) throw new Error("Acesso negado");
 
     const { user_id, role, action } = await req.json();
-    if (!user_id || !role) throw new Error("user_id e role são obrigatórios");
-
-    // Resellers can only toggle 'revendedor' role for their own network members
-    if (!isAdmin) {
-      if (role !== "revendedor") throw new Error("Revendedores só podem alterar o cargo de vendedor");
-      const { data: targetProfile } = await adminClient.from("profiles").select("reseller_id").eq("id", user_id).single();
-      if (!targetProfile || targetProfile.reseller_id !== caller.id) {
-        throw new Error("Você só pode gerenciar membros da sua rede");
-      }
-    }
     if (!user_id || !role) throw new Error("user_id e role são obrigatórios");
 
     if (action === "remove") {
