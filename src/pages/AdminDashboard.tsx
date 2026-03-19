@@ -840,6 +840,15 @@ export default function AdminDashboard() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formato não suportado. Use JPG, PNG, WebP ou GIF.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 8MB.");
+      return;
+    }
     setStoreLogoUploading(true);
     try {
       const ext = file.name.split(".").pop();
