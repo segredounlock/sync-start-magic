@@ -122,6 +122,10 @@ export function useConversations() {
 
       const unreadMap: Record<string, number> = {};
       (unreadData as any[]).forEach((u: any) => { unreadMap[u.conversation_id] = Number(u.unread_count) || 0; });
+      // Force zero for the conversation the user is currently viewing
+      if (activeConvoRef.current) {
+        unreadMap[activeConvoRef.current] = 0;
+      }
 
       const convos = allConvos.map((c: any) => {
         if (c.type === 'group') {
