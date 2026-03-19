@@ -340,8 +340,116 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ===== DELAY NOTIFICATION SYSTEM =====
+    let delayNotified = 0;
+    try {
+      // Read configurable threshold (default 5 min)
+      const thresholdMin = Number(config.pixDelayThresholdMinutes) || 5;
+      const supportLink = config.supportGroupLink || "";
+
+      const delayCutoff = new Date(Date.now() - thresholdMin * 60 * 1000).toISOString();
+
+      // Find pending deposits older than threshold that haven't been notified
+      const { data: delayedTxs } = await supabase
+        .from("transactions")
+        .select("id, user_id, amount, created_at, payment_id, metadata")
+        .eq("status", "pending")
+        .eq("type", "deposit")
+        .eq("delay_notified", false)
+        .lt("created_at", delayCutoff)
+        .gt("created_at", cutoff) // still within the 45min window
+        .limit(20);
+
+      if (delayedTxs && delayedTxs.length > 0) {
+        const botToken = config.telegramBotToken?.trim();
+
+        for (const dtx of delayedTxs) {
+          try {
+            const valorFmt = Number(dtx.amount).toFixed(2).replace(".", ",");
+            const createdAt = new Date(dtx.created_at);
+            const minutesWaiting = Math.floor((Date.now() - createdAt.getTime()) / 60000);
+
+            // Get user profile for Telegram notification
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("telegram_id, nome")
+              .eq("id", dtx.user_id)
+              .maybeSingle();
+
+            const nome = profile?.nome || "Usuário";
+            const supportNote = supportLink
+              ? `\n\n📢 Grupo de Suporte: ${supportLink}`
+              : "\n\n💬 Se precisar de ajuda, entre em contato com o suporte.";
+
+            const delayMsg =
+              `⏳ <b>Processando seu PIX...</b>\n\n` +
+              `Olá ${nome}! Seu pagamento de <b>R$ ${valorFmt}</b> foi identificado ` +
+              `e está sendo processado pelo nosso sistema.\n\n` +
+              `⏱ Aguardando há <b>${minutesWaiting} minutos</b>\n` +
+              `✅ Seu saldo será creditado automaticamente\n\n` +
+              `Em momentos de alta demanda, pode haver um pequeno atraso na confirmação. ` +
+              `Caso demore mais que 30 minutos, entre em contato com nosso suporte.` +
+              supportNote;
+
+            // Send Telegram notification
+            if (botToken && profile?.telegram_id) {
+              try {
+                await fetch(
+                  `https://api.telegram.org/bot${botToken}/sendMessage`,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      chat_id: Number(profile.telegram_id),
+                      text: delayMsg,
+                      parse_mode: "HTML",
+                    }),
+                  }
+                );
+              } catch (tgErr) {
+                console.warn(`Delay TG notify error for ${dtx.id}:`, tgErr);
+              }
+            }
+
+            // Send Push notification
+            try {
+              const baseUrl = Deno.env.get("SUPABASE_URL")!;
+              const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+              fetch(`${baseUrl}/functions/v1/send-push`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${serviceKey}`,
+                },
+                body: JSON.stringify({
+                  title: "⏳ Processando seu PIX...",
+                  body: `Seu pagamento de R$ ${valorFmt} está sendo processado. Aguarde a confirmação automática.`,
+                  user_ids: [dtx.user_id],
+                }),
+              }).catch(() => {});
+            } catch {}
+
+            // Mark as notified
+            await supabase
+              .from("transactions")
+              .update({ delay_notified: true })
+              .eq("id", dtx.id);
+
+            delayNotified++;
+            console.log(
+              `Delay notification sent for tx ${dtx.id} (user ${dtx.user_id}, waiting ${minutesWaiting}min)`
+            );
+          } catch (dtxErr) {
+            console.warn(`Error processing delay notification for ${dtx.id}:`, dtxErr);
+          }
+        }
+      }
+    } catch (delayErr) {
+      console.warn("Delay notification system error:", delayErr);
+    }
+
     console.log(
-      `check-pending-pix: checked=${checked}, confirmed=${confirmed}, total_pending=${pending.length}`
+      `check-pending-pix: checked=${checked}, confirmed=${confirmed}, delay_notified=${delayNotified}, total_pending=${pending.length}`
     );
 
     return new Response(
@@ -349,6 +457,7 @@ Deno.serve(async (req) => {
         success: true,
         checked,
         confirmed,
+        delay_notified: delayNotified,
         total_pending: pending.length,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
