@@ -3096,6 +3096,13 @@ export default function Principal() {
            {view === "bot" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
 
+              {/* Info Card - Bot */}
+              <InfoCard title="Bot do Telegram" items={[
+                { icon: Bot, iconColor: "text-primary", label: "Token", description: "chave de acesso obtida no @BotFather para conectar seu bot." },
+                { icon: Wifi, iconColor: "text-success", label: "Webhook", description: "URL que recebe atualizações do Telegram em tempo real." },
+                { icon: Send, iconColor: "text-warning", label: "Mensagens", description: "o bot processa recargas, cadastros e broadcasts automaticamente." },
+              ]} />
+
               {/* ── Compact Header ── */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
