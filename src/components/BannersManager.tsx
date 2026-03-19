@@ -138,7 +138,14 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
   }
 
   return (
-    <div className="glass-card rounded-xl p-6 space-y-4">
+    <div className="space-y-4">
+      {/* Info Card - Banners */}
+      <InfoCard title="Banners Promocionais" items={[
+        { icon: Zap, iconColor: "text-warning", label: "Tipos", description: "Banner (estático), Popup (abre ao entrar) e Slide (carrossel rotativo)." },
+        { icon: ImagePlus, iconColor: "text-primary", label: "Ícone", description: "imagem opcional exibida ao lado do texto do banner." },
+      ]} />
+
+      <div className="glass-card rounded-xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="font-semibold text-foreground flex items-center gap-2">
           <Zap className="h-4 w-4 text-warning" /> 📢 Banners Promocionais

@@ -147,6 +147,13 @@ export function RedesSection() {
 
   return (
     <div className="space-y-4">
+      {/* Info Card - Redes */}
+      <InfoCard title="Visão da Rede" items={[
+        { icon: Network, iconColor: "text-primary", label: "Donos de Rede", description: "revendedores que possuem clientes vinculados à sua rede." },
+        { icon: Users, iconColor: "text-success", label: "Clientes", description: "usuários vinculados a cada revendedor, que geram comissões." },
+        { icon: TrendingUp, iconColor: "text-warning", label: "Volume", description: "soma de todas as recargas realizadas por cada rede." },
+      ]} />
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[

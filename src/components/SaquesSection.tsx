@@ -199,6 +199,13 @@ export function SaquesSection({ onCountUpdate }: { onCountUpdate?: (count: numbe
 
   return (
     <div className="space-y-4">
+      {/* Info Card - Saques */}
+      <InfoCard title="Gestão de Saques" items={[
+        { icon: Banknote, iconColor: "text-success", label: "Saque", description: "solicitação de retirada de saldo via PIX feita pelo revendedor." },
+        { icon: Clock, iconColor: "text-warning", label: "Pendentes", description: "saques aguardando aprovação manual do administrador." },
+        { icon: CheckCircle2, iconColor: "text-primary", label: "Aprovação", description: "ao aprovar, o valor é transferido via PIX para a chave cadastrada pelo usuário." },
+      ]} />
+
       {/* Stats cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
