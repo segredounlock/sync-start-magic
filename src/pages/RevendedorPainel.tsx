@@ -2420,6 +2420,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           {/* ===== TAB: STATUS ===== */}
           {tab === "status" && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+              {/* Info Card - Status */}
+              <InfoCard title="Status do Sistema" items={[
+                { icon: Activity, iconColor: "text-success", label: "Tempo de Processamento", description: "média de tempo que cada operadora leva para confirmar a recarga." },
+                { icon: Server, iconColor: "text-primary", label: "Disponibilidade", description: "indica se a API de recargas está respondendo normalmente." },
+              ]} />
               {/* Header */}
               <div>
                 <h2 className="text-lg font-bold text-foreground">Status do Sistema</h2>
