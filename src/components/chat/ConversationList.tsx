@@ -13,7 +13,8 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ conversations, loading, activeId, onSelect }: ConversationListProps) {
-
+  const { onlineUsers } = useGroupPresence();
+  const onlineSet = new Set(onlineUsers);
   if (loading) {
     return (
       <div className="flex-1 p-4 space-y-3">
