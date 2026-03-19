@@ -67,6 +67,7 @@ export function useConversations() {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loading, setLoading] = useState(false);
   const initialLoadDone = useRef(false);
+  const activeConvoRef = useRef<string | null>(null);
 
   const fetchConversations = useCallback(async () => {
     if (!user) return;
@@ -121,6 +122,10 @@ export function useConversations() {
 
       const unreadMap: Record<string, number> = {};
       (unreadData as any[]).forEach((u: any) => { unreadMap[u.conversation_id] = Number(u.unread_count) || 0; });
+      // Force zero for the conversation the user is currently viewing
+      if (activeConvoRef.current) {
+        unreadMap[activeConvoRef.current] = 0;
+      }
 
       const convos = allConvos.map((c: any) => {
         if (c.type === 'group') {
@@ -191,8 +196,11 @@ export function useConversations() {
     return data.id;
   }, [user, fetchConversations]);
 
-  const clearUnread = useCallback((conversationId: string) => {
-    setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+  const clearUnread = useCallback((conversationId: string | null) => {
+    activeConvoRef.current = conversationId;
+    if (conversationId) {
+      setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+    }
   }, []);
 
   return { conversations, loading, fetchConversations, startConversation, clearUnread };
@@ -414,11 +422,10 @@ export function useChatMessages(conversationId: string | null) {
 
           if (unreadIds.length > 0) {
             // Update global is_read for direct chats (backward compat)
-            supabase
+            await supabase
               .from("chat_messages")
               .update({ is_read: true, read_at: new Date().toISOString() })
-              .in("id", unreadIds)
-              .then(() => {});
+              .in("id", unreadIds);
 
             // Insert per-user read receipts
             const readReceipts = unreadIds.map((msgId: string) => ({
@@ -426,17 +433,15 @@ export function useChatMessages(conversationId: string | null) {
               user_id: user.id,
               read_at: new Date().toISOString(),
             }));
-            supabase
+            await supabase
               .from("chat_message_reads")
-              .upsert(readReceipts, { onConflict: "message_id,user_id" })
-              .then(() => {
-                // Touch conversation to trigger realtime refetch of unread counts
-                supabase
-                  .from("chat_conversations")
-                  .update({ updated_at: new Date().toISOString() })
-                  .eq("id", conversationId)
-                  .then(() => {});
-              });
+              .upsert(readReceipts, { onConflict: "message_id,user_id" });
+
+            // Touch conversation to trigger realtime refetch of unread counts
+            await supabase
+              .from("chat_conversations")
+              .update({ updated_at: new Date().toISOString() })
+              .eq("id", conversationId);
           }
         }
       }
