@@ -1,40 +1,31 @@
 
 
-## Diagnóstico e Correção
+## Problema
+O admin define preços personalizados no Painel Principal, mas o usuário pode sobrescrever esses preços no "Meus Preços" — não há distinção entre regra definida pelo admin e regra definida pelo próprio usuário.
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Solução
 
-### Plano
-
-**1. Corrigir o mapeamento de status na sync function**
-
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
-```
-
-**2. Corrigir manualmente o pedido preso**
-
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
-
+### 1. Migração: Adicionar coluna `set_by_admin` na tabela `reseller_pricing_rules`
 ```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+ALTER TABLE reseller_pricing_rules 
+  ADD COLUMN set_by_admin boolean NOT NULL DEFAULT false;
 ```
+Marcar as regras existentes dos 3 usuários como `set_by_admin = true` (já que foram definidas pelo admin).
 
-**3. Verificar se há outros pedidos presos**
+### 2. Atualizar Principal.tsx
+Quando o admin salvar um preço personalizado via `saveResellerPricingRule`, incluir `set_by_admin: true` no upsert.
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+### 3. Atualizar MeusPrecos.tsx
+- Carregar a flag `set_by_admin` junto com as regras
+- Quando `set_by_admin = true`: exibir o preço como **bloqueado** (ícone de cadeado, campo desabilitado, tooltip "Preço definido pelo administrador")
+- Impedir que o usuário edite ou resete regras marcadas como `set_by_admin`
+- O usuário ainda pode configurar preços para valores que **não** têm regra do admin
+
+### 4. Atualizar Edge Function recarga-express
+Nenhuma mudança necessária — a lógica já lê `regra_valor` da `reseller_pricing_rules`. A flag `set_by_admin` é apenas para controle de UI.
 
 ### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+- **Migração SQL**: adicionar coluna + atualizar regras existentes
+- `src/pages/Principal.tsx`: adicionar `set_by_admin: true` no upsert
+- `src/components/MeusPrecos.tsx`: bloquear edição de regras do admin
 
