@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations, GENERAL_CHAT_ID } from "@/hooks/useChat";
 import { supabase } from "@/integrations/supabase/client";
-import { usePresenceTracker } from "@/hooks/usePresence";
+
 import { ConversationList } from "@/components/chat/ConversationList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { NewChatModal } from "@/components/chat/NewChatModal";
@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 export default function ChatApp() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  usePresenceTracker();
+  
   const { conversations, loading, startConversation, clearUnread } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 

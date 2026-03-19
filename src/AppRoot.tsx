@@ -10,6 +10,7 @@ import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
 import { useCacheCleanup } from "@/hooks/useCacheCleanup";
+import { usePresenceTracker } from "@/hooks/usePresence";
 
 // Lazy load ALL pages
 const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
@@ -100,6 +101,12 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// ── Global presence tracker (runs for all authenticated users) ──
+function GlobalPresence() {
+  usePresenceTracker();
+  return null;
+}
+
 // ── Deferred non-critical effects ──
 function DeferredEffects() {
   const [ready, setReady] = useState(false);
@@ -134,6 +141,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <GlobalPresence />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
