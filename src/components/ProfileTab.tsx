@@ -367,11 +367,11 @@ export function ProfileTab({
                         </p>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-xs text-muted-foreground truncate font-mono">
-                            https://recargasbrasill.com/registrar?ref={referralCode}
+                            {window.location.origin}/registrar?ref={referralCode}
                           </div>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`https://recargasbrasill.com/registrar?ref=${referralCode}`);
+                              navigator.clipboard.writeText(`${window.location.origin}/registrar?ref=${referralCode}`);
                               toast.success("Link de indicação copiado!");
                             }}
                             className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
