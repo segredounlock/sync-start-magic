@@ -16,6 +16,7 @@ interface ChatPageProps {
 
 export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
   const { user } = useAuth();
+  usePresenceTracker();
   const { conversations, loading, startConversation, clearUnread } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(GENERAL_CHAT_ID);
 
