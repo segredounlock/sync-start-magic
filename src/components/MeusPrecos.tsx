@@ -4,7 +4,8 @@ import { styledToast as toast } from "@/lib/toast";
 import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, ArrowDown, Smartphone, GitBranch } from "lucide-react";
+import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, ArrowDown, Smartphone, GitBranch, DollarSign, Percent, Tag } from "lucide-react";
+import { InfoCard } from "@/components/InfoCard";
 
 interface PricingValue {
   value: number;
@@ -246,11 +247,12 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
         <p className="text-sm text-muted-foreground mt-1">Defina sua margem de lucro para cada produto.</p>
       </div>
 
-      {/* Info badge */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
-        <Info className="h-4 w-4 text-primary flex-shrink-0" />
-        <span className="text-xs font-medium text-primary">Lucro é somado ao custo base.</span>
-      </div>
+      <InfoCard title="Como funciona" items={[
+        { icon: DollarSign, label: "Custo Base", description: "Valor fixo da operadora que você paga por cada recarga." },
+        { icon: Percent, label: "Seu Lucro", description: "Valor que você define e é somado ao custo base para formar o preço final." },
+        { icon: Tag, label: "Preço Final", description: "Custo Base + Seu Lucro = valor que o cliente paga." },
+        { icon: CheckSquare, label: "Edição em Lote", description: "Selecione vários valores e aplique o mesmo lucro de uma vez." },
+      ]} />
 
       {/* Diagrama da cadeia de indicação - colapsável */}
       <div className="rounded-xl border border-border overflow-hidden">

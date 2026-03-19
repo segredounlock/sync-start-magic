@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Smartphone, Users, Banknote, Share2,
   TrendingUp, DollarSign, ShoppingCart, UserPlus, AlertCircle,
-  HelpCircle, X, Copy, MessageCircle,
+  HelpCircle, X, Copy, MessageCircle, BarChart3,
 } from "lucide-react";
+import { InfoCard } from "@/components/InfoCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 import { supabase } from "@/integrations/supabase/client";
@@ -253,6 +254,13 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
           <VerificationBadge badge={badge ?? null} size="md" />
         </h1>
       </div>
+
+      <InfoCard title="Visão Geral" items={[
+        { icon: DollarSign, label: "Lucro", description: "Total de lucro das suas vendas no período selecionado." },
+        { icon: TrendingUp, label: "Comissões", description: "Ganhos por indicações diretas e indiretas da sua rede." },
+        { icon: BarChart3, label: "Período", description: "Use os filtros para ver dados de hoje, do mês ou de outra data." },
+        ...(!isClientMode ? [{ icon: UserPlus, label: "Indicação", description: "Compartilhe seu link para expandir sua rede e ganhar comissões." }] : []),
+      ]} />
 
       {/* Pending Prices Alert */}
       {!isClientMode && showSalesTools && hasPendingPrices && (
