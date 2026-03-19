@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Medal, Trophy } from "lucide-react";
@@ -282,57 +282,75 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
   const [userPosition, setUserPosition] = useState<{ rank: number; user: RankUser } | null>(null);
+  const refreshInFlightRef = useRef(false);
 
-  const loadRanking = async () => {
-    setLoading(true);
-    // Fetch larger set to find user's position
-    const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 50 });
-    const all = (data || []) as RankUser[];
-    setRanking(all.slice(0, 20));
+  const loadRanking = useCallback(async ({ showLoader = false }: { showLoader?: boolean } = {}) => {
+    if (refreshInFlightRef.current) return;
+    refreshInFlightRef.current = true;
 
-    // Find user position in full list
-    const idx = all.findIndex(r => r.user_id === userId);
-    if (idx >= 0) {
-      setUserPosition({ rank: idx, user: all[idx] });
-    } else {
-      // User not in top 50, try to get their count
-      const { data: countData } = await supabase.rpc("get_user_recargas_count" as any, { _user_id: userId });
-      if (countData !== null && countData !== undefined) {
-        // Find their approximate rank
-        const count = Number(countData);
-        const approxRank = all.filter(r => r.total_recargas > count).length;
-        const { data: profile } = await supabase.from("profiles").select("nome, avatar_url, verification_badge").eq("id", userId).maybeSingle();
-        setUserPosition({
-          rank: approxRank,
-          user: {
-            user_id: userId,
-            nome: profile?.nome || "Você",
-            avatar_url: profile?.avatar_url || null,
-            verification_badge: profile?.verification_badge || null,
-            total_recargas: count,
-          }
-        });
+    if (showLoader) setLoading(true);
+
+    try {
+      const { data } = await supabase.rpc("get_recargas_ranking" as any, { _limit: 50 });
+      const all = (data || []) as RankUser[];
+      setRanking(all.slice(0, 20));
+
+      const idx = all.findIndex((r) => r.user_id === userId);
+      if (idx >= 0) {
+        setUserPosition({ rank: idx, user: all[idx] });
       } else {
-        setUserPosition(null);
-      }
-    }
+        const { data: countData } = await supabase.rpc("get_user_recargas_count" as any, { _user_id: userId });
+        if (countData !== null && countData !== undefined) {
+          const count = Number(countData);
+          const approxRank = all.filter((r) => r.total_recargas > count).length;
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("nome, avatar_url, verification_badge")
+            .eq("id", userId)
+            .maybeSingle();
 
-    setLoading(false);
-    setTimeout(() => setRevealed(true), 100);
-  };
+          setUserPosition({
+            rank: approxRank,
+            user: {
+              user_id: userId,
+              nome: profile?.nome || "Você",
+              avatar_url: profile?.avatar_url || null,
+              verification_badge: profile?.verification_badge || null,
+              total_recargas: count,
+            },
+          });
+        } else {
+          setUserPosition(null);
+        }
+      }
+
+      setRevealed(true);
+    } finally {
+      if (showLoader) setLoading(false);
+      refreshInFlightRef.current = false;
+    }
+  }, [userId]);
 
   useEffect(() => {
-    loadRanking();
-    const channel = supabase
-      .channel("ranking-updates")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "profiles" },
-        () => loadRanking()
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+    loadRanking({ showLoader: true });
+
+    const refreshInterval = window.setInterval(() => {
+      loadRanking();
+    }, 60000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadRanking();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [loadRanking]);
 
   if (loading) return <RankingSkeleton />;
   if (ranking.length < 3) return null;
