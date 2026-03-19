@@ -17,9 +17,7 @@ class PresenceManager {
 
   private getChannel() {
     if (!this.channel) {
-      this.channel = supabase.channel(PRESENCE_CHANNEL, {
-        config: { presence: { key: "global" } },
-      });
+      this.channel = supabase.channel(PRESENCE_CHANNEL);
       this.channel.on("presence", { event: "sync" }, () => {
         this.notifyListeners();
       });
