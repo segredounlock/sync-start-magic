@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations, GENERAL_CHAT_ID } from "@/hooks/useChat";
+import { usePresenceTracker } from "@/hooks/usePresence";
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationList } from "./ConversationList";
 import { ChatWindow } from "./ChatWindow";
@@ -15,6 +16,7 @@ interface ChatPageProps {
 
 export function ChatPage({ onBack, forceMobile }: ChatPageProps) {
   const { user } = useAuth();
+  usePresenceTracker();
   const { conversations, loading, startConversation, clearUnread } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(GENERAL_CHAT_ID);
 
