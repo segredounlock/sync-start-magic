@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { appToast } from "@/lib/toast";
 import { playSuccessSound, playWebSignupSound, playTelegramSignupSound, playCashRegisterSound } from "@/lib/sounds";
@@ -79,6 +79,9 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
   const showDeposit = notifConfig?.showDepositToast !== false;
   const showRecarga = notifConfig?.showRecargaToast !== false;
   const showNewUser = notifConfig?.showNewUserToast !== false;
+  // Stabilize listenTo to prevent effect re-runs on every render
+  const listenToKey = [...listenTo].sort().join(",");
+  const stableListenTo = useMemo(() => listenTo, [listenToKey]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -86,6 +89,13 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
   const knownIds = useRef<Set<string>>(new Set());
   const revendedoresRef = useRef(revendedores);
   revendedoresRef.current = revendedores;
+  // Keep toast/sound flags in refs so the realtime effect doesn't re-run when they change
+  const showDepositRef = useRef(showDeposit);
+  showDepositRef.current = showDeposit;
+  const showRecargaRef = useRef(showRecarga);
+  showRecargaRef.current = showRecarga;
+  const showNewUserRef = useRef(showNewUser);
+  showNewUserRef.current = showNewUser;
 
   // Load persisted notifications
   useEffect(() => {
@@ -152,7 +162,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
       channels.forEach(ch => supabase.removeChannel(ch));
       channels = [];
 
-      if (listenTo.includes("deposit")) {
+      if (stableListenTo.includes("deposit")) {
         const ch = supabase.channel(`notif-deposits-${Date.now()}`)
           .on("postgres_changes", {
             event: "UPDATE", schema: "public", table: "transactions",
@@ -177,7 +187,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
                 is_read: false,
               });
               try { playCashRegisterSound(); } catch {}
-              if (showDeposit) {
+              if (showDepositRef.current) {
                 showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
                 appToast.depositConfirmed(`Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
               }
@@ -192,7 +202,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
         channels.push(ch);
       }
 
-      if (listenTo.includes("recarga")) {
+      if (stableListenTo.includes("recarga")) {
         const ch = supabase.channel(`notif-recargas-${Date.now()}`)
           .on("postgres_changes", {
             event: "INSERT", schema: "public", table: "recargas",
@@ -218,7 +228,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               is_read: false,
             });
             try { playSuccessSound(); } catch {}
-            if (showRecarga) {
+            if (showRecargaRef.current) {
               showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
               appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
             }
@@ -256,7 +266,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             const originalId = r.id;
             // Play sound for status changes
             try { playSuccessSound(); } catch {}
-            if (showRecarga) {
+            if (showRecargaRef.current) {
               showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`);
             }
             if (knownIds.current.has(originalId)) {
@@ -293,7 +303,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
         channels.push(ch);
       }
 
-      if (listenTo.includes("new_user")) {
+      if (stableListenTo.includes("new_user")) {
         const ch = supabase.channel(`notif-new-users-all-${Date.now()}`)
           .on("postgres_changes", {
             event: "INSERT", schema: "public", table: "profiles",
@@ -314,7 +324,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               is_read: false,
             });
             try { playWebSignupSound(); } catch {}
-            if (showNewUser) {
+            if (showNewUserRef.current) {
               showSystemNotification("🆕 Novo cadastro", label);
               appToast.newUserWeb(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
             }
@@ -337,7 +347,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               is_read: false,
             });
             try { playTelegramSignupSound(); } catch {}
-            if (showNewUser) {
+            if (showNewUserRef.current) {
               showSystemNotification("🤖 Novo Telegram", label);
               appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
             }
@@ -364,7 +374,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               is_read: false,
             });
             try { playTelegramSignupSound(); } catch {}
-            if (showNewUser) {
+            if (showNewUserRef.current) {
               showSystemNotification("🤖 Novo Telegram", label);
               appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
             }
@@ -387,7 +397,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
         lastPollAt = new Date().toISOString();
 
         // Poll for recent completed deposits
-        if (listenTo.includes("deposit")) {
+        if (stableListenTo.includes("deposit")) {
           const { data: deposits } = await supabase
             .from("transactions")
             .select("id, amount, user_id, status, type, updated_at, created_at")
@@ -419,7 +429,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
         }
 
         // Poll for recent recargas
-        if (listenTo.includes("recarga")) {
+        if (stableListenTo.includes("recarga")) {
           const { data: recargas } = await supabase
             .from("recargas")
             .select("id, telefone, operadora, valor, custo, status, created_at, user_id, updated_at")
@@ -482,7 +492,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
       if (pollTimer) clearTimeout(pollTimer);
       channels.forEach(ch => supabase.removeChannel(ch));
     };
-  }, [listenTo, addNotification, getProfile]);
+  }, [stableListenTo, addNotification, getProfile]);
 
   const markAllRead = useCallback(async () => {
     setUnreadCount(0);
