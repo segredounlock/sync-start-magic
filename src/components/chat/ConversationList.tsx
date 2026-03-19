@@ -3,6 +3,7 @@ import { formatChatTimestamp } from "@/lib/timezone";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
+import { useGroupPresence } from "@/hooks/usePresence";
 
 interface ConversationListProps {
   conversations: ChatConversation[];
