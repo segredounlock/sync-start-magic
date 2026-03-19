@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 export default function ChatApp() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  usePresenceTracker();
+  
   const { conversations, loading, startConversation, clearUnread } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 

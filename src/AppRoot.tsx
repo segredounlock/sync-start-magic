@@ -141,6 +141,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <GlobalPresence />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
