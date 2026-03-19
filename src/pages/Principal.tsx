@@ -3507,6 +3507,53 @@ export default function Principal() {
                       </div>
                     </div>
 
+                    {/* Verificação de E-mail */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-primary" /> Verificação de E-mail
+                      </h4>
+                      <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                        globalConfig.emailVerificationEnabled === 'true' ? 'border-primary bg-primary/10' : 'border-border bg-muted/30'}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                            globalConfig.emailVerificationEnabled === "true" ? "bg-primary/20" : "bg-muted"
+                          }`}>
+                            <Mail className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-foreground">Confirmar E-mail no Cadastro</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {globalConfig.emailVerificationEnabled === "true"
+                                ? "🔵 Novos usuários precisam confirmar o e-mail antes de acessar"
+                                : "🟢 Novos usuários entram direto sem verificação de e-mail"}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const newVal = globalConfig.emailVerificationEnabled !== "true";
+                            try {
+                              const { data, error } = await supabase.functions.invoke("admin-toggle-email-verify", {
+                                body: { enabled: newVal },
+                              });
+                              if (error) throw error;
+                              setGlobalConfig(prev => ({ ...prev, emailVerificationEnabled: newVal ? "true" : "false" }));
+                              toast.success(newVal ? "Verificação de e-mail ativada" : "Verificação de e-mail desativada");
+                            } catch (err: any) {
+                              toast.error(err.message || "Erro ao alterar configuração");
+                            }
+                          }}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                            globalConfig.emailVerificationEnabled === "true"
+                              ? "bg-muted text-foreground hover:opacity-90"
+                              : "bg-primary text-primary-foreground hover:opacity-90"
+                          }`}
+                        >
+                          {globalConfig.emailVerificationEnabled === "true" ? "Desativar" : "Ativar"}
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Temas Sazonais */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <h4 className="font-semibold text-foreground flex items-center gap-2">
