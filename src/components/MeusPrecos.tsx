@@ -9,12 +9,13 @@ import { InfoCard } from "@/components/InfoCard";
 
 interface PricingValue {
   value: number;
-  cost: number; // base cost from global pricing_rules
-  apiCost: number; // raw API cost (custo field from pricing_rules)
-  userCost: number; // reseller's custom cost (regra_valor)
-  profit: number; // margin the reseller adds
+  cost: number;
+  apiCost: number;
+  userCost: number;
+  profit: number;
   operadoraId: string;
   hasCustom: boolean;
+  setByAdmin: boolean;
 }
 
 interface OperadoraPricing {
