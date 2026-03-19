@@ -23,6 +23,7 @@ import { MobileBottomNav, NavItem } from "@/components/MobileBottomNav";
 import { PollManager } from "@/components/PollManager";
 import { ChatRoomManager } from "@/components/ChatRoomManager";
 import { VerificationBadge, BADGE_CONFIG, BadgeType } from "@/components/VerificationBadge";
+import NetworkCommissionConfig from "@/components/NetworkCommissionConfig";
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
