@@ -1,29 +1,40 @@
 
 
-## Atualizar Preço Global da CLARO
+## Diagnóstico e Correção
 
-O objetivo é atualizar a coluna `regra_valor` na tabela `pricing_rules` para a operadora CLARO, igualando aos valores "Preço Final" mostrados na foto.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### Valores a serem aplicados
+### Plano
 
-| Recarga | Custo API | Preço Final (novo `regra_valor`) |
-|---------|-----------|----------------------------------|
-| R$ 20   | 11.00     | **14.30** |
-| R$ 25   | 12.00     | **15.60** |
-| R$ 30   | 13.00     | **16.90** |
-| R$ 35   | 15.00     | **19.50** |
-| R$ 40   | 17.00     | **22.10** |
-| R$ 50   | 20.00     | **26.00** |
-| R$ 60   | 23.00     | **29.90** |
-| R$ 70   | 26.00     | **33.80** |
+**1. Corrigir o mapeamento de status na sync function**
 
-### Execução
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-Usar o insert tool para executar UPDATE na tabela `pricing_rules`, atualizando `regra_valor` para cada `valor_recarga` da CLARO (filtrando pelo `operadora_id` da CLARO).
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
 
-### Impacto
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
 
-- Todos os usuários **sem** regra customizada (`reseller_base_pricing_rules`) passarão a pagar esses novos preços.
-- Os 3 usuários com preço customizado (Érica, Neverland, João Victor) **não são afetados** — continuam usando seus custos base próprios.
-- O safety floor será atualizado automaticamente, já que ele usa o preço global como piso mínimo.
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
+```sql
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+```
+
+**3. Verificar se há outros pedidos presos**
+
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+
+### Arquivos alterados
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 

@@ -169,6 +169,8 @@ function TestConsultaButton({ url, apiKey }: { url: string; apiKey: string }) {
   );
 }
 
+const LISTEN_TO_TYPES: ("deposit" | "recarga" | "new_user")[] = ["deposit", "recarga", "new_user"];
+
 export default function Principal() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -176,6 +178,7 @@ export default function Principal() {
 
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
+  const memoizedRevendedores = useMemo(() => revendedores.map(r => ({ id: r.id, nome: r.nome, email: r.email })), [revendedores]);
   const { loading, runFetch } = useResilientFetch();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"todos" | "admin" | "revendedor" | "cliente" | "usuario" | "sem_role">("todos");
@@ -1497,8 +1500,8 @@ export default function Principal() {
               </button>
             )}
             <NotificationBell
-              listenTo={["deposit", "recarga", "new_user"]}
-              revendedores={revendedores.map(r => ({ id: r.id, nome: r.nome, email: r.email }))}
+              listenTo={LISTEN_TO_TYPES}
+              revendedores={memoizedRevendedores}
             />
           </div>
         </header>
