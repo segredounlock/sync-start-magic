@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Smartphone, Zap, Shield, UserPlus, Loader2, Wifi } from "lucide-react";
-import { VerificationBadge } from "@/components/VerificationBadge";
+import { VerificationBadge, BadgeType } from "@/components/VerificationBadge";
 
 interface ResellerProfile {
   id: string;
