@@ -113,6 +113,46 @@ function parsePayload<T>(payload: unknown): T | null {
   return payload as T;
 }
 
+/** Countdown to next day in Brazil timezone */
+function ComeBackTomorrow() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const calc = () => {
+      const now = new Date();
+      // Get current date in São Paulo
+      const brDate = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      // Next day midnight in BR = brDate + 1 day at 00:00 São Paulo time
+      const [y, m, d] = brDate.split("-").map(Number);
+      const tomorrow = new Date(Date.UTC(y, m - 1, d + 1, 3, 0, 0)); // UTC-3
+      const diff = tomorrow.getTime() - now.getTime();
+      if (diff <= 0) { setTimeLeft("Disponível agora!"); return; }
+      const h = Math.floor(diff / 3600000);
+      const min = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border">
+      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+        <Clock className="h-4 w-4" />
+        <span className="text-xs font-medium">
+          {timeLeft === "Disponível agora!" ? (
+            <span className="text-primary font-bold">{timeLeft}</span>
+          ) : (
+            <>Volte amanhã em <span className="font-bold text-foreground">{timeLeft}</span></>
+          )}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -432,24 +472,25 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.4, type: "spring" }}
                           >
-                            {result.is_won ? (
-                              <>
-                                <Trophy className="h-12 w-12 text-warning mx-auto mb-2" />
-                                <h3 className="text-lg font-extrabold text-success">🎉 Parabéns!</h3>
-                                <p className="text-2xl font-black text-primary mt-1">
-                                  + R$ {result.prize_amount.toFixed(2)}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-2">Crédito adicionado!</p>
-                              </>
-                            ) : (
-                              <>
-                                <Frown className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
-                                <h3 className="text-lg font-bold text-foreground">Não foi dessa vez</h3>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  Tente novamente amanhã ou jogue a Gold!
-                                </p>
-                              </>
-                            )}
+                             {result.is_won ? (
+                               <>
+                                 <Trophy className="h-12 w-12 text-warning mx-auto mb-2" />
+                                 <h3 className="text-lg font-extrabold text-success">🎉 Parabéns!</h3>
+                                 <p className="text-2xl font-black text-primary mt-1">
+                                   + R$ {result.prize_amount.toFixed(2)}
+                                 </p>
+                                 <p className="text-xs text-muted-foreground mt-2">Crédito adicionado!</p>
+                               </>
+                             ) : (
+                               <>
+                                 <Frown className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
+                                 <h3 className="text-lg font-bold text-foreground">Não foi dessa vez</h3>
+                                 <p className="text-sm text-muted-foreground mt-1">
+                                   Tente novamente amanhã ou jogue a Gold!
+                                 </p>
+                               </>
+                             )}
+                             <ComeBackTomorrow />
                           </motion.div>
                         </motion.div>
                       )}
