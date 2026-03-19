@@ -719,7 +719,7 @@ export default function AdminDashboard() {
   const mixOperadoras = useMemo(() => {
     const map: Record<string, number> = {};
     filteredRecargas.forEach(r => {
-      const op = r.operadora || "Outros";
+      const op = (r.operadora || "Outros").toUpperCase().trim();
       map[op] = (map[op] || 0) + 1;
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
