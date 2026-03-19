@@ -12,6 +12,8 @@ interface ResellerProfile {
   store_logo_url: string | null;
   store_primary_color: string | null;
   active: boolean;
+  avatar_url: string | null;
+  verification_badge: string | null;
 }
 
 interface PricingItem {
