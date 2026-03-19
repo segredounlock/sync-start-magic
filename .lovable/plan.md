@@ -1,40 +1,38 @@
 
 
-## Diagnóstico e Correção
+## Bug: Preços personalizados não funcionam para usuários com role "usuario"
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+### Causa Raiz
 
-### Plano
+Na Edge Function `recarga-express`, a função `hasCustomPricing()` (linha 632-649) **ignora completamente** usuários com role "usuario":
 
-**1. Corrigir o mapeamento de status na sync function**
-
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```text
+hasCustomPricing():
+  ├─ admin/revendedor → verifica reseller_pricing_rules do userId ✅
+  ├─ cliente + resellerId → verifica regras do reseller ✅
+  └─ usuario (else) → return false ❌  ← BUG AQUI
 ```
 
-**2. Corrigir manualmente o pedido preso**
+Quando `hasCustomPricing()` retorna `false`, e a Margem Padrão Global está ativa, o sistema aplica a margem global **sobrescrevendo** os preços personalizados que o admin definiu para esses usuários.
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+O bloco `else` (linha 717-732) que resolve o preço para "usuario" até verifica a `reseller_pricing_rules`, mas nunca é alcançado porque a margem global já foi aplicada antes.
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
+### Correção
+
+**Arquivo:** `supabase/functions/recarga-express/index.ts`
+
+1. **Corrigir `hasCustomPricing()`** — Adicionar verificação para role "usuario": se o usuário possui regras em `reseller_pricing_rules`, retornar `true` para que a margem global não sobrescreva seus preços personalizados.
+
+```text
+hasCustomPricing() corrigido:
+  ├─ admin/revendedor → verifica reseller_pricing_rules do userId ✅
+  ├─ cliente + resellerId → verifica regras do reseller ✅
+  └─ usuario (novo!) → verifica reseller_pricing_rules do userId ✅
 ```
 
-**3. Verificar se há outros pedidos presos**
+A mudança é simples: remover o `return false` final e adicionar uma verificação genérica para qualquer role que tenha regras na `reseller_pricing_rules`.
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
-
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+### Impacto
+- Os 3 usuários identificados (Recargas Brasil, João Victor, Neverland) passarão a ter seus preços personalizados respeitados
+- Nenhum outro fluxo é afetado — admin, revendedor e cliente continuam funcionando como antes
 
