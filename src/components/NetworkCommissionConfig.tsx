@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { styledToast as toast } from "@/lib/toast";
-import { TrendingUp, ToggleRight, ToggleLeft, Save, Loader2, Info, Users, GitBranch } from "lucide-react";
+import { TrendingUp, ToggleRight, ToggleLeft, Save, Loader2, Users, GitBranch } from "lucide-react";
+import { InfoCard } from "@/components/InfoCard";
 import { motion } from "framer-motion";
 
 interface CommissionState {
