@@ -6,7 +6,7 @@ import {
   Wallet, History, Send, Landmark, Smartphone, Shield, Activity,
   CheckCircle2, Loader2, Camera, Pencil, Calendar, Clock,
   X, Check, ChevronDown, ChevronUp, Lock, LogOut, User,
-  Key, QrCode, BarChart3, HeadphonesIcon, Bell,
+  Key, QrCode, BarChart3, HeadphonesIcon, Bell, Globe, Copy, ExternalLink,
 } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 import type { Recarga } from "@/types";
