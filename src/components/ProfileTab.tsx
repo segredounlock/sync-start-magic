@@ -371,7 +371,7 @@ export function ProfileTab({
                           </div>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`https://recargasbrasill.com/registrar?ref=${referralCode}`);
+                              navigator.clipboard.writeText(`${window.location.origin}/registrar?ref=${referralCode}`);
                               toast.success("Link de indicação copiado!");
                             }}
                             className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
