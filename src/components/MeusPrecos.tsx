@@ -425,20 +425,14 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                       <span className="text-muted-foreground">Seu Lucro:</span>
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground text-xs">R$</span>
-                        {pv.setByAdmin ? (
-                          <span className="w-20 text-right font-semibold text-sm text-amber-500">
-                            {pv.profit.toFixed(2)}
-                          </span>
-                        ) : (
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={displayProfitRaw}
-                            onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, e.target.value)}
-                            className="w-20 text-right bg-background border border-border rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
-                          />
-                        )}
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={displayProfitRaw}
+                          onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, e.target.value)}
+                          className="w-20 text-right bg-background border border-border rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
+                        />
                       </div>
                     </div>
                     <div className="flex justify-between text-sm pt-1 border-t border-border">
