@@ -405,21 +405,14 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Valor da Recarga</p>
                       <p className="text-xl font-bold text-foreground">R$ {pv.value.toFixed(2)}</p>
                     </div>
-                    {pv.setByAdmin ? (
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/15 text-amber-500" title="Preço definido pelo administrador">
-                        <Lock className="h-3.5 w-3.5" />
-                        <span className="text-[10px] font-bold uppercase">Admin</span>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => toggleSelect(pv.operadoraId, pv.value)}
-                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
-                          isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"
-                        }`}
-                      >
-                        {isSelected && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>✓</motion.span>}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => toggleSelect(pv.operadoraId, pv.value)}
+                      className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                        isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"
+                      }`}
+                    >
+                      {isSelected && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>✓</motion.span>}
+                    </button>
                   </div>
 
                   {/* Details */}
