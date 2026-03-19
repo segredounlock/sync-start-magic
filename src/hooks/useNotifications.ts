@@ -217,6 +217,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               created_at: r.created_at,
               is_read: false,
             });
+            try { playSuccessSound(); } catch {}
             if (showRecarga) {
               showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
               appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
