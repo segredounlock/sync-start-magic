@@ -43,6 +43,7 @@ export default function Auth() {
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
+  const [referralCode, setReferralCode] = useState(refParam);
   const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
   const [phase, setPhase] = useState<LoginPhase>("form");
