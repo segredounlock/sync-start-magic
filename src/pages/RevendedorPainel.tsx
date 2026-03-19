@@ -2363,6 +2363,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               <InfoCard title="Minha Conta" items={[
                 { icon: User, iconColor: "text-primary", label: "Perfil", description: "atualize seu nome, foto, telefone e informações pessoais." },
                 { icon: Settings, iconColor: "text-warning", label: "Configurações", description: "gerencie chave PIX, notificações e preferências da conta." },
+                { icon: Headphones, iconColor: "text-teal-500", label: "Suporte", description: "configure canais de atendimento (WhatsApp, Telegram, E-mail) para sua rede." },
               ]} />
               <ProfileTab
                 user={user}
