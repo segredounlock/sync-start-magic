@@ -40,6 +40,25 @@ interface ProfileData {
 // Helper to detect UUID format
 const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+function formatLastSeen(isoDate: string): string {
+  const now = new Date();
+  const seen = new Date(isoDate);
+  const diffMs = now.getTime() - seen.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffH = Math.floor(diffMin / 60);
+  const diffD = Math.floor(diffH / 24);
+
+  if (diffMin < 1) return "Agora";
+  if (diffMin < 60) return `Ativo há ${diffMin}min`;
+  if (diffH < 24) {
+    const remainMin = diffMin % 60;
+    return remainMin > 0 ? `Ativo há ${diffH}h ${remainMin}min` : `Ativo há ${diffH}h`;
+  }
+  if (diffD === 1) return "Visto ontem";
+  if (diffD < 7) return `Visto há ${diffD} dias`;
+  return `Visto em ${seen.toLocaleDateString("pt-BR")}`;
+}
+
 export default function UserProfile() {
   const { userId: paramId } = useParams<{ userId: string }>();
   const { user, role: myRole } = useAuth();
@@ -54,7 +73,7 @@ export default function UserProfile() {
   const [profileRole, setProfileRole] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const { isOnline: presenceOnline } = useUserPresence(resolvedId ?? undefined);
+  const { isOnline: presenceOnline, lastSeen } = useUserPresence(resolvedId ?? undefined);
   const [avatarError, setAvatarError] = useState(false);
 
   // Edit mode (only for own profile)
@@ -303,7 +322,8 @@ export default function UserProfile() {
                     {userInitial}
                   </div>
                 )}
-                {presenceOnline && (
+                {/* Online/Last seen indicator */}
+                {presenceOnline ? (
                   <div className="absolute -bottom-1 -right-1 md:bottom-1 md:right-1 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full pl-1 pr-2 py-0.5 ring-1 ring-border/30">
                     <span className="relative flex h-3 w-3">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -311,7 +331,12 @@ export default function UserProfile() {
                     </span>
                     <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">Online</span>
                   </div>
-                )}
+                ) : lastSeen ? (
+                  <div className="absolute -bottom-1 -right-1 md:bottom-1 md:right-1 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full pl-1 pr-2 py-0.5 ring-1 ring-border/30">
+                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-muted-foreground/40" />
+                    <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">{formatLastSeen(lastSeen)}</span>
+                  </div>
+                ) : null}
               </div>
 
               {/* Info column */}
