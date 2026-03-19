@@ -4176,7 +4176,7 @@ export default function Principal() {
                               {statusBadge(r.status)}
                             </div>
                             <div className="flex items-center justify-between text-[12px]">
-                              <span className="text-muted-foreground">{r.operadora || "—"} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
+                              <span className="text-muted-foreground">{(r.operadora || "—").toUpperCase()} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
                               <span className="font-bold font-mono tabular-nums text-foreground">{fmt(Number(r.valor))}</span>
                             </div>
                             <p className="text-[10px] text-muted-foreground mt-0.5">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
