@@ -145,7 +145,12 @@ async function generateCommissions(
       type: "indirect",
       amount: indirectAmount,
     });
-    console.log(`commissions: indirect ${indirectAmount} to grandparent ${grandparentId} from user ${userId}`);
+    await adminClient.rpc("increment_saldo", {
+      p_user_id: grandparentId,
+      p_tipo: "pessoal",
+      p_amount: indirectAmount,
+    });
+    console.log(`commissions: indirect ${indirectAmount} to grandparent ${grandparentId} from user ${userId} — credited to pessoal`);
   } catch (err) {
     console.error("generateCommissions error:", err);
   }
