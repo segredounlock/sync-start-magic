@@ -464,9 +464,9 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
               <VerificationBadge badge="verificado" size="sm" />
             ) : null}
           </h3>
-          <span className="text-[10px] text-muted-foreground">
+          <AnimatePresence mode="wait">
             {isGroup ? (
-              <span className="flex items-center gap-1">
+              <motion.span key="group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 <motion.span
                   key={onlineCount}
@@ -478,18 +478,41 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                 </motion.span>
                 <span className="text-muted-foreground/60">·</span>
                 <span>{memberCount} membros</span>
-              </span>
+              </motion.span>
             ) : isOnline ? (
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+              <motion.span
+                key="online"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                className="text-[10px] flex items-center gap-1"
+              >
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", damping: 15, stiffness: 400 }}
+                  className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"
+                />
                 <span className="text-success font-medium">Online</span>
-              </span>
+              </motion.span>
             ) : lastSeen ? (
-              `visto por último ${formatLastSeen(lastSeen)}`
+              <motion.span
+                key="lastseen"
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                className="text-[10px] text-muted-foreground"
+              >
+                visto por último {formatLastSeen(lastSeen)}
+              </motion.span>
             ) : (
-              "Offline"
+              <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[10px] text-muted-foreground">
+                Offline
+              </motion.span>
             )}
-          </span>
+          </AnimatePresence>
         </div>
         <div className="flex items-center gap-1">
           {isUserAdmin && isGroup && (
