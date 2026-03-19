@@ -72,6 +72,7 @@ export function ProfileTab({
   const [followingList, setFollowingList] = useState<{ id: string; nome: string | null; avatar_url: string | null }[]>([]);
   const [listLoading, setListLoading] = useState(false);
   const [slug, setSlug] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [editingSlug, setEditingSlug] = useState(false);
   const [slugText, setSlugText] = useState("");
   const [savingSlug, setSavingSlug] = useState(false);
