@@ -840,6 +840,15 @@ export default function AdminDashboard() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formato não suportado. Use JPG, PNG, WebP ou GIF.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 8MB.");
+      return;
+    }
     setStoreLogoUploading(true);
     try {
       const ext = file.name.split(".").pop();
@@ -2526,7 +2535,7 @@ export default function AdminDashboard() {
                         <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg glass-card cursor-pointer hover:bg-muted/40 transition-colors text-sm font-medium text-foreground">
                           {storeLogoUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                           {storeLogoUploading ? "Enviando..." : "Enviar Logo"}
-                          <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleLogoUpload} className="hidden" />
                         </label>
                         {storeLogoUrl && <button onClick={() => setStoreLogoUrl("")} className="ml-2 text-xs text-destructive hover:underline">Remover</button>}
                       </div>
