@@ -54,7 +54,7 @@ export default function UserProfile() {
   const [profileRole, setProfileRole] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const { isOnline: presenceOnline } = useUserPresence(resolvedId ?? undefined);
+  const { isOnline: presenceOnline, lastSeen } = useUserPresence(resolvedId ?? undefined);
   const [avatarError, setAvatarError] = useState(false);
 
   // Edit mode (only for own profile)
