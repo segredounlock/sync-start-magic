@@ -75,13 +75,13 @@ export function useSupportChannels(userId: string | undefined): UseSupportChanne
           }
 
           // Go up one level
-          const { data: parentData } = await supabase
+          const parentResult = await supabase
             .from("profiles")
             .select("reseller_id")
             .eq("id", currentResellerId)
             .single();
 
-          currentResellerId = (parentData as { reseller_id: string | null } | null)?.reseller_id || null;
+          currentResellerId = parentResult.data?.reseller_id || null;
         }
       } catch {
         // silent fail → fallback to system support
