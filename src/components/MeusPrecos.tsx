@@ -398,6 +398,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                   key={key}
                   layout
                   className={`glass-card rounded-xl p-4 border-2 transition-colors ${
+                    pv.setByAdmin ? "border-amber-500/40 bg-amber-500/5" :
                     isSelected ? "border-primary shadow-[0_0_16px_hsl(var(--primary)/0.15)]" : "border-border"
                   }`}
                 >
@@ -407,14 +408,21 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Valor da Recarga</p>
                       <p className="text-xl font-bold text-foreground">R$ {pv.value.toFixed(2)}</p>
                     </div>
-                    <button
-                      onClick={() => toggleSelect(pv.operadoraId, pv.value)}
-                      className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
-                        isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"
-                      }`}
-                    >
-                      {isSelected && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>✓</motion.span>}
-                    </button>
+                    {pv.setByAdmin ? (
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/15 text-amber-500" title="Preço definido pelo administrador">
+                        <Lock className="h-3.5 w-3.5" />
+                        <span className="text-[10px] font-bold uppercase">Admin</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => toggleSelect(pv.operadoraId, pv.value)}
+                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                          isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"
+                        }`}
+                      >
+                        {isSelected && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>✓</motion.span>}
+                      </button>
+                    )}
                   </div>
 
                   {/* Details */}
@@ -427,14 +435,20 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                       <span className="text-muted-foreground">Seu Lucro:</span>
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground text-xs">R$</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={displayProfitRaw}
-                          onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, e.target.value)}
-                          className="w-20 text-right bg-background border border-border rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
-                        />
+                        {pv.setByAdmin ? (
+                          <span className="w-20 text-right font-semibold text-sm text-amber-500">
+                            {pv.profit.toFixed(2)}
+                          </span>
+                        ) : (
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={displayProfitRaw}
+                            onChange={(e) => handleProfitChange(pv.operadoraId, pv.value, e.target.value)}
+                            className="w-20 text-right bg-background border border-border rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
+                          />
+                        )}
                       </div>
                     </div>
                     <div className="flex justify-between text-sm pt-1 border-t border-border">
@@ -443,8 +457,15 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     </div>
                   </div>
 
+                  {/* Admin lock notice */}
+                  {pv.setByAdmin && (
+                    <p className="mt-2 text-[11px] text-amber-500/80 flex items-center gap-1">
+                      <Lock className="h-3 w-3" /> Preço definido pelo administrador — não pode ser alterado.
+                    </p>
+                  )}
+
                   {/* Save button */}
-                  {hasEdits && (
+                  {hasEdits && !pv.setByAdmin && (
                     <motion.button
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
