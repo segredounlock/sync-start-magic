@@ -58,9 +58,9 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
   const [pricingModal, setPricingModal] = useState<{ id: string; name: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const referralLink = profileSlug
-    ? `${window.location.origin}/loja/${profileSlug}`
-    : `${window.location.origin}/recarga?ref=${referralCode || userId}`;
+  const referralLink = referralCode
+    ? `${window.location.origin}/recarga?ref=${referralCode}`
+    : `${window.location.origin}/loja/${profileSlug || userId}`;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
