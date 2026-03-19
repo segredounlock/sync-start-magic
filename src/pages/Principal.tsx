@@ -1508,6 +1508,13 @@ export default function Principal() {
           {/* ===== DASHBOARD ===== */}
           {view === "dashboard" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              {/* Info Card - Dashboard */}
+              <InfoCard title="Painel de Controle" items={[
+                { icon: TrendingUp, iconColor: "text-success", label: "Lucro", description: "diferença entre o valor cobrado dos clientes e o custo da API de recargas." },
+                { icon: Activity, iconColor: "text-primary", label: "Métricas", description: "recargas realizadas, taxa de sucesso, ticket médio e volume total." },
+                { icon: Clock, iconColor: "text-warning", label: "Tempo Real", description: "os dados são atualizados automaticamente conforme novas recargas são processadas." },
+              ]} />
+
               {/* Bank-style Dashboard */}
               {(() => {
                 const allCompleted = allRecargas.filter(r => r.status === "completed" || r.status === "concluida");
