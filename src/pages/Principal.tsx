@@ -750,15 +750,16 @@ export default function Principal() {
   const fetchRevDetail = useCallback(async (rev: Revendedor) => {
     setRevLoading(true);
     try {
-      const [{ data: recData }, { data: transData }, { data: rpRules }] = await Promise.all([
+      const [{ data: recData }, { data: transData }, { data: rpRules }, { data: baseRules }] = await Promise.all([
         supabase.from("recargas").select("*").eq("user_id", rev.id).order("created_at", { ascending: false }).limit(100),
         supabase.from("transactions").select("id, amount, created_at, status, type, payment_id, metadata").eq("user_id", rev.id).order("created_at", { ascending: false }).limit(100),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", rev.id),
+        (supabase.from("reseller_base_pricing_rules" as any) as any).select("*").eq("user_id", rev.id),
       ]);
       setRevRecargas((recData || []).map(r => ({ ...r, valor: Number(r.valor), custo: Number(r.custo) })));
       setRevTransactions((transData || []).map(t => ({ ...t, amount: Number(t.amount) })));
       setRevPricingRules((rpRules || []).map(r => ({ operadora_id: r.operadora_id, valor_recarga: Number(r.valor_recarga), regra_valor: Number(r.regra_valor) })));
-      setRevDetailPricingRules((rpRules || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
+      setRevDetailPricingRules(((baseRules || []) as any[]).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
     } catch (err) { console.error(err); }
     setRevLoading(false);
   }, []);
