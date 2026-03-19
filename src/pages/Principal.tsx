@@ -2287,8 +2287,9 @@ export default function Principal() {
                                   return (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                       {activeOp.valores.sort((a: number, b: number) => a - b).map((valor: number) => {
-                                        const rule = revDetailPricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
-                                        const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                                        const normalizedValor = Number(valor);
+                                        const rule = revDetailPricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
+                                        const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
                                         const localTipo = rule?.tipo_regra || globalRule?.tipo_regra || "fixo";
                                         const localValor = rule?.regra_valor ?? globalRule?.regra_valor ?? 0;
                                         const localCusto = rule?.custo ?? globalRule?.custo ?? 0;
