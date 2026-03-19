@@ -53,6 +53,10 @@ export function ConversationList({ conversations, loading, activeId, onSelect }:
     const isActive = activeId === conv.id;
     const isAdmin = conv.other_user?.role === 'admin';
     const hasSpecialNameEffect = isAdmin || !!conv.other_user?.verification_badge;
+    const isDmOnline = !isGroup && conv.other_user?.id && onlineSet.has(conv.other_user.id);
+    const isActive = activeId === conv.id;
+    const isAdmin = conv.other_user?.role === 'admin';
+    const hasSpecialNameEffect = isAdmin || !!conv.other_user?.verification_badge;
 
     return (
       <motion.button
