@@ -429,16 +429,23 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     return () => { supabase.removeChannel(saldoChannel); };
   }, [user?.id]);
 
+  // Stable refs for realtime callbacks
+  const fetchDataRef = useRef(fetchData);
+  fetchDataRef.current = fetchData;
+  const fetchTransactionsRef = useRef(fetchTransactions);
+  fetchTransactionsRef.current = fetchTransactions;
+
   // Realtime: recargas status updates
   useEffect(() => {
-    if (!user) return;
+    const uid = user?.id;
+    if (!uid) return;
     const channel = supabase
-      .channel(`recargas-status-${user.id}`)
+      .channel(`recargas-status-${uid}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "recargas",
-        filter: `user_id=eq.${user.id}`,
+        filter: `user_id=eq.${uid}`,
       }, (payload) => {
         const newRow = payload.new as any;
         const oldRow = payload.old as any;
@@ -446,12 +453,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           notifiedRecargaIds.current.add(newRow.id);
           appToast.recargaCompleted(`Recarga ${(newRow.operadora || "").toUpperCase()} R$ ${Number(newRow.valor).toFixed(2)} para ${newRow.telefone} concluída!`);
           playSuccessSound();
-          fetchData();
-          // Auto-send receipt to Telegram (uses Satori fallback for image)
+          fetchDataRef.current();
           supabase.functions.invoke("telegram-notify", {
             body: {
               type: "recarga_completed",
-              user_id: user.id,
+              user_id: uid,
               data: {
                 telefone: newRow.telefone,
                 operadora: newRow.operadora || null,
@@ -465,24 +471,25 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, fetchData]);
+  }, [user?.id]);
 
   // Realtime: transactions (saques) status updates
   useEffect(() => {
-    if (!user) return;
+    const uid = user?.id;
+    if (!uid) return;
     const txChannel = supabase
-      .channel(`tx-realtime-${user.id}`)
+      .channel(`tx-realtime-${uid}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "transactions",
-        filter: `user_id=eq.${user.id}`,
+        filter: `user_id=eq.${uid}`,
       }, (payload) => {
         const newRow = payload.new as any;
         const oldRow = payload.old as any;
         if (newRow.type === "saque" && newRow.status !== oldRow?.status) {
-          fetchTransactions();
-          fetchData();
+          fetchTransactionsRef.current();
+          fetchDataRef.current();
           if (newRow.status === "completed") {
             toast.success(`🎉 Saque de R$ ${Number(newRow.amount).toFixed(2).replace(".", ",")} foi pago!`);
           } else if (newRow.status === "approved") {
@@ -491,15 +498,14 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             toast.error(`❌ Saque de R$ ${Number(newRow.amount).toFixed(2).replace(".", ",")} rejeitado. Saldo estornado.`);
           }
         }
-        // Also refresh for deposit status changes
         if (newRow.type === "deposit" && newRow.status !== oldRow?.status) {
-          fetchTransactions();
-          fetchData();
+          fetchTransactionsRef.current();
+          fetchDataRef.current();
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(txChannel); };
-  }, [user, fetchData, fetchTransactions]);
+  }, [user?.id]);
 
   useEffect(() => {
     // Parallel initial load: data + catalog + banners
