@@ -4443,8 +4443,9 @@ export default function Principal() {
                             return (
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {activeOp.valores.sort((a, b) => a - b).map(valor => {
-                                  const resellerRule = resellerPricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
-                                  const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && r.valor_recarga === valor);
+                                  const normalizedValor = Number(valor);
+                                  const resellerRule = resellerPricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
+                                  const globalRule = pricingRules.find(r => r.operadora_id === activeOpId && Number(r.valor_recarga) === normalizedValor);
                                   const hasCustom = !!resellerRule;
                                   const rule = resellerRule || globalRule;
                                   const savedTipo = rule?.tipo_regra || "fixo";
