@@ -645,7 +645,12 @@ Deno.serve(async (req) => {
               .eq("user_id", resellerId);
             return (count || 0) > 0;
           }
-          return false;
+          // For "usuario" or any other role, check if they have personal custom rules
+          const { count: userCount } = await adminClient
+            .from("reseller_pricing_rules")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId);
+          return (userCount || 0) > 0;
         };
 
         // Check default margin FIRST — but skip if user has custom pricing rules
