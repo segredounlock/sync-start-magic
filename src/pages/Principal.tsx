@@ -4463,6 +4463,12 @@ export default function Principal() {
           {/* ===== BROADCAST ===== */}
           {view === "broadcast" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Info Card - Broadcast */}
+              <InfoCard title="Broadcast" items={[
+                { icon: Megaphone, iconColor: "text-warning", label: "Mensagem em Massa", description: "envia uma mensagem para todos os usuários registrados no bot do Telegram." },
+                { icon: Send, iconColor: "text-primary", label: "Envio em Lotes", description: "as mensagens são enviadas em lotes para evitar bloqueio pelo Telegram." },
+              ]} />
+
               {/* Header */}
               <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
