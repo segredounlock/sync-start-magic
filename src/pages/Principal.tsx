@@ -3834,6 +3834,13 @@ export default function Principal() {
           {/* ===== RELATÓRIOS ===== */}
           {view === "relatorios" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+              {/* Info Card - Relatórios */}
+              <InfoCard title="Relatórios de Lucro" items={[
+                { icon: FileText, iconColor: "text-warning", label: "Lucro por Revendedor", description: "mostra o preço cobrado vs custo real da API, com lucro líquido por venda." },
+                { icon: TrendingUp, iconColor: "text-success", label: "Períodos", description: "filtre por Hoje, 7 dias, 30 dias ou período personalizado." },
+                { icon: DollarSign, iconColor: "text-primary", label: "Exportação", description: "baixe os dados em formato CSV para análise em planilhas." },
+              ]} />
+
               {/* Header compact */}
               <div className="glass-card rounded-2xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">

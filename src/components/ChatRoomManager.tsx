@@ -268,6 +268,13 @@ export function ChatRoomManager({ globalConfig, setGlobalConfig, saveGlobalConfi
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      {/* Info Card - Bate-papo */}
+      <InfoCard title="Gestão de Salas" items={[
+        { icon: MessageSquare, iconColor: "text-primary", label: "Salas", description: "canais de conversa organizados por categoria (geral, negócios, suporte)." },
+        { icon: Lock, iconColor: "text-warning", label: "Privacidade", description: "salas privadas ficam visíveis apenas para membros autorizados." },
+        { icon: Shield, iconColor: "text-destructive", label: "Bloqueio", description: "salas bloqueadas impedem novos envios de mensagem." },
+      ]} />
+
       {/* Header with toggle + new room */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">

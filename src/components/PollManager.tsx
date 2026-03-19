@@ -177,6 +177,13 @@ export function PollManager() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      {/* Info Card - Enquetes */}
+      <InfoCard title="Sistema de Enquetes" items={[
+        { icon: BarChart3, iconColor: "text-primary", label: "Enquetes", description: "crie perguntas com múltiplas opções para coletar opiniões dos usuários." },
+        { icon: Eye, iconColor: "text-success", label: "Tempo Real", description: "os votos são atualizados automaticamente conforme os usuários participam." },
+        { icon: ToggleRight, iconColor: "text-warning", label: "Ativar/Pausar", description: "controle quando a enquete fica disponível para votação." },
+      ]} />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
