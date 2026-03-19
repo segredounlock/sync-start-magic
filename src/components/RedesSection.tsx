@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { InfoCard } from "@/components/InfoCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Currency } from "@/components/ui";
 import { motion } from "framer-motion";
