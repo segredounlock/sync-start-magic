@@ -1,33 +1,51 @@
 
 
-## Corrigir preços customizados não sendo exibidos no Painel do Revendedor
+## Atualizar preços globais da CLARO para todos os usuários
 
-### Problema
+### Situação atual
+- CLARO tem 8 valores: 20, 25, 30, 35, 40, 50, 60, 70
+- Preços globais atuais (regra_valor): R$14,30 / R$15,60 / R$16,90 / R$19,50 / R$22,10 / R$26,00 / R$29,90 / R$33,80
+- O usuário quer que TODOS vejam os preços da screenshot (iguais aos custos customizados dos 3 usuários)
 
-O usuário `ferreiragreg180@gmail.com` (Neverland-Recargas) tem preços customizados pelo administrador na tabela `reseller_base_pricing_rules` (ex: CLARO R$20 → custo R$11,50), mas o painel está exibindo os preços globais (R$14,30).
+### Mudanças necessárias
 
-**Causa raiz**: A função `fetchCatalog` no `RevendedorPainel.tsx` (linha 207-260) busca apenas `reseller_pricing_rules` (margens próprias do revendedor) e `pricing_rules` (global). Ela **nunca consulta** `reseller_base_pricing_rules` (custos base customizados pelo admin). Como Neverland-Recargas não tem nenhuma entrada em `reseller_pricing_rules`, o sistema cai no fallback global.
+**1. Adicionar novos valores à operadora CLARO**
+- Valores atuais: [20, 25, 30, 35, 40, 50, 60, 70]
+- Novos valores a adicionar: **90, 100, 120, 150**
 
-### Hierarquia correta de preços (que já funciona no `recarga-express` e `MeusPrecos`)
+**2. Atualizar `pricing_rules` existentes** (regra_valor → novo preço global)
 
-1. `reseller_pricing_rules` — margem definida pelo próprio revendedor
-2. `reseller_base_pricing_rules` — custo base customizado pelo admin
-3. `pricing_rules` com margem padrão global — fallback
-4. `pricing_rules` direto — último fallback
+| Recarga | Custo API | Preço Atual | Novo Preço |
+|---------|-----------|-------------|------------|
+| R$ 20   | R$ 8      | R$ 14,30    | **R$ 11**  |
+| R$ 25   | R$ 9      | R$ 15,60    | **R$ 12**  |
+| R$ 30   | R$ 10     | R$ 16,90    | **R$ 13**  |
+| R$ 35   | R$ 12     | R$ 19,50    | **R$ 15**  |
+| R$ 40   | R$ 14     | R$ 22,10    | **R$ 17**  |
+| R$ 50   | R$ 17     | R$ 26,00    | **R$ 20**  |
+| R$ 60   | R$ 20     | R$ 29,90    | **R$ 23**  |
+| R$ 70   | R$ 23     | R$ 33,80    | **R$ 26**  |
 
-### Correção
+**3. Criar novas `pricing_rules`** para os valores novos
 
-**Arquivo**: `src/pages/RevendedorPainel.tsx` — função `fetchCatalog` (~linhas 207-260)
+| Recarga | Custo (estimado) | Preço Global |
+|---------|-----------------|--------------|
+| R$ 90   | R$ 29           | **R$ 33**    |
+| R$ 100  | R$ 32           | **R$ 36**    |
+| R$ 120  | R$ 37           | **R$ 41**    |
+| R$ 150  | R$ 44           | **R$ 48**    |
 
-1. Adicionar fetch de `reseller_base_pricing_rules` para o `pricingUserId` no `Promise.all`
-2. Na resolução de preço de cada valor, aplicar a hierarquia correta:
-   - Se tem `reseller_pricing_rules` → usa como preço final
-   - Senão, se tem `reseller_base_pricing_rules` → usa `regra_valor` como custo
-   - Senão → usa `pricing_rules` global (com ou sem margem padrão)
+### Implementação
+
+- Uma migration SQL que:
+  1. Atualiza `operadoras.valores` para incluir os 4 novos valores
+  2. Atualiza os 8 `pricing_rules` existentes com os novos preços
+  3. Insere 4 novas `pricing_rules` para 90, 100, 120, 150
 
 ### Impacto
 
-- Neverland-Recargas e os outros 2 usuários com preços customizados passarão a ver R$11,50 (CLARO R$20) em vez de R$14,30
-- Nenhum outro usuário é afetado (quem não tem `reseller_base_pricing_rules` continua vendo preço global)
-- A cobrança real na `recarga-express` já usa a hierarquia correta — esta correção alinha o frontend
+- Todos os usuários sem preço customizado passarão a ver os novos preços (mais baixos)
+- Os 3 usuários com `reseller_base_pricing_rules` continuam com seus preços customizados
+- A margem do admin será reduzida (ex: R$20 passa de R$6,30 para R$3,00)
+- O `sync-catalog` pode sobrescrever os valores 90/100/120/150 se eles não existirem na API externa — se isso acontecer, serão desativados automaticamente
 
