@@ -3015,8 +3015,15 @@ export default function Principal() {
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
-                  {/* Header */}
-                  <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                   {/* Info Card - Depósitos */}
+                   <InfoCard title="Regras de Depósito" items={[
+                     { icon: Landmark, iconColor: "text-success", label: "Limites", description: "valores mínimo e máximo aceitos por depósito PIX." },
+                     { icon: Shield, iconColor: "text-warning", label: "Anti-spam", description: "limita quantos QR Codes pendentes um usuário pode ter simultaneamente." },
+                     { icon: DollarSign, iconColor: "text-primary", label: "Taxas", description: "valor fixo ou percentual descontado do depósito antes de creditar ao cliente." },
+                   ]} />
+
+                   {/* Header */}
+                   <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
                         <Landmark className="h-5 w-5 text-success" />
@@ -3026,7 +3033,7 @@ export default function Principal() {
                         <p className="text-xs text-muted-foreground mt-0.5">Limites, regras e taxas de depósito PIX</p>
                       </div>
                     </div>
-                  </div>
+                   </div>
 
                   <div className="glass-card rounded-2xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg">Limites e Regras</h4>
