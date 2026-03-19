@@ -176,6 +176,7 @@ export default function Principal() {
 
   // Notifications handled by NotificationBell component
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
+  const memoizedRevendedores = useMemo(() => revendedores.map(r => ({ id: r.id, nome: r.nome, email: r.email })), [revendedores]);
   const { loading, runFetch } = useResilientFetch();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"todos" | "admin" | "revendedor" | "cliente" | "usuario" | "sem_role">("todos");
