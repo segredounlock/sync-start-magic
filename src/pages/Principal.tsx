@@ -3381,6 +3381,13 @@ export default function Principal() {
                 {/* ═══════ SETOR: SISTEMA ═══════ */}
                 {configSection === "geral" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Sistema */}
+                    <InfoCard title="Configurações do Sistema" items={[
+                      { icon: Globe, iconColor: "text-primary", label: "Nome do Site", description: "título exibido no navegador e em compartilhamentos." },
+                      { icon: AlertTriangle, iconColor: "text-warning", label: "Modo Manutenção", description: "bloqueia acesso público ao site, apenas admins podem entrar." },
+                      { icon: Zap, iconColor: "text-accent-foreground", label: "Temas Sazonais", description: "ativa efeitos visuais especiais para datas comemorativas." },
+                    ]} />
+
                     {/* Nome do Site */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <h4 className="font-semibold text-foreground flex items-center gap-2">
