@@ -546,6 +546,7 @@ export default function Principal() {
         custo: rule.custo,
         tipo_regra: rule.tipo_regra,
         regra_valor: rule.regra_valor,
+        set_by_admin: true,
         updated_at: new Date().toISOString(),
       } as any, { onConflict: "user_id,operadora_id,valor_recarga" } as any);
       if (error) throw error;
