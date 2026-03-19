@@ -478,7 +478,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
                 <span className="text-success font-medium">Online</span>
               </span>
             ) : lastSeen ? (
-              `Visto por último ${formatLastSeen(lastSeen)}`
+              `visto por último ${formatLastSeen(lastSeen)}`
             ) : (
               "Offline"
             )}
