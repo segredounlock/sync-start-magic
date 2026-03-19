@@ -79,6 +79,9 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
   const showDeposit = notifConfig?.showDepositToast !== false;
   const showRecarga = notifConfig?.showRecargaToast !== false;
   const showNewUser = notifConfig?.showNewUserToast !== false;
+  // Stabilize listenTo to prevent effect re-runs on every render
+  const listenToKey = listenTo.sort().join(",");
+  const stableListenTo = useMemo(() => listenTo, [listenToKey]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
