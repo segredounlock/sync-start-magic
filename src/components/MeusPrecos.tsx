@@ -187,7 +187,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const selectAllForOperadora = (opId: string) => {
     const op = operadoras.find((o) => o.id === opId);
     if (!op) return;
-    const selectableKeys = op.values.filter((v) => !v.setByAdmin).map((v) => `${opId}_${v.value}`);
+    const selectableKeys = op.values.map((v) => `${opId}_${v.value}`);
     const allSelected = selectableKeys.every((k) => selectedValues.has(k));
     setSelectedValues((prev) => {
       const next = new Set(prev);
