@@ -1,40 +1,52 @@
 
 
-## Diagnóstico e Correção
+# Como WhatsApp e Telegram Identificam Quem Está Online
 
-### Problema raiz
-A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
+## Pesquisa: Como Funciona nos Apps Profissionais
 
-### Plano
+### WhatsApp
+- **Conexao persistente**: Quando voce abre o WhatsApp, o app abre um socket TCP permanente com o servidor (protocolo FunXMPP). Nao usa polling.
+- **Presenca efemera**: Ao conectar, o app envia `<presence type="available" />`. O servidor guarda em **memoria (Redis)**, nao no banco de dados.
+- **Ao sair**: O servidor detecta que o socket caiu e marca `status: offline, last_seen: timestamp`. Notifica os contatos instantaneamente.
+- **Heartbeat**: O app envia "pings" periodicos (~30s) para manter a conexao viva. Se parar de pingar, o servidor marca offline.
+- **Nao toca banco de dados**: Tudo e in-memory e volatil.
 
-**1. Corrigir o mapeamento de status na sync function**
+### Telegram
+- **3 sinais combinados**: O status "online" vem de: (1) timestamp do last_seen, (2) presenca do socket ativo, (3) recibos de leitura.
+- **Timeout automatico**: Se o usuario fica 30 segundos sem interagir, o status muda para "visto recentemente".
+- **Reciprocidade**: Voce so ve o status de quem permite que voce veja (privacidade mutua).
 
-Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
-
-```typescript
-// Antes:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
-
-// Depois:
-if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+### Resumo da Arquitetura Profissional
+```text
+┌─────────────┐     Socket TCP      ┌──────────────┐     In-Memory     ┌──────────────┐
+│  App/Client │ ◄──────────────────► │   Gateway    │ ◄───────────────► │  Redis/Cache │
+│             │   (conexao aberta)   │   Server     │   (presenca)      │  (volatil)   │
+└─────────────┘                      └──────────────┘                   └──────────────┘
+                                           │
+                                     Notifica contatos
+                                     quando status muda
 ```
 
-**2. Corrigir manualmente o pedido preso**
+## Como Funciona o Seu Sistema Atual
 
-Executar migração SQL para:
-- Atualizar o status do pedido `ace98bbd-...` para `falha`
-- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+Seu sistema ja usa o **Supabase Realtime Presence** que e bastante similar ao modelo profissional:
 
-```sql
-UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
-UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
-```
+- **Canal de presenca**: Usa `supabase.channel("chat-presence-v2")` com Presence (baseado em WebSocket, similar ao socket TCP)
+- **Track/Untrack**: Quando entra no chat faz `track()`, quando sai faz `untrack()` - igual WhatsApp
+- **Heartbeat de 15s**: Re-envia presenca a cada 15 segundos
+- **Visibilidade**: Re-track quando volta para a aba
+- **last_seen_at**: Salva no banco a ultima vez que o usuario esteve online
 
-**3. Verificar se há outros pedidos presos**
+**Conclusao**: Seu sistema ja segue o mesmo padrao do WhatsApp e Telegram. A arquitetura e correta. O Supabase Presence funciona via WebSocket (conexao persistente), exatamente como os apps profissionais fazem.
 
-Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
+### Diferencas Menores
+| Aspecto | WhatsApp/Telegram | Seu Sistema |
+|---------|-------------------|-------------|
+| Protocolo | TCP/XMPP customizado | WebSocket (Supabase) |
+| Armazenamento presenca | Redis in-memory | Supabase Presence (in-memory no servidor) |
+| Heartbeat | ~30s | 15s (ate mais frequente) |
+| Deteccao de saida | Socket fecha = offline | `untrack()` + WebSocket fecha |
+| last_seen | In-memory | Banco de dados (profiles.last_seen_at) |
 
-### Arquivos alterados
-- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
-- Nova migração SQL (correção manual do pedido + estorno)
+**Seu sistema esta bem implementado e alinhado com as melhores praticas da industria.** Nao ha necessidade de mudancas arquiteturais.
 
