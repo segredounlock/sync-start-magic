@@ -2059,9 +2059,23 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
 async function handleDepositAmount(supabase: any, token: string, chatId: number, chatIdStr: string, user: any, text: string, session: any, userMsgId: number) {
   deleteMessageFire(token, chatId, userMsgId);
 
+  // If user typed non-numeric text, exit deposit flow entirely
+  const cleaned = text.replace(/[.,\s]/g, "");
+  if (!/^\d+([.,]\d+)?$/.test(text.replace(/\s/g, "")) || cleaned.length === 0) {
+    clearSession(supabase, chatIdStr);
+    await sendMessageWithKeyboard(token, chatId,
+      "❌ Depósito cancelado.\n\nDigite um comando ou use o menu.",
+      [[{ text: "💳 Depositar", callback_data: "menu_deposito" }, { text: "📖 Menu", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+
   const valor = parseFloat(text.replace(",", "."));
   if (isNaN(valor) || valor < 10 || valor > 10000) {
-    await sendMessage(token, chatId, "❌ Valor inválido. O valor mínimo é <b>R$ 10,00</b> e o máximo é R$ 10.000,00.\n\nDigite um valor válido:");
+    await sendMessageWithKeyboard(token, chatId,
+      "❌ Valor inválido. O valor mínimo é <b>R$ 10,00</b> e o máximo é R$ 10.000,00.\n\nDigite um valor válido ou cancele:",
+      [[{ text: "❌ Cancelar", callback_data: "menu_main" }]]
+    );
     return;
   }
 
