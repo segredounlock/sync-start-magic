@@ -17,9 +17,7 @@ class PresenceManager {
 
   private getChannel() {
     if (!this.channel) {
-      this.channel = supabase.channel(PRESENCE_CHANNEL, {
-        config: { presence: { key: "global" } },
-      });
+      this.channel = supabase.channel(PRESENCE_CHANNEL);
       this.channel.on("presence", { event: "sync" }, () => {
         this.notifyListeners();
       });
@@ -34,9 +32,8 @@ class PresenceManager {
     ch.subscribe((status: string) => {
       this.subscribing = false;
       if (status === "SUBSCRIBED") {
-        // Re-track if we have a user
         if (this.trackedUserId) {
-          ch.track({ user_id: this.trackedUserId, online_at: new Date().toISOString() });
+          ch.track({ user_id: this.trackedUserId, online_at: new Date().toISOString() }, { key: this.trackedUserId });
         }
         this.notifyListeners();
       }
@@ -48,7 +45,7 @@ class PresenceManager {
     const ch = this.getChannel();
     this.ensureSubscribed();
     if (ch.state === "joined") {
-      ch.track({ user_id: userId, online_at: new Date().toISOString() });
+      ch.track({ user_id: userId, online_at: new Date().toISOString() }, { key: userId });
     }
   }
 
