@@ -189,11 +189,11 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const selectAllForOperadora = (opId: string) => {
     const op = operadoras.find((o) => o.id === opId);
     if (!op) return;
-    const allKeys = op.values.map((v) => `${opId}_${v.value}`);
-    const allSelected = allKeys.every((k) => selectedValues.has(k));
+    const selectableKeys = op.values.filter((v) => !v.setByAdmin).map((v) => `${opId}_${v.value}`);
+    const allSelected = selectableKeys.every((k) => selectedValues.has(k));
     setSelectedValues((prev) => {
       const next = new Set(prev);
-      allKeys.forEach((k) => allSelected ? next.delete(k) : next.add(k));
+      selectableKeys.forEach((k) => allSelected ? next.delete(k) : next.add(k));
       return next;
     });
   };
