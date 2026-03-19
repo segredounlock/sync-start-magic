@@ -755,7 +755,7 @@ export type Database = {
           nome: string | null
           referral_code: string | null
           reseller_id: string | null
-          slug: string | null
+          slug: string
           store_logo_url: string | null
           store_name: string | null
           store_primary_color: string | null
@@ -778,7 +778,7 @@ export type Database = {
           nome?: string | null
           referral_code?: string | null
           reseller_id?: string | null
-          slug?: string | null
+          slug: string
           store_logo_url?: string | null
           store_name?: string | null
           store_primary_color?: string | null
@@ -801,7 +801,7 @@ export type Database = {
           nome?: string | null
           referral_code?: string | null
           reseller_id?: string | null
-          slug?: string | null
+          slug?: string
           store_logo_url?: string | null
           store_name?: string | null
           store_primary_color?: string | null
@@ -1549,6 +1549,10 @@ export type Database = {
         Returns: boolean
       }
       export_schema_info: { Args: never; Returns: Json }
+      generate_unique_slug: {
+        Args: { p_nome: string; p_user_id: string }
+        Returns: string
+      }
       get_chat_enabled: { Args: never; Returns: boolean }
       get_chat_new_conv_filter: { Args: never; Returns: string }
       get_deposit_fee_for_user: {
@@ -1701,6 +1705,7 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: undefined
       }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
