@@ -441,13 +441,19 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
               </label>
             )}
           </div>
-        ) : otherUser?.avatar_url ? (
-          <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" className="w-11 h-11 rounded-full object-cover border-2 border-border" />
         ) : (
-          <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-            {initial}
+          <div className="relative">
+            {otherUser?.avatar_url ? (
+              <img src={otherUser.avatar_url} alt="" referrerPolicy="no-referrer" className="w-11 h-11 rounded-full object-cover border-2 border-border" />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                {initial}
+              </div>
+            )}
+            {isOnline && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-success border-2 border-card" />
+            )}
           </div>
-        )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground flex items-center gap-1">
             <span className={shouldShimmerName ? "shimmer-letters" : ""}>{name}</span>
