@@ -1,40 +1,79 @@
 
 
-## Enviar mensagem para Erica (Recargas Brasil)
+## Sistema de Notificação Automática de Atraso no PIX
 
-### Situação
-- Usuária: **Erica Ferreira Dutra** (Recargas Brasil)
-- Telegram ID: `6363075028`
-- Atraso confirmado: depósito de R$ 50,00 levou ~16 minutos para confirmar (19:48 → 20:04)
-- Depósito de R$ 15,00 expirou sem pagamento
+### Problema
+Quando o gateway PixGo apresenta lentidão, o usuário fica esperando sem feedback. Atualmente não há comunicação proativa informando que o pagamento está sendo processado.
 
-**Observação:** Este perfil (d74ea4f9) é o mesmo que aparece como "Recargas Brasil" — possivelmente sua própria conta admin.
+### Solução
+Adicionar lógica de notificação automática diretamente na Edge Function `check-pending-pix` (que já roda a cada 2 minutos via cron). Quando um depósito pendente ultrapassar um tempo configurável (ex: 5 minutos), o sistema envia automaticamente uma mensagem via Telegram e Push informando que o pagamento está sendo processado.
 
-### Plano
-Enviar mensagem via `telegram-notify` Edge Function com a mesma abordagem usada para a Maiara, adaptada com o valor correto (R$ 50,00).
+### Detalhes Técnicos
 
-### Mensagem
-```
-Olá Erica! 👋
+**1. Adicionar coluna de controle na tabela `transactions`**
 
-Aqui é da equipe Recargas Brasil.
-
-Informamos que nosso sistema passou por uma lentidão temporária,
-e por isso o seu PIX de R$ 50,00 demorou alguns minutos a mais
-para ser confirmado. Pedimos desculpas pelo transtorno!
-
-✅ Trabalhamos com seriedade e transparência. Todo pagamento
-confirmado é creditado automaticamente no seu saldo.
-
-📢 Temos um grupo de suporte onde você pode tirar dúvidas
-e acompanhar novidades em tempo real.
-
-💬 Se precisar de qualquer ajuda, estamos à disposição!
-
-Atenciosamente,
-🇧🇷 Equipe Recargas Brasil
+Nova migração SQL:
+```sql
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS delay_notified boolean DEFAULT false;
 ```
 
-### Execução
-Chamar a Edge Function `telegram-notify` com `chat_id: "6363075028"` e a mensagem acima.
+Isso evita enviar a mensagem de atraso mais de uma vez para o mesmo depósito.
+
+**2. Modificar `check-pending-pix/index.ts`**
+
+Após o loop de verificação de status na API, adicionar uma etapa que:
+
+- Identifica depósitos pendentes há mais de **5 minutos** que ainda não foram notificados (`delay_notified = false`)
+- Consulta o status na API do gateway (PixGo/MP) para verificar:
+  - Se está `pending` → envia mensagem "processando"
+  - Se está com status de disputa/MED → envia alerta diferente ao admin
+  - Se a API retorna erro/timeout → informa "verificando com o gateway"
+- Envia notificação via Telegram (se o usuário tem `telegram_id`) e Push (PWA)
+- Marca `delay_notified = true` na transação
+
+**3. Mensagem automática enviada ao usuário (Telegram + Push)**
+
+```
+⏳ Processando seu PIX...
+
+Seu pagamento de R$ XX,XX foi identificado e está sendo
+processado pelo nosso sistema. Em momentos de alta demanda,
+pode haver um pequeno atraso na confirmação.
+
+⏱ Tempo estimado: até 15 minutos
+✅ Seu saldo será creditado automaticamente
+
+Caso demore mais que 30 minutos, entre em contato
+com nosso suporte.
+
+📢 Grupo de Suporte: [link]
+```
+
+**4. Configuração via `system_config`**
+
+Duas novas chaves opcionais:
+- `pixDelayThresholdMinutes` → tempo em minutos para disparar (padrão: 5)
+- `supportGroupLink` → link do grupo de suporte para incluir na mensagem
+
+### Arquivos alterados
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `supabase/functions/check-pending-pix/index.ts` | Adicionar lógica de notificação de atraso |
+| Nova migração SQL | Adicionar coluna `delay_notified` em `transactions` |
+
+### Fluxo
+
+```text
+Cron (2 min) → check-pending-pix
+  │
+  ├─ Para cada depósito pendente:
+  │   ├─ Verifica status na API do gateway
+  │   ├─ Se confirmado → credita saldo (já existente)
+  │   ├─ Se pendente + >5 min + não notificado:
+  │   │   ├─ Envia Telegram "processando..."
+  │   │   ├─ Envia Push "processando..."
+  │   │   └─ Marca delay_notified = true
+  │   └─ Se expirado → marca expired (já existente)
+```
 
