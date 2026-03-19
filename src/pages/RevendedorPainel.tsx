@@ -2171,6 +2171,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           )}
           {tab === "extrato" && (
             <>
+              {/* Info Card - Extrato */}
+              <InfoCard title="Minha Carteira" items={[
+                { icon: Wallet, iconColor: "text-primary", label: "Saldo", description: "saldo disponível para realizar recargas e operações." },
+                { icon: ArrowRightLeft, iconColor: "text-success", label: "Transações", description: "depósitos, recargas e comissões movimentam sua carteira." },
+                { icon: Banknote, iconColor: "text-warning", label: "Saques", description: "solicite a retirada do saldo pessoal (comissões) via PIX." },
+              ]} />
               {/* Wallet Header */}
               <div className="mb-5">
                 <h2 className="text-xl font-bold text-foreground">Minha Carteira</h2>
