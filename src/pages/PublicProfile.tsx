@@ -128,9 +128,9 @@ export default function PublicProfile() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-card rounded-2xl shadow-xl p-6 text-center border border-border"
         >
-          {profile.store_logo_url ? (
+          {(profile.avatar_url || profile.store_logo_url) ? (
             <img
-              src={profile.store_logo_url}
+              src={profile.avatar_url || profile.store_logo_url!}
               alt={storeName}
               className="w-20 h-20 rounded-full mx-auto object-cover border-4 border-background shadow-lg"
             />
@@ -144,7 +144,7 @@ export default function PublicProfile() {
           )}
           <div className="mt-3 flex items-center justify-center gap-1">
             <h2 className="text-lg font-bold text-foreground">{storeName}</h2>
-            <VerificationBadge badge={null} size="sm" />
+            <VerificationBadge badge={profile.verification_badge as BadgeType} size="sm" />
           </div>
           <p className="text-xs text-muted-foreground">@{slug}</p>
           <Link
