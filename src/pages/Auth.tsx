@@ -18,6 +18,7 @@ function translateAuthError(msg: string): string {
     "Invalid login credentials": "E-mail ou senha incorretos",
     "Email not confirmed": "E-mail ainda não confirmado. Verifique sua caixa de entrada.",
     "User already registered": "Este e-mail já está cadastrado",
+    "email address has already been registered": "Este e-mail já está cadastrado",
     "Password should be at least 6 characters": "A senha deve ter no mínimo 6 caracteres",
     "Signup requires a valid password": "Informe uma senha válida",
     "User not found": "Usuário não encontrado",
