@@ -358,6 +358,7 @@ export function BannersManager({ botUsername }: BannersManagerProps) {
           </div>
         ))}
       </div>
+      </div>
     </div>
   );
 }
