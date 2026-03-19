@@ -149,7 +149,7 @@ function App() {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={["admin", "revendedor"]}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <LazyPage><AdminDashboard /></LazyPage>
                 </ProtectedRoute>
               }
