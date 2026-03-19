@@ -794,12 +794,13 @@ export default function Principal() {
     let dataTimer: ReturnType<typeof setTimeout> | null = null;
     let analyticsTimer: ReturnType<typeof setTimeout> | null = null;
     const debouncedFetchData = () => {
+      if (dataFetchInFlightRef.current) return; // skip if fetch already running
       if (dataTimer) clearTimeout(dataTimer);
-      dataTimer = setTimeout(() => fetchData(), 2000);
+      dataTimer = setTimeout(() => fetchData(), 5000);
     };
     const debouncedFetchAnalytics = () => {
       if (analyticsTimer) clearTimeout(analyticsTimer);
-      analyticsTimer = setTimeout(() => { analyticsLoaded.current = false; fetchAnalytics(); }, 3000);
+      analyticsTimer = setTimeout(() => { analyticsLoaded.current = false; fetchAnalytics(); }, 5000);
     };
     const channel = supabase.channel('principal-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, debouncedFetchData)
