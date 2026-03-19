@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations, GENERAL_CHAT_ID } from "@/hooks/useChat";
+import { usePresenceTracker } from "@/hooks/usePresence";
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationList } from "./ConversationList";
 import { ChatWindow } from "./ChatWindow";
