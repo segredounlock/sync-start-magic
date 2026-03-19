@@ -3635,6 +3635,12 @@ export default function Principal() {
                 {/* ═══════ SETOR: NOTIFICAÇÕES ═══════ */}
                 {configSection === "notificacoes" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Notificações */}
+                    <InfoCard title="Sistema de Alertas" items={[
+                      { icon: Megaphone, iconColor: "text-primary", label: "Toasts Visuais", description: "alertas pop-up que aparecem na tela ao receber depósitos, recargas e cadastros." },
+                      { icon: Users, iconColor: "text-success", label: "Por Cargo", description: "configure separadamente quais alertas cada tipo de usuário recebe." },
+                    ]} />
+
                     <div className="glass-card rounded-xl p-5 space-y-5">
                       <div>
                         <h4 className="font-semibold text-foreground flex items-center gap-2">
