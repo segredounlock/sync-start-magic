@@ -4,10 +4,11 @@ import { styledToast as toast } from "@/lib/toast";
 import { formatFullDateTimeBR } from "@/lib/timezone";
 import {
   MessageCircle, CheckCircle2, Clock, XCircle, RefreshCw, Loader2,
-  ChevronDown, ChevronUp, Plus, Send, Image, X, Upload,
+  ChevronDown, ChevronUp, Plus, Send, Image, X, Upload, HelpCircle,
 } from "lucide-react";
 import { renderTelegramHtml } from "./TextFormatToolbar";
 import { motion, AnimatePresence } from "framer-motion";
+import { InfoCard } from "@/components/InfoCard";
 
 interface Ticket {
   id: string;
