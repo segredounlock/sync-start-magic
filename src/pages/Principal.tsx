@@ -521,7 +521,7 @@ export default function Principal() {
 
   const { remove: removePricingRule } = useCrud("pricing_rules", { onRefresh: fetchPricingData, messages: { deleted: "Regra removida" } });
   const resetPricingRule = async (operadora_id: string, valor_recarga: number) => {
-    const existing = pricingRules.find(r => r.operadora_id === operadora_id && r.valor_recarga === valor_recarga);
+    const existing = pricingRules.find(r => r.operadora_id === operadora_id && Number(r.valor_recarga) === Number(valor_recarga));
     if (!existing?.id) return;
     await removePricingRule(existing.id);
   };
