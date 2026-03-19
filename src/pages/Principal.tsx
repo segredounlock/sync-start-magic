@@ -3482,6 +3482,12 @@ export default function Principal() {
                 {/* ═══════ SETOR: REDE ═══════ */}
                 {configSection === "rede" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Rede */}
+                    <InfoCard title="Configurações da Rede" items={[
+                      { icon: Tag, iconColor: "text-primary", label: "Ferramentas de Venda", description: "controla visibilidade de 'Meus Preços' e 'Minha Rede' para os revendedores." },
+                      { icon: TrendingUp, iconColor: "text-success", label: "Comissões", description: "defina quanto do lucro vai para o vendedor (direta) e para quem o indicou (indireta)." },
+                    ]} />
+
                     {/* Ferramentas de Venda */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <div className="flex items-center justify-between">
