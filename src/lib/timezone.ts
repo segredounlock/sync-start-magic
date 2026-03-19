@@ -229,17 +229,20 @@ export function formatChatTimestamp(dateInput: string | Date): string {
   return formatDateShortBR(d);
 }
 
-/** "há 5min", "há 2h", or "03/03 14:30" */
+/** WhatsApp-style: "hoje às 14:30", "ontem às 09:15", or "03/03 às 14:30" */
 export function formatLastSeenBR(dateInput: string | Date): string {
   const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "agora";
-  if (diffMin < 60) return `há ${diffMin}min`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `há ${diffH}h`;
-  return formatDateShortBR(d) + " " + formatTimeBR(d);
+  const inputKey = toLocalDateKey(d.toISOString());
+  const todayKey = getTodayLocalKey();
+  const time = formatTimeBR(d);
+
+  if (inputKey === todayKey) return `hoje às ${time}`;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (inputKey === toLocalDateKey(yesterday.toISOString())) return `ontem às ${time}`;
+
+  return formatDateShortBR(d) + " às " + time;
 }
 
 /**
