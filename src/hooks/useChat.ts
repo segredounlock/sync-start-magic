@@ -422,11 +422,10 @@ export function useChatMessages(conversationId: string | null) {
 
           if (unreadIds.length > 0) {
             // Update global is_read for direct chats (backward compat)
-            supabase
+            await supabase
               .from("chat_messages")
               .update({ is_read: true, read_at: new Date().toISOString() })
-              .in("id", unreadIds)
-              .then(() => {});
+              .in("id", unreadIds);
 
             // Insert per-user read receipts
             const readReceipts = unreadIds.map((msgId: string) => ({
@@ -434,17 +433,15 @@ export function useChatMessages(conversationId: string | null) {
               user_id: user.id,
               read_at: new Date().toISOString(),
             }));
-            supabase
+            await supabase
               .from("chat_message_reads")
-              .upsert(readReceipts, { onConflict: "message_id,user_id" })
-              .then(() => {
-                // Touch conversation to trigger realtime refetch of unread counts
-                supabase
-                  .from("chat_conversations")
-                  .update({ updated_at: new Date().toISOString() })
-                  .eq("id", conversationId)
-                  .then(() => {});
-              });
+              .upsert(readReceipts, { onConflict: "message_id,user_id" });
+
+            // Touch conversation to trigger realtime refetch of unread counts
+            await supabase
+              .from("chat_conversations")
+              .update({ updated_at: new Date().toISOString() })
+              .eq("id", conversationId);
           }
         }
       }
