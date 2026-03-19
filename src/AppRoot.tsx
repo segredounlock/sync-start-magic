@@ -145,6 +145,7 @@ function App() {
             <Route path="/miniapp" element={<LazyPage><TelegramMiniApp /></LazyPage>} />
             <Route path="/regras" element={<LazyPage><RegrasPage /></LazyPage>} />
             <Route path="/instalar" element={<LazyPage><InstallApp /></LazyPage>} />
+            <Route path="/docs/rede" element={<LazyPage><DocsRede /></LazyPage>} />
             <Route
               path="/admin"
               element={
