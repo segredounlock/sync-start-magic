@@ -135,6 +135,12 @@ function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>;
 }
 
+function RegisterRedirect() {
+  const [searchParams] = useSearchParams();
+  const ref = searchParams.get("ref") || "";
+  return <Navigate to={`/login${ref ? `?ref=${ref}` : ""}`} replace />;
+}
+
 function App() {
   useCacheCleanup();
   usePrefetchRoutes();
