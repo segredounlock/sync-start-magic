@@ -884,10 +884,17 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte offline", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-teal-400" : "text-muted-foreground" },
   ];
 
-  const salesMenuItems: MenuItem[] = (!isClientMode && (role === "admin" || salesToolsEnabled)) ? [
-    { key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" },
-    { key: "minharede", label: "Minha Rede", icon: UsersIcon, color: "text-indigo-400" },
-  ] : [];
+  const salesMenuItems: MenuItem[] = (() => {
+    if (isClientMode) return [];
+    const items: MenuItem[] = [];
+    // Meus Preços: only for admin/revendedor
+    if (role === "admin" || role === "revendedor") {
+      items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
+    }
+    // Minha Rede: visible to all authenticated users
+    items.push({ key: "minharede", label: "Minha Rede", icon: UsersIcon, color: "text-indigo-400" });
+    return items;
+  })();
 
   const tabTitle: Record<PainelTab, string> = {
     dashboard: "Dashboard", recarga: "Fazer Recarga", addSaldo: "Depositar", historico: "Meus Pedidos",
