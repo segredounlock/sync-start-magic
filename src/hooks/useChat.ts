@@ -192,8 +192,11 @@ export function useConversations() {
     return data.id;
   }, [user, fetchConversations]);
 
-  const clearUnread = useCallback((conversationId: string) => {
-    setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+  const clearUnread = useCallback((conversationId: string | null) => {
+    activeConvoRef.current = conversationId;
+    if (conversationId) {
+      setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+    }
   }, []);
 
   return { conversations, loading, fetchConversations, startConversation, clearUnread };
