@@ -23,18 +23,28 @@ export function FloatingSupportButton() {
   isOpenRef.current = isOpen;
   unreadCountRef.current = unreadCount;
 
-  // Check if support is enabled (realtime)
-  useEffect(() => {
-    const check = async () => {
-      const { data } = await (supabase.from("system_config") as any)
-        .select("value")
-        .eq("key", "supportEnabled")
-        .maybeSingle();
-      setEnabled(data?.value !== "false");
-    };
-    check();
+  // Check if support is enabled (realtime + polling fallback)
+  const checkEnabled = useCallback(async () => {
+    const { data } = await (supabase.from("system_config") as any)
+      .select("value")
+      .eq("key", "supportEnabled")
+      .maybeSingle();
+    setEnabled(data?.value !== "false");
+  }, []);
 
-    // Listen for changes to supportEnabled
+  useEffect(() => {
+    checkEnabled();
+
+    // Poll every 30s as fallback
+    const pollId = setInterval(checkEnabled, 30000);
+
+    // Re-check on tab visibility change
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") checkEnabled();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    // Listen for realtime changes
     const ch = supabase
       .channel("support-enabled-toggle")
       .on("postgres_changes", { event: "*", schema: "public", table: "system_config", filter: "key=eq.supportEnabled" }, (payload: any) => {
@@ -43,8 +53,12 @@ export function FloatingSupportButton() {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(ch); };
-  }, []);
+    return () => {
+      clearInterval(pollId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      supabase.removeChannel(ch);
+    };
+  }, [checkEnabled]);
 
   // Hide on certain routes
   const hiddenRoutes = ["/chat", "/admin/support"];
