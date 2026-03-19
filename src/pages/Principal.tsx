@@ -24,6 +24,7 @@ import { PollManager } from "@/components/PollManager";
 import { ChatRoomManager } from "@/components/ChatRoomManager";
 import { VerificationBadge, BADGE_CONFIG, BadgeType } from "@/components/VerificationBadge";
 import NetworkCommissionConfig from "@/components/NetworkCommissionConfig";
+import { InfoCard } from "@/components/InfoCard";
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -2528,6 +2529,13 @@ export default function Principal() {
           {/* ===== CONFIG API ===== */}
            {view === "config-api" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Info Card - API */}
+              <InfoCard title="Configuração da API" items={[
+                { icon: Smartphone, iconColor: "text-primary", label: "Provedor de Recarga", description: "URL e chave da API que processa as recargas de celular." },
+                { icon: TrendingUp, iconColor: "text-success", label: "Margem de Lucro", description: "percentual adicionado sobre o custo base para definir o preço de venda." },
+                { icon: Search, iconColor: "text-warning", label: "Consulta de Operadora", description: "identifica automaticamente a operadora pelo número do telefone." },
+              ]} />
+
               {/* Header */}
               <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -2621,6 +2629,11 @@ export default function Principal() {
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <PinProtection configKey="adminPin">
+                  <InfoCard title="Gateway de Pagamento" items={[
+                    { icon: CreditCard, iconColor: "text-primary", label: "Gateway Principal", description: "provedor que gera os QR Codes PIX para depósitos no sistema." },
+                    { icon: Shield, iconColor: "text-warning", label: "Credenciais", description: "tokens de acesso do provedor selecionado. Mantenha em sigilo." },
+                    { icon: KeyRound, iconColor: "text-success", label: "Webhook", description: "URL que recebe confirmações automáticas de pagamento." },
+                  ]} />
                   <div className="glass-card rounded-2xl p-6 md:p-8 space-y-5">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center">
@@ -3002,8 +3015,15 @@ export default function Principal() {
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
                 <>
-                  {/* Header */}
-                  <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                   {/* Info Card - Depósitos */}
+                   <InfoCard title="Regras de Depósito" items={[
+                     { icon: Landmark, iconColor: "text-success", label: "Limites", description: "valores mínimo e máximo aceitos por depósito PIX." },
+                     { icon: Shield, iconColor: "text-warning", label: "Anti-spam", description: "limita quantos QR Codes pendentes um usuário pode ter simultaneamente." },
+                     { icon: DollarSign, iconColor: "text-primary", label: "Taxas", description: "valor fixo ou percentual descontado do depósito antes de creditar ao cliente." },
+                   ]} />
+
+                   {/* Header */}
+                   <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
                         <Landmark className="h-5 w-5 text-success" />
@@ -3013,7 +3033,7 @@ export default function Principal() {
                         <p className="text-xs text-muted-foreground mt-0.5">Limites, regras e taxas de depósito PIX</p>
                       </div>
                     </div>
-                  </div>
+                   </div>
 
                   <div className="glass-card rounded-2xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg">Limites e Regras</h4>
@@ -3075,6 +3095,13 @@ export default function Principal() {
           {/* ===== BOT TELEGRAM ===== */}
            {view === "bot" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+
+              {/* Info Card - Bot */}
+              <InfoCard title="Bot do Telegram" items={[
+                { icon: Bot, iconColor: "text-primary", label: "Token", description: "chave de acesso obtida no @BotFather para conectar seu bot." },
+                { icon: Wifi, iconColor: "text-success", label: "Webhook", description: "URL que recebe atualizações do Telegram em tempo real." },
+                { icon: Send, iconColor: "text-warning", label: "Mensagens", description: "o bot processa recargas, cadastros e broadcasts automaticamente." },
+              ]} />
 
               {/* ── Compact Header ── */}
               <div className="flex items-center justify-between">
@@ -3380,6 +3407,13 @@ export default function Principal() {
                 {/* ═══════ SETOR: SISTEMA ═══════ */}
                 {configSection === "geral" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Sistema */}
+                    <InfoCard title="Configurações do Sistema" items={[
+                      { icon: Globe, iconColor: "text-primary", label: "Nome do Site", description: "título exibido no navegador e em compartilhamentos." },
+                      { icon: AlertTriangle, iconColor: "text-warning", label: "Modo Manutenção", description: "bloqueia acesso público ao site, apenas admins podem entrar." },
+                      { icon: Zap, iconColor: "text-accent-foreground", label: "Temas Sazonais", description: "ativa efeitos visuais especiais para datas comemorativas." },
+                    ]} />
+
                     {/* Nome do Site */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <h4 className="font-semibold text-foreground flex items-center gap-2">
@@ -3474,6 +3508,12 @@ export default function Principal() {
                 {/* ═══════ SETOR: REDE ═══════ */}
                 {configSection === "rede" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Rede */}
+                    <InfoCard title="Configurações da Rede" items={[
+                      { icon: Tag, iconColor: "text-primary", label: "Ferramentas de Venda", description: "controla visibilidade de 'Meus Preços' e 'Minha Rede' para os revendedores." },
+                      { icon: TrendingUp, iconColor: "text-success", label: "Comissões", description: "defina quanto do lucro vai para o vendedor (direta) e para quem o indicou (indireta)." },
+                    ]} />
+
                     {/* Ferramentas de Venda */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <div className="flex items-center justify-between">
@@ -3513,6 +3553,12 @@ export default function Principal() {
                 {/* ═══════ SETOR: JOGOS ═══════ */}
                 {configSection === "jogos" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Jogos */}
+                    <InfoCard title="Configurações de Jogos" items={[
+                      { icon: Trophy, iconColor: "text-warning", label: "Raspadinha Diária", description: "cada usuário pode raspar 1 cartão por dia, com chance de ganhar saldo." },
+                      { icon: DollarSign, iconColor: "text-success", label: "Faixas de Prêmio", description: "3 faixas (Comum, Rara, Épica) com probabilidades e valores configuráveis." },
+                    ]} />
+
                     {/* Raspadinha Config */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <div className="flex items-center gap-3">
@@ -3589,6 +3635,12 @@ export default function Principal() {
                 {/* ═══════ SETOR: NOTIFICAÇÕES ═══════ */}
                 {configSection === "notificacoes" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Notificações */}
+                    <InfoCard title="Sistema de Alertas" items={[
+                      { icon: Megaphone, iconColor: "text-primary", label: "Toasts Visuais", description: "alertas pop-up que aparecem na tela ao receber depósitos, recargas e cadastros." },
+                      { icon: Users, iconColor: "text-success", label: "Por Cargo", description: "configure separadamente quais alertas cada tipo de usuário recebe." },
+                    ]} />
+
                     <div className="glass-card rounded-xl p-5 space-y-5">
                       <div>
                         <h4 className="font-semibold text-foreground flex items-center gap-2">
@@ -4146,6 +4198,13 @@ export default function Principal() {
           {/* ===== PRECIFICAÇÃO ===== */}
           {view === "precificacao" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+              {/* Info Card - Precificação */}
+              <InfoCard title="Precificação" items={[
+                { icon: Tag, iconColor: "text-warning", label: "Preço Global", description: "regras padrão de margem aplicadas a todos os revendedores." },
+                { icon: Users, iconColor: "text-primary", label: "Preço Personalizado", description: "regras específicas por revendedor que sobrepõem o preço global." },
+                { icon: Shield, iconColor: "text-destructive", label: "Piso de Segurança", description: "impede que qualquer venda seja feita abaixo do custo base da API." },
+              ]} />
+
               {/* Header */}
               <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -4404,6 +4463,12 @@ export default function Principal() {
           {/* ===== BROADCAST ===== */}
           {view === "broadcast" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Info Card - Broadcast */}
+              <InfoCard title="Broadcast" items={[
+                { icon: Megaphone, iconColor: "text-warning", label: "Mensagem em Massa", description: "envia uma mensagem para todos os usuários registrados no bot do Telegram." },
+                { icon: Send, iconColor: "text-primary", label: "Envio em Lotes", description: "as mensagens são enviadas em lotes para evitar bloqueio pelo Telegram." },
+              ]} />
+
               {/* Header */}
               <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
