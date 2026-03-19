@@ -59,7 +59,7 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
   const menuRef = useRef<HTMLDivElement>(null);
 
   const referralLink = referralCode
-    ? `${window.location.origin}/recarga?ref=${referralCode}`
+    ? `${window.location.origin}/registrar?ref=${referralCode}`
     : `${window.location.origin}/loja/${profileSlug || userId}`;
 
   const fetchData = useCallback(async () => {
