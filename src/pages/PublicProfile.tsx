@@ -142,7 +142,7 @@ export default function PublicProfile() {
           )}
           <div className="mt-3 flex items-center justify-center gap-1">
             <h2 className="text-lg font-bold text-foreground">{storeName}</h2>
-            <VerificationBadge badge={profile.store_logo_url ? "verified" : null} size="sm" />
+            <VerificationBadge badge={null} size="sm" />
           </div>
           <p className="text-xs text-muted-foreground">@{slug}</p>
           <Link

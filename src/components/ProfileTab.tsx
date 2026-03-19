@@ -347,7 +347,7 @@ export function ProfileTab({
                             <Copy className="h-4 w-4" />
                           </button>
                           <a
-                            href={`/loja/${slug}`}
+                            href={`/p/${slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
