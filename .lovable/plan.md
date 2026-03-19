@@ -1,79 +1,40 @@
 
 
-## Sistema de Notificação Automática de Atraso no PIX
+## Diagnóstico e Correção
 
-### Problema
-Quando o gateway PixGo apresenta lentidão, o usuário fica esperando sem feedback. Atualmente não há comunicação proativa informando que o pagamento está sendo processado.
+### Problema raiz
+A Edge Function `sync-pending-recargas` não mapeia o status `expirada` retornado pela API externa. Apenas `falha`, `cancelada` e `cancelled` são tratados como falha. Pedidos expirados ficam presos em `pending` para sempre.
 
-### Solução
-Adicionar lógica de notificação automática diretamente na Edge Function `check-pending-pix` (que já roda a cada 2 minutos via cron). Quando um depósito pendente ultrapassar um tempo configurável (ex: 5 minutos), o sistema envia automaticamente uma mensagem via Telegram e Push informando que o pagamento está sendo processado.
+### Plano
 
-### Detalhes Técnicos
+**1. Corrigir o mapeamento de status na sync function**
 
-**1. Adicionar coluna de controle na tabela `transactions`**
+Em `supabase/functions/sync-pending-recargas/index.ts`, adicionar `expirada` e `expired` à lista de status mapeados para `falha`:
 
-Nova migração SQL:
+```typescript
+// Antes:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled")
+
+// Depois:
+if (apiStatus === "falha" || apiStatus === "cancelada" || apiStatus === "cancelled" || apiStatus === "expirada" || apiStatus === "expired")
+```
+
+**2. Corrigir manualmente o pedido preso**
+
+Executar migração SQL para:
+- Atualizar o status do pedido `ace98bbd-...` para `falha`
+- Estornar R$ 12,30 ao saldo do usuário `0899d920-...`
+
 ```sql
-ALTER TABLE transactions ADD COLUMN IF NOT EXISTS delay_notified boolean DEFAULT false;
+UPDATE recargas SET status = 'falha', updated_at = now() WHERE id = 'ace98bbd-4625-4966-802a-60fcf434be14';
+UPDATE saldos SET valor = valor + 12.30 WHERE user_id = '0899d920-2f0f-4609-9f9f-318d3566738c' AND tipo = 'revenda';
 ```
 
-Isso evita enviar a mensagem de atraso mais de uma vez para o mesmo depósito.
+**3. Verificar se há outros pedidos presos**
 
-**2. Modificar `check-pending-pix/index.ts`**
-
-Após o loop de verificação de status na API, adicionar uma etapa que:
-
-- Identifica depósitos pendentes há mais de **5 minutos** que ainda não foram notificados (`delay_notified = false`)
-- Consulta o status na API do gateway (PixGo/MP) para verificar:
-  - Se está `pending` → envia mensagem "processando"
-  - Se está com status de disputa/MED → envia alerta diferente ao admin
-  - Se a API retorna erro/timeout → informa "verificando com o gateway"
-- Envia notificação via Telegram (se o usuário tem `telegram_id`) e Push (PWA)
-- Marca `delay_notified = true` na transação
-
-**3. Mensagem automática enviada ao usuário (Telegram + Push)**
-
-```
-⏳ Processando seu PIX...
-
-Seu pagamento de R$ XX,XX foi identificado e está sendo
-processado pelo nosso sistema. Em momentos de alta demanda,
-pode haver um pequeno atraso na confirmação.
-
-⏱ Tempo estimado: até 15 minutos
-✅ Seu saldo será creditado automaticamente
-
-Caso demore mais que 30 minutos, entre em contato
-com nosso suporte.
-
-📢 Grupo de Suporte: [link]
-```
-
-**4. Configuração via `system_config`**
-
-Duas novas chaves opcionais:
-- `pixDelayThresholdMinutes` → tempo em minutos para disparar (padrão: 5)
-- `supportGroupLink` → link do grupo de suporte para incluir na mensagem
+Consultar se existem mais recargas `pending` antigas que também podem estar nessa situação.
 
 ### Arquivos alterados
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `supabase/functions/check-pending-pix/index.ts` | Adicionar lógica de notificação de atraso |
-| Nova migração SQL | Adicionar coluna `delay_notified` em `transactions` |
-
-### Fluxo
-
-```text
-Cron (2 min) → check-pending-pix
-  │
-  ├─ Para cada depósito pendente:
-  │   ├─ Verifica status na API do gateway
-  │   ├─ Se confirmado → credita saldo (já existente)
-  │   ├─ Se pendente + >5 min + não notificado:
-  │   │   ├─ Envia Telegram "processando..."
-  │   │   ├─ Envia Push "processando..."
-  │   │   └─ Marca delay_notified = true
-  │   └─ Se expirado → marca expired (já existente)
-```
+- `supabase/functions/sync-pending-recargas/index.ts` (adicionar status `expirada`/`expired`)
+- Nova migração SQL (correção manual do pedido + estorno)
 
