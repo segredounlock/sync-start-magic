@@ -32,9 +32,8 @@ class PresenceManager {
     ch.subscribe((status: string) => {
       this.subscribing = false;
       if (status === "SUBSCRIBED") {
-        // Re-track if we have a user
         if (this.trackedUserId) {
-          ch.track({ user_id: this.trackedUserId, online_at: new Date().toISOString() });
+          ch.track({ user_id: this.trackedUserId, online_at: new Date().toISOString() }, { key: this.trackedUserId });
         }
         this.notifyListeners();
       }
