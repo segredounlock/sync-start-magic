@@ -15,7 +15,6 @@ interface PricingValue {
   profit: number;
   operadoraId: string;
   hasCustom: boolean;
-  setByAdmin: boolean;
 }
 
 interface OperadoraPricing {
