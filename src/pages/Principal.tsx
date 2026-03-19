@@ -3553,6 +3553,12 @@ export default function Principal() {
                 {/* ═══════ SETOR: JOGOS ═══════ */}
                 {configSection === "jogos" && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {/* Info Card - Jogos */}
+                    <InfoCard title="Configurações de Jogos" items={[
+                      { icon: Trophy, iconColor: "text-warning", label: "Raspadinha Diária", description: "cada usuário pode raspar 1 cartão por dia, com chance de ganhar saldo." },
+                      { icon: DollarSign, iconColor: "text-success", label: "Faixas de Prêmio", description: "3 faixas (Comum, Rara, Épica) com probabilidades e valores configuráveis." },
+                    ]} />
+
                     {/* Raspadinha Config */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <div className="flex items-center gap-3">
