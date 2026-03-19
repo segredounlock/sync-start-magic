@@ -254,6 +254,11 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             }
 
             const originalId = r.id;
+            // Play sound for status changes
+            try { playSuccessSound(); } catch {}
+            if (showRecarga) {
+              showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`);
+            }
             if (knownIds.current.has(originalId)) {
               setNotifications(prev => prev.map(n =>
                 n.id === originalId
