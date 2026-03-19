@@ -121,7 +121,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
 
   const getProfile = useCallback(async (userId: string) => {
     if (profileCache.current[userId]) return profileCache.current[userId];
-    const rev = revendedores?.find(r => r.id === userId);
+    const rev = revendedoresRef.current?.find(r => r.id === userId);
     if (rev) {
       profileCache.current[userId] = { nome: rev.nome, email: rev.email };
       return profileCache.current[userId];
@@ -130,7 +130,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
     const result = { nome: data?.nome || null, email: data?.email || null };
     profileCache.current[userId] = result;
     return result;
-  }, [revendedores]);
+  }, []);
 
   const addNotification = useCallback((notif: AppNotification) => {
     if (knownIds.current.has(notif.id)) return;
