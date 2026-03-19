@@ -123,6 +123,13 @@ export function MyTickets({ userId }: { userId: string }) {
     <div className="space-y-4">
       <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
 
+      <InfoCard title="Suporte via Tickets" items={[
+        { icon: Plus, label: "Novo Ticket", description: "Abra uma solicitação descrevendo sua dúvida ou problema." },
+        { icon: Clock, label: "Acompanhamento", description: "Acompanhe o status: Aberto, Respondido ou Fechado." },
+        { icon: CheckCircle2, label: "Resposta", description: "Quando respondido, a resposta do suporte aparece no ticket.", iconColor: "text-success" },
+        { icon: HelpCircle, label: "Anexos", description: "Você pode anexar imagens para ilustrar o problema." },
+      ]} />
+
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <MessageCircle className="w-4 h-4 text-primary" /> Meus Tickets

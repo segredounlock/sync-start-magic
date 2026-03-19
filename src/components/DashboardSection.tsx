@@ -255,6 +255,13 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
         </h1>
       </div>
 
+      <InfoCard title="Visão Geral" items={[
+        { icon: DollarSign, label: "Lucro", description: "Total de lucro das suas vendas no período selecionado." },
+        { icon: TrendingUp, label: "Comissões", description: "Ganhos por indicações diretas e indiretas da sua rede." },
+        { icon: BarChart3, label: "Período", description: "Use os filtros para ver dados de hoje, do mês ou de outra data." },
+        ...(!isClientMode ? [{ icon: UserPlus, label: "Indicação", description: "Compartilhe seu link para expandir sua rede e ganhar comissões." }] : []),
+      ]} />
+
       {/* Pending Prices Alert */}
       {!isClientMode && showSalesTools && hasPendingPrices && (
         <motion.div

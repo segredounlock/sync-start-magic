@@ -169,6 +169,13 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+      <InfoCard title="Como funciona a Rede" items={[
+        { icon: UserPlus, label: "Indicação", description: "Compartilhe seu link e ganhe comissão sobre as vendas dos indicados." },
+        { icon: DollarSign, label: "Comissão Direta", description: "Percentual do lucro de cada venda feita pelos seus indicados diretos." },
+        { icon: TrendingUp, label: "Comissão Indireta", description: "Percentual do lucro das vendas feitas pelos indicados dos seus indicados." },
+        { icon: Users, label: "Gestão", description: "Promova membros a vendedor ou gerencie preços individuais." },
+      ]} />
+
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
