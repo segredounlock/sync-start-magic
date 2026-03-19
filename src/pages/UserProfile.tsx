@@ -302,7 +302,15 @@ export default function UserProfile() {
                     {userInitial}
                   </div>
                 )}
-                <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-4 h-4 md:w-5 md:h-5 bg-success rounded-full ring-2 ring-background" />
+                {presenceOnline && (
+                  <div className="absolute -bottom-1 -right-1 md:bottom-1 md:right-1 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full pl-1 pr-2 py-0.5 ring-1 ring-border/30">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+                    </span>
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">Online</span>
+                  </div>
+                )}
               </div>
 
               {/* Info column */}
