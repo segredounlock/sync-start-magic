@@ -676,28 +676,43 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
       <AnimatePresence>
         {typingText && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            initial={{ height: 0, opacity: 0, y: 4 }}
+            animate={{ height: "auto", opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: 4 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             className="px-4 overflow-hidden"
           >
-            <div className="flex items-center gap-2 py-1.5">
-              {typingActivity === "recording" ? (
-                <div className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-                  <Mic className="h-3.5 w-3.5 text-destructive/70" />
-                </div>
-              ) : typingActivity === "emoji" ? (
-                <Smile className="h-3.5 w-3.5 text-warning animate-bounce" />
-              ) : (
-                <div className="flex gap-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
-                </div>
-              )}
-              <span className="text-[11px] text-muted-foreground italic">{typingText}</span>
+            <div className="flex items-center gap-2.5 py-2">
+              {/* Animated bubble */}
+              <div className="flex items-center bg-muted/60 rounded-full px-2.5 py-1.5 gap-1.5 border border-border/50">
+                {typingActivity === "recording" ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                    <Mic className="h-3.5 w-3.5 text-destructive/70" />
+                  </>
+                ) : typingActivity === "emoji" ? (
+                  <Smile className="h-3.5 w-3.5 text-warning animate-bounce" />
+                ) : (
+                  <div className="flex gap-[3px] items-center h-4">
+                    {[0, 1, 2].map((i) => (
+                      <motion.span
+                        key={i}
+                        className="w-[5px] h-[5px] rounded-full bg-primary/70"
+                        animate={{ y: [0, -4, 0] }}
+                        transition={{
+                          duration: 0.6,
+                          repeat: Infinity,
+                          delay: i * 0.15,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground italic truncate max-w-[70%]">
+                {typingText}
+              </span>
             </div>
           </motion.div>
         )}
