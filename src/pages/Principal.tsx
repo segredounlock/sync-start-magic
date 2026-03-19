@@ -1497,8 +1497,8 @@ export default function Principal() {
               </button>
             )}
             <NotificationBell
-              listenTo={["deposit", "recarga", "new_user"]}
-              revendedores={revendedores.map(r => ({ id: r.id, nome: r.nome, email: r.email }))}
+              listenTo={LISTEN_TO_TYPES}
+              revendedores={memoizedRevendedores}
             />
           </div>
         </header>
