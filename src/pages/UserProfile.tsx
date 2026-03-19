@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserPresence } from "@/hooks/usePresence";
 
 const AVAILABLE_ROLES = [
   { value: "admin", label: "Admin", color: "text-red-400", bg: "bg-red-500/15" },
