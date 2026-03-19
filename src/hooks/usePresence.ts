@@ -154,6 +154,7 @@ export function useUserPresence(userId: string | undefined) {
 export function useGroupPresence() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const channelRef = useRef<any>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const channel = getSharedChannel();
@@ -170,14 +171,22 @@ export function useGroupPresence() {
       setOnlineUsers(Array.from(ids));
     };
 
-    if (channel.state === "joined") syncOnline();
+    // Register listener (works whether channel is joined or not in v2)
     channel.on("presence", { event: "sync" }, syncOnline);
 
-    if (channel.state !== "joined" && channel.state !== "joining") {
-      channel.subscribe();
+    if (channel.state === "joined") {
+      syncOnline();
+    } else if (channel.state !== "joining") {
+      channel.subscribe(() => {
+        syncOnline();
+      });
     }
 
+    // Fallback: poll presence state every 5s to catch missed sync events
+    intervalRef.current = setInterval(syncOnline, 5000);
+
     return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
       releaseSharedChannel();
       channelRef.current = null;
     };
