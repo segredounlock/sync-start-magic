@@ -790,13 +790,19 @@ export function MessageBubble({ message, isOwn, isGroup, isCurrentUserAdmin, isC
               <span className={`text-[9px] ${isOwn ? "text-white/50" : "text-muted-foreground/70"}`}>{date}</span>
               {isEdited && <span className={`text-[8px] italic ${isOwn ? "text-white/40" : "text-muted-foreground/60"}`}>{editedByAdmin ? "editado pelo admin" : "editado"}</span>}
               <span className={`text-[9px] font-medium ${isOwn ? "text-white/60" : "text-muted-foreground"}`}>{time}</span>
-              {isOwn && (
+              {isOwn && !isGroup && (
                 message.is_read ? (
-                  <CheckCheck className="h-3 w-3 text-[hsl(200,80%,65%)]" />
+                  <motion.span
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  >
+                    <CheckCheck className="h-3.5 w-3.5 text-[hsl(200,80%,65%)]" />
+                  </motion.span>
                 ) : message.is_delivered ? (
-                  <CheckCheck className="h-3 w-3 text-white/50" />
+                  <CheckCheck className="h-3.5 w-3.5 text-white/50" />
                 ) : (
-                  <Check className="h-3 w-3 text-white/50" />
+                  <Check className="h-3.5 w-3.5 text-white/50" />
                 )
               )}
             </div>
