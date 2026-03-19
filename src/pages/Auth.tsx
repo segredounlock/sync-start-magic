@@ -201,17 +201,28 @@ export default function Auth() {
 
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
+        // Validate referral code is provided
+        if (!referralCode.trim()) {
+          appToast.error("Código de indicação é obrigatório para criar conta");
+          setSubmitting(false);
+          return;
+        }
+
         // Resolve referral code to reseller ID
         let resellerId: string | null = null;
-        if (refParam) {
-          // If it's a UUID, use directly; otherwise resolve referral code
-          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refParam);
-          if (isUuid) {
-            resellerId = refParam;
-          } else {
-            const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: refParam });
-            if (resolvedId) resellerId = resolvedId as string;
-          }
+        const code = referralCode.trim();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
+        if (isUuid) {
+          resellerId = code;
+        } else {
+          const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: code });
+          if (resolvedId) resellerId = resolvedId as string;
+        }
+
+        if (!resellerId) {
+          appToast.error("Código de indicação inválido. Verifique e tente novamente.");
+          setSubmitting(false);
+          return;
         }
 
         const { data: signUpData, error } = await supabase.auth.signUp({
