@@ -2529,6 +2529,13 @@ export default function Principal() {
           {/* ===== CONFIG API ===== */}
            {view === "config-api" && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Info Card - API */}
+              <InfoCard title="Configuração da API" items={[
+                { icon: Smartphone, iconColor: "text-primary", label: "Provedor de Recarga", description: "URL e chave da API que processa as recargas de celular." },
+                { icon: TrendingUp, iconColor: "text-success", label: "Margem de Lucro", description: "percentual adicionado sobre o custo base para definir o preço de venda." },
+                { icon: Search, iconColor: "text-warning", label: "Consulta de Operadora", description: "identifica automaticamente a operadora pelo número do telefone." },
+              ]} />
+
               {/* Header */}
               <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
