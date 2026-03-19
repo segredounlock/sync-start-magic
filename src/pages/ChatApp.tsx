@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations, GENERAL_CHAT_ID } from "@/hooks/useChat";
 import { supabase } from "@/integrations/supabase/client";
-import { usePresenceTracker } from "@/hooks/usePresence";
+
 import { ConversationList } from "@/components/chat/ConversationList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { NewChatModal } from "@/components/chat/NewChatModal";
