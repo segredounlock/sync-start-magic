@@ -1377,6 +1377,7 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          delay_notified: boolean | null
           id: string
           metadata: Json | null
           module: string | null
@@ -1390,6 +1391,7 @@ export type Database = {
         Insert: {
           amount?: number
           created_at?: string
+          delay_notified?: boolean | null
           id?: string
           metadata?: Json | null
           module?: string | null
@@ -1403,6 +1405,7 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          delay_notified?: boolean | null
           id?: string
           metadata?: Json | null
           module?: string | null
