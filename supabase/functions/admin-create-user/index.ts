@@ -35,7 +35,7 @@ serve(async (req) => {
     if (password.length < 6) throw new Error("Senha deve ter no mínimo 6 caracteres");
 
     const validRoles = ["admin", "revendedor", "usuario"];
-    const assignRole = validRoles.includes(role) ? role : "revendedor";
+    const assignRole = validRoles.includes(role) ? role : "usuario";
 
     // Create user via admin API
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
