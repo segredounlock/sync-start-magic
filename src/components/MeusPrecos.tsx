@@ -396,7 +396,6 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                   key={key}
                   layout
                   className={`glass-card rounded-xl p-4 border-2 transition-colors ${
-                    pv.setByAdmin ? "border-amber-500/40 bg-amber-500/5" :
                     isSelected ? "border-primary shadow-[0_0_16px_hsl(var(--primary)/0.15)]" : "border-border"
                   }`}
                 >
