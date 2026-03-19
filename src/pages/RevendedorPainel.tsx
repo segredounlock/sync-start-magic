@@ -272,18 +272,22 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     });
   }, [user?.id, callApi]);
 
+  const userIdRef = useRef(user?.id);
+  userIdRef.current = user?.id;
+
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    const uid = userIdRef.current;
+    if (!uid) return;
     const t0 = performance.now();
     await runFetch(async () => {
       const [{ data: saldoData }, { data: saldoPessoalData }, { data: recargasData }, { data: profile }, { data: botTokenConfig }, { count: recargasTotalCount }, { count: recargasCompletedCount }] = await Promise.all([
-        supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "revenda").maybeSingle(),
-        supabase.from("saldos").select("valor").eq("user_id", user.id).eq("tipo", "pessoal").maybeSingle(),
-        supabase.from("recargas").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
-        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url, referral_code, verification_badge").eq("id", user.id).single(),
-        supabase.from("reseller_config").select("value").eq("user_id", user.id).eq("key", "telegram_bot_token").maybeSingle(),
-        supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "completed"),
+        supabase.from("saldos").select("valor").eq("user_id", uid).eq("tipo", "revenda").maybeSingle(),
+        supabase.from("saldos").select("valor").eq("user_id", uid).eq("tipo", "pessoal").maybeSingle(),
+        supabase.from("recargas").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
+        supabase.from("profiles").select("nome, telegram_username, whatsapp_number, telegram_id, slug, avatar_url, referral_code, verification_badge").eq("id", uid).single(),
+        supabase.from("reseller_config").select("value").eq("user_id", uid).eq("key", "telegram_bot_token").maybeSingle(),
+        supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("recargas").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "completed"),
       ]);
       setSaldo(Number(saldoData?.valor) || 0);
       setSaldoPessoal(Number(saldoPessoalData?.valor) || 0);
@@ -304,7 +308,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       const { data: pixData } = await supabase
         .from("reseller_config")
         .select("key, value")
-        .eq("user_id", user.id)
+        .eq("user_id", uid)
         .in("key", ["pix_key_type", "pix_key_value"]);
       if (pixData) {
         for (const row of pixData) {
@@ -314,7 +318,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       }
     });
     console.log(`[RevendedorPainel] fetchData completed in ${(performance.now() - t0).toFixed(0)}ms`);
-  }, [user, runFetch]);
+  }, [runFetch]);
 
   const [commissions, setCommissions] = useState<{ id: string; amount: number; type: string; created_at: string; recarga_id: string | null; referred_user_id: string }[]>([]);
 
