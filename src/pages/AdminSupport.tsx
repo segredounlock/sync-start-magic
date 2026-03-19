@@ -902,7 +902,15 @@ export default function AdminSupport() {
   })() : null;
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background rounded-2xl border border-border overflow-hidden">
+    <div className="space-y-4">
+      {/* Info Card - Suporte */}
+      <InfoCard title="Central de Suporte" items={[
+        { icon: Shield, iconColor: "text-primary", label: "Tickets", description: "chamados abertos pelos usuários via Telegram, organizados por prioridade." },
+        { icon: Clock, iconColor: "text-warning", label: "SLA", description: "tempo de resposta. Tickets urgentes devem ser respondidos primeiro." },
+        { icon: CheckCircle2, iconColor: "text-success", label: "Resolução", description: "marque como resolvido após solucionar. O usuário recebe notificação." },
+      ]} />
+
+    <div className="h-[calc(100vh-10rem)] bg-background rounded-2xl border border-border overflow-hidden">
       {/* Desktop */}
       <div className="hidden md:grid h-full" style={{ gridTemplateColumns: showInfoPanel && selectedTicket ? "300px 1fr 280px" : "300px 1fr" }}>
         <div className="border-r border-border flex flex-col overflow-hidden">{ticketList}</div>
