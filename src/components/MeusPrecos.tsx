@@ -441,12 +441,6 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
                     </div>
                   </div>
 
-                  {/* Admin lock notice */}
-                  {pv.setByAdmin && (
-                    <p className="mt-2 text-[11px] text-amber-500/80 flex items-center gap-1">
-                      <Lock className="h-3 w-3" /> Preço definido pelo administrador — não pode ser alterado.
-                    </p>
-                  )}
 
                   {/* Save button */}
                   {hasEdits && !pv.setByAdmin && (
