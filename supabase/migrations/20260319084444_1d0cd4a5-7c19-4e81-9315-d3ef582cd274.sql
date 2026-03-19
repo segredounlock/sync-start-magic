@@ -1,0 +1,1 @@
+ALTER TABLE reseller_pricing_rules ADD COLUMN set_by_admin boolean NOT NULL DEFAULT false;

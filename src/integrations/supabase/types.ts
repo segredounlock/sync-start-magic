@@ -1016,6 +1016,7 @@ export type Database = {
           id: string
           operadora_id: string
           regra_valor: number
+          set_by_admin: boolean
           tipo_regra: string
           updated_at: string
           user_id: string
@@ -1027,6 +1028,7 @@ export type Database = {
           id?: string
           operadora_id: string
           regra_valor?: number
+          set_by_admin?: boolean
           tipo_regra?: string
           updated_at?: string
           user_id: string
@@ -1038,6 +1040,7 @@ export type Database = {
           id?: string
           operadora_id?: string
           regra_valor?: number
+          set_by_admin?: boolean
           tipo_regra?: string
           updated_at?: string
           user_id?: string
