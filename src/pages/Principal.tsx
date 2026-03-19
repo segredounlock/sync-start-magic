@@ -491,7 +491,7 @@ export default function Principal() {
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
       ]);
-      setPricingOps((ops || []).map((o: any) => ({ ...o, valores: o.valores || [] })));
+      setPricingOps((ops || []).map((o: any) => ({ ...o, valores: Array.isArray(o.valores) ? o.valores.map((v: any) => Number(v)) : [] })));
       setPricingRules((rules || []).map((r: any) => ({ ...r, valor_recarga: Number(r.valor_recarga), custo: Number(r.custo), regra_valor: Number(r.regra_valor), tipo_regra: r.tipo_regra as "fixo" | "margem" })));
       pricingSynced.current = true;
     } catch (err) { console.error(err); toast.error("Erro ao carregar precificação"); }
