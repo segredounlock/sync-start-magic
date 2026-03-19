@@ -1725,8 +1725,15 @@ export default function Principal() {
           )}
 
           {/* ===== LISTA ===== */}
-          {view === "lista" && (
+           {view === "lista" && (
             <>
+              {/* Info Card - Lista */}
+              <InfoCard title="Gestão de Usuários" items={[
+                { icon: Users, iconColor: "text-primary", label: "Usuários", description: "todos os revendedores e clientes cadastrados no sistema." },
+                { icon: UserCheck, iconColor: "text-success", label: "Ativar/Desativar", description: "controle de acesso individual. Usuários inativos não conseguem operar." },
+                { icon: Shield, iconColor: "text-warning", label: "Cargos", description: "defina permissões: admin (acesso total), revendedor (vende) ou cliente (compra)." },
+              ]} />
+
                <div className="grid grid-cols-4 gap-2">
                 {[
                   { icon: Users, label: "Total", value: String(totalUsers), color: "text-primary", bgColor: "bg-primary/10" },
