@@ -40,6 +40,25 @@ interface ProfileData {
 // Helper to detect UUID format
 const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+function formatLastSeen(isoDate: string): string {
+  const now = new Date();
+  const seen = new Date(isoDate);
+  const diffMs = now.getTime() - seen.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffH = Math.floor(diffMin / 60);
+  const diffD = Math.floor(diffH / 24);
+
+  if (diffMin < 1) return "Agora";
+  if (diffMin < 60) return `Ativo há ${diffMin}min`;
+  if (diffH < 24) {
+    const remainMin = diffMin % 60;
+    return remainMin > 0 ? `Ativo há ${diffH}h ${remainMin}min` : `Ativo há ${diffH}h`;
+  }
+  if (diffD === 1) return "Visto ontem";
+  if (diffD < 7) return `Visto há ${diffD} dias`;
+  return `Visto em ${seen.toLocaleDateString("pt-BR")}`;
+}
+
 export default function UserProfile() {
   const { userId: paramId } = useParams<{ userId: string }>();
   const { user, role: myRole } = useAuth();
