@@ -42,10 +42,11 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
   const fetchPricing = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: marginConfig }, { data: commConfig }] = await Promise.all([
+      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: resellerBaseRules }, { data: marginConfig }, { data: commConfig }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", userId),
+        (supabase.from("reseller_base_pricing_rules" as any) as any).select("*").eq("user_id", userId),
         supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
         supabase.from("system_config").select("key, value").in("key", ["directCommissionPercent", "indirectCommissionPercent"]),
       ]);
@@ -67,21 +68,21 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
         indirect: commMap.indirectCommissionPercent || "10",
       });
 
-      // If reseller has ANY custom rules, global margin doesn't apply to price resolution
-      // BUT the base cost shown should always reflect the actual cost (with global margin if enabled)
-      const hasAnyCustomRules = (resellerRules || []).length > 0;
-
       const result: OperadoraPricing[] = ops.map((op) => {
         const valores = (op.valores as unknown as number[]) || [];
         const values: PricingValue[] = valores.map((v) => {
           const gRule = (globalRules || []).find((r) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
           const rRule = (resellerRules || []).find((r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
+          const baseRule = (resellerBaseRules || []).find((r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
 
           const apiCost = gRule ? Number(gRule.custo) : v;
 
-          // Base cost: always apply global margin if enabled (this is what the reseller actually pays)
           let baseCost: number;
-          if (globalMarginEnabled && globalMarginValue > 0 && gRule) {
+          if (baseRule) {
+            baseCost = baseRule.tipo_regra === "fixo"
+              ? (Number(baseRule.regra_valor) > 0 ? Number(baseRule.regra_valor) : Number(baseRule.custo))
+              : Number(baseRule.custo) * (1 + Number(baseRule.regra_valor) / 100);
+          } else if (globalMarginEnabled && globalMarginValue > 0 && gRule) {
             baseCost = globalMarginType === "percentual"
               ? apiCost * (1 + globalMarginValue / 100)
               : apiCost + globalMarginValue;
@@ -90,7 +91,7 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
               ? (Number(gRule.regra_valor) > 0 ? Number(gRule.regra_valor) : apiCost)
               : apiCost * (1 + Number(gRule.regra_valor) / 100);
           } else {
-            baseCost = apiCost; // No global rule = use API cost (not face value)
+            baseCost = apiCost;
           }
 
           const hasCustom = !!rRule;

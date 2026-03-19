@@ -940,6 +940,50 @@ export type Database = {
           },
         ]
       }
+      reseller_base_pricing_rules: {
+        Row: {
+          created_at: string
+          custo: number
+          id: string
+          operadora_id: string
+          regra_valor: number
+          tipo_regra: string
+          updated_at: string
+          user_id: string
+          valor_recarga: number
+        }
+        Insert: {
+          created_at?: string
+          custo?: number
+          id?: string
+          operadora_id: string
+          regra_valor?: number
+          tipo_regra?: string
+          updated_at?: string
+          user_id: string
+          valor_recarga: number
+        }
+        Update: {
+          created_at?: string
+          custo?: number
+          id?: string
+          operadora_id?: string
+          regra_valor?: number
+          tipo_regra?: string
+          updated_at?: string
+          user_id?: string
+          valor_recarga?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_base_pricing_rules_operadora_id_fkey"
+            columns: ["operadora_id"]
+            isOneToOne: false
+            referencedRelation: "operadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reseller_config: {
         Row: {
           created_at: string
