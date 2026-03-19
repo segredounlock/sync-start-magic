@@ -64,7 +64,7 @@ serve(async (req) => {
     // Assign 'cliente' role
     const { error: roleError } = await adminClient
       .from("user_roles")
-      .insert({ user_id: newUser.user.id, role: "cliente" });
+      .insert({ user_id: newUser.user.id, role: "usuario" });
     if (roleError) throw roleError;
 
     return new Response(JSON.stringify({ success: true, userId: newUser.user.id }), {
