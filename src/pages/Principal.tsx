@@ -977,7 +977,7 @@ export default function Principal() {
 
       const [{ data: profiles }, { data: allResellerPricing }, { data: globalPricing }, { data: opsData }] = await Promise.all([
         supabase.from("profiles").select("id, nome, email"),
-        supabase.from("reseller_pricing_rules").select("*"),
+        (supabase.from("reseller_base_pricing_rules" as any) as any).select("*"),
         supabase.from("pricing_rules").select("*"),
         supabase.from("operadoras").select("id, nome"),
       ]);
