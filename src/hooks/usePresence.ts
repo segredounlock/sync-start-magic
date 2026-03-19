@@ -46,7 +46,7 @@ class PresenceManager {
     const ch = this.getChannel();
     this.ensureSubscribed();
     if (ch.state === "joined") {
-      ch.track({ user_id: userId, online_at: new Date().toISOString() });
+      ch.track({ user_id: userId, online_at: new Date().toISOString() }, { key: userId });
     }
   }
 
