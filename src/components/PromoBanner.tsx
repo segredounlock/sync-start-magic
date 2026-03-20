@@ -88,7 +88,7 @@ export function PromoBanner({
               {/* Text */}
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-bold text-foreground leading-tight">
-                  🤖 {title} 🚀
+                  🤖 <ShimmerTitle text={title} /> 🚀
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   📱 {subtitle} ⚡💬
