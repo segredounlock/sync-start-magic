@@ -34,6 +34,7 @@ interface FingerprintRecord {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
+  raw_data: Record<string, any> | null;
   // joined from profiles
   user_nome?: string;
   user_email?: string;
@@ -488,55 +489,7 @@ export function AntifraudSection() {
                                 </div>
 
                                 {/* Advanced raw_data details */}
-                                {(fp as any).raw_data && Object.keys((fp as any).raw_data).length > 0 && (
-                                  <div className="mt-3">
-                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">📡 Dados Avançados</p>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                      {(fp as any).raw_data.connectionType && (
-                                        <DetailItem icon={Globe} label="Conexão" value={(fp as any).raw_data.connectionType} />
-                                      )}
-                                      {(fp as any).raw_data.connectionDownlink != null && (
-                                        <DetailItem icon={Globe} label="Download" value={`${(fp as any).raw_data.connectionDownlink} Mbps`} />
-                                      )}
-                                      {(fp as any).raw_data.batteryLevel != null && (
-                                        <DetailItem icon={Smartphone} label="Bateria" value={`${Math.round((fp as any).raw_data.batteryLevel * 100)}%${(fp as any).raw_data.batteryCharging ? ' ⚡' : ''}`} />
-                                      )}
-                                      {(fp as any).raw_data.audioInputDevices != null && (
-                                        <DetailItem icon={Monitor} label="Microfones" value={String((fp as any).raw_data.audioInputDevices)} />
-                                      )}
-                                      {(fp as any).raw_data.videoInputDevices != null && (
-                                        <DetailItem icon={Monitor} label="Câmeras" value={String((fp as any).raw_data.videoInputDevices)} />
-                                      )}
-                                      {(fp as any).raw_data.adBlockerDetected != null && (
-                                        <DetailItem icon={ShieldAlert} label="AdBlocker" value={(fp as any).raw_data.adBlockerDetected ? "Detectado ⚠️" : "Não"} />
-                                      )}
-                                      {(fp as any).raw_data.webdriver && (
-                                        <DetailItem icon={AlertTriangle} label="WebDriver" value="⚠️ Bot detectado!" />
-                                      )}
-                                      {(fp as any).raw_data.screenOrientation && (
-                                        <DetailItem icon={Smartphone} label="Orientação" value={(fp as any).raw_data.screenOrientation} />
-                                      )}
-                                      {(fp as any).raw_data.languages && (
-                                        <DetailItem icon={Globe} label="Idiomas" value={(fp as any).raw_data.languages} />
-                                      )}
-                                      {(fp as any).raw_data.audioHash && (
-                                        <DetailItem icon={Fingerprint} label="Áudio FP" value={(fp as any).raw_data.audioHash} />
-                                      )}
-                                      {(fp as any).raw_data.fontHash && (
-                                        <DetailItem icon={Fingerprint} label="Fontes FP" value={(fp as any).raw_data.fontHash} />
-                                      )}
-                                      {(fp as any).raw_data.uaPlatform && (
-                                        <DetailItem icon={Monitor} label="UA Platform" value={(fp as any).raw_data.uaPlatform} />
-                                      )}
-                                      {(fp as any).raw_data.uaBrands && (
-                                        <DetailItem icon={Monitor} label="UA Brands" value={(fp as any).raw_data.uaBrands} />
-                                      )}
-                                      {(fp as any).raw_data.storageQuota != null && (
-                                        <DetailItem icon={Cpu} label="Storage" value={`${Math.round(((fp as any).raw_data.storageQuota || 0) / 1024 / 1024)} MB`} />
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
+                                <AdvancedDataSection rawData={fp.raw_data} />
 
                                 {/* User Agent full */}
                                 {fp.user_agent && (
@@ -836,6 +789,144 @@ function DetailItem({ icon: Icon, label, value }: { icon: any; label: string; va
         <p className="text-[10px] text-muted-foreground">{label}</p>
         <p className="text-xs font-medium break-all">{value}</p>
       </div>
+    </div>
+  );
+}
+
+// ── Raw data category definitions ──
+const RAW_DATA_CATEGORIES: { title: string; emoji: string; keys: { key: string; label: string; icon: any; format?: (v: any) => string }[] }[] = [
+  {
+    title: "Conexão", emoji: "🌐",
+    keys: [
+      { key: "connectionType", label: "Tipo", icon: Globe },
+      { key: "connectionDownlink", label: "Download", icon: Globe, format: v => `${v} Mbps` },
+      { key: "connectionRtt", label: "Latência", icon: Globe, format: v => `${v} ms` },
+      { key: "connectionSaveData", label: "Economia", icon: Globe, format: v => v ? "Sim" : "Não" },
+    ],
+  },
+  {
+    title: "Tela / Janela", emoji: "🖥️",
+    keys: [
+      { key: "screenOrientation", label: "Orientação", icon: Smartphone },
+      { key: "windowSize", label: "Janela", icon: Monitor },
+      { key: "availScreen", label: "Tela Disponível", icon: Monitor },
+      { key: "outerSize", label: "Outer Size", icon: Monitor },
+      { key: "screenIsExtended", label: "Tela Estendida", icon: Monitor, format: v => v ? "Sim" : "Não" },
+    ],
+  },
+  {
+    title: "Hardware", emoji: "🔧",
+    keys: [
+      { key: "batteryLevel", label: "Bateria", icon: Smartphone, format: v => `${Math.round(v * 100)}%` },
+      { key: "batteryCharging", label: "Carregando", icon: Smartphone, format: v => v ? "⚡ Sim" : "Não" },
+      { key: "audioInputDevices", label: "Microfones", icon: Cpu },
+      { key: "videoInputDevices", label: "Câmeras", icon: Cpu },
+      { key: "audioOutputDevices", label: "Saídas Áudio", icon: Cpu },
+      { key: "storageQuota", label: "Storage Quota", icon: Cpu, format: v => `${Math.round(v / 1024 / 1024)} MB` },
+      { key: "storageUsage", label: "Storage Usado", icon: Cpu, format: v => `${Math.round(v / 1024 / 1024)} MB` },
+      { key: "jsHeapSizeLimit", label: "JS Heap", icon: Cpu, format: v => `${Math.round(v / 1024 / 1024)} MB` },
+      { key: "usedJSHeapSize", label: "Heap Usado", icon: Cpu, format: v => `${Math.round(v / 1024 / 1024)} MB` },
+      { key: "deviceMemory", label: "Memória", icon: Cpu, format: v => `${v} GB` },
+      { key: "hardwareConcurrency", label: "Núcleos", icon: Cpu },
+    ],
+  },
+  {
+    title: "Fingerprints Avançados", emoji: "🧬",
+    keys: [
+      { key: "audioHash", label: "Áudio FP", icon: Fingerprint },
+      { key: "fontHash", label: "Fontes FP", icon: Fingerprint },
+      { key: "mathHash", label: "Math FP", icon: Fingerprint },
+      { key: "intlHash", label: "Intl FP", icon: Fingerprint },
+      { key: "voicesHash", label: "Voices FP", icon: Fingerprint },
+      { key: "webglExtensionsHash", label: "WebGL Ext", icon: Fingerprint },
+      { key: "webglParams", label: "WebGL Params", icon: Monitor },
+      { key: "webglVendor", label: "WebGL Vendor", icon: Monitor },
+    ],
+  },
+  {
+    title: "Privacidade / Bot", emoji: "🛡️",
+    keys: [
+      { key: "adBlockerDetected", label: "AdBlocker", icon: ShieldAlert, format: v => v ? "⚠️ Detectado" : "Não" },
+      { key: "webdriver", label: "WebDriver", icon: AlertTriangle, format: v => v ? "⚠️ Bot!" : "Não" },
+      { key: "doNotTrack", label: "Do Not Track", icon: Shield },
+      { key: "cookieEnabled", label: "Cookies", icon: Shield, format: v => v ? "Sim" : "Não" },
+      { key: "pdfViewerEnabled", label: "PDF Viewer", icon: Shield, format: v => v ? "Sim" : "Não" },
+    ],
+  },
+  {
+    title: "Navegador / Sistema", emoji: "📱",
+    keys: [
+      { key: "languages", label: "Idiomas", icon: Globe },
+      { key: "uaBrands", label: "UA Brands", icon: Monitor },
+      { key: "uaMobile", label: "UA Mobile", icon: Smartphone, format: v => v ? "Sim" : "Não" },
+      { key: "uaPlatform", label: "UA Platform", icon: Monitor },
+      { key: "timezoneOffset", label: "TZ Offset", icon: Clock, format: v => `${v} min` },
+      { key: "maxTouchPoints", label: "Touch Points", icon: Smartphone },
+    ],
+  },
+];
+
+function AdvancedDataSection({ rawData }: { rawData: Record<string, any> | null }) {
+  const [showJson, setShowJson] = useState(false);
+
+  if (!rawData || Object.keys(rawData).length === 0) return null;
+
+  const renderedKeys = new Set<string>();
+
+  return (
+    <div className="mt-3 space-y-3">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">📡 Dados Avançados</p>
+
+      {RAW_DATA_CATEGORIES.map(cat => {
+        const items = cat.keys.filter(k => rawData[k.key] != null && rawData[k.key] !== "");
+        if (items.length === 0) return null;
+        items.forEach(k => renderedKeys.add(k.key));
+        return (
+          <div key={cat.title}>
+            <p className="text-[10px] font-medium text-muted-foreground mb-1">{cat.emoji} {cat.title}</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+              {items.map(k => (
+                <DetailItem
+                  key={k.key}
+                  icon={k.icon}
+                  label={k.label}
+                  value={k.format ? k.format(rawData[k.key]) : String(rawData[k.key])}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Remaining uncategorized keys */}
+      {(() => {
+        const remaining = Object.keys(rawData).filter(k => !renderedKeys.has(k) && rawData[k] != null && rawData[k] !== "");
+        if (remaining.length === 0) return null;
+        return (
+          <div>
+            <p className="text-[10px] font-medium text-muted-foreground mb-1">📎 Outros</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+              {remaining.map(k => (
+                <DetailItem key={k} icon={FileText} label={k} value={String(rawData[k])} />
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* JSON viewer toggle */}
+      <button
+        onClick={() => setShowJson(!showJson)}
+        className="flex items-center gap-1.5 text-[10px] font-medium text-primary hover:underline"
+      >
+        <FileText className="w-3 h-3" />
+        {showJson ? "Ocultar JSON completo" : "Ver JSON completo"}
+      </button>
+      {showJson && (
+        <pre className="p-3 rounded-lg bg-muted/50 border border-border text-[10px] text-muted-foreground overflow-auto max-h-64 whitespace-pre-wrap break-all">
+          {JSON.stringify(rawData, null, 2)}
+        </pre>
+      )}
     </div>
   );
 }
