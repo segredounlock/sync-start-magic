@@ -48,7 +48,10 @@ function validateStrongPassword(password: string): string | null {
 
     const { email, password, nome, role, saldo } = await req.json();
     if (!email || !password) throw new Error("E-mail e senha são obrigatórios");
-    if (password.length < 6) throw new Error("Senha deve ter no mínimo 6 caracteres");
+
+    // Strong password validation
+    const pwError = validateStrongPassword(password);
+    if (pwError) throw new Error(pwError);
 
     const validRoles = ["admin", "revendedor", "usuario"];
     const assignRole = validRoles.includes(role) ? role : "usuario";
