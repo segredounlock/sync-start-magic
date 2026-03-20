@@ -1168,7 +1168,7 @@ export default function Principal() {
     const lucroMes = cobradoMes - custoApiMes;
     const receitaMes = cobradoMes;
 
-    // Top 5 resellers by volume today
+    // Top resellers by volume today (all users who made recargas)
     const revVolumeMap: Record<string, { nome: string; count: number; total: number }> = {};
     todayRecs.forEach(r => {
       const rev = revendedores.find(rv => rv.id === r.user_id);
@@ -1177,10 +1177,11 @@ export default function Principal() {
       revVolumeMap[r.user_id].count++;
       revVolumeMap[r.user_id].total += r.valor;
     });
-    const topResellers = Object.entries(revVolumeMap)
+    const allTopResellers = Object.entries(revVolumeMap)
       .map(([id, d]) => ({ id, ...d }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
+      .sort((a, b) => b.total - a.total);
+    const topResellers = allTopResellers.slice(0, 10);
+    const totalActiveToday = allTopResellers.length;
 
     // Recent 8 recharges
     const recentRecs = allRecargas.slice(0, 8);
