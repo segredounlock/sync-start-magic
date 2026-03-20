@@ -38,14 +38,11 @@ export function FloatingSupportButton() {
   // Check if support is enabled (realtime + polling fallback)
   const checkEnabled = useCallback(async () => {
     try {
-      const { data, error } = await (supabase.from("system_config") as any)
-        .select("value")
-        .eq("key", "supportEnabled")
-        .maybeSingle();
+      // Use security definer function to bypass RLS issues
+      const { data, error } = await supabase.rpc("get_notif_config", { _key: "supportEnabled" });
       if (error) { console.warn("Support check error:", error.message); }
-      // If no row or value is "true"/null → enabled; only "false" disables
-      const raw = data?.value;
-      const isEnabled = raw !== "false" && raw !== false && String(raw ?? "true") !== "false";
+      const val = String(data ?? "true");
+      const isEnabled = val !== "false";
       setEnabled(isEnabled);
     } catch (e) {
       console.warn("Support check exception:", e);
