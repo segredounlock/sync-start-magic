@@ -49,9 +49,13 @@ export default function Auth() {
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
+  const [requireReferral, setRequireReferral] = useState(true);
 
-  // Prefetch likely next pages while user is on login screen
+  // Load referral requirement + prefetch pages
   useEffect(() => {
+    supabase.from("system_config").select("value").eq("key", "requireReferralCode").maybeSingle()
+      .then(({ data }) => { if (data) setRequireReferral(data.value !== "false"); });
+
     const timer = setTimeout(() => {
       import("@/pages/AdminDashboard").catch(() => {});
       import("@/pages/RevendedorPainel").catch(() => {});
