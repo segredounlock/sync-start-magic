@@ -14,18 +14,31 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [isRecovery, setIsRecovery] = useState(false);
+  const [authState, setAuthState] = useState<"loading" | "recovery" | "invalid">("loading");
 
   useEffect(() => {
-    // Check if this is a recovery session from email link
+    // Check hash immediately
     const hash = window.location.hash;
     if (hash.includes("type=recovery")) {
-      setIsRecovery(true);
+      setAuthState("recovery");
+      return;
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
-        setIsRecovery(true);
+        setAuthState("recovery");
+      }
+    });
+
+    // Check if user already has a session (hash already consumed by Supabase)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setAuthState((prev) => prev === "loading" ? "recovery" : prev);
+      } else {
+        // Give time for onAuthStateChange PASSWORD_RECOVERY to fire
+        setTimeout(() => {
+          setAuthState((prev) => prev === "loading" ? "invalid" : prev);
+        }, 3000);
       }
     });
 
