@@ -49,9 +49,13 @@ export default function Auth() {
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
+  const [requireReferral, setRequireReferral] = useState(true);
 
-  // Prefetch likely next pages while user is on login screen
+  // Load referral requirement + prefetch pages
   useEffect(() => {
+    supabase.from("system_config").select("value").eq("key", "requireReferralCode").maybeSingle()
+      .then(({ data }) => { if (data) setRequireReferral(data.value !== "false"); });
+
     const timer = setTimeout(() => {
       import("@/pages/AdminDashboard").catch(() => {});
       import("@/pages/RevendedorPainel").catch(() => {});
@@ -219,26 +223,24 @@ export default function Auth() {
 
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
-        // Validate referral code is provided
-        if (!referralCode.trim()) {
-          appToast.error("Código de indicação é obrigatório para criar conta");
-          setSubmitting(false);
-          return;
-        }
-
-        // Resolve referral code to reseller ID
+        // Validate referral code if required
         let resellerId: string | null = null;
-        const code = referralCode.trim();
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
-        if (isUuid) {
-          resellerId = code;
-        } else {
-          const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: code });
-          if (resolvedId) resellerId = resolvedId as string;
-        }
-
-        if (!resellerId) {
-          appToast.error("Código de indicação inválido. Verifique e tente novamente.");
+        if (referralCode.trim()) {
+          const code = referralCode.trim();
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
+          if (isUuid) {
+            resellerId = code;
+          } else {
+            const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: code });
+            if (resolvedId) resellerId = resolvedId as string;
+          }
+          if (!resellerId) {
+            appToast.error("Código de indicação inválido. Verifique e tente novamente.");
+            setSubmitting(false);
+            return;
+          }
+        } else if (requireReferral) {
+          appToast.error("Código de indicação é obrigatório para criar conta");
           setSubmitting(false);
           return;
         }
@@ -368,18 +370,20 @@ export default function Auth() {
                 </div>
 
                 {!isLogin && (
-                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
-                    <label className="block text-xs font-semibold text-primary uppercase tracking-wider mb-1.5">Código de Indicação</label>
+                  <div className={`rounded-xl border p-3 ${requireReferral ? 'border-primary/20 bg-primary/5' : 'border-border bg-muted/30'}`}>
+                    <label className="block text-xs font-semibold text-primary uppercase tracking-wider mb-1.5">
+                      Código de Indicação {!requireReferral && <span className="text-muted-foreground font-normal normal-case">(opcional)</span>}
+                    </label>
                     <div className="relative">
                       <TicketCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
                       <input
                         type="text"
                         value={referralCode}
                         onChange={(e) => setReferralCode(e.target.value)}
-                        required={!isLogin}
+                        required={requireReferral && !isLogin}
                         readOnly={!!refParam}
                         className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm uppercase ${refParam ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        placeholder="OBRIGATÓRIO"
+                        placeholder={requireReferral ? "OBRIGATÓRIO" : "Opcional — cole seu código aqui"}
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
