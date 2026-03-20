@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { styledToast as toast } from "@/lib/toast";
 import { formatFullDateTimeBR } from "@/lib/timezone";
 import { confirm } from "@/lib/confirm";
-import { logAdminAction } from "@/lib/auditLog";
+import { logAudit } from "@/lib/auditLog";
 import { InfoCard } from "@/components/InfoCard";
 import { SkeletonRow } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
