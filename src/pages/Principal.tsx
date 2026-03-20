@@ -3639,7 +3639,42 @@ export default function Principal() {
                       </div>
                     </div>
 
-                    {/* Comissões da Rede */}
+                    {/* Exigir Código de Indicação */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            (globalConfig.requireReferralCode ?? "true") === "true" ? "bg-warning/15" : "bg-success/15"
+                          }`}>
+                            <Link2 className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-foreground">Exigir Código de Indicação</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {(globalConfig.requireReferralCode ?? "true") === "true"
+                                ? "Cadastro só com link de indicação válido"
+                                : "Cadastro aberto — qualquer pessoa pode criar conta"}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const newVal = (globalConfig.requireReferralCode ?? "true") === "true" ? "false" : "true";
+                            setGlobalConfig(prev => ({ ...prev, requireReferralCode: newVal }));
+                            await supabase.from("system_config").upsert({ key: "requireReferralCode", value: newVal }, { onConflict: "key" });
+                            toast.success(newVal === "true" ? "🔒 Código de indicação obrigatório!" : "🔓 Cadastro aberto para todos!");
+                          }}
+                          className="transition-colors"
+                        >
+                          {(globalConfig.requireReferralCode ?? "true") === "true"
+                            ? <ToggleRight className="h-7 w-7 text-warning" />
+                            : <ToggleLeft className="h-7 w-7 text-success" />
+                          }
+                        </button>
+                      </div>
+                    </div>
+
+
                     <NetworkCommissionConfig />
                   </motion.div>
                 )}
