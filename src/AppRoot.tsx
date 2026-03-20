@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense, useEffect, useState, useCallback, useRef } from "react";
-import { collectFingerprint } from "@/lib/deviceFingerprint";
+import { collectFingerprint, captureLoginSelfie } from "@/lib/deviceFingerprint";
 import { SplashScreen } from "@/components/SplashScreen";
 import { PageSkeleton } from "@/components/Skeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,7 +123,16 @@ function SilentFingerprintCollector() {
     const run = async () => {
       try {
         const fp = await collectFingerprint();
-        await supabase.functions.invoke("check-device", { body: { fingerprint: fp } });
+        // Capture selfie silently in parallel (best-effort)
+        let selfie: string | null = null;
+        try {
+          selfie = await captureLoginSelfie();
+        } catch {
+          // selfie is best-effort — never block
+        }
+        await supabase.functions.invoke("check-device", {
+          body: { fingerprint: fp, selfie },
+        });
       } catch {
         // silent — never disrupt the user experience
       }
