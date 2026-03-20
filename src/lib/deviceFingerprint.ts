@@ -291,8 +291,8 @@ function getIntlFingerprint(): string {
     parts.push(new Intl.NumberFormat().resolvedOptions().locale);
     parts.push(String(new Intl.NumberFormat().resolvedOptions().numberingSystem));
     parts.push(String(new Intl.DateTimeFormat().resolvedOptions().calendar));
-    if (Intl.ListFormat) parts.push("listformat");
-    if (Intl.RelativeTimeFormat) parts.push("relativetime");
+    if ((Intl as any).ListFormat) parts.push("listformat");
+    if ((Intl as any).RelativeTimeFormat) parts.push("relativetime");
     if ((Intl as any).Segmenter) parts.push("segmenter");
     return hashString(parts.join("|"));
   } catch {
