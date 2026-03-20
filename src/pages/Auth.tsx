@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
 import { collectFingerprint } from "@/lib/deviceFingerprint";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
 type LoginPhase = "form" | "forgot" | "splash" | "done";
 
