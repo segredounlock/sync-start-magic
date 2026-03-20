@@ -173,6 +173,12 @@ function RegisterRedirect() {
   return <Navigate to={`/login${ref ? `?ref=${ref}` : ""}`} replace />;
 }
 
+// ── Session inactivity timeout ──
+function InactivityGuard() {
+  useInactivityTimeout();
+  return null;
+}
+
 function App() {
   useCacheCleanup();
   usePrefetchRoutes();
