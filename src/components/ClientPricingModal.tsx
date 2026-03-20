@@ -36,12 +36,13 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: clientRules }, { data: marginConfig }] = await Promise.all([
+      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: clientRules }, { data: marginConfig }, { data: resellerBaseRules }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", resellerId),
         (supabase.from("client_pricing_rules" as any) as any).select("*").eq("reseller_id", resellerId).eq("client_id", clientId),
         supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
+        supabase.from("reseller_base_pricing_rules").select("*").eq("user_id", resellerId),
       ]);
 
       if (!ops) return;
@@ -59,12 +60,18 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
           const gRule = (globalRules || []).find((r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
           const rRule = (resellerRules || []).find((r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
           const cRule = (clientRules || []).find((r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
+          const rbRule = (resellerBaseRules || []).find((r: any) => r.operadora_id === op.id && Number(r.valor_recarga) === v);
 
           const apiCost = gRule ? Number(gRule.custo) : v;
 
-          // Base cost: apply global margin if enabled (same logic as MeusPrecos)
+          // Base cost priority: reseller_base_pricing_rules → global margin → global pricing_rules → API cost
           let baseCost: number;
-          if (globalMarginEnabled && globalMarginValue > 0 && gRule) {
+          if (rbRule) {
+            // Admin set a custom base cost for this reseller
+            baseCost = rbRule.tipo_regra === "fixo"
+              ? (Number(rbRule.regra_valor) > 0 ? Number(rbRule.regra_valor) : Number(rbRule.custo))
+              : Number(rbRule.custo) * (1 + Number(rbRule.regra_valor) / 100);
+          } else if (globalMarginEnabled && globalMarginValue > 0 && gRule) {
             baseCost = globalMarginType === "percentual"
               ? apiCost * (1 + globalMarginValue / 100)
               : apiCost + globalMarginValue;
@@ -73,7 +80,7 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
               ? (Number(gRule.regra_valor) > 0 ? Number(gRule.regra_valor) : apiCost)
               : apiCost * (1 + Number(gRule.regra_valor) / 100);
           } else {
-            baseCost = apiCost; // No global rule = use API cost (not face value)
+            baseCost = apiCost;
           }
 
           // Default profit = reseller's standard markup
