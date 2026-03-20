@@ -37,12 +37,20 @@ export function FloatingSupportButton() {
 
   // Check if support is enabled (realtime + polling fallback)
   const checkEnabled = useCallback(async () => {
-    const { data } = await (supabase.from("system_config") as any)
-      .select("value")
-      .eq("key", "supportEnabled")
-      .maybeSingle();
-    const val = String(data?.value ?? "true");
-    setEnabled(val !== "false");
+    try {
+      const { data, error } = await (supabase.from("system_config") as any)
+        .select("value")
+        .eq("key", "supportEnabled")
+        .maybeSingle();
+      if (error) { console.warn("Support check error:", error.message); }
+      // If no row or value is "true"/null → enabled; only "false" disables
+      const raw = data?.value;
+      const isEnabled = raw !== "false" && raw !== false && String(raw ?? "true") !== "false";
+      setEnabled(isEnabled);
+    } catch (e) {
+      console.warn("Support check exception:", e);
+      setEnabled(true);
+    }
   }, []);
 
   useEffect(() => {
