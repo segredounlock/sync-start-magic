@@ -68,6 +68,20 @@ interface AuditEntry {
 
 type TabKey = "fingerprints" | "banned" | "audit" | "attempts";
 
+// Selfie modal state
+function SelfieModal({ url, onClose }: { url: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 p-1.5 rounded-full bg-background border border-border shadow-lg">
+          <X className="w-4 h-4" />
+        </button>
+        <img src={url} alt="Selfie de login" className="w-full rounded-xl shadow-2xl border border-border" />
+      </div>
+    </div>
+  );
+}
+
 export function AntifraudSection() {
   const { user } = useAuth();
   const [tab, setTab] = useState<TabKey>("fingerprints");
