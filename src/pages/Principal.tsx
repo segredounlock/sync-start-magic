@@ -15,6 +15,7 @@ import { SaquesSection } from "@/components/SaquesSection";
 import { RedesSection } from "@/components/RedesSection";
 import { lazy, Suspense } from "react";
 const AdminSupport = lazy(() => import("@/pages/AdminSupport"));
+const AntifraudSection = lazy(() => import("@/components/AntifraudSection"));
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -56,7 +57,7 @@ import { confirm } from "@/lib/confirm";
 import { safeValor } from "@/lib/utils";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte" | "antifraude";
 
 type ReportPeriod = "hoje" | "7dias" | "mes" | "total";
 
@@ -1322,6 +1323,7 @@ export default function Principal() {
     { key: "batepapo", icon: Send, label: "Bate-Papo", color: "text-destructive" },
     { key: "suporte", icon: Headphones, label: "Suporte", color: "text-[hsl(30,90%,55%)]", badge: pendingSupportCount },
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
+    { key: "antifraude", icon: Shield, label: "Antifraude", color: "text-destructive" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
 
@@ -1504,6 +1506,7 @@ export default function Principal() {
               {view === "redes" && "Visão consolidada de todos os donos de rede."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "suporte" && "Gerencie tickets de suporte recebidos via Telegram."}
+              {view === "antifraude" && "Monitore dispositivos, gerencie banimentos e logs de segurança."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
           </div>
@@ -4876,10 +4879,13 @@ export default function Principal() {
           {view === "redes" && <RedesSection />}
 
           {/* ===== SUPORTE ===== */}
-          {view === "suporte" && <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>}
+           {view === "suporte" && <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>}
 
-          {/* ===== BACKUP ===== */}
-          {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
+           {/* ===== ANTIFRAUDE ===== */}
+           {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
+
+           {/* ===== BACKUP ===== */}
+           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
         </main>
       </div>
 
