@@ -554,6 +554,27 @@ export function AntifraudSection() {
                                   })()}
                                 </div>
 
+                                {/* Selfie de login */}
+                                {fp.selfie_url && (
+                                  <div className="mt-3 p-3 rounded-xl bg-muted/40 space-y-2">
+                                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                      <User className="h-4 w-4 text-primary" />
+                                      Selfie de Login
+                                    </div>
+                                    <button
+                                      onClick={() => setSelfieModalUrl(fp.selfie_url)}
+                                      className="block rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors"
+                                    >
+                                      <img
+                                        src={fp.selfie_url}
+                                        alt="Selfie de login"
+                                        className="w-24 h-24 object-cover"
+                                      />
+                                    </button>
+                                    <p className="text-[10px] text-muted-foreground">Clique para ampliar</p>
+                                  </div>
+                                )}
+
                                 {/* Advanced raw_data details */}
                                 <AdvancedDataSection rawData={fp.raw_data} />
 
