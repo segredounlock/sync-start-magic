@@ -117,7 +117,7 @@ serve(async (req) => {
       "reseller_config", "reseller_deposit_fees",
       "disabled_recharge_values", "client_pricing_rules", "transactions", "recargas",
       "referral_commissions", "admin_notifications", "banners", "polls", "poll_votes",
-      "follows", "audit_logs", "support_templates", "support_tickets", "support_messages",
+      "follows", "audit_logs", "login_attempts", "support_templates", "support_tickets", "support_messages",
       "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
       "push_subscriptions", "update_history", "scratch_cards",
       "login_fingerprints", "banned_devices",
