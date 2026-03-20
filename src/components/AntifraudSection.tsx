@@ -624,6 +624,78 @@ export function AntifraudSection() {
             </div>
           )}
 
+          {/* ===== LOGIN ATTEMPTS TAB ===== */}
+          {tab === "attempts" && (
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar por email ou IP..."
+                    value={attemptSearch}
+                    onChange={e => setAttemptSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted/50 border border-border text-sm focus:ring-2 focus:ring-primary/30 focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={fetchAttempts}
+                  disabled={loading}
+                  className="p-2.5 rounded-xl bg-muted/50 border border-border hover:bg-muted transition-colors"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+
+              {loading && loginAttempts.length === 0 ? (
+                <div className="space-y-3">{[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}</div>
+              ) : loginAttempts.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Nenhuma tentativa de login registrada</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {loginAttempts
+                    .filter((a: any) => {
+                      if (!attemptSearch.trim()) return true;
+                      const q = attemptSearch.toLowerCase();
+                      return a.email?.toLowerCase().includes(q) || a.ip_address?.toLowerCase().includes(q);
+                    })
+                    .map((attempt: any) => (
+                      <div
+                        key={attempt.id}
+                        className={`rounded-xl border p-3 flex items-center gap-3 ${
+                          attempt.success ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                          attempt.success ? "bg-success/10" : "bg-destructive/10"
+                        }`}>
+                          {attempt.success ? (
+                            <CheckCircle2 className="w-4 h-4 text-success" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-destructive" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{attempt.email}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>IP: {attempt.ip_address || "—"}</span>
+                            <span>•</span>
+                            <span>{attempt.success ? "Sucesso" : "Falha"}</span>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground text-right shrink-0">
+                          {formatFullDateTimeBR(attempt.created_at)}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ===== AUDIT LOG TAB ===== */}
           {tab === "audit" && (
             <div className="space-y-4">
