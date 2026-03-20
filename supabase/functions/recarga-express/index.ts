@@ -732,29 +732,67 @@ Deno.serve(async (req) => {
             }
           }
         } else {
-          const { data: ownRule } = await adminClient
-            .from("reseller_pricing_rules")
-            .select("*")
-            .eq("user_id", userId)
-            .eq("operadora_id", operadoraId)
-            .eq("valor_recarga", catalogValue)
-            .maybeSingle();
-          if (ownRule) {
-            chargedCost = applyRule(ownRule, "reseller_pricing_rules(own)");
-          } else {
-            const { data: ownBaseRule } = await adminClient
-              .from("reseller_base_pricing_rules")
+          // 1. Check client_pricing_rules if user has a reseller
+          let clientPricingApplied = false;
+          if (resellerId) {
+            const { data: clientRule } = await adminClient
+              .from("client_pricing_rules")
+              .select("*")
+              .eq("reseller_id", resellerId)
+              .eq("client_id", userId)
+              .eq("operadora_id", operadoraId)
+              .eq("valor_recarga", catalogValue)
+              .maybeSingle();
+
+            if (clientRule) {
+              // Resolve base cost from reseller's base pricing or global
+              const { data: resellerBaseRule } = await adminClient
+                .from("reseller_base_pricing_rules")
+                .select("*")
+                .eq("user_id", resellerId)
+                .eq("operadora_id", operadoraId)
+                .eq("valor_recarga", catalogValue)
+                .maybeSingle();
+
+              const globalRule = await getGlobalRule();
+              const resolvedBase = resellerBaseRule
+                ? applyRule(resellerBaseRule, "reseller_base_pricing_rules(via_reseller)")
+                : globalRule
+                  ? applyRule(globalRule, "pricing_rules(base_fallback)")
+                  : apiCost;
+
+              chargedCost = resolvedBase + Number(clientRule.lucro);
+              pricingSource = "client_pricing_rules";
+              clientPricingApplied = true;
+            }
+          }
+
+          // 2. Fallback to own rules
+          if (!clientPricingApplied) {
+            const { data: ownRule } = await adminClient
+              .from("reseller_pricing_rules")
               .select("*")
               .eq("user_id", userId)
               .eq("operadora_id", operadoraId)
               .eq("valor_recarga", catalogValue)
               .maybeSingle();
-            if (ownBaseRule) {
-              chargedCost = applyRule(ownBaseRule, "reseller_base_pricing_rules(own)");
+            if (ownRule) {
+              chargedCost = applyRule(ownRule, "reseller_pricing_rules(own)");
             } else {
-              const globalRule = await getGlobalRule();
-              if (globalRule) {
-                chargedCost = applyRule(globalRule, "pricing_rules");
+              const { data: ownBaseRule } = await adminClient
+                .from("reseller_base_pricing_rules")
+                .select("*")
+                .eq("user_id", userId)
+                .eq("operadora_id", operadoraId)
+                .eq("valor_recarga", catalogValue)
+                .maybeSingle();
+              if (ownBaseRule) {
+                chargedCost = applyRule(ownBaseRule, "reseller_base_pricing_rules(own)");
+              } else {
+                const globalRule = await getGlobalRule();
+                if (globalRule) {
+                  chargedCost = applyRule(globalRule, "pricing_rules");
+                }
               }
             }
           }
