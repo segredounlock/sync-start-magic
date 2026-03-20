@@ -51,16 +51,26 @@ export default function Auth() {
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
   const [phase, setPhase] = useState<LoginPhase>("form");
   const [destination, setDestination] = useState("/painel");
-  const [requireReferral, setRequireReferral] = useState(true);
+  const [requireReferral, setRequireReferral] = useState<boolean | null>(null);
 
   // Load referral requirement + prefetch pages
   useEffect(() => {
-    supabase.from("system_config").select("value").eq("key", "requireReferralCode").maybeSingle()
-      .then(({ data }) => { if (data) setRequireReferral(data.value !== "false"); });
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc("get_require_referral_code" as any);
+        if (error) {
+          setRequireReferral(true);
+          return;
+        }
+        setRequireReferral(data === true);
+      } catch {
+        setRequireReferral(true);
+      }
+    })();
 
     const timer = setTimeout(() => {
-      import("@/pages/AdminDashboard").catch(() => {});
-      import("@/pages/RevendedorPainel").catch(() => {});
+      import("@/pages/AdminDashboard").then(() => undefined, () => undefined);
+      import("@/pages/RevendedorPainel").then(() => undefined, () => undefined);
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -89,155 +99,135 @@ export default function Auth() {
     }, 1000);
   }, []);
 
-  const isLocked = lockedUntil !== null && Date.now() < lockedUntil;
-
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotSubmitting, setForgotSubmitting] = useState(false);
-  const [forgotSent, setForgotSent] = useState(false);
-
-  // Splash → done after 1.5s
   useEffect(() => {
-    if (phase === "splash") {
-      const timer = setTimeout(() => setPhase("done"), 1500);
-      return () => clearTimeout(timer);
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const until = Number(localStorage.getItem("loginLockedUntil") || 0);
+    if (until && until > Date.now()) {
+      setFailedAttempts(MAX_ATTEMPTS);
+      const remaining = until - Date.now();
+      setLockedUntil(until);
+      setCooldownRemaining(Math.ceil(remaining / 1000));
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+      cooldownRef.current = setInterval(() => {
+        const secs = Math.ceil((until - Date.now()) / 1000);
+        if (secs <= 0) {
+          clearInterval(cooldownRef.current!);
+          cooldownRef.current = null;
+          setLockedUntil(null);
+          setFailedAttempts(0);
+          setCooldownRemaining(0);
+          localStorage.removeItem("loginLockedUntil");
+        } else {
+          setCooldownRemaining(secs);
+        }
+      }, 1000);
     }
-  }, [phase]);
+  }, []);
 
-  // Redirect if already logged in (but not if we're mid-login)
-  if (!loading && user && phase === "form" && !submitting) {
-    const dest = role === "admin" ? "/principal" : "/painel";
-    return <Navigate to={dest} replace />;
-  }
+  useEffect(() => {
+    if (failedAttempts >= MAX_ATTEMPTS && !lockedUntil) {
+      startCooldown();
+      const until = Date.now() + COOLDOWN_MS;
+      localStorage.setItem("loginLockedUntil", String(until));
+    }
+  }, [failedAttempts, lockedUntil, startCooldown]);
 
-  if (phase === "done") {
-    return <Navigate to={destination} replace />;
-  }
+  const resetCooldown = () => {
+    setFailedAttempts(0);
+    setLockedUntil(null);
+    setCooldownRemaining(0);
+    localStorage.removeItem("loginLockedUntil");
+    if (cooldownRef.current) {
+      clearInterval(cooldownRef.current);
+      cooldownRef.current = null;
+    }
+  };
 
-  if (phase === "splash") {
-    return <SplashScreen />;
-  }
+  useEffect(() => {
+    if (!loading && user) {
+      navigate(role === "admin" ? "/principal" : "/painel", { replace: true });
+    }
+  }, [user, role, loading, navigate]);
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!forgotEmail.trim()) return;
-    setForgotSubmitting(true);
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      appToast.error("Digite seu e-mail para recuperar a senha");
+      return;
+    }
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      setSubmitting(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      setForgotSent(true);
-      appToast.emailSent("E-mail de recuperação enviado!");
+      appToast.success("Enviamos o link de recuperação para seu e-mail");
+      setPhase("done");
     } catch (err: any) {
-      appToast.error(translateAuthError(err.message));
+      appToast.error(translateAuthError(err?.message || "Erro ao enviar recuperação"));
     } finally {
-      setForgotSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const isValidEmail = (val: string): boolean => {
-    // Regex completa: user@domain.tld (TLD de 2-10 chars, sem caracteres extras)
-    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/.test(val.trim());
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin && isLocked) {
-      appToast.blocked(`Muitas tentativas. Aguarde ${cooldownRemaining}s`);
+    if (submitting) return;
+    if (lockedUntil && lockedUntil > Date.now()) {
+      appToast.error(`Muitas tentativas. Aguarde ${cooldownRemaining}s.`);
       return;
-    }
-    if (!isValidEmail(email)) {
-      appToast.error("Digite um e-mail válido (ex: nome@email.com)");
-      return;
-    }
-    // Password strength check on signup
-    if (!isLogin) {
-      const pwCheck = validatePassword(password);
-      if (!pwCheck.valid) {
-        appToast.error(pwCheck.errors[0] || "Senha não atende os requisitos de segurança");
-        return;
-      }
     }
 
-    setSubmitting(true);
     try {
+      setSubmitting(true);
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
-          const newAttempts = failedAttempts + 1;
-          setFailedAttempts(newAttempts);
-          if (newAttempts >= MAX_ATTEMPTS) {
-            startCooldown();
-            appToast.blocked(`Bloqueado por 60 segundos após ${MAX_ATTEMPTS} tentativas`);
-          }
+          setFailedAttempts((p) => p + 1);
           throw error;
         }
-        setFailedAttempts(0);
-        // Save or clear remembered email
-        if (rememberMe) {
-          localStorage.setItem("rememberMe", "true");
-          localStorage.setItem("rememberedEmail", email);
-        } else {
-          localStorage.removeItem("rememberMe");
-          localStorage.removeItem("rememberedEmail");
-        }
-        // Clean up any legacy stored password
-        localStorage.removeItem("rememberedPass");
-        const { data: { session: freshSession } } = await supabase.auth.getSession();
-        const userId = freshSession?.user?.id || "";
-        if (!userId) { appToast.error("Erro ao obter sessão"); setSubmitting(false); return; }
-        // Retry role check to handle race condition with trigger
-        const rolePriority = ["admin", "revendedor", "cliente", "usuario", "user"];
-        let resolvedRole: string | null = null;
+        resetCooldown();
 
-        for (let i = 0; i < 3; i++) {
-          const { data, error } = await supabase
-            .from("user_roles")
-            .select("role, created_at")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false });
-
-          if (error) throw error;
-
-          if (data && data.length > 0) {
-            const roles = data.map((r) => r.role);
-            resolvedRole = rolePriority.find((r) => roles.includes(r)) || roles[0] || null;
-            break;
-          }
-
-          if (i < 2) await new Promise((r) => setTimeout(r, 1000));
-        }
-
-        if (!resolvedRole) {
-          await supabase.auth.signOut();
-          appToast.authError("Sua conta ainda não possui um cargo atribuído. Aguarde a aprovação ou contate o administrador.");
-          setSubmitting(false);
-          return;
-        }
-
-        // ── Fingerprint & device ban check (non-blocking for UX but blocks banned) ──
+        let resolvedRole = role;
         try {
-          const [fingerprint, selfieBase64] = await Promise.all([
-            collectFingerprint(),
-            captureLoginSelfie(),
-          ]);
-          const { data: deviceResult } = await supabase.functions.invoke("check-device", {
-            body: { fingerprint, selfie: selfieBase64 },
+          const fp = await collectFingerprint();
+          const { data: deviceResult, error: deviceError } = await supabase.functions.invoke("check-device", {
+            body: { fingerprint: fp },
           });
-          if (deviceResult?.banned) {
+
+          if (deviceError) {
+            console.warn("Fingerprint check failed:", deviceError);
+          } else if (deviceResult?.blocked) {
             await supabase.auth.signOut();
-            appToast.blocked("Seu acesso foi bloqueado permanentemente. Contate o suporte.");
+            appToast.error(deviceResult.message || "Acesso bloqueado para este dispositivo.");
             setSubmitting(false);
             return;
+          } else if (deviceResult?.shouldSelfie) {
+            try {
+              const selfie = await captureLoginSelfie();
+              await supabase.functions.invoke("check-device", {
+                body: { fingerprint: fp, selfie },
+              });
+            } catch (selfieErr) {
+              console.warn("Selfie capture skipped/failed:", selfieErr);
+            }
           }
         } catch (fpErr) {
-          // Não bloqueia login se fingerprint falhar — apenas loga
           console.warn("Fingerprint check failed:", fpErr);
         }
 
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
-        // Validate referral code if required
+        if (requireReferral === null) {
+          appToast.error("Aguarde um instante e tente novamente.");
+          setSubmitting(false);
+          return;
+        }
+
         let resellerId: string | null = null;
         if (referralCode.trim()) {
           const code = referralCode.trim();
@@ -253,8 +243,15 @@ export default function Auth() {
             setSubmitting(false);
             return;
           }
-        } else if (requireReferral) {
+        } else if (requireReferral === true) {
           appToast.error("Código de indicação é obrigatório para criar conta");
+          setSubmitting(false);
+          return;
+        }
+
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.valid) {
+          appToast.error(passwordValidation.errors[0]);
           setSubmitting(false);
           return;
         }
@@ -266,72 +263,146 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        // reseller_id is now handled by the handle_new_user trigger via metadata
+        if (!signUpData.user) {
+          throw new Error("Não foi possível criar a conta");
+        }
 
-        setDestination("/painel");
+        setPhase("splash");
+        setTimeout(() => setPhase("done"), 1800);
+        return;
       }
-      if (!isLogin) appToast.success("Conta criada com sucesso!");
+
       setPhase("splash");
+      setTimeout(() => navigate(destination, { replace: true }), 1200);
     } catch (err: any) {
-      const msg = translateAuthError(err.message);
-      appToast.authError(msg);
+      appToast.error(translateAuthError(err?.message || "Erro na autenticação"));
       setSubmitting(false);
     }
   };
 
-  if (loading) {
-    return <SplashScreen />;
-  }
+  if (loading) return <SplashScreen />;
+  if (user) return <Navigate to={role === "admin" ? "/principal" : "/painel"} replace />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-      
-      <div className="absolute top-4 right-4 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </Link>
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-10">
+      <AnimatePresence mode="wait">
+        {phase === "splash" ? (
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl border border-border/50 ring-1 ring-primary/20 mx-auto mb-4"
+            key="splash"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="w-full max-w-md"
           >
-            <img src={logo} alt="Recargas Brasil" className="w-full h-full object-cover" />
+            <SplashScreen />
           </motion.div>
-          <h1 className="font-display text-2xl font-bold shimmer-letters">
-            Recargas <span className="brasil-word">Brasil</span>
-          </h1>
-          <p className="text-muted-foreground text-xs mt-2 tracking-wide uppercase">
-            Sistema de recargas para revendedores
-          </p>
-        </div>
+        ) : phase === "done" ? (
+          <motion.div
+            key="done"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="w-full max-w-md bg-card border border-border rounded-3xl shadow-2xl p-8 text-center"
+          >
+            <CheckCircle className="mx-auto h-14 w-14 text-primary mb-4" />
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              {isLogin ? "Entrando..." : "Conta criada!"}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {isLogin ? "Redirecionando você agora." : "Confira seu e-mail para confirmar o cadastro antes de entrar."}
+            </p>
+            {!isLogin && (
+              <button
+                onClick={() => {
+                  setPhase("form");
+                  setIsLogin(true);
+                }}
+                className="mt-6 text-sm text-primary hover:underline"
+              >
+                Ir para o login
+              </button>
+            )}
+          </motion.div>
+        ) : phase === "forgot" ? (
+          <motion.div
+            key="forgot"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="w-full max-w-md bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl p-6 sm:p-8"
+          >
+            <div className="text-center mb-6">
+              <img src={logo} alt="Recargas Brasil" className="w-20 h-20 object-cover rounded-2xl mx-auto mb-4 shadow-lg" />
+              <h1 className="text-2xl font-bold text-foreground">Recuperar senha</h1>
+              <p className="text-muted-foreground text-sm mt-2">Digite seu e-mail para receber o link de redefinição.</p>
+            </div>
 
-        {/* Form Card */}
-        <AnimatePresence>
-          {phase === "form" && (
-            <motion.div
-              key="card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20, transition: { duration: 0.3 } }}
-              transition={{ duration: 0.4 }}
-              className="rounded-2xl border border-border bg-card p-6 relative shadow-lg"
-            >
-              {/* Tabs */}
-              <div className="flex mb-6 rounded-xl overflow-hidden bg-muted/50 p-1">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">E-mail</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-3 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
+                    placeholder="voce@email.com"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleForgotPassword}
+                disabled={submitting}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-70"
+              >
+                {submitting ? "Enviando..." : "Enviar link de recuperação"}
+              </button>
+
+              <button
+                onClick={() => setPhase("form")}
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Voltar
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="w-full max-w-md"
+          >
+            <div className="text-center mb-6">
+              <img src={logo} alt="Recargas Brasil" className="w-24 h-24 object-cover rounded-3xl mx-auto mb-4 shadow-xl" />
+              <h1 className="text-4xl font-black tracking-tight text-foreground">
+                Recargas <span className="text-primary">Brasil</span>
+              </h1>
+              <p className="text-muted-foreground mt-2 text-sm tracking-wide">SISTEMA DE RECARGAS PARA REVENDEDORES</p>
+            </div>
+
+            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl p-6 sm:p-8">
+              <div className="grid grid-cols-2 gap-2 bg-muted/50 rounded-2xl p-1.5 mb-6">
                 <button
                   type="button"
                   onClick={() => setIsLogin(true)}
-                  disabled={submitting}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                    isLogin
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                  className={`py-3 rounded-xl font-semibold text-sm transition-all ${
+                    isLogin ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Entrar
@@ -339,51 +410,48 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => setIsLogin(false)}
-                  disabled={submitting}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                    !isLogin
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                  className={`py-3 rounded-xl font-semibold text-sm transition-all ${
+                    !isLogin ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Cadastrar
                 </button>
               </div>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleAuth} className="space-y-4">
                 {!isLogin && (
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Nome</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
                       <input
                         type="text"
                         value={nome}
                         onChange={(e) => setNome(e.target.value)}
                         required={!isLogin}
-                        className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
+                        className="w-full pl-10 pr-3 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
                         placeholder="Seu nome completo"
                       />
                     </div>
                   </div>
                 )}
+
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">E-mail</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
-                      placeholder="seu@email.com"
+                      className="w-full pl-10 pr-3 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
+                      placeholder="voce@email.com"
                     />
                   </div>
                 </div>
 
-                {!isLogin && (requireReferral || refParam) && (
+                {!isLogin && (requireReferral === true || !!refParam) && (
                   <div className="rounded-xl border p-3 border-primary/20 bg-primary/5">
                     <label className="block text-xs font-semibold text-primary uppercase tracking-wider mb-1.5">
                       Código de Indicação
@@ -394,7 +462,7 @@ export default function Auth() {
                         type="text"
                         value={referralCode}
                         onChange={(e) => setReferralCode(e.target.value)}
-                        required={requireReferral && !isLogin}
+                        required={requireReferral === true && !isLogin}
                         readOnly={!!refParam}
                         className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm uppercase ${refParam ? 'opacity-70 cursor-not-allowed' : ''}`}
                         placeholder="OBRIGATÓRIO"
@@ -405,165 +473,87 @@ export default function Auth() {
                     </p>
                   </div>
                 )}
+
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Senha</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      minLength={isLogin ? 6 : 8}
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
+                      className="w-full pl-10 pr-3 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
                       placeholder={isLogin ? "Sua senha" : "Mínimo 8 caracteres"}
                     />
                   </div>
-                  {!isLogin && <PasswordStrengthMeter password={password} />}
+                  {!isLogin && password && <PasswordStrengthMeter password={password} />}
                 </div>
 
                 {isLogin && (
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <label className="inline-flex items-center gap-2 text-muted-foreground cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-border bg-muted/50 text-primary focus:ring-primary/30 accent-primary"
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setRememberMe(checked);
+                          localStorage.setItem("rememberMe", String(checked));
+                          if (!checked) localStorage.removeItem("rememberedEmail");
+                        }}
+                        className="rounded border-border text-primary focus:ring-primary/30"
                       />
-                      <span className="text-xs text-muted-foreground">Lembrar-me</span>
+                      Lembrar e-mail
                     </label>
                     <button
                       type="button"
-                      onClick={() => { setPhase("forgot"); setForgotEmail(email); setForgotSent(false); }}
-                      className="text-xs text-primary hover:underline font-medium"
+                      onClick={() => setPhase("forgot")}
+                      className="text-primary hover:underline"
                     >
-                      Esqueci minha senha
+                      Esqueci a senha
                     </button>
                   </div>
                 )}
 
-                {isLocked && (
-                  <div className="text-center py-2 px-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
-                    🔒 Bloqueado — tente novamente em {cooldownRemaining}s
+                {lockedUntil && lockedUntil > Date.now() && (
+                  <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                    Muitas tentativas. Aguarde {cooldownRemaining}s para tentar novamente.
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  disabled={submitting || isLocked}
-                  className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50 glow-primary"
+                  disabled={submitting || (!!lockedUntil && lockedUntil > Date.now()) || requireReferral === null}
+                  className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-base hover:opacity-90 transition disabled:opacity-70"
                 >
-                  {submitting ? "Aguarde..." : isLogin ? "Entrar" : "Criar conta"}
+                  {submitting ? "Processando..." : isLogin ? "Entrar" : "Criar conta"}
                 </button>
               </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
 
-        {/* Install App Button */}
-        {phase === "form" && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-            className="mt-4"
-          >
-            <Link
-              to="/instalar"
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-lg hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.98]"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <motion.div
-                  animate={{ y: [0, -2, 0] }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                >
-                  <Smartphone className="w-5 h-5 text-primary" />
-                </motion.div>
+            <div className="mt-4 bg-card/90 border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Smartphone className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-semibold text-foreground leading-tight">Instalar App no celular</h2>
+                  <p className="text-sm text-muted-foreground">Acesse mais rápido direto da tela inicial</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">Instalar App no celular</p>
-                <p className="text-[11px] text-muted-foreground">Acesse mais rápido direto da tela inicial</p>
-              </div>
-              <motion.div
-                animate={{ x: [0, 3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              <button
+                type="button"
+                onClick={() => navigate("/instalar")}
+                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Ver instruções para instalar app"
               >
-                <Download className="w-4 h-4 text-muted-foreground" />
-              </motion.div>
-            </Link>
+                <Download className="h-5 w-5" />
+              </button>
+            </div>
           </motion.div>
         )}
-
-        {/* Forgot Password Panel */}
-        <AnimatePresence>
-          {phase === "forgot" && (
-            <motion.div
-              key="forgot"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="rounded-2xl border border-border bg-card p-6 shadow-lg"
-            >
-              <div className="text-center mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-3">
-                  <Mail className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-lg font-bold text-foreground">Recuperar Senha</h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {forgotSent
-                    ? "Verifique seu e-mail para redefinir a senha"
-                    : "Digite seu e-mail para receber o link de recuperação"}
-                </p>
-              </div>
-
-              {!forgotSent ? (
-                <form onSubmit={handleForgotPassword} className="space-y-4">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="email"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      required
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
-                      placeholder="seu@email.com"
-                      autoFocus
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={forgotSubmitting}
-                    className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50 glow-primary"
-                  >
-                    {forgotSubmitting ? "Enviando..." : "Enviar link"}
-                  </button>
-                </form>
-              ) : (
-                <div className="text-center py-4">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", damping: 10 }}
-                    className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center mx-auto mb-3"
-                  >
-                    <CheckCircle className="h-6 w-6 text-primary" />
-                  </motion.div>
-                  <p className="text-sm text-muted-foreground">E-mail enviado com sucesso!</p>
-                </div>
-              )}
-
-              <button
-                onClick={() => { setPhase("form"); setForgotSent(false); }}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mt-4 mx-auto transition-colors font-medium"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Voltar ao login
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      </AnimatePresence>
     </div>
   );
 }
