@@ -383,10 +383,10 @@ export default function Auth() {
                   </div>
                 </div>
 
-                {!isLogin && (
-                  <div className={`rounded-xl border p-3 ${requireReferral ? 'border-primary/20 bg-primary/5' : 'border-border bg-muted/30'}`}>
+                {!isLogin && (requireReferral || refParam) && (
+                  <div className="rounded-xl border p-3 border-primary/20 bg-primary/5">
                     <label className="block text-xs font-semibold text-primary uppercase tracking-wider mb-1.5">
-                      Código de Indicação {!requireReferral && <span className="text-muted-foreground font-normal normal-case">(opcional)</span>}
+                      Código de Indicação
                     </label>
                     <div className="relative">
                       <TicketCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
@@ -397,7 +397,7 @@ export default function Auth() {
                         required={requireReferral && !isLogin}
                         readOnly={!!refParam}
                         className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm uppercase ${refParam ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        placeholder={requireReferral ? "OBRIGATÓRIO" : "Opcional — cole seu código aqui"}
+                        placeholder="OBRIGATÓRIO"
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
