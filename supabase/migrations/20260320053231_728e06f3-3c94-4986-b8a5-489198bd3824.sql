@@ -1,0 +1,1 @@
+ALTER TABLE public.telegram_users REPLICA IDENTITY FULL;
