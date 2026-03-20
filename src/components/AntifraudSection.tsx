@@ -91,6 +91,7 @@ export function AntifraudSection() {
   const [fingerprints, setFingerprints] = useState<FingerprintRecord[]>([]);
   const [fpSearch, setFpSearch] = useState("");
   const [expandedFp, setExpandedFp] = useState<string | null>(null);
+  const [selfieModalUrl, setSelfieModalUrl] = useState<string | null>(null);
 
   // Banned devices state
   const [bannedDevices, setBannedDevices] = useState<BannedDevice[]>([]);
