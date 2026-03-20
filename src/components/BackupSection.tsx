@@ -19,7 +19,7 @@ const TABLES_LABEL = "dinâmico";
 
 const SOURCE_PATHS = [
   // Core
-  "src/App.tsx","src/AppRoot.tsx","src/main.tsx","src/index.css","src/styles/app.css","src/vite-env.d.ts",
+  "src/AppRoot.tsx","src/main.tsx","src/index.css","src/styles/app.css","src/vite-env.d.ts",
   // Pages
   "src/pages/AdminDashboard.tsx","src/pages/AdminSupport.tsx","src/pages/Auth.tsx","src/pages/ChatApp.tsx",
   "src/pages/ClientePortal.tsx","src/pages/ClientSupport.tsx","src/pages/DocsRede.tsx",
