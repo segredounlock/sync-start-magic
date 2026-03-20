@@ -12,6 +12,7 @@ import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
 import { useCacheCleanup } from "@/hooks/useCacheCleanup";
 import { usePresenceTracker } from "@/hooks/usePresence";
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 // Lazy load ALL pages
 const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
@@ -172,6 +173,12 @@ function RegisterRedirect() {
   return <Navigate to={`/login${ref ? `?ref=${ref}` : ""}`} replace />;
 }
 
+// ── Session inactivity timeout ──
+function InactivityGuard() {
+  useInactivityTimeout();
+  return null;
+}
+
 function App() {
   useCacheCleanup();
   usePrefetchRoutes();
@@ -181,6 +188,7 @@ function App() {
       <AuthProvider>
         <GlobalPresence />
         <SilentFingerprintCollector />
+        <InactivityGuard />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>

@@ -64,7 +64,7 @@ interface AuditEntry {
   created_at: string;
 }
 
-type TabKey = "fingerprints" | "banned" | "audit";
+type TabKey = "fingerprints" | "banned" | "audit" | "attempts";
 
 export function AntifraudSection() {
   const { user } = useAuth();
@@ -85,8 +85,12 @@ export function AntifraudSection() {
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([]);
   const [auditFilter, setAuditFilter] = useState("");
 
+  // Login attempts state
+  const [loginAttempts, setLoginAttempts] = useState<any[]>([]);
+  const [attemptSearch, setAttemptSearch] = useState("");
+
   // Stats
-  const [stats, setStats] = useState({ totalFingerprints: 0, uniqueUsers: 0, bannedActive: 0, suspiciousIps: 0 });
+  const [stats, setStats] = useState({ totalFingerprints: 0, uniqueUsers: 0, bannedActive: 0, suspiciousIps: 0, failedAttempts: 0 });
 
   // ── Fetch fingerprints ──
   const fetchFingerprints = useCallback(async () => {
@@ -177,11 +181,32 @@ export function AntifraudSection() {
     }
   }, []);
 
+  // ── Fetch login attempts ──
+  const fetchAttempts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("login_attempts" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      const attempts = (data || []) as any[];
+      setLoginAttempts(attempts);
+      setStats(prev => ({ ...prev, failedAttempts: attempts.filter((a: any) => !a.success).length }));
+    } catch (err: any) {
+      toast.error("Erro ao carregar tentativas: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (tab === "fingerprints") fetchFingerprints();
     else if (tab === "banned") fetchBanned();
     else if (tab === "audit") fetchAudit();
-  }, [tab, fetchFingerprints, fetchBanned, fetchAudit]);
+    else if (tab === "attempts") fetchAttempts();
+  }, [tab, fetchFingerprints, fetchBanned, fetchAudit, fetchAttempts]);
 
   // ── Ban device from fingerprint ──
   const banDevice = async (fp: FingerprintRecord) => {
@@ -293,8 +318,9 @@ export function AntifraudSection() {
 
   const tabs: { key: TabKey; label: string; icon: any; count?: number }[] = [
     { key: "fingerprints", label: "Fingerprints", icon: Fingerprint, count: stats.totalFingerprints },
-    { key: "banned", label: "Dispositivos Banidos", icon: Ban, count: stats.bannedActive },
-    { key: "audit", label: "Logs Antifraude", icon: FileText, count: auditLogs.length },
+    { key: "banned", label: "Banidos", icon: Ban, count: stats.bannedActive },
+    { key: "attempts", label: "Tentativas", icon: Clock, count: stats.failedAttempts },
+    { key: "audit", label: "Logs", icon: FileText, count: auditLogs.length },
   ];
 
   // Check if a fingerprint is already banned
@@ -598,6 +624,78 @@ export function AntifraudSection() {
             </div>
           )}
 
+          {/* ===== LOGIN ATTEMPTS TAB ===== */}
+          {tab === "attempts" && (
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar por email ou IP..."
+                    value={attemptSearch}
+                    onChange={e => setAttemptSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted/50 border border-border text-sm focus:ring-2 focus:ring-primary/30 focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={fetchAttempts}
+                  disabled={loading}
+                  className="p-2.5 rounded-xl bg-muted/50 border border-border hover:bg-muted transition-colors"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+
+              {loading && loginAttempts.length === 0 ? (
+                <div className="space-y-3">{[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}</div>
+              ) : loginAttempts.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Nenhuma tentativa de login registrada</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {loginAttempts
+                    .filter((a: any) => {
+                      if (!attemptSearch.trim()) return true;
+                      const q = attemptSearch.toLowerCase();
+                      return a.email?.toLowerCase().includes(q) || a.ip_address?.toLowerCase().includes(q);
+                    })
+                    .map((attempt: any) => (
+                      <div
+                        key={attempt.id}
+                        className={`rounded-xl border p-3 flex items-center gap-3 ${
+                          attempt.success ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                          attempt.success ? "bg-success/10" : "bg-destructive/10"
+                        }`}>
+                          {attempt.success ? (
+                            <CheckCircle2 className="w-4 h-4 text-success" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-destructive" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{attempt.email}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>IP: {attempt.ip_address || "—"}</span>
+                            <span>•</span>
+                            <span>{attempt.success ? "Sucesso" : "Falha"}</span>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground text-right shrink-0">
+                          {formatFullDateTimeBR(attempt.created_at)}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ===== AUDIT LOG TAB ===== */}
           {tab === "audit" && (
             <div className="space-y-4">
@@ -697,6 +795,9 @@ function formatActionLabel(action: string): string {
     unban_device: "Ban desativado",
     reban_device: "Ban reativado",
     delete_ban: "Ban excluído",
+    new_device_detected: "🆕 Novo dispositivo detectado",
+    rate_limited_login: "⚠️ Login bloqueado por rate limit",
+    banned_device_login_blocked: "🚫 Login bloqueado (dispositivo banido)",
   };
   return labels[action] || action;
 }

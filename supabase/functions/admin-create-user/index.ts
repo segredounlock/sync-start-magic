@@ -6,7 +6,23 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+const COMMON_PASSWORDS = [
+  "123456", "12345678", "123456789", "1234567890", "password", "qwerty",
+  "abc123", "111111", "123123", "admin123", "letmein", "welcome",
+  "monkey", "dragon", "master", "login", "princess", "football",
+  "shadow", "sunshine", "trustno1", "iloveyou", "batman", "access",
+  "hello123", "charlie", "donald", "password1", "qwerty123", "senha",
+  "senha123", "mudar123", "brasil", "brasil123", "recargas", "recargas123",
+];
+
+function validateStrongPassword(password: string): string | null {
+  if (password.length < 8) return "Senha deve ter no mínimo 8 caracteres";
+  if (!/[A-Z]/.test(password)) return "Senha deve conter pelo menos 1 letra maiúscula";
+  if (!/[0-9]/.test(password)) return "Senha deve conter pelo menos 1 número";
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) return "Senha deve conter pelo menos 1 caractere especial";
+  if (COMMON_PASSWORDS.includes(password.toLowerCase())) return "Essa senha é muito comum e insegura";
+  return null;
+}
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -32,7 +48,10 @@ serve(async (req) => {
 
     const { email, password, nome, role, saldo } = await req.json();
     if (!email || !password) throw new Error("E-mail e senha são obrigatórios");
-    if (password.length < 6) throw new Error("Senha deve ter no mínimo 6 caracteres");
+
+    // Strong password validation
+    const pwError = validateStrongPassword(password);
+    if (pwError) throw new Error(pwError);
 
     const validRoles = ["admin", "revendedor", "usuario"];
     const assignRole = validRoles.includes(role) ? role : "usuario";

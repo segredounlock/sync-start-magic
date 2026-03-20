@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
 import { collectFingerprint } from "@/lib/deviceFingerprint";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
 type LoginPhase = "form" | "forgot" | "splash" | "done";
 
@@ -148,6 +150,15 @@ export default function Auth() {
       appToast.error("Digite um e-mail válido (ex: nome@email.com)");
       return;
     }
+    // Password strength check on signup
+    if (!isLogin) {
+      const pwCheck = validatePassword(password);
+      if (!pwCheck.valid) {
+        appToast.error(pwCheck.errors[0] || "Senha não atende os requisitos de segurança");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       if (isLogin) {
@@ -400,11 +411,12 @@ export default function Auth() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      minLength={6}
+                      minLength={isLogin ? 6 : 8}
                       className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder={isLogin ? "Sua senha" : "Mínimo 8 caracteres"}
                     />
                   </div>
+                  {!isLogin && <PasswordStrengthMeter password={password} />}
                 </div>
 
                 {isLogin && (

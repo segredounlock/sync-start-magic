@@ -607,6 +607,30 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       login_fingerprints: {
         Row: {
           canvas_hash: string | null
@@ -1715,6 +1739,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_old_login_attempts: { Args: never; Returns: undefined }
       export_schema_info: { Args: never; Returns: Json }
       generate_unique_slug: {
         Args: { p_nome: string; p_user_id: string }
