@@ -474,6 +474,7 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
             );
           })}
         </div>
+        </>
       )}
       {/* Client Pricing Modal */}
       <ClientPricingModal
