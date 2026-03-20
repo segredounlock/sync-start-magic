@@ -1,42 +1,35 @@
 
 
-## Problem
+## Diagnóstico Confirmado
 
-The public profile page (`/p/:slug`) shows no prices because the RPC `get_public_reseller_pricing` only looks at `reseller_pricing_rules` (the reseller's custom network margins). Most users rely on the global `pricing_rules` table or `reseller_base_pricing_rules` for their pricing, so the query returns empty.
+Exatamente isso. O código atual trata todos os usuários igual — prioriza `reseller_pricing_rules` (preço de VENDA para a rede) sobre `reseller_base_pricing_rules` (CUSTO real do usuário). Para um "usuario" que não tem rede, o que importa é o custo que o admin definiu para ele (`reseller_base_pricing_rules`), não o preço de venda.
 
-## Solution
+```text
+Lógica ATUAL (bugada para usuario):
+  1. reseller_pricing_rules  ← preço de VENDA (ex: R$ 28,00) ❌ mostra isso
+  2. reseller_base_pricing_rules ← custo real (ex: R$ 11,50)
+  3. margem padrão global
+  4. pricing_rules global
 
-Recreate the `get_public_reseller_pricing` RPC to follow the same pricing hierarchy used elsewhere in the system:
+  Edge Function cobra: reseller_base_pricing_rules → R$ 11,50
+  UI mostra: reseller_pricing_rules → R$ 28,00
+  → CONFLITO ❌
 
-1. **Priority 1**: `reseller_pricing_rules` (user's own custom pricing for their network)
-2. **Priority 2**: `reseller_base_pricing_rules` (admin-customized base cost for this user) — compute price as `regra_valor` (the selling price)
-3. **Priority 3**: `pricing_rules` (global admin pricing) — use `regra_valor` as the margin
-
-The function should return the final customer-facing price for each carrier/value combination, filtering only active carriers and non-disabled values.
-
-## Changes
-
-### 1. Database Migration — Recreate `get_public_reseller_pricing`
-
-New logic:
-- Find the user by slug
-- For each active operadora + valor_recarga, resolve the price using the hierarchy above
-- Exclude disabled values from `disabled_recharge_values`
-- Return `operadora_nome`, `valor_recarga`, and the computed `preco_cliente` (what the customer pays)
-
-### 2. Frontend Update — `src/pages/PublicProfile.tsx`
-
-- Update the pricing display to use the new return format (`preco_cliente` instead of computing from `regra_valor`/`tipo_regra`)
-- Remove the `computePrice` function since the RPC now returns the final price directly
-
-## Technical Detail
-
-```sql
--- Pseudocode for the new RPC
-FOR each pricing_rules row (active operadora, not disabled):
-  1. Check reseller_pricing_rules for user → use regra_valor as price
-  2. Else check reseller_base_pricing_rules → use regra_valor as price  
-  3. Else use pricing_rules.regra_valor (global) applied to valor_recarga
-  Return (operadora_nome, valor_recarga, preco_cliente)
+Lógica CORRIGIDA (quando NÃO é client mode):
+  1. reseller_base_pricing_rules ← custo real (ex: R$ 11,50) ✅
+  2. margem padrão global
+  3. pricing_rules global
+  (reseller_pricing_rules só usado em client mode)
 ```
+
+## Plano
+
+### Arquivo: `src/pages/RevendedorPainel.tsx` — função `fetchCatalog` (~linhas 235-260)
+
+Inverter a prioridade quando `isClientMode = false`:
+
+- **Se `isClientMode = true`** (cliente vendo loja): manter ordem atual — `reseller_pricing_rules` → `reseller_base_pricing_rules` → margem global → global
+- **Se `isClientMode = false`** (usuario/revendedor vendo seu painel): pular `reseller_pricing_rules` — usar `reseller_base_pricing_rules` → margem global → global
+
+Isso alinha a exibição do catálogo com a lógica de cobrança da Edge Function `recarga-express`, que já usa `reseller_base_pricing_rules` como custo real.
 
