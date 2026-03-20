@@ -4879,10 +4879,13 @@ export default function Principal() {
           {view === "redes" && <RedesSection />}
 
           {/* ===== SUPORTE ===== */}
-          {view === "suporte" && <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>}
+           {view === "suporte" && <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>}
 
-          {/* ===== BACKUP ===== */}
-          {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
+           {/* ===== ANTIFRAUDE ===== */}
+           {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
+
+           {/* ===== BACKUP ===== */}
+           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
         </main>
       </div>
 
