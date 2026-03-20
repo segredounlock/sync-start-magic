@@ -118,7 +118,7 @@ export function FloatingSupportButton() {
     }
   };
 
-  if (!user || shouldHide || role === "admin" || channelsLoading) return null;
+  if (!user || shouldHide || role === "admin" || channelsLoading || enabled === null) return null;
 
   // When disabled AND no custom channels, show offline button
   if (!enabled && !isCustom) {
