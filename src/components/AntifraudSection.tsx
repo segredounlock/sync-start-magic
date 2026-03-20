@@ -349,6 +349,8 @@ export function AntifraudSection() {
   useEffect(() => { fetchBanned(); }, [fetchBanned]);
 
   return (
+    <>
+    {selfieModalUrl && <SelfieModal url={selfieModalUrl} onClose={() => setSelfieModalUrl(null)} />}
     <div className="space-y-6">
       {/* Header */}
       <InfoCard
