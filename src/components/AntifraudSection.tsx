@@ -90,6 +90,8 @@ export function AntifraudSection() {
   // Fingerprints state
   const [fingerprints, setFingerprints] = useState<FingerprintRecord[]>([]);
   const [fpSearch, setFpSearch] = useState("");
+  const [fpPage, setFpPage] = useState(1);
+  const FP_PER_PAGE = 20;
   const [expandedFp, setExpandedFp] = useState<string | null>(null);
   const [selfieModalUrl, setSelfieModalUrl] = useState<string | null>(null);
 
