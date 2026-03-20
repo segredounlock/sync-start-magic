@@ -241,7 +241,7 @@ export function AntifraudSection() {
       const { error } = await supabase.from("banned_devices").delete().eq("id", ban.id);
       if (error) throw error;
 
-      await logAdminAction(user!.id, "delete_ban", "device", ban.id, {
+      await logAudit("delete_ban", "device", ban.id, {
         fingerprint: ban.fingerprint_hash, user: ban.original_user_nome,
       });
 
