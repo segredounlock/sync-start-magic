@@ -1206,6 +1206,7 @@ export default function Principal() {
       lucroMes,
       mesRecs: mesRecs.length,
       topResellers,
+      totalActiveToday,
       recentRecs,
       lowBalanceRevs,
       receitaTotal,
