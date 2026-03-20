@@ -1506,6 +1506,7 @@ export default function Principal() {
               {view === "redes" && "Visão consolidada de todos os donos de rede."}
               {view === "backup" && "Exportar e restaurar backup do sistema."}
               {view === "suporte" && "Gerencie tickets de suporte recebidos via Telegram."}
+              {view === "antifraude" && "Monitore dispositivos, gerencie banimentos e logs de segurança."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
             </p>
           </div>
