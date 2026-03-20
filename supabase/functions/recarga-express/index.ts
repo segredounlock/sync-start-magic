@@ -769,13 +769,16 @@ Deno.serve(async (req) => {
         // 1. Absolute minimum: API cost
         let floor = apiCost;
 
-        // 2. Global admin price (if exists)
-        const globalRuleForFloor = await getGlobalRule();
-        if (globalRuleForFloor) {
-          const globalPrice = globalRuleForFloor.tipo_regra === "fixo"
-            ? (Number(globalRuleForFloor.regra_valor) > 0 ? Number(globalRuleForFloor.regra_valor) : Number(globalRuleForFloor.custo))
-            : Number(globalRuleForFloor.custo) * (1 + Number(globalRuleForFloor.regra_valor) / 100);
-          floor = Math.max(floor, globalPrice);
+        // 2. Global admin price (if exists) — skip if admin set a custom base price for this user
+        const isCustomBaseRule = pricingSource.includes("reseller_base_pricing_rules");
+        if (!isCustomBaseRule) {
+          const globalRuleForFloor = await getGlobalRule();
+          if (globalRuleForFloor) {
+            const globalPrice = globalRuleForFloor.tipo_regra === "fixo"
+              ? (Number(globalRuleForFloor.regra_valor) > 0 ? Number(globalRuleForFloor.regra_valor) : Number(globalRuleForFloor.custo))
+              : Number(globalRuleForFloor.custo) * (1 + Number(globalRuleForFloor.regra_valor) / 100);
+            floor = Math.max(floor, globalPrice);
+          }
         }
 
         // 3. For clients: reseller's custom price is the floor (client can't undercut reseller)
