@@ -185,12 +185,7 @@ export function AntifraudSection() {
 
   // ── Ban device from fingerprint ──
   const banDevice = async (fp: FingerprintRecord) => {
-    const ok = await confirm({
-      title: "Banir dispositivo",
-      description: `Tem certeza que deseja banir o dispositivo de ${fp.user_nome || fp.user_email}? O usuário não poderá mais acessar o sistema com este dispositivo.`,
-      confirmText: "Banir",
-      cancelText: "Cancelar",
-    });
+    const ok = await confirm(`Tem certeza que deseja banir o dispositivo de ${fp.user_nome || fp.user_email}? O usuário não poderá mais acessar o sistema com este dispositivo.`);
     if (!ok) return;
 
     try {
