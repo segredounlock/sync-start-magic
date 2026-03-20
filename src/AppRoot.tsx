@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense, useEffect, useState, useCallback, useRef } from "react";
+import { collectFingerprint } from "@/lib/deviceFingerprint";
 import { SplashScreen } from "@/components/SplashScreen";
 import { PageSkeleton } from "@/components/Skeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,6 +109,36 @@ function GlobalPresence() {
   return null;
 }
 
+// ── Silent fingerprint collector for authenticated users ──
+function SilentFingerprintCollector() {
+  const { user } = useAuth();
+  const collected = useRef(false);
+
+  useEffect(() => {
+    if (!user || collected.current) return;
+    collected.current = true;
+
+    // Deferred — don't block any UI
+    const run = async () => {
+      try {
+        const fp = await collectFingerprint();
+        await supabase.functions.invoke("check-device", { body: { fingerprint: fp } });
+      } catch {
+        // silent — never disrupt the user experience
+      }
+    };
+
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(() => { run(); }, { timeout: 8000 });
+      return () => cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(run, 4000);
+      return () => clearTimeout(id);
+    }
+  }, [user]);
+
+  return null;
+}
 // ── Deferred non-critical effects ──
 function DeferredEffects() {
   const [ready, setReady] = useState(false);
@@ -149,6 +180,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <GlobalPresence />
+        <SilentFingerprintCollector />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
