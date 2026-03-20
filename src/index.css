@@ -417,7 +417,7 @@ select option {
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-    animation: shimmer-letters 4s ease-in-out infinite;
+    animation: shimmer-letters 6s ease-in-out infinite;
   }
 }
 
