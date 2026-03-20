@@ -338,7 +338,7 @@ export function AntifraudSection() {
       <InfoCard
         title="Sistema Antifraude"
         items={[
-          { icon: Fingerprint, label: "Fingerprints", description: "Visualize dados coletados de dispositivos de todos os usuários." },
+          { icon: Fingerprint, label: "Dados Coletados", description: "Visualize dados coletados de dispositivos de todos os usuários." },
           { icon: Ban, label: "Banimentos", description: "Bloqueie dispositivos fraudulentos e gerencie a lista de banidos." },
           { icon: FileText, label: "Logs", description: "Acompanhe todas as ações de segurança executadas." },
         ]}
