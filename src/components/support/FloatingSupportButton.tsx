@@ -19,7 +19,7 @@ const CHANNEL_ICONS: Record<string, string> = {
 };
 
 export function FloatingSupportButton() {
-  const { user, role } = useAuth();
+  const { user, role, roleLoaded } = useAuth();
   const location = useLocation();
   const { playSound } = useNotificationSound();
   const { channels, bubbleChannel, isCustom, loading: channelsLoading } = useSupportChannels(user?.id);
