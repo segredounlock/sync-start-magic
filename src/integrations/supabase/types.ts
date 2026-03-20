@@ -83,6 +83,51 @@ export type Database = {
         }
         Relationships: []
       }
+      banned_devices: {
+        Row: {
+          active: boolean
+          banned_by: string
+          created_at: string
+          fingerprint_hash: string | null
+          id: string
+          ip_address: string | null
+          original_user_email: string | null
+          original_user_id: string | null
+          original_user_nome: string | null
+          reason: string
+          updated_at: string
+          user_agent_pattern: string | null
+        }
+        Insert: {
+          active?: boolean
+          banned_by: string
+          created_at?: string
+          fingerprint_hash?: string | null
+          id?: string
+          ip_address?: string | null
+          original_user_email?: string | null
+          original_user_id?: string | null
+          original_user_nome?: string | null
+          reason?: string
+          updated_at?: string
+          user_agent_pattern?: string | null
+        }
+        Update: {
+          active?: boolean
+          banned_by?: string
+          created_at?: string
+          fingerprint_hash?: string | null
+          id?: string
+          ip_address?: string | null
+          original_user_email?: string | null
+          original_user_id?: string | null
+          original_user_nome?: string | null
+          reason?: string
+          updated_at?: string
+          user_agent_pattern?: string | null
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           created_at: string
@@ -559,6 +604,81 @@ export type Database = {
           follower_id?: string
           following_id?: string
           id?: string
+        }
+        Relationships: []
+      }
+      login_fingerprints: {
+        Row: {
+          canvas_hash: string | null
+          color_depth: number | null
+          created_at: string
+          device_memory: number | null
+          fingerprint_hash: string
+          geolocation_accuracy: number | null
+          hardware_concurrency: number | null
+          id: string
+          installed_plugins: string | null
+          ip_address: string | null
+          language: string | null
+          latitude: number | null
+          longitude: number | null
+          pixel_ratio: number | null
+          platform: string | null
+          raw_data: Json | null
+          screen_resolution: string | null
+          timezone: string | null
+          touch_support: boolean | null
+          user_agent: string | null
+          user_id: string
+          webgl_renderer: string | null
+        }
+        Insert: {
+          canvas_hash?: string | null
+          color_depth?: number | null
+          created_at?: string
+          device_memory?: number | null
+          fingerprint_hash: string
+          geolocation_accuracy?: number | null
+          hardware_concurrency?: number | null
+          id?: string
+          installed_plugins?: string | null
+          ip_address?: string | null
+          language?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          pixel_ratio?: number | null
+          platform?: string | null
+          raw_data?: Json | null
+          screen_resolution?: string | null
+          timezone?: string | null
+          touch_support?: boolean | null
+          user_agent?: string | null
+          user_id: string
+          webgl_renderer?: string | null
+        }
+        Update: {
+          canvas_hash?: string | null
+          color_depth?: number | null
+          created_at?: string
+          device_memory?: number | null
+          fingerprint_hash?: string
+          geolocation_accuracy?: number | null
+          hardware_concurrency?: number | null
+          id?: string
+          installed_plugins?: string | null
+          ip_address?: string | null
+          language?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          pixel_ratio?: number | null
+          platform?: string | null
+          raw_data?: Json | null
+          screen_resolution?: string | null
+          timezone?: string | null
+          touch_support?: boolean | null
+          user_agent?: string | null
+          user_id?: string
+          webgl_renderer?: string | null
         }
         Relationships: []
       }

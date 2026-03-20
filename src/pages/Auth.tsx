@@ -10,6 +10,7 @@ import { ArrowLeft, Mail, Lock, User, Download, Smartphone, CheckCircle, TicketC
 import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
+import { collectFingerprint } from "@/lib/deviceFingerprint";
 
 type LoginPhase = "form" | "forgot" | "splash" | "done";
 
@@ -197,6 +198,23 @@ export default function Auth() {
           appToast.authError("Sua conta ainda não possui um cargo atribuído. Aguarde a aprovação ou contate o administrador.");
           setSubmitting(false);
           return;
+        }
+
+        // ── Fingerprint & device ban check (non-blocking for UX but blocks banned) ──
+        try {
+          const fingerprint = await collectFingerprint();
+          const { data: deviceResult } = await supabase.functions.invoke("check-device", {
+            body: { fingerprint },
+          });
+          if (deviceResult?.banned) {
+            await supabase.auth.signOut();
+            appToast.blocked("Seu acesso foi bloqueado permanentemente. Contate o suporte.");
+            setSubmitting(false);
+            return;
+          }
+        } catch (fpErr) {
+          // Não bloqueia login se fingerprint falhar — apenas loga
+          console.warn("Fingerprint check failed:", fpErr);
         }
 
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
