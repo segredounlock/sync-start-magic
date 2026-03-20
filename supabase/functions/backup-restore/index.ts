@@ -84,10 +84,11 @@ serve(async (req) => {
 
     // Tables that have user_id referencing profiles.id
     const profileFkTables = new Set([
-      "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_config",
-      "transactions", "disabled_recharge_values", "referral_commissions",
+      "user_roles", "saldos", "recargas", "reseller_pricing_rules", "reseller_base_pricing_rules",
+      "reseller_config", "transactions", "disabled_recharge_values", "referral_commissions",
       "scratch_cards", "client_pricing_rules", "push_subscriptions",
       "support_tickets", "support_messages", "reseller_deposit_fees",
+      "login_fingerprints", "poll_votes",
     ]);
 
     const getExistingProfileIds = async () => {
@@ -110,13 +111,16 @@ serve(async (req) => {
     // Define restore order: known tables first in dependency order, then any new/unknown tables
     const knownOrder = [
       "operadoras", "system_config", "bot_settings", "notifications", "broadcast_progress",
-      "telegram_users", "telegram_sessions", "terms_acceptance", "profiles", "user_roles", "saldos",
-      "pricing_rules", "reseller_pricing_rules", "reseller_config", "reseller_deposit_fees",
+      "broadcast_messages", "telegram_users", "telegram_sessions", "terms_acceptance",
+      "profiles", "user_roles", "saldos",
+      "pricing_rules", "reseller_pricing_rules", "reseller_base_pricing_rules",
+      "reseller_config", "reseller_deposit_fees",
       "disabled_recharge_values", "client_pricing_rules", "transactions", "recargas",
       "referral_commissions", "admin_notifications", "banners", "polls", "poll_votes",
       "follows", "audit_logs", "support_templates", "support_tickets", "support_messages",
       "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
       "push_subscriptions", "update_history", "scratch_cards",
+      "login_fingerprints", "banned_devices",
     ];
 
     // Build final restore order: known tables that exist in ZIP first, then unknown tables from ZIP
