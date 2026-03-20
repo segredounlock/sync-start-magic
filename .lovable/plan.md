@@ -1,35 +1,41 @@
 
 
-## Diagnóstico Confirmado
+## Problema Encontrado: Safety Floor Sobrescrevendo Preço Customizado
 
-Exatamente isso. O código atual trata todos os usuários igual — prioriza `reseller_pricing_rules` (preço de VENDA para a rede) sobre `reseller_base_pricing_rules` (CUSTO real do usuário). Para um "usuario" que não tem rede, o que importa é o custo que o admin definiu para ele (`reseller_base_pricing_rules`), não o preço de venda.
+### Diagnóstico
+
+Para o usuário `ferreiragreg180` (role=`usuario`) fazendo recarga CLARO R$70:
 
 ```text
-Lógica ATUAL (bugada para usuario):
-  1. reseller_pricing_rules  ← preço de VENDA (ex: R$ 28,00) ❌ mostra isso
-  2. reseller_base_pricing_rules ← custo real (ex: R$ 11,50)
-  3. margem padrão global
-  4. pricing_rules global
+1. reseller_base_pricing_rules: regra_valor=25, custo=23 (tipo=fixo)
+   → applyRule retorna R$ 25,00 ✅
 
-  Edge Function cobra: reseller_base_pricing_rules → R$ 11,50
-  UI mostra: reseller_pricing_rules → R$ 28,00
-  → CONFLITO ❌
+2. Safety Floor calcula:
+   - apiCost = R$ 23,00
+   - Global pricing_rules: regra_valor=26, custo=23 (tipo=fixo)
+   - floor = max(23, 26) = R$ 26,00
 
-Lógica CORRIGIDA (quando NÃO é client mode):
-  1. reseller_base_pricing_rules ← custo real (ex: R$ 11,50) ✅
-  2. margem padrão global
-  3. pricing_rules global
-  (reseller_pricing_rules só usado em client mode)
+3. chargedCost=25 < floor=26
+   → FORÇADO para R$ 26,00 ❌
 ```
 
-## Plano
+O safety floor foi projetado para proteger o admin de vender abaixo do preço global. Mas quando o **admin deliberadamente** define um preço customizado MENOR que o global em `reseller_base_pricing_rules`, essa proteção se torna um bug.
 
-### Arquivo: `src/pages/RevendedorPainel.tsx` — função `fetchCatalog` (~linhas 235-260)
+### Correção
 
-Inverter a prioridade quando `isClientMode = false`:
+**Arquivo**: `supabase/functions/recarga-express/index.ts` (linhas 768-799)
 
-- **Se `isClientMode = true`** (cliente vendo loja): manter ordem atual — `reseller_pricing_rules` → `reseller_base_pricing_rules` → margem global → global
-- **Se `isClientMode = false`** (usuario/revendedor vendo seu painel): pular `reseller_pricing_rules` — usar `reseller_base_pricing_rules` → margem global → global
+Quando o `pricingSource` for `reseller_base_pricing_rules` (preço definido pelo admin), o safety floor deve usar apenas o `apiCost` como piso, não o preço global. A lógica é: se o admin definiu um preço customizado, ele sabe o que está fazendo.
 
-Isso alinha a exibição do catálogo com a lógica de cobrança da Edge Function `recarga-express`, que já usa `reseller_base_pricing_rules` como custo real.
+```text
+Fluxo corrigido:
+  - Se pricingSource contém "reseller_base_pricing_rules":
+    floor = apiCost (R$ 23,00) → chargedCost R$ 25 > 23 ✅ mantém R$ 25
+  - Se pricingSource é outro (margem padrão, fallback global):
+    floor = max(apiCost, globalPrice) → mantém proteção normal
+```
+
+### Resumo da mudança
+
+Modificar o bloco de safety floor (~linha 772-778) para pular a elevação ao preço global quando a fonte de precificação for `reseller_base_pricing_rules`, preservando apenas o piso do custo da API.
 
