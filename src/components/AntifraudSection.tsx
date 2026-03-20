@@ -444,8 +444,9 @@ export function AntifraudSection() {
                   <p>Nenhum dado coletado encontrado</p>
                 </div>
               ) : (
+                <>
                 <div className="space-y-2">
-                  {filteredFingerprints.map(fp => {
+                  {paginatedFingerprints.map(fp => {
                     const banned = isBanned(fp.fingerprint_hash);
                     const expanded = expandedFp === fp.id;
                     return (
