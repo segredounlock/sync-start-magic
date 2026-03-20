@@ -180,6 +180,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <GlobalPresence />
+        <SilentFingerprintCollector />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
