@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { motion, AnimatePresence } from "framer-motion";
 import {
