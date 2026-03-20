@@ -221,7 +221,7 @@ export function AntifraudSection() {
         .eq("id", ban.id);
       if (error) throw error;
 
-      await logAdminAction(user!.id, ban.active ? "unban_device" : "reban_device", "device", ban.id, {
+      await logAudit(ban.active ? "unban_device" : "reban_device", "device", ban.id, {
         fingerprint: ban.fingerprint_hash, user: ban.original_user_nome,
       });
 
