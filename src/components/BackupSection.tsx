@@ -117,6 +117,13 @@ const SOURCE_PATHS = [
   "supabase/functions/_shared/email-templates/reauthentication.tsx",
   // Supabase config
   "supabase/config.toml",
+  // Documentation
+  "ALTERACOES.md","DOCUMENTACAO_MIGRACAO.md",
+  "documentation/README.md","documentation/ARQUITETURA.md","documentation/BANCO_DE_DADOS.md",
+  "documentation/EDGE_FUNCTIONS.md","documentation/COMPONENTES.md","documentation/AUTENTICACAO.md",
+  "documentation/PAGAMENTOS.md","documentation/CHAT.md","documentation/TELEGRAM.md",
+  "documentation/BACKUP.md","documentation/MIGRACAO.md","documentation/STORAGE.md",
+  "documentation/SECRETS.md",
 ];
 
 type TabKey = "dados" | "github" | "atualizacao";
