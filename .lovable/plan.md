@@ -1,41 +1,51 @@
 
 
-## Problema Encontrado: Safety Floor Sobrescrevendo Preço Customizado
+## Problema: Preços Exclusivos Não São Aplicados para Usuários da Rede
 
 ### Diagnóstico
 
-Para o usuário `ferreiragreg180` (role=`usuario`) fazendo recarga CLARO R$70:
+O `ClientPricingModal` salva corretamente na tabela `client_pricing_rules`. Porém, a Edge Function `recarga-express` **só consulta essa tabela para o role "cliente"** (linha 691):
 
 ```text
-1. reseller_base_pricing_rules: regra_valor=25, custo=23 (tipo=fixo)
-   → applyRule retorna R$ 25,00 ✅
-
-2. Safety Floor calcula:
-   - apiCost = R$ 23,00
-   - Global pricing_rules: regra_valor=26, custo=23 (tipo=fixo)
-   - floor = max(23, 26) = R$ 26,00
-
-3. chargedCost=25 < floor=26
-   → FORÇADO para R$ 26,00 ❌
+Edge Function — fluxo atual:
+  if (userRole === "cliente" && resellerId) → checa client_pricing_rules ✅
+  else (userRole === "usuario")            → NÃO checa client_pricing_rules ❌
 ```
 
-O safety floor foi projetado para proteger o admin de vender abaixo do preço global. Mas quando o **admin deliberadamente** define um preço customizado MENOR que o global em `reseller_base_pricing_rules`, essa proteção se torna um bug.
+Os membros da rede têm role **"usuario"** (não "cliente"), e o `resellerId` só é resolvido para "cliente" (linha 563). Resultado: os preços exclusivos são salvos mas nunca lidos.
 
-### Correção
+### Plano de Correção
 
-**Arquivo**: `supabase/functions/recarga-express/index.ts` (linhas 768-799)
+**Arquivo**: `supabase/functions/recarga-express/index.ts`
 
-Quando o `pricingSource` for `reseller_base_pricing_rules` (preço definido pelo admin), o safety floor deve usar apenas o `apiCost` como piso, não o preço global. A lógica é: se o admin definiu um preço customizado, ele sabe o que está fazendo.
+**Mudança 1** (~linha 561-570): Resolver `resellerId` para TODOS os usuários que tenham `reseller_id` no perfil, não apenas "cliente":
 
 ```text
-Fluxo corrigido:
-  - Se pricingSource contém "reseller_base_pricing_rules":
-    floor = apiCost (R$ 23,00) → chargedCost R$ 25 > 23 ✅ mantém R$ 25
-  - Se pricingSource é outro (margem padrão, fallback global):
-    floor = max(apiCost, globalPrice) → mantém proteção normal
+// ANTES: só resolve para "cliente"
+if (userRole === "cliente") { resellerId = profile.reseller_id }
+
+// DEPOIS: resolve para qualquer role
+resellerId = profile.reseller_id (para todos os usuários)
 ```
 
-### Resumo da mudança
+**Mudança 2** (~linha 734-761): No bloco `else` que trata "usuario", adicionar verificação de `client_pricing_rules` antes das regras existentes:
 
-Modificar o bloco de safety floor (~linha 772-778) para pular a elevação ao preço global quando a fonte de precificação for `reseller_base_pricing_rules`, preservando apenas o piso do custo da API.
+```text
+// ANTES (bloco else para "usuario"):
+1. reseller_pricing_rules(own)
+2. reseller_base_pricing_rules(own)
+3. pricing_rules(global)
+
+// DEPOIS:
+1. client_pricing_rules (se tiver resellerId) ← NOVO
+2. reseller_pricing_rules(own)
+3. reseller_base_pricing_rules(own)
+4. pricing_rules(global)
+```
+
+A lógica do `client_pricing_rules` para "usuario" segue o mesmo padrão do "cliente" (linha 716): `chargedCost = resolvedBase + clientRule.lucro`.
+
+### Resultado Esperado
+
+Quando o revendedor define R$ 16 de lucro para a recarga de R$ 20 (custo base R$ 11), o membro da rede pagará R$ 11 + R$ 16 = **R$ 27** ao fazer a recarga — independente do role ser "usuario" ou "cliente".
 
