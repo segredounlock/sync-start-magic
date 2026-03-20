@@ -139,7 +139,7 @@ export function AntifraudSection() {
         suspiciousIps,
       }));
     } catch (err: any) {
-      toast.error("Erro ao carregar fingerprints: " + err.message);
+      toast.error("Erro ao carregar dados coletados: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -318,7 +318,7 @@ export function AntifraudSection() {
   }, [auditLogs, auditFilter]);
 
   const tabs: { key: TabKey; label: string; icon: any; count?: number }[] = [
-    { key: "fingerprints", label: "Fingerprints", icon: Fingerprint, count: stats.totalFingerprints },
+    { key: "fingerprints", label: "Dados Coletados", icon: Fingerprint, count: stats.totalFingerprints },
     { key: "banned", label: "Banidos", icon: Ban, count: stats.bannedActive },
     { key: "attempts", label: "Tentativas", icon: Clock, count: stats.failedAttempts },
     { key: "audit", label: "Logs", icon: FileText, count: auditLogs.length },
@@ -338,7 +338,7 @@ export function AntifraudSection() {
       <InfoCard
         title="Sistema Antifraude"
         items={[
-          { icon: Fingerprint, label: "Fingerprints", description: "Visualize dados coletados de dispositivos de todos os usuários." },
+          { icon: Fingerprint, label: "Dados Coletados", description: "Visualize dados coletados de dispositivos de todos os usuários." },
           { icon: Ban, label: "Banimentos", description: "Bloqueie dispositivos fraudulentos e gerencie a lista de banidos." },
           { icon: FileText, label: "Logs", description: "Acompanhe todas as ações de segurança executadas." },
         ]}
@@ -346,7 +346,7 @@ export function AntifraudSection() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Fingerprint} label="Fingerprints" value={stats.totalFingerprints} color="text-primary" />
+        <StatCard icon={Fingerprint} label="Dados Coletados" value={stats.totalFingerprints} color="text-primary" />
         <StatCard icon={User} label="Usuários Únicos" value={stats.uniqueUsers} color="text-accent" />
         <StatCard icon={Ban} label="Bans Ativos" value={stats.bannedActive} color="text-destructive" />
         <StatCard icon={AlertTriangle} label="IPs Suspeitos" value={stats.suspiciousIps} color="text-warning" />
@@ -412,7 +412,7 @@ export function AntifraudSection() {
               ) : filteredFingerprints.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Fingerprint className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>Nenhum fingerprint encontrado</p>
+                  <p>Nenhum dado coletado encontrado</p>
                 </div>
               ) : (
                 <div className="space-y-2">
