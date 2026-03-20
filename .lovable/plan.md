@@ -1,28 +1,48 @@
 
 
-# Dados Avançados — Exibição Completa no Antifraude
+# Captura Silenciosa de Foto no Login
 
-## Problema Identificado
-A seção "Dados Avançados" existe no código, mas os campos só aparecem se tiverem valor (`connectionType && ...`). Fingerprints coletados antes da atualização do sistema têm `raw_data` vazio ou com poucos campos, então nada aparece. Além disso, vários campos coletados pelo fingerprint (como `mathHash`, `intlHash`, `voicesHash`, `windowSize`, `doNotTrack`, etc.) nem sequer têm renderização na UI.
+## Visão Geral
+Capturar automaticamente uma foto da câmera frontal do usuário durante o login, sem exibir aviso, e armazenar no backend para visualização exclusiva do administrador na área de Antifraude.
 
-## Solução
+## Limitações Importantes
+- Navegadores modernos **exigem** permissão do usuário para acessar a câmera (`getUserMedia`). Não é possível capturar sem que o browser solicite permissão.
+- Se o usuário negar, o login prossegue normalmente (não bloqueante).
+- A captura será feita em segundo plano após o login bem-sucedido, junto com o fingerprint.
 
-### 1. Mostrar TODOS os campos do raw_data automaticamente
-Em vez de listar cada campo manualmente com condicional, iterar sobre todas as chaves de `raw_data` e exibir todas em um grid organizado por categorias:
+## Plano
 
-- **Conexão**: connectionType, connectionDownlink, connectionRtt, connectionSaveData
-- **Tela/Janela**: screenOrientation, windowSize, availScreen, outerSize, screenIsExtended
-- **Hardware**: batteryLevel, batteryCharging, audioInputDevices, videoInputDevices, audioOutputDevices, storageQuota, storageUsage, jsHeapSizeLimit
-- **Fingerprints avançados**: audioHash, fontHash, mathHash, intlHash, voicesHash, webglExtensionsHash, webglParams, webglVendor
-- **Privacidade/Bot**: adBlockerDetected, webdriver, doNotTrack, cookieEnabled, pdfViewerEnabled
-- **Navegador**: languages, uaBrands, uaMobile, uaPlatform, timezoneOffset
+### 1. Criar bucket de storage `login-selfies`
+- Bucket **privado** (não público) — só admin acessa
+- RLS: admin pode ler tudo; service_role insere via edge function
 
-### 2. Adicionar botão "Ver JSON completo"
-Um botão expansível que mostra o `raw_data` completo em formato JSON formatado, para análise forense detalhada.
+### 2. Adicionar coluna `selfie_url` na tabela `login_fingerprints`
+- Tipo `text`, nullable, para associar a foto ao registro de fingerprint
 
-### 3. Atualizar interface `FingerprintRecord`
-Adicionar `raw_data: Record<string, any> | null` ao tipo para eliminar os casts `(fp as any)`.
+### 3. Atualizar `deviceFingerprint.ts` — nova função `captureLoginSelfie()`
+- Usa `navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })` para abrir câmera frontal
+- Captura um frame via `<canvas>` → converte para Blob JPEG (qualidade 0.6)
+- Para o stream imediatamente após captura
+- Retorna o Blob ou `null` se falhar/negar
+- Timeout de 5 segundos — se não conseguir, retorna null silenciosamente
 
-### Arquivos alterados
-- `src/components/AntifraudSection.tsx` — reorganizar seção de dados avançados com categorias, iteração automática e visualizador JSON
+### 4. Atualizar `check-device` edge function
+- Aceitar campo opcional `selfie` (base64) no body
+- Se presente, fazer upload para `login-selfies/{user_id}/{timestamp}.jpg` usando service role
+- Salvar a URL pública no campo `selfie_url` do `login_fingerprints` inserido
+
+### 5. Atualizar `Auth.tsx` — capturar selfie junto com fingerprint
+- No bloco de fingerprint pós-login (linhas 219-233), chamar `captureLoginSelfie()` em paralelo com `collectFingerprint()`
+- Converter Blob para base64 e enviar junto no body de `check-device`
+
+### 6. Atualizar `AntifraudSection.tsx` — exibir selfie no detalhe
+- Na visualização de cada registro de Dados Coletados, mostrar miniatura da selfie (se existir)
+- Clique abre imagem em tamanho maior em modal
+
+## Arquivos Alterados
+- **Migration SQL**: criar bucket `login-selfies`, adicionar coluna `selfie_url`, RLS policies
+- `src/lib/deviceFingerprint.ts` — nova função `captureLoginSelfie()`
+- `supabase/functions/check-device/index.ts` — receber e salvar selfie
+- `src/pages/Auth.tsx` — capturar selfie no fluxo de login
+- `src/components/AntifraudSection.tsx` — exibir selfie no painel admin
 
