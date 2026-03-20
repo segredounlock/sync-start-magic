@@ -41,7 +41,8 @@ export function FloatingSupportButton() {
       .select("value")
       .eq("key", "supportEnabled")
       .maybeSingle();
-    setEnabled(data?.value !== "false");
+    const val = String(data?.value ?? "true");
+    setEnabled(val !== "false");
   }, []);
 
   useEffect(() => {
