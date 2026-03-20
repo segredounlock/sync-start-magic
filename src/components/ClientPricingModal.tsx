@@ -36,12 +36,13 @@ export function ClientPricingModal({ open, onClose, resellerId, clientId, client
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: clientRules }, { data: marginConfig }] = await Promise.all([
+      const [{ data: ops }, { data: globalRules }, { data: resellerRules }, { data: clientRules }, { data: marginConfig }, { data: resellerBaseRules }] = await Promise.all([
         supabase.from("operadoras").select("*").eq("ativo", true).order("nome"),
         supabase.from("pricing_rules").select("*"),
         supabase.from("reseller_pricing_rules").select("*").eq("user_id", resellerId),
         (supabase.from("client_pricing_rules" as any) as any).select("*").eq("reseller_id", resellerId).eq("client_id", clientId),
         supabase.from("system_config").select("key, value").in("key", ["defaultMarginEnabled", "defaultMarginType", "defaultMarginValue"]),
+        supabase.from("reseller_base_pricing_rules").select("*").eq("user_id", resellerId),
       ]);
 
       if (!ops) return;
