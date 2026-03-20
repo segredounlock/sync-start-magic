@@ -487,7 +487,7 @@ export default function Auth() {
                       placeholder={isLogin ? "Sua senha" : "Mínimo 8 caracteres"}
                     />
                   </div>
-                  {!isLogin && password && <PasswordStrengthMeter password={password} className="mt-2" />}
+                  {!isLogin && password && <PasswordStrengthMeter password={password} />}
                 </div>
 
                 {isLogin && (
