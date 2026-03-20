@@ -487,6 +487,57 @@ export function AntifraudSection() {
                                   )}
                                 </div>
 
+                                {/* Advanced raw_data details */}
+                                {(fp as any).raw_data && Object.keys((fp as any).raw_data).length > 0 && (
+                                  <div className="mt-3">
+                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">📡 Dados Avançados</p>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                                      {(fp as any).raw_data.connectionType && (
+                                        <DetailItem icon={Globe} label="Conexão" value={(fp as any).raw_data.connectionType} />
+                                      )}
+                                      {(fp as any).raw_data.connectionDownlink != null && (
+                                        <DetailItem icon={Globe} label="Download" value={`${(fp as any).raw_data.connectionDownlink} Mbps`} />
+                                      )}
+                                      {(fp as any).raw_data.batteryLevel != null && (
+                                        <DetailItem icon={Smartphone} label="Bateria" value={`${Math.round((fp as any).raw_data.batteryLevel * 100)}%${(fp as any).raw_data.batteryCharging ? ' ⚡' : ''}`} />
+                                      )}
+                                      {(fp as any).raw_data.audioInputDevices != null && (
+                                        <DetailItem icon={Monitor} label="Microfones" value={String((fp as any).raw_data.audioInputDevices)} />
+                                      )}
+                                      {(fp as any).raw_data.videoInputDevices != null && (
+                                        <DetailItem icon={Monitor} label="Câmeras" value={String((fp as any).raw_data.videoInputDevices)} />
+                                      )}
+                                      {(fp as any).raw_data.adBlockerDetected != null && (
+                                        <DetailItem icon={ShieldAlert} label="AdBlocker" value={(fp as any).raw_data.adBlockerDetected ? "Detectado ⚠️" : "Não"} />
+                                      )}
+                                      {(fp as any).raw_data.webdriver && (
+                                        <DetailItem icon={AlertTriangle} label="WebDriver" value="⚠️ Bot detectado!" />
+                                      )}
+                                      {(fp as any).raw_data.screenOrientation && (
+                                        <DetailItem icon={Smartphone} label="Orientação" value={(fp as any).raw_data.screenOrientation} />
+                                      )}
+                                      {(fp as any).raw_data.languages && (
+                                        <DetailItem icon={Globe} label="Idiomas" value={(fp as any).raw_data.languages} />
+                                      )}
+                                      {(fp as any).raw_data.audioHash && (
+                                        <DetailItem icon={Fingerprint} label="Áudio FP" value={(fp as any).raw_data.audioHash} />
+                                      )}
+                                      {(fp as any).raw_data.fontHash && (
+                                        <DetailItem icon={Fingerprint} label="Fontes FP" value={(fp as any).raw_data.fontHash} />
+                                      )}
+                                      {(fp as any).raw_data.uaPlatform && (
+                                        <DetailItem icon={Monitor} label="UA Platform" value={(fp as any).raw_data.uaPlatform} />
+                                      )}
+                                      {(fp as any).raw_data.uaBrands && (
+                                        <DetailItem icon={Monitor} label="UA Brands" value={(fp as any).raw_data.uaBrands} />
+                                      )}
+                                      {(fp as any).raw_data.storageQuota != null && (
+                                        <DetailItem icon={Cpu} label="Storage" value={`${Math.round(((fp as any).raw_data.storageQuota || 0) / 1024 / 1024)} MB`} />
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* User Agent full */}
                                 {fp.user_agent && (
                                   <div className="mt-3 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground break-all">
