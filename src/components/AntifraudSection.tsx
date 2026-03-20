@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, ShieldAlert, ShieldCheck, Search, Eye, EyeOff, Ban,
   Smartphone, Fingerprint, MapPin, Globe, Monitor, Cpu, Clock,
-  ChevronDown, ChevronRight, X, RefreshCw, Loader2, AlertTriangle,
+  ChevronDown, ChevronRight, ChevronLeft, X, RefreshCw, Loader2, AlertTriangle,
   User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, Filter,
   FileText, Trash2,
 } from "lucide-react";
@@ -90,6 +90,8 @@ export function AntifraudSection() {
   // Fingerprints state
   const [fingerprints, setFingerprints] = useState<FingerprintRecord[]>([]);
   const [fpSearch, setFpSearch] = useState("");
+  const [fpPage, setFpPage] = useState(1);
+  const FP_PER_PAGE = 20;
   const [expandedFp, setExpandedFp] = useState<string | null>(null);
   const [selfieModalUrl, setSelfieModalUrl] = useState<string | null>(null);
 
@@ -307,6 +309,15 @@ export function AntifraudSection() {
     );
   }, [fingerprints, fpSearch]);
 
+  // Reset page when search changes
+  useEffect(() => { setFpPage(1); }, [fpSearch]);
+
+  const fpTotalPages = Math.max(1, Math.ceil(filteredFingerprints.length / FP_PER_PAGE));
+  const paginatedFingerprints = useMemo(() => {
+    const start = (fpPage - 1) * FP_PER_PAGE;
+    return filteredFingerprints.slice(start, start + FP_PER_PAGE);
+  }, [filteredFingerprints, fpPage]);
+
   const filteredBanned = useMemo(() => {
     let list = bannedDevices;
     if (!showInactive) list = list.filter(b => b.active);
@@ -433,8 +444,9 @@ export function AntifraudSection() {
                   <p>Nenhum dado coletado encontrado</p>
                 </div>
               ) : (
+                <>
                 <div className="space-y-2">
-                  {filteredFingerprints.map(fp => {
+                  {paginatedFingerprints.map(fp => {
                     const banned = isBanned(fp.fingerprint_hash);
                     const expanded = expandedFp === fp.id;
                     return (
@@ -612,6 +624,33 @@ export function AntifraudSection() {
                     );
                   })}
                 </div>
+
+                {/* Pagination */}
+                {fpTotalPages > 1 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      {(fpPage - 1) * FP_PER_PAGE + 1}–{Math.min(fpPage * FP_PER_PAGE, filteredFingerprints.length)} de {filteredFingerprints.length}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setFpPage(p => Math.max(1, p - 1))}
+                        disabled={fpPage <= 1}
+                        className="p-1.5 rounded-lg border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <span className="text-xs font-medium px-2">{fpPage}/{fpTotalPages}</span>
+                      <button
+                        onClick={() => setFpPage(p => Math.min(fpTotalPages, p + 1))}
+                        disabled={fpPage >= fpTotalPages}
+                        className="p-1.5 rounded-lg border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
           )}
