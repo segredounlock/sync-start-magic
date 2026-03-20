@@ -181,11 +181,32 @@ export function AntifraudSection() {
     }
   }, []);
 
+  // ── Fetch login attempts ──
+  const fetchAttempts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("login_attempts" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      const attempts = (data || []) as any[];
+      setLoginAttempts(attempts);
+      setStats(prev => ({ ...prev, failedAttempts: attempts.filter((a: any) => !a.success).length }));
+    } catch (err: any) {
+      toast.error("Erro ao carregar tentativas: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (tab === "fingerprints") fetchFingerprints();
     else if (tab === "banned") fetchBanned();
     else if (tab === "audit") fetchAudit();
-  }, [tab, fetchFingerprints, fetchBanned, fetchAudit]);
+    else if (tab === "attempts") fetchAttempts();
+  }, [tab, fetchFingerprints, fetchBanned, fetchAudit, fetchAttempts]);
 
   // ── Ban device from fingerprint ──
   const banDevice = async (fp: FingerprintRecord) => {
