@@ -142,7 +142,7 @@
 
 | Hook | Descrição |
 |------|-----------|
-| `useAuth.tsx` | Autenticação, sessão, roles e permissões |
+| `useAuth.tsx` | Autenticação, sessão, roles e permissões (realtime role changes) |
 | `useAsync.ts` | Wrapper para operações assíncronas |
 | `useBackgroundPaymentMonitor.ts` | Monitor de pagamentos PIX em background |
 | `useCacheCleanup.ts` | Limpeza de cache PWA |
@@ -152,14 +152,27 @@
 | `useFeePreview.ts` | Preview de taxas de depósito |
 | `useInactivityTimeout.ts` | Timeout por inatividade (segurança) |
 | `useNotificationSound.ts` | Sons de notificação |
-| `useNotifications.ts` | Notificações admin |
+| `useNotifications.ts` | Notificações admin (realtime + polling com deduplicação) |
 | `usePixDeposit.ts` | Fluxo de depósito PIX |
-| `usePresence.ts` | Presença online do usuário |
+| `usePresence.ts` | Presença online do usuário (Supabase Presence) |
 | `usePushNotifications.ts` | Push notifications web (VAPID) |
 | `useSeasonalTheme.ts` | Tema sazonal (natal, carnaval, etc.) |
 | `useSupportChannels.ts` | Canais de suporte |
 | `useTheme.tsx` | Tema light/dark |
 | `useTypingIndicator.ts` | Indicador de digitação no chat |
+
+### Deduplicação de Notificações (`useNotifications.ts`)
+
+O sistema utiliza múltiplas camadas para evitar notificações duplicadas:
+
+1. **`knownIds` (Set)** — IDs já processados são armazenados em memória
+2. **`addNotification`** — Verifica `knownIds` antes de adicionar
+3. **INSERT vs UPDATE** — Recargas:
+   - INSERT: cria notificação + toast "Processando" + som
+   - UPDATE com ID conhecido: atualiza silenciosamente, toast apenas para status final (concluída/falha)
+   - UPDATE com ID novo: cria notificação + toast (caso INSERT perdido)
+4. **Polling fallback** — A cada 15s, busca eventos perdidos com verificação de `knownIds`
+5. **Reconnect** — Na troca de visibilidade da aba, reconecta canais + poll imediato
 
 ---
 
