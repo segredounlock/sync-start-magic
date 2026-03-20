@@ -397,9 +397,8 @@ select option {
 
 .shimmer-letters {
   display: inline-block;
-  /* Glow fallback universal — funciona em qualquer WebView/browser */
   color: hsl(152, 72%, 55%);
-  animation: text-glow-pulse 3s ease-in-out infinite;
+  animation: text-glow-pulse 5s ease-in-out infinite;
 }
 
 /* Progressive enhancement: gradient shimmer for browsers that support it */
