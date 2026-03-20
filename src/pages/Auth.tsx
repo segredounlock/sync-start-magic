@@ -223,26 +223,24 @@ export default function Auth() {
 
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
-        // Validate referral code is provided
-        if (!referralCode.trim()) {
-          appToast.error("Código de indicação é obrigatório para criar conta");
-          setSubmitting(false);
-          return;
-        }
-
-        // Resolve referral code to reseller ID
+        // Validate referral code if required
         let resellerId: string | null = null;
-        const code = referralCode.trim();
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
-        if (isUuid) {
-          resellerId = code;
-        } else {
-          const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: code });
-          if (resolvedId) resellerId = resolvedId as string;
-        }
-
-        if (!resellerId) {
-          appToast.error("Código de indicação inválido. Verifique e tente novamente.");
+        if (referralCode.trim()) {
+          const code = referralCode.trim();
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
+          if (isUuid) {
+            resellerId = code;
+          } else {
+            const { data: resolvedId } = await supabase.rpc("get_user_by_referral_code" as any, { _code: code });
+            if (resolvedId) resellerId = resolvedId as string;
+          }
+          if (!resellerId) {
+            appToast.error("Código de indicação inválido. Verifique e tente novamente.");
+            setSubmitting(false);
+            return;
+          }
+        } else if (requireReferral) {
+          appToast.error("Código de indicação é obrigatório para criar conta");
           setSubmitting(false);
           return;
         }
