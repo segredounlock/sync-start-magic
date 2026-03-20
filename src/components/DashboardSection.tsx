@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { TopRankingPodium } from "@/components/TopRankingPodium";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -404,33 +405,56 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-foreground">Lucro Diário</h3>
-            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md">Lucro (R$)</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+              <span className="text-[10px] text-muted-foreground font-medium">Lucro (R$)</span>
+            </div>
           </div>
           {dailyData.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
+            <div className="h-52 flex items-center justify-center text-xs text-muted-foreground">
               Sem dados no período
             </div>
           ) : (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
-                <div className="w-3 h-3 rounded-sm bg-primary" />
-                <span>Lucro</span>
-              </div>
-              <div className="h-48 flex items-end gap-1">
-                {dailyData.map((d, i) => (
-                  <div key={d.date} className="flex-1 flex flex-col items-center gap-1" title={`${d.date}: ${fmt(d.value)}`}>
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${Math.max((d.value / maxDaily) * 100, 4)}%` }}
-                      transition={{ delay: i * 0.03, duration: 0.4 }}
-                      className="w-full rounded-t-md bg-primary/80 min-h-[4px]"
-                    />
-                    <span className="text-[8px] text-muted-foreground truncate w-full text-center">
-                      {d.date.slice(5)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="h-52 -mx-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyData} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(v: string) => v.slice(8)}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)}
+                    width={40}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: 12,
+                      fontSize: 12,
+                      padding: "8px 12px",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+                    }}
+                    labelFormatter={(v: string) => v.slice(5).replace("-", "/")}
+                    formatter={(value: number) => [fmt(value), "Lucro"]}
+                  />
+                  <Bar
+                    dataKey="value"
+                    fill="hsl(var(--primary))"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={28}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </div>
