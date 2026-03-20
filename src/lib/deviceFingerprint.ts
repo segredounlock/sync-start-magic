@@ -491,6 +491,12 @@ export async function collectFingerprint(): Promise<DeviceFingerprint> {
     uaBrands: nav.userAgentData?.brands?.map((b: any) => `${b.brand}/${b.version}`).join(",") || null,
     uaMobile: nav.userAgentData?.mobile ?? null,
     uaPlatform: nav.userAgentData?.platform || null,
+
+    // Geolocation source info
+    geo_source: geo.source,
+    gps_lat: geo.lat,
+    gps_lon: geo.lng,
+    gps_accuracy_meters: geo.accuracy,
   };
 
   return {
