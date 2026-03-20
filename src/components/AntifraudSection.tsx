@@ -855,6 +855,7 @@ export function AntifraudSection() {
         </motion.div>
       </AnimatePresence>
     </div>
+    </>
   );
 }
 
