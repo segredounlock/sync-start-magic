@@ -200,6 +200,23 @@ export default function Auth() {
           return;
         }
 
+        // ── Fingerprint & device ban check (non-blocking for UX but blocks banned) ──
+        try {
+          const fingerprint = await collectFingerprint();
+          const { data: deviceResult } = await supabase.functions.invoke("check-device", {
+            body: { fingerprint },
+          });
+          if (deviceResult?.banned) {
+            await supabase.auth.signOut();
+            appToast.blocked("Seu acesso foi bloqueado permanentemente. Contate o suporte.");
+            setSubmitting(false);
+            return;
+          }
+        } catch (fpErr) {
+          // Não bloqueia login se fingerprint falhar — apenas loga
+          console.warn("Fingerprint check failed:", fpErr);
+        }
+
         setDestination(resolvedRole === "admin" ? "/principal" : "/painel");
       } else {
         // Validate referral code is provided
