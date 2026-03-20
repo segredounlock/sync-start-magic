@@ -150,6 +150,15 @@ export default function Auth() {
       appToast.error("Digite um e-mail válido (ex: nome@email.com)");
       return;
     }
+    // Password strength check on signup
+    if (!isLogin) {
+      const pwCheck = validatePassword(password);
+      if (!pwCheck.valid) {
+        appToast.error(pwCheck.errors[0] || "Senha não atende os requisitos de segurança");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       if (isLogin) {
