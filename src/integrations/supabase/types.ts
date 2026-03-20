@@ -1837,6 +1837,7 @@ export type Database = {
           verification_badge: string
         }[]
       }
+      get_require_referral_code: { Args: never; Returns: boolean }
       get_sales_tools_enabled: { Args: never; Returns: boolean }
       get_scratch_recent_winners: {
         Args: never
