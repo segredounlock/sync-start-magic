@@ -624,6 +624,33 @@ export function AntifraudSection() {
                     );
                   })}
                 </div>
+
+                {/* Pagination */}
+                {fpTotalPages > 1 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      {(fpPage - 1) * FP_PER_PAGE + 1}–{Math.min(fpPage * FP_PER_PAGE, filteredFingerprints.length)} de {filteredFingerprints.length}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setFpPage(p => Math.max(1, p - 1))}
+                        disabled={fpPage <= 1}
+                        className="p-1.5 rounded-lg border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <span className="text-xs font-medium px-2">{fpPage}/{fpTotalPages}</span>
+                      <button
+                        onClick={() => setFpPage(p => Math.min(fpTotalPages, p + 1))}
+                        disabled={fpPage >= fpTotalPages}
+                        className="p-1.5 rounded-lg border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
           )}
