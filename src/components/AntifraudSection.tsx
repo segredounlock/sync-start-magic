@@ -90,6 +90,7 @@ export function AntifraudSection() {
   // Fingerprints state
   const [fingerprints, setFingerprints] = useState<FingerprintRecord[]>([]);
   const [fpSearch, setFpSearch] = useState("");
+  const [fpSelfieFilter, setFpSelfieFilter] = useState<"all" | "with" | "without">("all");
   const [fpPage, setFpPage] = useState(1);
   const FP_PER_PAGE = 20;
   const [expandedFp, setExpandedFp] = useState<string | null>(null);
@@ -298,19 +299,24 @@ export function AntifraudSection() {
 
   // ── Filtered data ──
   const filteredFingerprints = useMemo(() => {
-    if (!fpSearch.trim()) return fingerprints;
+    let list = fingerprints;
+    // Selfie filter
+    if (fpSelfieFilter === "with") list = list.filter(f => !!f.selfie_url);
+    else if (fpSelfieFilter === "without") list = list.filter(f => !f.selfie_url);
+    // Text search
+    if (!fpSearch.trim()) return list;
     const q = fpSearch.toLowerCase();
-    return fingerprints.filter(f =>
+    return list.filter(f =>
       (f.user_nome?.toLowerCase().includes(q)) ||
       (f.user_email?.toLowerCase().includes(q)) ||
       (f.ip_address?.toLowerCase().includes(q)) ||
       (f.fingerprint_hash?.toLowerCase().includes(q)) ||
       (f.platform?.toLowerCase().includes(q))
     );
-  }, [fingerprints, fpSearch]);
+  }, [fingerprints, fpSearch, fpSelfieFilter]);
 
   // Reset page when search changes
-  useEffect(() => { setFpPage(1); }, [fpSearch]);
+  useEffect(() => { setFpPage(1); }, [fpSearch, fpSelfieFilter]);
 
   const fpTotalPages = Math.max(1, Math.ceil(filteredFingerprints.length / FP_PER_PAGE));
   const paginatedFingerprints = useMemo(() => {
@@ -434,6 +440,27 @@ export function AntifraudSection() {
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                 </button>
+              </div>
+
+              {/* Selfie filter chips */}
+              <div className="flex gap-1.5 flex-wrap">
+                {([
+                  { value: "all", label: "Todos" },
+                  { value: "with", label: "📷 Com foto" },
+                  { value: "without", label: "🚫 Sem foto" },
+                ] as { value: "all" | "with" | "without"; label: string }[]).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFpSelfieFilter(opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      fpSelfieFilter === opt.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
 
               {loading && fingerprints.length === 0 ? (
