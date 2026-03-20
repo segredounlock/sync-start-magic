@@ -316,7 +316,7 @@ export function AntifraudSection() {
   }, [fingerprints, fpSearch, fpSelfieFilter]);
 
   // Reset page when search changes
-  useEffect(() => { setFpPage(1); }, [fpSearch]);
+  useEffect(() => { setFpPage(1); }, [fpSearch, fpSelfieFilter]);
 
   const fpTotalPages = Math.max(1, Math.ceil(filteredFingerprints.length / FP_PER_PAGE));
   const paginatedFingerprints = useMemo(() => {
