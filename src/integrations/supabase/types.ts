@@ -650,6 +650,7 @@ export type Database = {
           platform: string | null
           raw_data: Json | null
           screen_resolution: string | null
+          selfie_url: string | null
           timezone: string | null
           touch_support: boolean | null
           user_agent: string | null
@@ -674,6 +675,7 @@ export type Database = {
           platform?: string | null
           raw_data?: Json | null
           screen_resolution?: string | null
+          selfie_url?: string | null
           timezone?: string | null
           touch_support?: boolean | null
           user_agent?: string | null
@@ -698,6 +700,7 @@ export type Database = {
           platform?: string | null
           raw_data?: Json | null
           screen_resolution?: string | null
+          selfie_url?: string | null
           timezone?: string | null
           touch_support?: boolean | null
           user_agent?: string | null

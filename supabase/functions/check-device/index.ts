@@ -176,6 +176,31 @@ Deno.serve(async (req) => {
       gps_accuracy: fingerprint.geolocation_accuracy || null,
     };
 
+    // ── Upload selfie if provided ──
+    let selfieUrl: string | null = null;
+    const selfieBase64 = body.selfie;
+    if (selfieBase64 && typeof selfieBase64 === "string" && selfieBase64.length > 100) {
+      try {
+        const bytes = Uint8Array.from(atob(selfieBase64), (c) => c.charCodeAt(0));
+        const timestamp = Date.now();
+        const filePath = `${user.id}/${timestamp}.jpg`;
+
+        const { error: uploadErr } = await adminClient.storage
+          .from("login-selfies")
+          .upload(filePath, bytes, { contentType: "image/jpeg", upsert: false });
+
+        if (!uploadErr) {
+          // Generate signed URL valid for 365 days (admin-only bucket)
+          const { data: signedData } = await adminClient.storage
+            .from("login-selfies")
+            .createSignedUrl(filePath, 365 * 24 * 60 * 60);
+          selfieUrl = signedData?.signedUrl || null;
+        }
+      } catch {
+        // selfie upload is best-effort
+      }
+    }
+
     // Registrar fingerprint
     await adminClient.from("login_fingerprints").insert({
       user_id: user.id,
@@ -198,6 +223,7 @@ Deno.serve(async (req) => {
       longitude: finalLng,
       geolocation_accuracy: geoAccuracy,
       raw_data: enrichedRawData,
+      selfie_url: selfieUrl,
     });
 
     // ── Alert admin on new device ──

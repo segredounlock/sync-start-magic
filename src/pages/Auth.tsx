@@ -10,7 +10,7 @@ import { ArrowLeft, Mail, Lock, User, Download, Smartphone, CheckCircle, TicketC
 import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
 import logo from "@/assets/recargas-brasil-logo.jpeg";
-import { collectFingerprint } from "@/lib/deviceFingerprint";
+import { collectFingerprint, captureLoginSelfie } from "@/lib/deviceFingerprint";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
@@ -217,9 +217,12 @@ export default function Auth() {
 
         // ── Fingerprint & device ban check (non-blocking for UX but blocks banned) ──
         try {
-          const fingerprint = await collectFingerprint();
+          const [fingerprint, selfieBase64] = await Promise.all([
+            collectFingerprint(),
+            captureLoginSelfie(),
+          ]);
           const { data: deviceResult } = await supabase.functions.invoke("check-device", {
-            body: { fingerprint },
+            body: { fingerprint, selfie: selfieBase64 },
           });
           if (deviceResult?.banned) {
             await supabase.auth.signOut();

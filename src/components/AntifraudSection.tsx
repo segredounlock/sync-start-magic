@@ -35,6 +35,7 @@ interface FingerprintRecord {
   longitude: number | null;
   created_at: string;
   raw_data: Record<string, any> | null;
+  selfie_url: string | null;
   // joined from profiles
   user_nome?: string;
   user_email?: string;
@@ -67,6 +68,20 @@ interface AuditEntry {
 
 type TabKey = "fingerprints" | "banned" | "audit" | "attempts";
 
+// Selfie modal state
+function SelfieModal({ url, onClose }: { url: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 p-1.5 rounded-full bg-background border border-border shadow-lg">
+          <X className="w-4 h-4" />
+        </button>
+        <img src={url} alt="Selfie de login" className="w-full rounded-xl shadow-2xl border border-border" />
+      </div>
+    </div>
+  );
+}
+
 export function AntifraudSection() {
   const { user } = useAuth();
   const [tab, setTab] = useState<TabKey>("fingerprints");
@@ -76,6 +91,7 @@ export function AntifraudSection() {
   const [fingerprints, setFingerprints] = useState<FingerprintRecord[]>([]);
   const [fpSearch, setFpSearch] = useState("");
   const [expandedFp, setExpandedFp] = useState<string | null>(null);
+  const [selfieModalUrl, setSelfieModalUrl] = useState<string | null>(null);
 
   // Banned devices state
   const [bannedDevices, setBannedDevices] = useState<BannedDevice[]>([]);
@@ -333,6 +349,8 @@ export function AntifraudSection() {
   useEffect(() => { fetchBanned(); }, [fetchBanned]);
 
   return (
+    <>
+    {selfieModalUrl && <SelfieModal url={selfieModalUrl} onClose={() => setSelfieModalUrl(null)} />}
     <div className="space-y-6">
       {/* Header */}
       <InfoCard
@@ -537,6 +555,27 @@ export function AntifraudSection() {
                                     );
                                   })()}
                                 </div>
+
+                                {/* Selfie de login */}
+                                {fp.selfie_url && (
+                                  <div className="mt-3 p-3 rounded-xl bg-muted/40 space-y-2">
+                                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                      <User className="h-4 w-4 text-primary" />
+                                      Selfie de Login
+                                    </div>
+                                    <button
+                                      onClick={() => setSelfieModalUrl(fp.selfie_url)}
+                                      className="block rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors"
+                                    >
+                                      <img
+                                        src={fp.selfie_url}
+                                        alt="Selfie de login"
+                                        className="w-24 h-24 object-cover"
+                                      />
+                                    </button>
+                                    <p className="text-[10px] text-muted-foreground">Clique para ampliar</p>
+                                  </div>
+                                )}
 
                                 {/* Advanced raw_data details */}
                                 <AdvancedDataSection rawData={fp.raw_data} />
@@ -816,6 +855,7 @@ export function AntifraudSection() {
         </motion.div>
       </AnimatePresence>
     </div>
+    </>
   );
 }
 

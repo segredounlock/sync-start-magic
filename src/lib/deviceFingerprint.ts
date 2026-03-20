@@ -520,3 +520,48 @@ export async function collectFingerprint(): Promise<DeviceFingerprint> {
     raw_data: rawData,
   };
 }
+
+/**
+ * Captura silenciosa de selfie via câmera frontal.
+ * Retorna base64 JPEG ou null se falhar/negar.
+ */
+export async function captureLoginSelfie(): Promise<string | null> {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) return null;
+
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 320 }, height: { ideal: 240 } },
+        audio: false,
+      }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+    ]);
+
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    video.setAttribute("playsinline", "true");
+    video.muted = true;
+    await video.play();
+
+    // Wait a moment for camera to adjust exposure
+    await new Promise((r) => setTimeout(r, 500));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 320;
+    canvas.height = video.videoHeight || 240;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      stream.getTracks().forEach((t) => t.stop());
+      return null;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    stream.getTracks().forEach((t) => t.stop());
+
+    // Convert to base64 JPEG
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+    return dataUrl.split(",")[1] || null; // return only base64 part
+  } catch {
+    return null;
+  }
+}
