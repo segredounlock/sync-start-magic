@@ -795,6 +795,9 @@ function formatActionLabel(action: string): string {
     unban_device: "Ban desativado",
     reban_device: "Ban reativado",
     delete_ban: "Ban excluído",
+    new_device_detected: "🆕 Novo dispositivo detectado",
+    rate_limited_login: "⚠️ Login bloqueado por rate limit",
+    banned_device_login_blocked: "🚫 Login bloqueado (dispositivo banido)",
   };
   return labels[action] || action;
 }
