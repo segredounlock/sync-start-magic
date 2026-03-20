@@ -38,8 +38,9 @@ export default function ResetPassword() {
       toast.error("As senhas não coincidem");
       return;
     }
-    if (password.length < 6) {
-      toast.error("A senha deve ter no mínimo 6 caracteres");
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      toast.error(pwCheck.errors[0] || "Senha não atende os requisitos de segurança");
       return;
     }
 
