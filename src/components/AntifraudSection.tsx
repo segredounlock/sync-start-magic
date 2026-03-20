@@ -299,16 +299,21 @@ export function AntifraudSection() {
 
   // ── Filtered data ──
   const filteredFingerprints = useMemo(() => {
-    if (!fpSearch.trim()) return fingerprints;
+    let list = fingerprints;
+    // Selfie filter
+    if (fpSelfieFilter === "with") list = list.filter(f => !!f.selfie_url);
+    else if (fpSelfieFilter === "without") list = list.filter(f => !f.selfie_url);
+    // Text search
+    if (!fpSearch.trim()) return list;
     const q = fpSearch.toLowerCase();
-    return fingerprints.filter(f =>
+    return list.filter(f =>
       (f.user_nome?.toLowerCase().includes(q)) ||
       (f.user_email?.toLowerCase().includes(q)) ||
       (f.ip_address?.toLowerCase().includes(q)) ||
       (f.fingerprint_hash?.toLowerCase().includes(q)) ||
       (f.platform?.toLowerCase().includes(q))
     );
-  }, [fingerprints, fpSearch]);
+  }, [fingerprints, fpSearch, fpSelfieFilter]);
 
   // Reset page when search changes
   useEffect(() => { setFpPage(1); }, [fpSearch]);
