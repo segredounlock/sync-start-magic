@@ -309,6 +309,15 @@ export function AntifraudSection() {
     );
   }, [fingerprints, fpSearch]);
 
+  // Reset page when search changes
+  useEffect(() => { setFpPage(1); }, [fpSearch]);
+
+  const fpTotalPages = Math.max(1, Math.ceil(filteredFingerprints.length / FP_PER_PAGE));
+  const paginatedFingerprints = useMemo(() => {
+    const start = (fpPage - 1) * FP_PER_PAGE;
+    return filteredFingerprints.slice(start, start + FP_PER_PAGE);
+  }, [filteredFingerprints, fpPage]);
+
   const filteredBanned = useMemo(() => {
     let list = bannedDevices;
     if (!showInactive) list = list.filter(b => b.active);
