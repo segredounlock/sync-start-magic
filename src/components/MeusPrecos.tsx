@@ -369,16 +369,16 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
       {activeOp && (
         <>
           {/* Count + Select All */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <span className="text-sm text-muted-foreground font-medium">
               <span className="font-bold text-foreground">{activeOp.values.length}</span> produtos listados
             </span>
             <button
               onClick={() => selectAllForOperadora(activeOp.id)}
-              className="text-sm font-semibold text-primary flex items-center gap-1 hover:underline"
+              className="text-sm font-semibold text-primary flex items-center gap-1 hover:underline shrink-0"
             >
               <CheckSquare className="h-4 w-4" />
-              Selecionar Todos de {activeOp.nome.toUpperCase()}
+              Selecionar Todos
             </button>
           </div>
 
