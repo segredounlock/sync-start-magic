@@ -19,7 +19,7 @@ const CHANNEL_ICONS: Record<string, string> = {
 };
 
 export function FloatingSupportButton() {
-  const { user, role } = useAuth();
+  const { user, role, roleLoaded } = useAuth();
   const location = useLocation();
   const { playSound } = useNotificationSound();
   const { channels, bubbleChannel, isCustom, loading: channelsLoading } = useSupportChannels(user?.id);
@@ -127,7 +127,7 @@ export function FloatingSupportButton() {
     }
   };
 
-  if (!user || shouldHide || role === "admin" || channelsLoading || enabled === null) return null;
+  if (!user || shouldHide || !roleLoaded || role === "admin" || channelsLoading || enabled === null) return null;
 
   // When disabled AND no custom channels, show offline button
   if (!enabled && !isCustom) {
