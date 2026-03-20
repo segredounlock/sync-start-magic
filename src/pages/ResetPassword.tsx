@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { styledToast as toast } from "@/lib/toast";
 import { useNavigate } from "react-router-dom";
 import { Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
