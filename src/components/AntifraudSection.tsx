@@ -346,7 +346,7 @@ export function AntifraudSection() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Fingerprint} label="Fingerprints" value={stats.totalFingerprints} color="text-primary" />
+        <StatCard icon={Fingerprint} label="Dados Coletados" value={stats.totalFingerprints} color="text-primary" />
         <StatCard icon={User} label="Usuários Únicos" value={stats.uniqueUsers} color="text-accent" />
         <StatCard icon={Ban} label="Bans Ativos" value={stats.bannedActive} color="text-destructive" />
         <StatCard icon={AlertTriangle} label="IPs Suspeitos" value={stats.suspiciousIps} color="text-warning" />
