@@ -1170,7 +1170,7 @@ export default function Principal() {
 
     // Top resellers by volume today (all users who made recargas)
     const revVolumeMap: Record<string, { nome: string; count: number; total: number }> = {};
-    todayRecs.forEach(r => {
+    completedToday.forEach(r => {
       const rev = revendedores.find(rv => rv.id === r.user_id);
       if (!rev) return;
       if (!revVolumeMap[r.user_id]) revVolumeMap[r.user_id] = { nome: rev.nome || rev.email || "Sem nome", count: 0, total: 0 };
