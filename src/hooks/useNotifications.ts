@@ -268,6 +268,12 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             try { playSuccessSound(); } catch {}
             if (showRecargaRef.current) {
               showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`);
+              const toastMethod = r.status === "completed" || r.status === "concluida"
+                ? appToast.recargaCompleted
+                : r.status === "falha" || r.status === "cancelled"
+                  ? appToast.recargaFailed
+                  : appToast.recargaProcessing;
+              toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.updated_at || r.created_at)}` });
             }
             if (knownIds.current.has(originalId)) {
               setNotifications(prev => prev.map(n =>
