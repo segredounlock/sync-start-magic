@@ -26,7 +26,7 @@ export function FloatingSupportButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasNewMessage, setHasNewMessage] = useState(false);
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
   const [showOfflineTooltip, setShowOfflineTooltip] = useState(false);
   const [showChannelsPopup, setShowChannelsPopup] = useState(false);
   const isOpenRef = useRef(false);
@@ -118,7 +118,7 @@ export function FloatingSupportButton() {
     }
   };
 
-  if (!user || shouldHide || role === "admin" || channelsLoading) return null;
+  if (!user || shouldHide || role === "admin" || channelsLoading || enabled === null) return null;
 
   // When disabled AND no custom channels, show offline button
   if (!enabled && !isCustom) {
