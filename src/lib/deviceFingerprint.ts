@@ -319,27 +319,56 @@ function getMathFingerprint(): string {
   }
 }
 
-function getGeolocation(): Promise<{ lat: number | null; lng: number | null; accuracy: number | null }> {
+interface GeoResult {
+  lat: number | null;
+  lng: number | null;
+  accuracy: number | null;
+  source: "gps" | "ip" | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  isp: string | null;
+}
+
+/** Try GPS with high accuracy first, then fall back to coarse GPS */
+function getGeolocation(): Promise<GeoResult> {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      resolve({ lat: null, lng: null, accuracy: null });
+      resolve({ lat: null, lng: null, accuracy: null, source: null, city: null, region: null, country: null, isp: null });
       return;
     }
-    const timeout = setTimeout(() => resolve({ lat: null, lng: null, accuracy: null }), 5000);
+
+    let resolved = false;
+    const done = (lat: number | null, lng: number | null, accuracy: number | null) => {
+      if (resolved) return;
+      resolved = true;
+      resolve({ lat, lng, accuracy, source: lat ? "gps" : null, city: null, region: null, country: null, isp: null });
+    };
+
+    // Global timeout — never hang more than 10s total
+    const globalTimeout = setTimeout(() => done(null, null, null), 10000);
+
+    // Try high accuracy first (GPS on mobile)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        clearTimeout(timeout);
-        resolve({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        });
+        clearTimeout(globalTimeout);
+        done(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
       },
       () => {
-        clearTimeout(timeout);
-        resolve({ lat: null, lng: null, accuracy: null });
+        // Fallback: try without high accuracy (WiFi/cell tower)
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            clearTimeout(globalTimeout);
+            done(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+          },
+          () => {
+            clearTimeout(globalTimeout);
+            done(null, null, null);
+          },
+          { timeout: 4000, maximumAge: 600000, enableHighAccuracy: false }
+        );
       },
-      { timeout: 4000, maximumAge: 300000 }
+      { timeout: 5000, maximumAge: 60000, enableHighAccuracy: true }
     );
   });
 }
@@ -462,6 +491,12 @@ export async function collectFingerprint(): Promise<DeviceFingerprint> {
     uaBrands: nav.userAgentData?.brands?.map((b: any) => `${b.brand}/${b.version}`).join(",") || null,
     uaMobile: nav.userAgentData?.mobile ?? null,
     uaPlatform: nav.userAgentData?.platform || null,
+
+    // Geolocation source info
+    geo_source: geo.source,
+    gps_lat: geo.lat,
+    gps_lon: geo.lng,
+    gps_accuracy_meters: geo.accuracy,
   };
 
   return {

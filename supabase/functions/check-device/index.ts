@@ -58,6 +58,26 @@ Deno.serve(async (req) => {
       || req.headers.get("x-real-ip")
       || "unknown";
 
+    // ── IP Geolocation fallback + enriquecimento ──
+    let ipGeo: { lat?: number; lon?: number; city?: string; regionName?: string; country?: string; isp?: string; query?: string } = {};
+    try {
+      const geoRes = await fetch(`http://ip-api.com/json/${clientIP}?fields=lat,lon,city,regionName,country,isp,query`, {
+        signal: AbortSignal.timeout(3000),
+      });
+      if (geoRes.ok) {
+        ipGeo = await geoRes.json();
+      }
+    } catch {
+      // silent — IP geo is best-effort
+    }
+
+    // Merge location: prefer GPS from client, fallback to IP
+    const hasGpsFromClient = fingerprint.latitude != null && fingerprint.longitude != null;
+    const finalLat = hasGpsFromClient ? fingerprint.latitude : (ipGeo.lat ?? null);
+    const finalLng = hasGpsFromClient ? fingerprint.longitude : (ipGeo.lon ?? null);
+    const geoSource = hasGpsFromClient ? "gps" : (ipGeo.lat ? "ip" : null);
+    const geoAccuracy = hasGpsFromClient ? fingerprint.geolocation_accuracy : (ipGeo.lat ? 50000 : null); // IP ~50km
+
     // ── Rate limiting: check recent failed login attempts ──
     const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60 * 1000).toISOString();
     
@@ -139,6 +159,23 @@ Deno.serve(async (req) => {
 
     const isNewDevice = !knownFingerprints || knownFingerprints.length === 0;
 
+    // Enriquecer raw_data com dados de IP geolocation
+    const enrichedRawData = {
+      ...(fingerprint.raw_data || {}),
+      // Geo enrichment from server
+      geo_source: geoSource,
+      ip_city: ipGeo.city || null,
+      ip_region: ipGeo.regionName || null,
+      ip_country: ipGeo.country || null,
+      ip_isp: ipGeo.isp || null,
+      ip_lat: ipGeo.lat || null,
+      ip_lon: ipGeo.lon || null,
+      ip_address_resolved: ipGeo.query || clientIP,
+      gps_lat: fingerprint.latitude || null,
+      gps_lon: fingerprint.longitude || null,
+      gps_accuracy: fingerprint.geolocation_accuracy || null,
+    };
+
     // Registrar fingerprint
     await adminClient.from("login_fingerprints").insert({
       user_id: user.id,
@@ -157,10 +194,10 @@ Deno.serve(async (req) => {
       hardware_concurrency: fingerprint.hardware_concurrency || null,
       color_depth: fingerprint.color_depth || null,
       pixel_ratio: fingerprint.pixel_ratio || null,
-      latitude: fingerprint.latitude || null,
-      longitude: fingerprint.longitude || null,
-      geolocation_accuracy: fingerprint.geolocation_accuracy || null,
-      raw_data: fingerprint.raw_data || {},
+      latitude: finalLat,
+      longitude: finalLng,
+      geolocation_accuracy: geoAccuracy,
+      raw_data: enrichedRawData,
     });
 
     // ── Alert admin on new device ──

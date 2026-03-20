@@ -483,9 +483,59 @@ export function AntifraudSection() {
                                   <DetailItem icon={Fingerprint} label="Hash" value={fp.fingerprint_hash?.slice(0, 16) + "..."} />
                                   <DetailItem icon={Monitor} label="Canvas" value={fp.canvas_hash?.slice(0, 16) + "..." || "—"} />
                                   <DetailItem icon={Monitor} label="WebGL" value={fp.webgl_renderer?.slice(0, 30) || "—"} />
-                                  {fp.latitude && fp.longitude && (
-                                    <DetailItem icon={MapPin} label="Localização" value={`${fp.latitude.toFixed(4)}, ${fp.longitude.toFixed(4)}`} />
-                                  )}
+                                  {/* Localização enriquecida */}
+                                  {(() => {
+                                    const rd = fp.raw_data || {};
+                                    const hasGps = fp.latitude != null && fp.longitude != null;
+                                    const hasIp = rd.ip_city || rd.ip_region || rd.ip_country;
+                                    const geoSource = rd.geo_source;
+                                    
+                                    if (!hasGps && !hasIp) return null;
+                                    
+                                    const locationParts: string[] = [];
+                                    if (rd.ip_city) locationParts.push(rd.ip_city);
+                                    if (rd.ip_region) locationParts.push(rd.ip_region);
+                                    if (rd.ip_country) locationParts.push(rd.ip_country);
+                                    const locationLabel = locationParts.length > 0 ? locationParts.join(", ") : null;
+                                    
+                                    return (
+                                      <div className="col-span-full mt-2 p-3 rounded-xl bg-muted/40 space-y-2">
+                                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                          <MapPin className="h-4 w-4 text-primary" />
+                                          Localização
+                                          {geoSource && (
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                                              geoSource === "gps" ? "bg-green-500/15 text-green-600" : "bg-yellow-500/15 text-yellow-600"
+                                            }`}>
+                                              {geoSource === "gps" ? "📡 GPS" : "🌐 IP"}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {locationLabel && (
+                                          <p className="text-sm text-foreground">{locationLabel}</p>
+                                        )}
+                                        {hasGps && (
+                                          <p className="text-xs text-muted-foreground">
+                                            Coordenadas: {fp.latitude!.toFixed(5)}, {fp.longitude!.toFixed(5)}
+                                            {rd.gps_accuracy_meters && ` (±${Math.round(rd.gps_accuracy_meters)}m)`}
+                                          </p>
+                                        )}
+                                        {rd.ip_isp && (
+                                          <p className="text-xs text-muted-foreground">Provedor: {rd.ip_isp}</p>
+                                        )}
+                                        {hasGps && (
+                                          <a
+                                            href={`https://www.google.com/maps?q=${fp.latitude},${fp.longitude}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                                          >
+                                            <MapPin className="h-3 w-3" /> Ver no Google Maps
+                                          </a>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
 
                                 {/* Advanced raw_data details */}
@@ -851,6 +901,22 @@ const RAW_DATA_CATEGORIES: { title: string; emoji: string; keys: { key: string; 
       { key: "doNotTrack", label: "Do Not Track", icon: Shield },
       { key: "cookieEnabled", label: "Cookies", icon: Shield, format: v => v ? "Sim" : "Não" },
       { key: "pdfViewerEnabled", label: "PDF Viewer", icon: Shield, format: v => v ? "Sim" : "Não" },
+    ],
+  },
+  {
+    title: "Localização (IP)", emoji: "📍",
+    keys: [
+      { key: "geo_source", label: "Fonte", icon: MapPin, format: (v: any) => v === "gps" ? "📡 GPS" : v === "ip" ? "🌐 IP" : String(v) },
+      { key: "ip_city", label: "Cidade", icon: MapPin },
+      { key: "ip_region", label: "Estado", icon: MapPin },
+      { key: "ip_country", label: "País", icon: Globe },
+      { key: "ip_isp", label: "Provedor", icon: Globe },
+      { key: "ip_lat", label: "Lat (IP)", icon: MapPin },
+      { key: "ip_lon", label: "Lon (IP)", icon: MapPin },
+      { key: "gps_lat", label: "Lat (GPS)", icon: MapPin },
+      { key: "gps_lon", label: "Lon (GPS)", icon: MapPin },
+      { key: "gps_accuracy_meters", label: "Precisão GPS", icon: MapPin, format: (v: any) => `±${Math.round(v)}m` },
+      { key: "ip_address_resolved", label: "IP Resolvido", icon: Shield },
     ],
   },
   {
