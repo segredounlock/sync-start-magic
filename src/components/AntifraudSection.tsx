@@ -442,6 +442,27 @@ export function AntifraudSection() {
                 </button>
               </div>
 
+              {/* Selfie filter chips */}
+              <div className="flex gap-1.5 flex-wrap">
+                {([
+                  { value: "all", label: "Todos" },
+                  { value: "with", label: "📷 Com foto" },
+                  { value: "without", label: "🚫 Sem foto" },
+                ] as { value: "all" | "with" | "without"; label: string }[]).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFpSelfieFilter(opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      fpSelfieFilter === opt.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
               {loading && fingerprints.length === 0 ? (
                 <div className="space-y-3">{[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}</div>
               ) : filteredFingerprints.length === 0 ? (
