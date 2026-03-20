@@ -58,6 +58,26 @@ Deno.serve(async (req) => {
       || req.headers.get("x-real-ip")
       || "unknown";
 
+    // ── IP Geolocation fallback + enriquecimento ──
+    let ipGeo: { lat?: number; lon?: number; city?: string; regionName?: string; country?: string; isp?: string; query?: string } = {};
+    try {
+      const geoRes = await fetch(`http://ip-api.com/json/${clientIP}?fields=lat,lon,city,regionName,country,isp,query`, {
+        signal: AbortSignal.timeout(3000),
+      });
+      if (geoRes.ok) {
+        ipGeo = await geoRes.json();
+      }
+    } catch {
+      // silent — IP geo is best-effort
+    }
+
+    // Merge location: prefer GPS from client, fallback to IP
+    const hasGpsFromClient = fingerprint.latitude != null && fingerprint.longitude != null;
+    const finalLat = hasGpsFromClient ? fingerprint.latitude : (ipGeo.lat ?? null);
+    const finalLng = hasGpsFromClient ? fingerprint.longitude : (ipGeo.lon ?? null);
+    const geoSource = hasGpsFromClient ? "gps" : (ipGeo.lat ? "ip" : null);
+    const geoAccuracy = hasGpsFromClient ? fingerprint.geolocation_accuracy : (ipGeo.lat ? 50000 : null); // IP ~50km
+
     // ── Rate limiting: check recent failed login attempts ──
     const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60 * 1000).toISOString();
     
