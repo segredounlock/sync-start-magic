@@ -1,0 +1,1 @@
+UPDATE profiles SET reseller_id = 'd74ea4f9-e831-4b14-a48f-75ef2d6ac5d3' WHERE id = 'c8ed44f5-bace-4743-9828-095efd14bb72';
