@@ -6,10 +6,8 @@ function ShimmerTitle({ text }: { text: string }) {
   const match = text.match(/(.*?)(Recargas\s*Brasil)(.*)/i);
   if (!match) return <>{text}</>;
   const [, before, rb, after] = match;
-  return <>{before}<span className="shimmer-letters">{rb.replace(/brasil/i, m => `<span class="brasil-word">${m}</span>`)
-    .split(/(<span[^>]*>.*?<\/span>)/g).map((part, i) =>
-      part.startsWith("<span") ? <span key={i} className="brasil-word">{part.replace(/<[^>]+>/g, "")}</span> : part
-    )}</span>{after}</>;
+  const parts = rb.split(/brasil/i);
+  return <>{before}<span className="shimmer-letters">{parts[0]}<span className="brasil-word">Brasil</span></span>{after}</>;
 }
 
 interface PromoBannerProps {
