@@ -201,7 +201,7 @@ export function AntifraudSection() {
       });
       if (error) throw error;
 
-      await logAdminAction(user!.id, "ban_device", "device", fp.fingerprint_hash, {
+      await logAudit("ban_device", "device", fp.fingerprint_hash, {
         user_id: fp.user_id, user_nome: fp.user_nome, ip: fp.ip_address,
       });
 
