@@ -345,12 +345,12 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
 
       {/* Relatório de Desempenho */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <h2 className="text-lg font-bold text-foreground">Relatório de Desempenho</h2>
             <p className="text-xs text-muted-foreground">Acompanhe suas vendas e comissões no período selecionado.</p>
           </div>
-          <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-muted rounded-xl p-1 self-start sm:self-auto">
             {([
               { key: "hoje" as Period, label: "Hoje" },
               { key: "mes" as Period, label: "Mês" },

@@ -4,7 +4,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, ArrowDown, Smartphone, GitBranch, DollarSign, Percent, Tag } from "lucide-react";
+import { Save, Info, CheckSquare, ChevronDown, ChevronUp, Users, ArrowRight, Smartphone, GitBranch, DollarSign, Percent, Tag } from "lucide-react";
 import { InfoCard } from "@/components/InfoCard";
 
 interface PricingValue {
@@ -278,52 +278,48 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
             >
               <div className="p-4 space-y-4 bg-muted/10">
                 {/* Horizontal flow */}
-                <div className="flex items-center justify-center gap-2 sm:gap-4">
+                <div className="flex items-center justify-center gap-1 sm:gap-4 overflow-x-auto">
                   {/* Avô */}
-                  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center">
-                      <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
+                  <div className="flex flex-col items-center gap-1.5 min-w-[70px] sm:min-w-[80px]">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-center">
+                      <Users className="h-4 w-4 sm:h-6 sm:w-6 text-purple-400" />
                     </div>
-                    <span className="text-xs font-semibold text-foreground">Avô</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Quem te<br/>indicou</span>
-                    <span className="mt-1 px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-bold">
-                      Ganha {commissionConfig.indirect}%
+                    <span className="text-[11px] sm:text-xs font-semibold text-foreground">Avô</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground text-center leading-tight">Quem te<br/>indicou</span>
+                    <span className="mt-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[9px] sm:text-[10px] font-bold">
+                      {commissionConfig.indirect}%
                     </span>
                   </div>
 
-                  <div className="flex flex-col items-center gap-0.5 -mt-6">
-                    <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
-                    <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
-                    <span className="text-[9px] text-muted-foreground">te indicou</span>
+                  <div className="flex flex-col items-center gap-0.5 -mt-4 sm:-mt-6 shrink-0">
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground/60" />
                   </div>
 
                   {/* Você */}
-                  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
-                      <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  <div className="flex flex-col items-center gap-1.5 min-w-[70px] sm:min-w-[80px]">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
+                      <Users className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <span className="text-xs font-semibold text-foreground">Você</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Vende pro<br/>cliente</span>
-                    <span className="mt-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
-                      Fica com {commissionConfig.direct}%
+                    <span className="text-[11px] sm:text-xs font-semibold text-foreground">Você</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground text-center leading-tight">Vende pro<br/>cliente</span>
+                    <span className="mt-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] sm:text-[10px] font-bold">
+                      {commissionConfig.direct}%
                     </span>
                   </div>
 
-                  <div className="flex flex-col items-center gap-0.5 -mt-6">
-                    <ArrowRight className="h-5 w-5 text-muted-foreground/60 hidden sm:block" />
-                    <ArrowDown className="h-5 w-5 text-muted-foreground/60 sm:hidden" />
-                    <span className="text-[9px] text-muted-foreground">você vende</span>
+                  <div className="flex flex-col items-center gap-0.5 -mt-4 sm:-mt-6 shrink-0">
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground/60" />
                   </div>
 
                   {/* Cliente */}
-                  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center">
-                      <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+                  <div className="flex flex-col items-center gap-1.5 min-w-[70px] sm:min-w-[80px]">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center">
+                      <Smartphone className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-400" />
                     </div>
-                    <span className="text-xs font-semibold text-foreground">Cliente</span>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Compra a<br/>recarga</span>
-                    <span className="mt-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
-                      💰 Paga o preço
+                    <span className="text-[11px] sm:text-xs font-semibold text-foreground">Cliente</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground text-center leading-tight">Compra a<br/>recarga</span>
+                    <span className="mt-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[9px] sm:text-[10px] font-bold">
+                      💰 Paga
                     </span>
                   </div>
                 </div>
@@ -369,16 +365,16 @@ export function MeusPrecos({ userId }: MeusPrecosProps) {
       {activeOp && (
         <>
           {/* Count + Select All */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <span className="text-sm text-muted-foreground font-medium">
               <span className="font-bold text-foreground">{activeOp.values.length}</span> produtos listados
             </span>
             <button
               onClick={() => selectAllForOperadora(activeOp.id)}
-              className="text-sm font-semibold text-primary flex items-center gap-1 hover:underline"
+              className="text-sm font-semibold text-primary flex items-center gap-1 hover:underline shrink-0"
             >
               <CheckSquare className="h-4 w-4" />
-              Selecionar Todos de {activeOp.nome.toUpperCase()}
+              Selecionar Todos
             </button>
           </div>
 
