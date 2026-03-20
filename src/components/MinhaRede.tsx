@@ -253,12 +253,13 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border relative">
+        {/* Desktop: table */}
+        <div className="rounded-lg border border-border relative hidden sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Membro</th>
-                <th className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider hidden sm:table-cell">Status</th>
+                <th className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Status</th>
                 <th className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider hidden md:table-cell">Rede (D / I)</th>
                 <th className="text-right px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Lucro (D / I)</th>
                 <th className="text-center px-2 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider w-14">Ações</th>
@@ -275,7 +276,6 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
                     transition={{ delay: i * 0.03 }}
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
                   >
-                    {/* Member */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {member.avatar_url ? (
@@ -289,28 +289,18 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
                           <p className="font-semibold text-foreground truncate text-sm">{member.nome || "Sem nome"}</p>
                           <p className="text-xs text-muted-foreground truncate">{member.email || ""}</p>
                         </div>
-                        {/* Mobile-only badge */}
-                        <span className={`sm:hidden ml-auto shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold ${badge.color}`}>
-                          {badge.label}
-                        </span>
                       </div>
                     </td>
-
-                    {/* Status */}
-                    <td className="text-center px-3 py-3 hidden sm:table-cell">
+                    <td className="text-center px-3 py-3">
                       <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${badge.color}`}>
                         {badge.label}
                       </span>
                     </td>
-
-                    {/* Rede D/I */}
                     <td className="text-center px-3 py-3 font-medium text-foreground hidden md:table-cell">
                       <span className="font-bold">{member.direct_network}</span>
                       <span className="text-muted-foreground mx-1">/</span>
                       <span>{member.indirect_network}</span>
                     </td>
-
-                    {/* Lucro D/I */}
                     <td className="text-right px-3 py-3">
                       <div className="flex flex-col items-end gap-0.5">
                         <span className="text-xs text-success font-medium flex items-center gap-1">
@@ -323,8 +313,6 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
                         </span>
                       </div>
                     </td>
-
-                    {/* Actions */}
                     <td className="text-center px-2 py-3 relative">
                       <button
                         onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
@@ -381,6 +369,109 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: card layout */}
+        <div className="space-y-3 sm:hidden">
+          {filteredMembers.map((member, i) => {
+            const badge = roleBadge[member.role] || roleBadge.usuario;
+            return (
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className="rounded-xl border border-border bg-card p-4"
+              >
+                <div className="flex items-center gap-3">
+                  {member.avatar_url ? (
+                    <img src={member.avatar_url} alt="" className="w-11 h-11 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className={`w-11 h-11 rounded-full ${getAvatarColor(member.id)} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+                      {getInitial(member)}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-foreground truncate text-sm">{member.nome || "Sem nome"}</p>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold ${badge.color}`}>
+                        {badge.label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{member.email || ""}</p>
+                  </div>
+                  <button
+                    onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
+                    className="p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground shrink-0"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/50">
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground font-medium">Recargas</p>
+                    <p className="text-sm font-bold text-foreground">{member.total_recargas}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground font-medium">Lucro D</p>
+                    <p className="text-sm font-bold text-success"><Currency value={member.direct_profit} /></p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground font-medium">Lucro I</p>
+                    <p className="text-sm font-bold text-accent"><Currency value={member.indirect_profit} /></p>
+                  </div>
+                </div>
+
+                {/* Mobile menu */}
+                <AnimatePresence>
+                  {openMenuId === member.id && (
+                    <motion.div
+                      ref={menuRef}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden mt-3 pt-3 border-t border-border/50"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            setPricingModal({ id: member.id, name: member.nome || member.email || "Membro" });
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                        >
+                          <Tag className="h-4 w-4 text-primary" />
+                          Preços Exclusivos
+                        </button>
+                        {member.role !== "revendedor" && member.role !== "admin" && (
+                          <button
+                            disabled={promotingId === member.id}
+                            onClick={() => promoteToReseller(member)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <ArrowUpCircle className="h-4 w-4 text-purple-500" />
+                            {promotingId === member.id ? "Promovendo..." : "Promover p/ Vendedor"}
+                          </button>
+                        )}
+                        {member.role === "revendedor" && (
+                          <button
+                            disabled={promotingId === member.id}
+                            onClick={() => demoteToClient(member)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-muted/50 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <ArrowUpCircle className="h-4 w-4 rotate-180 text-destructive" />
+                            {promotingId === member.id ? "Rebaixando..." : "Rebaixar p/ Cliente"}
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
       )}
       {/* Client Pricing Modal */}
