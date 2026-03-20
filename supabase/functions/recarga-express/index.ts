@@ -558,9 +558,9 @@ Deno.serve(async (req) => {
           .maybeSingle();
         const userRole = roleData?.role || "cliente";
 
-        // Get reseller_id if cliente
+        // Get reseller_id for any user that has one (not just "cliente")
         let resellerId: string | null = null;
-        if (userRole === "cliente") {
+        {
           const { data: profileData } = await adminClient
             .from("profiles")
             .select("reseller_id")
