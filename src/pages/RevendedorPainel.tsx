@@ -238,20 +238,20 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             const globalRule = opGlobalRules.find((r) => Number(r.valor_recarga) === v);
             let cost: number;
 
-            if (hasResellerRules && resellerRule) {
-              // Priority 1: Reseller's own pricing rules (regra_valor = final cost)
+            if (isClientMode && hasResellerRules && resellerRule) {
+              // Client mode only: Reseller's network markup (regra_valor = selling price)
               cost = resellerRule.tipo_regra === "fixo"
                 ? (Number(resellerRule.regra_valor) > 0 ? Number(resellerRule.regra_valor) : Number(resellerRule.custo))
                 : Number(resellerRule.custo) * (1 + Number(resellerRule.regra_valor) / 100);
             } else if (hasBaseRules && baseRule) {
-              // Priority 2: Admin-set custom base cost (regra_valor = their cost)
+              // Admin-set custom base cost (regra_valor = user's actual cost)
               cost = Number(baseRule.regra_valor) > 0 ? Number(baseRule.regra_valor) : Number(baseRule.custo);
             } else if (dmEnabled && dmValue > 0 && globalRule) {
-              // Priority 3: Global rule + default margin
+              // Global rule + default margin
               const apiCost = Number(globalRule.custo);
               cost = dmType === "fixo" ? apiCost + dmValue : apiCost * (1 + dmValue / 100);
             } else if (globalRule) {
-              // Priority 4: Global rule direct
+              // Global rule direct
               cost = globalRule.tipo_regra === "fixo"
                 ? (Number(globalRule.regra_valor) > 0 ? Number(globalRule.regra_valor) : Number(globalRule.custo))
                 : Number(globalRule.custo) * (1 + Number(globalRule.regra_valor) / 100);
