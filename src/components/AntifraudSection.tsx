@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, ShieldAlert, ShieldCheck, Search, Eye, EyeOff, Ban,
   Smartphone, Fingerprint, MapPin, Globe, Monitor, Cpu, Clock,
-  ChevronDown, ChevronRight, X, RefreshCw, Loader2, AlertTriangle,
+  ChevronDown, ChevronRight, ChevronLeft, X, RefreshCw, Loader2, AlertTriangle,
   User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, Filter,
   FileText, Trash2,
 } from "lucide-react";
