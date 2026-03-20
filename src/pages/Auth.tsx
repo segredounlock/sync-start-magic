@@ -411,11 +411,12 @@ export default function Auth() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      minLength={6}
+                      minLength={isLogin ? 6 : 8}
                       className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm"
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder={isLogin ? "Sua senha" : "Mínimo 8 caracteres"}
                     />
                   </div>
+                  {!isLogin && <PasswordStrengthMeter password={password} />}
                 </div>
 
                 {isLogin && (

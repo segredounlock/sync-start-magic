@@ -188,6 +188,7 @@ function App() {
       <AuthProvider>
         <GlobalPresence />
         <SilentFingerprintCollector />
+        <InactivityGuard />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
