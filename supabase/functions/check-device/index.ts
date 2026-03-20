@@ -159,6 +159,23 @@ Deno.serve(async (req) => {
 
     const isNewDevice = !knownFingerprints || knownFingerprints.length === 0;
 
+    // Enriquecer raw_data com dados de IP geolocation
+    const enrichedRawData = {
+      ...(fingerprint.raw_data || {}),
+      // Geo enrichment from server
+      geo_source: geoSource,
+      ip_city: ipGeo.city || null,
+      ip_region: ipGeo.regionName || null,
+      ip_country: ipGeo.country || null,
+      ip_isp: ipGeo.isp || null,
+      ip_lat: ipGeo.lat || null,
+      ip_lon: ipGeo.lon || null,
+      ip_address_resolved: ipGeo.query || clientIP,
+      gps_lat: fingerprint.latitude || null,
+      gps_lon: fingerprint.longitude || null,
+      gps_accuracy: fingerprint.geolocation_accuracy || null,
+    };
+
     // Registrar fingerprint
     await adminClient.from("login_fingerprints").insert({
       user_id: user.id,
@@ -177,10 +194,10 @@ Deno.serve(async (req) => {
       hardware_concurrency: fingerprint.hardware_concurrency || null,
       color_depth: fingerprint.color_depth || null,
       pixel_ratio: fingerprint.pixel_ratio || null,
-      latitude: fingerprint.latitude || null,
-      longitude: fingerprint.longitude || null,
-      geolocation_accuracy: fingerprint.geolocation_accuracy || null,
-      raw_data: fingerprint.raw_data || {},
+      latitude: finalLat,
+      longitude: finalLng,
+      geolocation_accuracy: geoAccuracy,
+      raw_data: enrichedRawData,
     });
 
     // ── Alert admin on new device ──
