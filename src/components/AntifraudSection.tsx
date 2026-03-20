@@ -34,6 +34,7 @@ interface FingerprintRecord {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
+  raw_data: Record<string, any> | null;
   // joined from profiles
   user_nome?: string;
   user_email?: string;
