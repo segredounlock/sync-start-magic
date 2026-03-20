@@ -382,24 +382,23 @@ select option {
 /* Shimmer: brilho verde passa pelas letras */
 @keyframes shimmer-letters {
   0%, 100% { background-position: 200% center; }
-  40% { background-position: -200% center; }
+  50% { background-position: -200% center; }
 }
 
 /* Glow pulsante — funciona em qualquer WebView */
 @keyframes text-glow-pulse {
   0%, 100% {
-    text-shadow: 0 0 4px hsl(152 72% 50% / 0.3), 0 0 8px hsl(152 72% 50% / 0.1);
+    text-shadow: 0 0 4px hsl(152 72% 50% / 0.15), 0 0 8px hsl(152 72% 50% / 0.05);
   }
   50% {
-    text-shadow: 0 0 8px hsl(152 72% 50% / 0.6), 0 0 20px hsl(152 72% 50% / 0.3), 0 0 32px hsl(152 72% 50% / 0.1);
+    text-shadow: 0 0 6px hsl(152 72% 50% / 0.3), 0 0 14px hsl(152 72% 50% / 0.12);
   }
 }
 
 .shimmer-letters {
   display: inline-block;
-  /* Glow fallback universal — funciona em qualquer WebView/browser */
   color: hsl(152, 72%, 55%);
-  animation: text-glow-pulse 3s ease-in-out infinite;
+  animation: text-glow-pulse 5s ease-in-out infinite;
 }
 
 /* Progressive enhancement: gradient shimmer for browsers that support it */
@@ -418,7 +417,7 @@ select option {
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-    animation: shimmer-letters 4s ease-in-out infinite;
+    animation: shimmer-letters 6s ease-in-out infinite;
   }
 }
 
