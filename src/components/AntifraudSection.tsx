@@ -309,9 +309,12 @@ export function AntifraudSection() {
     <div className="space-y-6">
       {/* Header */}
       <InfoCard
-        icon={<ShieldAlert className="w-5 h-5 text-destructive" />}
         title="Sistema Antifraude"
-        description="Monitore dispositivos, gerencie banimentos e acompanhe logs de segurança. Identifique atividades suspeitas e proteja o sistema contra fraudes."
+        items={[
+          { icon: Fingerprint, label: "Fingerprints", description: "Visualize dados coletados de dispositivos de todos os usuários." },
+          { icon: Ban, label: "Banimentos", description: "Bloqueie dispositivos fraudulentos e gerencie a lista de banidos." },
+          { icon: FileText, label: "Logs", description: "Acompanhe todas as ações de segurança executadas." },
+        ]}
       />
 
       {/* Stats Cards */}
