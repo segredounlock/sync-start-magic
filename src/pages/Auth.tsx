@@ -250,7 +250,7 @@ export default function Auth() {
         }
 
         const passwordValidation = validatePassword(password);
-        if (!passwordValidation.isValid) {
+        if (!passwordValidation.valid) {
           appToast.error(passwordValidation.errors[0]);
           setSubmitting(false);
           return;
