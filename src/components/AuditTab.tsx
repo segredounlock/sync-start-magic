@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Search, Filter, Calendar, User, RefreshCw, ChevronDown, Shield } from "lucide-react";
+import { Search, Filter, Calendar, User, RefreshCw, ChevronDown, Shield, DollarSign, MessageSquare, Smartphone, UserX, UserCheck, Ban, Eye } from "lucide-react";
 import { formatDateTimeBR } from "@/lib/timezone";
 
 interface AuditLog {
@@ -16,29 +16,110 @@ interface AuditLog {
   admin_email?: string;
 }
 
-const ACTION_LABELS: Record<string, { label: string; color: string }> = {
-  block_room: { label: "Bloquear Sala", color: "bg-red-500/20 text-red-400" },
-  unblock_room: { label: "Desbloquear Sala", color: "bg-green-500/20 text-green-400" },
-  set_privacy: { label: "Alterar Privacidade", color: "bg-blue-500/20 text-blue-400" },
-  set_saldo: { label: "Definir Saldo", color: "bg-yellow-500/20 text-yellow-400" },
-  add_saldo: { label: "Adicionar Saldo", color: "bg-green-500/20 text-green-400" },
-  remove_saldo: { label: "Remover Saldo", color: "bg-red-500/20 text-red-400" },
-  set_badge: { label: "Atribuir Badge", color: "bg-purple-500/20 text-purple-400" },
-  remove_badge: { label: "Remover Badge", color: "bg-orange-500/20 text-orange-400" },
-  remove_role: { label: "Remover Cargo", color: "bg-red-500/20 text-red-400" },
-  add_role: { label: "Adicionar Cargo", color: "bg-green-500/20 text-green-400" },
-  create_user: { label: "Criar Usuário", color: "bg-blue-500/20 text-blue-400" },
-  delete_user: { label: "Deletar Usuário", color: "bg-red-500/20 text-red-400" },
-  toggle_role: { label: "Alterar Cargo", color: "bg-yellow-500/20 text-yellow-400" },
+const ACTION_LABELS: Record<string, { label: string; color: string; icon: "shield" | "dollar" | "chat" | "device" | "user" }> = {
+  // Chat
+  block_room: { label: "Bloquear Sala", color: "bg-red-500/20 text-red-400", icon: "chat" },
+  unblock_room: { label: "Desbloquear Sala", color: "bg-green-500/20 text-green-400", icon: "chat" },
+  set_privacy: { label: "Alterar Privacidade", color: "bg-blue-500/20 text-blue-400", icon: "chat" },
+  set_room_public: { label: "Sala → Pública", color: "bg-blue-500/20 text-blue-400", icon: "chat" },
+  set_room_private: { label: "Sala → Privada", color: "bg-purple-500/20 text-purple-400", icon: "chat" },
+  // Saldo
+  set_saldo: { label: "Definir Saldo", color: "bg-yellow-500/20 text-yellow-400", icon: "dollar" },
+  add_saldo: { label: "Adicionar Saldo", color: "bg-green-500/20 text-green-400", icon: "dollar" },
+  saldo_add: { label: "Adicionar Saldo", color: "bg-green-500/20 text-green-400", icon: "dollar" },
+  remove_saldo: { label: "Remover Saldo", color: "bg-red-500/20 text-red-400", icon: "dollar" },
+  saldo_remove: { label: "Remover Saldo", color: "bg-red-500/20 text-red-400", icon: "dollar" },
+  saldo_set: { label: "Definir Saldo", color: "bg-yellow-500/20 text-yellow-400", icon: "dollar" },
+  auto_collect_debt: { label: "Cobrança Automática", color: "bg-orange-500/20 text-orange-400", icon: "dollar" },
+  // Saques
+  saque_approved: { label: "Saque Aprovado", color: "bg-green-500/20 text-green-400", icon: "dollar" },
+  saque_rejected: { label: "Saque Rejeitado", color: "bg-red-500/20 text-red-400", icon: "dollar" },
+  // Badges
+  set_badge: { label: "Atribuir Badge", color: "bg-purple-500/20 text-purple-400", icon: "user" },
+  remove_badge: { label: "Remover Badge", color: "bg-orange-500/20 text-orange-400", icon: "user" },
+  // Cargos
+  remove_role: { label: "Remover Cargo", color: "bg-red-500/20 text-red-400", icon: "user" },
+  add_role: { label: "Adicionar Cargo", color: "bg-green-500/20 text-green-400", icon: "user" },
+  toggle_role: { label: "Alterar Cargo", color: "bg-yellow-500/20 text-yellow-400", icon: "user" },
+  // Usuários
+  create_user: { label: "Criar Usuário", color: "bg-blue-500/20 text-blue-400", icon: "user" },
+  delete_user: { label: "Deletar Usuário", color: "bg-red-500/20 text-red-400", icon: "user" },
+  // Antifraude
+  new_device_detected: { label: "Novo Dispositivo", color: "bg-blue-500/20 text-blue-400", icon: "device" },
+  banned_device_login_blocked: { label: "Login Bloqueado", color: "bg-red-500/20 text-red-400", icon: "shield" },
+  rate_limited_login: { label: "Rate Limit", color: "bg-orange-500/20 text-orange-400", icon: "shield" },
+  ban_user_devices: { label: "Banir Dispositivos", color: "bg-red-500/20 text-red-400", icon: "shield" },
+  ban_device: { label: "Banir Device", color: "bg-red-500/20 text-red-400", icon: "shield" },
+  unban_device: { label: "Desbanir Device", color: "bg-green-500/20 text-green-400", icon: "shield" },
+  reban_device: { label: "Rebanir Device", color: "bg-yellow-500/20 text-yellow-400", icon: "shield" },
+  delete_ban: { label: "Excluir Ban", color: "bg-muted text-muted-foreground", icon: "shield" },
+  // Reset
+  reset_password: { label: "Resetar Senha", color: "bg-yellow-500/20 text-yellow-400", icon: "user" },
+  toggle_email_verify: { label: "Verificar E-mail", color: "bg-blue-500/20 text-blue-400", icon: "user" },
 };
 
 const TARGET_LABELS: Record<string, string> = {
   chat_room: "Sala de Chat",
+  chat_conversation: "Conversa",
   user: "Usuário",
   saldo: "Saldo",
   profile: "Perfil",
   role: "Cargo",
+  user_role: "Cargo",
+  device: "Dispositivo",
+  antifraud: "Antifraude",
+  transaction: "Transação",
+  badge: "Badge",
 };
+
+const DETAIL_LABELS: Record<string, string> = {
+  user_nome: "Usuário",
+  nome: "Nome",
+  email: "E-mail",
+  ip_address: "IP",
+  fingerprint_hash: "Fingerprint",
+  reason: "Motivo",
+  platform: "Plataforma",
+  anterior: "Antes",
+  novo: "Depois",
+  role: "Cargo",
+  badge: "Badge",
+  valor: "Valor",
+  amount: "Valor",
+  tipo: "Tipo",
+  saldo_anterior: "Saldo Anterior",
+  saldo_novo: "Saldo Novo",
+  fingerprints_banned: "Fingerprints Banidos",
+  ips_banned: "IPs Banidos",
+  total_entries: "Total Entradas",
+  screen_resolution: "Resolução",
+  language: "Idioma",
+  timezone: "Fuso Horário",
+};
+
+const HIDDEN_KEYS = new Set(["user_agent", "raw_data", "canvas_hash", "webgl_renderer", "installed_plugins"]);
+
+function formatDetailValue(key: string, value: any): string {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "boolean") return value ? "Sim" : "Não";
+  if (key === "fingerprint_hash" && typeof value === "string" && value.length > 16) return value.slice(0, 16) + "…";
+  if ((key === "valor" || key === "amount" || key === "saldo_anterior" || key === "saldo_novo") && typeof value === "number") {
+    return `R$ ${value.toFixed(2)}`;
+  }
+  return String(value);
+}
+
+function ActionIcon({ type }: { type: string }) {
+  const cls = "w-3.5 h-3.5";
+  switch (type) {
+    case "shield": return <Shield className={cls} />;
+    case "dollar": return <DollarSign className={cls} />;
+    case "chat": return <MessageSquare className={cls} />;
+    case "device": return <Smartphone className={cls} />;
+    case "user": return <User className={cls} />;
+    default: return <Eye className={cls} />;
+  }
+}
 
 const PER_PAGE = 20;
 
@@ -81,7 +162,6 @@ export default function AuditTab() {
 
       const rows = (data || []) as AuditLog[];
 
-      // Fetch admin names
       const adminIds = [...new Set(rows.map((r: AuditLog) => r.admin_id))];
       if (adminIds.length > 0) {
         const { data: profiles } = await supabase
@@ -125,18 +205,15 @@ export default function AuditTab() {
   useEffect(() => { fetchAdmins(); }, [fetchAdmins]);
 
   const handleSearch = () => fetchLogs(true);
-  const loadMore = () => {
-    setPage(p => p + 1);
-  };
+  const loadMore = () => { setPage(p => p + 1); };
 
   useEffect(() => {
     if (page > 1) fetchLogs(false);
   }, [page]);
 
-  const actionLabel = (action: string) => ACTION_LABELS[action] || { label: action, color: "bg-muted text-muted-foreground" };
+  const actionLabel = (action: string) => ACTION_LABELS[action] || { label: action, color: "bg-muted text-muted-foreground", icon: "shield" as const };
   const targetLabel = (t: string) => TARGET_LABELS[t] || t;
 
-  const uniqueActions = [...new Set(logs.map(l => l.action))];
   const allActions = Object.keys(ACTION_LABELS);
 
   return (
@@ -207,21 +284,11 @@ export default function AuditTab() {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Calendar className="w-3 h-3" /> De</label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm"
-              />
+              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm" />
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Calendar className="w-3 h-3" /> Até</label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm"
-              />
+              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm" />
             </div>
           </div>
         </motion.div>
@@ -253,7 +320,8 @@ export default function AuditTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${al.color}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${al.color}`}>
+                        <ActionIcon type={al.icon} />
                         {al.label}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -263,14 +331,19 @@ export default function AuditTab() {
                     <div className="text-xs text-muted-foreground mt-1">
                       <span className="font-medium text-foreground">{log.admin_nome || log.admin_email || log.admin_id.slice(0, 8)}</span>
                       {log.target_id && (
-                        <span className="ml-1">→ <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">{log.target_id.slice(0, 12)}...</span></span>
+                        <span className="ml-1">→ <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">{log.target_id.slice(0, 12)}…</span></span>
                       )}
                     </div>
-                    {log.details && Object.keys(log.details).length > 0 && (
-                      <div className="mt-1.5 text-[11px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-1 font-mono break-all">
-                        {Object.entries(log.details).map(([k, v]) => (
-                          <div key={k}><span className="text-primary/70">{k}:</span> {String(v)}</div>
-                        ))}
+                    {log.details && typeof log.details === "object" && Object.keys(log.details).length > 0 && (
+                      <div className="mt-1.5 text-[11px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-1.5 space-y-0.5">
+                        {Object.entries(log.details)
+                          .filter(([k]) => !HIDDEN_KEYS.has(k))
+                          .map(([k, v]) => (
+                            <div key={k} className="flex gap-1">
+                              <span className="text-primary/70 font-medium shrink-0">{DETAIL_LABELS[k] || k}:</span>
+                              <span className="break-all">{formatDetailValue(k, v)}</span>
+                            </div>
+                          ))}
                       </div>
                     )}
                   </div>
