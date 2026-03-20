@@ -85,7 +85,7 @@ serve(async (req) => {
           "support_templates", "support_tickets", "support_messages",
           "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
           "push_subscriptions", "update_history",
-          "login_fingerprints", "banned_devices",
+          "login_fingerprints", "login_attempts", "banned_devices",
         ];
         for (const t of candidateTables) {
           const { error } = await supabaseAdmin.from(t).select("id").limit(0);
