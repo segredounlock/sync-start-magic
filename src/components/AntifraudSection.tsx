@@ -85,8 +85,12 @@ export function AntifraudSection() {
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([]);
   const [auditFilter, setAuditFilter] = useState("");
 
+  // Login attempts state
+  const [loginAttempts, setLoginAttempts] = useState<any[]>([]);
+  const [attemptSearch, setAttemptSearch] = useState("");
+
   // Stats
-  const [stats, setStats] = useState({ totalFingerprints: 0, uniqueUsers: 0, bannedActive: 0, suspiciousIps: 0 });
+  const [stats, setStats] = useState({ totalFingerprints: 0, uniqueUsers: 0, bannedActive: 0, suspiciousIps: 0, failedAttempts: 0 });
 
   // ── Fetch fingerprints ──
   const fetchFingerprints = useCallback(async () => {
