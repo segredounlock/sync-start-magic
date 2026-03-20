@@ -1168,7 +1168,7 @@ export default function Principal() {
     const lucroMes = cobradoMes - custoApiMes;
     const receitaMes = cobradoMes;
 
-    // Top 5 resellers by volume today
+    // Top resellers by volume today (all users who made recargas)
     const revVolumeMap: Record<string, { nome: string; count: number; total: number }> = {};
     todayRecs.forEach(r => {
       const rev = revendedores.find(rv => rv.id === r.user_id);
@@ -1177,10 +1177,11 @@ export default function Principal() {
       revVolumeMap[r.user_id].count++;
       revVolumeMap[r.user_id].total += r.valor;
     });
-    const topResellers = Object.entries(revVolumeMap)
+    const allTopResellers = Object.entries(revVolumeMap)
       .map(([id, d]) => ({ id, ...d }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
+      .sort((a, b) => b.total - a.total);
+    const topResellers = allTopResellers.slice(0, 10);
+    const totalActiveToday = allTopResellers.length;
 
     // Recent 8 recharges
     const recentRecs = allRecargas.slice(0, 8);
@@ -1205,6 +1206,7 @@ export default function Principal() {
       lucroMes,
       mesRecs: mesRecs.length,
       topResellers,
+      totalActiveToday,
       recentRecs,
       lowBalanceRevs,
       receitaTotal,
@@ -1644,6 +1646,9 @@ export default function Principal() {
                 <div className="glass-card rounded-xl p-4 md:p-5">
                   <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-success" /> Top Revendedores Hoje
+                    {dashboardMetrics.totalActiveToday > 0 && (
+                      <span className="text-[10px] font-medium text-muted-foreground ml-auto">{dashboardMetrics.totalActiveToday} usuário{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""} ativo{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""}</span>
+                    )}
                   </h3>
                   {dashboardMetrics.topResellers.length === 0 ? (
                     <p className="text-center py-6 text-muted-foreground text-sm">Sem atividade hoje</p>
