@@ -428,7 +428,9 @@ export function ProfileTab({
                   <button
                     onClick={async () => {
                       if (!user?.email) return;
-                      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+                      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+                        redirectTo: `${window.location.origin}/reset-password`,
+                      });
                       if (error) toast.error("Erro ao enviar e-mail");
                       else toast.success("E-mail de redefinição enviado!");
                     }}
