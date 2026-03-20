@@ -370,18 +370,20 @@ export default function Auth() {
                 </div>
 
                 {!isLogin && (
-                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
-                    <label className="block text-xs font-semibold text-primary uppercase tracking-wider mb-1.5">Código de Indicação</label>
+                  <div className={`rounded-xl border p-3 ${requireReferral ? 'border-primary/20 bg-primary/5' : 'border-border bg-muted/30'}`}>
+                    <label className="block text-xs font-semibold text-primary uppercase tracking-wider mb-1.5">
+                      Código de Indicação {!requireReferral && <span className="text-muted-foreground font-normal normal-case">(opcional)</span>}
+                    </label>
                     <div className="relative">
                       <TicketCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
                       <input
                         type="text"
                         value={referralCode}
                         onChange={(e) => setReferralCode(e.target.value)}
-                        required={!isLogin}
+                        required={requireReferral && !isLogin}
                         readOnly={!!refParam}
                         className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all text-sm uppercase ${refParam ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        placeholder="OBRIGATÓRIO"
+                        placeholder={requireReferral ? "OBRIGATÓRIO" : "Opcional — cole seu código aqui"}
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
