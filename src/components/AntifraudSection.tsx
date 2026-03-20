@@ -318,8 +318,9 @@ export function AntifraudSection() {
 
   const tabs: { key: TabKey; label: string; icon: any; count?: number }[] = [
     { key: "fingerprints", label: "Fingerprints", icon: Fingerprint, count: stats.totalFingerprints },
-    { key: "banned", label: "Dispositivos Banidos", icon: Ban, count: stats.bannedActive },
-    { key: "audit", label: "Logs Antifraude", icon: FileText, count: auditLogs.length },
+    { key: "banned", label: "Banidos", icon: Ban, count: stats.bannedActive },
+    { key: "attempts", label: "Tentativas", icon: Clock, count: stats.failedAttempts },
+    { key: "audit", label: "Logs", icon: FileText, count: auditLogs.length },
   ];
 
   // Check if a fingerprint is already banned
