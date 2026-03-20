@@ -71,7 +71,19 @@ export default function ResetPassword() {
     }
   };
 
-  if (!isRecovery) {
+  if (authState === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="absolute top-4 right-4"><ThemeToggle /></div>
+        <div className="text-center space-y-4">
+          <Lock className="h-12 w-12 text-muted-foreground mx-auto animate-pulse" />
+          <p className="text-muted-foreground">Verificando link de recuperação...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (authState === "invalid") {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="absolute top-4 right-4"><ThemeToggle /></div>
