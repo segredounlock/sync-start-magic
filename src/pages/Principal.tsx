@@ -1648,20 +1648,64 @@ export default function Principal() {
                   {dashboardMetrics.topResellers.length === 0 ? (
                     <p className="text-center py-6 text-muted-foreground text-sm">Sem atividade hoje</p>
                   ) : (
-                    <div className="space-y-2">
-                      {dashboardMetrics.topResellers.map((r, i) => (
-                        <div key={r.id} className={`flex items-center gap-3 py-2 border-b border-border/30 last:border-0 cursor-pointer hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-all duration-200 ${i === 0 ? "bg-warning/5" : ""}`}
-                          onClick={() => { const rev = revendedores.find(rv => rv.id === r.id); if (rev) openRevDetail(rev); }}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${i === 0 ? "bg-warning/25 text-warning" : i === 1 ? "bg-muted/80 text-muted-foreground" : "bg-muted/60 text-muted-foreground"}`}>
-                            {i === 0 ? <Trophy className="h-3.5 w-3.5" /> : i + 1}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{r.nome}</p>
-                            <p className="text-[10px] text-muted-foreground">{r.count} recargas</p>
-                          </div>
-                          <span className="text-sm font-bold font-mono text-success shrink-0"><AnimatedCounter value={r.total} prefix="R$&nbsp;" duration={600} /></span>
-                        </div>
-                      ))}
+                    <div className="space-y-1">
+                      {dashboardMetrics.topResellers.map((r, i) => {
+                        const rev = revendedores.find(rv => rv.id === r.id);
+                        const isFirst = i === 0;
+                        const isSecond = i === 1;
+                        const isThird = i === 2;
+                        const rankColors = isFirst
+                          ? "bg-warning/15 border-warning/30 text-warning"
+                          : isSecond
+                          ? "bg-muted/60 border-border text-muted-foreground"
+                          : isThird
+                          ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
+                          : "bg-muted/30 border-border/30 text-muted-foreground";
+                        const badgeColors = isFirst
+                          ? "bg-warning/25 text-warning shadow-warning/20 shadow-sm"
+                          : isSecond
+                          ? "bg-muted text-muted-foreground"
+                          : isThird
+                          ? "bg-orange-500/15 text-orange-400"
+                          : "bg-muted/60 text-muted-foreground";
+
+                        return (
+                          <motion.div
+                            key={r.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className={`flex items-center gap-3 py-2.5 px-3 rounded-lg border cursor-pointer hover:scale-[1.01] transition-all duration-200 ${rankColors}`}
+                            onClick={() => { if (rev) openRevDetail(rev); }}
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${badgeColors}`}>
+                              {isFirst ? <Trophy className="h-4 w-4" /> : i + 1}
+                            </div>
+
+                            {rev?.avatar_url ? (
+                              <img src={rev.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-border" />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <User className="h-4 w-4 text-primary" />
+                              </div>
+                            )}
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className={`text-sm font-semibold truncate ${isFirst ? "text-warning" : "text-foreground"}`}>{r.nome}</p>
+                                {rev?.verification_badge && (
+                                  <VerificationBadge badge={rev.verification_badge as any} size="sm" />
+                                )}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground">{r.count} recarga{r.count !== 1 ? "s" : ""}</p>
+                            </div>
+
+                            <span className={`text-sm font-bold font-mono shrink-0 ${isFirst ? "text-success" : "text-success/80"}`}>
+                              <AnimatedCounter value={r.total} prefix="R$&nbsp;" duration={600} />
+                            </span>
+                          </motion.div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
