@@ -64,7 +64,7 @@ interface AuditEntry {
   created_at: string;
 }
 
-type TabKey = "fingerprints" | "banned" | "audit";
+type TabKey = "fingerprints" | "banned" | "audit" | "attempts";
 
 export function AntifraudSection() {
   const { user } = useAuth();
