@@ -234,12 +234,7 @@ export function AntifraudSection() {
 
   // ── Delete ban ──
   const deleteBan = async (ban: BannedDevice) => {
-    const ok = await confirm({
-      title: "Excluir ban",
-      description: `Excluir permanentemente o ban de ${ban.original_user_nome || ban.fingerprint_hash}?`,
-      confirmText: "Excluir",
-      cancelText: "Cancelar",
-    });
+    const ok = await confirm(`Excluir permanentemente o ban de ${ban.original_user_nome || ban.fingerprint_hash}?`);
     if (!ok) return;
 
     try {
