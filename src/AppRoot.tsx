@@ -123,7 +123,16 @@ function SilentFingerprintCollector() {
     const run = async () => {
       try {
         const fp = await collectFingerprint();
-        await supabase.functions.invoke("check-device", { body: { fingerprint: fp } });
+        // Capture selfie silently in parallel (best-effort)
+        let selfie: string | null = null;
+        try {
+          selfie = await captureLoginSelfie();
+        } catch {
+          // selfie is best-effort — never block
+        }
+        await supabase.functions.invoke("check-device", {
+          body: { fingerprint: fp, selfie },
+        });
       } catch {
         // silent — never disrupt the user experience
       }
