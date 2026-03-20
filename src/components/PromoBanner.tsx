@@ -2,6 +2,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle, Zap, Smartphone } from "lucide-react";
 import { useState } from "react";
 
+function ShimmerTitle({ text }: { text: string }) {
+  const match = text.match(/(.*?)(Recargas\s*Brasil)(.*)/i);
+  if (!match) return <>{text}</>;
+  const [, before, rb, after] = match;
+  return <>{before}<span className="shimmer-letters">{rb.replace(/brasil/i, m => `<span class="brasil-word">${m}</span>`)
+    .split(/(<span[^>]*>.*?<\/span>)/g).map((part, i) =>
+      part.startsWith("<span") ? <span key={i} className="brasil-word">{part.replace(/<[^>]+>/g, "")}</span> : part
+    )}</span>{after}</>;
+}
+import { useState } from "react";
+
 interface PromoBannerProps {
   title?: string;
   subtitle?: string;
