@@ -139,7 +139,7 @@ export function AntifraudSection() {
         suspiciousIps,
       }));
     } catch (err: any) {
-      toast.error("Erro ao carregar fingerprints: " + err.message);
+      toast.error("Erro ao carregar dados coletados: " + err.message);
     } finally {
       setLoading(false);
     }
