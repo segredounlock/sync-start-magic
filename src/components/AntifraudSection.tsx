@@ -904,6 +904,22 @@ const RAW_DATA_CATEGORIES: { title: string; emoji: string; keys: { key: string; 
     ],
   },
   {
+    title: "Localização (IP)", emoji: "📍",
+    keys: [
+      { key: "geo_source", label: "Fonte", icon: MapPin, format: (v: any) => v === "gps" ? "📡 GPS" : v === "ip" ? "🌐 IP" : String(v) },
+      { key: "ip_city", label: "Cidade", icon: MapPin },
+      { key: "ip_region", label: "Estado", icon: MapPin },
+      { key: "ip_country", label: "País", icon: Globe },
+      { key: "ip_isp", label: "Provedor", icon: Globe },
+      { key: "ip_lat", label: "Lat (IP)", icon: MapPin },
+      { key: "ip_lon", label: "Lon (IP)", icon: MapPin },
+      { key: "gps_lat", label: "Lat (GPS)", icon: MapPin },
+      { key: "gps_lon", label: "Lon (GPS)", icon: MapPin },
+      { key: "gps_accuracy_meters", label: "Precisão GPS", icon: MapPin, format: (v: any) => `±${Math.round(v)}m` },
+      { key: "ip_address_resolved", label: "IP Resolvido", icon: Shield },
+    ],
+  },
+  {
     title: "Navegador / Sistema", emoji: "📱",
     keys: [
       { key: "languages", label: "Idiomas", icon: Globe },
