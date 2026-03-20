@@ -264,18 +264,9 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             }
 
             const originalId = r.id;
-            // Play sound for status changes
-            try { playSuccessSound(); } catch {}
-            if (showRecargaRef.current) {
-              showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`);
-              const toastMethod = r.status === "completed" || r.status === "concluida"
-                ? appToast.recargaCompleted
-                : r.status === "falha" || r.status === "cancelled"
-                  ? appToast.recargaFailed
-                  : appToast.recargaProcessing;
-              toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.updated_at || r.created_at)}` });
-            }
+
             if (knownIds.current.has(originalId)) {
+              // Already known — just update the existing notification silently (no toast/sound)
               setNotifications(prev => prev.map(n =>
                 n.id === originalId
                   ? { ...n, message: updatedMsg, status: r.status, created_at: originalTime }
@@ -285,7 +276,25 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
                 .update({ message: updatedMsg, status: r.status, created_at: originalTime } as any)
                 .eq("id", originalId)
                 .then(() => {});
+              // Only show toast for final status changes (completed/failed), not intermediate
+              if (showRecargaRef.current && (r.status === "completed" || r.status === "concluida" || r.status === "falha" || r.status === "cancelled")) {
+                const toastMethod = r.status === "completed" || r.status === "concluida"
+                  ? appToast.recargaCompleted
+                  : appToast.recargaFailed;
+                toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.updated_at || r.created_at)}` });
+              }
             } else {
+              // New notification — show toast and sound
+              try { playSuccessSound(); } catch {}
+              if (showRecargaRef.current) {
+                showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`);
+                const toastMethod = r.status === "completed" || r.status === "concluida"
+                  ? appToast.recargaCompleted
+                  : r.status === "falha" || r.status === "cancelled"
+                    ? appToast.recargaFailed
+                    : appToast.recargaProcessing;
+                toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.updated_at || r.created_at)}` });
+              }
               addNotification({
                 id: originalId,
                 type: "recarga",
