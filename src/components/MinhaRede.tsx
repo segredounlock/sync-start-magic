@@ -253,6 +253,7 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
           </p>
         </div>
       ) : (
+        <>
         {/* Desktop: table */}
         <div className="rounded-lg border border-border relative hidden sm:block">
           <table className="w-full text-sm">
