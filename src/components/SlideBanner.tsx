@@ -2,6 +2,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
+function ShimmerTitle({ text }: { text: string }) {
+  const match = text.match(/(.*?)(Recargas\s*Brasil)(.*)/i);
+  if (!match) return <>{text}</>;
+  const [, before, rb, after] = match;
+  const parts = rb.split(/brasil/i);
+  return <>{before}<span className="shimmer-letters">{parts[0]}<span className="brasil-word">Brasil</span></span>{after}</>;
+}
+
 interface SlideItem {
   title: string;
   subtitle: string;
@@ -126,7 +134,7 @@ export function SlideBanner({
               {/* Text */}
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-bold text-foreground leading-tight truncate">
-                  {slide.title || "Novidade!"}
+                  <ShimmerTitle text={slide.title || "Novidade!"} />
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                   {slide.subtitle || "Confira as novidades"}
