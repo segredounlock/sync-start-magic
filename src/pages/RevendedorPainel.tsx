@@ -913,8 +913,11 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
     { key: "suporte", label: supportEnabled ? "Suporte" : "Suporte offline", icon: supportEnabled ? Headphones : HeadphoneOff, color: supportEnabled ? "text-teal-400" : "text-muted-foreground" },
   ];
 
+  const isAdmin = role === "admin";
+  const showSalesTools = isAdmin || salesToolsEnabled;
+
   const salesMenuItems: MenuItem[] = (() => {
-    if (isClientMode) return [];
+    if (isClientMode || !showSalesTools) return [];
     const items: MenuItem[] = [];
     // Meus Preços: available to all users (admin price floor enforced by backend)
     items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
