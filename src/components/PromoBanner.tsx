@@ -11,7 +11,6 @@ function ShimmerTitle({ text }: { text: string }) {
       part.startsWith("<span") ? <span key={i} className="brasil-word">{part.replace(/<[^>]+>/g, "")}</span> : part
     )}</span>{after}</>;
 }
-import { useState } from "react";
 
 interface PromoBannerProps {
   title?: string;
