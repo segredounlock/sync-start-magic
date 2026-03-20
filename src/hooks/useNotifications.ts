@@ -357,7 +357,10 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
           }, (payload) => {
             const row = payload.new as any;
             const old = payload.old as any;
-            if (!row?.is_registered || old?.is_registered === row.is_registered) return;
+            // Only notify when is_registered changes from false→true
+            // old must explicitly have is_registered=false (requires REPLICA IDENTITY FULL)
+            if (!row?.is_registered) return;
+            if (old?.is_registered !== false) return;
             // Use same ID as INSERT to deduplicate (tg- prefix)
             const dedupeId = `tg-${row.id}`;
             if (knownIds.current.has(dedupeId)) return;
