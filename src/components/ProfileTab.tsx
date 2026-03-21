@@ -122,6 +122,11 @@ export function ProfileTab({
     try {
       const updates: any = {};
       if (nomeText.trim() && nomeText.trim() !== profileNome) {
+        if (role !== "admin" && isReservedName(nomeText.trim())) {
+          toast.error(RESERVED_NAME_ERROR);
+          setSavingProfile(false);
+          return;
+        }
         updates.nome = nomeText.trim();
         setProfileNome(nomeText.trim());
       }

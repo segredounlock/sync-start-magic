@@ -46,6 +46,7 @@ serve(async (req) => {
     const { email, password, nome, reseller_id } = await req.json();
     if (!email || !password) throw new Error("E-mail e senha são obrigatórios");
     if (!reseller_id) throw new Error("ID do revendedor é obrigatório");
+    if (nome && isReservedName(nome)) throw new Error("Este nome não é permitido. Nomes como 'admin', 'suporte' são reservados.");
 
     // Strong password validation
     const pwError = validateStrongPassword(password);

@@ -250,6 +250,12 @@ export default function Auth() {
           return;
         }
 
+        if (nome.trim() && isReservedName(nome.trim())) {
+          appToast.error(RESERVED_NAME_ERROR);
+          setSubmitting(false);
+          return;
+        }
+
         const passwordValidation = validatePassword(password);
         if (!passwordValidation.valid) {
           appToast.error(passwordValidation.errors[0]);
