@@ -14,6 +14,7 @@ import { PixKeyTab } from "@/components/settings/PixKeyTab";
 import { PixelAdsTab } from "@/components/settings/PixelAdsTab";
 import { SupportTab } from "@/components/settings/SupportTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
+import { isReservedName, RESERVED_NAME_ERROR } from "@/lib/reservedNames";
 
 interface ProfileTabProps {
   user: any;
