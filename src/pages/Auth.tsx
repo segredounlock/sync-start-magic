@@ -13,6 +13,7 @@ import logo from "@/assets/recargas-brasil-logo.jpeg";
 import { collectFingerprint, captureLoginSelfie } from "@/lib/deviceFingerprint";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
+import { isReservedName, RESERVED_NAME_ERROR } from "@/lib/reservedNames";
 
 type LoginPhase = "form" | "forgot" | "splash" | "done";
 
@@ -245,6 +246,12 @@ export default function Auth() {
           }
         } else if (requireReferral === true) {
           appToast.error("Código de indicação é obrigatório para criar conta");
+          setSubmitting(false);
+          return;
+        }
+
+        if (nome.trim() && isReservedName(nome.trim())) {
+          appToast.error(RESERVED_NAME_ERROR);
           setSubmitting(false);
           return;
         }

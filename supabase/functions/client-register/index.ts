@@ -15,6 +15,19 @@ const COMMON_PASSWORDS = [
   "senha123", "mudar123", "brasil", "brasil123", "recargas", "recargas123",
 ];
 
+const RESERVED_NAME_KEYWORDS = [
+  "adm", "admin", "administrador", "administradora",
+  "suporte", "support", "staff", "moderador", "moderadora",
+  "oficial", "official", "sistema", "system", "bot",
+  "equipe", "team", "gerente", "manager", "dono", "owner",
+  "recargas brasil", "recargasbrasil",
+];
+
+function isReservedName(name: string): boolean {
+  const normalized = name.toLowerCase().replace(/[^a-z0-9\s]/g, " ").trim();
+  return RESERVED_NAME_KEYWORDS.some((kw) => normalized.includes(kw));
+}
+
 function validateStrongPassword(password: string): string | null {
   if (password.length < 8) return "Senha deve ter no mínimo 8 caracteres";
   if (!/[A-Z]/.test(password)) return "Senha deve conter pelo menos 1 letra maiúscula";
@@ -33,6 +46,7 @@ serve(async (req) => {
     const { email, password, nome, reseller_id } = await req.json();
     if (!email || !password) throw new Error("E-mail e senha são obrigatórios");
     if (!reseller_id) throw new Error("ID do revendedor é obrigatório");
+    if (nome && isReservedName(nome)) throw new Error("Este nome não é permitido. Nomes como 'admin', 'suporte' são reservados.");
 
     // Strong password validation
     const pwError = validateStrongPassword(password);

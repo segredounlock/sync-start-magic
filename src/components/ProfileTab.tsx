@@ -14,6 +14,7 @@ import { PixKeyTab } from "@/components/settings/PixKeyTab";
 import { PixelAdsTab } from "@/components/settings/PixelAdsTab";
 import { SupportTab } from "@/components/settings/SupportTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
+import { isReservedName, RESERVED_NAME_ERROR } from "@/lib/reservedNames";
 
 interface ProfileTabProps {
   user: any;
@@ -121,6 +122,11 @@ export function ProfileTab({
     try {
       const updates: any = {};
       if (nomeText.trim() && nomeText.trim() !== profileNome) {
+        if (role !== "admin" && isReservedName(nomeText.trim())) {
+          toast.error(RESERVED_NAME_ERROR);
+          setSavingProfile(false);
+          return;
+        }
         updates.nome = nomeText.trim();
         setProfileNome(nomeText.trim());
       }

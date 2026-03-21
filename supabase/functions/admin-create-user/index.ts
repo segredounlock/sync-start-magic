@@ -14,6 +14,8 @@ const COMMON_PASSWORDS = [
   "senha123", "mudar123", "brasil", "brasil123", "recargas", "recargas123",
 ];
 
+// Admin-create-user does NOT block reserved names since only admins call this function
+
 function validateStrongPassword(password: string): string | null {
   if (password.length < 8) return "Senha deve ter no mínimo 8 caracteres";
   if (!/[A-Z]/.test(password)) return "Senha deve conter pelo menos 1 letra maiúscula";
