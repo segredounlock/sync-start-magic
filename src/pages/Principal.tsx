@@ -2651,7 +2651,6 @@ export default function Principal() {
               {configLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <PinProtection configKey="adminPin">
                   <div className="glass-card rounded-2xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg flex items-center gap-2">
                       <Smartphone className="h-5 w-5 text-primary" /> Provedor de Recarga
