@@ -4932,7 +4932,7 @@ export default function Principal() {
            {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
 
            {/* ===== BACKUP ===== */}
-           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
+           {view === "backup" && <BackupSection />}
         </main>
       </div>
 
