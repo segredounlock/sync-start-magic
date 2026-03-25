@@ -4969,6 +4969,7 @@ export default function Principal() {
         ]}
       />
     </div>
+    </PinProtection>
   );
 }
 const fmtCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
