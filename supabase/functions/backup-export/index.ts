@@ -152,6 +152,64 @@ serve(async (req) => {
       }
     }
 
+    // === AUTH USERS EXPORT ===
+    let authUsersCount = 0;
+    if (includeAuth) {
+      const authFolder = zip.folder("auth");
+      try {
+        let allUsers: any[] = [];
+        let page = 1;
+        const perPage = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+            page,
+            perPage,
+          });
+
+          if (listError) {
+            console.error("Error listing auth users:", listError.message);
+            authFolder!.file("_error.txt", `Error: ${listError.message}`);
+            hasMore = false;
+            continue;
+          }
+
+          const sanitized = (users || []).map((u: any) => ({
+            id: u.id,
+            email: u.email,
+            phone: u.phone || null,
+            email_confirmed_at: u.email_confirmed_at || null,
+            created_at: u.created_at,
+            updated_at: u.updated_at || null,
+            last_sign_in_at: u.last_sign_in_at || null,
+            banned_until: u.banned_until || null,
+            raw_user_meta_data: u.raw_user_meta_data || {},
+            app_metadata: u.app_metadata || {},
+          }));
+
+          allUsers = allUsers.concat(sanitized);
+
+          if (!users || users.length < perPage) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        }
+
+        authUsersCount = allUsers.length;
+        authFolder!.file("users.json", JSON.stringify({
+          count: allUsers.length,
+          exported_at: new Date().toISOString(),
+          note: "Senhas não são exportáveis. Usuários precisarão redefinir senha na migração.",
+          users: allUsers,
+        }, null, 2));
+      } catch (err: any) {
+        console.error("Auth export error:", err.message);
+        authFolder!.file("_error.txt", `Error: ${err.message}`);
+      }
+    }
+
     // === SCHEMA EXPORT (functions, RLS, triggers, enums) ===
     if (includeSchema) {
       const schemaFolder = zip.folder("schema");
