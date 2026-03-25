@@ -362,6 +362,11 @@ serve(async (req) => {
       }
     }
 
+    // Close SQL connection if open
+    if (sqlConn) {
+      try { await sqlConn.end(); } catch (_) { /* ignore */ }
+    }
+
     return new Response(JSON.stringify({
       success: true,
       backup_date: backupInfo.created_at,
