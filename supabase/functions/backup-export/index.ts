@@ -291,6 +291,18 @@ serve(async (req) => {
       }
     }
 
+    // Metadata (after all data collected)
+    zip.file("backup-info.json", JSON.stringify({
+      version: "3.1",
+      created_at: new Date().toISOString(),
+      created_by: user.email,
+      include_database: includeDatabase,
+      include_auth: includeAuth,
+      include_schema: includeSchema,
+      tables: tables,
+      auth_users: authUsersCount,
+    }, null, 2));
+
     const zipBlob = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 
     return new Response(zipBlob, {
