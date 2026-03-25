@@ -803,6 +803,24 @@ Deno.serve(async (req) => {
               if (ownRule) {
                 chargedCost = applyRule(ownRule, "reseller_pricing_rules(own)");
               } else {
+                const { data: ownBaseRule } = await adminClient
+                  .from("reseller_base_pricing_rules")
+                  .select("*")
+                  .eq("user_id", userId)
+                  .eq("operadora_id", operadoraId)
+                  .eq("valor_recarga", catalogValue)
+                  .maybeSingle();
+                if (ownBaseRule) {
+                  chargedCost = applyRule(ownBaseRule, "reseller_base_pricing_rules(own)");
+                } else {
+                  const globalRule = await getGlobalRule();
+                  if (globalRule) {
+                    chargedCost = applyRule(globalRule, "pricing_rules");
+                  }
+                }
+              }
+            } else {
+              // User has reseller but no own network and no reseller rule found — use base/global
               const { data: ownBaseRule } = await adminClient
                 .from("reseller_base_pricing_rules")
                 .select("*")
