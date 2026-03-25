@@ -1,6 +1,6 @@
 # 🧩 Componentes, Páginas, Hooks e Libs
 
-## Páginas (`src/pages/`) — 16 arquivos
+## Páginas (`src/pages/`) — 16+ arquivos
 
 | Arquivo | Rota | Descrição |
 |---------|------|-----------|
@@ -19,7 +19,7 @@
 | `TelegramMiniApp.tsx` | `/telegram` | Mini app do Telegram |
 | `InstallApp.tsx` | `/instalar` | Página de instalação PWA |
 | `RegrasPage.tsx` | `/regras` | Regras do sistema |
-| `DocsRede.tsx` | `/docs-rede` | Documentação da rede |
+| `DocsRede.tsx` | `/docs/rede` | Documentação técnica da rede |
 | `UserProfile.tsx` | `/perfil/:id` | Perfil de usuário |
 | `MaintenancePage.tsx` | — | Página de manutenção |
 | `NotFound.tsx` | `*` | Página 404 |
@@ -42,11 +42,14 @@
 | `Skeleton.tsx` | Loading skeletons |
 | `SeasonalEffects.tsx` | Efeitos sazonais (neve, confete, etc.) |
 | `UpdatePrompt.tsx` | Prompt de atualização PWA |
+| `ImageCropper.tsx` | Cropper de imagens |
+| `TextFormatToolbar.tsx` | Toolbar de formatação de texto |
+| `InfoCard.tsx` | Card informativo reutilizável |
 
 ### Admin
 | Arquivo | Descrição |
 |---------|-----------|
-| `BackupSection.tsx` | Backup completo (DB + código + GitHub sync) |
+| `BackupSection.tsx` | Backup completo (DB + Auth + código + GitHub sync) |
 | `DashboardSection.tsx` | Dashboard de métricas |
 | `RealtimeDashboard.tsx` | Dashboard com dados em tempo real |
 | `BankDashboard.tsx` | Dashboard financeiro |
@@ -188,6 +191,7 @@ O sistema utiliza múltiplas camadas para evitar notificações duplicadas:
 | `inputValidation.ts` | Validação de inputs (telefone, email) |
 | `passwordValidation.ts` | Validação de força de senha |
 | `payment.ts` | Criação de PIX e verificação de status |
+| `reservedNames.ts` | Lista de nomes reservados (slugs) |
 | `sessionGuard.ts` | Guarda de sessão (multi-tab) |
 | `sounds.ts` | Sons do sistema (notificação, sucesso, erro) |
 | `sourceManifest.ts` | Manifesto de arquivos fonte para backup |

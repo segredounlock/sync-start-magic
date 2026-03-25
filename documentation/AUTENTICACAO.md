@@ -83,7 +83,15 @@ Quando um novo usuário se cadastra via `auth.users`, o trigger `handle_new_user
 6. Redirecionado para /login após sucesso
 ```
 
-> **Fix aplicado:** A página agora aguarda o Supabase processar o link antes de decidir se é válido. Anteriormente, exibia "link inválido" instantaneamente porque o hash já havia sido consumido pelo Supabase antes do componente verificar.
+## Backup e Migração de Senhas
+
+O sistema de backup exporta `encrypted_password` (hash bcrypt) de `auth.users` via SQL direto. Na restauração:
+
+1. INSERT SQL direto em `auth.users` com UUID original + hash bcrypt
+2. INSERT em `auth.identities` para provider email
+3. Usuários migrados fazem login com a mesma senha — sem necessidade de reset
+
+> **Requisito:** `SUPABASE_DB_URL` deve estar configurado como secret. Sem ele, fallback para Admin API (sem senhas, UUIDs novos).
 
 ## Proteções de Segurança
 

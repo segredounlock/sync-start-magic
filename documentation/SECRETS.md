@@ -2,13 +2,16 @@
 
 ## Secrets do Supabase (Edge Functions)
 
-| Secret | Descrição | Auto-configurado |
-|--------|-----------|------------------|
-| `SUPABASE_URL` | URL do projeto | ✅ |
-| `SUPABASE_ANON_KEY` | Chave anônima | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço admin | ✅ |
-| `SUPABASE_DB_URL` | URL direta do PostgreSQL | ✅ |
-| `LOVABLE_API_KEY` | Chave do Lovable AI Gateway | ✅ |
+| Secret | Descrição | Auto-configurado | Usado por |
+|--------|-----------|:----------------:|-----------|
+| `SUPABASE_URL` | URL do projeto | ✅ | Todas as functions |
+| `SUPABASE_ANON_KEY` | Chave anônima | ✅ | Todas as functions |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço admin | ✅ | Todas as functions |
+| `SUPABASE_DB_URL` | URL direta do PostgreSQL | ✅ | backup-export, backup-restore |
+| `LOVABLE_API_KEY` | Chave do Lovable AI Gateway | ✅ | Functions com AI |
+| `SUPABASE_PUBLISHABLE_KEY` | Chave pública | ✅ | — |
+
+> **Importante:** `SUPABASE_DB_URL` é essencial para backup/restore de `auth.users` com senhas criptografadas. Sem ele, o sistema usa fallback via Admin API (sem senhas).
 
 ## Frontend (.env — auto-gerado)
 
@@ -48,6 +51,7 @@
 | Key (bot_settings) | Descrição |
 |-----|-----------|
 | `botToken` | Token do bot Telegram |
+| `webhookSecret` | Secret para validar webhooks |
 
 ### Sistema
 | Key | Descrição |
