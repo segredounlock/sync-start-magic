@@ -1330,6 +1330,7 @@ export default function Principal() {
   ];
 
   return (
+    <PinProtection configKey="adminPin">
     <div className="min-h-screen md:flex">
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
@@ -2650,7 +2651,7 @@ export default function Principal() {
               {configLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <PinProtection configKey="adminPin">
+                <>
                   <div className="glass-card rounded-2xl p-6 space-y-4">
                     <h4 className="font-semibold text-foreground text-lg flex items-center gap-2">
                       <Smartphone className="h-5 w-5 text-primary" /> Provedor de Recarga
@@ -2716,7 +2717,7 @@ export default function Principal() {
                       {configSaving ? "Salvando..." : "Salvar Configurações"}
                     </button>
                   </div>
-                </PinProtection>
+                </>
               )}
             </motion.div>
           )}
@@ -2727,7 +2728,7 @@ export default function Principal() {
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <PinProtection configKey="adminPin">
+                <>
                   <InfoCard title="Gateway de Pagamento" items={[
                     { icon: CreditCard, iconColor: "text-primary", label: "Gateway Principal", description: "provedor que gera os QR Codes PIX para depósitos no sistema." },
                     { icon: Shield, iconColor: "text-warning", label: "Credenciais", description: "tokens de acesso do provedor selecionado. Mantenha em sigilo." },
@@ -3102,7 +3103,7 @@ export default function Principal() {
                       )}
                     </div>
                   )}
-                </PinProtection>
+                </>
               )}
             </motion.div>
           )}
@@ -4934,7 +4935,7 @@ export default function Principal() {
            {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
 
            {/* ===== BACKUP ===== */}
-           {view === "backup" && <PinProtection configKey="adminPin"><BackupSection /></PinProtection>}
+           {view === "backup" && <BackupSection />}
         </main>
       </div>
 
@@ -4971,6 +4972,7 @@ export default function Principal() {
         ]}
       />
     </div>
+    </PinProtection>
   );
 }
 const fmtCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

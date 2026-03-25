@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { renderTelegramHtml } from "@/components/TextFormatToolbar";
+import { PinProtection } from "@/components/PinProtection";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import AdminBankDashboard from "@/components/BankDashboard";
 // (removed duplicate toast hook)
@@ -969,6 +970,7 @@ export default function AdminDashboard() {
   const menuItems = role === "revendedor" ? allMenuItems.filter(m => !m.adminOnly) : allMenuItems;
 
   return (
+    <PinProtection configKey="adminPin">
     <div className="min-h-screen md:flex">
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
@@ -3877,6 +3879,7 @@ export default function AdminDashboard() {
         ]}
       />
     </div>
+    </PinProtection>
   );
 }
 
@@ -4167,9 +4170,9 @@ function OperadoraModal({ operadora, onClose, onSaved }: { operadora: Operadora 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-md border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
             <button type="submit" disabled={loading} className="flex-1 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50">{loading ? "Salvando..." : "Salvar"}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+           </div>
+         </form>
+       </div>
+     </div>
+   );
 }
