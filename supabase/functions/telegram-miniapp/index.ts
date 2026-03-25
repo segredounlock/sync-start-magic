@@ -214,12 +214,23 @@ serve(async (req) => {
             const { data: gRules } = await supabase.from("pricing_rules").select("*");
             globalRules = gRules || [];
 
-            const pricingUserId = (userRole === "cliente" && resellerId) ? resellerId : user_id;
-            const { data: rRules } = await supabase
-              .from("reseller_pricing_rules")
-              .select("*")
-              .eq("user_id", pricingUserId);
-            resellerRules = rRules || [];
+            // For "cliente": load reseller's selling prices (correct - that's their cost)
+            // For "usuario"/"revendedor": do NOT load own reseller_pricing_rules (those are selling prices, not costs)
+            let baseRules: any[] = [];
+            if (userRole === "cliente" && resellerId) {
+              const { data: rRules } = await supabase
+                .from("reseller_pricing_rules")
+                .select("*")
+                .eq("user_id", resellerId);
+              resellerRules = rRules || [];
+            } else if (user_id) {
+              // Load admin-defined custom costs for this user
+              const { data: bRules } = await supabase
+                .from("reseller_base_pricing_rules")
+                .select("*")
+                .eq("user_id", user_id);
+              baseRules = bRules || [];
+            }
           }
 
           // Load local operadoras to map carrier names to UUIDs
@@ -259,19 +270,32 @@ serve(async (req) => {
                 const apiCost = Number(v.cost || 0);
                 let userCost = apiCost;
 
-                // Default margin OVERRIDES all rules when active
-                if (dmEnabled && dmVal > 0) {
-                  userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
-                } else if (operadoraId && user_id) {
-                  const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
-                  if (rRule) {
-                    userCost = applyRule(rRule);
+                if (operadoraId && user_id) {
+                  if (userRole === "cliente" && resellerRules.length > 0) {
+                    // Cliente: use reseller's selling price as their cost
+                    const rRule = resellerRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
+                    if (rRule) {
+                      userCost = applyRule(rRule);
+                    } else {
+                      // Fallback to global for cliente
+                      const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
+                      if (gRule) userCost = applyRule(gRule);
+                    }
                   } else {
-                    const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
-                    if (gRule) {
-                      userCost = applyRule(gRule);
+                    // Usuario/Revendedor: resolve actual purchase cost (NOT own selling prices)
+                    // Priority: 1. reseller_base_pricing_rules, 2. default margin, 3. global pricing_rules
+                    const bRule = baseRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
+                    if (bRule) {
+                      userCost = applyRule(bRule);
+                    } else if (dmEnabled && dmVal > 0) {
+                      userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
+                    } else {
+                      const gRule = globalRules.find((r: any) => r.operadora_id === operadoraId && Number(r.valor_recarga) === faceValue);
+                      if (gRule) userCost = applyRule(gRule);
                     }
                   }
+                } else if (dmEnabled && dmVal > 0) {
+                  userCost = dmType === "fixo" ? apiCost + dmVal : apiCost * (1 + dmVal / 100);
                 }
 
                 return {
