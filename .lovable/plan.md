@@ -1,69 +1,51 @@
 
 
-# Plano: Backup e Restauracao com Senhas Criptografadas via SQL Direto
+# Fix: Telegram Mini App showing wrong cost for reseller's own recharges
 
-## Por que nao funciona hoje
+## Problem
 
-A Admin API do Supabase (`listUsers`) nao retorna o campo `encrypted_password` e a `createUser` nao aceita hash pre-existente. Porem, usando conexao SQL direta ao PostgreSQL via `SUPABASE_DB_URL`, podemos ler e escrever o hash bcrypt diretamente na tabela `auth.users`, preservando as senhas dos usuarios.
+In `supabase/functions/telegram-miniapp/index.ts` (lines 217-222), the pricing lookup for a "usuario" role loads **their own** `reseller_pricing_rules` as `resellerRules`. Then at lines 266-268, `applyRule(rRule)` returns `regra_valor` — which is the user's **selling price** to clients, NOT their purchase cost.
 
-## Alteracoes
+Example for Vitinho (R$30 Claro recharge):
+- His `reseller_pricing_rules.regra_valor` = selling price (e.g. R$22)
+- Global admin price (`pricing_rules`) = actual cost (e.g. R$11)
+- Mini App shows R$22 as cost → "Saldo insuficiente" with R$14.34 balance
+- Should show R$11 as cost → sufficient balance
 
-### 1. `supabase/functions/backup-export/index.ts`
+The `RevendedorPainel.tsx` already handles this correctly (lines 242-258): when NOT in client mode, it skips the user's own reseller rules and uses `baseRules` or `globalRules`.
 
-Substituir o bloco de auth export (linhas 146-202) que usa `listUsers()` por uma query SQL direta:
+## Fix
 
-```sql
-SELECT id, email, encrypted_password, email_confirmed_at, 
-       created_at, updated_at, last_sign_in_at, banned_until,
-       raw_user_meta_data, raw_app_meta_data, phone,
-       confirmation_token, recovery_token, aud, role
-FROM auth.users ORDER BY created_at
-```
+**File: `supabase/functions/telegram-miniapp/index.ts`** (lines 213-275)
 
-Usar a lib `postgres` para Deno (`https://deno.land/x/postgresjs/mod.js` ou `https://esm.sh/postgres`) com `SUPABASE_DB_URL`. Isso captura o `encrypted_password` que a Admin API esconde.
+Replicate the same logic as `RevendedorPainel`:
+1. Load `reseller_base_pricing_rules` for the user (admin-set custom costs)
+2. Load `defaultMargin` config
+3. For pricing resolution:
+   - If user is "cliente" with a reseller → use reseller's `reseller_pricing_rules` (selling price = client's cost) — **this is correct already**
+   - If user is "usuario"/"revendedor" → **skip their own** `reseller_pricing_rules` and use:
+     1. `reseller_base_pricing_rules` (admin custom cost) if exists
+     2. Default margin applied to API cost (if enabled)
+     3. Global `pricing_rules` as fallback
+   - Set `userCost` = resolved cost (what the user actually pays)
+   - Keep `reseller_pricing_rules` available for display as "selling price" if needed
 
-O JSON no ZIP passara a incluir o campo `encrypted_password` para cada usuario.
-
-### 2. `supabase/functions/backup-restore/index.ts`
-
-Substituir o bloco de auth restore (linhas 95-160) que usa `createUser()` por INSERT SQL direto:
-
-```sql
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, 
-  created_at, updated_at, raw_user_meta_data, raw_app_meta_data, 
-  phone, aud, role, instance_id)
-VALUES ($1, $2, $3, ...)
-ON CONFLICT (id) DO NOTHING
-```
-
-Isso preserva:
-- O UUID original (resolve o problema de FK com profiles)
-- A senha criptografada (usuario faz login normalmente sem resetar)
-- Todos os metadados (incluindo dados do Telegram)
-
-### Detalhes Tecnicos
+The key change is on line 217: only load `reseller_pricing_rules` from the **reseller** (not from the user themselves) when role is "cliente". For "usuario", use global/base rules instead.
 
 ```text
-Fluxo atual (quebrado):
-  Export: listUsers() → sem encrypted_password
-  Restore: createUser() → novo UUID, sem senha
+Current (broken):
+  pricingUserId = (cliente && resellerId) ? resellerId : user_id
+  → loads user's OWN selling prices as their cost
 
-Fluxo novo (completo):
-  Export: SQL direto auth.users → com encrypted_password e UUID original
-  Restore: INSERT SQL direto → mesmo UUID, mesma senha, mesmo hash
+Fixed:
+  if cliente → load reseller's rules (correct)
+  if usuario → load base_pricing_rules + global rules only
+  → shows admin-defined cost as their actual cost
 ```
 
-A lib PostgreSQL para Deno sera importada como:
-```typescript
-import postgres from "https://deno.land/x/postgresjs@v3.4.4/mod.js";
-```
+## Impact
 
-Conexao via `SUPABASE_DB_URL` que ja esta configurada como secret.
+- Fixes "Saldo insuficiente" false positive in Telegram Mini App
+- Aligns Mini App pricing with RevendedorPainel and recarga-express behavior
+- No changes needed to recarga-express (backend already resolves cost correctly)
 
-### Campos exportados por usuario
-
-| Campo | Antes | Agora |
-|-------|:---:|:---:|
-| id (UUID) | OK | OK |
-| email | OK | OK |
-| encrypted_password | **NA
