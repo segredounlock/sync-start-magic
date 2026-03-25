@@ -133,6 +133,7 @@ export default function BackupSection() {
   const [includeDb, setIncludeDb] = useState(true);
   const [includeSource, setIncludeSource] = useState(true);
   const [includeSchema, setIncludeSchema] = useState(false);
+  const [includeAuth, setIncludeAuth] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [exportStage, setExportStage] = useState("");
