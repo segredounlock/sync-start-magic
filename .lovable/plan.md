@@ -1,30 +1,29 @@
 
 
-# Devolver R$ 7,70 ao Vitinho
+# Devolver R$ 134,50 para 5 Usuários Sobrecarregados
 
-## Ação
+## Resumo
 
-Executar uma migração SQL que:
+Recargas Brasil **não é bug** -- tem preço customizado definido pelo admin. Apenas 5 usuários foram prejudicados e precisam de devolução.
 
-1. Credita R$ 7,70 no saldo de revenda do Vitinho (`eb565a68-d0f8-43da-8633-bb6a3d2ecb75`) usando `increment_saldo`
-2. Registra a ação no `audit_logs` com detalhes das 4 recargas afetadas
+## Ações
 
-## SQL
+### Migração SQL -- Creditar saldo e registrar auditoria
 
-```sql
-SELECT increment_saldo('eb565a68-d0f8-43da-8633-bb6a3d2ecb75'::uuid, 'revenda', 7.70);
+Para cada usuário afetado:
 
-INSERT INTO audit_logs (admin_id, action, target_type, target_id, details)
-VALUES (
-  'f5501acc-79f3-460f-bc3e-493280ea84f0',
-  'refund_pricing_bug',
-  'saldo',
-  'eb565a68-d0f8-43da-8633-bb6a3d2ecb75',
-  '{"motivo":"Devolução por sobrecobrança de reseller_pricing_rules órfãs","valor_devolvido":7.70,"saldo_tipo":"revenda","recargas_afetadas":4}'::jsonb
-);
-```
+| Usuário | Valor Devolvido |
+|---------|----------------|
+| Cassio | R$ 45,20 |
+| Jdfcell | R$ 35,30 |
+| LNCELL | R$ 24,00 |
+| ALÊ-RECARGAS | R$ 19,00 |
+| Evolution | R$ 11,00 |
+| **Total** | **R$ 134,50** |
 
-Saldo atual: R$ 6,64 → Novo saldo: R$ 14,34
+Para cada um:
+1. `SELECT increment_saldo(user_id, 'revenda', valor)` -- credita o saldo
+2. `INSERT INTO audit_logs` -- registra a devolução com detalhes
 
-Nenhum arquivo de código será alterado.
+Nenhum arquivo de código será alterado. Apenas uma migração SQL.
 
