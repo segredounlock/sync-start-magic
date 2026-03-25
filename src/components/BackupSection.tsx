@@ -133,6 +133,7 @@ export default function BackupSection() {
   const [includeDb, setIncludeDb] = useState(true);
   const [includeSource, setIncludeSource] = useState(true);
   const [includeSchema, setIncludeSchema] = useState(false);
+  const [includeAuth, setIncludeAuth] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [exportStage, setExportStage] = useState("");
@@ -359,7 +360,7 @@ export default function BackupSection() {
 
 
   const handleExport = async () => {
-    if (!includeDb && !includeSource && !includeSchema) { toast.error("Selecione pelo menos uma opção"); return; }
+    if (!includeDb && !includeSource && !includeSchema && !includeAuth) { toast.error("Selecione pelo menos uma opção"); return; }
     const t0 = performance.now();
     console.log("[Backup] export started");
     setExporting(true); setExportProgress(0); setExportStage("Iniciando...");
@@ -379,7 +380,7 @@ export default function BackupSection() {
         const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          body: JSON.stringify({ includeDatabase: true, includeSchema }),
+          body: JSON.stringify({ includeDatabase: true, includeSchema, includeAuth }),
         });
         if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
         // The edge function returns a ZIP with database/ folder — extract and re-add to our ZIP
@@ -438,6 +439,7 @@ export default function BackupSection() {
         include_database: includeDb,
         include_source: includeSource,
         include_schema: includeSchema,
+        include_auth: includeAuth,
         source_files: includeSource ? effectivePaths.length : 0,
         tables: "dynamic",
       }, null, 2));
@@ -508,7 +510,7 @@ export default function BackupSection() {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-        body: JSON.stringify({ includeDatabase: true }),
+        body: JSON.stringify({ includeDatabase: true, includeAuth: true }),
       });
       if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
       const dbZipData = await resp.arrayBuffer();
@@ -1090,6 +1092,22 @@ export default function BackupSection() {
                   <Shield className="h-3.5 w-3.5" /> Incluir schema completo
                 </p>
                 <p className="text-[11px] text-muted-foreground">Funções SQL, RLS policies, triggers, enums, configs, documentação</p>
+              </div>
+            </button>
+
+            {/* Include Auth toggle */}
+            <button onClick={() => setIncludeAuth(!includeAuth)}
+              className="flex items-center gap-3 w-full p-3.5 rounded-2xl bg-card border border-border shadow-sm hover:bg-muted/60 transition-all text-left">
+              <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                includeAuth ? "bg-primary border-primary" : "border-muted-foreground/40"
+              }`}>
+                {includeAuth && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Fingerprint className="h-3.5 w-3.5" /> Incluir dados de autenticação
+                </p>
+                <p className="text-[11px] text-muted-foreground">Emails, metadados, datas de login (senhas não são exportadas)</p>
               </div>
             </button>
 

@@ -58,6 +58,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const includeDatabase = body.includeDatabase !== false;
     const includeSchema = body.includeSchema === true;
+    const includeAuth = body.includeAuth !== false;
 
     const zip = new JSZip();
 
@@ -94,15 +95,6 @@ serve(async (req) => {
       }
     }
 
-    // Metadata
-    zip.file("backup-info.json", JSON.stringify({
-      version: "3.0",
-      created_at: new Date().toISOString(),
-      created_by: user.email,
-      include_database: includeDatabase,
-      include_schema: includeSchema,
-      tables: tables,
-    }, null, 2));
 
     // === DATABASE DATA ===
     if (includeDatabase && tables.length > 0) {
@@ -148,6 +140,64 @@ serve(async (req) => {
             table, error: err.message, rows: [], count: 0,
           }, null, 2));
         }
+      }
+    }
+
+    // === AUTH USERS EXPORT ===
+    let authUsersCount = 0;
+    if (includeAuth) {
+      const authFolder = zip.folder("auth");
+      try {
+        let allUsers: any[] = [];
+        let page = 1;
+        const perPage = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+            page,
+            perPage,
+          });
+
+          if (listError) {
+            console.error("Error listing auth users:", listError.message);
+            authFolder!.file("_error.txt", `Error: ${listError.message}`);
+            hasMore = false;
+            continue;
+          }
+
+          const sanitized = (users || []).map((u: any) => ({
+            id: u.id,
+            email: u.email,
+            phone: u.phone || null,
+            email_confirmed_at: u.email_confirmed_at || null,
+            created_at: u.created_at,
+            updated_at: u.updated_at || null,
+            last_sign_in_at: u.last_sign_in_at || null,
+            banned_until: u.banned_until || null,
+            raw_user_meta_data: u.raw_user_meta_data || {},
+            app_metadata: u.app_metadata || {},
+          }));
+
+          allUsers = allUsers.concat(sanitized);
+
+          if (!users || users.length < perPage) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        }
+
+        authUsersCount = allUsers.length;
+        authFolder!.file("users.json", JSON.stringify({
+          count: allUsers.length,
+          exported_at: new Date().toISOString(),
+          note: "Senhas não são exportáveis. Usuários precisarão redefinir senha na migração.",
+          users: allUsers,
+        }, null, 2));
+      } catch (err: any) {
+        console.error("Auth export error:", err.message);
+        authFolder!.file("_error.txt", `Error: ${err.message}`);
       }
     }
 
@@ -240,6 +290,18 @@ serve(async (req) => {
         configFolder!.file("system-config.json", JSON.stringify(safeConfig, null, 2));
       }
     }
+
+    // Metadata (after all data collected)
+    zip.file("backup-info.json", JSON.stringify({
+      version: "3.1",
+      created_at: new Date().toISOString(),
+      created_by: user.email,
+      include_database: includeDatabase,
+      include_auth: includeAuth,
+      include_schema: includeSchema,
+      tables: tables,
+      auth_users: authUsersCount,
+    }, null, 2));
 
     const zipBlob = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 
