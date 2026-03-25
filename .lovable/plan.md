@@ -1,50 +1,40 @@
 
 
-# Corrigir Preços Incorretos: Limpar e Proteger reseller_pricing_rules
+# Devolver R$ 7,70 ao Vitinho
 
-## Problema Confirmado
-
-Encontrei **34 usuários com cargo "usuario"** que têm regras em `reseller_pricing_rules` (incluindo o Vitinho com 15 regras). O "Meus Preços" foi projetado para revendedores definirem preços de venda para sua rede, mas usuários comuns também configuraram -- e o sistema usa essas regras para cobrar DELES na hora da recarga (linha 772-780 do `recarga-express`).
-
-Exemplo do Vitinho: ele configurou `regra_valor = 15` para TIM R$20, achando que era o preço de venda para sua rede. Mas quando ELE faz uma recarga, o sistema cobra R$15 dele (em vez do custo base real).
+## Resumo
+Creditar R$ 7,70 no saldo de revenda do Vitinho e registrar no audit_logs.
 
 ## Plano
 
-### 1. Limpar regras de usuários comuns (Migração SQL)
+### 1. Migração SQL
+Executar uma migração que:
+- Chama `increment_saldo` para adicionar R$ 7,70 ao saldo de revenda do Vitinho (`eb565a68-d0f8-43da-8633-bb6a3d2ecb75`)
+- Insere um registro em `audit_logs` documentando a devolução com os detalhes das 4 recargas afetadas (IDs, valores cobrados, preços corretos, diferenças)
 
-Deletar todas as entradas em `reseller_pricing_rules` para usuários com role "usuario" que **não têm ninguém na rede** (nenhum perfil com `reseller_id` apontando para eles). São regras inúteis que só causam cobrança errada.
+### 2. Notificação admin
+Insere uma entrada em `admin_notifications` informando que a devolução foi processada.
 
-Para usuários "usuario" que TÊM rede (funcionam como mini-revendedores), manter as regras pois elas servem para precificar a rede deles.
+## Detalhes Técnicos
 
-### 2. Corrigir lógica de cobrança no recarga-express
+```sql
+-- Creditar R$ 7,70 no saldo de revenda
+SELECT increment_saldo(
+  'eb565a68-d0f8-43da-8633-bb6a3d2ecb75'::uuid,
+  'revenda',
+  7.70
+);
 
-No bloco `else` (linha 734-799 do `recarga-express/index.ts`), quando um "usuario" faz recarga:
+-- Registrar auditoria
+INSERT INTO audit_logs (admin_id, action, target_type, target_id, details)
+VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  'refund_pricing_bug',
+  'saldo',
+  'eb565a68-d0f8-43da-8633-bb6a3d2ecb75',
+  '{"motivo": "Sobrecobrança por reseller_pricing_rules órfãs", "valor_devolvido": 7.70, "recargas": [...]}'
+);
+```
 
-- Se ele tem `reseller_id` (está na rede de alguém), usar o preço do revendedor dele (não as próprias regras)
-- Só usar `reseller_pricing_rules` do próprio usuário se ele **tem membros na rede** (ou seja, funciona como revendedor)
-
-Lógica atual (problemática):
-1. Verifica `client_pricing_rules` via reseller
-2. Se não achou, usa `reseller_pricing_rules` do PRÓPRIO usuário ← **ERRO**
-
-Lógica corrigida:
-1. Verifica `client_pricing_rules` via reseller
-2. Se tem `reseller_id`, usa preço do revendedor (`reseller_pricing_rules` do reseller)
-3. Só usa regras próprias se o usuário tem rede própria
-
-### 3. Esconder "Meus Preços" para quem não tem rede
-
-No `RevendedorPainel.tsx`, só mostrar o menu "Meus Preços" se o usuário tem pelo menos 1 membro na rede (ou é admin/revendedor). Usuários sem rede não precisam desse recurso.
-
-## Arquivos Modificados
-
-1. **Migração SQL** -- Deletar regras órfãs de usuários sem rede
-2. **supabase/functions/recarga-express/index.ts** -- Corrigir lógica de cobrança no bloco else
-3. **src/pages/RevendedorPainel.tsx** -- Condicionar exibição do menu "Meus Preços"
-
-## Resultado
-
-- Todos os 34 usuários sem rede terão suas regras removidas
-- Cobranças futuras usarão o preço correto (custo base do admin ou preço global)
-- "Meus Preços" só aparece para quem realmente precisa
+Nenhum arquivo de código será alterado. Apenas uma migração SQL.
 
