@@ -3101,7 +3101,6 @@ export default function Principal() {
                       )}
                     </div>
                   )}
-                </PinProtection>
               )}
             </motion.div>
           )}
