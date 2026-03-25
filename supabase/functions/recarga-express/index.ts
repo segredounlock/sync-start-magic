@@ -638,29 +638,38 @@ Deno.serve(async (req) => {
           return { cost: Math.round(finalCost * 100) / 100, applied: true };
         };
 
-        // Check if user has any custom pricing rules (if so, skip global margin)
+        // Check if user has any custom COST rules (not selling rules — skip global margin only for real cost overrides)
         const hasCustomPricing = async (): Promise<boolean> => {
           if (userRole === "revendedor" || userRole === "admin") {
+            // Check reseller_base_pricing_rules (admin-set costs), NOT reseller_pricing_rules (selling prices)
             const { count } = await adminClient
-              .from("reseller_pricing_rules")
+              .from("reseller_base_pricing_rules")
               .select("id", { count: "exact", head: true })
               .eq("user_id", userId);
             return (count || 0) > 0;
           }
           if (userRole === "cliente" && resellerId) {
-            // Check if the reseller has custom rules
+            // Check if the reseller has custom selling rules (these ARE the client's cost)
             const { count } = await adminClient
               .from("reseller_pricing_rules")
               .select("id", { count: "exact", head: true })
               .eq("user_id", resellerId);
             return (count || 0) > 0;
           }
-          // For "usuario" or any other role, check if they have personal custom rules
-          const { count: userCount } = await adminClient
-            .from("reseller_pricing_rules")
+          // For "usuario": check reseller_base_pricing_rules or if reseller has rules for them
+          if (resellerId) {
+            const { count } = await adminClient
+              .from("reseller_pricing_rules")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", resellerId);
+            return (count || 0) > 0;
+          }
+          // Independent user: check base pricing rules only
+          const { count: baseCount } = await adminClient
+            .from("reseller_base_pricing_rules")
             .select("id", { count: "exact", head: true })
             .eq("user_id", userId);
-          return (userCount || 0) > 0;
+          return (baseCount || 0) > 0;
         };
 
         // Check default margin FIRST — but skip if user has custom pricing rules
