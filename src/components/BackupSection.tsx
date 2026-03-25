@@ -1095,6 +1095,22 @@ export default function BackupSection() {
               </div>
             </button>
 
+            {/* Include Auth toggle */}
+            <button onClick={() => setIncludeAuth(!includeAuth)}
+              className="flex items-center gap-3 w-full p-3.5 rounded-2xl bg-card border border-border shadow-sm hover:bg-muted/60 transition-all text-left">
+              <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                includeAuth ? "bg-primary border-primary" : "border-muted-foreground/40"
+              }`}>
+                {includeAuth && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Fingerprint className="h-3.5 w-3.5" /> Incluir dados de autenticação
+                </p>
+                <p className="text-[11px] text-muted-foreground">Emails, metadados, datas de login (senhas não são exportadas)</p>
+              </div>
+            </button>
+
             {/* Restore Result */}
             <AnimatePresence>
               {restoreResult && (
