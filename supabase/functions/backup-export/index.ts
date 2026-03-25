@@ -143,58 +143,60 @@ serve(async (req) => {
       }
     }
 
-    // === AUTH USERS EXPORT ===
+    // === AUTH USERS EXPORT (via SQL direto para capturar encrypted_password) ===
     let authUsersCount = 0;
     if (includeAuth) {
       const authFolder = zip.folder("auth");
       try {
-        let allUsers: any[] = [];
-        let page = 1;
-        const perPage = 1000;
-        let hasMore = true;
+        const dbUrl = Deno.env.get("SUPABASE_DB_URL");
+        if (!dbUrl) {
+          throw new Error("SUPABASE_DB_URL não configurado");
+        }
 
-        while (hasMore) {
-          const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-            page,
-            perPage,
-          });
+        const { default: postgres } = await import("https://deno.land/x/postgresjs@v3.4.4/mod.js");
+        const sql = postgres(dbUrl, { max: 1 });
 
-          if (listError) {
-            console.error("Error listing auth users:", listError.message);
-            authFolder!.file("_error.txt", `Error: ${listError.message}`);
-            hasMore = false;
-            continue;
-          }
+        try {
+          const users = await sql`
+            SELECT id, email, encrypted_password, email_confirmed_at,
+                   created_at, updated_at, last_sign_in_at, banned_until,
+                   raw_user_meta_data, raw_app_meta_data, phone,
+                   confirmation_token, recovery_token, aud, role,
+                   instance_id, is_sso_user, confirmed_at
+            FROM auth.users
+            ORDER BY created_at
+          `;
 
-          const sanitized = (users || []).map((u: any) => ({
+          const allUsers = users.map((u: any) => ({
             id: u.id,
             email: u.email,
+            encrypted_password: u.encrypted_password || null,
             phone: u.phone || null,
             email_confirmed_at: u.email_confirmed_at || null,
+            confirmed_at: u.confirmed_at || null,
             created_at: u.created_at,
             updated_at: u.updated_at || null,
             last_sign_in_at: u.last_sign_in_at || null,
             banned_until: u.banned_until || null,
             raw_user_meta_data: u.raw_user_meta_data || {},
-            app_metadata: u.app_metadata || {},
+            raw_app_meta_data: u.raw_app_meta_data || {},
+            aud: u.aud || "authenticated",
+            role: u.role || "authenticated",
+            instance_id: u.instance_id || "00000000-0000-0000-0000-000000000000",
+            is_sso_user: u.is_sso_user || false,
           }));
 
-          allUsers = allUsers.concat(sanitized);
-
-          if (!users || users.length < perPage) {
-            hasMore = false;
-          } else {
-            page++;
-          }
+          authUsersCount = allUsers.length;
+          authFolder!.file("users.json", JSON.stringify({
+            count: allUsers.length,
+            exported_at: new Date().toISOString(),
+            export_method: "direct_sql",
+            note: "Exportado via SQL direto. Inclui encrypted_password (bcrypt hash) para restauração completa.",
+            users: allUsers,
+          }, null, 2));
+        } finally {
+          await sql.end();
         }
-
-        authUsersCount = allUsers.length;
-        authFolder!.file("users.json", JSON.stringify({
-          count: allUsers.length,
-          exported_at: new Date().toISOString(),
-          note: "Senhas não são exportáveis. Usuários precisarão redefinir senha na migração.",
-          users: allUsers,
-        }, null, 2));
       } catch (err: any) {
         console.error("Auth export error:", err.message);
         authFolder!.file("_error.txt", `Error: ${err.message}`);
