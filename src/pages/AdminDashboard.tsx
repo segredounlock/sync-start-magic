@@ -4174,6 +4174,5 @@ function OperadoraModal({ operadora, onClose, onSaved }: { operadora: Operadora 
          </form>
        </div>
      </div>
-    </PinProtection>
    );
 }
