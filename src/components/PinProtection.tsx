@@ -5,12 +5,21 @@ import { styledToast as toast } from "@/lib/toast";
 
 interface PinProtectionProps {
   children: React.ReactNode;
-  configKey?: string; // system_config key for storing the PIN hash
+  configKey?: string;
+}
+
+// SHA-256 hash for PIN
+async function hashPin(pin: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin + "::lovable-pin-salt");
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 export function PinProtection({ children, configKey = "adminPin" }: PinProtectionProps) {
   const [unlocked, setUnlocked] = useState(false);
-  const [hasPin, setHasPin] = useState<boolean | null>(null); // null = loading
+  const [hasPin, setHasPin] = useState<boolean | null>(null);
   const [pin, setPin] = useState(["", "", "", ""]);
   const [confirmPin, setConfirmPin] = useState(["", "", "", ""]);
   const [step, setStep] = useState<"enter" | "create" | "confirm">("enter");
@@ -82,9 +91,10 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
         setTimeout(() => confirmRefs.current[0]?.focus(), 100);
         return;
       }
-      // Save PIN
+      // Save hashed PIN
+      const hashed = await hashPin(pinValue);
       await supabase.from("system_config").upsert(
-        { key: configKey, value: pinValue, updated_at: new Date().toISOString() },
+        { key: configKey, value: hashed, updated_at: new Date().toISOString() },
         { onConflict: "key" }
       );
       setHasPin(true);
@@ -93,14 +103,24 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
       return;
     }
 
-    // Verify PIN
+    // Verify PIN by comparing hashes
     const { data } = await supabase
       .from("system_config")
       .select("value")
       .eq("key", configKey)
       .maybeSingle();
 
-    if (data?.value === pinValue) {
+    const hashed = await hashPin(pinValue);
+
+    // Support both legacy plain-text and new hashed PINs
+    if (data?.value === hashed || (data?.value?.length === 4 && data?.value === pinValue)) {
+      // If it was plain-text, migrate to hashed
+      if (data?.value?.length === 4) {
+        await supabase.from("system_config").upsert(
+          { key: configKey, value: hashed, updated_at: new Date().toISOString() },
+          { onConflict: "key" }
+        );
+      }
       setUnlocked(true);
     } else {
       setError("PIN incorreto");
@@ -113,11 +133,7 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
   useEffect(() => {
     const pinValue = pin.join("");
     if (pinValue.length === 4 && step !== "confirm") {
-      if (step === "create") {
-        handleSubmit();
-      } else {
-        handleSubmit();
-      }
+      handleSubmit();
     }
   }, [pin]);
 
