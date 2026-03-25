@@ -58,6 +58,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const includeDatabase = body.includeDatabase !== false;
     const includeSchema = body.includeSchema === true;
+    const includeAuth = body.includeAuth !== false;
 
     const zip = new JSZip();
 
