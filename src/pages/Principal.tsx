@@ -2727,7 +2727,6 @@ export default function Principal() {
               {globalConfigLoading ? (
                 <div className="space-y-3 py-4">{[1,2,3].map(i => <SkeletonCard key={i} />)}</div>
               ) : (
-                <PinProtection configKey="adminPin">
                   <InfoCard title="Gateway de Pagamento" items={[
                     { icon: CreditCard, iconColor: "text-primary", label: "Gateway Principal", description: "provedor que gera os QR Codes PIX para depósitos no sistema." },
                     { icon: Shield, iconColor: "text-warning", label: "Credenciais", description: "tokens de acesso do provedor selecionado. Mantenha em sigilo." },
