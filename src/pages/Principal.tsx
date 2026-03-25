@@ -1330,6 +1330,7 @@ export default function Principal() {
   ];
 
   return (
+    <PinProtection configKey="adminPin">
     <div className="min-h-screen md:flex">
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
