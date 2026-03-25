@@ -13,7 +13,17 @@ project_id = "xtkqyjruyuydlbvwduuy"
     verify_jwt = false
   [functions.backup-restore]
     verify_jwt = false
-  [functions.bootstrap-admin]
+  [functions.ban-device]
+    verify_jwt = false
+  [functions.check-device]
+    verify_jwt = false
+  [functions.delete-broadcast]
+    verify_jwt = false
+  [functions.scratch-card]
+    verify_jwt = false
+  [functions.sync-pending-recargas]
+    verify_jwt = false
+  [functions.admin-reset-password]
     verify_jwt = false
   [functions.cleanup-stuck-broadcasts]
     verify_jwt = false
