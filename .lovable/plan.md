@@ -1,46 +1,69 @@
 
 
-# Plano: Exportar auth.users no Backup
+# Plano: Backup e Restauracao com Senhas Criptografadas via SQL Direto
 
-## Problema
+## Por que nao funciona hoje
 
-O backup atual exporta apenas as tabelas do schema `public`. A tabela `auth.users` (emails, metadados, datas de criacao, confirmacao de email) fica de fora. Sem ela, uma migracao completa exige recriar todos os usuarios manualmente.
+A Admin API do Supabase (`listUsers`) nao retorna o campo `encrypted_password` e a `createUser` nao aceita hash pre-existente. Porem, usando conexao SQL direta ao PostgreSQL via `SUPABASE_DB_URL`, podemos ler e escrever o hash bcrypt diretamente na tabela `auth.users`, preservando as senhas dos usuarios.
 
-## Solucao
+## Alteracoes
 
-Adicionar exportacao de `auth.users` dentro da propria edge function `backup-export`, usando a Admin API do Supabase (`supabase.auth.admin.listUsers()`). Os dados serao salvos em `auth/users.json` dentro do ZIP.
+### 1. `supabase/functions/backup-export/index.ts`
 
-### Alteracoes
+Substituir o bloco de auth export (linhas 146-202) que usa `listUsers()` por uma query SQL direta:
 
-**1. `supabase/functions/backup-export/index.ts`**
+```sql
+SELECT id, email, encrypted_password, email_confirmed_at, 
+       created_at, updated_at, last_sign_in_at, banned_until,
+       raw_user_meta_data, raw_app_meta_data, phone,
+       confirmation_token, recovery_token, aud, role
+FROM auth.users ORDER BY created_at
+```
 
-Apos o body parse (linha 58), adicionar flag `includeAuth` (default `true`).
+Usar a lib `postgres` para Deno (`https://deno.land/x/postgresjs/mod.js` ou `https://esm.sh/postgres`) com `SUPABASE_DB_URL`. Isso captura o `encrypted_password` que a Admin API esconde.
 
-Apos a secao de database export, adicionar bloco que:
-- Usa `supabaseAdmin.auth.admin.listUsers()` com paginacao (paginas de 1000)
-- Salva no ZIP como `auth/users.json` com campos: `id`, `email`, `email_confirmed_at`, `created_at`, `last_sign_in_at`, `raw_user_meta_data`, `phone`, `banned_until`
-- Exclui campos sensíveis como `encrypted_password` (a Admin API nao retorna senhas de qualquer forma)
+O JSON no ZIP passara a incluir o campo `encrypted_password` para cada usuario.
 
-**2. `src/components/BackupSection.tsx`**
+### 2. `supabase/functions/backup-restore/index.ts`
 
-Adicionar checkbox "Incluir dados de autenticacao" na UI de export, enviando `includeAuth: true` no body da requisicao. Atualizar o resumo do backup para mostrar quantidade de usuarios auth exportados.
+Substituir o bloco de auth restore (linhas 95-160) que usa `createUser()` por INSERT SQL direto:
+
+```sql
+INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, 
+  created_at, updated_at, raw_user_meta_data, raw_app_meta_data, 
+  phone, aud, role, instance_id)
+VALUES ($1, $2, $3, ...)
+ON CONFLICT (id) DO NOTHING
+```
+
+Isso preserva:
+- O UUID original (resolve o problema de FK com profiles)
+- A senha criptografada (usuario faz login normalmente sem resetar)
+- Todos os metadados (incluindo dados do Telegram)
 
 ### Detalhes Tecnicos
 
 ```text
-ZIP atualizado:
-backup-YYYY-MM-DD.zip
-├── backup-info.json
-├── auth/
-│   └── users.json          ← NOVO (id, email, metadata, timestamps)
-├── database/
-│   └── ... (42 tabelas)
-└── schema/ (opcional)
+Fluxo atual (quebrado):
+  Export: listUsers() → sem encrypted_password
+  Restore: createUser() → novo UUID, sem senha
+
+Fluxo novo (completo):
+  Export: SQL direto auth.users → com encrypted_password e UUID original
+  Restore: INSERT SQL direto → mesmo UUID, mesma senha, mesmo hash
 ```
 
-A API `auth.admin.listUsers()` retorna ate 1000 usuarios por pagina. O loop de paginacao coletara todos os 1179 usuarios.
+A lib PostgreSQL para Deno sera importada como:
+```typescript
+import postgres from "https://deno.land/x/postgresjs@v3.4.4/mod.js";
+```
 
-### Limitacao importante
+Conexao via `SUPABASE_DB_URL` que ja esta configurada como secret.
 
-Senhas nao sao exportaveis — a Admin API nao as retorna. Na migracao, usuarios precisarao usar "Esqueci minha senha" para definir nova senha, ou o admin pode usar a API para criar usuarios com senhas temporarias.
+### Campos exportados por usuario
 
+| Campo | Antes | Agora |
+|-------|:---:|:---:|
+| id (UUID) | OK | OK |
+| email | OK | OK |
+| encrypted_password | **NA
