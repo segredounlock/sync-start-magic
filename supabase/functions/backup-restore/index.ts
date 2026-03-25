@@ -312,6 +312,7 @@ serve(async (req) => {
       success: true,
       backup_date: backupInfo.created_at,
       backup_by: backupInfo.created_by,
+      auth_users: authRestoreResult,
       results,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
