@@ -1,103 +1,46 @@
 
 
-# Auditoria Completa do Sistema de Backup
+# Plano: Exportar auth.users no Backup
 
-## Resultado Geral: 3 problemas encontrados
+## Problema
 
----
+O backup atual exporta apenas as tabelas do schema `public`. A tabela `auth.users` (emails, metadados, datas de criacao, confirmacao de email) fica de fora. Sem ela, uma migracao completa exige recriar todos os usuarios manualmente.
 
-## 1. SOURCE_PATHS no BackupSection.tsx
+## Solucao
 
-### Arquivos presentes no projeto mas FALTANDO no SOURCE_PATHS:
+Adicionar exportacao de `auth.users` dentro da propria edge function `backup-export`, usando a Admin API do Supabase (`supabase.auth.admin.listUsers()`). Os dados serao salvos em `auth/users.json` dentro do ZIP.
 
-| Arquivo | Status |
-|---------|--------|
-| `supabase/functions/backup-restore/index.ts` | **FALTANDO** -- a edge function de restore existe mas nao esta na lista |
-| `supabase/functions/admin-reset-password/index.ts` | **FALTANDO** |
+### Alteracoes
 
-Todos os demais arquivos (pages, components, hooks, libs, edge functions, email templates, docs) estao corretamente listados.
+**1. `supabase/functions/backup-export/index.ts`**
 
-### Arquivos no SOURCE_PATHS que NAO existem no projeto:
+Apos o body parse (linha 58), adicionar flag `includeAuth` (default `true`).
 
-| Arquivo | Status |
-|---------|--------|
-| `public/manifest.webmanifest` | Nao confirmado -- pode existir mas nao aparece na listagem de arquivos do projeto |
+Apos a secao de database export, adicionar bloco que:
+- Usa `supabaseAdmin.auth.admin.listUsers()` com paginacao (paginas de 1000)
+- Salva no ZIP como `auth/users.json` com campos: `id`, `email`, `email_confirmed_at`, `created_at`, `last_sign_in_at`, `raw_user_meta_data`, `phone`, `banned_until`
+- Exclui campos sensíveis como `encrypted_password` (a Admin API nao retorna senhas de qualquer forma)
 
----
+**2. `src/components/BackupSection.tsx`**
 
-## 2. backup-restore knownOrder vs Tabelas Reais
+Adicionar checkbox "Incluir dados de autenticacao" na UI de export, enviando `includeAuth: true` no body da requisicao. Atualizar o resumo do backup para mostrar quantidade de usuarios auth exportados.
 
-### Tabelas no banco que FALTAM no knownOrder do restore:
+### Detalhes Tecnicos
 
-| Tabela | Status |
-|--------|--------|
-| `support_tickets` | Presente no banco, **JA esta** no knownOrder |
-| `profiles_public` | E uma VIEW, nao tabela -- nao precisa estar |
+```text
+ZIP atualizado:
+backup-YYYY-MM-DD.zip
+├── backup-info.json
+├── auth/
+│   └── users.json          ← NOVO (id, email, metadata, timestamps)
+├── database/
+│   └── ... (42 tabelas)
+└── schema/ (opcional)
+```
 
-O knownOrder inclui `telegram_users`, `telegram_sessions`, `terms_acceptance` que podem nao existir mais como tabelas fisicas, mas isso nao causa erro (sao simplesmente ignorados se nao existirem no ZIP).
+A API `auth.admin.listUsers()` retorna ate 1000 usuarios por pagina. O loop de paginacao coletara todos os 1179 usuarios.
 
-**Conclusao**: O knownOrder do restore esta correto para todas as 42+ tabelas.
+### Limitacao importante
 
----
-
-## 3. backup-export candidateTables (fallback)
-
-O fallback do export tambem esta alinhado com as tabelas reais. Nenhuma tabela faltante.
-
----
-
-## 4. Edge Functions: config.toml vs Diretorio
-
-| Edge Function | No diretorio | No config.toml |
-|---------------|:---:|:---:|
-| admin-create-user | OK | OK |
-| admin-delete-user | OK | OK |
-| admin-reset-password | OK | **FALTANDO** |
-| admin-toggle-email-verify | OK | OK |
-| admin-toggle-role | OK | OK |
-| auth-email-hook | OK | OK |
-| backup-export | OK | OK |
-| backup-restore | OK | OK |
-| ban-device | OK | **FALTANDO** |
-| check-device | OK | **FALTANDO** |
-| check-pending-pix | OK | OK |
-| cleanup-stuck-broadcasts | OK | OK |
-| client-register | OK | OK |
-| collect-pending-debts | OK | OK |
-| create-pix | OK | OK |
-| delete-broadcast | OK | **FALTANDO** |
-| efi-setup | OK | OK |
-| expire-pending-deposits | OK | OK |
-| github-sync | OK | OK |
-| og-store | OK | OK |
-| pix-webhook | OK | OK |
-| recarga-express | OK | OK |
-| scratch-card | OK | **FALTANDO** |
-| send-broadcast | OK | OK |
-| send-push | OK | OK |
-| sync-catalog | OK | OK |
-| sync-pending-recargas | OK | **FALTANDO** |
-| telegram-bot | OK | OK |
-| telegram-miniapp | OK | OK |
-| telegram-notify | OK | OK |
-| telegram-setup | OK | OK |
-| vapid-setup | OK | OK |
-| bootstrap-admin | No config.toml | **NAO existe no diretorio** |
-
-Nota: as 6 functions faltando no config.toml ja deployam com `verify_jwt = false` por padrao no Lovable Cloud, entao nao e um problema critico. O `bootstrap-admin` esta no config.toml mas nao existe como pasta -- deve ser removido.
-
----
-
-## Plano de Correcao
-
-### Arquivo 1: `src/components/BackupSection.tsx`
-Adicionar ao array SOURCE_PATHS:
-- `"supabase/functions/backup-restore/index.ts"`
-- `"supabase/functions/admin-reset-password/index.ts"`
-
-### Arquivo 2: `supabase/config.toml`
-- Remover a entrada `[functions.bootstrap-admin]` (funcao nao existe)
-- Opcionalmente adicionar as 6 functions faltantes (ban-device, check-device, delete-broadcast, scratch-card, sync-pending-recargas, admin-reset-password), mas nao e obrigatorio
-
-Nenhuma alteracao necessaria no backup-export ou backup-restore -- ambos estao corretos.
+Senhas nao sao exportaveis — a Admin API nao as retorna. Na migracao, usuarios precisarao usar "Esqueci minha senha" para definir nova senha, ou o admin pode usar a API para criar usuarios com senhas temporarias.
 
