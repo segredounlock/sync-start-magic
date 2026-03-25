@@ -77,7 +77,7 @@ const SOURCE_PATHS = [
   "src/lib/auditLog.ts","src/lib/confirm.tsx","src/lib/currencyMask.ts",
   "src/lib/deviceFingerprint.ts","src/lib/fetchAll.ts","src/lib/inputValidation.ts",
   "src/lib/passwordValidation.ts","src/lib/payment.ts",
-  "src/lib/sessionGuard.ts","src/lib/sounds.ts","src/lib/sourceManifest.ts",
+  "src/lib/reservedNames.ts","src/lib/sessionGuard.ts","src/lib/sounds.ts","src/lib/sourceManifest.ts",
   "src/lib/timezone.ts","src/lib/toast.tsx","src/lib/utils.ts",
   // Types
   "src/types/index.ts",
