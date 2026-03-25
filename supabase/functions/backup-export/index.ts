@@ -97,12 +97,14 @@ serve(async (req) => {
 
     // Metadata
     zip.file("backup-info.json", JSON.stringify({
-      version: "3.0",
+      version: "3.1",
       created_at: new Date().toISOString(),
       created_by: user.email,
       include_database: includeDatabase,
+      include_auth: includeAuth,
       include_schema: includeSchema,
       tables: tables,
+      auth_users: authUsersCount,
     }, null, 2));
 
     // === DATABASE DATA ===
