@@ -1,47 +1,37 @@
 
 
-# Organizar Log de Auditoria
+# Proteger Admin e Principal com PIN de Segurança
 
-## Problema
-O componente `AuditTab.tsx` está incompleto — faltam labels para muitas ações do sistema (antifraude, saques, chat, badges, etc.) e os detalhes são exibidos como JSON bruto sem formatação.
+## O que muda
 
-## Plano
+Ao acessar `/admin` (AdminDashboard) ou `/principal` (Painel Principal), o sistema pedira o PIN de 4 digitos antes de mostrar qualquer conteudo. Sem o PIN correto, nada e exibido.
 
-### 1. Adicionar todas as ações faltantes ao ACTION_LABELS
-Ações que faltam no mapa atual:
-- `new_device_detected` — Novo Dispositivo (azul/info)
-- `banned_device_login_blocked` — Login Bloqueado (vermelho)
-- `rate_limited_login` — Rate Limit (laranja)
-- `ban_user_devices` — Banir Dispositivos (vermelho)
-- `ban_device` — Banir Device (vermelho)
-- `unban_device` — Desbanir Device (verde)
-- `reban_device` — Rebanir Device (amarelo)
-- `delete_ban` — Excluir Ban (cinza)
-- `saque_approved` / `saque_rejected` — Saque Aprovado/Rejeitado
-- `set_badge` / `remove_badge` — já existem
-- `saldo_add` / `saldo_remove` / `saldo_set` — Saldo
-- `block_room` / `unblock_room` — já existem
-- `set_room_public` / `set_room_private` — Privacidade de Sala
-- `auto_collect_debt` — Cobrança Automática
+## Como funciona hoje
 
-Adicionar também ao TARGET_LABELS:
-- `antifraud`, `device`, `chat_conversation`, `user_role`, `transaction`
+- O PinProtection ja existe e funciona bem
+- Ele so e usado em **secoes especificas** dentro do Principal (aba API e Backup)
+- O AdminDashboard **nao usa** PinProtection
 
-### 2. Formatar detalhes de forma legível
-Em vez de exibir o JSON bruto, criar uma função que formata os campos com labels amigáveis:
-- `user_nome` → "Usuário"
-- `ip_address` → "IP"
-- `fingerprint_hash` → "Fingerprint"
-- `reason` → "Motivo"
-- `email` → "E-mail"
-- `platform` → "Plataforma"
-- `anterior` → "Antes"
-- `novo` → "Depois"
-- Ocultar campos muito longos (user_agent truncado)
+## Plano de implementacao
 
-### 3. Adicionar ícones por categoria
-Usar ícones diferentes para cada tipo de ação (Shield para segurança, DollarSign para saldo, MessageSquare para chat, etc.)
+### 1. Envolver AdminDashboard com PinProtection
 
-## Arquivo alterado
-- `src/components/AuditTab.tsx` — expandir labels, formatar detalhes, adicionar ícones
+**Arquivo**: `src/pages/AdminDashboard.tsx`
+
+- Importar `PinProtection`
+- Envolver todo o conteudo retornado pelo componente com `<PinProtection configKey="adminPin">...</PinProtection>`
+
+### 2. Envolver Principal com PinProtection (nivel da pagina)
+
+**Arquivo**: `src/pages/Principal.tsx`
+
+- Mover o `<PinProtection>` para envolver **toda a pagina** em vez de apenas as abas individuais
+- Remover os `<PinProtection>` internos das abas API e Backup (ja que a pagina inteira estara protegida)
+
+### Resultado
+
+- Ao navegar para `/admin` ou `/principal`, o usuario vera a tela de PIN
+- Apos digitar o PIN correto, o conteudo e liberado normalmente
+- O PIN e o mesmo ja configurado (`adminPin` no `system_config`)
+- Se o PIN ainda nao foi criado, o sistema pede para criar um novo
 
