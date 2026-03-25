@@ -397,7 +397,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       .then(({ data }) => { if (data === "true") setRevDepositToast(true); });
     supabase.rpc("get_sales_tools_enabled" as any)
       .then(({ data }) => { setSalesToolsEnabled(data !== false); });
-  }, []);
+    if (user) {
+      supabase.from("profiles").select("id", { count: "exact", head: true })
+        .eq("reseller_id", user.id)
+        .then(({ count }) => { setHasNetwork((count ?? 0) > 0); });
+    }
+  }, [user]);
   const handleBgPaymentConfirmed = useCallback(() => {
     fetchData();
     fetchTransactions();
