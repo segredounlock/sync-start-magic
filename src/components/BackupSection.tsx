@@ -360,7 +360,7 @@ export default function BackupSection() {
 
 
   const handleExport = async () => {
-    if (!includeDb && !includeSource && !includeSchema) { toast.error("Selecione pelo menos uma opção"); return; }
+    if (!includeDb && !includeSource && !includeSchema && !includeAuth) { toast.error("Selecione pelo menos uma opção"); return; }
     const t0 = performance.now();
     console.log("[Backup] export started");
     setExporting(true); setExportProgress(0); setExportStage("Iniciando...");
