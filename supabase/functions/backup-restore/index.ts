@@ -78,21 +78,30 @@ serve(async (req) => {
       }
     }
 
-    // Get ALL existing auth user IDs (paginated)
-    const existingAuthUsers = new Map<string, boolean>();
-    {
+    // Get ALL existing auth user IDs via direct SQL
+    const dbUrl = Deno.env.get("SUPABASE_DB_URL");
+    let sqlConn: any = null;
+    const validAuthUserIds = new Set<string>();
+
+    if (dbUrl) {
+      const { default: postgres } = await import("https://deno.land/x/postgresjs@v3.4.4/mod.js");
+      sqlConn = postgres(dbUrl, { max: 1 });
+
+      const existingUsers = await sqlConn`SELECT id FROM auth.users`;
+      for (const u of existingUsers) validAuthUserIds.add(u.id);
+    } else {
+      // Fallback to Admin API if no DB URL
       let page = 1;
       while (true) {
         const { data: authPage } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
         const users = authPage?.users || [];
-        for (const u of users) existingAuthUsers.set(u.id, true);
+        for (const u of users) validAuthUserIds.add(u.id);
         if (users.length < 1000) break;
         page++;
       }
     }
-    const validAuthUserIds = new Set(existingAuthUsers.keys());
 
-    // ─── Restore auth.users from auth/users.json (BEFORE database tables) ───
+    // ─── Restore auth.users from auth/users.json via SQL direto ───
     const authUsersFile = zip.file("auth/users.json");
     let authRestoreResult: { status: string; created: number; skipped: number; failed: number; errors: string[] } = {
       status: "not_found", created: 0, skipped: 0, failed: 0, errors: [],
@@ -105,46 +114,104 @@ serve(async (req) => {
         let created = 0, skipped = 0, failed = 0;
         const errors: string[] = [];
 
-        for (const au of authUsers) {
-          if (!au.id || !au.email) { skipped++; continue; }
+        if (sqlConn) {
+          // === SQL DIRETO: preserva UUID, senha e metadados ===
+          for (const au of authUsers) {
+            if (!au.id || !au.email) { skipped++; continue; }
+            if (validAuthUserIds.has(au.id)) { skipped++; continue; }
 
-          // Skip if user already exists
-          if (validAuthUserIds.has(au.id)) { skipped++; continue; }
-
-          try {
-            const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-              email: au.email,
-              email_confirm: !!au.email_confirmed_at,
-              phone: au.phone || undefined,
-              user_metadata: au.raw_user_meta_data || au.user_metadata || {},
-              // password not available — user will need to reset
-            });
-
-            if (createErr) {
-              // If user exists by email (duplicate), just skip
-              if (createErr.message?.includes("already been registered") || createErr.message?.includes("already exists")) {
+            try {
+              await sqlConn`
+                INSERT INTO auth.users (
+                  id, email, encrypted_password, email_confirmed_at, confirmed_at,
+                  created_at, updated_at, last_sign_in_at, banned_until,
+                  raw_user_meta_data, raw_app_meta_data, phone,
+                  aud, role, instance_id, is_sso_user
+                ) VALUES (
+                  ${au.id}::uuid,
+                  ${au.email},
+                  ${au.encrypted_password || ''},
+                  ${au.email_confirmed_at || null},
+                  ${au.confirmed_at || au.email_confirmed_at || null},
+                  ${au.created_at || new Date().toISOString()},
+                  ${au.updated_at || new Date().toISOString()},
+                  ${au.last_sign_in_at || null},
+                  ${au.banned_until || null},
+                  ${JSON.stringify(au.raw_user_meta_data || {})}::jsonb,
+                  ${JSON.stringify(au.raw_app_meta_data || au.app_metadata || { provider: "email", providers: ["email"] })}::jsonb,
+                  ${au.phone || null},
+                  ${au.aud || 'authenticated'},
+                  ${au.role || 'authenticated'},
+                  ${au.instance_id || '00000000-0000-0000-0000-000000000000'}::uuid,
+                  ${au.is_sso_user || false}
+                )
+                ON CONFLICT (id) DO NOTHING
+              `;
+              validAuthUserIds.add(au.id);
+              created++;
+            } catch (err: any) {
+              // Check if conflict by email
+              if (err.message?.includes("unique") || err.message?.includes("duplicate")) {
                 skipped++;
               } else {
                 failed++;
-                if (errors.length < 5) errors.push(`${au.email}: ${createErr.message}`);
-              }
-            } else if (newUser?.user) {
-              validAuthUserIds.add(newUser.user.id);
-              created++;
-
-              // If the backup user had a different ID than the newly created one,
-              // we can't easily reconcile. Log it but the profiles will reference the old ID.
-              // Best case: Supabase assigns a new UUID, which won't match profiles.
-              // To avoid this, we need to check if createUser allows specifying the ID.
-              // Unfortunately the Admin API doesn't allow setting a custom UUID.
-              // So we track the mapping but can't force the ID.
-              if (newUser.user.id !== au.id) {
-                console.warn(`Auth user ${au.email} created with new ID ${newUser.user.id} (backup ID: ${au.id}). Profile FK may not match.`);
+                if (errors.length < 10) errors.push(`${au.email}: ${err.message}`);
               }
             }
-          } catch (err: any) {
-            failed++;
-            if (errors.length < 5) errors.push(`${au.email}: ${err.message}`);
+          }
+
+          // Also insert into auth.identities for email provider
+          for (const au of authUsers) {
+            if (!au.id || !au.email) continue;
+            try {
+              await sqlConn`
+                INSERT INTO auth.identities (
+                  id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at
+                ) VALUES (
+                  ${au.id}::uuid,
+                  ${au.id}::uuid,
+                  ${au.id},
+                  'email',
+                  ${JSON.stringify({ sub: au.id, email: au.email, email_verified: !!au.email_confirmed_at })}::jsonb,
+                  ${au.last_sign_in_at || null},
+                  ${au.created_at || new Date().toISOString()},
+                  ${au.updated_at || new Date().toISOString()}
+                )
+                ON CONFLICT (provider, provider_id) DO NOTHING
+              `;
+            } catch (_err: any) {
+              // Identity already exists, skip silently
+            }
+          }
+        } else {
+          // Fallback: Admin API (sem senha, novo UUID)
+          for (const au of authUsers) {
+            if (!au.id || !au.email) { skipped++; continue; }
+            if (validAuthUserIds.has(au.id)) { skipped++; continue; }
+
+            try {
+              const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+                email: au.email,
+                email_confirm: !!au.email_confirmed_at,
+                phone: au.phone || undefined,
+                user_metadata: au.raw_user_meta_data || au.user_metadata || {},
+              });
+
+              if (createErr) {
+                if (createErr.message?.includes("already been registered") || createErr.message?.includes("already exists")) {
+                  skipped++;
+                } else {
+                  failed++;
+                  if (errors.length < 5) errors.push(`${au.email}: ${createErr.message}`);
+                }
+              } else if (newUser?.user) {
+                validAuthUserIds.add(newUser.user.id);
+                created++;
+              }
+            } catch (err: any) {
+              failed++;
+              if (errors.length < 5) errors.push(`${au.email}: ${err.message}`);
+            }
           }
         }
 
@@ -154,19 +221,6 @@ serve(async (req) => {
         };
 
         console.log(`Auth users restore: ${created} created, ${skipped} skipped, ${failed} failed`);
-
-        // Refresh valid auth user IDs after creating new users
-        if (created > 0) {
-          validAuthUserIds.clear();
-          let page = 1;
-          while (true) {
-            const { data: authPage } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
-            const users = authPage?.users || [];
-            for (const u of users) validAuthUserIds.add(u.id);
-            if (users.length < 1000) break;
-            page++;
-          }
-        }
       } catch (err: any) {
         console.error("Error restoring auth users:", err.message);
         authRestoreResult = { status: "error", created: 0, skipped: 0, failed: 0, errors: [err.message] };
