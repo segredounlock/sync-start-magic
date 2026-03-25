@@ -439,6 +439,7 @@ export default function BackupSection() {
         include_database: includeDb,
         include_source: includeSource,
         include_schema: includeSchema,
+        include_auth: includeAuth,
         source_files: includeSource ? effectivePaths.length : 0,
         tables: "dynamic",
       }, null, 2));
