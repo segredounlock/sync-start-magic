@@ -970,6 +970,7 @@ export default function AdminDashboard() {
   const menuItems = role === "revendedor" ? allMenuItems.filter(m => !m.adminOnly) : allMenuItems;
 
   return (
+    <PinProtection configKey="adminPin">
     <div className="min-h-screen md:flex">
       {/* Mobile Menu Bottom Sheet */}
       {menuOpen && (
