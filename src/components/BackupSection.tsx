@@ -380,7 +380,7 @@ export default function BackupSection() {
         const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          body: JSON.stringify({ includeDatabase: true, includeSchema }),
+          body: JSON.stringify({ includeDatabase: true, includeSchema, includeAuth }),
         });
         if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
         // The edge function returns a ZIP with database/ folder — extract and re-add to our ZIP
