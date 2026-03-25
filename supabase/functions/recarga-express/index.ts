@@ -784,57 +784,21 @@ Deno.serve(async (req) => {
 
           // 3. Only use own rules if user has NO reseller (independent) or has own network
           if (!clientPricingApplied) {
-            // Check if user has own network members (acts as mini-reseller)
-            const { count: networkCount } = await adminClient
-              .from("profiles")
-              .select("id", { count: "exact", head: true })
-              .eq("reseller_id", userId);
-
-            const hasOwnNetwork = (networkCount ?? 0) > 0;
-
-            if (!resellerId || hasOwnNetwork) {
-              const { data: ownRule } = await adminClient
-                .from("reseller_pricing_rules")
-                .select("*")
-                .eq("user_id", userId)
-                .eq("operadora_id", operadoraId)
-                .eq("valor_recarga", catalogValue)
-                .maybeSingle();
-              if (ownRule) {
-                chargedCost = applyRule(ownRule, "reseller_pricing_rules(own)");
-              } else {
-                const { data: ownBaseRule } = await adminClient
-                  .from("reseller_base_pricing_rules")
-                  .select("*")
-                  .eq("user_id", userId)
-                  .eq("operadora_id", operadoraId)
-                  .eq("valor_recarga", catalogValue)
-                  .maybeSingle();
-                if (ownBaseRule) {
-                  chargedCost = applyRule(ownBaseRule, "reseller_base_pricing_rules(own)");
-                } else {
-                  const globalRule = await getGlobalRule();
-                  if (globalRule) {
-                    chargedCost = applyRule(globalRule, "pricing_rules");
-                  }
-                }
-              }
+            // User's own reseller_pricing_rules are SELLING prices, NOT purchase costs.
+            // Always use: reseller_base_pricing_rules → default margin → pricing_rules (global)
+            const { data: ownBaseRule } = await adminClient
+              .from("reseller_base_pricing_rules")
+              .select("*")
+              .eq("user_id", userId)
+              .eq("operadora_id", operadoraId)
+              .eq("valor_recarga", catalogValue)
+              .maybeSingle();
+            if (ownBaseRule) {
+              chargedCost = applyRule(ownBaseRule, "reseller_base_pricing_rules(own)");
             } else {
-              // User has reseller but no own network and no reseller rule found — use base/global
-              const { data: ownBaseRule } = await adminClient
-                .from("reseller_base_pricing_rules")
-                .select("*")
-                .eq("user_id", userId)
-                .eq("operadora_id", operadoraId)
-                .eq("valor_recarga", catalogValue)
-                .maybeSingle();
-              if (ownBaseRule) {
-                chargedCost = applyRule(ownBaseRule, "reseller_base_pricing_rules(own)");
-              } else {
-                const globalRule = await getGlobalRule();
-                if (globalRule) {
-                  chargedCost = applyRule(globalRule, "pricing_rules");
-                }
+              const globalRule = await getGlobalRule();
+              if (globalRule) {
+                chargedCost = applyRule(globalRule, "pricing_rules");
               }
             }
           }
