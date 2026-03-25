@@ -147,6 +147,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const [showBotToken, setShowBotToken] = useState(false);
   const [savingContacts, setSavingContacts] = useState(false);
   const [salesToolsEnabled, setSalesToolsEnabled] = useState(true);
+  const [hasNetwork, setHasNetwork] = useState(false);
 
   // Transactions (extrato)
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -396,7 +397,12 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
       .then(({ data }) => { if (data === "true") setRevDepositToast(true); });
     supabase.rpc("get_sales_tools_enabled" as any)
       .then(({ data }) => { setSalesToolsEnabled(data !== false); });
-  }, []);
+    if (user) {
+      supabase.from("profiles").select("id", { count: "exact", head: true })
+        .eq("reseller_id", user.id)
+        .then(({ count }) => { setHasNetwork((count ?? 0) > 0); });
+    }
+  }, [user]);
   const handleBgPaymentConfirmed = useCallback(() => {
     fetchData();
     fetchTransactions();
@@ -919,8 +925,10 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   const salesMenuItems: MenuItem[] = (() => {
     if (isClientMode || !showSalesTools) return [];
     const items: MenuItem[] = [];
-    // Meus Preços: available to all users (admin price floor enforced by backend)
-    items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
+    // Meus Preços: only for admins, revendedores, or users with their own network
+    if (isAdmin || role === "revendedor" || hasNetwork) {
+      items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
+    }
     // Minha Rede: visible to all authenticated users
     items.push({ key: "minharede", label: "Minha Rede", icon: UsersIcon, color: "text-indigo-400" });
     return items;
