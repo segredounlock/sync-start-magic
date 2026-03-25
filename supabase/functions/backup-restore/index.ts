@@ -78,9 +78,100 @@ serve(async (req) => {
       }
     }
 
-    // Get existing auth user IDs
-    const { data: authUsersPage } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    const validAuthUserIds = new Set((authUsersPage?.users || []).map(u => u.id));
+    // Get ALL existing auth user IDs (paginated)
+    const existingAuthUsers = new Map<string, boolean>();
+    {
+      let page = 1;
+      while (true) {
+        const { data: authPage } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+        const users = authPage?.users || [];
+        for (const u of users) existingAuthUsers.set(u.id, true);
+        if (users.length < 1000) break;
+        page++;
+      }
+    }
+    const validAuthUserIds = new Set(existingAuthUsers.keys());
+
+    // ─── Restore auth.users from auth/users.json (BEFORE database tables) ───
+    const authUsersFile = zip.file("auth/users.json");
+    let authRestoreResult: { status: string; created: number; skipped: number; failed: number; errors: string[] } = {
+      status: "not_found", created: 0, skipped: 0, failed: 0, errors: [],
+    };
+
+    if (authUsersFile) {
+      try {
+        const authUsersData = JSON.parse(await authUsersFile.async("string"));
+        const authUsers = authUsersData.users || authUsersData || [];
+        let created = 0, skipped = 0, failed = 0;
+        const errors: string[] = [];
+
+        for (const au of authUsers) {
+          if (!au.id || !au.email) { skipped++; continue; }
+
+          // Skip if user already exists
+          if (validAuthUserIds.has(au.id)) { skipped++; continue; }
+
+          try {
+            const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+              email: au.email,
+              email_confirm: !!au.email_confirmed_at,
+              phone: au.phone || undefined,
+              user_metadata: au.raw_user_meta_data || au.user_metadata || {},
+              // password not available — user will need to reset
+            });
+
+            if (createErr) {
+              // If user exists by email (duplicate), just skip
+              if (createErr.message?.includes("already been registered") || createErr.message?.includes("already exists")) {
+                skipped++;
+              } else {
+                failed++;
+                if (errors.length < 5) errors.push(`${au.email}: ${createErr.message}`);
+              }
+            } else if (newUser?.user) {
+              validAuthUserIds.add(newUser.user.id);
+              created++;
+
+              // If the backup user had a different ID than the newly created one,
+              // we can't easily reconcile. Log it but the profiles will reference the old ID.
+              // Best case: Supabase assigns a new UUID, which won't match profiles.
+              // To avoid this, we need to check if createUser allows specifying the ID.
+              // Unfortunately the Admin API doesn't allow setting a custom UUID.
+              // So we track the mapping but can't force the ID.
+              if (newUser.user.id !== au.id) {
+                console.warn(`Auth user ${au.email} created with new ID ${newUser.user.id} (backup ID: ${au.id}). Profile FK may not match.`);
+              }
+            }
+          } catch (err: any) {
+            failed++;
+            if (errors.length < 5) errors.push(`${au.email}: ${err.message}`);
+          }
+        }
+
+        authRestoreResult = {
+          status: created > 0 || skipped > 0 ? "restored" : "error",
+          created, skipped, failed, errors,
+        };
+
+        console.log(`Auth users restore: ${created} created, ${skipped} skipped, ${failed} failed`);
+
+        // Refresh valid auth user IDs after creating new users
+        if (created > 0) {
+          validAuthUserIds.clear();
+          let page = 1;
+          while (true) {
+            const { data: authPage } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+            const users = authPage?.users || [];
+            for (const u of users) validAuthUserIds.add(u.id);
+            if (users.length < 1000) break;
+            page++;
+          }
+        }
+      } catch (err: any) {
+        console.error("Error restoring auth users:", err.message);
+        authRestoreResult = { status: "error", created: 0, skipped: 0, failed: 0, errors: [err.message] };
+      }
+    }
 
     // Tables that have user_id referencing profiles.id
     const profileFkTables = new Set([
@@ -221,6 +312,7 @@ serve(async (req) => {
       success: true,
       backup_date: backupInfo.created_at,
       backup_by: backupInfo.created_by,
+      auth_users: authRestoreResult,
       results,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
