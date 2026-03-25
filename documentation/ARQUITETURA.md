@@ -21,7 +21,7 @@
                     │ Auth        │ ← JWT + Roles
                     │ Storage     │ ← 8 buckets
                     │ Realtime    │ ← WebSocket
-                    │ Edge Funcs  │ ← 29 funções Deno
+                    │ Edge Funcs  │ ← 31 funções Deno
                     └──────┬──────┘
                            │
               ┌────────────┼────────────┐
@@ -36,7 +36,7 @@
 
 ```
 /
-├── documentation/           # Documentação completa do sistema
+├── documentation/           # 12 arquivos de documentação técnica
 ├── public/
 │   └── sw-push.js          # Service Worker para push notifications
 ├── src/
@@ -50,7 +50,7 @@
 │   ├── integrations/
 │   │   └── supabase/       # Client e types (auto-gerado)
 │   ├── lib/                # Utilitários e helpers (14 arquivos)
-│   ├── pages/              # Páginas da aplicação (16 arquivos)
+│   ├── pages/              # Páginas da aplicação (16+ arquivos)
 │   │   └── docs/           # Documentação interna (2 arquivos)
 │   ├── styles/             # Estilos globais
 │   ├── types/              # Tipos TypeScript globais
@@ -59,7 +59,7 @@
 │   └── index.css           # Estilos base + Tailwind
 ├── supabase/
 │   ├── config.toml         # Configuração do Supabase
-│   ├── functions/          # 29 Edge Functions
+│   ├── functions/          # 31 Edge Functions
 │   │   ├── _shared/        # Templates de email compartilhados
 │   │   │   └── email-templates/  # 6 templates (signup, recovery, etc.)
 │   │   ├── admin-create-user/
@@ -68,8 +68,8 @@
 │   │   ├── admin-toggle-email-verify/
 │   │   ├── admin-toggle-role/
 │   │   ├── auth-email-hook/
-│   │   ├── backup-export/
-│   │   ├── backup-restore/
+│   │   ├── backup-export/      # SQL direto para auth.users
+│   │   ├── backup-restore/     # SQL direto para auth.users
 │   │   ├── ban-device/
 │   │   ├── check-device/
 │   │   ├── check-pending-pix/
@@ -125,4 +125,22 @@ Usuário solicita depósito → Edge Function create-pix
   → Gateway (MP/PushinPay/etc) → Retorna QR Code
   → Monitor em background verifica status
   → pix-webhook recebe confirmação → Credita saldo
+```
+
+### Backup Completo
+```
+Admin clica "Exportar" → Edge Function backup-export
+  → SQL direto: SELECT * FROM auth.users (com encrypted_password)
+  → Supabase SDK: SELECT * FROM cada tabela pública
+  → JSZip: gera ZIP com auth/ + database/ + schema/ + config/
+  → Download do ZIP
+```
+
+### Restauração Completa
+```
+Admin faz upload do ZIP → Edge Function backup-restore
+  → SQL direto: INSERT INTO auth.users (UUID + senha preservados)
+  → SQL direto: INSERT INTO auth.identities (provider email)
+  → Supabase SDK: UPSERT em cada tabela na ordem de dependência
+  → Retorna relatório (criados, pulados, falhas)
 ```

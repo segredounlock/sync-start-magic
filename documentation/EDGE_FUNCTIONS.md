@@ -1,4 +1,4 @@
-# ⚡ Edge Functions — 29 Funções
+# ⚡ Edge Functions — 31 Funções
 
 ## Funções Administrativas
 
@@ -19,6 +19,7 @@
 | `check-pending-pix` | Verificar PIX pendentes | JWT |
 | `collect-pending-debts` | Cobrar débitos pendentes | JWT + admin |
 | `efi-setup` | Configurar certificado EfiPay | JWT + admin |
+| `expire-pending-deposits` | Expirar depósitos pendentes (>45min) | JWT |
 
 ## Funções de Recarga
 
@@ -30,11 +31,11 @@
 
 ## Funções de Backup
 
-| Função | Descrição | Auth |
-|--------|-----------|------|
-| `backup-export` | Exportar backup completo em ZIP | JWT + admin |
-| `backup-restore` | Restaurar backup de ZIP | JWT + admin |
-| `github-sync` | Sincronizar código com GitHub | JWT + admin |
+| Função | Descrição | Auth | Conexão SQL |
+|--------|-----------|------|-------------|
+| `backup-export` | Exportar backup completo em ZIP (DB + auth.users + schema) | JWT + admin | ✅ `SUPABASE_DB_URL` |
+| `backup-restore` | Restaurar backup de ZIP (DB + auth.users com senhas) | JWT + admin | ✅ `SUPABASE_DB_URL` |
+| `github-sync` | Sincronizar código com GitHub | JWT + admin | — |
 
 ## Funções de Telegram
 
@@ -67,14 +68,23 @@
 |--------|-----------|------|
 | `auth-email-hook` | Hook de emails de autenticação | Webhook (Lovable) |
 | `client-register` | Auto-registro de cliente via link | Public |
-| `expire-pending-deposits` | Expirar depósitos pendentes (>45min) | JWT |
 | `og-store` | Gerar meta tags OG para lojas | Public |
 | `scratch-card` | Gerar/validar raspadinha | JWT |
 | `vapid-setup` | Gerar chaves VAPID para push | JWT + admin |
 
 ---
 
-## Gateways de Pagamento Suportados
+## Dependências Externas
+
+### Bibliotecas Deno usadas nas Edge Functions
+
+| Biblioteca | Versão | Usada em |
+|------------|--------|----------|
+| `supabase-js` | @2 | Todas |
+| `jszip` | @3.10.1 | backup-export, backup-restore |
+| `postgresjs` | @v3.4.4 | backup-export, backup-restore |
+
+### Gateways de Pagamento Suportados
 
 A função `create-pix` suporta 5 gateways:
 

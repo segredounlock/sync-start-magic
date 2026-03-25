@@ -2,11 +2,13 @@
 
 ## 1. Preparação (No ambiente atual)
 
-- [ ] Exportar backup completo (BD + código) via painel admin
+- [ ] Exportar backup completo (BD + Auth + Código) via painel admin
+- [ ] Marcar checkbox "Incluir dados de autenticação" no export
+- [ ] Marcar checkbox "Incluir schema" para exportar funções e RLS
 - [ ] Sincronizar código com GitHub
 - [ ] Anotar todas as secrets configuradas em `system_config`
-- [ ] Exportar schema info via `export_schema_info()` RPC
 - [ ] Fazer download do ZIP de backup
+- [ ] Verificar que `auth/users.json` contém `encrypted_password` para todos os usuários
 
 ## 2. Novo Ambiente
 
@@ -19,7 +21,7 @@
   - `SUPABASE_URL`
   - `SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
-  - `SUPABASE_DB_URL`
+  - `SUPABASE_DB_URL` ← **Essencial para restauração com senhas**
   - `LOVABLE_API_KEY`
 
 ## 3. Banco de Dados
@@ -30,9 +32,10 @@
 - [ ] Tabelas com FK para profiles: `user_roles`, `saldos`, `recargas`, `transactions`, `referral_commissions`, etc.
 - [ ] Tabelas de chat: `chat_conversations`, `chat_members`, `chat_messages`, `chat_message_reads`, `chat_reactions`
 - [ ] Tabelas de suporte: `support_tickets`, `support_messages`
+- [ ] Tabelas Telegram: `telegram_users`, `telegram_sessions`, `terms_acceptance`
 - [ ] Demais tabelas
 
-### 3.2 Funções (criar todas)
+### 3.2 Funções (criar todas — 35 funções)
 - [ ] `has_role` (SECURITY DEFINER)
 - [ ] `has_verification_badge`
 - [ ] `increment_saldo`
@@ -74,7 +77,7 @@
 
 ### 3.3 RLS Policies
 - [ ] Configurar RLS em TODAS as 42 tabelas
-- [ ] Testar acesso por role (admin, revendedor, cliente)
+- [ ] Testar acesso por role (admin, usuario)
 
 ### 3.4 Realtime
 - [ ] Habilitar realtime: `chat_conversations`, `chat_messages`, `chat_reactions`
@@ -97,7 +100,7 @@
 
 ## 5. Edge Functions
 
-- [ ] Deploy das 29 edge functions
+- [ ] Deploy das 31 edge functions
 - [ ] Verificar `verify_jwt` para webhooks:
   - `telegram-bot` → false
   - `pix-webhook` → false
@@ -107,19 +110,29 @@
 
 ## 6. Dados
 
+### 6.1 Restauração de Auth Users
+- [ ] Verificar que `SUPABASE_DB_URL` está configurado no novo ambiente
 - [ ] Restaurar backup via `backup-restore`
+- [ ] Verificar log: "Auth users restore: X created, Y skipped, Z failed"
+- [ ] Confirmar que UUIDs foram preservados (mesmo ID do ambiente anterior)
+- [ ] Testar login de um usuário existente com senha antiga
+
+### 6.2 Restauração de Dados
 - [ ] Verificar integridade:
   - Profiles existem para todos os auth.users?
   - Saldos existem para todos os profiles?
   - User_roles existem para todos os profiles?
+  - Dados do Telegram preservados? (telegram_id, telegram_username em profiles)
+  - telegram_users, telegram_sessions, terms_acceptance restaurados?
 - [ ] Reconfigurar configs:
-  - Gateway de pagamento
+  - Gateway de pagamento ativo
   - Webhook do Telegram
   - Chaves VAPID
 
 ## 7. Validação
 
-- [ ] Testar login/cadastro
+- [ ] Testar login com senha existente (sem reset)
+- [ ] Testar cadastro de novo usuário
 - [ ] Testar recuperação de senha
 - [ ] Testar depósito PIX (todos os gateways)
 - [ ] Testar recarga
@@ -131,3 +144,11 @@
 - [ ] Testar GitHub sync
 - [ ] Testar raspadinha
 - [ ] Testar suporte
+
+## 8. Limitações Conhecidas
+
+| Limitação | Impacto | Workaround |
+|-----------|---------|------------|
+| Storage files não são migrados | Avatars, logos, áudios perdidos | Re-upload manual ou migrar via API |
+| `auth.identities` pode falhar se provider diferente | SSO users podem precisar re-autenticar | Verificar manualmente |
+| Sem `SUPABASE_DB_URL` | Senhas perdidas, UUIDs novos | Usuários usam "Esqueci senha" |
