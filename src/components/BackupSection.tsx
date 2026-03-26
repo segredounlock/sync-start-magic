@@ -1909,7 +1909,7 @@ export default function BackupSection() {
                   className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
                     confirmModal.icon === "restore"
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25"
-                    confirmModal.icon === "safe"
+                      : confirmModal.icon === "safe"
                       ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:shadow-lg hover:shadow-emerald-500/25"
                       : confirmModal.icon === "update"
                       ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:shadow-lg hover:shadow-blue-500/25"
