@@ -406,7 +406,7 @@ serve(async (req) => {
     }
 
     // ════════════════════════════════════════════
-    // MIRROR-STATUS — Get mirror state summary
+    // MIRROR-STATUS — Get mirror state summary + health check
     // ════════════════════════════════════════════
     if (action === "mirror-status") {
       const { supabaseAdmin } = await verifyAdmin(req);
@@ -432,10 +432,56 @@ serve(async (req) => {
         .order("started_at", { ascending: false })
         .limit(5);
 
+      // ── Backend health check ──
+      const healthChecks: { key: string; ok: boolean; detail: string }[] = [];
+      const criticalKeys = ["siteTitle", "siteName", "maintenanceMode", "activeGateway"];
+
+      // Check critical configs
+      for (const key of criticalKeys) {
+        const { data } = await supabaseAdmin
+          .from("system_config")
+          .select("value")
+          .eq("key", key)
+          .maybeSingle();
+        healthChecks.push({
+          key,
+          ok: data !== null && data?.value !== undefined,
+          detail: data ? `"${data.value}"` : "AUSENTE",
+        });
+      }
+
+      // Check RPC
+      let rpcOk = false;
+      try {
+        const { error } = await supabaseAdmin.rpc("get_maintenance_mode");
+        rpcOk = !error;
+      } catch { /* */ }
+      healthChecks.push({ key: "get_maintenance_mode()", ok: rpcOk, detail: rpcOk ? "OK" : "Falhou" });
+
+      // Check operadoras
+      const { count: opCount } = await supabaseAdmin
+        .from("operadoras")
+        .select("id", { count: "exact", head: true });
+      healthChecks.push({ key: "operadoras", ok: (opCount || 0) > 0, detail: `${opCount || 0} registros` });
+
+      // Check admin exists
+      const { count: adminCount } = await supabaseAdmin
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin");
+      healthChecks.push({ key: "admin_role", ok: (adminCount || 0) > 0, detail: `${adminCount || 0} admin(s)` });
+
+      // Readiness
+      const allCriticalOk = healthChecks.filter(h => criticalKeys.includes(h.key)).every(h => h.ok);
+      const readiness: string = (!allCriticalOk || !rpcOk) ? "broken" : 
+        ((opCount || 0) === 0 || (adminCount || 0) === 0) ? "partial" : "ready";
+
       return new Response(JSON.stringify({
         state: stateData,
         conflicts: conflicts || [],
         recent_logs: recentLogs || [],
+        health: healthChecks,
+        readiness,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
