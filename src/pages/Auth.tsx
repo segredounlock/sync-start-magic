@@ -40,6 +40,7 @@ const MAX_ATTEMPTS = 5;
 const COOLDOWN_MS = 60_000;
 
 export default function Auth() {
+  const siteName = useSiteName();
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
