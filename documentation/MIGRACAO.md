@@ -152,3 +152,33 @@
 | Storage files não são migrados | Avatars, logos, áudios perdidos | Re-upload manual ou migrar via API |
 | `auth.identities` pode falhar se provider diferente | SSO users podem precisar re-autenticar | Verificar manualmente |
 | Sem `SUPABASE_DB_URL` | Senhas perdidas, UUIDs novos | Usuários usam "Esqueci senha" |
+
+---
+
+## 9. Migração para Projeto Espelho (Mirror)
+
+Se o destino for um projeto espelho com Lovable Cloud próprio:
+
+### 9.1 Código (Automático)
+- [ ] O workflow `sync-mirror.yml` sincroniza automaticamente a cada push
+- [ ] `.env` e `config.toml` são removidos antes do push (isolamento de ambiente)
+- [ ] O espelho recebe seus próprios secrets do Lovable Cloud automaticamente
+
+### 9.2 Banco de Dados
+- [ ] As migrations SQL são sincronizadas via código e aplicadas automaticamente
+- [ ] O `types.ts` é regenerado pelo Lovable Cloud do espelho baseado no schema
+
+### 9.3 Configuração Manual no Espelho
+- [ ] Habilitar Realtime nas tabelas: `chat_conversations`, `chat_messages`, `chat_reactions`
+- [ ] Criar os 8 storage buckets com suas políticas
+- [ ] Configurar gateway de pagamento em `system_config`
+- [ ] Configurar bot Telegram (token + webhook)
+- [ ] Gerar chaves VAPID via `vapid-setup`
+- [ ] Criar primeiro usuário admin
+- [ ] Definir PIN master
+
+### 9.4 Dados
+- [ ] Usar backup-export/restore para migrar dados entre ambientes
+- [ ] Ou iniciar com banco limpo (novo ambiente)
+
+> Detalhes completos em [MIRROR_SYNC.md](./MIRROR_SYNC.md)
