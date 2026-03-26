@@ -17,10 +17,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Configurar git
+      - name: Preparar para mirror
         run: |
           git config user.name "sync-bot"
           git config user.email "sync@bot.com"
+          rm -f .env
+          rm -f supabase/config.toml
+          git add -A
+          git commit -m "chore: prepare mirror sync (remove env-specific files)" --allow-empty
 
       - name: Sync mirror
         env:
