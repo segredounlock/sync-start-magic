@@ -1449,7 +1449,7 @@ export default function BackupSection() {
 
             {/* ══════════ SEÇÃO 3: GitHub Actions ══════════ */}
             <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
-              <button onClick={() => { setShowActionsPanel(!showActionsPanel); if (!showActionsPanel && workflowRuns.length === 0 && selectedRepo) loadWorkflowRuns(); }}
+              <button onClick={() => { setShowActionsPanel(!showActionsPanel); if (!showActionsPanel && workflowRuns.length === 0 && actionsRepo) loadWorkflowRuns(); }}
                 className="w-full flex items-center justify-between p-4 hover:bg-muted/40 transition-colors">
                 <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-600/10 flex items-center justify-center">
@@ -1483,45 +1483,45 @@ export default function BackupSection() {
                     <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
                       {/* Action buttons */}
                       <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => loadWorkflowRuns()} disabled={loadingRuns || !selectedRepo}
+                        <button onClick={() => loadWorkflowRuns()} disabled={loadingRuns || !actionsRepo}
                           className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-muted/50 border border-border/50 text-foreground hover:bg-muted transition-all disabled:opacity-50">
                           {loadingRuns ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                           Atualizar
                         </button>
-                        <button onClick={triggerWorkflow} disabled={triggeringWorkflow || !selectedRepo}
+                        <button onClick={triggerWorkflow} disabled={triggeringWorkflow || !actionsRepo}
                           className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all disabled:opacity-50">
                           {triggeringWorkflow ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                           Trigger Manual
                         </button>
                       </div>
 
-                      {!selectedRepo && (
-                        <p className="text-[11px] text-muted-foreground text-center py-2">Carregue os repositórios acima primeiro</p>
+                      {!actionsRepo && (
+                        <p className="text-[11px] text-muted-foreground text-center py-2">Carregue os repositórios acima primeiro para detectar o repo de origem</p>
                       )}
 
                       {/* Mirror diagnostic info */}
-                      {selectedRepo && (
+                      {actionsRepo && (
                         <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-3 space-y-2">
                           <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                             <Info className="h-3 w-3" /> Diagnóstico do Mirror
                           </p>
                           <div className="space-y-1 text-[11px]">
                             <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Repo origem:</span>
-                              <span className="font-mono text-foreground text-[10px]">{selectedRepo}</span>
+                              <span className="text-muted-foreground">Repo origem (workflow):</span>
+                              <span className="font-mono text-emerald-400 text-[10px]">{actionsRepo}</span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-muted-foreground">Mirror destino:</span>
-                              <span className="font-mono text-foreground text-[10px]">segredounlock/sync-start-magic</span>
+                              <span className="font-mono text-foreground text-[10px]">{selectedRepo || "segredounlock/sync-start-magic"}</span>
                             </div>
                             <div className="border-t border-border/30 pt-1.5 mt-1.5 space-y-1">
                               <p className="text-[10px] font-semibold text-muted-foreground">Checklist para o sync funcionar:</p>
-                              <p className="text-[10px] text-muted-foreground">1. O secret <code className="bg-muted px-1 rounded text-foreground">GH_TOKEN</code> deve existir em <strong>{selectedRepo}</strong> → Settings → Secrets → Actions</p>
+                              <p className="text-[10px] text-muted-foreground">1. O secret <code className="bg-muted px-1 rounded text-foreground">GH_TOKEN</code> deve existir em <strong>{actionsRepo}</strong> → Settings → Secrets → Actions</p>
                               <p className="text-[10px] text-muted-foreground">2. O token deve ter acesso (escopo <code className="bg-muted px-1 rounded text-foreground">repo</code>) ao repositório destino</p>
                               <p className="text-[10px] text-muted-foreground">3. O workflow <code className="bg-muted px-1 rounded text-foreground">sync-mirror.yml</code> deve existir no repo de origem</p>
                             </div>
                           </div>
-                          <a href={`https://github.com/${selectedRepo}/settings/secrets/actions`} target="_blank" rel="noopener noreferrer"
+                          <a href={`https://github.com/${actionsRepo}/settings/secrets/actions`} target="_blank" rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 hover:text-blue-300 transition-colors mt-1">
                             <ExternalLink className="h-3 w-3" /> Abrir Secrets do repositório
                           </a>
