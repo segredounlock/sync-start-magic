@@ -153,6 +153,15 @@ export default function BackupSection() {
   const [syncLog, setSyncLog] = useState<{ path: string; status: "ok" | "error" | "pending"; error?: string }[]>([]);
   const syncLogRef = useRef<HTMLDivElement>(null);
 
+  // GitHub Actions
+  const [workflowRuns, setWorkflowRuns] = useState<any[]>([]);
+  const [loadingRuns, setLoadingRuns] = useState(false);
+  const [workflows, setWorkflows] = useState<any[]>([]);
+  const [triggeringWorkflow, setTriggeringWorkflow] = useState(false);
+  const [selectedRunLogs, setSelectedRunLogs] = useState<any>(null);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [showActionsPanel, setShowActionsPanel] = useState(false);
+
   // Update system
   const [updateExporting, setUpdateExporting] = useState(false);
   const [updateExportProgress, setUpdateExportProgress] = useState(0);
