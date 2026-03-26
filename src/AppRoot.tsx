@@ -209,6 +209,7 @@ function App() {
         <GlobalPresence />
         <SilentFingerprintCollector />
         <InactivityGuard />
+        <DynamicTitle />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>
