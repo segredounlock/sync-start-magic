@@ -686,9 +686,11 @@ export default function Principal() {
         setAllUsers((profiles || []).map(p => ({ id: p.id, active: p.active, created_at: p.created_at })));
 
         const roleMap: Record<string, string> = {};
+        const hasRevendedorRole: Record<string, boolean> = {};
         (roles || []).forEach(r => {
           const current = roleMap[r.user_id];
           if (!current || r.role === "admin") roleMap[r.user_id] = r.role;
+          if (r.role === "revendedor") hasRevendedorRole[r.user_id] = true;
         });
 
         const saldoMap: Record<string, number> = {};
