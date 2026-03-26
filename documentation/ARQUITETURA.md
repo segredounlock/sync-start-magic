@@ -97,7 +97,7 @@
 │   │   ├── telegram-notify/
 │   │   ├── telegram-setup/
 │   │   └── vapid-setup/
-│   └── migrations/         # SQL migrations
+│   └── migrations/         # SQL migrations (187+ arquivos)
 ├── index.html              # HTML entry
 ├── vite.config.ts          # Configuração Vite + PWA + Source Hash Plugin
 ├── tailwind.config.ts      # Configuração Tailwind
