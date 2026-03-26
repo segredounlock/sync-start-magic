@@ -76,10 +76,10 @@ export default function InstallApp() {
           className="text-center space-y-4"
         >
           <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden shadow-2xl border border-border/50 ring-1 ring-primary/20">
-            <img src={logo} alt="Recargas Brasil" className="w-full h-full object-cover" />
+            <img src={logo} alt={siteName} className="w-full h-full object-cover" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Recargas Brasil</h2>
+            <h2 className="text-2xl font-bold">{siteName}</h2>
             <p className="text-muted-foreground mt-1">
               Instale na tela inicial do seu celular
             </p>
