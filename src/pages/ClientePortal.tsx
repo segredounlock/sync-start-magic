@@ -40,6 +40,7 @@ const storeStats = [
 ];
 
 export default function ClientePortal() {
+  const siteName = useSiteName();
   const { slug } = useParams<{ slug: string }>();
   const { user, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
