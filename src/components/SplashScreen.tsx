@@ -1,5 +1,5 @@
-import logo from "@/assets/recargas-brasil-logo.jpeg";
 import { useSiteName } from "@/hooks/useSiteName";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 
 // Preload globally so it's cached
 const _preload = new Image();
