@@ -38,6 +38,12 @@ interface SyncLog {
   completed_at: string | null;
 }
 
+interface HealthCheck {
+  key: string;
+  ok: boolean;
+  detail: string;
+}
+
 interface ReconcileResult {
   summary: { total: number; synced: number; pending: number; conflict: number; protected: number; new_files: number; modified: number };
 }
