@@ -428,7 +428,7 @@ async function loadSiteConfig(supabase: any) {
 // ===== TERMS OF SERVICE =====
 const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
-function buildTermsText(siteName: string, siteUrl = "https://recargasbrasill.com"): string {
+function buildTermsText(siteName: string, siteUrl = ""): string {
   return `📜 <b>TERMOS DE UTILIZAÇÃO</b>
 🌐 <b>${siteName}</b> — ${siteUrl}
 
