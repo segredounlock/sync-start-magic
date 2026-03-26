@@ -1,4 +1,4 @@
-name: Sync to UPDATERECARGASBRASIL
+name: Sync to Mirrors
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push to mirror
+      - name: Sync UPDATERECARGASBRASIL
         run: |
-          git remote add mirror https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/segredounlock/UPDATERECARGASBRASIL.git
-          git push mirror main --force
+          git remote add mirror_update https://x-access-token:${{ secrets.SYNC_UPDATERECARGASBRASIL }}@github.com/segredounlock/UPDATERECARGASBRASIL.git
+          git push mirror_update main --force
