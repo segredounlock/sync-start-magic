@@ -76,7 +76,7 @@ const SOURCE_PATHS = [
   "src/hooks/useSupportChannels.ts","src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts",
   // Libs
   "src/lib/auditLog.ts","src/lib/confirm.tsx","src/lib/currencyMask.ts",
-  "src/lib/deviceFingerprint.ts","src/lib/fetchAll.ts","src/lib/inputValidation.ts",
+  "src/lib/deviceFingerprint.ts","src/lib/domain.ts","src/lib/fetchAll.ts","src/lib/inputValidation.ts",
   "src/lib/passwordValidation.ts","src/lib/payment.ts",
   "src/lib/reservedNames.ts","src/lib/sessionGuard.ts","src/lib/sounds.ts","src/lib/sourceManifest.ts",
   "src/lib/timezone.ts","src/lib/toast.tsx","src/lib/utils.ts",
@@ -118,13 +118,15 @@ const SOURCE_PATHS = [
   "supabase/functions/_shared/email-templates/reauthentication.tsx",
   // Supabase config
   "supabase/config.toml",
+  // GitHub Actions
+  ".github/workflows/sync-mirror.yml",
   // Documentation
   "ALTERACOES.md","DOCUMENTACAO_MIGRACAO.md",
   "documentation/README.md","documentation/ARQUITETURA.md","documentation/BANCO_DE_DADOS.md",
   "documentation/EDGE_FUNCTIONS.md","documentation/COMPONENTES.md","documentation/AUTENTICACAO.md",
   "documentation/PAGAMENTOS.md","documentation/CHAT.md","documentation/TELEGRAM.md",
   "documentation/BACKUP.md","documentation/MIGRACAO.md","documentation/STORAGE.md",
-  "documentation/SECRETS.md",
+  "documentation/SECRETS.md","documentation/MIRROR_SYNC.md",
 ];
 
 type TabKey = "dados" | "github" | "atualizacao";
