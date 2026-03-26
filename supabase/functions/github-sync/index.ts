@@ -24,6 +24,21 @@ async function ghFetch(path: string, pat: string, options: RequestInit = {}) {
   return body;
 }
 
+async function ghFetchRaw(path: string, pat: string) {
+  const res = await fetch(`${GITHUB_API}${path}`, {
+    headers: {
+      Authorization: `Bearer ${pat}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+    throw new Error(body.message || `GitHub API ${res.status}`);
+  }
+  return res;
+}
+
 async function verifyAdmin(req: Request) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) throw new Error("Não autorizado");
@@ -51,17 +66,6 @@ async function verifyAdmin(req: Request) {
 
   return { user, supabaseAdmin };
 }
-
-// Files to sync as the backup module
-const BACKUP_MODULE_FILES = [
-  "supabase/functions/backup-export/index.ts",
-  "supabase/functions/backup-restore/index.ts",
-  "supabase/functions/expire-pending-deposits/index.ts",
-  "supabase/functions/github-sync/index.ts",
-  "src/components/BackupSection.tsx",
-  "src/pages/Principal.tsx",
-  "src/pages/MaintenancePage.tsx",
-];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -106,6 +110,132 @@ serve(async (req) => {
       });
     }
 
+    // WORKFLOW RUNS — GET ?action=workflow-runs&repo=owner/name
+    if (action === "workflow-runs") {
+      await verifyAdmin(req);
+      const repo = url.searchParams.get("repo");
+      if (!repo) throw new Error("Repositório não informado");
+      
+      const runs = await ghFetch(`/repos/${repo}/actions/runs?per_page=10`, pat);
+      const simplified = (runs.workflow_runs || []).map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        status: r.status,
+        conclusion: r.conclusion,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+        html_url: r.html_url,
+        head_branch: r.head_branch,
+        head_sha: r.head_sha?.substring(0, 7),
+        run_number: r.run_number,
+        event: r.event,
+      }));
+      return new Response(JSON.stringify(simplified), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // WORKFLOW RUN LOGS — GET ?action=workflow-logs&repo=owner/name&run_id=123
+    if (action === "workflow-logs") {
+      await verifyAdmin(req);
+      const repo = url.searchParams.get("repo");
+      const runId = url.searchParams.get("run_id");
+      if (!repo || !runId) throw new Error("Repositório e run_id são obrigatórios");
+      
+      // Get jobs for this run
+      const jobs = await ghFetch(`/repos/${repo}/actions/runs/${runId}/jobs`, pat);
+      const jobDetails = (jobs.jobs || []).map((j: any) => ({
+        id: j.id,
+        name: j.name,
+        status: j.status,
+        conclusion: j.conclusion,
+        started_at: j.started_at,
+        completed_at: j.completed_at,
+        steps: (j.steps || []).map((s: any) => ({
+          name: s.name,
+          status: s.status,
+          conclusion: s.conclusion,
+          number: s.number,
+        })),
+      }));
+
+      // Try to get log text for the first job
+      let logText = "";
+      if (jobDetails.length > 0) {
+        try {
+          const logRes = await fetch(`${GITHUB_API}/repos/${repo}/actions/jobs/${jobDetails[0].id}/logs`, {
+            headers: {
+              Authorization: `Bearer ${pat}`,
+              Accept: "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+            },
+            redirect: "follow",
+          });
+          if (logRes.ok) {
+            logText = await logRes.text();
+            // Truncate if too large
+            if (logText.length > 10000) {
+              logText = logText.substring(logText.length - 10000);
+            }
+          }
+        } catch {
+          // Logs may not be available
+        }
+      }
+
+      return new Response(JSON.stringify({ jobs: jobDetails, log: logText }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // TRIGGER WORKFLOW — POST ?action=trigger-workflow
+    if (action === "trigger-workflow") {
+      await verifyAdmin(req);
+      const body = await req.json();
+      const { repo, workflow_id, branch } = body;
+      if (!repo) throw new Error("Repositório não informado");
+
+      // If workflow_id provided, dispatch it
+      if (workflow_id) {
+        await ghFetch(`/repos/${repo}/actions/workflows/${workflow_id}/dispatches`, pat, {
+          method: "POST",
+          body: JSON.stringify({ ref: branch || "main" }),
+        });
+      } else {
+        // Find first workflow and dispatch it
+        const workflows = await ghFetch(`/repos/${repo}/actions/workflows`, pat);
+        const wfs = workflows.workflows || [];
+        if (wfs.length === 0) throw new Error("Nenhum workflow encontrado");
+        
+        await ghFetch(`/repos/${repo}/actions/workflows/${wfs[0].id}/dispatches`, pat, {
+          method: "POST",
+          body: JSON.stringify({ ref: branch || "main" }),
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, message: "Workflow disparado!" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // LIST WORKFLOWS — GET ?action=list-workflows&repo=owner/name
+    if (action === "list-workflows") {
+      await verifyAdmin(req);
+      const repo = url.searchParams.get("repo");
+      if (!repo) throw new Error("Repositório não informado");
+
+      const workflows = await ghFetch(`/repos/${repo}/actions/workflows`, pat);
+      const simplified = (workflows.workflows || []).map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        path: w.path,
+        state: w.state,
+      }));
+      return new Response(JSON.stringify(simplified), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // SYNC FILES — POST ?action=sync
     if (action === "sync") {
       const { user, supabaseAdmin } = await verifyAdmin(req);
@@ -116,8 +246,6 @@ serve(async (req) => {
 
       const filesToSync: { path: string; content: string }[] = files || [];
       if (filesToSync.length === 0) {
-        // If no files provided, fetch from Supabase database backup
-        // We'll get the actual file contents from the project source
         return new Response(
           JSON.stringify({ error: "Nenhum arquivo para sincronizar" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -129,16 +257,14 @@ serve(async (req) => {
 
       for (const file of filesToSync) {
         try {
-          // Check if file exists (to get sha for update)
           let sha: string | undefined;
           try {
             const existing = await ghFetch(`/repos/${repo}/contents/${file.path}?ref=${targetBranch}`, pat);
             sha = existing.sha;
           } catch {
-            // File doesn't exist yet, will create
+            // File doesn't exist yet
           }
 
-          // Create or update file
           const payload: any = {
             message: `[Backup Module] Sync ${file.path}`,
             content: btoa(unescape(encodeURIComponent(file.content))),
@@ -164,7 +290,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: "Ação inválida. Use ?action=list-repos ou ?action=sync" }),
+      JSON.stringify({ error: "Ação inválida. Use ?action=list-repos, workflow-runs, workflow-logs, trigger-workflow, list-workflows ou sync" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
