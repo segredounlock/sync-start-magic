@@ -1481,13 +1481,13 @@ export default function BackupSection() {
             <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
               <button onClick={() => { setShowActionsPanel(!showActionsPanel); if (!showActionsPanel && workflowRuns.length === 0 && actionsRepo) loadWorkflowRuns(); }}
                 className="w-full flex items-center justify-between p-4 hover:bg-muted/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-600/10 flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-violet-400" />
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/10 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-violet-400" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-foreground">GitHub Actions</p>
-                    <p className="text-[10px] text-muted-foreground">Status, logs e trigger manual</p>
+                    <p className="text-base font-bold text-foreground">GitHub Actions</p>
+                    <p className="text-xs text-muted-foreground">Status do mirror, logs e trigger manual</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
