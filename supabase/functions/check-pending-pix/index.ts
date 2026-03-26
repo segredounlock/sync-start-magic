@@ -295,6 +295,168 @@ Deno.serve(async (req) => {
         }
       }
 
+      // ===== PUSHINPAY =====
+      if (gateway === "pushinpay") {
+        // Try reseller-specific token first, fallback to global
+        const meta2 = (tx.metadata as Record<string, unknown>) || {};
+        const token = (meta2.reseller_pushinPayToken as string) || config.pushinPayToken;
+        if (!token) continue;
+
+        checked++;
+        try {
+          const resp = await fetch(
+            `https://api.pushinpay.com.br/api/pix/cashIn/${tx.payment_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+              },
+            }
+          );
+
+          if (!resp.ok) {
+            console.warn(`PushinPay check ${tx.payment_id}: HTTP ${resp.status}`);
+            continue;
+          }
+
+          const data = await resp.json();
+          const ppStatus = data.status || "";
+
+          if (ppStatus === "paid" || ppStatus === "approved" || ppStatus === "completed") {
+            console.log(`PushinPay payment ${tx.payment_id} confirmed! Crediting user ${tx.user_id}`);
+
+            const { data: feeRows } = await supabase.rpc("get_deposit_fee_for_user", { _user_id: tx.user_id });
+            const taxaTipo = feeRows?.[0]?.fee_type || "fixo";
+            const taxaValor = Number(feeRows?.[0]?.fee_value) || 0;
+            let fee = 0;
+            if (taxaValor > 0) {
+              fee = taxaTipo === "percentual" ? Number(tx.amount) * (taxaValor / 100) : taxaValor;
+              fee = Math.round(fee * 100) / 100;
+            }
+            const creditAmount = Math.max(0, Number(tx.amount) - fee);
+
+            const payerInfo: Record<string, unknown> = {
+              end_to_end_id: data.end_to_end_id || null,
+              payer_name: data.payer_name || data.debitParty?.name || null,
+              payer_document: data.payer_document || data.debitParty?.document || null,
+              confirmed_at: new Date().toISOString(),
+              confirmed_by: "check-pending-pix",
+            };
+            if (fee > 0) {
+              payerInfo.fee_applied = fee;
+              payerInfo.fee_type = taxaTipo;
+              payerInfo.fee_rate = taxaValor;
+              payerInfo.credited_amount = creditAmount;
+            }
+
+            const updatedMeta = { ...meta, ...payerInfo };
+
+            const { data: claimed } = await supabase.rpc("claim_transaction", {
+              p_tx_id: tx.id,
+              p_from_status: "pending",
+              p_to_status: "completed",
+              p_metadata: updatedMeta,
+            });
+
+            if (!claimed) {
+              console.log(`Transaction ${tx.id} already processed, skipping`);
+              continue;
+            }
+
+            const saldoTipo = "revenda";
+            const { data: newBalance } = await supabase.rpc("increment_saldo", {
+              p_user_id: tx.user_id,
+              p_tipo: saldoTipo,
+              p_amount: creditAmount,
+            });
+
+            console.log(`Balance updated (${saldoTipo}): +${creditAmount} = ${newBalance} for user ${tx.user_id} (fee: R$${fee.toFixed(2)})`);
+
+            // Telegram notification
+            try {
+              const botToken = config.telegramBotToken?.trim();
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("telegram_id, nome")
+                .eq("id", tx.user_id)
+                .maybeSingle();
+
+              if (botToken && profile?.telegram_id) {
+                const chatIdTg = Number(profile.telegram_id);
+                const pixMsgId = updatedMeta.telegram_pix_msg_id;
+                const pixChatId = updatedMeta.telegram_chat_id || chatIdTg;
+                if (pixMsgId) {
+                  try {
+                    await fetch(`https://api.telegram.org/bot${botToken}/deleteMessage`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ chat_id: Number(pixChatId), message_id: Number(pixMsgId) }),
+                    });
+                  } catch {}
+                }
+
+                const nome = profile.nome || "Usuário";
+                const valorFmt = Number(tx.amount).toFixed(2).replace(".", ",");
+                const saldoFmt = Number(newBalance || 0).toFixed(2).replace(".", ",");
+                const feeNote = fee > 0 ? `\n💸 Taxa: <b>R$ ${fee.toFixed(2).replace(".", ",")}</b>\n💵 Creditado: <b>R$ ${creditAmount.toFixed(2).replace(".", ",")}</b>` : "";
+                const msg = `✅ <b>Pagamento Confirmado!</b>\n\n💰 Valor: <b>R$ ${valorFmt}</b>${feeNote}\n💳 Novo saldo: <b>R$ ${saldoFmt}</b>\n👤 ${nome}\n\n🎉 Saldo creditado com sucesso!`;
+
+                const tgResp = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    chat_id: chatIdTg,
+                    text: msg,
+                    parse_mode: "HTML",
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: "💰 Ver Saldo", callback_data: "menu_saldo" }, { text: "📱 Fazer Recarga", callback_data: "menu_recarga" }],
+                        [{ text: "📖 Menu", callback_data: "menu_main" }],
+                      ],
+                    },
+                  }),
+                });
+                const tgResult = await tgResp.json();
+                if (tgResult?.ok) {
+                  await supabase.from("transactions").update({ telegram_notified: true }).eq("id", tx.id);
+                }
+              }
+            } catch (notifyErr) {
+              console.warn("Telegram notification error:", notifyErr);
+            }
+
+            // Push notification
+            try {
+              const baseUrl = Deno.env.get("SUPABASE_URL")!;
+              const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+              fetch(`${baseUrl}/functions/v1/send-push`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+                body: JSON.stringify({
+                  title: "✅ Depósito Confirmado",
+                  body: `Depósito de R$ ${Number(tx.amount).toFixed(2).replace(".", ",")} confirmado! Saldo atualizado.`,
+                  user_ids: [tx.user_id],
+                }),
+              }).catch(() => {});
+            } catch {}
+
+            confirmed++;
+          } else if (ppStatus === "expired" || ppStatus === "cancelled" || ppStatus === "canceled") {
+            await supabase
+              .from("transactions")
+              .update({
+                status: "expired",
+                updated_at: new Date().toISOString(),
+                metadata: { ...meta, expired_by: "check-pending-pix", expired_at: new Date().toISOString() },
+              })
+              .eq("id", tx.id);
+            console.log(`PushinPay payment ${tx.payment_id} expired/cancelled`);
+          }
+        } catch (err) {
+          console.error(`Error checking PushinPay payment ${tx.payment_id}:`, err);
+        }
+      }
+
       // ===== MERCADO PAGO =====
       if (gateway === "mercadopago") {
         const modo = config.mercadoPagoModo || "prod";
@@ -314,7 +476,6 @@ Deno.serve(async (req) => {
 
           const data = await resp.json();
           if (data.status === "approved") {
-            // Trigger webhook processing by calling pix-webhook
             const baseUrl = Deno.env.get("SUPABASE_URL")!;
             const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
             await fetch(
