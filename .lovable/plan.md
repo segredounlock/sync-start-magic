@@ -1,56 +1,55 @@
 
-# Corrigir 404 no Espelho Publicado
 
-## Diagnóstico
-O problema não parece ser `window.location.origin` nem o reconhecimento de domínio.
+# Corrigir Tela Branca no Espelho — RLS + Dados Iniciais
 
-Pelo código e pela verificação da rota atual:
-- o app usa `BrowserRouter`
-- existe rota para `/`, `/login`, `/painel`, `/admin`, etc.
-- **não existe rota `/index`**
-- quando o espelho/publicação abre em `/index`, o React cai no `NotFound` e mostra exatamente a tela do print
+## Diagnóstico Confirmado
 
-Ou seja: o espelho está chegando na aplicação por uma URL legada/inválida (`/index`) e o app hoje trata isso como 404.
+O espelho tem as migrations aplicadas (a função `get_maintenance_mode` já existe nas migrations). Os dois problemas reais são:
 
-## Implementação proposta
+1. **`system_config` vazia no espelho** — as migrations inserem dados com `siteTitle = 'Recargas Brasil'`, mas se o espelho foi inicializado de forma diferente ou os dados foram limpos, a tabela fica vazia.
 
-### 1. Adicionar redirecionamento de compatibilidade
-No `src/AppRoot.tsx`:
-- criar uma rota explícita `path="/index"` redirecionando para `/`
-- opcionalmente também adicionar alias antigo `path="/auth"` redirecionando para `/login`, para evitar outros links quebrados
+2. **RLS bloqueia `useSiteName` para usuários não-autenticados** — O hook faz query direta `supabase.from("system_config").select("value").eq("key", "siteTitle")`, mas as políticas RLS do `system_config` só permitem leitura para admins e para keys específicas (taxas, comissões, margem). **Não existe policy para `siteTitle`/`siteName` nem para `anon`**. Na landing page (sem login), a query retorna vazio silenciosamente.
 
-Exemplo de comportamento:
-```text
-/index  -> /
-/auth   -> /login
+## Plano de Correção
+
+### 1. Migration: RLS para leitura pública de configs de branding
+
+Adicionar policy SELECT para `anon` e `authenticated` nas keys de branding e manutenção:
+
+```sql
+CREATE POLICY "Public can read branding configs"
+ON public.system_config FOR SELECT
+TO anon, authenticated
+USING (key IN ('siteTitle', 'siteName', 'siteSubtitle', 'seasonalTheme'));
 ```
 
-### 2. Normalizar entrada por links antigos
-Ainda no roteamento principal:
-- manter `/` como rota canônica
-- garantir que links antigos, bookmarks e URLs do espelho não parem em 404 se forem apenas aliases históricos
+Isso permite que `useSiteName` funcione sem autenticação. O `get_maintenance_mode` já usa SECURITY DEFINER, então não precisa de policy extra.
 
-### 3. Revisar pontos que possam gerar URLs antigas
-Fazer uma varredura rápida em:
-- redirects
-- links públicos
-- qualquer lugar que monte URL manualmente
+### 2. Migration: Garantir dados iniciais existem
 
-Objetivo:
-- evitar que o sistema continue emitindo `/index` em algum fluxo antigo
+```sql
+INSERT INTO system_config (key, value) VALUES
+  ('siteTitle', 'Sistema de Recargas'),
+  ('siteName', 'Sistema de Recargas'),
+  ('activeGateway', 'none'),
+  ('maintenanceMode', 'false'),
+  ... (15 configs essenciais)
+ON CONFLICT (key) DO NOTHING;
+```
 
-### 4. Validar no espelho publicado
-Depois da implementação, testar estes cenários:
-- abrir domínio do espelho em `/`
-- abrir manualmente `/index`
-- abrir `/login`
-- verificar que `/index` redireciona corretamente e não mostra mais 404
+Isso garante que no espelho ou em qualquer novo ambiente, os dados mínimos existam.
+
+### 3. Código: Nenhuma alteração necessária
+
+O `useSiteName` já tem fallback para `DEFAULT_SITE_NAME`. O `MaintenanceGuard` já tem timeout. O `AuthProvider` já tem timeout de 5s. A lógica está correta — só faltavam dados e permissões no banco.
+
+## Resultado Esperado
+
+- Espelho carrega imediatamente ao publicar (sem tela branca)
+- Landing page mostra título correto mesmo sem login
+- Nenhum arquivo de código alterado
+- 1 migration SQL (RLS + dados)
 
 ## Arquivos
-- `src/AppRoot.tsx` — adicionar aliases/redirecionamentos
-- revisão pontual de links/URLs legadas, se houver referência indireta a `/index`
+- 1 nova migration SQL
 
-## Resultado esperado
-- o espelho deixa de mostrar 404 ao abrir em `/index`
-- links antigos continuam funcionando
-- o domínio dinâmico continua normal; o problema é de rota, não de `window.location`
