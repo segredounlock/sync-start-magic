@@ -1234,7 +1234,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     supabase.from("system_config").select("value").eq("key", "webAppUrl").maybeSingle(),
     supabase.from("system_config").select("key, value").like("key", "bot_btn_%"),
   ]);
-  const migrationSiteUrl = migrationConfig.url || "https://recargasbrasill.com";
+  const migrationSiteUrl = migrationConfig.url || defaultSiteUrl;
   if (webAppConfig?.data?.value) webAppUrl = webAppConfig.data.value;
 
   // Build button visibility map (default true except migration)
