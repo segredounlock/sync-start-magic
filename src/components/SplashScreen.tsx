@@ -1,11 +1,10 @@
-import logo from "@/assets/recargas-brasil-logo.jpeg";
 import { useSiteName } from "@/hooks/useSiteName";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 
-// Preload globally so it's cached
-const _preload = new Image();
-_preload.src = logo;
+// Preload handled by browser cache
 
 export function SplashScreen() {
+  const logo = useSiteLogo();
   const siteName = useSiteName();
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[hsl(var(--background))]">

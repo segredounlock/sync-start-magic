@@ -7,7 +7,7 @@ import { createPixDeposit, type PixResult } from "@/lib/payment";
 import { applyCurrencyMask } from "@/lib/currencyMask";
 import { useFeePreview } from "@/hooks/useFeePreview";
 import { motion, AnimatePresence } from "framer-motion";
-import recargasLogo from "@/assets/recargas-brasil-logo.jpeg";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Smartphone, DollarSign, Clock, Landmark, User,
@@ -321,6 +321,7 @@ export default function TelegramMiniApp() {
     return (saved === "light" || saved === "dark") ? saved : "auto";
   });
   const siteName = useSiteName();
+  const recargasLogo = useSiteLogo();
   const { isDark } = useTelegramTheme(themePreference);
 
   const toggleTheme = useCallback(() => {

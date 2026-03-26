@@ -3,7 +3,7 @@ import { useSiteName } from "@/hooks/useSiteName";
 import { motion } from "framer-motion";
 import { Download, Smartphone, Share, Plus, Check, ArrowLeft, Apple, Monitor } from "lucide-react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/recargas-brasil-logo.jpeg";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -12,6 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export default function InstallApp() {
   const siteName = useSiteName();
+  const logo = useSiteLogo();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);

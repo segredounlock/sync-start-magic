@@ -10,7 +10,7 @@ import { Navigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock, User, Download, Smartphone, CheckCircle, TicketCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
-import logo from "@/assets/recargas-brasil-logo.jpeg";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 import { collectFingerprint, captureLoginSelfie } from "@/lib/deviceFingerprint";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
@@ -41,6 +41,7 @@ const COOLDOWN_MS = 60_000;
 
 export default function Auth() {
   const siteName = useSiteName();
+  const logo = useSiteLogo();
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
