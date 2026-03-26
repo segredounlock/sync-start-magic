@@ -395,15 +395,30 @@ function generatePassword(): string {
   return pass;
 }
 
+// ===== SITE NAME (dynamic from system_config) =====
+let siteNameCache: { value: string; time: number } | null = null;
+const SITE_NAME_TTL = 300_000; // 5 minutes
+
+async function getSiteName(supabase: any): Promise<string> {
+  if (siteNameCache && Date.now() - siteNameCache.time < SITE_NAME_TTL) return siteNameCache.value;
+  try {
+    const { data } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle();
+    const name = data?.value || "Recargas Brasil";
+    siteNameCache = { value: name, time: Date.now() };
+    return name;
+  } catch { return "Recargas Brasil"; }
+}
+
 // ===== TERMS OF SERVICE =====
 const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
-const TERMS_TEXT = `📜 <b>TERMOS DE UTILIZAÇÃO</b>
-🌐 <b>Recargas Brasil</b> — https://recargasbrasill.com
+function buildTermsText(siteName: string): string {
+  return `📜 <b>TERMOS DE UTILIZAÇÃO</b>
+🌐 <b>${siteName}</b> — https://recargasbrasill.com
 
 Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
-1️⃣ <b>Sobre o Serviço</b> — O <b>Recargas Brasil</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site https://recargasbrasill.com.
+1️⃣ <b>Sobre o Serviço</b> — O <b>${siteName}</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site https://recargasbrasill.com.
 
 2️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
 
@@ -446,6 +461,7 @@ Antes de acionar o suporte, <b>verifique no app da operadora</b>:
 ⏱️ As recargas geralmente aparecem no extrato da operadora em até <b>1 hora</b> após a conclusão. Informe esse prazo ao seu cliente <b>antes</b> de realizar a recarga.
 
 ⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
+}
 
 const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg"; // kept for future optional use
 

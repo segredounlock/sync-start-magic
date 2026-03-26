@@ -28,8 +28,15 @@ Deno.serve(async (req) => {
 
   const store = Array.isArray(data) ? data[0] : null;
 
+  // Fetch dynamic site name
+  let siteName = "Recargas Brasil";
+  try {
+    const { data: configData } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle();
+    if (configData?.value) siteName = configData.value;
+  } catch {}
+
   // Defaults
-  const defaultTitle = "Recargas Brasil - Sistema de Recargas";
+  const defaultTitle = `${siteName} - Sistema de Recargas`;
   const defaultDescription =
     "Sistema de recargas de celular para revendedores. Gerencie saldos, recargas e clientes.";
   const defaultImage = "https://recargasbrasill.com/og-image.png";
