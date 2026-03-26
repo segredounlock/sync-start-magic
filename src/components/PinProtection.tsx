@@ -8,6 +8,12 @@ interface PinProtectionProps {
   configKey?: string;
 }
 
+// Module-level session cache: { [configKey]: timestamp }
+const pinSessionCache: Record<string, number> = {};
+
+// Default timeout in seconds
+const DEFAULT_PIN_TIMEOUT = 300; // 5 minutes
+
 // SHA-256 hash for PIN
 async function hashPin(pin: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -17,6 +23,28 @@ async function hashPin(pin: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function getPinTimeout(): Promise<number> {
+  try {
+    const { data } = await supabase
+      .from("system_config")
+      .select("value")
+      .eq("key", "pinTimeoutSeconds")
+      .maybeSingle();
+    if (data?.value) {
+      const val = parseInt(data.value, 10);
+      if (!isNaN(val) && val >= 0) return val;
+    }
+  } catch {}
+  return DEFAULT_PIN_TIMEOUT;
+}
+
+function isSessionValid(configKey: string, timeoutSeconds: number): boolean {
+  const ts = pinSessionCache[configKey];
+  if (!ts) return false;
+  if (timeoutSeconds === 0) return true; // 0 = never expires
+  return (Date.now() - ts) < timeoutSeconds * 1000;
+}
+
 export function PinProtection({ children, configKey = "adminPin" }: PinProtectionProps) {
   const [unlocked, setUnlocked] = useState(false);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
@@ -24,14 +52,26 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
   const [confirmPin, setConfirmPin] = useState(["", "", "", ""]);
   const [step, setStep] = useState<"enter" | "create" | "confirm">("enter");
   const [error, setError] = useState("");
+  const [timeoutSeconds, setTimeoutSeconds] = useState(DEFAULT_PIN_TIMEOUT);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const confirmRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    checkPin();
+    checkSessionAndPin();
   }, []);
 
-  const checkPin = async () => {
+  const checkSessionAndPin = async () => {
+    // Load timeout config
+    const timeout = await getPinTimeout();
+    setTimeoutSeconds(timeout);
+
+    // Check if session is still valid
+    if (isSessionValid(configKey, timeout)) {
+      setUnlocked(true);
+      return;
+    }
+
+    // Check if PIN exists
     const { data } = await supabase
       .from("system_config")
       .select("value")
@@ -72,6 +112,11 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
     }
   };
 
+  const unlockSession = () => {
+    pinSessionCache[configKey] = Date.now();
+    setUnlocked(true);
+  };
+
   const handleSubmit = async () => {
     const pinValue = pin.join("");
     if (pinValue.length !== 4) return;
@@ -91,19 +136,18 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
         setTimeout(() => confirmRefs.current[0]?.focus(), 100);
         return;
       }
-      // Save hashed PIN
       const hashed = await hashPin(pinValue);
       await supabase.from("system_config").upsert(
         { key: configKey, value: hashed, updated_at: new Date().toISOString() },
         { onConflict: "key" }
       );
       setHasPin(true);
-      setUnlocked(true);
+      unlockSession();
       toast.success("PIN criado com sucesso!");
       return;
     }
 
-    // Verify PIN by comparing hashes
+    // Verify PIN
     const { data } = await supabase
       .from("system_config")
       .select("value")
@@ -112,16 +156,14 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
 
     const hashed = await hashPin(pinValue);
 
-    // Support both legacy plain-text and new hashed PINs
     if (data?.value === hashed || (data?.value?.length === 4 && data?.value === pinValue)) {
-      // If it was plain-text, migrate to hashed
       if (data?.value?.length === 4) {
         await supabase.from("system_config").upsert(
           { key: configKey, value: hashed, updated_at: new Date().toISOString() },
           { onConflict: "key" }
         );
       }
-      setUnlocked(true);
+      unlockSession();
     } else {
       setError("PIN incorreto");
       setPin(["", "", "", ""]);
@@ -129,19 +171,13 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
     }
   };
 
-  // Auto-submit when all digits are filled
+  // Auto-submit
   useEffect(() => {
-    const pinValue = pin.join("");
-    if (pinValue.length === 4 && step !== "confirm") {
-      handleSubmit();
-    }
+    if (pin.join("").length === 4 && step !== "confirm") handleSubmit();
   }, [pin]);
 
   useEffect(() => {
-    const confirmValue = confirmPin.join("");
-    if (confirmValue.length === 4 && step === "confirm") {
-      handleSubmit();
-    }
+    if (confirmPin.join("").length === 4 && step === "confirm") handleSubmit();
   }, [confirmPin]);
 
   if (unlocked) return <>{children}</>;
@@ -197,6 +233,21 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
       {error && (
         <p className="text-sm text-destructive font-medium">{error}</p>
       )}
+
+      {hasPin && step === "enter" && timeoutSeconds > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Sessão válida por {timeoutSeconds >= 60 ? `${Math.floor(timeoutSeconds / 60)} min` : `${timeoutSeconds}s`} após autenticação
+        </p>
+      )}
     </div>
   );
+}
+
+/** Utility to clear PIN session (e.g. on logout) */
+export function clearPinSession(configKey?: string) {
+  if (configKey) {
+    delete pinSessionCache[configKey];
+  } else {
+    Object.keys(pinSessionCache).forEach(k => delete pinSessionCache[k]);
+  }
 }
