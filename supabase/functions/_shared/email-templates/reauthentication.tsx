@@ -15,6 +15,7 @@ import {
 
 interface ReauthenticationEmailProps {
   token: string
+  siteName?: string
 }
 
 const LOGO_URL = 'https://xtkqyjruyuydlbvwduuy.supabase.co/storage/v1/object/public/email-assets/logo.jpeg'
