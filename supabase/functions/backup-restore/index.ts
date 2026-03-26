@@ -110,7 +110,10 @@ serve(async (req) => {
       status: "not_found", created: 0, skipped: 0, failed: 0, errors: [],
     };
 
-    if (authUsersFile) {
+    if (safeMode) {
+      authRestoreResult = { status: "skipped_safe_mode", created: 0, skipped: 0, failed: 0, errors: [] };
+      console.log("Safe mode: skipping auth.users restore");
+    } else if (authUsersFile) {
       try {
         const authUsersData = JSON.parse(await authUsersFile.async("string"));
         const authUsers = authUsersData.users || authUsersData || [];
@@ -118,7 +121,6 @@ serve(async (req) => {
         const errors: string[] = [];
 
         if (sqlConn) {
-          // === SQL DIRETO: preserva UUID, senha e metadados ===
           for (const au of authUsers) {
             if (!au.id || !au.email) { skipped++; continue; }
             if (validAuthUserIds.has(au.id)) { skipped++; continue; }
@@ -153,7 +155,6 @@ serve(async (req) => {
               validAuthUserIds.add(au.id);
               created++;
             } catch (err: any) {
-              // Check if conflict by email
               if (err.message?.includes("unique") || err.message?.includes("duplicate")) {
                 skipped++;
               } else {
@@ -163,7 +164,6 @@ serve(async (req) => {
             }
           }
 
-          // Also insert into auth.identities for email provider
           for (const au of authUsers) {
             if (!au.id || !au.email) continue;
             try {
@@ -187,7 +187,6 @@ serve(async (req) => {
             }
           }
         } else {
-          // Fallback: Admin API (sem senha, novo UUID)
           for (const au of authUsers) {
             if (!au.id || !au.email) { skipped++; continue; }
             if (validAuthUserIds.has(au.id)) { skipped++; continue; }

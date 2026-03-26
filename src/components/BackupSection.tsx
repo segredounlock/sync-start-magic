@@ -190,7 +190,7 @@ export default function BackupSection() {
     title: string;
     description: string;
     details?: string[];
-    icon?: "sync" | "restore" | "update";
+    icon?: "sync" | "restore" | "update" | "safe";
     onConfirm: () => void;
   }>({ open: false, title: "", description: "", onConfirm: () => {} });
   // GitHub PAT
