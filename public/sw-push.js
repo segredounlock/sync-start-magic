@@ -2,7 +2,7 @@
 // This file handles background push events when the browser is minimized
 
 self.addEventListener("push", (event) => {
-  let data = { title: "Recargas Brasil", body: "Nova notificação" };
+  let data = { title: "Sistema de Recargas", body: "Nova notificação" };
   try {
     if (event.data) {
       data = event.data.json();
