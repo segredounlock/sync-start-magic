@@ -87,6 +87,7 @@ serve(async (req) => {
           "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
           "push_subscriptions", "update_history",
           "login_fingerprints", "login_attempts", "banned_devices",
+          "mirror_sync_state", "mirror_file_state", "mirror_sync_logs",
         ];
         for (const t of candidateTables) {
           const { error } = await supabaseAdmin.from(t).select("id").limit(0);
