@@ -387,9 +387,12 @@ export default function BackupSection() {
     setSyncing(false);
   };
 
+  // For Actions, always use the SOURCE repo (where workflow lives), not the mirror destination
+  const actionsRepo = sourceRepo || selectedRepo;
+
   const loadWorkflowRuns = async (repo?: string) => {
-    const targetRepo = repo || selectedRepo;
-    if (!targetRepo) { toast.error("Selecione um repositório"); return; }
+    const targetRepo = repo || actionsRepo;
+    if (!targetRepo) { toast.error("Configure o repositório de origem"); return; }
     setLoadingRuns(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -406,14 +409,14 @@ export default function BackupSection() {
   };
 
   const loadWorkflowLogs = async (runId: number) => {
-    if (!selectedRepo) return;
+    if (!actionsRepo) return;
     setLoadingLogs(true);
     setSelectedRunLogs(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessão expirada");
       const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-sync?action=workflow-logs&repo=${encodeURIComponent(selectedRepo)}&run_id=${runId}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-sync?action=workflow-logs&repo=${encodeURIComponent(actionsRepo)}&run_id=${runId}`,
         { headers: { Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
       );
       if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
@@ -424,18 +427,18 @@ export default function BackupSection() {
   };
 
   const triggerWorkflow = async () => {
-    if (!selectedRepo) { toast.error("Selecione um repositório"); return; }
+    if (!actionsRepo) { toast.error("Configure o repositório de origem"); return; }
     setTriggeringWorkflow(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessão expirada");
-      const repo = repos.find((r: any) => r.full_name === selectedRepo);
+      const repo = repos.find((r: any) => r.full_name === actionsRepo);
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-sync?action=trigger-workflow`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          body: JSON.stringify({ repo: selectedRepo, branch: repo?.default_branch || "main" }),
+          body: JSON.stringify({ repo: actionsRepo, branch: repo?.default_branch || "main" }),
         }
       );
       if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
