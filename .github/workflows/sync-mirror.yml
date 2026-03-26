@@ -9,6 +9,7 @@ on:
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    if: github.repository == 'segredounlock/recargas-brasil-v2'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
