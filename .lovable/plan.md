@@ -1,35 +1,34 @@
 
 
-# Proteger menu Antifraude com PIN de 4 dígitos
+# Modo Seguro de Restauração — Apenas Adicionar, Nunca Sobrescrever
 
 ## Problema
-O menu "Antifraude" no Painel Principal está acessível sem proteção adicional. Dados forenses sensíveis (fingerprints, selfies, IPs) devem exigir PIN.
+Ao restaurar backup no espelho, o sistema sobrescreve usuários, `system_config`, `bot_settings` e outros dados existentes. O espelho já tem seu próprio backend configurado e não deve ter dados substituídos.
 
 ## Solução
-Envolver o `<AntifraudSection />` com o componente `<PinProtection>` que já existe no sistema — o mesmo usado para proteger outras áreas sensíveis.
+Adicionar um modo **"Restauração Segura"** que:
+- **Pula** completamente a restauração de `auth.users` (não toca nos usuários do destino)
+- **Pula** tabelas de configuração do sistema (`system_config`, `bot_settings`)
+- Para as demais tabelas, usa **INSERT ... ON CONFLICT DO NOTHING** em vez de UPSERT (só adiciona registros que não existem)
 
-## Alteração
+## Alterações
 
-**`src/pages/Principal.tsx`** — linha ~4945:
+### 1. Edge Function `backup-restore/index.ts`
+- Ler query param `?mode=safe` da URL
+- Se `mode === "safe"`:
+  - Pular completamente a restauração de `auth/users.json`
+  - Pular tabelas `system_config` e `bot_settings`
+  - Trocar `upsert` por `insert` com `{ onConflict: "id", ignoreDuplicates: true }` para todas as tabelas (insere apenas novos, ignora existentes)
+  - Retornar `authRestoreResult = { status: "skipped_safe_mode" }`
 
-```tsx
-// De:
-{view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
+### 2. Frontend `BackupSection.tsx`
+- Adicionar novo botão **"Restauração Segura"** ao lado do botão "Restaurar" existente, com ícone de escudo e cor verde/azul
+- Novo botão abre o file picker e chama `executeImport(file, true)` (flag safeMode)
+- `executeImport` recebe param `safeMode` e adiciona `?mode=safe` na URL da edge function
+- Modal de confirmação diferente: "Apenas dados novos serão adicionados. Usuários e configurações existentes NÃO serão alterados."
+- Novo `fileInputRef` dedicado (ou reutilizar com state)
 
-// Para:
-{view === "antifraude" && (
-  <Suspense fallback={<SkeletonCard />}>
-    <PinProtection configKey="adminPin">
-      <AntifraudSection />
-    </PinProtection>
-  </Suspense>
-)}
-```
-
-Adicionar import do `PinProtection` no topo do arquivo (se ainda não existir).
-
-## Resultado
-- Ao clicar em "Antifraude", o sistema pede o PIN de 4 dígitos antes de mostrar os dados
-- Usa o mesmo PIN já configurado (`adminPin` no `system_config`)
-- Sem mudança no fluxo — após digitar o PIN correto, o conteúdo aparece normalmente
+### Arquivos alterados
+1. `supabase/functions/backup-restore/index.ts` — lógica safe mode
+2. `src/components/BackupSection.tsx` — botão + handler
 
