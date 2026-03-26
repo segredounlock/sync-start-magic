@@ -1589,6 +1589,12 @@ export default function BackupSection() {
                         </div>
                       )}
 
+                      {/* Sincronização Inteligente */}
+                      <MirrorSyncPanel
+                        mirrorRepo={selectedRepo || "segredounlock/sync-start-magic"}
+                        sourceRepo={actionsRepo}
+                      />
+
                       {/* Inicializar Espelho */}
                       <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-4 space-y-3">
                         <p className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
