@@ -981,7 +981,7 @@ export default function BackupSection() {
         {activeTab === "dados" && (
           <motion.div key="dados" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} className="space-y-4">
             {/* Quick Actions Row */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Export Card */}
               <button onClick={handleExport} disabled={exporting}
                 className="relative group rounded-2xl p-4 bg-card border border-border shadow-sm hover:bg-muted/60 hover:shadow-md hover:border-amber-500/30 transition-all text-left disabled:opacity-60">
