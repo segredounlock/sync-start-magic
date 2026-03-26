@@ -963,10 +963,10 @@ export default function BackupSection() {
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex gap-1 p-1.5 rounded-2xl bg-card border border-border shadow-sm">
+      <div className="flex gap-0.5 p-1 rounded-2xl bg-card border border-border shadow-sm">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
               activeTab === t.key
                 ? "bg-primary/10 text-foreground shadow-sm border border-primary/20"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
