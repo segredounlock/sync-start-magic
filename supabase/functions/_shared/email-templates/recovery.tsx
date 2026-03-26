@@ -36,7 +36,7 @@ export const RecoveryEmail = ({
         <Heading style={h1}>Redefinir sua senha</Heading>
         <Text style={text}>
           Recebemos uma solicitação para redefinir a senha da sua conta no{' '}
-          <strong>Recargas Brasil</strong>. Clique no botão abaixo para criar uma nova senha.
+          <strong>{siteName}</strong>. Clique no botão abaixo para criar uma nova senha.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Redefinir Senha
