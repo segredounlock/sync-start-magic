@@ -1,7 +1,7 @@
 # 📦 Documentação Completa — Recargas Brasil v2
 
-> **Última atualização:** 2026-03-25  
-> **Versão:** 2.1  
+> **Última atualização:** 2026-03-26  
+> **Versão:** 2.2  
 > **Propósito:** Documentar TUDO necessário para migração, restauração e manutenção do sistema.
 
 > ⚠️ **Este arquivo é um resumo.** A documentação completa e detalhada está na pasta `documentation/`.
@@ -15,12 +15,13 @@
 | Frontend | React 18 + TypeScript + Vite 5 |
 | Estilização | Tailwind CSS + shadcn/ui + Framer Motion |
 | Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno — 31 funções |
+| Edge Functions | Deno — 32 funções |
 | Banco de Dados | PostgreSQL — 42 tabelas com RLS |
 | Pagamentos | Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay |
 | Bot | Telegram Bot API |
 | Armazenamento | Supabase Storage — 8 buckets |
 | PWA | vite-plugin-pwa + Service Worker |
+| Espelhamento | GitHub Actions — sync automático para repo mirror |
 
 ---
 
@@ -33,7 +34,7 @@ Consulte a pasta `documentation/` para guias completos:
 | [README.md](documentation/README.md) | Índice geral e changelog |
 | [ARQUITETURA.md](documentation/ARQUITETURA.md) | Arquitetura, estrutura de pastas, fluxos |
 | [BANCO_DE_DADOS.md](documentation/BANCO_DE_DADOS.md) | 42 tabelas, 35 funções, triggers, RLS |
-| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 31 Edge Functions |
+| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 32 Edge Functions |
 | [COMPONENTES.md](documentation/COMPONENTES.md) | Componentes, páginas, hooks, libs |
 | [AUTENTICACAO.md](documentation/AUTENTICACAO.md) | Auth, roles, segurança, migração de senhas |
 | [PAGAMENTOS.md](documentation/PAGAMENTOS.md) | Gateways PIX, taxas, webhooks |
@@ -43,12 +44,19 @@ Consulte a pasta `documentation/` para guias completos:
 | [MIGRACAO.md](documentation/MIGRACAO.md) | Checklist completo de migração |
 | [STORAGE.md](documentation/STORAGE.md) | 8 buckets e políticas |
 | [SECRETS.md](documentation/SECRETS.md) | Secrets e variáveis de ambiente |
+| [MIRROR_SYNC.md](documentation/MIRROR_SYNC.md) | Sistema de espelhamento automático |
 
 ---
 
-## 🔄 Principais Mudanças v2.1
+## 🔄 Principais Mudanças v2.2
 
-### Backup com SQL Direto
+### Sistema de Espelhamento (Mirror Sync)
+- **GitHub Actions** sincroniza automaticamente código para repo espelho a cada push
+- **Isolamento de ambiente** — `.env` e `config.toml` removidos antes do push
+- **Proteção contra execução no destino** — `if: github.repository` no workflow
+- **Cada espelho tem backend independente** com seus próprios secrets do Lovable Cloud
+
+### Backup com SQL Direto (v2.1)
 - **Export:** Usa `SUPABASE_DB_URL` para query direta em `auth.users`, capturando `encrypted_password` (bcrypt hash)
 - **Restore:** INSERT SQL direto preserva UUID original + senha + metadados + `auth.identities`
 - **Resultado:** Migração completa — usuários fazem login com a mesma senha
@@ -69,6 +77,7 @@ Consulte a pasta `documentation/` para guias completos:
 > 2. `supabase/functions/backup-restore/index.ts` — knownOrder
 > 3. `src/components/BackupSection.tsx` — SOURCE_PATHS
 > 4. `documentation/` — atualizar docs relevantes
+> 5. `.github/workflows/sync-mirror.yml` — verificar se novos arquivos sensíveis precisam ser excluídos
 
 ---
 

@@ -21,7 +21,7 @@
                     │ Auth        │ ← JWT + Roles
                     │ Storage     │ ← 8 buckets
                     │ Realtime    │ ← WebSocket
-                    │ Edge Funcs  │ ← 31 funções Deno
+                    │ Edge Funcs  │ ← 32 funções Deno
                     └──────┬──────┘
                            │
               ┌────────────┼────────────┐
@@ -36,7 +36,10 @@
 
 ```
 /
-├── documentation/           # 12 arquivos de documentação técnica
+├── .github/
+│   └── workflows/
+│       └── sync-mirror.yml # Espelhamento automático para repo mirror
+├── documentation/           # 13 arquivos de documentação técnica
 ├── public/
 │   └── sw-push.js          # Service Worker para push notifications
 ├── src/
@@ -59,7 +62,7 @@
 │   └── index.css           # Estilos base + Tailwind
 ├── supabase/
 │   ├── config.toml         # Configuração do Supabase
-│   ├── functions/          # 31 Edge Functions
+│   ├── functions/          # 32 Edge Functions
 │   │   ├── _shared/        # Templates de email compartilhados
 │   │   │   └── email-templates/  # 6 templates (signup, recovery, etc.)
 │   │   ├── admin-create-user/
@@ -94,7 +97,7 @@
 │   │   ├── telegram-notify/
 │   │   ├── telegram-setup/
 │   │   └── vapid-setup/
-│   └── migrations/         # SQL migrations
+│   └── migrations/         # SQL migrations (187+ arquivos)
 ├── index.html              # HTML entry
 ├── vite.config.ts          # Configuração Vite + PWA + Source Hash Plugin
 ├── tailwind.config.ts      # Configuração Tailwind
@@ -144,3 +147,13 @@ Admin faz upload do ZIP → Edge Function backup-restore
   → Supabase SDK: UPSERT em cada tabela na ordem de dependência
   → Retorna relatório (criados, pulados, falhas)
 ```
+
+### Espelhamento (Mirror Sync)
+```
+Lovable push → GitHub (recargas-brasil-v2)
+  → GitHub Actions: sync-mirror.yml
+  → Remove .env e config.toml
+  → Force push → sync-start-magic
+  → Lovable do espelho detecta e sincroniza
+```
+> Detalhes completos em [MIRROR_SYNC.md](./MIRROR_SYNC.md)

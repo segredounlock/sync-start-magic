@@ -2,6 +2,8 @@
 
 ## Secrets do Supabase (Edge Functions)
 
+> **⚡ Lovable Cloud provisiona automaticamente** todos os 6 secrets base ao criar o projeto. Isso vale tanto para o projeto de origem quanto para projetos espelho — cada um recebe seus **próprios valores** apontando para seu backend independente.
+
 | Secret | Descrição | Auto-configurado | Usado por |
 |--------|-----------|:----------------:|-----------|
 | `SUPABASE_URL` | URL do projeto | ✅ | Todas as functions |
@@ -14,6 +16,8 @@
 > **Importante:** `SUPABASE_DB_URL` é essencial para backup/restore de `auth.users` com senhas criptografadas. Sem ele, o sistema usa fallback via Admin API (sem senhas).
 
 ## Frontend (.env — auto-gerado)
+
+> O `.env` é gerado e gerenciado automaticamente pelo Lovable Cloud. **Nunca edite manualmente.**
 
 | Variável | Descrição |
 |----------|-----------|
@@ -78,3 +82,15 @@
 | Key | Descrição |
 |-----|-----------|
 | `githubPat` | Personal Access Token do GitHub |
+
+---
+
+## Configuração em Projeto Espelho
+
+Projetos espelho (mirror) recebem seus próprios secrets automaticamente do Lovable Cloud. Configurações adicionais necessárias no banco de dados do espelho:
+
+1. **Gateway de pagamento** — Configurar chaves em `system_config`
+2. **Bot Telegram** — Configurar `botToken` em `bot_settings` e executar `telegram-setup`
+3. **Chaves VAPID** — Executar `vapid-setup` para gerar novas chaves
+4. **GitHub PAT** — Configurar se quiser usar GitHub Sync no espelho
+5. **PIN Master** — Definir `masterPin` em `system_config`
