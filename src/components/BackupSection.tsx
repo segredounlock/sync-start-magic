@@ -963,10 +963,10 @@ export default function BackupSection() {
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex gap-1 p-1.5 rounded-2xl bg-card border border-border shadow-sm">
+      <div className="flex gap-0.5 p-1 rounded-2xl bg-card border border-border shadow-sm">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
               activeTab === t.key
                 ? "bg-primary/10 text-foreground shadow-sm border border-primary/20"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -981,7 +981,7 @@ export default function BackupSection() {
         {activeTab === "dados" && (
           <motion.div key="dados" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} className="space-y-4">
             {/* Quick Actions Row */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Export Card */}
               <button onClick={handleExport} disabled={exporting}
                 className="relative group rounded-2xl p-4 bg-card border border-border shadow-sm hover:bg-muted/60 hover:shadow-md hover:border-amber-500/30 transition-all text-left disabled:opacity-60">
@@ -1390,7 +1390,7 @@ export default function BackupSection() {
                     const edgeFns = effectivePaths.filter(p => p.startsWith("supabase/functions/")).length;
                     const configs = effectivePaths.filter(p => !p.startsWith("src/") && !p.startsWith("supabase/functions/") && !p.startsWith("public/")).length;
                     return (
-                      <div className="grid grid-cols-3 gap-2.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
                           <p className="text-xl font-bold text-foreground">{pages}</p>
                           <p className="text-xs text-muted-foreground font-medium">Páginas</p>
@@ -1536,14 +1536,14 @@ export default function BackupSection() {
                             <Info className="h-4 w-4" /> Diagnóstico do Mirror
                           </p>
                           <div className="space-y-2 text-sm">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5">
                               <span className="text-muted-foreground">Repositório de origem:</span>
                               <a href={`https://github.com/${actionsRepo}`} target="_blank" rel="noopener noreferrer"
-                                className="font-mono text-emerald-400 text-xs hover:underline">{actionsRepo}</a>
+                                className="font-mono text-emerald-400 text-xs hover:underline break-all">{actionsRepo}</a>
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5">
                               <span className="text-muted-foreground">Mirror (destino):</span>
-                              <span className="font-mono text-foreground text-xs">{selectedRepo || "segredounlock/sync-start-magic"}</span>
+                              <span className="font-mono text-foreground text-xs break-all">{selectedRepo || "segredounlock/sync-start-magic"}</span>
                             </div>
                             <div className="border-t border-border/30 pt-2.5 mt-2.5 space-y-2">
                               <p className="text-xs font-bold text-muted-foreground">✅ Checklist para o sync funcionar:</p>
