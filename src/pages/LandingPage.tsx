@@ -511,7 +511,7 @@ export default function LandingPage() {
               <span className="text-[11px] text-muted-foreground">Suporte 24/7</span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              © {new Date().getFullYear()} Recargas Brasil. Todos os direitos reservados.
+              © {new Date().getFullYear()} {siteName}. Todos os direitos reservados.
             </p>
           </div>
         </div>

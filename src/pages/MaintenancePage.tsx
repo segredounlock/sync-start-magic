@@ -119,7 +119,7 @@ export default function MaintenancePage() {
           transition={{ delay: 0.9 }}
           className="text-xs text-muted-foreground/60"
         >
-          © {new Date().getFullYear()} Recargas Brasil · Todos os direitos reservados
+          © {new Date().getFullYear()} {siteName} · Todos os direitos reservados
         </motion.p>
       </motion.div>
     </div>

@@ -244,7 +244,7 @@ export default function ClientePortal() {
 
   // Branding
   const brandColor = resellerInfo.store_primary_color || undefined;
-  const brandName = resellerInfo.store_name || "Recargas Brasil";
+  const brandName = resellerInfo.store_name || siteName;
   const brandLogo = resellerInfo.store_logo_url || null;
 
   const btnStyle: React.CSSProperties = brandColor

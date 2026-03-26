@@ -2206,7 +2206,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               recarga={receiptRecarga}
               open={!!receiptRecarga}
               onClose={() => setReceiptRecarga(null)}
-              storeName={profileNome || "Recargas Brasil"}
+              storeName={profileNome || siteName}
               userId={user?.id}
             />
           )}

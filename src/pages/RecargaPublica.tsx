@@ -160,7 +160,7 @@ export default function RecargaPublica() {
   // Custom branding
   const brandColor = revendedor?.store_primary_color || undefined;
   const brandBg = revendedor?.store_secondary_color || undefined;
-  const brandName = revendedor?.store_name || "Recargas Brasil";
+  const brandName = revendedor?.store_name || siteName;
   const brandLogo = revendedor?.store_logo_url || null;
 
   const handleSubmit = async () => {
