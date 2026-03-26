@@ -725,7 +725,7 @@ serve(async (req) => {
           const termsOk = await checkTermsAccepted(supabase, telegramId);
           if (!termsOk) {
             await sendMessage(BOT_TOKEN, chatId, "⚠️ Você precisa aceitar os termos de utilização antes de continuar.");
-            await sendTermsMessage(BOT_TOKEN, chatId);
+            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
             return;
           }
         }
