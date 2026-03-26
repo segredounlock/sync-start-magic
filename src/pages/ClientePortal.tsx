@@ -117,7 +117,7 @@ export default function ClientePortal() {
     }
 
     return () => {
-      document.title = "Recargas Brasil - Sistema de Recargas";
+      document.title = `${siteName} - Sistema de Recargas`;
     };
   }, [resellerInfo]);
 
