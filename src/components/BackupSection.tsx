@@ -88,7 +88,7 @@ const SOURCE_PATHS = [
   "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts",
   "postcss.config.js","index.html","package.json","README.md",
   // PWA
-  "public/sw-push.js","public/manifest.webmanifest",
+  "public/sw-push.js",
   // Edge Functions
   "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
   "supabase/functions/admin-reset-password/index.ts","supabase/functions/admin-toggle-email-verify/index.ts",
