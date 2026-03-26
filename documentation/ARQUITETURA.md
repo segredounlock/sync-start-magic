@@ -36,7 +36,10 @@
 
 ```
 /
-├── documentation/           # 12 arquivos de documentação técnica
+├── .github/
+│   └── workflows/
+│       └── sync-mirror.yml # Espelhamento automático para repo mirror
+├── documentation/           # 13 arquivos de documentação técnica
 ├── public/
 │   └── sw-push.js          # Service Worker para push notifications
 ├── src/
