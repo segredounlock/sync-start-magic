@@ -1,151 +1,65 @@
 
 
-# Sistema Avançado de Sincronização com Mirrors
+# Diagnóstico e Correção — Tela Branca (App Trava ao Carregar)
 
-## Visão Geral
-Substituir o sync "enviar tudo sempre" por um sistema inteligente baseado em hashes, estado por espelho e reconciliação automática. O sistema já possui hashes SHA-256 via Vite plugin (`sourceHashPlugin`) — vamos aproveitá-los.
+## Análise do Problema
 
-## Arquitetura
+Após revisar todo o fluxo de inicialização, identifiquei o ponto de travamento:
 
 ```text
-┌─────────────────┐        ┌──────────────────────┐
-│  Origem (este)   │        │  DB: mirror_sync_log │
-│                  │───────▶│  - mirror_id         │
-│  sourceHashes    │        │  - file_path         │
-│  (build-time)    │        │  - source_hash       │
-│                  │        │  - mirror_hash       │
-│                  │        │  - status (synced/    │
-│                  │        │    pending/conflict)  │
-│                  │        │  - last_synced_at     │
-└─────────────────┘        └──────────────────────┘
-                                     │
-                            ┌────────▼─────────┐
-                            │  Reconciliation   │
-                            │  Engine (edge fn) │
-                            │  - diff hashes    │
-                            │  - skip protected │
-                            │  - detect conflicts│
-                            │  - sync pending   │
-                            └──────────────────┘
+main.tsx → AppRoot → AuthProvider → getSession() → ???
+                   → MaintenanceGuard → supabase.rpc() → ???
 ```
 
-## Alterações
+**O AuthProvider NÃO tem timeout de segurança.** Se `supabase.auth.getSession()` travar (rede lenta, Supabase offline, proxy do preview), o estado `loading: true` persiste PARA SEMPRE → a tela fica no SplashScreen/PageSkeleton infinitamente.
 
-### 1. Nova tabela `mirror_sync_state`
-Armazena o estado de cada espelho independentemente.
+O `MaintenanceGuard` tem timeout de 2s (OK), mas o `AuthProvider` não tem nenhum — esse é o bug.
 
-```sql
-CREATE TABLE mirror_sync_state (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  mirror_id text NOT NULL,           -- ex: "sync-start-magic"
-  mirror_repo text NOT NULL,         -- ex: "segredounlock/sync-start-magic"
-  source_repo text NOT NULL,
-  last_synced_commit text,
-  last_sync_at timestamptz,
-  total_files integer DEFAULT 0,
-  synced_files integer DEFAULT 0,
-  pending_files integer DEFAULT 0,
-  conflict_files integer DEFAULT 0,
-  protected_paths jsonb DEFAULT '[]',
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  UNIQUE(mirror_id)
-);
+### Por que acontece nos dois (preview e espelho)?
+- **Preview**: O proxy do Lovable pode bloquear requests ao Supabase
+- **Espelho**: Se o Supabase do espelho estiver lento ou sem as RPCs esperadas, mesmo resultado
 
-CREATE TABLE mirror_file_state (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  mirror_id text NOT NULL,
-  file_path text NOT NULL,
-  source_hash text,
-  mirror_hash text,
-  status text NOT NULL DEFAULT 'pending',  -- synced | pending | conflict | protected
-  action text,                              -- create | update | delete | skip
-  last_synced_at timestamptz,
-  error_message text,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  UNIQUE(mirror_id, file_path)
-);
+### O `domain.ts` NÃO é o problema
+O `window.location.origin` funciona corretamente em qualquer domínio. O problema é a conexão com o backend, não o reconhecimento de domínio.
 
-CREATE TABLE mirror_sync_logs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  mirror_id text NOT NULL,
-  sync_type text NOT NULL DEFAULT 'incremental', -- full | incremental
-  files_sent integer DEFAULT 0,
-  files_skipped integer DEFAULT 0,
-  files_failed integer DEFAULT 0,
-  conflicts_detected integer DEFAULT 0,
-  duration_ms integer,
-  error_message text,
-  details jsonb DEFAULT '[]',
-  started_at timestamptz DEFAULT now(),
-  completed_at timestamptz
-);
+## Correção
+
+### Arquivo: `src/hooks/useAuth.tsx`
+
+Adicionar **timeout de segurança de 5 segundos** no `hydrateSession`:
+
+- Se `getSession()` não responder em 5s, forçar `loading: false` e `authReady: true` com sessão nula
+- O usuário verá a tela de login ao invés de ficar preso na tela branca
+- Se a sessão carregar depois, o `onAuthStateChange` ainda captura
+
+```text
+Antes:
+  getSession() → espera infinitamente → tela branca
+
+Depois:
+  getSession() → 5s timeout → libera app sem sessão → mostra login
+  (se sessão chegar depois, onAuthStateChange atualiza normalmente)
 ```
 
-RLS: apenas admins (ALL com `has_role(auth.uid(), 'admin')`).
+### Arquivo: `src/AppRoot.tsx`
 
-### 2. Edge Function `github-sync` — Novas actions
+Adicionar **timeout de segurança no MaintenanceGuard** para o caso do canal realtime travar:
+- O timeout de 2s já existe, manter
+- Adicionar fallback: se após 5s ainda null, forçar false
 
-Adicionar 3 novas actions à edge function existente:
+### Arquivo: `src/main.tsx`
 
-**`?action=reconcile&mirror_id=X`** (POST)
-- Recebe `{ source_hashes, protected_paths }` no body
-- Para cada arquivo no espelho (via GitHub API tree), calcula hash do conteúdo
-- Compara source_hash vs mirror_hash
-- Atualiza `mirror_file_state` com status correto
-- Retorna resumo: `{ new: N, modified: N, conflict: N, synced: N, protected: N }`
+**Reverter a mudança anterior** — o Service Worker NÃO deve ser desativado no preview. A lógica anterior era desnecessária e pode causar confusão. O problema real é o timeout do auth, não o SW.
 
-**`?action=smart-sync&mirror_id=X`** (POST)
-- Lê `mirror_file_state` WHERE status IN ('pending')
-- Envia apenas os arquivos pendentes (incremental)
-- Após envio bem-sucedido, atualiza status para 'synced' e mirror_hash
-- Registra em `mirror_sync_logs`
-- Retry automático (até 3x por arquivo)
+## Resultado Esperado
+- App NUNCA mais fica preso na tela branca
+- Se o backend estiver offline → mostra login em 5 segundos no máximo
+- Se o backend responder → funciona normalmente
+- Funciona tanto no preview, no site publicado e no espelho
+- Service Worker restaurado ao comportamento original
 
-**`?action=mirror-status&mirror_id=X`** (GET)
-- Retorna estado completo do espelho: total, synced, pending, conflicts
-- Lista de conflitos com hashes de ambos os lados
-
-### 3. Caminhos protegidos (nunca sincronizar)
-
-Lista default gravada em `mirror_sync_state.protected_paths`:
-```json
-[".env", "supabase/config.toml", ".github/workflows/"]
-```
-O motor de reconciliação marca esses como `status: 'protected'` e nunca os envia.
-
-### 4. UI em `BackupSection.tsx`
-
-Substituir/expandir a seção "Diagnóstico do Mirror" com painel completo:
-
-- **Dashboard do Mirror**: cards com total/synced/pending/conflicts
-- **Lista de pendências**: tabela com arquivo, ação (create/update), hash diff
-- **Lista de conflitos**: com opção de "Forçar sync" ou "Ignorar"
-- **Botão "Analisar Diferenças"**: chama reconcile, mostra resultado
-- **Botão "Sincronizar Pendentes"**: chama smart-sync (apenas o que falta)
-- **Histórico de syncs**: últimas 10 sincronizações com duração e resultado
-- **Gerenciar caminhos protegidos**: adicionar/remover paths protegidos
-
-### 5. Fluxo completo
-
-1. Admin clica "Analisar Diferenças"
-2. Frontend envia `source_hashes` (do Vite plugin, já disponível via `getFileHashes()`) + `protected_paths`
-3. Edge function compara com conteúdo atual no GitHub do espelho
-4. Resultado mostra: 15 synced, 3 pending, 1 conflict, 4 protected
-5. Admin clica "Sincronizar Pendentes" → envia apenas os 3 arquivos
-6. Conflitos ficam listados para resolução manual
-
-### Arquivos alterados/criados
-1. **Migration SQL** — 3 novas tabelas + RLS
-2. **`supabase/functions/github-sync/index.ts`** — 3 novas actions (reconcile, smart-sync, mirror-status)
-3. **`src/components/BackupSection.tsx`** — painel avançado de mirrors
-
-### Resultado
-- Sincronização incremental (envia só o que mudou)
-- Cada espelho com controle próprio no banco de dados
-- Zero sobrescrita de paths protegidos (.env, config.toml, workflows)
-- Detecção de conflitos com resolução manual
-- Auditoria completa com histórico de syncs
-- Escalável para múltiplos espelhos
+## Arquivos alterados
+1. `src/hooks/useAuth.tsx` — timeout de 5s no getSession
+2. `src/AppRoot.tsx` — reforçar timeout do MaintenanceGuard
+3. `src/main.tsx` — reverter desativação do SW no preview
 
