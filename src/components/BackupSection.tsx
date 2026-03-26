@@ -244,8 +244,17 @@ export default function BackupSection() {
         } catch { /* fallback to hardcoded */ }
       }
     };
+    const loadSourceRepo = async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "githubSourceRepo")
+        .maybeSingle();
+      if (data?.value) setSourceRepo(data.value);
+    };
     loadPat();
     loadManifest();
+    loadSourceRepo();
   }, []);
 
   // Load current system version + update history
