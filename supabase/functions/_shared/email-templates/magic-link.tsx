@@ -35,7 +35,7 @@ export const MagicLinkEmail = ({
         </div>
         <Heading style={h1}>Seu link de acesso</Heading>
         <Text style={text}>
-          Clique no botão abaixo para acessar o <strong>Recargas Brasil</strong>. Este link expira em breve.
+          Clique no botão abaixo para acessar o <strong>{siteName}</strong>. Este link expira em breve.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Acessar Agora
