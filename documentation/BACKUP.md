@@ -174,3 +174,10 @@ O sistema de [espelhamento automático](./MIRROR_SYNC.md) via GitHub Actions man
 - ✅ O espelho tem seu próprio backend independente
 - ✅ Código pode ser restaurado a partir do espelho se necessário
 - ⚠️ Apenas código é espelhado — dados do banco e storage **não** são sincronizados
+- ⚠️ **Migrations NÃO são aplicadas automaticamente** no espelho — verificar se o schema foi criado após o primeiro sync (ver [MIRROR_SYNC.md](./MIRROR_SYNC.md))
+
+### Verificando Schema do Espelho
+
+Use o `backup-export` no projeto espelho para verificar se o schema está correto:
+- Se a exportação retornar 0 tabelas, o banco está vazio e as migrations precisam ser aplicadas
+- Compare a contagem de tabelas (deve ser 42) com o projeto de origem

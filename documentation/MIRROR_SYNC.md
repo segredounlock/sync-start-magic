@@ -151,12 +151,35 @@ Após o primeiro sync, o espelho precisa de configurações adicionais no banco:
 3. **Dados iniciais** — Inserir configs em `system_config` (gateway de pagamento, etc.)
 4. **Primeiro admin** — Criar usuário e atribuir role `admin` em `user_roles`
 
+## ⚠️ Migrations NÃO São Aplicadas Automaticamente
+
+Os **arquivos** de migration (`supabase/migrations/*.sql`) são sincronizados via git para o espelho. Porém, o Lovable Cloud do espelho **não os executa automaticamente** ao receber o push. O banco pode ficar completamente vazio após o primeiro sync.
+
+### Como aplicar as migrations no espelho
+
+1. **Publicar o projeto espelho** — Ao clicar "Update" no publish dialog, o Lovable Cloud tenta aplicar migrations pendentes
+2. **Forçar re-deploy** — Se a publicação não aplicou, fazer uma pequena alteração no código e publicar novamente
+3. **Aplicação manual** — Se nenhuma das opções acima funcionar:
+   - Acessar Lovable Cloud → Run SQL
+   - Copiar o SQL completo documentado em [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md) (seção "SQL Completo para Criação Manual")
+   - Executar o SQL no banco do espelho
+
+### Verificação
+
+Após aplicar, verificar que:
+- [ ] As 42 tabelas existem (Lovable Cloud → Database → Tables)
+- [ ] As 36+ funções RPC foram criadas
+- [ ] As RLS policies estão ativas
+- [ ] O `types.ts` foi regenerado (acontece automaticamente após as tabelas existirem)
+
 ## Troubleshooting
 
 | Problema | Causa | Solução |
 |----------|-------|---------|
+| **Banco vazio após sync** | Migrations não foram executadas | Publicar o projeto espelho ou aplicar SQL manualmente |
 | Espelho aponta para backend errado | `.env` foi copiado | Verificar que o workflow remove `.env` antes do push |
 | Workflow falha no espelho | Falta condição `if` | Adicionar `if: github.repository == 'segredounlock/recargas-brasil-v2'` |
 | Emails de erro do GitHub | Workflow executou no espelho | Verificar condição `if` no job |
 | Types desatualizados no espelho | Schema divergiu | Aplicar migrations pendentes no espelho |
 | Edge Functions não funcionam | Secrets não configurados | Verificar que o Lovable Cloud do espelho está ativo |
+| `types.ts` vazio ou genérico | Banco sem tabelas | Aplicar migrations primeiro, `types.ts` regenera automaticamente |
