@@ -4,6 +4,7 @@ import { useSiteLogo } from "@/hooks/useSiteLogo";
 // Preload handled by browser cache
 
 export function SplashScreen() {
+  const logo = useSiteLogo();
   const siteName = useSiteName();
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[hsl(var(--background))]">
