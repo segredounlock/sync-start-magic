@@ -100,7 +100,7 @@
 
 ## 5. Edge Functions
 
-- [ ] Deploy das 31 edge functions
+- [ ] Deploy das 32 edge functions
 - [ ] Verificar `verify_jwt` para webhooks:
   - `telegram-bot` → false
   - `pix-webhook` → false
