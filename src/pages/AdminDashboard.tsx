@@ -2634,6 +2634,12 @@ export default function AdminDashboard() {
                       <input type="text" value={configData.siteTitle || ""} onChange={e => setConfigData(prev => ({ ...prev, siteTitle: e.target.value }))}
                         className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Recargas Brasil" />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">URL do Site</label>
+                      <input type="text" value={configData.siteUrl || ""} onChange={e => setConfigData(prev => ({ ...prev, siteUrl: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://recargasbrasill.com" />
+                      <p className="text-xs text-muted-foreground mt-1">Domínio principal usado em links do bot, emails e OG tags</p>
+                    </div>
 
                     {/* Modo Manutenção - movido para Painel Principal */}
 

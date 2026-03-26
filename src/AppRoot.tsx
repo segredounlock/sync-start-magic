@@ -13,6 +13,7 @@ import LandingPage from "@/pages/LandingPage";
 import { useCacheCleanup } from "@/hooks/useCacheCleanup";
 import { usePresenceTracker } from "@/hooks/usePresence";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
+import { useSiteName } from "@/hooks/useSiteName";
 
 // Lazy load ALL pages
 const RecargaPublica = lazy(() => import("@/pages/RecargaPublica"));
@@ -149,6 +150,16 @@ function SilentFingerprintCollector() {
 
   return null;
 }
+
+// ── Dynamic document title from system_config ──
+function DynamicTitle() {
+  const siteName = useSiteName();
+  useEffect(() => {
+    document.title = `${siteName} - Sistema de Recargas`;
+  }, [siteName]);
+  return null;
+}
+
 // ── Deferred non-critical effects ──
 function DeferredEffects() {
   const [ready, setReady] = useState(false);
@@ -198,6 +209,7 @@ function App() {
         <GlobalPresence />
         <SilentFingerprintCollector />
         <InactivityGuard />
+        <DynamicTitle />
         <DeferredEffects />
         <MaintenanceGuard>
           <Routes>

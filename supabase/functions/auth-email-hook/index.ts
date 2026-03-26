@@ -40,29 +40,34 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   reauthentication: ReauthenticationEmail,
 }
 
-// Configuration — site name is fetched dynamically from system_config
+// Configuration — site name and URL are fetched dynamically from system_config
 const DEFAULT_SITE_NAME = "Recargas Brasil"
+const DEFAULT_SITE_URL = "https://recargasbrasill.com"
 const SENDER_DOMAIN = "notify.recargasbrasill.com"
-const ROOT_DOMAIN = "recargasbrasill.com"
-const FROM_DOMAIN = "recargasbrasill.com"
 
-// Cache site name for 5 minutes
-let siteNameCache: { value: string; time: number } | null = null
+// Cache site config for 5 minutes
+let siteConfigCache: { name: string; url: string; time: number } | null = null
 const CACHE_TTL = 300_000
 
-async function getSiteName(): Promise<string> {
-  if (siteNameCache && Date.now() - siteNameCache.time < CACHE_TTL) return siteNameCache.value
+async function loadSiteConfig(): Promise<{ name: string; url: string }> {
+  if (siteConfigCache && Date.now() - siteConfigCache.time < CACHE_TTL) return siteConfigCache
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     )
-    const { data } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle()
-    const name = data?.value || DEFAULT_SITE_NAME
-    siteNameCache = { value: name, time: Date.now() }
-    return name
+    const { data } = await supabase.from("system_config").select("key, value").in("key", ["siteTitle", "siteUrl"])
+    const map: Record<string, string> = {}
+    for (const r of data || []) map[r.key] = r.value || ""
+    const config = {
+      name: map.siteTitle || DEFAULT_SITE_NAME,
+      url: (map.siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, ""),
+      time: Date.now(),
+    }
+    siteConfigCache = config
+    return config
   } catch {
-    return DEFAULT_SITE_NAME
+    return { name: DEFAULT_SITE_NAME, url: DEFAULT_SITE_URL }
   }
 }
 
@@ -242,13 +247,13 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Fetch dynamic site name
-  const SITE_NAME = await getSiteName()
+  // Fetch dynamic site name and URL
+  const siteConfig = await loadSiteConfig()
 
   // Build template props from payload.data (HookData structure)
   const templateProps = {
-    siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
+    siteName: siteConfig.name,
+    siteUrl: siteConfig.url,
     recipient: payload.data.email,
     confirmationUrl: payload.data.url,
     token: payload.data.token,
@@ -275,9 +280,9 @@ async function handleWebhook(req: Request): Promise<Response> {
   const emailPayload = {
     run_id,
     to: payload.data.email,
-    from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+    from: `${siteConfig.name} <noreply@${SENDER_DOMAIN}>`,
     sender_domain: SENDER_DOMAIN,
-    subject: getEmailSubject(emailType, SITE_NAME),
+    subject: getEmailSubject(emailType, siteConfig.name),
     html,
     text,
     purpose: 'transactional',

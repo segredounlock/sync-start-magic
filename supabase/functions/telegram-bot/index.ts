@@ -395,30 +395,46 @@ function generatePassword(): string {
   return pass;
 }
 
-// ===== SITE NAME (dynamic from system_config) =====
-let siteNameCache: { value: string; time: number } | null = null;
+// ===== SITE NAME & URL (dynamic from system_config) =====
+let siteNameCache: { value: string; url: string; time: number } | null = null;
 const SITE_NAME_TTL = 300_000; // 5 minutes
 
 async function getSiteName(supabase: any): Promise<string> {
-  if (siteNameCache && Date.now() - siteNameCache.time < SITE_NAME_TTL) return siteNameCache.value;
+  await loadSiteConfig(supabase);
+  return siteNameCache?.value || "Recargas Brasil";
+}
+
+async function getSiteUrl(supabase: any): Promise<string> {
+  await loadSiteConfig(supabase);
+  return siteNameCache?.url || "https://recargasbrasill.com";
+}
+
+async function loadSiteConfig(supabase: any) {
+  if (siteNameCache && Date.now() - siteNameCache.time < SITE_NAME_TTL) return;
   try {
-    const { data } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle();
-    const name = data?.value || "Recargas Brasil";
-    siteNameCache = { value: name, time: Date.now() };
-    return name;
-  } catch { return "Recargas Brasil"; }
+    const { data } = await supabase.from("system_config").select("key, value").in("key", ["siteTitle", "siteUrl"]);
+    const map: Record<string, string> = {};
+    for (const r of data || []) map[r.key] = r.value || "";
+    siteNameCache = {
+      value: map.siteTitle || "Recargas Brasil",
+      url: (map.siteUrl || "https://recargasbrasill.com").replace(/\/+$/, ""),
+      time: Date.now(),
+    };
+  } catch {
+    if (!siteNameCache) siteNameCache = { value: "Recargas Brasil", url: "https://recargasbrasill.com", time: Date.now() };
+  }
 }
 
 // ===== TERMS OF SERVICE =====
 const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
-function buildTermsText(siteName: string): string {
+function buildTermsText(siteName: string, siteUrl = "https://recargasbrasill.com"): string {
   return `📜 <b>TERMOS DE UTILIZAÇÃO</b>
-🌐 <b>${siteName}</b> — https://recargasbrasill.com
+🌐 <b>${siteName}</b> — ${siteUrl}
 
 Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
-1️⃣ <b>Sobre o Serviço</b> — O <b>${siteName}</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site https://recargasbrasill.com.
+1️⃣ <b>Sobre o Serviço</b> — O <b>${siteName}</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site ${siteUrl}.
 
 2️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
 
@@ -432,7 +448,7 @@ Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
 7️⃣ <b>Proibições</b> — É proibido o uso de bots, scripts ou automações para interagir com este sistema.
 
-8️⃣ <b>Suporte</b> — Em caso de dúvidas, utilize o botão "Ajuda / Suporte" ou acesse https://recargasbrasill.com.
+8️⃣ <b>Suporte</b> — Em caso de dúvidas, utilize o botão "Ajuda / Suporte" ou acesse ${siteUrl}.
 
 9️⃣ <b>Alterações</b> — Os termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação.
 
@@ -486,8 +502,8 @@ async function recordTermsAcceptance(supabase: any, telegramId: string) {
   );
 }
 
-async function sendTermsMessage(token: string, chatId: number, siteName = "Recargas Brasil") {
-  await sendMessageWithKeyboard(token, chatId, buildTermsText(siteName), [
+async function sendTermsMessage(token: string, chatId: number, siteName = "Recargas Brasil", siteUrl = "https://recargasbrasill.com") {
+  await sendMessageWithKeyboard(token, chatId, buildTermsText(siteName, siteUrl), [
     [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
     [{ text: "❌ Recusar", callback_data: "terms_decline" }],
   ]);
@@ -660,18 +676,19 @@ serve(async (req) => {
           }
         }
 
-        // Parallel: find user + session + register telegram_user + site name
-        const [linkedUser, session, , botSiteName] = await Promise.all([
+        // Parallel: find user + session + register telegram_user + site name + site url
+        const [linkedUser, session, , botSiteName, botSiteUrl] = await Promise.all([
           findUserByTelegram(supabase, telegramId),
           getSession(supabase, chatIdStr),
           ensureTelegramUser(supabase, message.from.id, message.from.first_name, telegramUsername),
           getSiteName(supabase),
+          getSiteUrl(supabase),
         ]);
 
           if (text === "/start" || text === "/menu" || text === "/vincular") {
           if (linkedUser) {
             // Always show terms on /start
-            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
+            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName, botSiteUrl);
           } else {
             // Check migration config
             const migration = await getMigrationConfig(supabase);
@@ -685,7 +702,7 @@ serve(async (req) => {
               );
             } else {
               // Show terms first for new users too
-              await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
+              await sendTermsMessage(BOT_TOKEN, chatId, botSiteName, botSiteUrl);
             }
           }
           return;
@@ -725,7 +742,7 @@ serve(async (req) => {
           const termsOk = await checkTermsAccepted(supabase, telegramId);
           if (!termsOk) {
             await sendMessage(BOT_TOKEN, chatId, "⚠️ Você precisa aceitar os termos de utilização antes de continuar.");
-            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
+            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName, botSiteUrl);
             return;
           }
         }
@@ -1205,18 +1222,19 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   const termsOk = await checkTermsAccepted(supabase, telegramId);
   if (!termsOk) {
     await sendMessage(token, chatId, "⚠️ Seus termos de utilização expiraram. Por favor, aceite novamente:");
-    await sendTermsMessage(token, chatId, await getSiteName(supabase));
+    await sendTermsMessage(token, chatId, await getSiteName(supabase), await getSiteUrl(supabase));
     return;
   }
 
-  let webAppUrl = "https://recargasbrasill.com/miniapp";
+  const defaultSiteUrl = await getSiteUrl(supabase);
+  let webAppUrl = `${defaultSiteUrl}/miniapp`;
   const [migrationConfig, em, webAppConfig, btnConfigs] = await Promise.all([
     getMigrationConfig(supabase),
     getSeasonalEmojis(supabase),
     supabase.from("system_config").select("value").eq("key", "webAppUrl").maybeSingle(),
     supabase.from("system_config").select("key, value").like("key", "bot_btn_%"),
   ]);
-  const migrationSiteUrl = migrationConfig.url || "https://recargasbrasill.com";
+  const migrationSiteUrl = migrationConfig.url || defaultSiteUrl;
   if (webAppConfig?.data?.value) webAppUrl = webAppConfig.data.value;
 
   // Build button visibility map (default true except migration)
@@ -1892,8 +1910,9 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 // ===== MAIN MENU =====
 
 async function sendMainMenu(token: string, chatId: number, user: any, supabase?: any) {
-  let webAppUrl = "https://recargasbrasill.com/miniapp";
-  let migrationSiteUrl = "https://recargasbrasill.com";
+  const baseSiteUrl = await getSiteUrl(supabase);
+  let webAppUrl = `${baseSiteUrl}/miniapp`;
+  let migrationSiteUrl = baseSiteUrl;
   let migrationEnabled = false;
   let em: Record<string, string> = {};
   let saldoFmt = "0,00";

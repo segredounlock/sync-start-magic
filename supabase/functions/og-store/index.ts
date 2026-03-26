@@ -28,18 +28,22 @@ Deno.serve(async (req) => {
 
   const store = Array.isArray(data) ? data[0] : null;
 
-  // Fetch dynamic site name
+  // Fetch dynamic site name and URL
   let siteName = "Recargas Brasil";
+  let siteBaseUrl = "https://recargasbrasill.com";
   try {
-    const { data: configData } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle();
-    if (configData?.value) siteName = configData.value;
+    const { data: configs } = await supabase.from("system_config").select("key, value").in("key", ["siteTitle", "siteUrl"]);
+    for (const c of configs || []) {
+      if (c.key === "siteTitle" && c.value) siteName = c.value;
+      if (c.key === "siteUrl" && c.value) siteBaseUrl = c.value.replace(/\/+$/, "");
+    }
   } catch {}
 
   // Defaults
   const defaultTitle = `${siteName} - Sistema de Recargas`;
   const defaultDescription =
     "Sistema de recargas de celular para revendedores. Gerencie saldos, recargas e clientes.";
-  const defaultImage = "https://recargasbrasill.com/og-image.png";
+  const defaultImage = `${siteBaseUrl}/og-image.png`;
 
   // Dynamic values
   const title = store?.store_name
@@ -51,7 +55,7 @@ Deno.serve(async (req) => {
   const image = store?.store_logo_url || defaultImage;
 
   // The actual SPA URL to redirect real users to
-  const spaUrl = `https://recargasbrasill.com/loja/${slug}`;
+  const spaUrl = `${siteBaseUrl}/loja/${slug}`;
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
