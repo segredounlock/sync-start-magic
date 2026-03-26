@@ -1,4 +1,4 @@
-# Sync test: 2026-03-26T2
+# Sync test: 2026-03-26T3
 name: Sync to Mirrors
 
 on:
@@ -15,5 +15,5 @@ jobs:
 
       - name: Sync UPDATERECARGASBRASIL
         run: |
-          git remote add mirror_update https://x-access-token:${{ secrets.SYNC_UPDATERECARGASBRASIL }}@github.com/segredounlock/UPDATERECARGASBRASIL.git
+          git remote add mirror_update https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/segredounlock/updaterecargasbrasil.git
           git push mirror_update main --force
