@@ -150,6 +150,16 @@ function SilentFingerprintCollector() {
 
   return null;
 }
+
+// ── Dynamic document title from system_config ──
+function DynamicTitle() {
+  const siteName = useSiteName();
+  useEffect(() => {
+    document.title = `${siteName} - Sistema de Recargas`;
+  }, [siteName]);
+  return null;
+}
+
 // ── Deferred non-critical effects ──
 function DeferredEffects() {
   const [ready, setReady] = useState(false);
