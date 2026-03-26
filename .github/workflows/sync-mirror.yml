@@ -27,9 +27,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Sync UPDATERECARGASBRASIL
+      - name: Sync mirror
         run: |
           git remote remove mirror_update || true
-          git remote add mirror_update https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/segredounlock/updaterecargasbrasil.git
+          git remote add mirror_update https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/segredounlock/sync-start-magic.git
           git remote -v
           git push mirror_update HEAD:main --force
