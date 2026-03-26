@@ -1,52 +1,27 @@
 
 
-# Restaurar sync-mirror.yml no projeto
+# Evitar que sync-mirror.yml rode no repo espelho
 
 ## Problema
-O arquivo `.github/workflows/sync-mirror.yml` foi deletado do Lovable, e como existe sync bidirecional, ele também foi removido do repo `recargas-brasil-v2` no GitHub — quebrando o espelhamento automático para `sync-start-magic`.
+Quando o `recargas-brasil-v2` espelha para `sync-start-magic`, o arquivo `sync-mirror.yml` é copiado junto. O GitHub Actions do `sync-start-magic` tenta executar esse workflow, causando erros e emails de falha.
 
 ## Solução
-Recriar o arquivo `.github/workflows/sync-mirror.yml` com a configuração correta que já estava funcionando.
+Adicionar uma condição `if` no job para que o workflow **só execute no repo de origem**. O arquivo continuará existindo no espelho, mas nunca será executado lá.
 
-## Arquivo a criar
+## Alteração
 
-**`.github/workflows/sync-mirror.yml`**
+**`.github/workflows/sync-mirror.yml`** — adicionar condição no job:
 
 ```yaml
-name: Sync to Mirrors
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    if: github.repository == 'segredounlock/recargas-brasil-v2'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Configurar git
-        run: |
-          git config user.name "sync-bot"
-          git config user.email "sync@bot.com"
-
-      - name: Sync mirror
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          git remote remove mirror_update || true
-          git remote add mirror_update https://x-access-token:${GH_TOKEN}@github.com/segredounlock/sync-start-magic.git
-          git push mirror_update HEAD:main --force
+      ...
 ```
 
-## Resultado
-- O workflow volta a existir no repo de origem (`recargas-brasil-v2`)
-- Cada push no `main` dispara o espelhamento automático para `sync-start-magic`
-- O `workflow_dispatch` permite trigger manual pelo painel
+Com isso:
+- ✅ No `recargas-brasil-v2` → workflow executa normalmente
+- ✅ No `sync-start-magic` → workflow é ignorado (skip), sem erro, sem email
 
