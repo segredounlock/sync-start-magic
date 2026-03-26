@@ -164,6 +164,8 @@ export default function BackupSection() {
   const [selectedRunLogs, setSelectedRunLogs] = useState<any>(null);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [showActionsPanel, setShowActionsPanel] = useState(false);
+  const [initMirrorLoading, setInitMirrorLoading] = useState(false);
+  const [initMirrorResult, setInitMirrorResult] = useState<any>(null);
 
   // Update system
   const [updateExporting, setUpdateExporting] = useState(false);
