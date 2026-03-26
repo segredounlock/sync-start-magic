@@ -4942,7 +4942,7 @@ export default function Principal() {
            {view === "suporte" && <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>}
 
            {/* ===== ANTIFRAUDE ===== */}
-           {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
+           {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><PinProtection configKey="adminPin"><AntifraudSection /></PinProtection></Suspense>}
 
            {/* ===== AUDITORIA ===== */}
            {view === "auditoria" && <Suspense fallback={<SkeletonCard />}><AuditTab /></Suspense>}
