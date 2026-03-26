@@ -249,7 +249,7 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
                   max="3"
                   step="0.02"
                   value={scale}
-                  onChange={(e) => setScale(Number(e.target.value))}
+                  onChange={(e) => { const v = Number(e.target.value); setScale(v); clampOffset(v); }}
                   className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted/50"
                   style={{
                     background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${zoomPercent}%, hsl(var(--muted) / 0.5) ${zoomPercent}%, hsl(var(--muted) / 0.5) 100%)`,
