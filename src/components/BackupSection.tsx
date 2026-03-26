@@ -452,7 +452,34 @@ export default function BackupSection() {
     setTriggeringWorkflow(false);
   };
 
-  const getStatusIcon = (status: string, conclusion: string | null) => {
+  const initMirror = async () => {
+    setInitMirrorLoading(true);
+    setInitMirrorResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
+      setInitMirrorResult(result);
+      toast.success("Espelho inicializado com sucesso!");
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    }
+    setInitMirrorLoading(false);
+  };
+
+
     if (status === "completed") {
       if (conclusion === "success") return <CheckCircle2 className="h-4 w-4 text-emerald-400" />;
       if (conclusion === "failure") return <XCircle className="h-4 w-4 text-red-400" />;
