@@ -1910,8 +1910,9 @@ async function handleRecargaPhone(supabase: any, token: string, chatId: number, 
 // ===== MAIN MENU =====
 
 async function sendMainMenu(token: string, chatId: number, user: any, supabase?: any) {
-  let webAppUrl = "https://recargasbrasill.com/miniapp";
-  let migrationSiteUrl = "https://recargasbrasill.com";
+  const baseSiteUrl = await getSiteUrl(supabase);
+  let webAppUrl = `${baseSiteUrl}/miniapp`;
+  let migrationSiteUrl = baseSiteUrl;
   let migrationEnabled = false;
   let em: Record<string, string> = {};
   let saldoFmt = "0,00";
