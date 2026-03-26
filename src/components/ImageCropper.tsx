@@ -115,10 +115,24 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
     }, "image/png", 1);
   };
 
-  const minScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 0.5;
-  const zoom = (delta: number) => setScale(s => Math.max(minScale, Math.min(3, s + delta)));
-  const reset = () => { setScale(Math.max(1, minScale)); setOffset({ x: 0, y: 0 }); };
-  const zoomPercent = Math.round(((scale - minScale) / (3 - minScale)) * 100);
+  const coverScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 1;
+
+  const clampOffset = (newScale: number) => {
+    const maxX = Math.max(0, (imgSize.w * newScale - CROP_SIZE) / 2);
+    const maxY = Math.max(0, (imgSize.h * newScale - CROP_SIZE) / 2);
+    setOffset(o => ({
+      x: Math.max(-maxX, Math.min(maxX, o.x)),
+      y: Math.max(-maxY, Math.min(maxY, o.y)),
+    }));
+  };
+
+  const zoom = (delta: number) => setScale(s => {
+    const next = Math.max(coverScale, Math.min(3, s + delta));
+    clampOffset(next);
+    return next;
+  });
+  const reset = () => { setScale(coverScale); setOffset({ x: 0, y: 0 }); };
+  const zoomPercent = Math.round(((scale - coverScale) / (3 - coverScale)) * 100);
 
   return (
     <AnimatePresence>
