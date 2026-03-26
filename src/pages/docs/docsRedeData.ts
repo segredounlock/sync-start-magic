@@ -60,8 +60,8 @@ Usuário se cadastra → Trigger handle_new_user() →
 ### 3.2 Cadastro via Link de Indicação
 
 O link de indicação segue dois formatos:
-- **Via referral_code:** \`https://recargasbrasill.com/recarga?ref=123456\`
-- **Via slug de loja:** \`https://recargasbrasill.com/loja/nome-da-loja\`
+- **Via referral_code:** \`https://seudominio.com/recarga?ref=123456\`
+- **Via slug de loja:** \`https://seudominio.com/loja/nome-da-loja\`
 
 \`\`\`
 Usuário acessa link → Cadastra com reseller_id →
