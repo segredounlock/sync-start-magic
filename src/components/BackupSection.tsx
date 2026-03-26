@@ -1390,7 +1390,7 @@ export default function BackupSection() {
                     const edgeFns = effectivePaths.filter(p => p.startsWith("supabase/functions/")).length;
                     const configs = effectivePaths.filter(p => !p.startsWith("src/") && !p.startsWith("supabase/functions/") && !p.startsWith("public/")).length;
                     return (
-                      <div className="grid grid-cols-3 gap-2.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
                           <p className="text-xl font-bold text-foreground">{pages}</p>
                           <p className="text-xs text-muted-foreground font-medium">Páginas</p>
