@@ -1185,8 +1185,9 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const chatIdStr = String(chatId);
       const telegramUsername = callback.from.username || "";
       await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
+      const cbSiteName = await getSiteName(supabase);
       const botMsgId = await sendMessage(token, chatId,
-        `✅ <b>Termos aceitos!</b>\n\n👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
+        `✅ <b>Termos aceitos!</b>\n\n👋 Bem-vindo ao <b>${cbSiteName}</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
       );
       if (botMsgId) {
         await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
