@@ -353,7 +353,7 @@ export default function Auth() {
             className="w-full max-w-md bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl p-6 sm:p-8"
           >
             <div className="text-center mb-6">
-              <img src={logo} alt="Recargas Brasil" className="w-20 h-20 object-cover rounded-2xl mx-auto mb-4 shadow-lg" />
+              <img src={logo} alt={siteName} className="w-20 h-20 object-cover rounded-2xl mx-auto mb-4 shadow-lg" />
               <h1 className="text-2xl font-bold text-foreground">Recuperar senha</h1>
               <p className="text-muted-foreground text-sm mt-2">Digite seu e-mail para receber o link de redefinição.</p>
             </div>
