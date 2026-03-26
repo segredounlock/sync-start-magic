@@ -416,8 +416,8 @@ async function loadSiteConfig(supabase: any) {
     const map: Record<string, string> = {};
     for (const r of data || []) map[r.key] = r.value || "";
     siteNameCache = {
-      value: map.siteTitle || "Recargas Brasil",
-      url: (map.siteUrl || "https://recargasbrasill.com").replace(/\/+$/, ""),
+      value: map.siteTitle || "Sistema de Recargas",
+      url: (map.siteUrl || "").replace(/\/+$/, ""),
       time: Date.now(),
     };
   } catch {
