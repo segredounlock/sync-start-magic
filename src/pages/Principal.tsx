@@ -686,9 +686,11 @@ export default function Principal() {
         setAllUsers((profiles || []).map(p => ({ id: p.id, active: p.active, created_at: p.created_at })));
 
         const roleMap: Record<string, string> = {};
+        const hasRevendedorRole: Record<string, boolean> = {};
         (roles || []).forEach(r => {
           const current = roleMap[r.user_id];
           if (!current || r.role === "admin") roleMap[r.user_id] = r.role;
+          if (r.role === "revendedor") hasRevendedorRole[r.user_id] = true;
         });
 
         const saldoMap: Record<string, number> = {};
@@ -703,7 +705,7 @@ export default function Principal() {
             id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
             saldo: saldoMap[p.id] ?? 0, telefone: p.whatsapp_number || null,
             telegram_username: p.telegram_username, whatsapp_number: p.whatsapp_number,
-            isRevendedor: roleMap[p.id] === "revendedor",
+            isRevendedor: !!hasRevendedorRole[p.id],
             role: resolvedRole,
             avatar_url: p.avatar_url || null,
             verification_badge: (p as any).verification_badge || null,
