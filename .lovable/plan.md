@@ -1,29 +1,64 @@
 
-# Corrigir Layout do Backup no Mobile
 
-## Problema
-A seção de Backup tem elementos desalinhados no mobile (390px):
-1. Grid de 3 botoes (Exportar, Restaurar, Restauracao Segura) em `grid-cols-2` deixa o terceiro botao sozinho e desalinhado
-2. Textos e cards podem estar cortados ou apertados no viewport de 390px
+# Inicializar Dados Essenciais no Espelho
 
-## Alteracoes
+## Situação
+O espelho tem schema correto (migrations aplicadas) mas tabelas críticas vazias. O sistema não funciona sem `system_config` e `operadoras`.
 
-### `src/components/BackupSection.tsx`
+## Abordagem Recomendada: Restauração Segura
 
-1. **Grid dos botoes de acao (linha ~984)**: Mudar de `grid-cols-2` para `grid-cols-1` no mobile e `grid-cols-3` no desktop, garantindo que os 3 botoes fiquem uniformes
-   - `grid grid-cols-1 sm:grid-cols-3 gap-3`
+O sistema já tem a funcionalidade de **Restauração Segura** implementada. A forma mais rápida e confiável:
 
-2. **Grid de stats do GitHub (linha ~1393)**: Mudar de `grid-cols-3` para `grid-cols-2` no mobile com o ultimo item spanning
-   - `grid grid-cols-2 sm:grid-cols-3 gap-2.5`
+1. **No projeto ORIGEM** (este): Exportar backup completo (botão "Exportar Backup")
+2. **No projeto ESPELHO**: Usar "Restauração Segura" com o ZIP exportado
 
-3. **Diagnostico do Mirror (linha ~1534)**: Os textos longos (nome do repo) podem quebrar — adicionar `break-all` nos nomes de repo e ajustar flex para `flex-col` no mobile
+Isso popula automaticamente `system_config`, `operadoras`, `pricing_rules`, `bot_settings` e todas as demais tabelas — sem sobrescrever usuários nem configs já existentes no espelho.
 
-4. **Header principal (linha ~955)**: Padding e tamanhos OK, manter
+## Alternativa: Script de Inicialização
 
-5. **Tabs (linha ~966)**: Reduzir gap e padding dos tabs para mobile
-   - `gap-0.5 p-1` e texto `text-xs`
+Caso prefira inserir apenas o mínimo manualmente no espelho, criar um botão **"Inicializar Espelho"** na seção Backup que:
 
-6. **Toggles de inclusao (linhas ~1197-1256)**: Padding interno menor no mobile
+### Step 1 — Inserir configs essenciais
+Chama uma edge function que insere as ~15 keys em `system_config` com valores default (usando `ON CONFLICT DO NOTHING`).
 
-### Resultado
-Layout fluido e legivel em 390px sem cortes ou desalinhamentos
+### Step 2 — Sincronizar catálogo
+Invoca `sync-catalog` para popular `operadoras` + `pricing_rules` via API (requer `apiKey` configurada antes).
+
+### Step 3 — Gerar referral_code do admin
+Atualiza o perfil admin existente para ter um `referral_code` se estiver vazio.
+
+## Detalhes Técnicos
+
+### Nova edge function `init-mirror/index.ts`
+- Recebe lista de configs default via body ou usa hardcoded
+- Insere em `system_config` com `ON CONFLICT (key) DO NOTHING`
+- Chama `sync-catalog` internamente se `apiKey` existir
+- Gera `referral_code` para perfis sem código
+
+### Alteração em `BackupSection.tsx`
+- Novo botão "Inicializar Espelho" na aba GitHub/Mirror
+- Visível apenas quando diagnóstico detecta `system_config` vazio
+- Chama a edge function e mostra resultado
+
+### Configs default inseridas
+| Key | Valor Default |
+|-----|--------------|
+| siteTitle | Sistema de Recargas |
+| activeGateway | none |
+| taxaTipo / taxaValor | fixo / 0 |
+| masterPin | 1234 |
+| maintenanceMode | false |
+| chat_enabled | true |
+| supportEnabled | true |
+| salesToolsEnabled | true |
+| requireReferralCode | false |
+| defaultMarginEnabled | false |
+| defaultMarginType / Value | fixo / 0 |
+| chat_new_conv_filter | all |
+
+## Recomendação
+
+**Usar Restauração Segura** é mais completo — traz todos os dados do origem de uma vez. O botão "Inicializar Espelho" seria útil como fallback para configuração mínima sem precisar de um backup.
+
+Qual abordagem prefere?
+
