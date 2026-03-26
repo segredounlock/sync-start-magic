@@ -100,16 +100,7 @@ export default function MaintenancePage() {
             Enquanto finalizamos as atualizações do site, nosso bot no Telegram continua funcionando normalmente.
           </p>
 
-          <a
-            href="https://t.me/RecargasBrasilBot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[hsl(199,89%,48%)] text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[hsl(199,89%,48%)]/20"
-          >
-            <Bot className="h-4 w-4" />
-            Acessar nosso Bot no Telegram
-            <ArrowRight className="h-4 w-4" />
-          </a>
+          <TelegramBotLink />
         </motion.div>
 
         {/* Footer */}
