@@ -130,6 +130,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear PIN session cache on logout
+      const { clearPinSession } = await import("@/components/PinProtection");
+      clearPinSession();
+    } catch {}
+    try {
       await supabase.auth.signOut();
     } catch (e) {
       console.error("Logout error:", e);
