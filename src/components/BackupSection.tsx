@@ -1494,7 +1494,7 @@ export default function BackupSection() {
                   {workflowRuns.length > 0 && (() => {
                     const latest = workflowRuns[0];
                     return (
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                         latest.conclusion === "success" ? "bg-emerald-500/10 text-emerald-400" :
                         latest.conclusion === "failure" ? "bg-red-500/10 text-red-400" :
                         latest.status === "in_progress" ? "bg-blue-500/10 text-blue-400" : "bg-muted text-muted-foreground"
