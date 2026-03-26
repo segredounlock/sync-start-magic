@@ -31,7 +31,7 @@ export const MagicLinkEmail = ({
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
-          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+          <Img src={LOGO_URL} width="56" height="56" alt={siteName} style={logoStyle} />
         </div>
         <Heading style={h1}>Seu link de acesso</Heading>
         <Text style={text}>
