@@ -4942,6 +4942,9 @@ export default function Principal() {
            {/* ===== ANTIFRAUDE ===== */}
            {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
 
+           {/* ===== AUDITORIA ===== */}
+           {view === "auditoria" && <Suspense fallback={<SkeletonCard />}><AuditTab /></Suspense>}
+
            {/* ===== BACKUP ===== */}
            {view === "backup" && <BackupSection />}
         </main>
