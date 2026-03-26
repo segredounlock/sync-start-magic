@@ -30,18 +30,22 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
   const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const aspect = img.naturalWidth / img.naturalHeight;
+    // Fit the smaller dimension to CROP_SIZE so the image always covers the circle
     let w: number, h: number;
     if (aspect > 1) {
+      // Landscape: height is the limiting dimension
       h = CROP_SIZE;
       w = CROP_SIZE * aspect;
     } else {
+      // Portrait: width is the limiting dimension
       w = CROP_SIZE;
       h = CROP_SIZE / aspect;
     }
     setImgSize({ w, h });
     setOffset({ x: 0, y: 0 });
-    const minScale = Math.max(CROP_SIZE / w, CROP_SIZE / h);
-    setScale(Math.max(1, minScale));
+    // minScale ensures the image always fully covers the crop circle
+    const coverScale = Math.max(CROP_SIZE / w, CROP_SIZE / h);
+    setScale(coverScale);
   }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -68,8 +72,18 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    const minScaleVal = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 0.5;
-    setScale(s => Math.max(minScaleVal, Math.min(3, s + delta)));
+    const coverScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 1;
+    setScale(s => {
+      const next = Math.max(coverScale, Math.min(3, s + delta));
+      // Clamp offset so image always covers circle
+      const maxX = Math.max(0, (imgSize.w * next - CROP_SIZE) / 2);
+      const maxY = Math.max(0, (imgSize.h * next - CROP_SIZE) / 2);
+      setOffset(o => ({
+        x: Math.max(-maxX, Math.min(maxX, o.x)),
+        y: Math.max(-maxY, Math.min(maxY, o.y)),
+      }));
+      return next;
+    });
   };
 
   const handleCrop = () => {
@@ -101,10 +115,24 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
     }, "image/png", 1);
   };
 
-  const minScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 0.5;
-  const zoom = (delta: number) => setScale(s => Math.max(minScale, Math.min(3, s + delta)));
-  const reset = () => { setScale(Math.max(1, minScale)); setOffset({ x: 0, y: 0 }); };
-  const zoomPercent = Math.round(((scale - minScale) / (3 - minScale)) * 100);
+  const coverScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 1;
+
+  const clampOffset = (newScale: number) => {
+    const maxX = Math.max(0, (imgSize.w * newScale - CROP_SIZE) / 2);
+    const maxY = Math.max(0, (imgSize.h * newScale - CROP_SIZE) / 2);
+    setOffset(o => ({
+      x: Math.max(-maxX, Math.min(maxX, o.x)),
+      y: Math.max(-maxY, Math.min(maxY, o.y)),
+    }));
+  };
+
+  const zoom = (delta: number) => setScale(s => {
+    const next = Math.max(coverScale, Math.min(3, s + delta));
+    clampOffset(next);
+    return next;
+  });
+  const reset = () => { setScale(coverScale); setOffset({ x: 0, y: 0 }); };
+  const zoomPercent = Math.round(((scale - coverScale) / (3 - coverScale)) * 100);
 
   return (
     <AnimatePresence>
@@ -191,7 +219,7 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
               </div>
 
               {/* Drag hint icon */}
-              {!dragging && scale > minScale + 0.1 && (
+              {!dragging && scale > coverScale + 0.1 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -217,11 +245,11 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
               <div className="flex-1 relative">
                 <input
                   type="range"
-                  min={minScale}
+                  min={coverScale}
                   max="3"
                   step="0.02"
                   value={scale}
-                  onChange={(e) => setScale(Number(e.target.value))}
+                  onChange={(e) => { const v = Number(e.target.value); setScale(v); clampOffset(v); }}
                   className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted/50"
                   style={{
                     background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${zoomPercent}%, hsl(var(--muted) / 0.5) ${zoomPercent}%, hsl(var(--muted) / 0.5) 100%)`,
