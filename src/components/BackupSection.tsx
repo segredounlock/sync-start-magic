@@ -1370,17 +1370,17 @@ export default function BackupSection() {
             {repos.length > 0 && (
               <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
                 <div className="px-4 pt-4 pb-3 border-b border-border/50">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center">
-                      <FolderSync className="h-4 w-4 text-emerald-400" />
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center">
+                      <FolderSync className="h-5 w-5 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-foreground">Sincronização</p>
-                      <p className="text-[10px] text-muted-foreground">Enviar código-fonte para o GitHub</p>
+                      <p className="text-base font-bold text-foreground">Sincronização</p>
+                      <p className="text-xs text-muted-foreground">Enviar código-fonte completo para o GitHub</p>
                     </div>
                   </div>
                 </div>
-                <div className="p-4 space-y-3">
+                <div className="p-4 space-y-4">
                   {/* Project stats */}
                   {!syncing && (() => {
                     const pages = effectivePaths.filter(p => p.startsWith("src/pages/")).length;
@@ -1390,36 +1390,36 @@ export default function BackupSection() {
                     const edgeFns = effectivePaths.filter(p => p.startsWith("supabase/functions/")).length;
                     const configs = effectivePaths.filter(p => !p.startsWith("src/") && !p.startsWith("supabase/functions/") && !p.startsWith("public/")).length;
                     return (
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{pages}</p>
-                          <p className="text-[10px] text-muted-foreground">Páginas</p>
+                      <div className="grid grid-cols-3 gap-2.5">
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{pages}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Páginas</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{components}</p>
-                          <p className="text-[10px] text-muted-foreground">Componentes</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{components}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Componentes</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{edgeFns}</p>
-                          <p className="text-[10px] text-muted-foreground">Edge Fns</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{edgeFns}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Edge Functions</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{hooks}</p>
-                          <p className="text-[10px] text-muted-foreground">Hooks</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{hooks}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Hooks</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{libs}</p>
-                          <p className="text-[10px] text-muted-foreground">Libs</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{libs}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Libs</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{configs}</p>
-                          <p className="text-[10px] text-muted-foreground">Configs</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{configs}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Configs</p>
                         </div>
                       </div>
                     );
                   })()}
 
-                  <p className="text-[10px] text-muted-foreground text-center font-mono">{effectivePaths.length} arquivos total</p>
+                  <p className="text-xs text-muted-foreground text-center font-mono">{effectivePaths.length} arquivos no total</p>
 
                   {/* Sync button */}
                   {!syncing ? (
