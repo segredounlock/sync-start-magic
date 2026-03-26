@@ -242,6 +242,9 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
+  // Fetch dynamic site name
+  const SITE_NAME = await getSiteName()
+
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
