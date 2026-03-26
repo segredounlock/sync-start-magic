@@ -190,7 +190,7 @@ export default function BackupSection() {
     title: string;
     description: string;
     details?: string[];
-    icon?: "sync" | "restore" | "update";
+    icon?: "sync" | "restore" | "update" | "safe";
     onConfirm: () => void;
   }>({ open: false, title: "", description: "", onConfirm: () => {} });
   // GitHub PAT
@@ -586,17 +586,33 @@ export default function BackupSection() {
       description: "A restauração vai sobrescrever os dados atuais do banco de dados.",
       details: ["Todos os dados serão substituídos", "Esta ação não pode ser desfeita"],
       icon: "restore",
-      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeImport(file); },
+      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeImport(file, false); },
     });
   };
 
-  const executeImport = async (file: File) => {
+  const safeFileInputRef = useRef<HTMLInputElement>(null);
+  const handleSafeImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".zip")) { toast.error("Selecione um arquivo .zip"); return; }
+    setConfirmModal({
+      open: true,
+      title: "Restauração Segura",
+      description: "Apenas dados novos serão adicionados. Usuários e configurações existentes NÃO serão alterados.",
+      details: ["auth.users não será tocado", "system_config e bot_settings serão ignorados", "Registros existentes não serão sobrescritos"],
+      icon: "safe",
+      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeImport(file, true); },
+    });
+  };
+
+  const executeImport = async (file: File, safeMode: boolean) => {
     setImporting(true); setRestoreResult(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessão expirada");
       const arrayBuffer = await file.arrayBuffer();
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-restore`, {
+      const endpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-restore${safeMode ? "?mode=safe" : ""}`;
+      const resp = await fetch(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
         body: arrayBuffer,
@@ -604,10 +620,11 @@ export default function BackupSection() {
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
       setRestoreResult(result);
-      toast.success("Backup restaurado com sucesso!");
+      toast.success(safeMode ? "Restauração segura concluída!" : "Backup restaurado com sucesso!");
     } catch (err: any) { toast.error(`Erro: ${err.message}`); }
     setImporting(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (safeFileInputRef.current) safeFileInputRef.current.value = "";
   };
 
   // === UPDATE SYSTEM HANDLERS ===
@@ -984,9 +1001,20 @@ export default function BackupSection() {
                 <p className="text-sm font-semibold text-foreground">{importing ? "Restaurando..." : "Restaurar"}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">Importar backup .zip</p>
               </button>
+
+              {/* Safe Import Card */}
+              <button onClick={() => safeFileInputRef.current?.click()} disabled={importing}
+                className="relative group rounded-2xl p-4 bg-card border border-border shadow-sm hover:bg-muted/60 hover:shadow-md hover:border-emerald-500/30 transition-all text-left disabled:opacity-60">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center mb-3 shadow-lg shadow-emerald-500/5">
+                  {importing ? <Loader2 className="h-4 w-4 animate-spin text-emerald-400" /> : <Shield className="h-4 w-4 text-emerald-400" />}
+                </div>
+                <p className="text-sm font-semibold text-foreground">{importing ? "Restaurando..." : "Restauração Segura"}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Só adiciona novos dados</p>
+              </button>
             </div>
 
             <input ref={fileInputRef} type="file" accept=".zip" onChange={handleImport} className="hidden" />
+            <input ref={safeFileInputRef} type="file" accept=".zip" onChange={handleSafeImport} className="hidden" />
 
             {/* Export progress */}
             <AnimatePresence>
@@ -1834,12 +1862,16 @@ export default function BackupSection() {
                     ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-amber-500/10"
                     : confirmModal.icon === "update"
                     ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20 shadow-blue-500/10"
+                    : confirmModal.icon === "safe"
+                    ? "bg-gradient-to-br from-emerald-500/20 to-green-500/20 shadow-emerald-500/10"
                     : "bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-emerald-500/10"
                 }`}>
                   {confirmModal.icon === "restore" ? (
                     <AlertTriangle className="h-6 w-6 text-amber-400" />
                   ) : confirmModal.icon === "update" ? (
                     <PackageCheck className="h-6 w-6 text-blue-400" />
+                  ) : confirmModal.icon === "safe" ? (
+                    <Shield className="h-6 w-6 text-emerald-400" />
                   ) : (
                     <Github className="h-6 w-6 text-emerald-400" />
                   )}
@@ -1877,6 +1909,8 @@ export default function BackupSection() {
                   className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
                     confirmModal.icon === "restore"
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25"
+                      : confirmModal.icon === "safe"
+                      ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:shadow-lg hover:shadow-emerald-500/25"
                       : confirmModal.icon === "update"
                       ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:shadow-lg hover:shadow-blue-500/25"
                       : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/25"
@@ -1886,6 +1920,8 @@ export default function BackupSection() {
                     <><Upload className="h-4 w-4" /> Restaurar</>
                   ) : confirmModal.icon === "update" ? (
                     <><PackageCheck className="h-4 w-4" /> Aplicar</>
+                  ) : confirmModal.icon === "safe" ? (
+                    <><Shield className="h-4 w-4" /> Restauração Segura</>
                   ) : (
                     <><FolderSync className="h-4 w-4" /> Sincronizar</>
                   )}

@@ -13,6 +13,9 @@ serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url);
+    const safeMode = url.searchParams.get("mode") === "safe";
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
@@ -107,7 +110,10 @@ serve(async (req) => {
       status: "not_found", created: 0, skipped: 0, failed: 0, errors: [],
     };
 
-    if (authUsersFile) {
+    if (safeMode) {
+      authRestoreResult = { status: "skipped_safe_mode", created: 0, skipped: 0, failed: 0, errors: [] };
+      console.log("Safe mode: skipping auth.users restore");
+    } else if (authUsersFile) {
       try {
         const authUsersData = JSON.parse(await authUsersFile.async("string"));
         const authUsers = authUsersData.users || authUsersData || [];
@@ -115,7 +121,6 @@ serve(async (req) => {
         const errors: string[] = [];
 
         if (sqlConn) {
-          // === SQL DIRETO: preserva UUID, senha e metadados ===
           for (const au of authUsers) {
             if (!au.id || !au.email) { skipped++; continue; }
             if (validAuthUserIds.has(au.id)) { skipped++; continue; }
@@ -150,7 +155,6 @@ serve(async (req) => {
               validAuthUserIds.add(au.id);
               created++;
             } catch (err: any) {
-              // Check if conflict by email
               if (err.message?.includes("unique") || err.message?.includes("duplicate")) {
                 skipped++;
               } else {
@@ -160,7 +164,6 @@ serve(async (req) => {
             }
           }
 
-          // Also insert into auth.identities for email provider
           for (const au of authUsers) {
             if (!au.id || !au.email) continue;
             try {
@@ -184,7 +187,6 @@ serve(async (req) => {
             }
           }
         } else {
-          // Fallback: Admin API (sem senha, novo UUID)
           for (const au of authUsers) {
             if (!au.id || !au.email) { skipped++; continue; }
             if (validAuthUserIds.has(au.id)) { skipped++; continue; }
@@ -281,7 +283,16 @@ serve(async (req) => {
       saldos: "user_id,tipo",
     };
 
+    // Tables to skip in safe mode
+    const safeSkipTables = new Set(["system_config", "bot_settings"]);
+
     for (const table of restoreOrder) {
+      // Safe mode: skip config tables
+      if (safeMode && safeSkipTables.has(table)) {
+        results.push({ table, status: "skipped_safe_mode", count: 0 });
+        continue;
+      }
+
       const file = zip.file(`database/${table}.json`);
       if (!file) {
         results.push({ table, status: "skipped", count: 0 });
@@ -310,6 +321,29 @@ serve(async (req) => {
 
         if (rows.length === 0) {
           results.push({ table, status: "skipped_fk", count: 0, skipped, error: `Todos os ${skipped} registros referenciavam usuários inexistentes` });
+          continue;
+        }
+
+        if (safeMode) {
+          // Safe mode: INSERT only, ignore duplicates
+          const batchSize = 100;
+          let totalInserted = 0;
+          for (let i = 0; i < rows.length; i += batchSize) {
+            const batch = rows.slice(i, i + batchSize);
+            const { error, count } = await supabaseAdmin.from(table).insert(batch, { count: "exact" } as any);
+            if (error) {
+              // Try row by row for conflicts
+              for (const row of batch) {
+                const { error: rowErr } = await supabaseAdmin.from(table).insert(row);
+                if (!rowErr) totalInserted++;
+                // Duplicate/conflict errors are silently ignored in safe mode
+              }
+            } else {
+              totalInserted += count || batch.length;
+            }
+          }
+          results.push({ table, status: "safe_restored", count: totalInserted, skipped });
+          if (table === "profiles") validProfileIds = await getExistingProfileIds();
           continue;
         }
 
@@ -369,6 +403,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      mode: safeMode ? "safe" : "full",
       backup_date: backupInfo.created_at,
       backup_by: backupInfo.created_by,
       auth_users: authRestoreResult,
