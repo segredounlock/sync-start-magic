@@ -245,7 +245,7 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
               <div className="flex-1 relative">
                 <input
                   type="range"
-                  min={minScale}
+                  min={coverScale}
                   max="3"
                   step="0.02"
                   value={scale}
