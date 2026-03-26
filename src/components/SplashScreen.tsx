@@ -1,9 +1,7 @@
 import { useSiteName } from "@/hooks/useSiteName";
 import { useSiteLogo } from "@/hooks/useSiteLogo";
 
-// Preload globally so it's cached
-const _preload = new Image();
-_preload.src = logo;
+// Preload handled by browser cache
 
 export function SplashScreen() {
   const siteName = useSiteName();
