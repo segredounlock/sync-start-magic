@@ -62,7 +62,7 @@
 │   └── index.css           # Estilos base + Tailwind
 ├── supabase/
 │   ├── config.toml         # Configuração do Supabase
-│   ├── functions/          # 31 Edge Functions
+│   ├── functions/          # 32 Edge Functions
 │   │   ├── _shared/        # Templates de email compartilhados
 │   │   │   └── email-templates/  # 6 templates (signup, recovery, etc.)
 │   │   ├── admin-create-user/
