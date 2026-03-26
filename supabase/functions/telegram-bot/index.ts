@@ -406,7 +406,7 @@ async function getSiteName(supabase: any): Promise<string> {
 
 async function getSiteUrl(supabase: any): Promise<string> {
   await loadSiteConfig(supabase);
-  return siteNameCache?.url || "https://recargasbrasill.com";
+  return siteNameCache?.url || "";
 }
 
 async function loadSiteConfig(supabase: any) {
