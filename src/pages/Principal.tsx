@@ -16,6 +16,7 @@ import { RedesSection } from "@/components/RedesSection";
 import { lazy, Suspense } from "react";
 const AdminSupport = lazy(() => import("@/pages/AdminSupport"));
 const AntifraudSection = lazy(() => import("@/components/AntifraudSection"));
+const AuditTab = lazy(() => import("@/components/AuditTab"));
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
