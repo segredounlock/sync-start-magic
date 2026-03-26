@@ -44,7 +44,7 @@ export const MagicLinkEmail = ({
         <Text style={footer}>
           Se você não solicitou este link, pode ignorar este e-mail com segurança.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

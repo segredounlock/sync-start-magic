@@ -54,7 +54,7 @@ export const SignupEmail = ({
         <Text style={footer}>
           Se você não criou uma conta, pode ignorar este e-mail com segurança.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

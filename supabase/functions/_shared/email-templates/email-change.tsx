@@ -53,7 +53,7 @@ export const EmailChangeEmail = ({
         <Text style={footer}>
           Se você não solicitou esta alteração, proteja sua conta imediatamente.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

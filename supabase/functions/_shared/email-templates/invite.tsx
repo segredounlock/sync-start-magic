@@ -49,7 +49,7 @@ export const InviteEmail = ({
         <Text style={footer}>
           Se você não esperava este convite, pode ignorar este e-mail com segurança.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

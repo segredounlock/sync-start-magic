@@ -36,7 +36,7 @@ export const ReauthenticationEmail = ({ token, siteName = 'Recargas Brasil' }: R
         <Text style={footer}>
           Este código expira em breve. Se você não solicitou, ignore este e-mail.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

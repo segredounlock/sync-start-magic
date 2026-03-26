@@ -46,7 +46,7 @@ export const RecoveryEmail = ({
           Se você não solicitou a redefinição de senha, ignore este e-mail.
           Sua senha não será alterada.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>
