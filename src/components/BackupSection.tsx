@@ -164,6 +164,8 @@ export default function BackupSection() {
   const [selectedRunLogs, setSelectedRunLogs] = useState<any>(null);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [showActionsPanel, setShowActionsPanel] = useState(false);
+  const [initMirrorLoading, setInitMirrorLoading] = useState(false);
+  const [initMirrorResult, setInitMirrorResult] = useState<any>(null);
 
   // Update system
   const [updateExporting, setUpdateExporting] = useState(false);
@@ -448,6 +450,33 @@ export default function BackupSection() {
       setTimeout(() => loadWorkflowRuns(), 5000);
     } catch (err: any) { toast.error(`Erro: ${err.message}`); }
     setTriggeringWorkflow(false);
+  };
+
+  const initMirror = async () => {
+    setInitMirrorLoading(true);
+    setInitMirrorResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
+      setInitMirrorResult(result);
+      toast.success("Espelho inicializado com sucesso!");
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    }
+    setInitMirrorLoading(false);
   };
 
   const getStatusIcon = (status: string, conclusion: string | null) => {
@@ -1558,6 +1587,42 @@ export default function BackupSection() {
                           </a>
                         </div>
                       )}
+
+                      {/* Inicializar Espelho */}
+                      <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-4 space-y-3">
+                        <p className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                          <Zap className="h-4 w-4" /> Inicializar Espelho
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Insere configs essenciais (<code className="bg-muted px-1 rounded text-foreground">system_config</code>), sincroniza operadoras e gera códigos de referência faltantes. Usa <strong>ON CONFLICT DO NOTHING</strong> — dados existentes não são alterados.
+                        </p>
+                        <button
+                          onClick={initMirror}
+                          disabled={initMirrorLoading}
+                          className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl text-sm font-semibold bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all disabled:opacity-50"
+                        >
+                          {initMirrorLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                          {initMirrorLoading ? "Inicializando..." : "Inicializar Espelho"}
+                        </button>
+                        {initMirrorResult?.results && (
+                          <div className="space-y-1.5 mt-2">
+                            {initMirrorResult.results.map((r: any, i: number) => (
+                              <div key={i} className={`flex items-start gap-2 text-xs rounded-lg p-2 ${
+                                r.status === "ok" ? "bg-emerald-500/10 text-emerald-400" :
+                                r.status === "skipped" ? "bg-muted/30 text-muted-foreground" :
+                                "bg-red-500/10 text-red-400"
+                              }`}>
+                                {r.status === "ok" ? <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /> :
+                                 r.status === "skipped" ? <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" /> :
+                                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />}
+                                <div>
+                                  <span className="font-semibold">{r.step}:</span> {r.detail}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
                       {/* Workflow runs list */}
                       {workflowRuns.length > 0 && (

@@ -63,5 +63,7 @@ project_id = "xtkqyjruyuydlbvwduuy"
     verify_jwt = false
   [functions.expire-pending-deposits]
     verify_jwt = false
+  [functions.init-mirror]
+    verify_jwt = false
   [functions.admin-toggle-email-verify]
     verify_jwt = false
