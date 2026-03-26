@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { motion } from "framer-motion";
 import { Download, Smartphone, Share, Plus, Check, ArrowLeft, Apple, Monitor } from "lucide-react";
 import { Link } from "react-router-dom";

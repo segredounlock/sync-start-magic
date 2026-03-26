@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useSiteName } from "@/hooks/useSiteName";
 import { Construction, Bot, ArrowRight, Wrench, Clock } from "lucide-react";
 
 export default function MaintenancePage() {

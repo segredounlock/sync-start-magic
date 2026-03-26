@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";

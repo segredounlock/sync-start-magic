@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useSiteName } from "@/hooks/useSiteName";
 import { InfoCard } from "@/components/InfoCard";
 import { DashboardSection } from "@/components/DashboardSection";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";

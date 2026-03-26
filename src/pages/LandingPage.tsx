@@ -1,4 +1,5 @@
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRef, useEffect, useState } from "react";
