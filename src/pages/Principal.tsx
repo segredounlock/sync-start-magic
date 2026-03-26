@@ -3453,7 +3453,7 @@ export default function Principal() {
                     <div className="px-4 pb-4 pt-1 border-t border-border">
                       <label className="block text-[11px] font-medium text-muted-foreground mb-1 mt-3">URL do Web App</label>
                       <input type="url" value={globalConfig.webAppUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, webAppUrl: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://recargasbrasill.com/miniapp" />
+                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring" placeholder="ex: https://meudominio.com/miniapp" />
                       <p className="text-[10px] text-muted-foreground mt-1">Deixe vazio para usar o padrão.</p>
                     </div>
                   </div>

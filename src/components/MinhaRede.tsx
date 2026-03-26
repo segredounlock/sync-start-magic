@@ -60,8 +60,8 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
   const menuRef = useRef<HTMLDivElement>(null);
 
   const referralLink = referralCode
-    ? `https://recargasbrasill.com/registrar?ref=${referralCode}`
-    : `https://recargasbrasill.com/loja/${profileSlug || userId}`;
+    ? buildUrl(`/registrar?ref=${referralCode}`)
+    : buildUrl(`/loja/${profileSlug || userId}`);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

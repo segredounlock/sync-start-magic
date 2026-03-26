@@ -361,7 +361,7 @@ Cada depósito PIX gera um registro em \`transactions\` com:
 Cada revendedor/admin pode ter uma **loja pública personalizada** acessível via URL amigável:
 
 \`\`\`
-https://recargasbrasill.com/loja/{slug}
+https://seudominio.com/loja/{slug}
 \`\`\`
 
 ### Personalização

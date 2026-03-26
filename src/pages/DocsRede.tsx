@@ -22,7 +22,7 @@ export default function DocsRede() {
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText("https://recargasbrasill.com/docs/rede");
+      await navigator.clipboard.writeText(buildUrl("/docs/rede"));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* ignore */ }
