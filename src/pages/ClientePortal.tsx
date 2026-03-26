@@ -97,7 +97,7 @@ export default function ClientePortal() {
   // Update document title and meta tags client-side
   useEffect(() => {
     if (!resellerInfo) return;
-    const storeName = resellerInfo.store_name || resellerInfo.nome || "Recargas Brasil";
+    const storeName = resellerInfo.store_name || resellerInfo.nome || siteName;
     document.title = `${storeName} - Recargas`;
 
     const setMeta = (property: string, content: string) => {
