@@ -1526,34 +1526,35 @@ export default function BackupSection() {
                       </div>
 
                       {!actionsRepo && (
-                        <p className="text-[11px] text-muted-foreground text-center py-2">Carregue os repositórios acima primeiro para detectar o repo de origem</p>
+                        <p className="text-sm text-muted-foreground text-center py-3">Carregue os repositórios acima primeiro para detectar o repo de origem</p>
                       )}
 
                       {/* Mirror diagnostic info */}
                       {actionsRepo && (
-                        <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-3 space-y-2">
-                          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <Info className="h-3 w-3" /> Diagnóstico do Mirror
+                        <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-4 space-y-3">
+                          <p className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                            <Info className="h-4 w-4" /> Diagnóstico do Mirror
                           </p>
-                          <div className="space-y-1 text-[11px]">
+                          <div className="space-y-2 text-sm">
                             <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Repo origem (workflow):</span>
-                              <span className="font-mono text-emerald-400 text-[10px]">{actionsRepo}</span>
+                              <span className="text-muted-foreground">Repositório de origem:</span>
+                              <a href={`https://github.com/${actionsRepo}`} target="_blank" rel="noopener noreferrer"
+                                className="font-mono text-emerald-400 text-xs hover:underline">{actionsRepo}</a>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Mirror destino:</span>
-                              <span className="font-mono text-foreground text-[10px]">{selectedRepo || "segredounlock/sync-start-magic"}</span>
+                              <span className="text-muted-foreground">Mirror (destino):</span>
+                              <span className="font-mono text-foreground text-xs">{selectedRepo || "segredounlock/sync-start-magic"}</span>
                             </div>
-                            <div className="border-t border-border/30 pt-1.5 mt-1.5 space-y-1">
-                              <p className="text-[10px] font-semibold text-muted-foreground">Checklist para o sync funcionar:</p>
-                              <p className="text-[10px] text-muted-foreground">1. O secret <code className="bg-muted px-1 rounded text-foreground">GH_TOKEN</code> deve existir em <strong>{actionsRepo}</strong> → Settings → Secrets → Actions</p>
-                              <p className="text-[10px] text-muted-foreground">2. O token deve ter acesso (escopo <code className="bg-muted px-1 rounded text-foreground">repo</code>) ao repositório destino</p>
-                              <p className="text-[10px] text-muted-foreground">3. O workflow <code className="bg-muted px-1 rounded text-foreground">sync-mirror.yml</code> deve existir no repo de origem</p>
+                            <div className="border-t border-border/30 pt-2.5 mt-2.5 space-y-2">
+                              <p className="text-xs font-bold text-muted-foreground">✅ Checklist para o sync funcionar:</p>
+                              <p className="text-xs text-muted-foreground">1. O secret <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold">GH_TOKEN</code> deve existir em <strong className="text-foreground">{actionsRepo}</strong> → Settings → Secrets → Actions</p>
+                              <p className="text-xs text-muted-foreground">2. O token deve ter escopo <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold">repo</code> com acesso ao repositório destino</p>
+                              <p className="text-xs text-muted-foreground">3. O workflow <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold">sync-mirror.yml</code> deve existir no repo de origem</p>
                             </div>
                           </div>
                           <a href={`https://github.com/${actionsRepo}/settings/secrets/actions`} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 hover:text-blue-300 transition-colors mt-1">
-                            <ExternalLink className="h-3 w-3" /> Abrir Secrets do repositório
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors mt-1">
+                            <ExternalLink className="h-3.5 w-3.5" /> Abrir Secrets do repositório
                           </a>
                         </div>
                       )}
