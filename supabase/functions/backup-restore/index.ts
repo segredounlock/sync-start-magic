@@ -403,6 +403,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      mode: safeMode ? "safe" : "full",
       backup_date: backupInfo.created_at,
       backup_by: backupInfo.created_by,
       auth_users: authRestoreResult,
