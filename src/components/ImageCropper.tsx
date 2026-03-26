@@ -30,18 +30,22 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
   const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const aspect = img.naturalWidth / img.naturalHeight;
+    // Fit the smaller dimension to CROP_SIZE so the image always covers the circle
     let w: number, h: number;
     if (aspect > 1) {
+      // Landscape: height is the limiting dimension
       h = CROP_SIZE;
       w = CROP_SIZE * aspect;
     } else {
+      // Portrait: width is the limiting dimension
       w = CROP_SIZE;
       h = CROP_SIZE / aspect;
     }
     setImgSize({ w, h });
     setOffset({ x: 0, y: 0 });
-    const minScale = Math.max(CROP_SIZE / w, CROP_SIZE / h);
-    setScale(Math.max(1, minScale));
+    // minScale ensures the image always fully covers the crop circle
+    const coverScale = Math.max(CROP_SIZE / w, CROP_SIZE / h);
+    setScale(coverScale);
   }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
