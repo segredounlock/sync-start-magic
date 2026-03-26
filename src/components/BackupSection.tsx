@@ -1862,12 +1862,16 @@ export default function BackupSection() {
                     ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-amber-500/10"
                     : confirmModal.icon === "update"
                     ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20 shadow-blue-500/10"
+                    : confirmModal.icon === "safe"
+                    ? "bg-gradient-to-br from-emerald-500/20 to-green-500/20 shadow-emerald-500/10"
                     : "bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-emerald-500/10"
                 }`}>
                   {confirmModal.icon === "restore" ? (
                     <AlertTriangle className="h-6 w-6 text-amber-400" />
                   ) : confirmModal.icon === "update" ? (
                     <PackageCheck className="h-6 w-6 text-blue-400" />
+                  ) : confirmModal.icon === "safe" ? (
+                    <Shield className="h-6 w-6 text-emerald-400" />
                   ) : (
                     <Github className="h-6 w-6 text-emerald-400" />
                   )}
