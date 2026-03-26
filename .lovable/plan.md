@@ -1,29 +1,52 @@
 
 
-# Corrigir diagnóstico do mirror — repo errado
+# Restaurar sync-mirror.yml no projeto
 
 ## Problema
-O painel está buscando workflow runs do repo **selecionado** (`sync-start-magic` = destino), mas o workflow `sync-mirror.yml` existe no repo **de origem** (o repo conectado ao Lovable). Por isso mostra "Falhou" no painel mas "Sucesso" no GitHub.
-
-O diagnóstico também mostra origem e destino iguais (`sync-start-magic` / `sync-start-magic`), o que está incorreto.
+O arquivo `.github/workflows/sync-mirror.yml` foi deletado do Lovable, e como existe sync bidirecional, ele também foi removido do repo `recargas-brasil-v2` no GitHub — quebrando o espelhamento automático para `sync-start-magic`.
 
 ## Solução
+Recriar o arquivo `.github/workflows/sync-mirror.yml` com a configuração correta que já estava funcionando.
 
-### 1. Identificar o repo de origem
-O repo de origem é o conectado ao Lovable (provavelmente `segredounlock/recargas-brasil-v2`). Precisamos:
-- Buscar o repo de origem da tabela `system_config` ou detectá-lo da lista de repos
-- Diferenciar claramente entre **repo origem** (onde está o workflow) e **repo destino** (mirror)
+## Arquivo a criar
 
-### 2. Alterar `BackupSection.tsx`
-- Na função `loadWorkflowRuns`, buscar runs do **repo de origem** (não do `selectedRepo` quando este for o destino)
-- Atualizar o diagnóstico para mostrar os repos corretos:
-  - Repo origem: o repo do Lovable (onde o workflow vive)
-  - Mirror destino: `sync-start-magic`
-- Adicionar lógica para identificar qual repo é a origem vs destino
+**`.github/workflows/sync-mirror.yml`**
 
-### 3. Alterar as funções de trigger e logs
-- `triggerWorkflow` e `loadWorkflowLogs` também precisam apontar para o repo de origem
+```yaml
+name: Sync to Mirrors
 
-### Arquivo a alterar
-- `src/components/BackupSection.tsx` — corrigir repo usado nas chamadas de workflow runs/logs/trigger
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configurar git
+        run: |
+          git config user.name "sync-bot"
+          git config user.email "sync@bot.com"
+
+      - name: Sync mirror
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git remote remove mirror_update || true
+          git remote add mirror_update https://x-access-token:${GH_TOKEN}@github.com/segredounlock/sync-start-magic.git
+          git push mirror_update HEAD:main --force
+```
+
+## Resultado
+- O workflow volta a existir no repo de origem (`recargas-brasil-v2`)
+- Cada push no `main` dispara o espelhamento automático para `sync-start-magic`
+- O `workflow_dispatch` permite trigger manual pelo painel
 
