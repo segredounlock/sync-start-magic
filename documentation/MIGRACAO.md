@@ -165,8 +165,11 @@ Se o destino for um projeto espelho com Lovable Cloud próprio:
 - [ ] O espelho recebe seus próprios secrets do Lovable Cloud automaticamente
 
 ### 9.2 Banco de Dados
-- [ ] As migrations SQL são sincronizadas via código e aplicadas automaticamente
-- [ ] O `types.ts` é regenerado pelo Lovable Cloud do espelho baseado no schema
+- [ ] Os **arquivos** de migration são sincronizados via git, mas **NÃO são aplicados automaticamente** ao banco do espelho
+- [ ] Após o primeiro sync, forçar uma publicação/re-deploy no projeto espelho para que o Lovable Cloud execute as migrations
+- [ ] Verificar que as 42 tabelas foram criadas: acessar Lovable Cloud → Database → Tables
+- [ ] Se o banco continuar vazio, aplicar o SQL manualmente via Lovable Cloud → Run SQL (usar o schema completo documentado em [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md))
+- [ ] O `types.ts` é regenerado pelo Lovable Cloud do espelho **somente após** as migrations serem aplicadas
 
 ### 9.3 Configuração Manual no Espelho
 - [ ] Habilitar Realtime nas tabelas: `chat_conversations`, `chat_messages`, `chat_reactions`
