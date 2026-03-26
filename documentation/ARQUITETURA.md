@@ -21,7 +21,7 @@
                     │ Auth        │ ← JWT + Roles
                     │ Storage     │ ← 8 buckets
                     │ Realtime    │ ← WebSocket
-                    │ Edge Funcs  │ ← 31 funções Deno
+                    │ Edge Funcs  │ ← 32 funções Deno
                     └──────┬──────┘
                            │
               ┌────────────┼────────────┐
