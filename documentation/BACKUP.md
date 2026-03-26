@@ -129,7 +129,7 @@ O `BackupSection.tsx` mantém lista explícita de todos os arquivos (`SOURCE_PAT
 - Hooks (18 arquivos)
 - Libs (14 arquivos)
 - Types e integrations
-- Edge Functions (31 funções)
+- Edge Functions (32 funções)
 - Email templates (6 templates)
 - Configs raiz (vite, tailwind, tsconfig, etc.)
 - Documentação (12 arquivos)
