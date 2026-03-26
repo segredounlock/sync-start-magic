@@ -367,6 +367,87 @@ export default function BackupSection() {
     setSyncing(false);
   };
 
+  const loadWorkflowRuns = async (repo?: string) => {
+    const targetRepo = repo || selectedRepo;
+    if (!targetRepo) { toast.error("Selecione um repositório"); return; }
+    setLoadingRuns(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-sync?action=workflow-runs&repo=${encodeURIComponent(targetRepo)}`,
+        { headers: { Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
+      );
+      if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
+      const data = await resp.json();
+      setWorkflowRuns(data);
+    } catch (err: any) { toast.error(`Erro: ${err.message}`); }
+    setLoadingRuns(false);
+  };
+
+  const loadWorkflowLogs = async (runId: number) => {
+    if (!selectedRepo) return;
+    setLoadingLogs(true);
+    setSelectedRunLogs(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-sync?action=workflow-logs&repo=${encodeURIComponent(selectedRepo)}&run_id=${runId}`,
+        { headers: { Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
+      );
+      if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
+      const data = await resp.json();
+      setSelectedRunLogs(data);
+    } catch (err: any) { toast.error(`Erro: ${err.message}`); }
+    setLoadingLogs(false);
+  };
+
+  const triggerWorkflow = async () => {
+    if (!selectedRepo) { toast.error("Selecione um repositório"); return; }
+    setTriggeringWorkflow(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+      const repo = repos.find((r: any) => r.full_name === selectedRepo);
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-sync?action=trigger-workflow`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: JSON.stringify({ repo: selectedRepo, branch: repo?.default_branch || "main" }),
+        }
+      );
+      if (!resp.ok) { const err = await resp.json().catch(() => ({ error: "Erro" })); throw new Error(err.error || `HTTP ${resp.status}`); }
+      toast.success("Workflow disparado! Aguarde alguns segundos e atualize o status.");
+      setTimeout(() => loadWorkflowRuns(), 5000);
+    } catch (err: any) { toast.error(`Erro: ${err.message}`); }
+    setTriggeringWorkflow(false);
+  };
+
+  const getStatusIcon = (status: string, conclusion: string | null) => {
+    if (status === "completed") {
+      if (conclusion === "success") return <CheckCircle2 className="h-4 w-4 text-emerald-400" />;
+      if (conclusion === "failure") return <XCircle className="h-4 w-4 text-red-400" />;
+      return <AlertTriangle className="h-4 w-4 text-amber-400" />;
+    }
+    if (status === "in_progress") return <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />;
+    if (status === "queued") return <CircleDot className="h-4 w-4 text-muted-foreground" />;
+    return <CircleDot className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  const getStatusLabel = (status: string, conclusion: string | null) => {
+    if (status === "completed") {
+      if (conclusion === "success") return "Sucesso";
+      if (conclusion === "failure") return "Falhou";
+      if (conclusion === "cancelled") return "Cancelado";
+      return conclusion || "Concluído";
+    }
+    if (status === "in_progress") return "Em execução";
+    if (status === "queued") return "Na fila";
+    return status;
+  };
+
 
 
   const handleExport = async () => {
