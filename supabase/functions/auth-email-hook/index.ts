@@ -36,11 +36,31 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   reauthentication: ReauthenticationEmail,
 }
 
-// Configuration
-const SITE_NAME = "Recargas Brasil"
+// Configuration — site name is fetched dynamically from system_config
+const DEFAULT_SITE_NAME = "Recargas Brasil"
 const SENDER_DOMAIN = "notify.recargasbrasill.com"
 const ROOT_DOMAIN = "recargasbrasill.com"
-const FROM_DOMAIN = "recargasbrasill.com" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "recargasbrasill.com"
+
+// Cache site name for 5 minutes
+let siteNameCache: { value: string; time: number } | null = null
+const CACHE_TTL = 300_000
+
+async function getSiteName(): Promise<string> {
+  if (siteNameCache && Date.now() - siteNameCache.time < CACHE_TTL) return siteNameCache.value
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    )
+    const { data } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle()
+    const name = data?.value || DEFAULT_SITE_NAME
+    siteNameCache = { value: name, time: Date.now() }
+    return name
+  } catch {
+    return DEFAULT_SITE_NAME
+  }
+}
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
