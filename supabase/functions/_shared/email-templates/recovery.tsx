@@ -27,7 +27,7 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Redefinir sua senha — Recargas Brasil</Preview>
+    <Preview>Redefinir sua senha — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
