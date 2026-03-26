@@ -1300,13 +1300,13 @@ export default function BackupSection() {
             {/* ══════════ SEÇÃO 1: Configuração ══════════ */}
             <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
               <div className="px-4 pt-4 pb-3 border-b border-border/50">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center">
-                    <Shield className="h-4 w-4 text-amber-400" />
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-amber-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-foreground">Configuração</p>
-                    <p className="text-[10px] text-muted-foreground">Token de acesso e repositório</p>
+                    <p className="text-base font-bold text-foreground">Configuração</p>
+                    <p className="text-xs text-muted-foreground">Token de acesso e repositório GitHub</p>
                   </div>
                 </div>
               </div>
