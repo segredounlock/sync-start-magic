@@ -31,6 +31,7 @@ interface RevendedorInfo {
 }
 
 export default function RecargaPublica() {
+  const siteName = useSiteName();
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
   const refParam = searchParams.get("ref") || searchParams.get("revendedor");
