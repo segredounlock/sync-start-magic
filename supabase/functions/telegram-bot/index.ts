@@ -1226,7 +1226,8 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     return;
   }
 
-  let webAppUrl = "https://recargasbrasill.com/miniapp";
+  const defaultSiteUrl = await getSiteUrl(supabase);
+  let webAppUrl = `${defaultSiteUrl}/miniapp`;
   const [migrationConfig, em, webAppConfig, btnConfigs] = await Promise.all([
     getMigrationConfig(supabase),
     getSeasonalEmojis(supabase),
