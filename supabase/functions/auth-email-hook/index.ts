@@ -75,26 +75,26 @@ const SAMPLE_PROJECT_URL = "https://recargasbrasill.com"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   magiclink: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   recovery: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   invite: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   email_change: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
