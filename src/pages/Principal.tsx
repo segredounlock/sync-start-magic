@@ -3659,6 +3659,67 @@ export default function Principal() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Segurança PIN */}
+                    <div className="glass-card rounded-xl p-5 space-y-4">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <KeyRound className="h-4 w-4 text-primary" /> Segurança — PIN de Acesso
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Configure o tempo de sessão do PIN. Após esse período, o PIN será solicitado novamente ao acessar áreas protegidas.
+                      </p>
+
+                      {/* Timeout selector */}
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1">Tempo de Sessão do PIN</label>
+                        <select
+                          value={globalConfig.pinTimeoutSeconds || "300"}
+                          onChange={async (e) => {
+                            const val = e.target.value;
+                            setGlobalConfig(prev => ({ ...prev, pinTimeoutSeconds: val }));
+                            await supabase.from("system_config").upsert(
+                              { key: "pinTimeoutSeconds", value: val, updated_at: new Date().toISOString() },
+                              { onConflict: "key" }
+                            );
+                            toast.success(`Tempo de sessão alterado para ${val === "0" ? "ilimitado" : val === "60" ? "1 minuto" : val === "120" ? "2 minutos" : val === "300" ? "5 minutos" : val === "600" ? "10 minutos" : val === "900" ? "15 minutos" : val === "1800" ? "30 minutos" : "1 hora"}`);
+                          }}
+                          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="60">1 minuto</option>
+                          <option value="120">2 minutos</option>
+                          <option value="300">5 minutos (padrão)</option>
+                          <option value="600">10 minutos</option>
+                          <option value="900">15 minutos</option>
+                          <option value="1800">30 minutos</option>
+                          <option value="3600">1 hora</option>
+                          <option value="0">Ilimitado (não expira)</option>
+                        </select>
+                        <p className="text-xs text-muted-foreground mt-1">Após esse tempo, o sistema pedirá o PIN novamente</p>
+                      </div>
+
+                      {/* Reset PIN button */}
+                      <div className="flex items-center justify-between p-4 rounded-xl border-2 border-border bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-destructive/10">
+                            <RotateCcw className="h-5 w-5 text-destructive" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-foreground">Redefinir PIN</p>
+                            <p className="text-[11px] text-muted-foreground">Remove o PIN atual — será necessário criar um novo</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (!confirm("Tem certeza que deseja remover o PIN? Você precisará criar um novo.")) return;
+                            await supabase.from("system_config").delete().eq("key", "adminPin");
+                            toast.success("PIN removido. Um novo será solicitado no próximo acesso.");
+                          }}
+                          className="px-4 py-2 rounded-xl text-sm font-bold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all"
+                        >
+                          Redefinir
+                        </button>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
 
