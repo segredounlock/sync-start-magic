@@ -98,7 +98,7 @@ export default function InstallApp() {
             </div>
             <h3 className="text-lg font-bold text-primary">App já instalado!</h3>
             <p className="text-sm text-muted-foreground">
-              O Recargas Brasil já está na sua tela inicial. Abra pelo ícone do app.
+              O {siteName} já está na sua tela inicial. Abra pelo ícone do app.
             </p>
           </motion.div>
         )}

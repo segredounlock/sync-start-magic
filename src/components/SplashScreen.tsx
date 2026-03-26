@@ -19,7 +19,7 @@ export function SplashScreen() {
         <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-2xl border border-border/50 ring-1 ring-primary/20">
           <img
             src={logo}
-            alt="Recargas Brasil"
+            alt={siteName}
             className="w-full h-full object-cover"
             loading="eager"
           />

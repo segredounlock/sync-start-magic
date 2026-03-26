@@ -398,9 +398,9 @@ export default function Auth() {
             className="w-full max-w-md"
           >
             <div className="text-center mb-6">
-              <img src={logo} alt="Recargas Brasil" className="w-24 h-24 object-cover rounded-3xl mx-auto mb-4 shadow-xl" />
+              <img src={logo} alt={siteName} className="w-24 h-24 object-cover rounded-3xl mx-auto mb-4 shadow-xl" />
               <h1 className="text-4xl font-black tracking-tight shimmer-letters">
-                Recargas <span className="brasil-word">Brasil</span>
+                {siteName}
               </h1>
               <p className="text-muted-foreground mt-2 text-sm tracking-wide">SISTEMA DE RECARGAS PARA REVENDEDORES</p>
             </div>
