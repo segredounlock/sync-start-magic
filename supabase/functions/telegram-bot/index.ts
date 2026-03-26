@@ -660,11 +660,12 @@ serve(async (req) => {
           }
         }
 
-        // Parallel: find user + session + register telegram_user
-        const [linkedUser, session] = await Promise.all([
+        // Parallel: find user + session + register telegram_user + site name
+        const [linkedUser, session, , botSiteName] = await Promise.all([
           findUserByTelegram(supabase, telegramId),
           getSession(supabase, chatIdStr),
           ensureTelegramUser(supabase, message.from.id, message.from.first_name, telegramUsername),
+          getSiteName(supabase),
         ]);
 
           if (text === "/start" || text === "/menu" || text === "/vincular") {
