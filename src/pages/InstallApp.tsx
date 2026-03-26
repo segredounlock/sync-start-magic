@@ -12,6 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export default function InstallApp() {
   const siteName = useSiteName();
+  const logo = useSiteLogo();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);

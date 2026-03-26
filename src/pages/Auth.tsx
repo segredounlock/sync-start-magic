@@ -41,6 +41,7 @@ const COOLDOWN_MS = 60_000;
 
 export default function Auth() {
   const siteName = useSiteName();
+  const logo = useSiteLogo();
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
