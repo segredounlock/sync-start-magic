@@ -30,7 +30,7 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Você foi convidado — Recargas Brasil</Preview>
+    <Preview>Você foi convidado — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
