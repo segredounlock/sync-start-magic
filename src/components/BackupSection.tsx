@@ -73,7 +73,7 @@ const SOURCE_PATHS = [
   "src/hooks/useInactivityTimeout.ts","src/hooks/useNotificationSound.ts",
   "src/hooks/useNotifications.ts","src/hooks/usePixDeposit.ts","src/hooks/usePresence.ts",
   "src/hooks/usePushNotifications.ts","src/hooks/useSeasonalTheme.ts",
-  "src/hooks/useSupportChannels.ts","src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts",
+  "src/hooks/useSupportChannels.ts","src/hooks/useTheme.tsx","src/hooks/useTypingIndicator.ts","src/hooks/useSiteName.ts",
   // Libs
   "src/lib/auditLog.ts","src/lib/confirm.tsx","src/lib/currencyMask.ts",
   "src/lib/deviceFingerprint.ts","src/lib/domain.ts","src/lib/fetchAll.ts","src/lib/inputValidation.ts",
@@ -88,7 +88,7 @@ const SOURCE_PATHS = [
   "tailwind.config.ts","tsconfig.json","tsconfig.node.json","vite.config.ts",
   "postcss.config.js","index.html","package.json","README.md",
   // PWA
-  "public/sw-push.js","public/manifest.webmanifest",
+  "public/sw-push.js",
   // Edge Functions
   "supabase/functions/admin-create-user/index.ts","supabase/functions/admin-delete-user/index.ts",
   "supabase/functions/admin-reset-password/index.ts","supabase/functions/admin-toggle-email-verify/index.ts",
