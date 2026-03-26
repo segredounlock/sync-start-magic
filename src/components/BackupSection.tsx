@@ -13,6 +13,7 @@ import { formatFullDateTimeBR, formatDateFullBR } from "@/lib/timezone";
 import { styledToast as toast } from "@/lib/toast";
 import JSZip from "jszip";
 import { getKnownPaths, getFileHashes } from "@/lib/sourceManifest";
+import MirrorSyncPanel from "@/components/MirrorSyncPanel";
 
 // Tables are now discovered dynamically by the edge functions
 // This constant is only used for display fallback
@@ -1587,6 +1588,12 @@ export default function BackupSection() {
                           </a>
                         </div>
                       )}
+
+                      {/* Sincronização Inteligente */}
+                      <MirrorSyncPanel
+                        mirrorRepo={selectedRepo || "segredounlock/sync-start-magic"}
+                        sourceRepo={actionsRepo}
+                      />
 
                       {/* Inicializar Espelho */}
                       <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-4 space-y-3">
