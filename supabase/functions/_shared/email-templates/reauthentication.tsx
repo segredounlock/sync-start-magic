@@ -23,7 +23,7 @@ const LOGO_URL = 'https://xtkqyjruyuydlbvwduuy.supabase.co/storage/v1/object/pub
 export const ReauthenticationEmail = ({ token, siteName = 'Recargas Brasil' }: ReauthenticationEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu código de verificação — Recargas Brasil</Preview>
+    <Preview>Seu código de verificação — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
