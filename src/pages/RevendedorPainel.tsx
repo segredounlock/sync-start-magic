@@ -69,6 +69,7 @@ interface RevendedorPainelProps {
 }
 
 export default function RevendedorPainel({ resellerId, resellerBranding }: RevendedorPainelProps = {}) {
+  const siteName = useSiteName();
   const isClientMode = !!resellerId;
   const navigate = useNavigate();
   const { filterValores } = useDisabledValues();
