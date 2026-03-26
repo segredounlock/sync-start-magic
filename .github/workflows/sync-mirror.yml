@@ -1,19 +1,34 @@
-# Sync test: 2026-03-26T3
 name: Sync to Mirrors
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   mirror:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Ver branch atual
+        run: |
+          echo "Branch atual: $GITHUB_REF_NAME"
+          git branch -a
+          git remote -v
+
+      - name: Configurar git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Sync UPDATERECARGASBRASIL
         run: |
+          git remote remove mirror_update || true
           git remote add mirror_update https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/segredounlock/updaterecargasbrasil.git
-          git push mirror_update main --force
+          git remote -v
+          git push mirror_update HEAD:main --force
