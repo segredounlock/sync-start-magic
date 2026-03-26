@@ -321,6 +321,7 @@ export default function TelegramMiniApp() {
     return (saved === "light" || saved === "dark") ? saved : "auto";
   });
   const siteName = useSiteName();
+  const recargasLogo = useSiteLogo();
   const { isDark } = useTelegramTheme(themePreference);
 
   const toggleTheme = useCallback(() => {
