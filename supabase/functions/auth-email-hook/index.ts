@@ -41,9 +41,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration — site name and URL are fetched dynamically from system_config
-const DEFAULT_SITE_NAME = "Recargas Brasil"
-const DEFAULT_SITE_URL = "https://recargasbrasill.com"
-const SENDER_DOMAIN = "notify.recargasbrasill.com"
+const DEFAULT_SITE_NAME = "Sistema de Recargas"
+const DEFAULT_SITE_URL = ""
+const SENDER_DOMAIN = Deno.env.get("SENDER_DOMAIN") || "notify.example.com"
 
 // Cache site config for 5 minutes
 let siteConfigCache: { name: string; url: string; time: number } | null = null
