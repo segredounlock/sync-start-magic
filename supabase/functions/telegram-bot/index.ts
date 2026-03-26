@@ -702,7 +702,7 @@ serve(async (req) => {
               );
             } else {
               // Show terms first for new users too
-              await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
+              await sendTermsMessage(BOT_TOKEN, chatId, botSiteName, botSiteUrl);
             }
           }
           return;
