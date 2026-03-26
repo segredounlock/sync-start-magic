@@ -1327,6 +1327,7 @@ export default function Principal() {
     { key: "suporte", icon: Headphones, label: "Suporte", color: "text-[hsl(30,90%,55%)]", badge: pendingSupportCount },
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
     { key: "antifraude", icon: Shield, label: "Antifraude", color: "text-destructive" },
+    { key: "auditoria", icon: FileText, label: "Auditoria", color: "text-primary" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
 
