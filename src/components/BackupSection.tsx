@@ -1343,8 +1343,8 @@ export default function BackupSection() {
                 {/* Repo selector inline */}
                 <div className="space-y-2">
                   <button onClick={loadRepos} disabled={loadingRepos}
-                    className="w-full py-2.5 rounded-xl bg-muted/50 border border-border hover:bg-muted/80 text-foreground font-medium text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                    {loadingRepos ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                    className="w-full py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted/80 text-foreground font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                    {loadingRepos ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                     {loadingRepos ? "Carregando..." : repos.length > 0 ? "Atualizar repositórios" : "Carregar repositórios"}
                   </button>
 
