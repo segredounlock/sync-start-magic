@@ -19,7 +19,8 @@ async function ghFetch(path: string, pat: string, options: RequestInit = {}) {
       ...(options.headers || {}),
     },
   });
-  const body = await res.json();
+  if (res.status === 204) return {}; // No Content (e.g. workflow dispatch)
+  const body = await res.json().catch(() => ({ message: `GitHub API ${res.status}` }));
   if (!res.ok) throw new Error(body.message || `GitHub API ${res.status}`);
   return body;
 }
