@@ -479,7 +479,7 @@ export default function BackupSection() {
     setInitMirrorLoading(false);
   };
 
-
+  const getStatusIcon = (status: string, conclusion: string | null) => {
     if (status === "completed") {
       if (conclusion === "success") return <CheckCircle2 className="h-4 w-4 text-emerald-400" />;
       if (conclusion === "failure") return <XCircle className="h-4 w-4 text-red-400" />;
