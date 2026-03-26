@@ -1001,9 +1001,20 @@ export default function BackupSection() {
                 <p className="text-sm font-semibold text-foreground">{importing ? "Restaurando..." : "Restaurar"}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">Importar backup .zip</p>
               </button>
+
+              {/* Safe Import Card */}
+              <button onClick={() => safeFileInputRef.current?.click()} disabled={importing}
+                className="relative group rounded-2xl p-4 bg-card border border-border shadow-sm hover:bg-muted/60 hover:shadow-md hover:border-emerald-500/30 transition-all text-left disabled:opacity-60">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center mb-3 shadow-lg shadow-emerald-500/5">
+                  {importing ? <Loader2 className="h-4 w-4 animate-spin text-emerald-400" /> : <Shield className="h-4 w-4 text-emerald-400" />}
+                </div>
+                <p className="text-sm font-semibold text-foreground">{importing ? "Restaurando..." : "Restauração Segura"}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Só adiciona novos dados</p>
+              </button>
             </div>
 
             <input ref={fileInputRef} type="file" accept=".zip" onChange={handleImport} className="hidden" />
+            <input ref={safeFileInputRef} type="file" accept=".zip" onChange={handleSafeImport} className="hidden" />
 
             {/* Export progress */}
             <AnimatePresence>
