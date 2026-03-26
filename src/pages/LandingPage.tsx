@@ -179,6 +179,7 @@ function PhoneFrame() {
    LANDING PAGE
    ══════════════════════════════════════════════════════════ */
 export default function LandingPage() {
+  const siteName = useSiteName();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
