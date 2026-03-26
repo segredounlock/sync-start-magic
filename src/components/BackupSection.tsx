@@ -1597,24 +1597,75 @@ export default function BackupSection() {
 
                       {/* Inicializar Espelho */}
                       <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-4 space-y-3">
-                        <p className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                        <p className="text-sm font-bold text-amber-400 flex items-center gap-2">
                           <Zap className="h-4 w-4" /> Inicializar Espelho
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Insere configs essenciais (<code className="bg-muted px-1 rounded text-foreground">system_config</code>), sincroniza operadoras e gera códigos de referência faltantes. Usa <strong>ON CONFLICT DO NOTHING</strong> — dados existentes não são alterados.
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Insere configs essenciais, verifica RPCs e valida se o backend do espelho está pronto para uso.
+                          Usa <strong className="text-foreground">ON CONFLICT DO NOTHING</strong> — dados existentes não são alterados.
                         </p>
+                        <div className="rounded-lg bg-amber-500/10 border border-amber-500/15 p-3 space-y-1">
+                          <p className="text-xs font-semibold text-amber-400">⚠️ Importante:</p>
+                          <p className="text-xs text-muted-foreground">Sincronizar código ≠ espelho funcional. O backend precisa de <strong className="text-foreground">Publish</strong> para aplicar migrations SQL.</p>
+                        </div>
                         <button
                           onClick={initMirror}
                           disabled={initMirrorLoading}
                           className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl text-sm font-semibold bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all disabled:opacity-50"
                         >
                           {initMirrorLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                          {initMirrorLoading ? "Inicializando..." : "Inicializar Espelho"}
+                          {initMirrorLoading ? "Verificando..." : "Inicializar e Diagnosticar"}
                         </button>
+
+                        {/* Readiness badge */}
+                        {initMirrorResult?.readiness && (
+                          <div className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-bold ${
+                            initMirrorResult.readiness === "ready"
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                              : initMirrorResult.readiness === "partial"
+                              ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                              : "bg-red-500/10 border-red-500/20 text-red-400"
+                          }`}>
+                            {initMirrorResult.readiness === "ready" ? <CheckCircle2 className="h-5 w-5" /> :
+                             initMirrorResult.readiness === "partial" ? <AlertTriangle className="h-5 w-5" /> :
+                             <XCircle className="h-5 w-5" />}
+                            {initMirrorResult.readiness === "ready" ? "Espelho Pronto para Uso" :
+                             initMirrorResult.readiness === "partial" ? "Espelho Parcial — itens pendentes" :
+                             "Espelho com Problemas — precisa de Publish"}
+                          </div>
+                        )}
+
+                        {/* Issues */}
+                        {initMirrorResult?.issues?.length > 0 && (
+                          <div className="space-y-1">
+                            {initMirrorResult.issues.map((issue: string, i: number) => (
+                              <p key={i} className="text-xs text-red-400 flex items-start gap-1.5">
+                                <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" /> {issue}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Health checks */}
+                        {initMirrorResult?.health?.length > 0 && (
+                          <div className="space-y-1 rounded-lg bg-muted/30 border border-border/50 p-3">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Checklist do Backend</p>
+                            {initMirrorResult.health.map((h: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between text-sm py-0.5">
+                                <span className="font-mono text-foreground/80">{h.key}</span>
+                                <span className={`text-xs font-semibold ${h.ok ? "text-emerald-400" : "text-red-400"}`}>
+                                  {h.ok ? "✓" : "✗"} {h.detail}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Step results */}
                         {initMirrorResult?.results && (
                           <div className="space-y-1.5 mt-2">
                             {initMirrorResult.results.map((r: any, i: number) => (
-                              <div key={i} className={`flex items-start gap-2 text-xs rounded-lg p-2 ${
+                              <div key={i} className={`flex items-start gap-2 text-xs rounded-lg p-2.5 ${
                                 r.status === "ok" ? "bg-emerald-500/10 text-emerald-400" :
                                 r.status === "skipped" ? "bg-muted/30 text-muted-foreground" :
                                 "bg-red-500/10 text-red-400"
