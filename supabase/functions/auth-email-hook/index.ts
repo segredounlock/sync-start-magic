@@ -17,13 +17,17 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirme seu e-mail — Recargas Brasil',
-  invite: 'Você foi convidado — Recargas Brasil',
-  magiclink: 'Seu link de acesso — Recargas Brasil',
-  recovery: 'Redefinir sua senha — Recargas Brasil',
-  email_change: 'Confirme a alteração de e-mail — Recargas Brasil',
-  reauthentication: 'Seu código de verificação — Recargas Brasil',
+const EMAIL_SUBJECT_TEMPLATES: Record<string, string> = {
+  signup: 'Confirme seu e-mail',
+  invite: 'Você foi convidado',
+  magiclink: 'Seu link de acesso',
+  recovery: 'Redefinir sua senha',
+  email_change: 'Confirme a alteração de e-mail',
+  reauthentication: 'Seu código de verificação',
+}
+function getEmailSubject(type: string, siteName: string): string {
+  const base = EMAIL_SUBJECT_TEMPLATES[type]
+  return base ? `${base} — ${siteName}` : 'Notification'
 }
 
 // Template mapping
