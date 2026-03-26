@@ -401,7 +401,7 @@ const SITE_NAME_TTL = 300_000; // 5 minutes
 
 async function getSiteName(supabase: any): Promise<string> {
   await loadSiteConfig(supabase);
-  return siteNameCache?.value || "Recargas Brasil";
+  return siteNameCache?.value || "Sistema de Recargas";
 }
 
 async function getSiteUrl(supabase: any): Promise<string> {
