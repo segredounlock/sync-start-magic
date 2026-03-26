@@ -40,7 +40,7 @@ export const EmailChangeEmail = ({
         </div>
         <Heading style={h1}>Alteração de e-mail</Heading>
         <Text style={text}>
-          Você solicitou a alteração do e-mail da sua conta no <strong>Recargas Brasil</strong> de{' '}
+          Você solicitou a alteração do e-mail da sua conta no <strong>{siteName}</strong> de{' '}
           <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}
           para{' '}
           <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
