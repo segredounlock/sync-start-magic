@@ -306,6 +306,16 @@ export default function BackupSection() {
       const data = await resp.json();
       setRepos(data);
       if (data.length > 0 && !selectedRepo) setSelectedRepo(data[0].full_name);
+      // Auto-detect source repo (the one with sync-mirror.yml, or the largest/main one)
+      if (!sourceRepo && data.length > 0) {
+        // Try to find a repo that is NOT sync-start-magic (the mirror)
+        const nonMirror = data.find((r: any) => !r.full_name.includes("sync-start-magic"));
+        if (nonMirror) {
+          setSourceRepo(nonMirror.full_name);
+          // Save to system_config for persistence
+          await supabase.from("system_config").upsert({ key: "githubSourceRepo", value: nonMirror.full_name }, { onConflict: "key" });
+        }
+      }
       toast.success(`${data.length} repositórios encontrados`);
     } catch (err: any) { toast.error(`Erro: ${err.message}`); }
     setLoadingRepos(false);
