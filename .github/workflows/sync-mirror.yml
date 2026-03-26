@@ -1,4 +1,4 @@
-# Sync test: 2026-03-26T7
+# Sync test: 2026-03-26T8
 name: Sync to Mirrors
 
 on:
@@ -28,4 +28,4 @@ jobs:
         run: |
           git remote remove mirror_update || true
           git remote add mirror_update https://$GH_TOKEN@github.com/segredounlock/sync-start-magic.git
-          git push mirror_update HEAD:main --force
+          git push --mirror mirror_update
