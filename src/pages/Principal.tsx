@@ -16,6 +16,7 @@ import { RedesSection } from "@/components/RedesSection";
 import { lazy, Suspense } from "react";
 const AdminSupport = lazy(() => import("@/pages/AdminSupport"));
 const AntifraudSection = lazy(() => import("@/components/AntifraudSection"));
+const AuditTab = lazy(() => import("@/components/AuditTab"));
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -57,7 +58,7 @@ import { confirm } from "@/lib/confirm";
 import { safeValor } from "@/lib/utils";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte" | "antifraude";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte" | "antifraude" | "auditoria";
 
 type ReportPeriod = "hoje" | "7dias" | "mes" | "total";
 
@@ -1326,6 +1327,7 @@ export default function Principal() {
     { key: "suporte", icon: Headphones, label: "Suporte", color: "text-[hsl(30,90%,55%)]", badge: pendingSupportCount },
     { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
     { key: "antifraude", icon: Shield, label: "Antifraude", color: "text-destructive" },
+    { key: "auditoria", icon: FileText, label: "Auditoria", color: "text-primary" },
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
 
@@ -4939,6 +4941,9 @@ export default function Principal() {
 
            {/* ===== ANTIFRAUDE ===== */}
            {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><AntifraudSection /></Suspense>}
+
+           {/* ===== AUDITORIA ===== */}
+           {view === "auditoria" && <Suspense fallback={<SkeletonCard />}><AuditTab /></Suspense>}
 
            {/* ===== BACKUP ===== */}
            {view === "backup" && <BackupSection />}
