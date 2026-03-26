@@ -688,7 +688,7 @@ serve(async (req) => {
           if (text === "/start" || text === "/menu" || text === "/vincular") {
           if (linkedUser) {
             // Always show terms on /start
-            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
+            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName, botSiteUrl);
           } else {
             // Check migration config
             const migration = await getMigrationConfig(supabase);
