@@ -133,7 +133,7 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: "Recargas Brasil",
+        name: "Sistema de Recargas",
         short_name: "Recargas",
         description: "Sistema de recargas de celular para revendedores",
         theme_color: "#10b981",

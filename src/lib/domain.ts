@@ -8,7 +8,7 @@ export function getBaseUrl(): string {
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
-  return 'https://recargasbrasill.com'; // fallback SSR/edge
+  return ''; // fallback SSR/edge — dinâmico via window.location.origin
 }
 
 export function buildUrl(path: string): string {

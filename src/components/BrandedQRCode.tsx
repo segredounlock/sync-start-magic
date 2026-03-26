@@ -1,4 +1,5 @@
 import { QRCodeSVG } from "qrcode.react";
+import { useSiteName } from "@/hooks/useSiteName";
 
 interface BrandedQRCodeProps {
   value: string;
@@ -7,6 +8,9 @@ interface BrandedQRCodeProps {
 }
 
 const BrandedQRCode = ({ value, size = 176, brandName }: BrandedQRCodeProps) => {
+  const siteName = useSiteName();
+  const displayName = brandName || siteName;
+
   return (
     <div className="bg-[#0a0a0a] rounded-2xl shadow-lg p-5 flex flex-col items-center gap-3 border border-border/30">
       <div className="bg-white p-3 rounded-xl">
@@ -20,14 +24,7 @@ const BrandedQRCode = ({ value, size = 176, brandName }: BrandedQRCodeProps) => 
         />
       </div>
       <div className="flex items-center gap-1.5">
-        {brandName ? (
-          <span className="text-white font-display text-sm font-bold tracking-wide">{brandName}</span>
-        ) : (
-          <>
-            <span className="text-white font-display text-sm font-bold tracking-wide">Recargas</span>
-            <span className="text-success font-display text-sm font-bold tracking-wide">Brasil</span>
-          </>
-        )}
+        <span className="text-white font-display text-sm font-bold tracking-wide">{displayName}</span>
       </div>
     </div>
   );

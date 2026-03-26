@@ -402,7 +402,7 @@ export default function Auth() {
               <h1 className="text-4xl font-black tracking-tight shimmer-letters">
                 {siteName}
               </h1>
-              <p className="text-muted-foreground mt-2 text-sm tracking-wide">SISTEMA DE RECARGAS PARA REVENDEDORES</p>
+              <p className="text-muted-foreground mt-2 text-sm tracking-wide">{siteName}</p>
             </div>
 
             <div className="bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl p-6 sm:p-8">

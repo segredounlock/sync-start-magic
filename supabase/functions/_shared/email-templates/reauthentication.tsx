@@ -20,7 +20,7 @@ interface ReauthenticationEmailProps {
 
 const LOGO_URL = 'https://xtkqyjruyuydlbvwduuy.supabase.co/storage/v1/object/public/email-assets/logo.jpeg'
 
-export const ReauthenticationEmail = ({ token, siteName = 'Recargas Brasil' }: ReauthenticationEmailProps) => (
+export const ReauthenticationEmail = ({ token, siteName = 'Sistema de Recargas' }: ReauthenticationEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Seu código de verificação — {siteName}</Preview>

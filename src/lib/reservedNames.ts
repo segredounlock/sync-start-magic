@@ -8,7 +8,7 @@ const RESERVED_KEYWORDS = [
   "suporte", "support", "staff", "moderador", "moderadora",
   "oficial", "official", "sistema", "system", "bot",
   "equipe", "team", "gerente", "manager", "dono", "owner",
-  "recargas brasil", "recargasbrasil",
+  
 ];
 
 export function isReservedName(name: string): boolean {
