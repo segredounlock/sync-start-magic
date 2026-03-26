@@ -705,7 +705,7 @@ export default function Principal() {
             id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
             saldo: saldoMap[p.id] ?? 0, telefone: p.whatsapp_number || null,
             telegram_username: p.telegram_username, whatsapp_number: p.whatsapp_number,
-            isRevendedor: roleMap[p.id] === "revendedor",
+            isRevendedor: !!hasRevendedorRole[p.id],
             role: resolvedRole,
             avatar_url: p.avatar_url || null,
             verification_badge: (p as any).verification_badge || null,
