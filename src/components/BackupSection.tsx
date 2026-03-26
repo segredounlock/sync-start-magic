@@ -1360,6 +1360,158 @@ export default function BackupSection() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* GitHub Actions Panel */}
+            <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+              <button onClick={() => { setShowActionsPanel(!showActionsPanel); if (!showActionsPanel && workflowRuns.length === 0 && selectedRepo) loadWorkflowRuns(); }}
+                className="w-full flex items-center justify-between p-4 hover:bg-muted/40 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/10 flex items-center justify-center shadow-lg shadow-violet-500/5">
+                    <Zap className="h-4 w-4 text-violet-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-foreground">GitHub Actions</p>
+                    <p className="text-[11px] text-muted-foreground">Status, logs e trigger manual</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {workflowRuns.length > 0 && (() => {
+                    const latest = workflowRuns[0];
+                    return getStatusIcon(latest.status, latest.conclusion);
+                  })()}
+                  {showActionsPanel ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {showActionsPanel && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                    <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
+                      {/* Action buttons */}
+                      <div className="flex gap-2">
+                        <button onClick={() => loadWorkflowRuns()} disabled={loadingRuns || !selectedRepo}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-muted/50 text-foreground hover:bg-muted transition-all disabled:opacity-50">
+                          {loadingRuns ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                          Atualizar Status
+                        </button>
+                        <button onClick={triggerWorkflow} disabled={triggeringWorkflow || !selectedRepo}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-all disabled:opacity-50">
+                          {triggeringWorkflow ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                          Trigger Manual
+                        </button>
+                      </div>
+
+                      {!selectedRepo && (
+                        <p className="text-[11px] text-muted-foreground text-center py-2">Carregue os repositórios acima primeiro</p>
+                      )}
+
+                      {/* Workflow runs list */}
+                      {workflowRuns.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Últimas execuções</p>
+                          <div className="max-h-64 overflow-y-auto space-y-1.5">
+                            {workflowRuns.map((run: any) => (
+                              <div key={run.id} className={`rounded-xl p-3 border transition-all cursor-pointer hover:bg-muted/40 ${
+                                selectedRunLogs?.jobs?.[0]?.id && run.id === workflowRuns.find((r: any) => selectedRunLogs.jobs.some((j: any) => true))?.id
+                                  ? "bg-violet-500/[0.06] border-violet-500/20"
+                                  : "bg-muted/20 border-border/50"
+                              }`}
+                                onClick={() => loadWorkflowLogs(run.id)}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    {getStatusIcon(run.status, run.conclusion)}
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-semibold text-foreground truncate">{run.name}</p>
+                                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                        <span className="flex items-center gap-0.5"><GitBranch className="h-2.5 w-2.5" />{run.head_branch}</span>
+                                        <span className="font-mono">#{run.run_number}</span>
+                                        <span>{run.head_sha}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0 ml-2">
+                                    <p className={`text-[10px] font-semibold ${
+                                      run.conclusion === "success" ? "text-emerald-400" :
+                                      run.conclusion === "failure" ? "text-red-400" :
+                                      run.status === "in_progress" ? "text-blue-400" : "text-muted-foreground"
+                                    }`}>{getStatusLabel(run.status, run.conclusion)}</p>
+                                    <p className="text-[10px] text-muted-foreground">{formatFullDateTimeBR(run.created_at)}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Log viewer */}
+                      <AnimatePresence>
+                        {loadingLogs && (
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Carregando logs...
+                          </motion.div>
+                        )}
+                        {selectedRunLogs && !loadingLogs && (
+                          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                            className="space-y-2">
+                            {/* Jobs */}
+                            {selectedRunLogs.jobs?.map((job: any) => (
+                              <div key={job.id} className="rounded-xl bg-muted/30 border border-border/50 p-3 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                    {getStatusIcon(job.status, job.conclusion)}
+                                    {job.name}
+                                  </p>
+                                  {job.conclusion === "success" && <span className="text-[10px] text-emerald-400 font-semibold">✓ Passou</span>}
+                                  {job.conclusion === "failure" && <span className="text-[10px] text-red-400 font-semibold">✗ Falhou</span>}
+                                </div>
+                                {/* Steps */}
+                                <div className="space-y-0.5">
+                                  {job.steps?.map((step: any) => (
+                                    <div key={step.number} className="flex items-center gap-2 text-[10px] py-0.5">
+                                      <span className={`w-3.5 text-center ${
+                                        step.conclusion === "success" ? "text-emerald-400" :
+                                        step.conclusion === "failure" ? "text-red-400" :
+                                        step.conclusion === "skipped" ? "text-muted-foreground" : "text-blue-400"
+                                      }`}>
+                                        {step.conclusion === "success" ? "✓" : step.conclusion === "failure" ? "✗" : step.conclusion === "skipped" ? "⊘" : "…"}
+                                      </span>
+                                      <span className="text-foreground/80">{step.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+
+                            {/* Raw log */}
+                            {selectedRunLogs.log && (
+                              <div className="rounded-xl bg-black/40 border border-border/50 overflow-hidden">
+                                <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
+                                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                                    <Terminal className="h-3 w-3" /> Log de execução
+                                  </p>
+                                  <button onClick={() => setSelectedRunLogs(null)} className="text-muted-foreground hover:text-foreground">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                                <pre className="p-3 text-[10px] font-mono text-emerald-300/80 max-h-48 overflow-y-auto whitespace-pre-wrap break-all leading-relaxed">
+                                  {selectedRunLogs.log}
+                                </pre>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {workflowRuns.length === 0 && !loadingRuns && selectedRepo && (
+                        <p className="text-[11px] text-muted-foreground text-center py-2">Nenhuma execução encontrada</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
 
