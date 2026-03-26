@@ -6,6 +6,7 @@ const _preload = new Image();
 _preload.src = logo;
 
 export function SplashScreen() {
+  const siteName = useSiteName();
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[hsl(var(--background))]">
       {/* Ambient glow */}
