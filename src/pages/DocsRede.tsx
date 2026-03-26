@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ArrowLeft, Copy, Check, Shield } from "lucide-react";
+import { buildUrl } from "@/lib/domain";
 import { sections } from "./docs/docsRedeData";
 import { SectionAccordion } from "./docs/DocsRedeComponents";
 
@@ -21,7 +22,7 @@ export default function DocsRede() {
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText("https://recargasbrasill.com/docs/rede");
+      await navigator.clipboard.writeText(buildUrl("/docs/rede"));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* ignore */ }

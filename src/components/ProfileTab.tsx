@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildUrl } from "@/lib/domain";
 import { VerificationBadge, BadgeType, BADGE_CONFIG } from "@/components/VerificationBadge";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -347,11 +348,11 @@ export function ProfileTab({
                         </p>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-xs text-muted-foreground truncate font-mono">
-                            https://recargasbrasill.com/p/{slug}
+                            {buildUrl(`/p/${slug}`)}
                           </div>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`https://recargasbrasill.com/p/${slug}`);
+                              navigator.clipboard.writeText(buildUrl(`/p/${slug}`));
                               toast.success("Link copiado!");
                             }}
                             className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
@@ -380,11 +381,11 @@ export function ProfileTab({
                         </p>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-xs text-muted-foreground truncate font-mono">
-                            https://recargasbrasill.com/registrar?ref={referralCode}
+                            {buildUrl(`/registrar?ref=${referralCode}`)}
                           </div>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`https://recargasbrasill.com/registrar?ref=${referralCode}`);
+                              navigator.clipboard.writeText(buildUrl(`/registrar?ref=${referralCode}`));
                               toast.success("Link de indicação copiado!");
                             }}
                             className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"

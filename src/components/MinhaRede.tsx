@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { styledToast as toast } from "@/lib/toast";
+import { buildUrl } from "@/lib/domain";
 import { Currency } from "@/components/ui/Currency";
 import { SkeletonCard } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,8 +60,8 @@ export function MinhaRede({ userId, profileSlug, referralCode }: MinhaRedeProps)
   const menuRef = useRef<HTMLDivElement>(null);
 
   const referralLink = referralCode
-    ? `https://recargasbrasill.com/registrar?ref=${referralCode}`
-    : `https://recargasbrasill.com/loja/${profileSlug || userId}`;
+    ? buildUrl(`/registrar?ref=${referralCode}`)
+    : buildUrl(`/loja/${profileSlug || userId}`);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

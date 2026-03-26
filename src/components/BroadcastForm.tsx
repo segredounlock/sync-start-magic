@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { styledToast as toast } from "@/lib/toast";
 import { Loader2, Send, Image, Plus, Trash2, Link, Upload, X, Sparkles, Tag, Zap, Bell, Megaphone, TrendingUp } from 'lucide-react';
+import { fixExternalUrl } from '@/lib/domain';
 import { TextFormatToolbar, renderTelegramHtml } from './TextFormatToolbar';
 
 interface BroadcastButton {
@@ -96,8 +97,7 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
     }
   };
 
-  const CUSTOM_DOMAIN = 'https://recargasbrasill.com';
-  const fixUrl = (url: string) => url.replace(/https?:\/\/[^/]*lovable\.app/gi, CUSTOM_DOMAIN);
+  const fixUrl = (url: string) => fixExternalUrl(url);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
