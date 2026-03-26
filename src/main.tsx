@@ -9,14 +9,36 @@ import UpdatePrompt from "./components/UpdatePrompt";
 import { installSessionGuard } from "./lib/sessionGuard";
 import "./styles/app.css";
 
+const isPreviewHost =
+  window.location.hostname.includes("id-preview--") ||
+  window.location.hostname.includes("lovableproject.com");
+
+const isInIframe = (() => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+})();
+
+const shouldDisableServiceWorker = isPreviewHost || isInIframe;
+
+if (shouldDisableServiceWorker && "serviceWorker" in navigator) {
+  void navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      void registration.unregister();
+    });
+  });
+}
+
 // Install global session expiry detection
 installSessionGuard();
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,       // 30s before refetch
-      gcTime: 5 * 60_000,      // 5min garbage collection
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -28,7 +50,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
-        <UpdatePrompt />
+        {!shouldDisableServiceWorker && <UpdatePrompt />}
         <Toaster
           position="top-center"
           toastOptions={{
@@ -42,7 +64,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               success: "!bg-primary/95 !text-primary-foreground !border-primary/30 [&>svg]:!text-primary-foreground [&_[data-close-button]]:!text-primary-foreground/70",
               error: "!bg-destructive/95 !text-destructive-foreground !border-destructive/30 [&>svg]:!text-destructive-foreground [&_[data-close-button]]:!text-destructive-foreground/70",
               info: "!bg-card !text-foreground !border-primary/30 [&>svg]:!text-primary [&_[data-close-button]]:!text-muted-foreground",
-              warning: "!bg-warning/95 !text-warning-foreground !border-warning/30 [&>svg]:!text-warning-foreground [&_[data-close-button]]:!text-warning-foreground/70",
+              warning: "!bg-warning/95 !text-warning-foreground !border-warning/30 [&>svg]:!text-warning-foreground/70",
               toast: "!bg-card !text-foreground !border-border/30 [&>svg]:!text-primary [&_[data-close-button]]:!text-muted-foreground",
             },
           }}

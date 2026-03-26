@@ -83,20 +83,22 @@ export default defineConfig({
     VitePWA({
       registerType: "prompt",
       injectRegister: false,
+      devOptions: {
+        enabled: false,
+      },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}"],
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        // Limit precache size
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB max per file
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",
             options: {
               cacheName: "google-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 days
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
@@ -105,27 +107,25 @@ export default defineConfig({
             handler: "CacheFirst",
             options: {
               cacheName: "gstatic-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 days
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
-            // Cache images with size limit and expiration
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
             handler: "CacheFirst",
             options: {
               cacheName: "images-cache",
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 }, // 7 days, max 50
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
-            // Cache API/supabase calls briefly
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 5 }, // 5 min
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 5 },
               networkTimeoutSeconds: 10,
               cacheableResponse: { statuses: [0, 200] },
             },
