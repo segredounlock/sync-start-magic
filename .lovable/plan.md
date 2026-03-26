@@ -1,55 +1,123 @@
 
+# Corrigir de Forma Definitiva a Tela Branca no Espelho
 
-# Corrigir Tela Branca no Espelho — RLS + Dados Iniciais
+## Diagnóstico corrigido
+A evidência atual mostra que o problema **não é mais “o projeto principal não tem a função ou os dados”**.
 
-## Diagnóstico Confirmado
+No ambiente deste projeto já existem:
+- `get_maintenance_mode()`
+- policy pública para branding em `system_config`
+- vários registros em `system_config`
 
-O espelho tem as migrations aplicadas (a função `get_maintenance_mode` já existe nas migrations). Os dois problemas reais são:
+Então a tela branca no espelho indica outra causa mais provável:
 
-1. **`system_config` vazia no espelho** — as migrations inserem dados com `siteTitle = 'Recargas Brasil'`, mas se o espelho foi inicializado de forma diferente ou os dados foram limpos, a tabela fica vazia.
-
-2. **RLS bloqueia `useSiteName` para usuários não-autenticados** — O hook faz query direta `supabase.from("system_config").select("value").eq("key", "siteTitle")`, mas as políticas RLS do `system_config` só permitem leitura para admins e para keys específicas (taxas, comissões, margem). **Não existe policy para `siteTitle`/`siteName` nem para `anon`**. Na landing page (sem login), a query retorna vazio silenciosamente.
-
-## Plano de Correção
-
-### 1. Migration: RLS para leitura pública de configs de branding
-
-Adicionar policy SELECT para `anon` e `authenticated` nas keys de branding e manutenção:
-
-```sql
-CREATE POLICY "Public can read branding configs"
-ON public.system_config FOR SELECT
-TO anon, authenticated
-USING (key IN ('siteTitle', 'siteName', 'siteSubtitle', 'seasonalTheme'));
+```text
+Projeto principal (teste) = OK
+Espelho/publicado          = desatualizado ou não inicializado
 ```
 
-Isso permite que `useSiteName` funcione sem autenticação. O `get_maintenance_mode` já usa SECURITY DEFINER, então não precisa de policy extra.
+Ou seja, o espelho pode estar com:
+- backend sem as migrations publicadas
+- `system_config` sem dados mínimos
+- publicação de código feita sem a etapa de inicialização do backend
+- divergência entre sync de arquivos GitHub e estado real do backend do espelho
 
-### 2. Migration: Garantir dados iniciais existem
+## O que precisa ser feito
 
-```sql
-INSERT INTO system_config (key, value) VALUES
-  ('siteTitle', 'Sistema de Recargas'),
-  ('siteName', 'Sistema de Recargas'),
-  ('activeGateway', 'none'),
-  ('maintenanceMode', 'false'),
-  ... (15 configs essenciais)
-ON CONFLICT (key) DO NOTHING;
+### 1. Corrigir a origem do problema: espelho sem inicialização garantida
+Fortalecer o fluxo do espelho para que ele **nunca dependa de suposição manual**.
+
+#### Ajustes no `supabase/functions/init-mirror/index.ts`
+Expandir a inicialização para garantir sempre:
+- configs mínimas em `system_config`
+- `siteTitle` e `siteSubtitle`
+- flags essenciais do sistema
+- catálogo mínimo ou aviso claro se não puder sincronizar operadoras
+- geração de `referral_code` faltante
+- resposta final com diagnóstico completo
+
+Hoje ele já insere configs, mas precisa ficar mais explícito e completo para white-label.
+
+### 2. Adicionar verificação real de prontidão do espelho
+O sistema precisa distinguir:
+
+```text
+Arquivos sincronizados != espelho pronto para uso
 ```
 
-Isso garante que no espelho ou em qualquer novo ambiente, os dados mínimos existam.
+#### Ajustes em `supabase/functions/github-sync/index.ts`
+Adicionar/fortalecer uma action de status do espelho que valide:
+- se `system_config` tem dados essenciais
+- se existem tabelas mínimas com dados-base
+- se a função `get_maintenance_mode` está disponível
+- se o mirror está “pronto”, “parcial” ou “quebrado”
 
-### 3. Código: Nenhuma alteração necessária
+Isso evita confiar apenas no sync de GitHub.
 
-O `useSiteName` já tem fallback para `DEFAULT_SITE_NAME`. O `MaintenanceGuard` já tem timeout. O `AuthProvider` já tem timeout de 5s. A lógica está correta — só faltavam dados e permissões no banco.
+### 3. Melhorar o painel de Backup/Mirror para entendimento claro
+#### Ajustes em `src/components/BackupSection.tsx`
+Melhorar textos, diagnóstico e legibilidade:
+- fontes maiores
+- mensagens mais claras sobre a diferença entre:
+  - sincronização de arquivos
+  - publicação
+  - inicialização do backend
+- exibir checklist visual:
+  - Código sincronizado
+  - Backend inicializado
+  - Configurações mínimas presentes
+  - Mirror apto para abrir sem tela branca
 
-## Resultado Esperado
+### 4. Mostrar status avançado no painel de mirror
+#### Ajustes em `src/components/MirrorSyncPanel.tsx`
+Adicionar bloco de “Saúde do Espelho” com:
+- status da inicialização
+- quantidade de configs essenciais encontradas
+- último commit sincronizado
+- último sync real
+- alerta se o espelho tiver código novo mas backend incompleto
 
-- Espelho carrega imediatamente ao publicar (sem tela branca)
-- Landing page mostra título correto mesmo sem login
-- Nenhum arquivo de código alterado
-- 1 migration SQL (RLS + dados)
+### 5. Impedir falso positivo de “está tudo certo”
+Quando o mirror não estiver pronto:
+- mostrar erro explícito no painel
+- bloquear mensagem de sucesso genérica
+- orientar a rodar a inicialização do mirror antes de considerar concluído
 
-## Arquivos
-- 1 nova migration SQL
+## Banco de dados
+Não vou repetir a migration anterior como solução principal.
 
+Ajuste de banco só faz sentido se faltar estrutura no ambiente de teste. Pelo estado atual deste projeto:
+- `get_maintenance_mode()` já existe
+- a policy pública de branding já existe
+
+Então o foco correto agora é:
+- garantir inicialização do espelho
+- validar prontidão do ambiente espelho/publicado
+- não assumir que GitHub sync resolve backend
+
+## Arquivos previstos
+1. `supabase/functions/init-mirror/index.ts`
+2. `supabase/functions/github-sync/index.ts`
+3. `src/components/BackupSection.tsx`
+4. `src/components/MirrorSyncPanel.tsx`
+
+## Resultado esperado
+- o sistema para de dizer que o espelho está pronto sem evidência real
+- fica claro quando só os arquivos foram sincronizados
+- o espelho recebe inicialização mínima obrigatória
+- reduz drasticamente casos de tela branca por backend incompleto
+- o painel passa a explicar melhor o que falta e com textos maiores
+
+## Detalhes técnicos
+```text
+Problema real:
+  Sync GitHub copia código
+  ≠
+  Publish / backend do espelho aplicar migrations e dados
+
+Solução:
+  1. Inicialização idempotente do mirror
+  2. Health check do backend do mirror
+  3. UI com diagnóstico claro
+  4. Sem assumir sucesso sem validação
+```
