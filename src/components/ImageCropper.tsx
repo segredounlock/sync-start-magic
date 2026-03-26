@@ -219,7 +219,7 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
               </div>
 
               {/* Drag hint icon */}
-              {!dragging && scale > minScale + 0.1 && (
+              {!dragging && scale > coverScale + 0.1 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
