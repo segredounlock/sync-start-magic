@@ -40,7 +40,7 @@ export const SignupEmail = ({
         </div>
         <Heading style={h1}>Confirme seu e-mail</Heading>
         <Text style={text}>
-          Bem-vindo ao <strong>Recargas Brasil</strong>! 🎉
+          Bem-vindo ao <strong>{siteName}</strong>! 🎉
         </Text>
         <Text style={text}>
           Para ativar sua conta, confirme seu endereço de e-mail (
