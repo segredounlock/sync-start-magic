@@ -395,18 +395,34 @@ function generatePassword(): string {
   return pass;
 }
 
-// ===== SITE NAME (dynamic from system_config) =====
-let siteNameCache: { value: string; time: number } | null = null;
+// ===== SITE NAME & URL (dynamic from system_config) =====
+let siteNameCache: { value: string; url: string; time: number } | null = null;
 const SITE_NAME_TTL = 300_000; // 5 minutes
 
 async function getSiteName(supabase: any): Promise<string> {
-  if (siteNameCache && Date.now() - siteNameCache.time < SITE_NAME_TTL) return siteNameCache.value;
+  await loadSiteConfig(supabase);
+  return siteNameCache?.value || "Recargas Brasil";
+}
+
+async function getSiteUrl(supabase: any): Promise<string> {
+  await loadSiteConfig(supabase);
+  return siteNameCache?.url || "https://recargasbrasill.com";
+}
+
+async function loadSiteConfig(supabase: any) {
+  if (siteNameCache && Date.now() - siteNameCache.time < SITE_NAME_TTL) return;
   try {
-    const { data } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle();
-    const name = data?.value || "Recargas Brasil";
-    siteNameCache = { value: name, time: Date.now() };
-    return name;
-  } catch { return "Recargas Brasil"; }
+    const { data } = await supabase.from("system_config").select("key, value").in("key", ["siteTitle", "siteUrl"]);
+    const map: Record<string, string> = {};
+    for (const r of data || []) map[r.key] = r.value || "";
+    siteNameCache = {
+      value: map.siteTitle || "Recargas Brasil",
+      url: (map.siteUrl || "https://recargasbrasill.com").replace(/\/+$/, ""),
+      time: Date.now(),
+    };
+  } catch {
+    if (!siteNameCache) siteNameCache = { value: "Recargas Brasil", url: "https://recargasbrasill.com", time: Date.now() };
+  }
 }
 
 // ===== TERMS OF SERVICE =====
