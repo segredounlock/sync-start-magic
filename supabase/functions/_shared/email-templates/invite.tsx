@@ -39,7 +39,7 @@ export const InviteEmail = ({
         <Heading style={h1}>Você foi convidado!</Heading>
         <Text style={text}>
           Você recebeu um convite para fazer parte do{' '}
-          <Link href={siteUrl} style={link}><strong>Recargas Brasil</strong></Link>.
+          <Link href={siteUrl} style={link}><strong>{siteName}</strong></Link>.
           Clique no botão abaixo para aceitar e criar sua conta.
         </Text>
         <Button style={button} href={confirmationUrl}>
