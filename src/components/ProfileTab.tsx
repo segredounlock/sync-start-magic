@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildUrl } from "@/lib/domain";
 import { VerificationBadge, BadgeType, BADGE_CONFIG } from "@/components/VerificationBadge";
 import { motion, AnimatePresence } from "framer-motion";
 import {
