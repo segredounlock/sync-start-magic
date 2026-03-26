@@ -268,6 +268,7 @@ serve(async (req) => {
       "chat_conversations", "chat_members", "chat_messages", "chat_message_reads", "chat_reactions",
       "push_subscriptions", "update_history", "scratch_cards",
       "login_fingerprints", "banned_devices",
+      "mirror_sync_state", "mirror_file_state", "mirror_sync_logs",
     ];
 
     // Build final restore order: known tables that exist in ZIP first, then unknown tables from ZIP
