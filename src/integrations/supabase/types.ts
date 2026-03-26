@@ -709,6 +709,141 @@ export type Database = {
         }
         Relationships: []
       }
+      mirror_file_state: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          error_message: string | null
+          file_path: string
+          id: string
+          last_synced_at: string | null
+          mirror_hash: string | null
+          mirror_id: string
+          source_hash: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_path: string
+          id?: string
+          last_synced_at?: string | null
+          mirror_hash?: string | null
+          mirror_id: string
+          source_hash?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_path?: string
+          id?: string
+          last_synced_at?: string | null
+          mirror_hash?: string | null
+          mirror_id?: string
+          source_hash?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      mirror_sync_logs: {
+        Row: {
+          completed_at: string | null
+          conflicts_detected: number | null
+          details: Json | null
+          duration_ms: number | null
+          error_message: string | null
+          files_failed: number | null
+          files_sent: number | null
+          files_skipped: number | null
+          id: string
+          mirror_id: string
+          started_at: string | null
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          conflicts_detected?: number | null
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          files_failed?: number | null
+          files_sent?: number | null
+          files_skipped?: number | null
+          id?: string
+          mirror_id: string
+          started_at?: string | null
+          sync_type?: string
+        }
+        Update: {
+          completed_at?: string | null
+          conflicts_detected?: number | null
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          files_failed?: number | null
+          files_sent?: number | null
+          files_skipped?: number | null
+          id?: string
+          mirror_id?: string
+          started_at?: string | null
+          sync_type?: string
+        }
+        Relationships: []
+      }
+      mirror_sync_state: {
+        Row: {
+          conflict_files: number | null
+          created_at: string | null
+          id: string
+          last_sync_at: string | null
+          last_synced_commit: string | null
+          mirror_id: string
+          mirror_repo: string
+          pending_files: number | null
+          protected_paths: Json | null
+          source_repo: string
+          synced_files: number | null
+          total_files: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          conflict_files?: number | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          last_synced_commit?: string | null
+          mirror_id: string
+          mirror_repo: string
+          pending_files?: number | null
+          protected_paths?: Json | null
+          source_repo?: string
+          synced_files?: number | null
+          total_files?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          conflict_files?: number | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          last_synced_commit?: string | null
+          mirror_id?: string
+          mirror_repo?: string
+          pending_files?: number | null
+          protected_paths?: Json | null
+          source_repo?: string
+          synced_files?: number | null
+          total_files?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           buttons: Json | null
