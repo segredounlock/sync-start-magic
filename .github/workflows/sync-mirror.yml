@@ -1,4 +1,4 @@
-# Sync test: 2026-03-26T6
+# Sync test: 2026-03-26T7
 name: Sync to Mirrors
 
 on:
@@ -17,20 +17,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Ver branch atual
-        run: |
-          echo "Branch atual: $GITHUB_REF_NAME"
-          git branch -a
-          git remote -v
-
       - name: Configurar git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Sync mirror
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git remote remove mirror_update || true
-          git remote add mirror_update https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/segredounlock/sync-start-magic.git
-          git remote -v
+          git remote add mirror_update https://$GH_TOKEN@github.com/segredounlock/sync-start-magic.git
           git push mirror_update HEAD:main --force
