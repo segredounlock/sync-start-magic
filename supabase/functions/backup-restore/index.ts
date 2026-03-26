@@ -283,7 +283,16 @@ serve(async (req) => {
       saldos: "user_id,tipo",
     };
 
+    // Tables to skip in safe mode
+    const safeSkipTables = new Set(["system_config", "bot_settings"]);
+
     for (const table of restoreOrder) {
+      // Safe mode: skip config tables
+      if (safeMode && safeSkipTables.has(table)) {
+        results.push({ table, status: "skipped_safe_mode", count: 0 });
+        continue;
+      }
+
       const file = zip.file(`database/${table}.json`);
       if (!file) {
         results.push({ table, status: "skipped", count: 0 });
@@ -312,6 +321,29 @@ serve(async (req) => {
 
         if (rows.length === 0) {
           results.push({ table, status: "skipped_fk", count: 0, skipped, error: `Todos os ${skipped} registros referenciavam usuários inexistentes` });
+          continue;
+        }
+
+        if (safeMode) {
+          // Safe mode: INSERT only, ignore duplicates
+          const batchSize = 100;
+          let totalInserted = 0;
+          for (let i = 0; i < rows.length; i += batchSize) {
+            const batch = rows.slice(i, i + batchSize);
+            const { error, count } = await supabaseAdmin.from(table).insert(batch, { count: "exact" } as any);
+            if (error) {
+              // Try row by row for conflicts
+              for (const row of batch) {
+                const { error: rowErr } = await supabaseAdmin.from(table).insert(row);
+                if (!rowErr) totalInserted++;
+                // Duplicate/conflict errors are silently ignored in safe mode
+              }
+            } else {
+              totalInserted += count || batch.length;
+            }
+          }
+          results.push({ table, status: "safe_restored", count: totalInserted, skipped });
+          if (table === "profiles") validProfileIds = await getExistingProfileIds();
           continue;
         }
 
