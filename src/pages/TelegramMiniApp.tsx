@@ -320,6 +320,7 @@ export default function TelegramMiniApp() {
     const saved = localStorage.getItem("tg-theme-preference");
     return (saved === "light" || saved === "dark") ? saved : "auto";
   });
+  const siteName = useSiteName();
   const { isDark } = useTelegramTheme(themePreference);
 
   const toggleTheme = useCallback(() => {
