@@ -502,7 +502,7 @@ async function recordTermsAcceptance(supabase: any, telegramId: string) {
   );
 }
 
-async function sendTermsMessage(token: string, chatId: number, siteName = "Recargas Brasil", siteUrl = "https://recargasbrasill.com") {
+async function sendTermsMessage(token: string, chatId: number, siteName = "Sistema de Recargas", siteUrl = "") {
   await sendMessageWithKeyboard(token, chatId, buildTermsText(siteName, siteUrl), [
     [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
     [{ text: "❌ Recusar", callback_data: "terms_decline" }],
