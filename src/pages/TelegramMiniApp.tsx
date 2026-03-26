@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { supabase } from "@/integrations/supabase/client";
