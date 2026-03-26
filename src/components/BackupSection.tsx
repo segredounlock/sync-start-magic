@@ -1313,7 +1313,7 @@ export default function BackupSection() {
               <div className="p-4 space-y-3">
                 {/* PAT Input */}
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">GitHub PAT (Personal Access Token)</label>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">GitHub PAT (Personal Access Token)</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <input
@@ -1321,22 +1321,22 @@ export default function BackupSection() {
                         value={githubPat}
                         onChange={e => setGithubPat(e.target.value)}
                         placeholder="ghp_..."
-                        className="w-full px-3 py-2 pr-9 rounded-xl bg-muted/50 border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                        className="w-full px-3 py-2.5 pr-9 rounded-xl bg-muted/50 border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
                       />
                       <button type="button" onClick={() => setShowPat(!showPat)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        {showPat ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        {showPat ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                     <button onClick={saveGithubPat} disabled={savingPat}
-                      className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5">
-                      {savingPat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                      className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5">
+                      {savingPat ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       Salvar
                     </button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Gere em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" className="underline hover:text-foreground">github.com/settings/tokens</a> com escopos{" "}
-                    <code className="bg-muted/50 px-1 rounded border border-border/50">repo</code> e{" "}
-                    <code className="bg-muted/50 px-1 rounded border border-border/50">workflow</code>
+                    <code className="bg-muted/50 px-1.5 py-0.5 rounded border border-border/50 text-xs">repo</code> e{" "}
+                    <code className="bg-muted/50 px-1.5 py-0.5 rounded border border-border/50 text-xs">workflow</code>
                   </p>
                 </div>
 
