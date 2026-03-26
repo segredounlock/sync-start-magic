@@ -32,7 +32,7 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme a alteração de e-mail — Recargas Brasil</Preview>
+    <Preview>Confirme a alteração de e-mail — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
