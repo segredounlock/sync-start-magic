@@ -247,13 +247,13 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Fetch dynamic site name
-  const SITE_NAME = await getSiteName()
+  // Fetch dynamic site name and URL
+  const siteConfig = await loadSiteConfig()
 
   // Build template props from payload.data (HookData structure)
   const templateProps = {
-    siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
+    siteName: siteConfig.name,
+    siteUrl: siteConfig.url,
     recipient: payload.data.email,
     confirmationUrl: payload.data.url,
     token: payload.data.token,
