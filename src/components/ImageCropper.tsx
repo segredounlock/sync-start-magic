@@ -72,8 +72,18 @@ export function ImageCropper({ file, onCrop, onCancel }: ImageCropperProps) {
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    const minScaleVal = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 0.5;
-    setScale(s => Math.max(minScaleVal, Math.min(3, s + delta)));
+    const coverScale = imgSize.w > 0 ? Math.max(CROP_SIZE / imgSize.w, CROP_SIZE / imgSize.h) : 1;
+    setScale(s => {
+      const next = Math.max(coverScale, Math.min(3, s + delta));
+      // Clamp offset so image always covers circle
+      const maxX = Math.max(0, (imgSize.w * next - CROP_SIZE) / 2);
+      const maxY = Math.max(0, (imgSize.h * next - CROP_SIZE) / 2);
+      setOffset(o => ({
+        x: Math.max(-maxX, Math.min(maxX, o.x)),
+        y: Math.max(-maxY, Math.min(maxY, o.y)),
+      }));
+      return next;
+    });
   };
 
   const handleCrop = () => {
