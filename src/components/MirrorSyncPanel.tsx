@@ -118,6 +118,24 @@ export default function MirrorSyncPanel({ mirrorRepo, sourceRepo }: MirrorSyncPa
     } catch { /* first load, tables may be empty */ }
   };
 
+  const loadHealth = async () => {
+    setLoadingHealth(true);
+    try {
+      const session = await getSession();
+      const resp = await fetch(
+        `${supabaseUrl}/functions/v1/github-sync?action=mirror-status&mirror_id=${encodeURIComponent(mirrorId)}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${session.access_token}`, apikey },
+        }
+      );
+      const data = await resp.json();
+      if (data.health) setHealthChecks(data.health);
+      if (data.readiness) setMirrorReadiness(data.readiness);
+    } catch { /* ignore */ }
+    setLoadingHealth(false);
+  };
+
   const handleReconcile = async () => {
     setReconciling(true);
     setReconcileResult(null);
