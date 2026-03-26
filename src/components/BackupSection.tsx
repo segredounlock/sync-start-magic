@@ -1536,14 +1536,14 @@ export default function BackupSection() {
                             <Info className="h-4 w-4" /> Diagnóstico do Mirror
                           </p>
                           <div className="space-y-2 text-sm">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5">
                               <span className="text-muted-foreground">Repositório de origem:</span>
                               <a href={`https://github.com/${actionsRepo}`} target="_blank" rel="noopener noreferrer"
-                                className="font-mono text-emerald-400 text-xs hover:underline">{actionsRepo}</a>
+                                className="font-mono text-emerald-400 text-xs hover:underline break-all">{actionsRepo}</a>
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5">
                               <span className="text-muted-foreground">Mirror (destino):</span>
-                              <span className="font-mono text-foreground text-xs">{selectedRepo || "segredounlock/sync-start-magic"}</span>
+                              <span className="font-mono text-foreground text-xs break-all">{selectedRepo || "segredounlock/sync-start-magic"}</span>
                             </div>
                             <div className="border-t border-border/30 pt-2.5 mt-2.5 space-y-2">
                               <p className="text-xs font-bold text-muted-foreground">✅ Checklist para o sync funcionar:</p>
