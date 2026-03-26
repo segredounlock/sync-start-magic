@@ -1561,35 +1561,35 @@ export default function BackupSection() {
 
                       {/* Workflow runs list */}
                       {workflowRuns.length > 0 && (
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Últimas execuções</p>
-                          <div className="max-h-64 overflow-y-auto space-y-1.5">
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Últimas execuções</p>
+                          <div className="max-h-72 overflow-y-auto space-y-2">
                             {workflowRuns.map((run: any) => (
-                              <div key={run.id} className={`rounded-xl p-3 border transition-all cursor-pointer hover:bg-muted/40 ${
+                              <div key={run.id} className={`rounded-xl p-3.5 border transition-all cursor-pointer hover:bg-muted/40 ${
                                 selectedRunLogs?.jobs?.[0]?.id && run.id === workflowRuns.find((r: any) => selectedRunLogs.jobs.some((j: any) => true))?.id
                                   ? "bg-violet-500/[0.06] border-violet-500/20"
                                   : "bg-muted/20 border-border/50"
                               }`}
                                 onClick={() => loadWorkflowLogs(run.id)}>
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex items-center gap-2.5 min-w-0">
                                     {getStatusIcon(run.status, run.conclusion)}
                                     <div className="min-w-0">
-                                      <p className="text-xs font-semibold text-foreground truncate">{run.name}</p>
-                                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                        <span className="flex items-center gap-0.5"><GitBranch className="h-2.5 w-2.5" />{run.head_branch}</span>
+                                      <p className="text-sm font-semibold text-foreground truncate">{run.name}</p>
+                                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1"><GitBranch className="h-3 w-3" />{run.head_branch}</span>
                                         <span className="font-mono">#{run.run_number}</span>
-                                        <span>{run.head_sha}</span>
+                                        <span className="font-mono">{run.head_sha}</span>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="text-right shrink-0 ml-2">
-                                    <p className={`text-[10px] font-semibold ${
+                                  <div className="text-right shrink-0 ml-3">
+                                    <p className={`text-xs font-bold ${
                                       run.conclusion === "success" ? "text-emerald-400" :
                                       run.conclusion === "failure" ? "text-red-400" :
                                       run.status === "in_progress" ? "text-blue-400" : "text-muted-foreground"
                                     }`}>{getStatusLabel(run.status, run.conclusion)}</p>
-                                    <p className="text-[10px] text-muted-foreground">{formatFullDateTimeBR(run.created_at)}</p>
+                                    <p className="text-xs text-muted-foreground">{formatFullDateTimeBR(run.created_at)}</p>
                                   </div>
                                 </div>
                               </div>
