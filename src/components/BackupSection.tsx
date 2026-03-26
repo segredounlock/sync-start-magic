@@ -1514,13 +1514,13 @@ export default function BackupSection() {
                       {/* Action buttons */}
                       <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => loadWorkflowRuns()} disabled={loadingRuns || !actionsRepo}
-                          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-muted/50 border border-border/50 text-foreground hover:bg-muted transition-all disabled:opacity-50">
-                          {loadingRuns ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                          className="flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-semibold bg-muted/50 border border-border/50 text-foreground hover:bg-muted transition-all disabled:opacity-50">
+                          {loadingRuns ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                           Atualizar
                         </button>
                         <button onClick={triggerWorkflow} disabled={triggeringWorkflow || !actionsRepo}
-                          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all disabled:opacity-50">
-                          {triggeringWorkflow ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                          className="flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all disabled:opacity-50">
+                          {triggeringWorkflow ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                           Trigger Manual
                         </button>
                       </div>
