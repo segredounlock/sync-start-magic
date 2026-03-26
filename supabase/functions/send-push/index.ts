@@ -242,7 +242,7 @@ serve(async (req) => {
         try {
           const res = await sendPush(
             { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-            payload, publicKey, privateKey, "mailto:admin@recargasbrasill.com"
+            payload, publicKey, privateKey, "mailto:noreply@example.com"
           );
           if (res.status === 201 || res.status === 200) {
             console.log(`[Push] ✅ Sent to user=${sub.user_id} endpoint=${sub.endpoint.slice(-20)}`);
