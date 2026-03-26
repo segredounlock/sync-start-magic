@@ -421,7 +421,7 @@ async function loadSiteConfig(supabase: any) {
       time: Date.now(),
     };
   } catch {
-    if (!siteNameCache) siteNameCache = { value: "Recargas Brasil", url: "https://recargasbrasill.com", time: Date.now() };
+    if (!siteNameCache) siteNameCache = { value: "Sistema de Recargas", url: "", time: Date.now() };
   }
 }
 
