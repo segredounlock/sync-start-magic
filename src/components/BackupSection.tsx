@@ -1300,20 +1300,20 @@ export default function BackupSection() {
             {/* ══════════ SEÇÃO 1: Configuração ══════════ */}
             <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
               <div className="px-4 pt-4 pb-3 border-b border-border/50">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center">
-                    <Shield className="h-4 w-4 text-amber-400" />
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-amber-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-foreground">Configuração</p>
-                    <p className="text-[10px] text-muted-foreground">Token de acesso e repositório</p>
+                    <p className="text-base font-bold text-foreground">Configuração</p>
+                    <p className="text-xs text-muted-foreground">Token de acesso e repositório GitHub</p>
                   </div>
                 </div>
               </div>
               <div className="p-4 space-y-3">
                 {/* PAT Input */}
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">GitHub PAT (Personal Access Token)</label>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">GitHub PAT (Personal Access Token)</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <input
@@ -1321,30 +1321,30 @@ export default function BackupSection() {
                         value={githubPat}
                         onChange={e => setGithubPat(e.target.value)}
                         placeholder="ghp_..."
-                        className="w-full px-3 py-2 pr-9 rounded-xl bg-muted/50 border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                        className="w-full px-3 py-2.5 pr-9 rounded-xl bg-muted/50 border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
                       />
                       <button type="button" onClick={() => setShowPat(!showPat)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        {showPat ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        {showPat ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                     <button onClick={saveGithubPat} disabled={savingPat}
-                      className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5">
-                      {savingPat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                      className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5">
+                      {savingPat ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       Salvar
                     </button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Gere em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" className="underline hover:text-foreground">github.com/settings/tokens</a> com escopos{" "}
-                    <code className="bg-muted/50 px-1 rounded border border-border/50">repo</code> e{" "}
-                    <code className="bg-muted/50 px-1 rounded border border-border/50">workflow</code>
+                    <code className="bg-muted/50 px-1.5 py-0.5 rounded border border-border/50 text-xs">repo</code> e{" "}
+                    <code className="bg-muted/50 px-1.5 py-0.5 rounded border border-border/50 text-xs">workflow</code>
                   </p>
                 </div>
 
                 {/* Repo selector inline */}
                 <div className="space-y-2">
                   <button onClick={loadRepos} disabled={loadingRepos}
-                    className="w-full py-2.5 rounded-xl bg-muted/50 border border-border hover:bg-muted/80 text-foreground font-medium text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                    {loadingRepos ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                    className="w-full py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted/80 text-foreground font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                    {loadingRepos ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                     {loadingRepos ? "Carregando..." : repos.length > 0 ? "Atualizar repositórios" : "Carregar repositórios"}
                   </button>
 
@@ -1370,17 +1370,17 @@ export default function BackupSection() {
             {repos.length > 0 && (
               <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
                 <div className="px-4 pt-4 pb-3 border-b border-border/50">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center">
-                      <FolderSync className="h-4 w-4 text-emerald-400" />
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center">
+                      <FolderSync className="h-5 w-5 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-foreground">Sincronização</p>
-                      <p className="text-[10px] text-muted-foreground">Enviar código-fonte para o GitHub</p>
+                      <p className="text-base font-bold text-foreground">Sincronização</p>
+                      <p className="text-xs text-muted-foreground">Enviar código-fonte completo para o GitHub</p>
                     </div>
                   </div>
                 </div>
-                <div className="p-4 space-y-3">
+                <div className="p-4 space-y-4">
                   {/* Project stats */}
                   {!syncing && (() => {
                     const pages = effectivePaths.filter(p => p.startsWith("src/pages/")).length;
@@ -1390,36 +1390,36 @@ export default function BackupSection() {
                     const edgeFns = effectivePaths.filter(p => p.startsWith("supabase/functions/")).length;
                     const configs = effectivePaths.filter(p => !p.startsWith("src/") && !p.startsWith("supabase/functions/") && !p.startsWith("public/")).length;
                     return (
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{pages}</p>
-                          <p className="text-[10px] text-muted-foreground">Páginas</p>
+                      <div className="grid grid-cols-3 gap-2.5">
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{pages}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Páginas</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{components}</p>
-                          <p className="text-[10px] text-muted-foreground">Componentes</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{components}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Componentes</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{edgeFns}</p>
-                          <p className="text-[10px] text-muted-foreground">Edge Fns</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{edgeFns}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Edge Functions</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{hooks}</p>
-                          <p className="text-[10px] text-muted-foreground">Hooks</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{hooks}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Hooks</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{libs}</p>
-                          <p className="text-[10px] text-muted-foreground">Libs</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{libs}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Libs</p>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{configs}</p>
-                          <p className="text-[10px] text-muted-foreground">Configs</p>
+                        <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-center">
+                          <p className="text-xl font-bold text-foreground">{configs}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Configs</p>
                         </div>
                       </div>
                     );
                   })()}
 
-                  <p className="text-[10px] text-muted-foreground text-center font-mono">{effectivePaths.length} arquivos total</p>
+                  <p className="text-xs text-muted-foreground text-center font-mono">{effectivePaths.length} arquivos no total</p>
 
                   {/* Sync button */}
                   {!syncing ? (
@@ -1481,20 +1481,20 @@ export default function BackupSection() {
             <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
               <button onClick={() => { setShowActionsPanel(!showActionsPanel); if (!showActionsPanel && workflowRuns.length === 0 && actionsRepo) loadWorkflowRuns(); }}
                 className="w-full flex items-center justify-between p-4 hover:bg-muted/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-600/10 flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-violet-400" />
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/10 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-violet-400" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-foreground">GitHub Actions</p>
-                    <p className="text-[10px] text-muted-foreground">Status, logs e trigger manual</p>
+                    <p className="text-base font-bold text-foreground">GitHub Actions</p>
+                    <p className="text-xs text-muted-foreground">Status do mirror, logs e trigger manual</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {workflowRuns.length > 0 && (() => {
                     const latest = workflowRuns[0];
                     return (
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                         latest.conclusion === "success" ? "bg-emerald-500/10 text-emerald-400" :
                         latest.conclusion === "failure" ? "bg-red-500/10 text-red-400" :
                         latest.status === "in_progress" ? "bg-blue-500/10 text-blue-400" : "bg-muted text-muted-foreground"
@@ -1514,81 +1514,82 @@ export default function BackupSection() {
                       {/* Action buttons */}
                       <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => loadWorkflowRuns()} disabled={loadingRuns || !actionsRepo}
-                          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-muted/50 border border-border/50 text-foreground hover:bg-muted transition-all disabled:opacity-50">
-                          {loadingRuns ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                          className="flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-semibold bg-muted/50 border border-border/50 text-foreground hover:bg-muted transition-all disabled:opacity-50">
+                          {loadingRuns ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                           Atualizar
                         </button>
                         <button onClick={triggerWorkflow} disabled={triggeringWorkflow || !actionsRepo}
-                          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all disabled:opacity-50">
-                          {triggeringWorkflow ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                          className="flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all disabled:opacity-50">
+                          {triggeringWorkflow ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                           Trigger Manual
                         </button>
                       </div>
 
                       {!actionsRepo && (
-                        <p className="text-[11px] text-muted-foreground text-center py-2">Carregue os repositórios acima primeiro para detectar o repo de origem</p>
+                        <p className="text-sm text-muted-foreground text-center py-3">Carregue os repositórios acima primeiro para detectar o repo de origem</p>
                       )}
 
                       {/* Mirror diagnostic info */}
                       {actionsRepo && (
-                        <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-3 space-y-2">
-                          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <Info className="h-3 w-3" /> Diagnóstico do Mirror
+                        <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-4 space-y-3">
+                          <p className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                            <Info className="h-4 w-4" /> Diagnóstico do Mirror
                           </p>
-                          <div className="space-y-1 text-[11px]">
+                          <div className="space-y-2 text-sm">
                             <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Repo origem (workflow):</span>
-                              <span className="font-mono text-emerald-400 text-[10px]">{actionsRepo}</span>
+                              <span className="text-muted-foreground">Repositório de origem:</span>
+                              <a href={`https://github.com/${actionsRepo}`} target="_blank" rel="noopener noreferrer"
+                                className="font-mono text-emerald-400 text-xs hover:underline">{actionsRepo}</a>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Mirror destino:</span>
-                              <span className="font-mono text-foreground text-[10px]">{selectedRepo || "segredounlock/sync-start-magic"}</span>
+                              <span className="text-muted-foreground">Mirror (destino):</span>
+                              <span className="font-mono text-foreground text-xs">{selectedRepo || "segredounlock/sync-start-magic"}</span>
                             </div>
-                            <div className="border-t border-border/30 pt-1.5 mt-1.5 space-y-1">
-                              <p className="text-[10px] font-semibold text-muted-foreground">Checklist para o sync funcionar:</p>
-                              <p className="text-[10px] text-muted-foreground">1. O secret <code className="bg-muted px-1 rounded text-foreground">GH_TOKEN</code> deve existir em <strong>{actionsRepo}</strong> → Settings → Secrets → Actions</p>
-                              <p className="text-[10px] text-muted-foreground">2. O token deve ter acesso (escopo <code className="bg-muted px-1 rounded text-foreground">repo</code>) ao repositório destino</p>
-                              <p className="text-[10px] text-muted-foreground">3. O workflow <code className="bg-muted px-1 rounded text-foreground">sync-mirror.yml</code> deve existir no repo de origem</p>
+                            <div className="border-t border-border/30 pt-2.5 mt-2.5 space-y-2">
+                              <p className="text-xs font-bold text-muted-foreground">✅ Checklist para o sync funcionar:</p>
+                              <p className="text-xs text-muted-foreground">1. O secret <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold">GH_TOKEN</code> deve existir em <strong className="text-foreground">{actionsRepo}</strong> → Settings → Secrets → Actions</p>
+                              <p className="text-xs text-muted-foreground">2. O token deve ter escopo <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold">repo</code> com acesso ao repositório destino</p>
+                              <p className="text-xs text-muted-foreground">3. O workflow <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold">sync-mirror.yml</code> deve existir no repo de origem</p>
                             </div>
                           </div>
                           <a href={`https://github.com/${actionsRepo}/settings/secrets/actions`} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 hover:text-blue-300 transition-colors mt-1">
-                            <ExternalLink className="h-3 w-3" /> Abrir Secrets do repositório
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors mt-1">
+                            <ExternalLink className="h-3.5 w-3.5" /> Abrir Secrets do repositório
                           </a>
                         </div>
                       )}
 
                       {/* Workflow runs list */}
                       {workflowRuns.length > 0 && (
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Últimas execuções</p>
-                          <div className="max-h-64 overflow-y-auto space-y-1.5">
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Últimas execuções</p>
+                          <div className="max-h-72 overflow-y-auto space-y-2">
                             {workflowRuns.map((run: any) => (
-                              <div key={run.id} className={`rounded-xl p-3 border transition-all cursor-pointer hover:bg-muted/40 ${
+                              <div key={run.id} className={`rounded-xl p-3.5 border transition-all cursor-pointer hover:bg-muted/40 ${
                                 selectedRunLogs?.jobs?.[0]?.id && run.id === workflowRuns.find((r: any) => selectedRunLogs.jobs.some((j: any) => true))?.id
                                   ? "bg-violet-500/[0.06] border-violet-500/20"
                                   : "bg-muted/20 border-border/50"
                               }`}
                                 onClick={() => loadWorkflowLogs(run.id)}>
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex items-center gap-2.5 min-w-0">
                                     {getStatusIcon(run.status, run.conclusion)}
                                     <div className="min-w-0">
-                                      <p className="text-xs font-semibold text-foreground truncate">{run.name}</p>
-                                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                        <span className="flex items-center gap-0.5"><GitBranch className="h-2.5 w-2.5" />{run.head_branch}</span>
+                                      <p className="text-sm font-semibold text-foreground truncate">{run.name}</p>
+                                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1"><GitBranch className="h-3 w-3" />{run.head_branch}</span>
                                         <span className="font-mono">#{run.run_number}</span>
-                                        <span>{run.head_sha}</span>
+                                        <span className="font-mono">{run.head_sha}</span>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="text-right shrink-0 ml-2">
-                                    <p className={`text-[10px] font-semibold ${
+                                  <div className="text-right shrink-0 ml-3">
+                                    <p className={`text-xs font-bold ${
                                       run.conclusion === "success" ? "text-emerald-400" :
                                       run.conclusion === "failure" ? "text-red-400" :
                                       run.status === "in_progress" ? "text-blue-400" : "text-muted-foreground"
                                     }`}>{getStatusLabel(run.status, run.conclusion)}</p>
-                                    <p className="text-[10px] text-muted-foreground">{formatFullDateTimeBR(run.created_at)}</p>
+                                    <p className="text-xs text-muted-foreground">{formatFullDateTimeBR(run.created_at)}</p>
                                   </div>
                                 </div>
                               </div>
