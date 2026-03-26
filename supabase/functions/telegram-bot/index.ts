@@ -82,7 +82,7 @@ async function getMigrationConfig(supabase: any): Promise<{ enabled: boolean; ur
   
   const result = {
     enabled: map["migration_message_enabled"] === "true",
-    url: map["migration_old_site_url"] || "https://recargasbrasill.com",
+    url: map["migration_old_site_url"] || "",
   };
   migrationCache = { ...result, time: Date.now() };
   return result;
