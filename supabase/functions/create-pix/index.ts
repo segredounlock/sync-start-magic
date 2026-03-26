@@ -74,7 +74,7 @@ async function createPushinPay(
 
   const body: Record<string, unknown> = {
     value: valueCents,
-    webhook_url: meta.webhookUrl || undefined,
+    webhook_url: meta.webhookUrl ? `${meta.webhookUrl}?gateway=pushinpay` : undefined,
   };
 
   const resp = await fetch("https://api.pushinpay.com.br/api/pix/cashIn", {
