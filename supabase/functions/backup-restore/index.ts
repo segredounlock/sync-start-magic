@@ -13,6 +13,9 @@ serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url);
+    const safeMode = url.searchParams.get("mode") === "safe";
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {

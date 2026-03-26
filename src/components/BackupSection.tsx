@@ -586,17 +586,33 @@ export default function BackupSection() {
       description: "A restauração vai sobrescrever os dados atuais do banco de dados.",
       details: ["Todos os dados serão substituídos", "Esta ação não pode ser desfeita"],
       icon: "restore",
-      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeImport(file); },
+      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeImport(file, false); },
     });
   };
 
-  const executeImport = async (file: File) => {
+  const safeFileInputRef = useRef<HTMLInputElement>(null);
+  const handleSafeImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".zip")) { toast.error("Selecione um arquivo .zip"); return; }
+    setConfirmModal({
+      open: true,
+      title: "Restauração Segura",
+      description: "Apenas dados novos serão adicionados. Usuários e configurações existentes NÃO serão alterados.",
+      details: ["auth.users não será tocado", "system_config e bot_settings serão ignorados", "Registros existentes não serão sobrescritos"],
+      icon: "safe",
+      onConfirm: () => { setConfirmModal(prev => ({ ...prev, open: false })); executeImport(file, true); },
+    });
+  };
+
+  const executeImport = async (file: File, safeMode: boolean) => {
     setImporting(true); setRestoreResult(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessão expirada");
       const arrayBuffer = await file.arrayBuffer();
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-restore`, {
+      const endpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-restore${safeMode ? "?mode=safe" : ""}`;
+      const resp = await fetch(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
         body: arrayBuffer,
@@ -604,10 +620,11 @@ export default function BackupSection() {
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
       setRestoreResult(result);
-      toast.success("Backup restaurado com sucesso!");
+      toast.success(safeMode ? "Restauração segura concluída!" : "Backup restaurado com sucesso!");
     } catch (err: any) { toast.error(`Erro: ${err.message}`); }
     setImporting(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (safeFileInputRef.current) safeFileInputRef.current.value = "";
   };
 
   // === UPDATE SYSTEM HANDLERS ===
