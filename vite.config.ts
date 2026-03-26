@@ -58,7 +58,10 @@ function sourceHashPlugin(): Plugin {
 }
 
 export default defineConfig({
-  server: { host: "::", port: 8080 },
+  server: { host: "::", port: 8080, hmr: { overlay: true } },
+  optimizeDeps: {
+    exclude: ["supabase/functions"],
+  },
   build: {
     target: "esnext",
     minify: "esbuild",
