@@ -32,15 +32,15 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme a alteração de e-mail — Recargas Brasil</Preview>
+    <Preview>Confirme a alteração de e-mail — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
-          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+          <Img src={LOGO_URL} width="56" height="56" alt={siteName} style={logoStyle} />
         </div>
         <Heading style={h1}>Alteração de e-mail</Heading>
         <Text style={text}>
-          Você solicitou a alteração do e-mail da sua conta no <strong>Recargas Brasil</strong> de{' '}
+          Você solicitou a alteração do e-mail da sua conta no <strong>{siteName}</strong> de{' '}
           <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}
           para{' '}
           <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
@@ -53,7 +53,7 @@ export const EmailChangeEmail = ({
         <Text style={footer}>
           Se você não solicitou esta alteração, proteja sua conta imediatamente.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

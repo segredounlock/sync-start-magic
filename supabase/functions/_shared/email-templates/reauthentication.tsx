@@ -15,18 +15,19 @@ import {
 
 interface ReauthenticationEmailProps {
   token: string
+  siteName?: string
 }
 
 const LOGO_URL = 'https://xtkqyjruyuydlbvwduuy.supabase.co/storage/v1/object/public/email-assets/logo.jpeg'
 
-export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
+export const ReauthenticationEmail = ({ token, siteName = 'Recargas Brasil' }: ReauthenticationEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu código de verificação — Recargas Brasil</Preview>
+    <Preview>Seu código de verificação — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
-          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+          <Img src={LOGO_URL} width="56" height="56" alt={siteName} style={logoStyle} />
         </div>
         <Heading style={h1}>Código de verificação</Heading>
         <Text style={text}>Use o código abaixo para confirmar sua identidade:</Text>
@@ -35,7 +36,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
         <Text style={footer}>
           Este código expira em breve. Se você não solicitou, ignore este e-mail.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

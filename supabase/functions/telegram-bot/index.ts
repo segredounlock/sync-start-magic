@@ -395,15 +395,30 @@ function generatePassword(): string {
   return pass;
 }
 
+// ===== SITE NAME (dynamic from system_config) =====
+let siteNameCache: { value: string; time: number } | null = null;
+const SITE_NAME_TTL = 300_000; // 5 minutes
+
+async function getSiteName(supabase: any): Promise<string> {
+  if (siteNameCache && Date.now() - siteNameCache.time < SITE_NAME_TTL) return siteNameCache.value;
+  try {
+    const { data } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle();
+    const name = data?.value || "Recargas Brasil";
+    siteNameCache = { value: name, time: Date.now() };
+    return name;
+  } catch { return "Recargas Brasil"; }
+}
+
 // ===== TERMS OF SERVICE =====
 const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
-const TERMS_TEXT = `📜 <b>TERMOS DE UTILIZAÇÃO</b>
-🌐 <b>Recargas Brasil</b> — https://recargasbrasill.com
+function buildTermsText(siteName: string): string {
+  return `📜 <b>TERMOS DE UTILIZAÇÃO</b>
+🌐 <b>${siteName}</b> — https://recargasbrasill.com
 
 Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
-1️⃣ <b>Sobre o Serviço</b> — O <b>Recargas Brasil</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site https://recargasbrasill.com.
+1️⃣ <b>Sobre o Serviço</b> — O <b>${siteName}</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site https://recargasbrasill.com.
 
 2️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
 
@@ -446,6 +461,7 @@ Antes de acionar o suporte, <b>verifique no app da operadora</b>:
 ⏱️ As recargas geralmente aparecem no extrato da operadora em até <b>1 hora</b> após a conclusão. Informe esse prazo ao seu cliente <b>antes</b> de realizar a recarga.
 
 ⚠️ <b>Ao clicar em "Aceitar", você confirma que leu e concorda com todos os termos acima.</b>`;
+}
 
 const TERMS_IMAGE = "https://img.freepik.com/free-vector/terms-service-concept-illustration_114360-1095.jpg"; // kept for future optional use
 
@@ -470,8 +486,8 @@ async function recordTermsAcceptance(supabase: any, telegramId: string) {
   );
 }
 
-async function sendTermsMessage(token: string, chatId: number) {
-  await sendMessageWithKeyboard(token, chatId, TERMS_TEXT, [
+async function sendTermsMessage(token: string, chatId: number, siteName = "Recargas Brasil") {
+  await sendMessageWithKeyboard(token, chatId, buildTermsText(siteName), [
     [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
     [{ text: "❌ Recusar", callback_data: "terms_decline" }],
   ]);
@@ -644,23 +660,24 @@ serve(async (req) => {
           }
         }
 
-        // Parallel: find user + session + register telegram_user
-        const [linkedUser, session] = await Promise.all([
+        // Parallel: find user + session + register telegram_user + site name
+        const [linkedUser, session, , botSiteName] = await Promise.all([
           findUserByTelegram(supabase, telegramId),
           getSession(supabase, chatIdStr),
           ensureTelegramUser(supabase, message.from.id, message.from.first_name, telegramUsername),
+          getSiteName(supabase),
         ]);
 
           if (text === "/start" || text === "/menu" || text === "/vincular") {
           if (linkedUser) {
             // Always show terms on /start
-            await sendTermsMessage(BOT_TOKEN, chatId);
+            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
           } else {
             // Check migration config
             const migration = await getMigrationConfig(supabase);
             if (migration.enabled) {
               await sendMessageWithKeyboard(BOT_TOKEN, chatId,
-                `👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\n⚠️ <b>Aviso de Migração</b>\n\nEstamos migrando para um novo sistema! Se você possui créditos no site antigo, pode acessá-lo para utilizá-los.\n\nCaso contrário, prossiga para vincular sua conta ao novo bot.`,
+                `👋 Bem-vindo ao <b>${botSiteName}</b>!\n\n⚠️ <b>Aviso de Migração</b>\n\nEstamos migrando para um novo sistema! Se você possui créditos no site antigo, pode acessá-lo para utilizá-los.\n\nCaso contrário, prossiga para vincular sua conta ao novo bot.`,
                 [
                   [{ text: "🔄 Usar créditos do site antigo", web_app: { url: migration.url } }],
                   [{ text: "▶️ Continuar para o bot", callback_data: "migration_continue" }],
@@ -668,7 +685,7 @@ serve(async (req) => {
               );
             } else {
               // Show terms first for new users too
-              await sendTermsMessage(BOT_TOKEN, chatId);
+              await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
             }
           }
           return;
@@ -708,7 +725,7 @@ serve(async (req) => {
           const termsOk = await checkTermsAccepted(supabase, telegramId);
           if (!termsOk) {
             await sendMessage(BOT_TOKEN, chatId, "⚠️ Você precisa aceitar os termos de utilização antes de continuar.");
-            await sendTermsMessage(BOT_TOKEN, chatId);
+            await sendTermsMessage(BOT_TOKEN, chatId, botSiteName);
             return;
           }
         }
@@ -1168,8 +1185,9 @@ async function handleCallback(supabase: any, token: string, callback: any) {
       const chatIdStr = String(chatId);
       const telegramUsername = callback.from.username || "";
       await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [] });
+      const cbSiteName = await getSiteName(supabase);
       const botMsgId = await sendMessage(token, chatId,
-        `✅ <b>Termos aceitos!</b>\n\n👋 Bem-vindo ao <b>Recargas Brasil</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
+        `✅ <b>Termos aceitos!</b>\n\n👋 Bem-vindo ao <b>${cbSiteName}</b>!\n\nVamos vincular sua conta.\n\n📧 Por favor, digite seu <b>e-mail</b>:`
       );
       if (botMsgId) {
         await setSession(supabase, chatIdStr, "awaiting_email", { telegram_id: telegramId, telegram_username: telegramUsername, msg_ids: [botMsgId] });
@@ -1187,7 +1205,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   const termsOk = await checkTermsAccepted(supabase, telegramId);
   if (!termsOk) {
     await sendMessage(token, chatId, "⚠️ Seus termos de utilização expiraram. Por favor, aceite novamente:");
-    await sendTermsMessage(token, chatId);
+    await sendTermsMessage(token, chatId, await getSiteName(supabase));
     return;
   }
 

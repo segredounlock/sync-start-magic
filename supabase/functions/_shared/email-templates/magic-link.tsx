@@ -27,15 +27,15 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu link de acesso — Recargas Brasil</Preview>
+    <Preview>Seu link de acesso — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
-          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+          <Img src={LOGO_URL} width="56" height="56" alt={siteName} style={logoStyle} />
         </div>
         <Heading style={h1}>Seu link de acesso</Heading>
         <Text style={text}>
-          Clique no botão abaixo para acessar o <strong>Recargas Brasil</strong>. Este link expira em breve.
+          Clique no botão abaixo para acessar o <strong>{siteName}</strong>. Este link expira em breve.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Acessar Agora
@@ -44,7 +44,7 @@ export const MagicLinkEmail = ({
         <Text style={footer}>
           Se você não solicitou este link, pode ignorar este e-mail com segurança.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

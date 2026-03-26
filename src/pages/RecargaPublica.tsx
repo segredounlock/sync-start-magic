@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 import { useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +31,7 @@ interface RevendedorInfo {
 }
 
 export default function RecargaPublica() {
+  const siteName = useSiteName();
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
   const refParam = searchParams.get("ref") || searchParams.get("revendedor");
@@ -158,7 +160,7 @@ export default function RecargaPublica() {
   // Custom branding
   const brandColor = revendedor?.store_primary_color || undefined;
   const brandBg = revendedor?.store_secondary_color || undefined;
-  const brandName = revendedor?.store_name || "Recargas Brasil";
+  const brandName = revendedor?.store_name || siteName;
   const brandLogo = revendedor?.store_logo_url || null;
 
   const handleSubmit = async () => {

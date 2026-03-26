@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useSiteName } from "@/hooks/useSiteName";
 import { InfoCard } from "@/components/InfoCard";
 import { DashboardSection } from "@/components/DashboardSection";
 import { AtualizacoesSection } from "@/components/AtualizacoesSection";
@@ -68,6 +69,7 @@ interface RevendedorPainelProps {
 }
 
 export default function RevendedorPainel({ resellerId, resellerBranding }: RevendedorPainelProps = {}) {
+  const siteName = useSiteName();
   const isClientMode = !!resellerId;
   const navigate = useNavigate();
   const { filterValores } = useDisabledValues();
@@ -2204,7 +2206,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               recarga={receiptRecarga}
               open={!!receiptRecarga}
               onClose={() => setReceiptRecarga(null)}
-              storeName={profileNome || "Recargas Brasil"}
+              storeName={profileNome || siteName}
               userId={user?.id}
             />
           )}

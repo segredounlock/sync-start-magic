@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,6 +40,7 @@ const MAX_ATTEMPTS = 5;
 const COOLDOWN_MS = 60_000;
 
 export default function Auth() {
+  const siteName = useSiteName();
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -351,7 +353,7 @@ export default function Auth() {
             className="w-full max-w-md bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl p-6 sm:p-8"
           >
             <div className="text-center mb-6">
-              <img src={logo} alt="Recargas Brasil" className="w-20 h-20 object-cover rounded-2xl mx-auto mb-4 shadow-lg" />
+              <img src={logo} alt={siteName} className="w-20 h-20 object-cover rounded-2xl mx-auto mb-4 shadow-lg" />
               <h1 className="text-2xl font-bold text-foreground">Recuperar senha</h1>
               <p className="text-muted-foreground text-sm mt-2">Digite seu e-mail para receber o link de redefinição.</p>
             </div>
@@ -396,9 +398,9 @@ export default function Auth() {
             className="w-full max-w-md"
           >
             <div className="text-center mb-6">
-              <img src={logo} alt="Recargas Brasil" className="w-24 h-24 object-cover rounded-3xl mx-auto mb-4 shadow-xl" />
+              <img src={logo} alt={siteName} className="w-24 h-24 object-cover rounded-3xl mx-auto mb-4 shadow-xl" />
               <h1 className="text-4xl font-black tracking-tight shimmer-letters">
-                Recargas <span className="brasil-word">Brasil</span>
+                {siteName}
               </h1>
               <p className="text-muted-foreground mt-2 text-sm tracking-wide">SISTEMA DE RECARGAS PARA REVENDEDORES</p>
             </div>

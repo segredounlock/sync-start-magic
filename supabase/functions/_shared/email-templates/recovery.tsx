@@ -27,16 +27,16 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Redefinir sua senha — Recargas Brasil</Preview>
+    <Preview>Redefinir sua senha — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
-          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+          <Img src={LOGO_URL} width="56" height="56" alt={siteName} style={logoStyle} />
         </div>
         <Heading style={h1}>Redefinir sua senha</Heading>
         <Text style={text}>
           Recebemos uma solicitação para redefinir a senha da sua conta no{' '}
-          <strong>Recargas Brasil</strong>. Clique no botão abaixo para criar uma nova senha.
+          <strong>{siteName}</strong>. Clique no botão abaixo para criar uma nova senha.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Redefinir Senha
@@ -46,7 +46,7 @@ export const RecoveryEmail = ({
           Se você não solicitou a redefinição de senha, ignore este e-mail.
           Sua senha não será alterada.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

@@ -32,15 +32,15 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme seu e-mail — Recargas Brasil</Preview>
+    <Preview>Confirme seu e-mail — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
-          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+          <Img src={LOGO_URL} width="56" height="56" alt={siteName} style={logoStyle} />
         </div>
         <Heading style={h1}>Confirme seu e-mail</Heading>
         <Text style={text}>
-          Bem-vindo ao <strong>Recargas Brasil</strong>! 🎉
+          Bem-vindo ao <strong>{siteName}</strong>! 🎉
         </Text>
         <Text style={text}>
           Para ativar sua conta, confirme seu endereço de e-mail (
@@ -54,7 +54,7 @@ export const SignupEmail = ({
         <Text style={footer}>
           Se você não criou uma conta, pode ignorar este e-mail com segurança.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>

@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
 import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { InviteEmail } from '../_shared/email-templates/invite.tsx'
@@ -16,13 +17,17 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirme seu e-mail — Recargas Brasil',
-  invite: 'Você foi convidado — Recargas Brasil',
-  magiclink: 'Seu link de acesso — Recargas Brasil',
-  recovery: 'Redefinir sua senha — Recargas Brasil',
-  email_change: 'Confirme a alteração de e-mail — Recargas Brasil',
-  reauthentication: 'Seu código de verificação — Recargas Brasil',
+const EMAIL_SUBJECT_TEMPLATES: Record<string, string> = {
+  signup: 'Confirme seu e-mail',
+  invite: 'Você foi convidado',
+  magiclink: 'Seu link de acesso',
+  recovery: 'Redefinir sua senha',
+  email_change: 'Confirme a alteração de e-mail',
+  reauthentication: 'Seu código de verificação',
+}
+function getEmailSubject(type: string, siteName: string): string {
+  const base = EMAIL_SUBJECT_TEMPLATES[type]
+  return base ? `${base} — ${siteName}` : 'Notification'
 }
 
 // Template mapping
@@ -35,11 +40,31 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   reauthentication: ReauthenticationEmail,
 }
 
-// Configuration
-const SITE_NAME = "Recargas Brasil"
+// Configuration — site name is fetched dynamically from system_config
+const DEFAULT_SITE_NAME = "Recargas Brasil"
 const SENDER_DOMAIN = "notify.recargasbrasill.com"
 const ROOT_DOMAIN = "recargasbrasill.com"
-const FROM_DOMAIN = "recargasbrasill.com" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "recargasbrasill.com"
+
+// Cache site name for 5 minutes
+let siteNameCache: { value: string; time: number } | null = null
+const CACHE_TTL = 300_000
+
+async function getSiteName(): Promise<string> {
+  if (siteNameCache && Date.now() - siteNameCache.time < CACHE_TTL) return siteNameCache.value
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    )
+    const { data } = await supabase.from("system_config").select("value").eq("key", "siteTitle").maybeSingle()
+    const name = data?.value || DEFAULT_SITE_NAME
+    siteNameCache = { value: name, time: Date.now() }
+    return name
+  } catch {
+    return DEFAULT_SITE_NAME
+  }
+}
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
@@ -50,26 +75,26 @@ const SAMPLE_PROJECT_URL = "https://recargasbrasill.com"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   magiclink: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   recovery: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   invite: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   email_change: {
-    siteName: SITE_NAME,
+    siteName: DEFAULT_SITE_NAME,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
@@ -217,6 +242,9 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
+  // Fetch dynamic site name
+  const SITE_NAME = await getSiteName()
+
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
@@ -249,7 +277,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     to: payload.data.email,
     from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
     sender_domain: SENDER_DOMAIN,
-    subject: EMAIL_SUBJECTS[emailType] || 'Notification',
+    subject: getEmailSubject(emailType, SITE_NAME),
     html,
     text,
     purpose: 'transactional',

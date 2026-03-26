@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
+import { useSiteName } from "@/hooks/useSiteName";
 import { Construction, Bot, ArrowRight, Wrench, Clock } from "lucide-react";
 
 export default function MaintenancePage() {
+  const siteName = useSiteName();
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12 overflow-hidden relative">
       {/* Animated background elements */}
@@ -117,7 +119,7 @@ export default function MaintenancePage() {
           transition={{ delay: 0.9 }}
           className="text-xs text-muted-foreground/60"
         >
-          © {new Date().getFullYear()} Recargas Brasil · Todos os direitos reservados
+          © {new Date().getFullYear()} {siteName} · Todos os direitos reservados
         </motion.p>
       </motion.div>
     </div>

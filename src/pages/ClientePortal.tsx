@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,6 +40,7 @@ const storeStats = [
 ];
 
 export default function ClientePortal() {
+  const siteName = useSiteName();
   const { slug } = useParams<{ slug: string }>();
   const { user, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -95,7 +97,7 @@ export default function ClientePortal() {
   // Update document title and meta tags client-side
   useEffect(() => {
     if (!resellerInfo) return;
-    const storeName = resellerInfo.store_name || resellerInfo.nome || "Recargas Brasil";
+    const storeName = resellerInfo.store_name || resellerInfo.nome || siteName;
     document.title = `${storeName} - Recargas`;
 
     const setMeta = (property: string, content: string) => {
@@ -115,7 +117,7 @@ export default function ClientePortal() {
     }
 
     return () => {
-      document.title = "Recargas Brasil - Sistema de Recargas";
+      document.title = `${siteName} - Sistema de Recargas`;
     };
   }, [resellerInfo]);
 
@@ -242,7 +244,7 @@ export default function ClientePortal() {
 
   // Branding
   const brandColor = resellerInfo.store_primary_color || undefined;
-  const brandName = resellerInfo.store_name || "Recargas Brasil";
+  const brandName = resellerInfo.store_name || siteName;
   const brandLogo = resellerInfo.store_logo_url || null;
 
   const btnStyle: React.CSSProperties = brandColor

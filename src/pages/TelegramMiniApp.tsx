@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
 import AnimatedCheck from "@/components/AnimatedCheck";
 import { supabase } from "@/integrations/supabase/client";
@@ -319,6 +320,7 @@ export default function TelegramMiniApp() {
     const saved = localStorage.getItem("tg-theme-preference");
     return (saved === "light" || saved === "dark") ? saved : "auto";
   });
+  const siteName = useSiteName();
   const { isDark } = useTelegramTheme(themePreference);
 
   const toggleTheme = useCallback(() => {
@@ -1163,7 +1165,7 @@ export default function TelegramMiniApp() {
           className="relative z-10"
         >
           <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl" style={{ border: st.borderLight, boxShadow: `0 0 40px color-mix(in srgb, var(--tg-link) 30%, transparent)` }}>
-            <img src={recargasLogo} alt="Recargas Brasil" className="w-full h-full object-cover" />
+            <img src={recargasLogo} alt={siteName} className="w-full h-full object-cover" />
           </div>
         </motion.div>
 
@@ -1211,8 +1213,8 @@ export default function TelegramMiniApp() {
         <div className="w-full max-w-sm relative z-10">
           {/* Logo & title */}
           <div className="text-center mb-8">
-            <img src={recargasLogo} alt="Recargas Brasil" className="w-28 h-28 rounded-3xl mx-auto mb-5 shadow-2xl object-cover ring-2 ring-white/20" />
-            <h1 className="text-2xl font-bold text-white drop-shadow-lg">Recargas Brasil</h1>
+            <img src={recargasLogo} alt={siteName} className="w-28 h-28 rounded-3xl mx-auto mb-5 shadow-2xl object-cover ring-2 ring-white/20" />
+            <h1 className="text-2xl font-bold text-white drop-shadow-lg">{siteName}</h1>
             <p className="text-sm mt-1.5 text-white/50">Faça login para continuar</p>
           </div>
           {/* Form card */}

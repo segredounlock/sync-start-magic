@@ -1,4 +1,5 @@
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRef, useEffect, useState } from "react";
@@ -178,6 +179,7 @@ function PhoneFrame() {
    LANDING PAGE
    ══════════════════════════════════════════════════════════ */
 export default function LandingPage() {
+  const siteName = useSiteName();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -509,7 +511,7 @@ export default function LandingPage() {
               <span className="text-[11px] text-muted-foreground">Suporte 24/7</span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              © {new Date().getFullYear()} Recargas Brasil. Todos os direitos reservados.
+              © {new Date().getFullYear()} {siteName}. Todos os direitos reservados.
             </p>
           </div>
         </div>

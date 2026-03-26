@@ -30,16 +30,16 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Você foi convidado — Recargas Brasil</Preview>
+    <Preview>Você foi convidado — {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={logoWrapper}>
-          <Img src={LOGO_URL} width="56" height="56" alt="Recargas Brasil" style={logoStyle} />
+          <Img src={LOGO_URL} width="56" height="56" alt={siteName} style={logoStyle} />
         </div>
         <Heading style={h1}>Você foi convidado!</Heading>
         <Text style={text}>
           Você recebeu um convite para fazer parte do{' '}
-          <Link href={siteUrl} style={link}><strong>Recargas Brasil</strong></Link>.
+          <Link href={siteUrl} style={link}><strong>{siteName}</strong></Link>.
           Clique no botão abaixo para aceitar e criar sua conta.
         </Text>
         <Button style={button} href={confirmationUrl}>
@@ -49,7 +49,7 @@ export const InviteEmail = ({
         <Text style={footer}>
           Se você não esperava este convite, pode ignorar este e-mail com segurança.
         </Text>
-        <Text style={brand}>© Recargas Brasil</Text>
+        <Text style={brand}>© {siteName}</Text>
       </Container>
     </Body>
   </Html>
