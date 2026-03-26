@@ -147,3 +147,13 @@ Admin faz upload do ZIP → Edge Function backup-restore
   → Supabase SDK: UPSERT em cada tabela na ordem de dependência
   → Retorna relatório (criados, pulados, falhas)
 ```
+
+### Espelhamento (Mirror Sync)
+```
+Lovable push → GitHub (recargas-brasil-v2)
+  → GitHub Actions: sync-mirror.yml
+  → Remove .env e config.toml
+  → Force push → sync-start-magic
+  → Lovable do espelho detecta e sincroniza
+```
+> Detalhes completos em [MIRROR_SYNC.md](./MIRROR_SYNC.md)
