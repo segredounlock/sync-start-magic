@@ -412,13 +412,13 @@ async function getSiteName(supabase: any): Promise<string> {
 // ===== TERMS OF SERVICE =====
 const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
-function buildTermsText(siteName: string): string {
+function buildTermsText(siteName: string, siteUrl = "https://recargasbrasill.com"): string {
   return `📜 <b>TERMOS DE UTILIZAÇÃO</b>
-🌐 <b>${siteName}</b> — https://recargasbrasill.com
+🌐 <b>${siteName}</b> — ${siteUrl}
 
 Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
-1️⃣ <b>Sobre o Serviço</b> — O <b>${siteName}</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site https://recargasbrasill.com.
+1️⃣ <b>Sobre o Serviço</b> — O <b>${siteName}</b> é uma plataforma de recargas de celular online, acessível via bot do Telegram e pelo site ${siteUrl}.
 
 2️⃣ <b>Uso Responsável</b> — O sistema é destinado exclusivamente para recargas de celular. Qualquer uso indevido resultará em bloqueio imediato.
 
@@ -432,7 +432,7 @@ Ao utilizar este bot e/ou o site, você concorda com as seguintes regras:
 
 7️⃣ <b>Proibições</b> — É proibido o uso de bots, scripts ou automações para interagir com este sistema.
 
-8️⃣ <b>Suporte</b> — Em caso de dúvidas, utilize o botão "Ajuda / Suporte" ou acesse https://recargasbrasill.com.
+8️⃣ <b>Suporte</b> — Em caso de dúvidas, utilize o botão "Ajuda / Suporte" ou acesse ${siteUrl}.
 
 9️⃣ <b>Alterações</b> — Os termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação.
 
