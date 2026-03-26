@@ -356,7 +356,60 @@ export default function MirrorSyncPanel({ mirrorRepo, sourceRepo }: MirrorSyncPa
           </div>
         )}
 
-        {/* Protected paths */}
+        {/* ══════ Saúde do Espelho ══════ */}
+        <div className="rounded-xl border overflow-hidden"
+          style={{
+            background: mirrorReadiness === "ready" ? "hsl(var(--accent) / 0.06)" :
+              mirrorReadiness === "partial" ? "hsl(142 76% 36% / 0.04)" : "hsl(0 84% 60% / 0.06)",
+            borderColor: mirrorReadiness === "ready" ? "hsl(var(--accent) / 0.2)" :
+              mirrorReadiness === "partial" ? "hsl(45 93% 47% / 0.2)" : "hsl(0 84% 60% / 0.2)",
+          }}>
+          <div className="p-3 flex items-center justify-between">
+            <p className="text-sm font-bold flex items-center gap-2">
+              {mirrorReadiness === "ready" ? (
+                <><CheckCircle2 className="h-4 w-4 text-emerald-400" /> <span className="text-emerald-400">Espelho Pronto</span></>
+              ) : mirrorReadiness === "partial" ? (
+                <><AlertTriangle className="h-4 w-4 text-amber-400" /> <span className="text-amber-400">Espelho Parcial</span></>
+              ) : mirrorReadiness === "broken" ? (
+                <><X className="h-4 w-4 text-red-400" /> <span className="text-red-400">Espelho com Problemas</span></>
+              ) : (
+                <span className="text-muted-foreground">Saúde do Espelho</span>
+              )}
+            </p>
+            <button
+              onClick={loadHealth}
+              disabled={loadingHealth}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-foreground hover:bg-muted transition-all disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {loadingHealth ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              Verificar
+            </button>
+          </div>
+
+          {healthChecks.length > 0 && (
+            <div className="border-t border-border/30 px-3 pb-3 pt-2 space-y-1">
+              {healthChecks.map((h, i) => (
+                <div key={i} className="flex items-center justify-between text-sm py-1">
+                  <span className="font-mono text-foreground/80">{h.key}</span>
+                  <span className={`text-xs font-semibold ${h.ok ? "text-emerald-400" : "text-red-400"}`}>
+                    {h.ok ? "✓" : "✗"} {h.detail}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mirrorReadiness && mirrorReadiness !== "ready" && (
+            <div className="border-t border-border/30 px-3 py-2">
+              <p className="text-xs text-muted-foreground">
+                {mirrorReadiness === "broken"
+                  ? "⚠️ O espelho precisa de publicação (Publish) para aplicar as migrations e ter o backend funcional."
+                  : "⚡ Espelho funcional, mas com itens pendentes. Configure apiKey e/ou crie um admin."}
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="rounded-xl bg-muted/30 border border-border/50 p-3 space-y-1.5">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <Shield className="h-3 w-3" /> Caminhos protegidos
