@@ -62,6 +62,9 @@ export default function MirrorSyncPanel({ mirrorRepo, sourceRepo }: MirrorSyncPa
   const [showConflicts, setShowConflicts] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
+  const [healthChecks, setHealthChecks] = useState<HealthCheck[]>([]);
+  const [mirrorReadiness, setMirrorReadiness] = useState<string | null>(null);
+  const [loadingHealth, setLoadingHealth] = useState(false);
 
   const [protectedPaths, setProtectedPaths] = useState<string[]>([".env", "supabase/config.toml", ".github/workflows/"]);
 
