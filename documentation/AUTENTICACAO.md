@@ -117,4 +117,4 @@ O sistema de backup exporta `encrypted_password` (hash bcrypt) de `auth.users` v
 | `email-change.tsx` | Mudança de email |
 | `reauthentication.tsx` | Reautenticação (OTP) |
 
-Todos os templates utilizam identidade visual do Recargas Brasil (Verde #1D9E5E) com logo no bucket `email-assets`. Domínio verificado: `notify.recargasbrasill.com`.
+Todos os templates utilizam identidade visual dinâmica (cor primária #1D9E5E) com logo no bucket `email-assets`. O domínio de envio e o nome do site são configuráveis via `system_config` (keys: `siteTitle`, `siteUrl`) e secret `SENDER_DOMAIN`.

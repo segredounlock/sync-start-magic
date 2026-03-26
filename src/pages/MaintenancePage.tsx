@@ -1,6 +1,25 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSiteName } from "@/hooks/useSiteName";
+import { supabase } from "@/integrations/supabase/client";
 import { Construction, Bot, ArrowRight, Wrench, Clock } from "lucide-react";
+
+function TelegramBotLink() {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.from("system_config").select("value").eq("key", "telegramBotUrl").maybeSingle()
+      .then(({ data }) => { if (data?.value) setUrl(data.value); });
+  }, []);
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[hsl(199,89%,48%)] text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[hsl(199,89%,48%)]/20">
+      <Bot className="h-4 w-4" />
+      Acessar nosso Bot no Telegram
+      <ArrowRight className="h-4 w-4" />
+    </a>
+  );
+}
 
 export default function MaintenancePage() {
   const siteName = useSiteName();
@@ -100,16 +119,7 @@ export default function MaintenancePage() {
             Enquanto finalizamos as atualizações do site, nosso bot no Telegram continua funcionando normalmente.
           </p>
 
-          <a
-            href="https://t.me/RecargasBrasilBot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[hsl(199,89%,48%)] text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[hsl(199,89%,48%)]/20"
-          >
-            <Bot className="h-4 w-4" />
-            Acessar nosso Bot no Telegram
-            <ArrowRight className="h-4 w-4" />
-          </a>
+          <TelegramBotLink />
         </motion.div>
 
         {/* Footer */}

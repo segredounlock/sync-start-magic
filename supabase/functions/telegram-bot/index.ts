@@ -82,7 +82,7 @@ async function getMigrationConfig(supabase: any): Promise<{ enabled: boolean; ur
   
   const result = {
     enabled: map["migration_message_enabled"] === "true",
-    url: map["migration_old_site_url"] || "https://recargasbrasill.com",
+    url: map["migration_old_site_url"] || "",
   };
   migrationCache = { ...result, time: Date.now() };
   return result;
@@ -401,12 +401,12 @@ const SITE_NAME_TTL = 300_000; // 5 minutes
 
 async function getSiteName(supabase: any): Promise<string> {
   await loadSiteConfig(supabase);
-  return siteNameCache?.value || "Recargas Brasil";
+  return siteNameCache?.value || "Sistema de Recargas";
 }
 
 async function getSiteUrl(supabase: any): Promise<string> {
   await loadSiteConfig(supabase);
-  return siteNameCache?.url || "https://recargasbrasill.com";
+  return siteNameCache?.url || "";
 }
 
 async function loadSiteConfig(supabase: any) {
@@ -416,19 +416,19 @@ async function loadSiteConfig(supabase: any) {
     const map: Record<string, string> = {};
     for (const r of data || []) map[r.key] = r.value || "";
     siteNameCache = {
-      value: map.siteTitle || "Recargas Brasil",
-      url: (map.siteUrl || "https://recargasbrasill.com").replace(/\/+$/, ""),
+      value: map.siteTitle || "Sistema de Recargas",
+      url: (map.siteUrl || "").replace(/\/+$/, ""),
       time: Date.now(),
     };
   } catch {
-    if (!siteNameCache) siteNameCache = { value: "Recargas Brasil", url: "https://recargasbrasill.com", time: Date.now() };
+    if (!siteNameCache) siteNameCache = { value: "Sistema de Recargas", url: "", time: Date.now() };
   }
 }
 
 // ===== TERMS OF SERVICE =====
 const TERMS_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
-function buildTermsText(siteName: string, siteUrl = "https://recargasbrasill.com"): string {
+function buildTermsText(siteName: string, siteUrl = ""): string {
   return `📜 <b>TERMOS DE UTILIZAÇÃO</b>
 🌐 <b>${siteName}</b> — ${siteUrl}
 
@@ -502,7 +502,7 @@ async function recordTermsAcceptance(supabase: any, telegramId: string) {
   );
 }
 
-async function sendTermsMessage(token: string, chatId: number, siteName = "Recargas Brasil", siteUrl = "https://recargasbrasill.com") {
+async function sendTermsMessage(token: string, chatId: number, siteName = "Sistema de Recargas", siteUrl = "") {
   await sendMessageWithKeyboard(token, chatId, buildTermsText(siteName, siteUrl), [
     [{ text: "✅ Aceitar Termos", callback_data: "terms_accept" }],
     [{ text: "❌ Recusar", callback_data: "terms_decline" }],

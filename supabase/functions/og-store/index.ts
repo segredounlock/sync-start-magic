@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
   const store = Array.isArray(data) ? data[0] : null;
 
   // Fetch dynamic site name and URL
-  let siteName = "Recargas Brasil";
-  let siteBaseUrl = "https://recargasbrasill.com";
+  let siteName = "Sistema de Recargas";
+  let siteBaseUrl = "";
   try {
     const { data: configs } = await supabase.from("system_config").select("key, value").in("key", ["siteTitle", "siteUrl"]);
     for (const c of configs || []) {

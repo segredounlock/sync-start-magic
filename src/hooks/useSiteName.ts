@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const DEFAULT_SITE_NAME = "Recargas Brasil";
+const DEFAULT_SITE_NAME = "Sistema de Recargas";
 const CACHE_KEY = "cached_site_name";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 

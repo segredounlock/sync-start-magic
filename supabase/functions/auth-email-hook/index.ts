@@ -41,9 +41,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration — site name and URL are fetched dynamically from system_config
-const DEFAULT_SITE_NAME = "Recargas Brasil"
-const DEFAULT_SITE_URL = "https://recargasbrasill.com"
-const SENDER_DOMAIN = "notify.recargasbrasill.com"
+const DEFAULT_SITE_NAME = "Sistema de Recargas"
+const DEFAULT_SITE_URL = ""
+const SENDER_DOMAIN = Deno.env.get("SENDER_DOMAIN") || "notify.example.com"
 
 // Cache site config for 5 minutes
 let siteConfigCache: { name: string; url: string; time: number } | null = null
@@ -76,7 +76,7 @@ async function loadSiteConfig(): Promise<{ name: string; url: string }> {
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://recargasbrasill.com"
+const SAMPLE_PROJECT_URL = ""
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {

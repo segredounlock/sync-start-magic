@@ -3526,12 +3526,12 @@ export default function Principal() {
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-1">Nome do Site</label>
                         <input type="text" value={globalConfig.siteTitle || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteTitle: e.target.value }))}
-                          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Recargas Brasil" />
+                          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Nome da sua empresa" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-1">URL do Site</label>
                         <input type="text" value={globalConfig.siteUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteUrl: e.target.value }))}
-                          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://recargasbrasill.com" />
+                          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://seudominio.com" />
                         <p className="text-xs text-muted-foreground mt-1">Domínio principal usado em links do bot, emails e OG tags</p>
                       </div>
                     </div>
