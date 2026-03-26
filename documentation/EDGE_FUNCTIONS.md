@@ -1,4 +1,4 @@
-# ⚡ Edge Functions — 31 Funções
+# ⚡ Edge Functions — 32 Funções
 
 ## Funções Administrativas
 
@@ -97,3 +97,18 @@ A função `create-pix` suporta 5 gateways:
 | **MisticPay** | `misticPayClientId`, `misticPayClientSecret` |
 
 Cada revendedor pode ter seu próprio gateway via `reseller_config`.
+
+---
+
+## Webhooks (verify_jwt = false)
+
+As seguintes funções **não verificam JWT** pois recebem chamadas externas:
+
+| Função | Origem da chamada |
+|--------|------------------|
+| `telegram-bot` | Telegram Bot API |
+| `pix-webhook` | Gateway de pagamento |
+| `auth-email-hook` | Lovable Cloud (auth hooks) |
+| `og-store` | Crawlers web (meta tags) |
+| `client-register` | Link público de registro |
+| `telegram-miniapp` | Telegram Mini App |
