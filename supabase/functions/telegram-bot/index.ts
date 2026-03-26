@@ -1222,7 +1222,7 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   const termsOk = await checkTermsAccepted(supabase, telegramId);
   if (!termsOk) {
     await sendMessage(token, chatId, "⚠️ Seus termos de utilização expiraram. Por favor, aceite novamente:");
-    await sendTermsMessage(token, chatId, await getSiteName(supabase));
+    await sendTermsMessage(token, chatId, await getSiteName(supabase), await getSiteUrl(supabase));
     return;
   }
 
