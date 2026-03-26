@@ -1,16 +1,13 @@
 
 
-# Testar sync com push
-
-## O que fazer
-Fazer uma alteração mínima no código para disparar um push ao GitHub, que ativará o workflow de sync para o `UPDATERECARGASBRASIL`.
+# Testar sync com novo token
 
 ## Alteração
-Adicionar um comentário com timestamp no arquivo `.github/workflows/sync-mirror.yml` para forçar um commit e testar o pipeline.
+Atualizar o comentário de timestamp no workflow para forçar um novo commit/push.
 
-## Resultado esperado
-1. Push vai para `recargas-brasil-v2`
-2. GitHub Action dispara automaticamente
-3. Código é espelhado para `UPDATERECARGASBRASIL`
-4. Verificar em `github.com/segredounlock/recargas-brasil-v2/actions` se passou ✅
+## Arquivo
+`.github/workflows/sync-mirror.yml` — mudar o comentário de `# Sync test: 2026-03-26` para `# Sync test: 2026-03-26T2` para gerar um diff.
+
+## Após publicar
+Verificar em `github.com/segredounlock/recargas-brasil-v2/actions` se o job passou ✅
 
