@@ -141,8 +141,8 @@ export default function AdminBankDashboard({
         className="flex items-center justify-between rounded-xl bg-card border border-border px-5 py-4"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Wallet className="h-4 w-4 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Wallet className="h-5 w-5 text-primary" />
           </div>
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
