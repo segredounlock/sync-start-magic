@@ -1378,7 +1378,7 @@ export default function Principal() {
               </div>
             </div>
 
-            <div className="px-4 pb-3 grid grid-cols-3 gap-2">
+            <div className="px-3 pb-2 grid grid-cols-3 gap-1.5">
               {menuItems.map((item, index) => {
                 const isActive = view === item.key;
                 return (
@@ -1392,13 +1392,13 @@ export default function Principal() {
                       }
                       setMenuOpen(false);
                     }}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-medium transition-all group ${
+                    className={`flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg text-[11px] font-medium transition-all group ${
                       isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/40"
                     }`}>
                     <div className="relative">
-                      <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} />
+                      <FloatingGridIcon icon={item.icon} color={item.color} isActive={isActive} index={index} size="h-5 w-5" />
                       {!!item.badge && item.badge > 0 && (
-                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">{item.badge}</span>
+                        <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">{item.badge}</span>
                       )}
                     </div>
                     <span className="text-center leading-tight">{item.label}</span>
@@ -1406,12 +1406,12 @@ export default function Principal() {
                 );
               })}
               <button onClick={() => { navigate("/admin"); setMenuOpen(false); }}
-                className="flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-all">
+                className="flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-muted/40 transition-all">
                 <BarChart3 className="h-5 w-5 text-primary" />
                 <span className="text-center leading-tight">Painel Admin</span>
               </button>
               <button onClick={() => { navigate("/painel"); setMenuOpen(false); }}
-                className="flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-all">
+                className="flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-muted/40 transition-all">
                 <Landmark className="h-5 w-5 text-success" />
                 <span className="text-center leading-tight">Painel Cliente</span>
               </button>
