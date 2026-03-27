@@ -182,7 +182,7 @@ export default function RecargasTicker() {
     >
       <div className="flex items-center h-8">
         <div className="shrink-0 flex items-center gap-1.5 px-3 border-r border-border bg-primary/10 h-full z-10">
-          <Smartphone className="h-3.5 w-3.5 text-primary animate-[soft-pulse_2s_ease-in-out_infinite]" />
+          <Smartphone className="h-3.5 w-3.5 text-primary animate-soft-pulse" />
           <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
         </div>
         <div className="overflow-hidden flex-1">

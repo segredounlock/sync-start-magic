@@ -80,11 +80,16 @@ export default {
           "0%, 100%": { transform: "translateY(0)", opacity: "0.5" },
           "50%": { transform: "translateY(-10px)", opacity: "1" },
         },
+        "soft-pulse": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.5", transform: "scale(0.9)" },
+        },
       },
       animation: {
         "gradient-x": "gradient-x 6s ease infinite",
         "fade-in": "fade-in 0.4s ease-out both",
         "splash-dot": "splash-dot 0.6s ease-in-out infinite",
+        "soft-pulse": "soft-pulse 2s ease-in-out infinite",
       },
     },
   },
