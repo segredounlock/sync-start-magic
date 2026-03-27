@@ -1876,9 +1876,8 @@ export default function Principal() {
                     { key: "admin", label: "Admin", count: revendedores.filter(r => r.role === "admin").length },
                     { key: "revendedor", label: "Revendedor", count: revendedores.filter(r => r.role === "revendedor").length },
                     { key: "usuario", label: "Usuário", count: revendedores.filter(r => r.role === "usuario").length },
-                    { key: "cliente", label: "Cliente", count: revendedores.filter(r => r.role === "cliente").length },
                     { key: "sem_role", label: "Sem função", count: revendedores.filter(r => r.role === "sem_role").length },
-                  ] as const).filter(f => ["todos", "admin", "revendedor", "usuario", "cliente"].includes(f.key) || f.count > 0).map(f => (
+                  ] as const).filter(f => ["todos", "admin", "revendedor", "usuario"].includes(f.key) || f.count > 0).map(f => (
                     <button
                       key={f.key}
                       onClick={() => setRoleFilter(f.key)}
@@ -2229,7 +2228,7 @@ export default function Principal() {
                           }`}
                         >
                           {changingRole ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Shield className="h-3.5 w-3.5" />}
-                          {selectedRev.role === "admin" ? "Admin" : selectedRev.role === "suporte" ? "Suporte" : selectedRev.role === "cliente" ? "Cliente" : "Usuário"}
+                          {selectedRev.role === "admin" ? "Admin" : selectedRev.role === "suporte" ? "Suporte" : "Usuário"}
                           <ChevronDown className={`h-3 w-3 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
                         </button>
                         <AnimatePresence>
@@ -2245,7 +2244,6 @@ export default function Principal() {
                                 {([
                                   { value: "admin", label: "Admin", color: "text-primary" },
                                   { value: "suporte", label: "Suporte", color: "text-blue-500" },
-                                  { value: "cliente", label: "Cliente", color: "text-warning" },
                                   { value: "usuario", label: "Usuário", color: "text-muted-foreground" },
                                 ] as const).map((opt) => (
                                   <button
