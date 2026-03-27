@@ -1,36 +1,39 @@
 
 
-# Corrigir Build do auth-email-hook (Tela Branca pós-sync)
+# Corrigir: Nome/Logo do Site Não Atualiza Após Salvar
 
 ## Problema
-O `deno.json` do `auth-email-hook` não declara as dependências `@lovable.dev/webhooks-js` e `@lovable.dev/email-js`. O Deno no espelho não consegue resolver esses imports `npm:`, quebrando o deploy da edge function.
+O hook `useSiteName` (e `useSiteLogo`) usa cache em memória com TTL de 5 minutos. Quando o admin salva um novo nome em "Configurações Gerais", o cache não é invalidado — os componentes continuam mostrando o valor antigo.
 
-## Correção
+## Solução
+Adicionar funções de invalidação de cache nos hooks e chamá-las após salvar.
 
-### `supabase/functions/auth-email-hook/deno.json`
-Adicionar `nodeModulesDir` e mapa de imports:
+### 1. `src/hooks/useSiteName.ts`
+Exportar função `invalidateSiteNameCache()` que:
+- Limpa o `memoryCache` (seta `null`)
+- Remove `cached_site_name` do localStorage
 
-```json
-{
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "npm:react@18.3.1",
-    "types": ["npm:@types/react@18.3.1"]
-  },
-  "nodeModulesDir": "auto",
-  "imports": {
-    "@lovable.dev/webhooks-js": "npm:@lovable.dev/webhooks-js",
-    "@lovable.dev/email-js": "npm:@lovable.dev/email-js"
-  }
-}
-```
+### 2. `src/hooks/useSiteLogo.ts`
+Exportar função `invalidateSiteLogoCache()` que:
+- Limpa o `memoryCache` (seta `null`)
+- Remove `cached_site_logo` do localStorage
 
-### Nenhuma outra alteração necessária
-- O código do `index.ts` já usa `npm:` prefix nos imports — está correto
-- A tela branca do espelho por falta de dados/RPCs já foi resolvida nas migrations anteriores
-- O espelho precisa de **Publish** após cada sync para aplicar migrations no banco
+### 3. `src/pages/Principal.tsx`
+Na função `saveGlobalConfig`, após o upsert com sucesso:
+- Chamar `invalidateSiteNameCache()`
+- Chamar `invalidateSiteLogoCache()`
+- Forçar re-render disparando um evento customizado (`window.dispatchEvent(new Event("site-branding-updated"))`)
+
+### 4. Nos hooks, escutar o evento
+Adicionar listener para `"site-branding-updated"` que refaz o fetch do banco, ignorando o cache.
 
 ## Resultado
-- Edge function `auth-email-hook` deploya sem erro no espelho
-- 1 arquivo alterado: `supabase/functions/auth-email-hook/deno.json`
+- Admin salva nome → todos os componentes atualizam imediatamente
+- Admin faz upload de logo → mesma coisa
+- Sem necessidade de recarregar a página
+
+## Arquivos
+1. `src/hooks/useSiteName.ts` — adicionar invalidação + listener de evento
+2. `src/hooks/useSiteLogo.ts` — adicionar invalidação + listener de evento
+3. `src/pages/Principal.tsx` — chamar invalidação após salvar
 
