@@ -2236,7 +2236,7 @@ export default function Principal() {
                             initial={{ opacity: 0, y: -4, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                            className="absolute top-full left-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden min-w-[160px]"
+                            className="absolute bottom-full left-0 mb-1 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden min-w-[160px]"
                           >
                             {([
                               { value: "admin", label: "Admin", color: "text-primary" },
