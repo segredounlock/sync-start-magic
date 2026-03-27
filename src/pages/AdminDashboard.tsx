@@ -1259,12 +1259,12 @@ export default function AdminDashboard() {
               {/* Por Operadora */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="glass-card rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center">
-                    <Package className="h-4 w-4 text-primary" />
+                  <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <Package className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground text-sm">Por Operadora</h4>
-                    <p className="text-[10px] text-muted-foreground">Distribuição de vendas</p>
+                    <h4 className="font-semibold text-foreground text-base">Por Operadora</h4>
+                    <p className="text-xs text-muted-foreground">Distribuição de vendas</p>
                   </div>
                 </div>
                 <div className="h-52 mt-2">
