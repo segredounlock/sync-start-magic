@@ -352,8 +352,8 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Relatório de Desempenho</h2>
-            <p className="text-xs text-muted-foreground">Acompanhe suas vendas e comissões no período selecionado.</p>
+            <h2 className="text-xl font-bold text-foreground">Relatório de Desempenho</h2>
+            <p className="text-sm text-muted-foreground">Acompanhe suas vendas e comissões no período selecionado.</p>
           </div>
           <div className="flex items-center gap-1 bg-muted rounded-xl p-1 self-start sm:self-auto">
             {([
