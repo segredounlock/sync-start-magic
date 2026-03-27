@@ -209,7 +209,7 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
           {/* Dot indicator */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div
-              className={`rounded-full bg-primary transition-all duration-300 ${
+              className={`rounded-full bg-primary transition-all duration-100 ${
                 digit
                   ? "w-3.5 h-3.5 opacity-100 scale-100"
                   : "w-0 h-0 opacity-0 scale-0"
