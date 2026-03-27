@@ -180,6 +180,7 @@ const LISTEN_TO_TYPES: ("deposit" | "recarga" | "new_user")[] = ["deposit", "rec
 export default function Principal() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const siteName = useSiteName();
   const { isDisabled: isValueDisabled, toggle: toggleDisabledValue } = useDisabledValues();
 
   // Notifications handled by NotificationBell component
