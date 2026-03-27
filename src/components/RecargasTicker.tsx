@@ -181,8 +181,12 @@ export default function RecargasTicker() {
       onTouchEnd={() => { isPaused.current = false; }}
     >
       <div className="flex items-center h-8">
-        <div className="shrink-0 flex items-center gap-1 px-3 border-r border-border bg-primary/10 h-full z-10">
-          <Smartphone className="h-3.5 w-3.5 text-primary" />
+        <div className="shrink-0 flex items-center gap-1.5 px-3 border-r border-border bg-primary/10 h-full z-10">
+          <Smartphone className="h-3.5 w-3.5 text-primary animate-[soft-pulse_2s_ease-in-out_infinite]" />
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-40" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+          </span>
           <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
         </div>
         <div className="overflow-hidden flex-1">
