@@ -3,12 +3,25 @@
 ## Hierarquia de Roles
 
 ```
-admin (master) → acesso total ao sistema
-  ├── Painel Principal (/principal) com PIN de proteção
-  ├── Painel Admin (/admin) — gestão completa
-  ├── Gerencia todos os usuários, saldos, preços
+admin master → acesso TOTAL e irrevogável ao sistema
+  ├── Painel Principal (/principal) com PIN de proteção + MasterOnlyRoute
+  ├── Único que pode acessar /principal
+  ├── Gerencia todos os admins, usuários, saldos, preços
   ├── Configura sistema, gateways, bot
-  └── Backup, restore, auditoria
+  ├── Backup, restore, auditoria
+  ├── Não pode ter seu cargo removido por nenhum outro admin
+  └── Definido automaticamente: primeiro usuário do sistema
+
+admin → acesso administrativo parcial
+  ├── Painel Admin (/admin) — gestão de usuários e recargas
+  ├── NÃO tem acesso ao /principal (apenas admin master)
+  ├── Pode receber permissão `allowPrincipal` para acesso ao /principal
+  └── Pode ser promovido/rebaixado pelo admin master
+
+suporte → agente de suporte
+  ├── Acesso a tickets de suporte
+  ├── Pode responder mensagens de suporte
+  └── Não tem acesso ao painel admin
 
 usuario → todos os demais usuários
   ├── Painel (/painel) — acesso padrão
@@ -19,7 +32,34 @@ usuario → todos os demais usuários
   └── Visualiza histórico e comissões
 ```
 
-> **Nota:** O cargo `revendedor` foi eliminado. Todos os usuários possuem o cargo `usuario` por padrão, preservando acesso a funções de rede e precificação personalizada. O acesso administrativo (/admin) é restrito ao cargo `admin`.
+> **Nota:** O cargo `revendedor` foi eliminado. Todos os usuários possuem o cargo `usuario` por padrão, preservando acesso a funções de rede e precificação personalizada.
+
+## Admin Master
+
+### Conceito
+O **Admin Master** é o usuário supremo do sistema. Ele tem acesso total e irrestrito, e nenhum outro admin pode remover seu cargo.
+
+### Implementação
+
+1. **`masterAdminId` em `system_config`** — Armazena o UUID do admin master
+2. **`MasterOnlyRoute.tsx`** — Componente que protege `/principal`, verificando se `user.id === masterAdminId`
+3. **Auto-promoção do primeiro usuário** — O trigger `handle_new_user` verifica se existe algum admin no sistema:
+   - Se **não existe nenhum admin**: o primeiro usuário recebe `admin` + `usuario` e é salvo como `masterAdminId`
+   - Se **já existe admin**: o novo usuário recebe apenas `usuario`
+
+### Fluxo de Verificação (`MasterOnlyRoute.tsx`)
+```
+1. Busca masterAdminId em system_config
+2. Verifica se user.id === masterAdminId
+3. Se sim → renderiza children (acesso ao /principal)
+4. Se não → redireciona para /painel
+```
+
+### Proteção de Cargo
+Na interface de gestão de usuários (Painel Principal):
+- Ao atribuir cargo `admin`, aparece sub-menu perguntando se é "Admin com acesso ao Principal" ou "Admin comum"
+- O admin master **nunca** aparece na lista de remoção de cargos
+- Apenas o admin master pode promover outros admins
 
 ## Tabela `user_roles`
 
@@ -27,7 +67,7 @@ usuario → todos os demais usuários
 CREATE TABLE user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
-  role TEXT NOT NULL, -- 'admin', 'usuario'
+  role TEXT NOT NULL, -- 'admin', 'usuario', 'suporte'
   created_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(user_id, role)
 );
@@ -52,7 +92,9 @@ Quando um novo usuário se cadastra via `auth.users`, o trigger `handle_new_user
 
 1. **Cria perfil** em `profiles` (nome, email, slug, reseller_id)
 2. **Cria 2 saldos** em `saldos` (revenda=0, pessoal=0)
-3. **Atribui role** `usuario` em `user_roles`
+3. **Verifica se existe admin no sistema:**
+   - Se não existe → atribui `admin` + `usuario` + salva como `masterAdminId`
+   - Se existe → atribui apenas `usuario`
 4. **Gera slug** único via `generate_unique_slug()`
 5. **Gera código** de indicação via `generate_referral_code()`
 
@@ -66,6 +108,8 @@ Quando um novo usuário se cadastra via `auth.users`, o trigger `handle_new_user
    - Sessão ativa? → senão redireciona para /login
    - Role compatível? → senão redireciona para /painel
    - Conta ativa? → senão mostra mensagem de bloqueio
+5. MasterOnlyRoute (para /principal):
+   - user.id === masterAdminId? → senão redireciona para /painel
 ```
 
 ## Fluxo de Recuperação de Senha
@@ -97,7 +141,8 @@ O sistema de backup exporta `encrypted_password` (hash bcrypt) de `auth.users` v
 
 | Proteção | Descrição |
 |----------|-----------|
-| **PIN Master** | Painel Principal requer PIN (config: `masterPin`) |
+| **Admin Master** | Cargo irrevogável, acesso total via MasterOnlyRoute |
+| **PIN Master** | Painel Principal requer PIN (config: `masterPin`) com dígitos em blur |
 | **Inatividade** | Logout automático após inatividade |
 | **Fingerprint** | Coleta dados do dispositivo no login |
 | **Banimento** | Ban por fingerprint/IP |

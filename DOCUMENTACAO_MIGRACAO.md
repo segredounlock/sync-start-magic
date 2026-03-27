@@ -1,7 +1,7 @@
 # 📦 Documentação Completa — Recargas Brasil v2
 
-> **Última atualização:** 2026-03-26  
-> **Versão:** 2.2  
+> **Última atualização:** 2026-03-27  
+> **Versão:** 2.3  
 > **Propósito:** Documentar TUDO necessário para migração, restauração e manutenção do sistema.
 
 > ⚠️ **Este arquivo é um resumo.** A documentação completa e detalhada está na pasta `documentation/`.
@@ -15,8 +15,8 @@
 | Frontend | React 18 + TypeScript + Vite 5 |
 | Estilização | Tailwind CSS + shadcn/ui + Framer Motion |
 | Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno — 32 funções |
-| Banco de Dados | PostgreSQL — 42 tabelas com RLS |
+| Edge Functions | Deno — 33 funções |
+| Banco de Dados | PostgreSQL — 45 tabelas com RLS |
 | Pagamentos | Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay |
 | Bot | Telegram Bot API |
 | Armazenamento | Supabase Storage — 8 buckets |
@@ -33,10 +33,10 @@ Consulte a pasta `documentation/` para guias completos:
 |-----------|-----------|
 | [README.md](documentation/README.md) | Índice geral e changelog |
 | [ARQUITETURA.md](documentation/ARQUITETURA.md) | Arquitetura, estrutura de pastas, fluxos |
-| [BANCO_DE_DADOS.md](documentation/BANCO_DE_DADOS.md) | 42 tabelas, 35 funções, triggers, RLS |
-| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 32 Edge Functions |
+| [BANCO_DE_DADOS.md](documentation/BANCO_DE_DADOS.md) | 45 tabelas, ~38 funções, triggers, RLS |
+| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 33 Edge Functions |
 | [COMPONENTES.md](documentation/COMPONENTES.md) | Componentes, páginas, hooks, libs |
-| [AUTENTICACAO.md](documentation/AUTENTICACAO.md) | Auth, roles, segurança, migração de senhas |
+| [AUTENTICACAO.md](documentation/AUTENTICACAO.md) | Auth, roles, Admin Master, segurança, migração de senhas |
 | [PAGAMENTOS.md](documentation/PAGAMENTOS.md) | Gateways PIX, taxas, webhooks |
 | [CHAT.md](documentation/CHAT.md) | Chat realtime, áudio, reações |
 | [TELEGRAM.md](documentation/TELEGRAM.md) | Bot, mini app, broadcasts |
@@ -48,9 +48,23 @@ Consulte a pasta `documentation/` para guias completos:
 
 ---
 
-## 🔄 Principais Mudanças v2.2
+## 🔄 Principais Mudanças v2.3
 
-### Sistema de Espelhamento (Mirror Sync)
+### Admin Master
+- **Cargo exclusivo** com acesso total e irrevogável ao sistema
+- **`masterAdminId`** salvo em `system_config` — primeiro usuário é auto-promovido
+- **`MasterOnlyRoute.tsx`** protege `/principal` — verifica `user.id === masterAdminId`
+- **Proteção de cargo** — nenhum outro admin pode remover o cargo do admin master
+- **Sub-menu de decisão** ao atribuir cargo admin: "Admin com acesso ao Principal" ou "Admin comum"
+
+### Novas Features
+- **Cargo `suporte`** — Novo role para agentes de suporte
+- **PIN com blur** — Dígitos do PIN ficam desfocados após digitação
+- **Animação soft-pulse** — Ícone Live no ticker com animação contínua
+- **URLs dinâmicas** — `domain.ts` usa `window.location.origin` (white-label ready)
+- **Branding dinâmico** — `useSiteName`, `useSiteLogo` leem de `system_config`
+
+### Sistema de Espelhamento (Mirror Sync) — v2.2
 - **GitHub Actions** sincroniza automaticamente código para repo espelho a cada push
 - **Isolamento de ambiente** — `.env` e `config.toml` removidos antes do push
 - **Proteção contra execução no destino** — `if: github.repository` no workflow
@@ -62,7 +76,7 @@ Consulte a pasta `documentation/` para guias completos:
 - **Resultado:** Migração completa — usuários fazem login com a mesma senha
 
 ### Cobertura de Dados
-- 42 tabelas do schema `public`
+- 45 tabelas do schema `public` (inclui mirror tables)
 - `auth.users` com senhas criptografadas
 - `auth.identities` para provider email
 - Dados do Telegram (telegram_users, telegram_sessions, terms_acceptance)

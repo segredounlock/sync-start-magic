@@ -1,4 +1,4 @@
-# ⚡ Edge Functions — 32 Funções
+# ⚡ Edge Functions — 33 Funções
 
 ## Funções Administrativas
 
@@ -68,6 +68,7 @@
 |--------|-----------|------|
 | `auth-email-hook` | Hook de emails de autenticação | Webhook (Lovable) |
 | `client-register` | Auto-registro de cliente via link | Public |
+| `init-mirror` | Inicializa ambiente espelho (seeding config + health check) | Public |
 | `og-store` | Gerar meta tags OG para lojas | Public |
 | `scratch-card` | Gerar/validar raspadinha | JWT |
 | `vapid-setup` | Gerar chaves VAPID para push | JWT + admin |
@@ -112,3 +113,4 @@ As seguintes funções **não verificam JWT** pois recebem chamadas externas:
 | `og-store` | Crawlers web (meta tags) |
 | `client-register` | Link público de registro |
 | `telegram-miniapp` | Telegram Mini App |
+| `init-mirror` | Processo de inicialização de espelho |
