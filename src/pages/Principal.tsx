@@ -2202,130 +2202,114 @@ export default function Principal() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
-                    <button onClick={() => setShowSaldoModal(selectedRev)} className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
-                      <DollarSign className="h-4 w-4 inline mr-1" /> Saldo
-                    </button>
-                    <button onClick={() => toggleRevendedorRole(selectedRev)}
-                      disabled={isTargetMaster(selectedRev.id)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground" : selectedRev.isRevendedor ? "bg-success/10 text-success hover:bg-success/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
-                      title={isTargetMaster(selectedRev.id) ? "Admin principal protegido" : ""}
-                    >
-                      {selectedRev.isRevendedor ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
-                      {selectedRev.isRevendedor ? "Revenda Ativa" : "Ativar Revenda"}
-                    </button>
-                    {/* Role Dropdown */}
-                    <div className="flex flex-col gap-2 min-w-[160px]">
-                      <button
-                        onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                        disabled={isTargetMaster(selectedRev.id) || changingRole}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                          isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground" :
-                          selectedRev.role === "admin" ? "bg-primary/10 text-primary hover:bg-primary/20" :
-                          selectedRev.role === "suporte" ? "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" :
-                          "bg-muted/50 text-muted-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {changingRole ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-                        {selectedRev.role === "admin" ? "Admin" : selectedRev.role === "suporte" ? "Suporte" : selectedRev.role === "cliente" ? "Cliente" : "Usuário"}
-                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
+                <div className="mt-4 pt-4 border-t border-border/50 space-y-3">
+                    {/* Row 1: Ações principais */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <button onClick={() => setShowSaldoModal(selectedRev)} className="px-3 py-2.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5">
+                        <DollarSign className="h-4 w-4" /> Saldo
                       </button>
-                      <AnimatePresence>
-                        {showRoleDropdown && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -6, height: 0 }}
-                            animate={{ opacity: 1, y: 0, height: "auto" }}
-                            exit={{ opacity: 0, y: -6, height: 0 }}
-                            className="bg-card border border-border rounded-xl shadow-lg overflow-hidden w-full"
-                          >
-                            {([
-                              { value: "admin", label: "Admin", color: "text-primary" },
-                              { value: "suporte", label: "Suporte", color: "text-blue-500" },
-                              { value: "cliente", label: "Cliente", color: "text-warning" },
-                              { value: "usuario", label: "Usuário", color: "text-muted-foreground" },
-                            ] as const).map((opt) => (
-                              <button
-                                key={opt.value}
-                                disabled={selectedRev.role === opt.value}
-                                onClick={async () => {
-                                  setShowRoleDropdown(false);
-                                  setChangingRole(true);
-                                  try {
-                                    // Remove old role
-                                    if (selectedRev.role && selectedRev.role !== "sem_role") {
-                                      const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", {
-                                        body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" },
-                                      });
-                                      if (d1?.error) throw new Error(d1.error);
-                                    }
-                                    // Add new role
-                                    const { data: d2 } = await supabase.functions.invoke("admin-toggle-role", {
-                                      body: { user_id: selectedRev.id, role: opt.value },
-                                    });
-                                    if (d2?.error) throw new Error(d2.error);
-                                    setSelectedRev({ ...selectedRev, role: opt.value });
-                                    setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: opt.value } : r));
-                                    toast.success(`Cargo alterado para ${opt.label}`);
-                                  } catch (err: any) {
-                                    toast.error(err.message || "Erro ao alterar cargo");
-                                  } finally {
-                                    setChangingRole(false);
-                                  }
-                                }}
-                                className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${
-                                  selectedRev.role === opt.value
-                                    ? "bg-primary/10 text-primary cursor-default"
-                                    : "hover:bg-muted/50 text-foreground"
-                                }`}
-                              >
-                                <Shield className={`h-3.5 w-3.5 ${opt.color}`} />
-                                {opt.label}
-                                {selectedRev.role === opt.value && <Check className="h-3.5 w-3.5 ml-auto text-primary" />}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      <button onClick={() => toggleRevendedorRole(selectedRev)}
+                        disabled={isTargetMaster(selectedRev.id)}
+                        className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground" : selectedRev.isRevendedor ? "bg-success/10 text-success hover:bg-success/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                      >
+                        {selectedRev.isRevendedor ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                        {selectedRev.isRevendedor ? "Revenda Ativa" : "Ativar Revenda"}
+                      </button>
+                      <button onClick={() => toggleActive(selectedRev)}
+                        disabled={isTargetMaster(selectedRev.id)}
+                        className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed" : selectedRev.active ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}
+                      >
+                        {selectedRev.active ? <><UserX className="h-4 w-4" /> Desativar</> : <><UserCheck className="h-4 w-4" /> Ativar</>}
+                      </button>
+                      <button
+                        onClick={() => setShowPasswordModal(selectedRev)}
+                        className="px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-warning/10 text-warning hover:bg-warning/20 flex items-center justify-center gap-1.5"
+                      >
+                        <KeyRound className="h-4 w-4" /> Senha
+                      </button>
                     </div>
-                    <button onClick={() => toggleActive(selectedRev)}
-                      disabled={isTargetMaster(selectedRev.id)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed" : selectedRev.active ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}
-                      title={isTargetMaster(selectedRev.id) ? "Admin principal protegido" : ""}
-                    >
-                      {selectedRev.active ? <><UserX className="h-4 w-4 inline mr-1" /> Desativar</> : <><UserCheck className="h-4 w-4 inline mr-1" /> Ativar</>}
-                    </button>
-                    {!isTargetMaster(selectedRev.id) && (
-                    <button
-                      onClick={async () => {
-                        const ok = await confirm(`Tem certeza que deseja DELETAR permanentemente o usuário "${selectedRev.nome || selectedRev.email}"? Esta ação não pode ser desfeita.`, { destructive: true, confirmText: "Deletar" });
-                        if (!ok) return;
-                        try {
-                          const { data, error } = await supabase.functions.invoke("admin-delete-user", {
-                            body: { user_id: selectedRev.id },
-                          });
-                          if (error) throw error;
-                          if (data?.error) throw new Error(data.error);
-                          toast.success("Usuário deletado com sucesso!");
-                          setView("lista");
-                          setSelectedRev(null);
-                          fetchData();
-                        } catch (err: any) {
-                          toast.error(err.message || "Erro ao deletar usuário");
-                        }
-                      }}
-                      className="px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20"
-                    >
-                      <Trash2 className="h-4 w-4 inline mr-1" /> Deletar
-                    </button>
-                    )}
-                    <button
-                      onClick={() => setShowPasswordModal(selectedRev)}
-                      className="px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-warning/10 text-warning hover:bg-warning/20"
-                    >
-                      <KeyRound className="h-4 w-4 inline mr-1" /> Redefinir Senha
-                    </button>
+
+                    {/* Row 2: Cargo + Deletar */}
+                    <div className="flex flex-wrap gap-2 items-start">
+                      {/* Cargo selector inline */}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 block">Cargo</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {([
+                            { value: "admin", label: "Admin", color: "text-primary", bg: "bg-primary/10 hover:bg-primary/20 ring-primary/40" },
+                            { value: "suporte", label: "Suporte", color: "text-blue-500", bg: "bg-blue-500/10 hover:bg-blue-500/20 ring-blue-500/40" },
+                            { value: "cliente", label: "Cliente", color: "text-warning", bg: "bg-warning/10 hover:bg-warning/20 ring-warning/40" },
+                            { value: "usuario", label: "Usuário", color: "text-muted-foreground", bg: "bg-muted/50 hover:bg-muted ring-muted-foreground/40" },
+                          ] as const).map((opt) => (
+                            <button
+                              key={opt.value}
+                              disabled={isTargetMaster(selectedRev.id) || changingRole}
+                              onClick={async () => {
+                                if (selectedRev.role === opt.value) return;
+                                setChangingRole(true);
+                                try {
+                                  if (selectedRev.role && selectedRev.role !== "sem_role") {
+                                    const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", {
+                                      body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" },
+                                    });
+                                    if (d1?.error) throw new Error(d1.error);
+                                  }
+                                  const { data: d2 } = await supabase.functions.invoke("admin-toggle-role", {
+                                    body: { user_id: selectedRev.id, role: opt.value },
+                                  });
+                                  if (d2?.error) throw new Error(d2.error);
+                                  setSelectedRev({ ...selectedRev, role: opt.value });
+                                  setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: opt.value } : r));
+                                  toast.success(`Cargo alterado para ${opt.label}`);
+                                } catch (err: any) {
+                                  toast.error(err.message || "Erro ao alterar cargo");
+                                } finally {
+                                  setChangingRole(false);
+                                }
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                                isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed" : ""
+                              } ${
+                                selectedRev.role === opt.value
+                                  ? `${opt.bg} ${opt.color} ring-1`
+                                  : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                              }`}
+                            >
+                              {changingRole && selectedRev.role !== opt.value ? null : <Shield className={`h-3 w-3 ${selectedRev.role === opt.value ? opt.color : ""}`} />}
+                              {opt.label}
+                              {selectedRev.role === opt.value && <Check className="h-3 w-3" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {!isTargetMaster(selectedRev.id) && (
+                        <button
+                          onClick={async () => {
+                            const ok = await confirm(`Tem certeza que deseja DELETAR permanentemente o usuário "${selectedRev.nome || selectedRev.email}"? Esta ação não pode ser desfeita.`, { destructive: true, confirmText: "Deletar" });
+                            if (!ok) return;
+                            try {
+                              const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+                                body: { user_id: selectedRev.id },
+                              });
+                              if (error) throw error;
+                              if (data?.error) throw new Error(data.error);
+                              toast.success("Usuário deletado com sucesso!");
+                              setView("lista");
+                              setSelectedRev(null);
+                              fetchData();
+                            } catch (err: any) {
+                              toast.error(err.message || "Erro ao deletar usuário");
+                            }
+                          }}
+                          className="px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20 flex items-center gap-1.5 mt-5"
+                        >
+                          <Trash2 className="h-4 w-4" /> Deletar
+                        </button>
+                      )}
+                    </div>
+
                     {isTargetMaster(selectedRev.id) && (
-                      <div className="w-full mt-1 px-3 py-2 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs font-medium flex items-center gap-1.5">
+                      <div className="px-3 py-2 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs font-medium flex items-center gap-1.5">
                         <Shield className="h-3.5 w-3.5" /> Administrador principal — protegido contra alterações
                       </div>
                     )}
