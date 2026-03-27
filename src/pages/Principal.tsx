@@ -197,6 +197,7 @@ export default function Principal() {
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [showAdminSubMenu, setShowAdminSubMenu] = useState(false);
   const [changingRole, setChangingRole] = useState(false);
   const [showBadgeDropdown, setShowBadgeDropdown] = useState(false);
 
@@ -2234,53 +2235,137 @@ export default function Principal() {
                         <AnimatePresence>
                           {showRoleDropdown && (
                             <>
-                              <div className="fixed inset-0 z-40" onClick={() => setShowRoleDropdown(false)} />
+                              <div className="fixed inset-0 z-40" onClick={() => { setShowRoleDropdown(false); setShowAdminSubMenu(false); }} />
                               <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute left-0 top-full mt-1 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden min-w-[140px]"
+                                className="absolute left-0 top-full mt-1 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden min-w-[180px]"
                               >
-                                {([
-                                  { value: "admin", label: "Admin", color: "text-primary" },
-                                  { value: "suporte", label: "Suporte", color: "text-blue-500" },
-                                  { value: "usuario", label: "Usuário", color: "text-muted-foreground" },
-                                ] as const).map((opt) => (
+                                {/* Admin option with sub-menu */}
+                                <div className="relative">
                                   <button
-                                    key={opt.value}
-                                    disabled={selectedRev.role === opt.value}
-                                    onClick={async () => {
-                                      setShowRoleDropdown(false);
-                                      setChangingRole(true);
-                                      try {
-                                        if (selectedRev.role && selectedRev.role !== "sem_role") {
-                                          const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", {
-                                            body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" },
-                                          });
-                                          if (d1?.error) throw new Error(d1.error);
-                                        }
-                                        const { data: d2 } = await supabase.functions.invoke("admin-toggle-role", {
-                                          body: { user_id: selectedRev.id, role: opt.value },
-                                        });
-                                        if (d2?.error) throw new Error(d2.error);
-                                        setSelectedRev({ ...selectedRev, role: opt.value });
-                                        setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: opt.value } : r));
-                                        toast.success(`Cargo alterado para ${opt.label}`);
-                                      } catch (err: any) {
-                                        toast.error(err.message || "Erro ao alterar cargo");
-                                      } finally {
-                                        setChangingRole(false);
-                                      }
-                                    }}
+                                    disabled={selectedRev.role === "admin"}
+                                    onClick={() => setShowAdminSubMenu(!showAdminSubMenu)}
                                     className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
-                                      selectedRev.role === opt.value ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-foreground"
+                                      selectedRev.role === "admin" ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-foreground"
                                     }`}
                                   >
-                                    <Shield className={`h-3 w-3 ${opt.color}`} />
-                                    {opt.label}
-                                    {selectedRev.role === opt.value && <Check className="h-3 w-3 ml-auto text-primary" />}
+                                    <Shield className="h-3 w-3 text-primary" />
+                                    Admin
+                                    {selectedRev.role === "admin" && <Check className="h-3 w-3 ml-auto text-primary" />}
+                                    {selectedRev.role !== "admin" && <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />}
                                   </button>
-                                ))}
+                                  <AnimatePresence>
+                                    {showAdminSubMenu && selectedRev.role !== "admin" && (
+                                      <motion.div
+                                        initial={{ opacity: 0, x: -5 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -5 }}
+                                        className="border-t border-border bg-muted/30"
+                                      >
+                                        <button
+                                          onClick={async () => {
+                                            setShowRoleDropdown(false); setShowAdminSubMenu(false); setChangingRole(true);
+                                            try {
+                                              if (selectedRev.role && selectedRev.role !== "sem_role") {
+                                                const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", { body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" } });
+                                                if (d1?.error) throw new Error(d1.error);
+                                              }
+                                              const { data: d2 } = await supabase.functions.invoke("admin-toggle-role", { body: { user_id: selectedRev.id, role: "admin" } });
+                                              if (d2?.error) throw new Error(d2.error);
+                                              // Set as master admin
+                                              await supabase.from("system_config").upsert({ key: "masterAdminId", value: selectedRev.id }, { onConflict: "key" });
+                                              setSelectedRev({ ...selectedRev, role: "admin" });
+                                              setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: "admin" } : r));
+                                              toast.success("Cargo alterado para Admin Master (acesso total)");
+                                            } catch (err: any) { toast.error(err.message || "Erro ao alterar cargo"); } finally { setChangingRole(false); }
+                                          }}
+                                          className="w-full px-4 py-2 text-left text-xs font-medium flex items-center gap-2 hover:bg-primary/10 text-foreground"
+                                        >
+                                          <Trophy className="h-3 w-3 text-amber-500" />
+                                          <div>
+                                            <div className="font-semibold">Admin Master</div>
+                                            <div className="text-[10px] text-muted-foreground">Acesso total + Principal</div>
+                                          </div>
+                                        </button>
+                                        <button
+                                          onClick={async () => {
+                                            setShowRoleDropdown(false); setShowAdminSubMenu(false); setChangingRole(true);
+                                            try {
+                                              if (selectedRev.role && selectedRev.role !== "sem_role") {
+                                                const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", { body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" } });
+                                                if (d1?.error) throw new Error(d1.error);
+                                              }
+                                              const { data: d2 } = await supabase.functions.invoke("admin-toggle-role", { body: { user_id: selectedRev.id, role: "admin" } });
+                                              if (d2?.error) throw new Error(d2.error);
+                                              setSelectedRev({ ...selectedRev, role: "admin" });
+                                              setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: "admin" } : r));
+                                              toast.success("Cargo alterado para Admin");
+                                            } catch (err: any) { toast.error(err.message || "Erro ao alterar cargo"); } finally { setChangingRole(false); }
+                                          }}
+                                          className="w-full px-4 py-2 text-left text-xs font-medium flex items-center gap-2 hover:bg-muted/50 text-foreground"
+                                        >
+                                          <Shield className="h-3 w-3 text-primary" />
+                                          <div>
+                                            <div className="font-semibold">Apenas Admin</div>
+                                            <div className="text-[10px] text-muted-foreground">Sem acesso ao Principal</div>
+                                          </div>
+                                        </button>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+
+                                {/* Suporte */}
+                                <button
+                                  disabled={selectedRev.role === "suporte"}
+                                  onClick={async () => {
+                                    setShowRoleDropdown(false); setShowAdminSubMenu(false); setChangingRole(true);
+                                    try {
+                                      if (selectedRev.role && selectedRev.role !== "sem_role") {
+                                        const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", { body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" } });
+                                        if (d1?.error) throw new Error(d1.error);
+                                      }
+                                      const { data: d2 } = await supabase.functions.invoke("admin-toggle-role", { body: { user_id: selectedRev.id, role: "suporte" } });
+                                      if (d2?.error) throw new Error(d2.error);
+                                      setSelectedRev({ ...selectedRev, role: "suporte" });
+                                      setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: "suporte" } : r));
+                                      toast.success("Cargo alterado para Suporte");
+                                    } catch (err: any) { toast.error(err.message || "Erro ao alterar cargo"); } finally { setChangingRole(false); }
+                                  }}
+                                  className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
+                                    selectedRev.role === "suporte" ? "bg-blue-500/10 text-blue-500" : "hover:bg-muted/50 text-foreground"
+                                  }`}
+                                >
+                                  <Shield className="h-3 w-3 text-blue-500" />
+                                  Suporte
+                                  {selectedRev.role === "suporte" && <Check className="h-3 w-3 ml-auto text-blue-500" />}
+                                </button>
+
+                                {/* Usuário */}
+                                <button
+                                  disabled={selectedRev.role === "usuario" || !selectedRev.role || selectedRev.role === "sem_role"}
+                                  onClick={async () => {
+                                    setShowRoleDropdown(false); setShowAdminSubMenu(false); setChangingRole(true);
+                                    try {
+                                      if (selectedRev.role && selectedRev.role !== "sem_role") {
+                                        const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", { body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" } });
+                                        if (d1?.error) throw new Error(d1.error);
+                                      }
+                                      setSelectedRev({ ...selectedRev, role: "usuario" });
+                                      setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: "usuario" } : r));
+                                      toast.success("Cargo alterado para Usuário");
+                                    } catch (err: any) { toast.error(err.message || "Erro ao alterar cargo"); } finally { setChangingRole(false); }
+                                  }}
+                                  className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
+                                    (selectedRev.role === "usuario" || !selectedRev.role || selectedRev.role === "sem_role") ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-foreground"
+                                  }`}
+                                >
+                                  <Shield className="h-3 w-3 text-muted-foreground" />
+                                  Usuário
+                                  {(selectedRev.role === "usuario" || !selectedRev.role || selectedRev.role === "sem_role") && <Check className="h-3 w-3 ml-auto text-primary" />}
+                                </button>
                               </motion.div>
                             </>
                           )}
