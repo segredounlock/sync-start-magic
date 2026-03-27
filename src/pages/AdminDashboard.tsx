@@ -1182,7 +1182,7 @@ export default function AdminDashboard() {
                   <button
                     key={p.key}
                     onClick={() => setPeriod(p.key)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${period === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${period === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     {p.label}
                   </button>
