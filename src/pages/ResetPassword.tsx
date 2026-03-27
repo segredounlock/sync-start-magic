@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion } from "framer-motion";
@@ -10,6 +11,7 @@ import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const siteName = useSiteName();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -109,7 +111,7 @@ export default function ResetPassword() {
           className="text-center mb-8"
         >
           <h1 className="font-display text-3xl font-bold shimmer-letters">
-            Recargas <span className="brasil-word">Brasil</span>
+            {siteName}
           </h1>
         </motion.div>
 

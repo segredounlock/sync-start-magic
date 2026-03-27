@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useNavigate } from "react-router-dom";
 import {
   ShieldAlert, Headphones, Clock, Users, Timer,
@@ -60,6 +61,7 @@ const rules = [
 
 export default function RegrasPage() {
   const navigate = useNavigate();
+  const siteName = useSiteName();
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -84,7 +86,7 @@ export default function RegrasPage() {
             Voltar
           </button>
           <h1 className="font-display text-lg font-bold shimmer-letters tracking-tight">
-            Recargas <span className="brasil-word">Brasil</span>
+            {siteName}
           </h1>
         </motion.div>
       </header>

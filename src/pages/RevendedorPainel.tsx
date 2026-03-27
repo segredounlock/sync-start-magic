@@ -1135,8 +1135,8 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
           <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
           <div className="px-5 py-5 border-b border-border relative">
-            <h1 className="font-display text-xl font-bold shimmer-letters">
-              Recargas <span className="brasil-word">Brasil</span>
+            <h1 className="font-display text-xl font-bold shimmer-letters truncate">
+              {siteName}
             </h1>
             <p className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold mt-1.5">Revendedor</p>
           </div>
