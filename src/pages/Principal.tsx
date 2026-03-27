@@ -197,6 +197,7 @@ export default function Principal() {
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [showAdminSubMenu, setShowAdminSubMenu] = useState(false);
   const [changingRole, setChangingRole] = useState(false);
   const [showBadgeDropdown, setShowBadgeDropdown] = useState(false);
 
