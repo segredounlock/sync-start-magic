@@ -451,7 +451,7 @@ export default function LandingPage() {
             {/* Brand */}
             <div>
               <h4 className="font-display text-lg font-bold shimmer-letters tracking-tight mb-3">
-                Recargas <span className="brasil-word">Brasil</span>
+                {siteName}
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
                 A plataforma mais rápida e segura para vender recargas de celular no Brasil.

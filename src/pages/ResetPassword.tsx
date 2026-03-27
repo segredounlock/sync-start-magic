@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSiteName } from "@/hooks/useSiteName";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion } from "framer-motion";

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useSiteName } from "@/hooks/useSiteName";
 import { useNavigate } from "react-router-dom";
 import {
   ShieldAlert, Headphones, Clock, Users, Timer,

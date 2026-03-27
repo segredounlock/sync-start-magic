@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useSiteName } from "@/hooks/useSiteName";
 import { buildUrl } from "@/lib/domain";
 import { renderTelegramHtml } from "@/components/TextFormatToolbar";
 import { PinProtection } from "@/components/PinProtection";
