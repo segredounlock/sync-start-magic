@@ -250,7 +250,7 @@ export default function AdminBankDashboard({
             {card.sub && (
               <div className="flex items-center gap-1 mt-1.5">
                 {card.trend === "up" && <TrendingUp className="h-3 w-3 text-success" />}
-                <span className="text-[10px] font-medium text-muted-foreground">
+                <span className="text-xs font-medium text-muted-foreground">
                   {card.sub}
                 </span>
               </div>
