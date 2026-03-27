@@ -9,7 +9,7 @@ export interface Revendedor {
   active: boolean;
   created_at: string;
   saldo: number;
-  role: "admin" | "revendedor" | "cliente" | "usuario" | "sem_role" | string;
+  role: "admin" | "revendedor" | "cliente" | "usuario" | "sem_role" | string; // "revendedor"/"cliente" são legados — mantidos por compatibilidade com dados antigos
   avatar_url: string | null;
   telefone?: string | null;
   telegram_username?: string | null;
