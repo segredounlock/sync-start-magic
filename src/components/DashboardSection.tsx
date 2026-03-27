@@ -331,14 +331,14 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => a.tab === "__saque__" ? setShowSaqueModal(true) : a.tab === "__convidar__" ? setShowConvidarModal(true) : onNavigateTab(a.tab)}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
+              className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
             >
-              <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
-                <a.icon className={`h-5 w-5 ${a.color}`} />
+              <div className={`w-12 h-12 rounded-xl ${a.bg} flex items-center justify-center`}>
+                <a.icon className={`h-6 w-6 ${a.color}`} />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-foreground">{a.label}</p>
-                <p className="text-[10px] text-muted-foreground">{a.sub}</p>
+                <p className="text-base font-semibold text-foreground">{a.label}</p>
+                <p className="text-xs text-muted-foreground">{a.sub}</p>
               </div>
             </motion.button>
           ))}
