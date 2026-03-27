@@ -126,7 +126,9 @@
   - User_roles existem para todos os profiles?
   - Dados do Telegram preservados? (telegram_id, telegram_username em profiles)
   - telegram_users, telegram_sessions, terms_acceptance restaurados?
-  - masterAdminId configurado em system_config?
+  - **`masterAdminId` existe em `system_config`?** ← Crítico! Sem isso, ninguém acessa `/principal`
+    - Verificar: `SELECT * FROM system_config WHERE key = 'masterAdminId';`
+    - Se ausente: `INSERT INTO system_config (key, value) VALUES ('masterAdminId', 'UUID-DO-ADMIN');`
 - [ ] Reconfigurar configs:
   - Gateway de pagamento ativo
   - Webhook do Telegram

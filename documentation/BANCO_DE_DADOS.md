@@ -34,6 +34,24 @@
 | `system_config` | Config global (key/value) | key, value |
 | `bot_settings` | Config do bot Telegram | key, value |
 
+### Chaves Críticas do `system_config`
+
+| Chave | Descrição | Auto-criação |
+|-------|-----------|-------------|
+| `masterAdminId` | UUID do admin master — controla acesso a `/principal` | ✅ Trigger `handle_new_user` (primeiro usuário) |
+| `masterPin` | PIN de proteção do Painel Principal | ❌ Configurado manualmente pelo admin |
+| `taxaTipo` / `taxaValor` | Taxa de depósito global | ❌ Configurado pelo admin |
+| `directCommissionPercent` | % comissão direta | ❌ Configurado pelo admin |
+| `indirectCommissionPercent` | % comissão indireta | ❌ Configurado pelo admin |
+| `siteTitle` / `siteName` | Nome do site | ❌ Configurado pelo admin |
+| `siteUrl` | URL do site | ❌ Configurado pelo admin |
+| `maintenanceMode` | Modo manutenção | ❌ Configurado pelo admin |
+| `chatEnabled` | Chat habilitado | ❌ Configurado pelo admin |
+| `seasonalTheme` | Tema sazonal | ❌ Configurado pelo admin |
+| `supportEnabled` | Suporte habilitado | ❌ Configurado pelo admin |
+
+> ⚠️ **`masterAdminId` é a chave mais crítica.** Sem ela, o `MasterOnlyRoute.tsx` redireciona todos para `/painel` e ninguém acessa o Painel Principal. Em migrações/restaurações, sempre verificar se esta chave existe.
+
 ## Tabelas de Comunicação
 
 | Tabela | Descrição | Colunas principais |
