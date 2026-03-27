@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 import { renderTelegramHtml } from "@/components/TextFormatToolbar";
 import { PinProtection } from "@/components/PinProtection";
 import AdminBankDashboard from "@/components/BankDashboard";
@@ -5386,7 +5388,8 @@ function ResetPasswordModal({ rev, onClose }: { rev: Revendedor; onClose: () => 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const isValid = newPassword.length >= 6 && newPassword === confirmPassword;
+  const pwCheck = validatePassword(newPassword);
+  const isValid = pwCheck.valid && newPassword === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -5439,8 +5442,8 @@ function ResetPasswordModal({ rev, onClose }: { rev: Revendedor; onClose: () => 
                 type={showPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                minLength={6}
+                placeholder="Mínimo 8 caracteres"
+                minLength={8}
                 required
                 autoFocus
                 className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/30 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary pr-10 transition-all"
@@ -5449,9 +5452,7 @@ function ResetPasswordModal({ rev, onClose }: { rev: Revendedor; onClose: () => 
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {newPassword.length > 0 && newPassword.length < 6 && (
-              <p className="text-[11px] text-destructive mt-1">Mínimo de 6 caracteres</p>
-            )}
+            <PasswordStrengthMeter password={newPassword} />
           </div>
 
           <div>
