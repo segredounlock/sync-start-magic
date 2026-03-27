@@ -263,8 +263,10 @@ export default function Principal() {
   const [globalConfigSaving, setGlobalConfigSaving] = useState(false);
   const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
-  const [masterAdminId, setMasterAdminId] = useState<string | null>(null);
   const [configSection, setConfigSection] = useState<"geral" | "rede" | "jogos" | "notificacoes" | "banners">("geral");
+  const MASTER_ADMIN_ID = globalConfig.masterAdminId || "f5501acc-79f3-460f-bc3e-493280ea84f0";
+  const isMasterAdmin = user?.id === MASTER_ADMIN_ID;
+  const isTargetMaster = (targetId: string) => targetId === MASTER_ADMIN_ID && !isMasterAdmin;
 
   // Bot status
   const [botStatus, setBotStatus] = useState<{
