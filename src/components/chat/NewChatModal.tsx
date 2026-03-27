@@ -99,14 +99,14 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
         // If admin_badge, also fetch users with verification badges
         if (filter === "admin_badge") {
           let badgeQuery = supabase
-            .from("profiles")
-            .select("id, nome, email, avatar_url, verification_badge")
+            .from("profiles_public")
+            .select("id, nome, avatar_url, verification_badge")
             .eq("active", true)
             .neq("id", user.id)
             .not("verification_badge", "is", null)
             .neq("verification_badge", "");
           if (search.trim()) {
-            badgeQuery = badgeQuery.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+            badgeQuery = badgeQuery.ilike("nome", `%${search}%`);
           }
           const { data: badgeUsers } = await badgeQuery.limit(50);
 
