@@ -37,6 +37,14 @@ serve(async (req) => {
     const { user_id, role, action } = await req.json();
     if (!user_id || !role) throw new Error("user_id e role são obrigatórios");
 
+    // Protect master admin — fetch from system_config
+    const { data: masterCfg } = await adminClient.from("system_config").select("value").eq("key", "masterAdminId").maybeSingle();
+    const masterAdminId = masterCfg?.value || "f5501acc-79f3-460f-bc3e-493280ea84f0";
+
+    if (user_id === masterAdminId && caller.id !== masterAdminId) {
+      throw new Error("O administrador principal não pode ser alterado por outros administradores");
+    }
+
     if (action === "remove") {
       const { error } = await adminClient.from("user_roles").delete().eq("user_id", user_id).eq("role", role);
       if (error) throw error;
