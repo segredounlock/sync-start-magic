@@ -1,7 +1,7 @@
 # 📚 Documentação Completa — Recargas Brasil v2
 
 > **Última atualização:** 2026-03-27  
-> **Versão:** 2.3  
+> **Versão:** 2.4  
 > **Propósito:** Documentação completa do sistema para migração, restauração e manutenção.
 
 ---
@@ -46,6 +46,21 @@
 
 ## 🔄 Changelog Recente
 
+### v2.4 (2026-03-27)
+- **Cargo `revendedor` restaurado** — Usuários sem vínculo de rede (`reseller_id = NULL`) recebem automaticamente o cargo `revendedor` ao se cadastrar
+  - ~1.085 usuários existentes sem vínculo receberam o cargo via INSERT em massa
+  - Trigger `handle_new_user` atualizado: se `_reseller_id IS NULL`, insere `revendedor` além de `usuario`
+  - Usuários com indicação (vínculo de rede) continuam recebendo apenas `usuario`
+  - Primeiro usuário (admin master) recebe `admin` + `usuario` + `revendedor`
+- **Raspadinha refatorada** — Lógica de sorteio completamente reescrita:
+  - Sorteio mutuamente exclusivo (single roll) com faixas cumulativas
+  - Distribuição cúbica dentro de cada tier (favorece valores menores)
+  - Chance total de ganhar reduzida para ~3,3% (era ~8,7%)
+  - Tier 1: 2% (R$0,10–R$1,00), Tier 2: 1% (R$1,00–R$5,00), Tier 3: 0,3% (R$3,00–R$15,00)
+  - Proteção contra valores iguais em derrotas
+  - Melhor suporte a touch no iOS Safari
+- **200 migrations** — Contagem atualizada
+
 ### v2.3 (2026-03-27)
 - **Admin Master** — Novo cargo exclusivo com acesso total via `MasterOnlyRoute`
   - `masterAdminId` salvo em `system_config`
@@ -59,7 +74,6 @@
 - **Branding dinâmico** — `useSiteName`, `useSiteLogo` leem de `system_config`
 - **33 Edge Functions** — Adicionada `init-mirror`
 - **45 tabelas** — Inclui mirror tables (`mirror_sync_state`, `mirror_file_state`, `mirror_sync_logs`)
-- **198 migrations** — Contagem atualizada
 
 ### v2.2 (2026-03-26)
 - **Sistema de espelhamento (Mirror Sync)** — Sincronização automática via GitHub Actions para repo espelho

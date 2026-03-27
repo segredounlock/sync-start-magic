@@ -18,21 +18,27 @@ admin → acesso administrativo parcial
   ├── Pode receber permissão `allowPrincipal` para acesso ao /principal
   └── Pode ser promovido/rebaixado pelo admin master
 
+revendedor → usuário com acesso a ferramentas de rede
+  ├── Acesso a "Meus Preços", "Minha Rede", "Minha Loja"
+  ├── Pode definir preços personalizados para seus clientes
+  ├── Pode gerenciar sua rede de indicações
+  ├── Atribuído automaticamente a usuários SEM vínculo de rede (reseller_id = NULL)
+  └── Usuários COM indicação (reseller_id preenchido) NÃO recebem este cargo
+
 suporte → agente de suporte
   ├── Acesso a tickets de suporte
   ├── Pode responder mensagens de suporte
   └── Não tem acesso ao painel admin
 
-usuario → todos os demais usuários
+usuario → todos os usuários
+  ├── Cargo base atribuído a todos
   ├── Painel (/painel) — acesso padrão
   ├── Realiza recargas
   ├── Deposita saldo via PIX
-  ├── Gerencia rede de indicações
-  ├── Define preços personalizados (rede)
   └── Visualiza histórico e comissões
 ```
 
-> **Nota:** O cargo `revendedor` foi eliminado. Todos os usuários possuem o cargo `usuario` por padrão, preservando acesso a funções de rede e precificação personalizada.
+> **Nota:** O cargo `revendedor` é atribuído automaticamente a novos usuários que se cadastram **sem** código de indicação (sem `reseller_id`). Usuários que entram via link de indicação recebem apenas `usuario`, ficando vinculados à rede do revendedor que os indicou.
 
 ## Admin Master
 
@@ -44,8 +50,9 @@ O **Admin Master** é o usuário supremo do sistema. Ele tem acesso total e irre
 1. **`masterAdminId` em `system_config`** — Armazena o UUID do admin master
 2. **`MasterOnlyRoute.tsx`** — Componente que protege `/principal`, verificando se `user.id === masterAdminId`
 3. **Auto-promoção do primeiro usuário** — O trigger `handle_new_user` verifica se existe algum admin no sistema:
-   - Se **não existe nenhum admin**: o primeiro usuário recebe `admin` + `usuario` e é salvo como `masterAdminId`
-   - Se **já existe admin**: o novo usuário recebe apenas `usuario`
+   - Se **não existe nenhum admin**: o primeiro usuário recebe `admin` + `usuario` + `revendedor` e é salvo como `masterAdminId`
+   - Se **já existe admin e sem vínculo**: o novo usuário recebe `usuario` + `revendedor`
+   - Se **já existe admin e com vínculo**: o novo usuário recebe apenas `usuario`
 
 ### Fluxo de Verificação (`MasterOnlyRoute.tsx`)
 ```
@@ -67,7 +74,7 @@ Na interface de gestão de usuários (Painel Principal):
 CREATE TABLE user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
-  role TEXT NOT NULL, -- 'admin', 'usuario', 'suporte'
+  role TEXT NOT NULL, -- 'admin', 'usuario', 'revendedor', 'suporte'
   created_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(user_id, role)
 );
@@ -93,8 +100,9 @@ Quando um novo usuário se cadastra via `auth.users`, o trigger `handle_new_user
 1. **Cria perfil** em `profiles` (nome, email, slug, reseller_id)
 2. **Cria 2 saldos** em `saldos` (revenda=0, pessoal=0)
 3. **Verifica se existe admin no sistema:**
-   - Se não existe → atribui `admin` + `usuario` + salva como `masterAdminId`
-   - Se existe → atribui apenas `usuario`
+   - Se não existe → atribui `admin` + `usuario` + `revendedor` + salva como `masterAdminId`
+   - Se existe e `reseller_id IS NULL` → atribui `usuario` + `revendedor`
+   - Se existe e `reseller_id IS NOT NULL` → atribui apenas `usuario`
 4. **Gera slug** único via `generate_unique_slug()`
 5. **Gera código** de indicação via `generate_referral_code()`
 

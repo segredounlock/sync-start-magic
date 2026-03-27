@@ -7,7 +7,7 @@
 | Tabela | Descrição | Colunas principais |
 |--------|-----------|-------------------|
 | `profiles` | Perfis de usuários | id, nome, email, telefone, avatar_url, slug, store_name, reseller_id, active, verification_badge, bio, referral_code, telegram_id, telegram_username, whatsapp_number, store_logo_url, store_primary_color, store_secondary_color, last_seen_at |
-| `user_roles` | Roles dos usuários | user_id, role (admin/usuario) |
+| `user_roles` | Roles dos usuários | user_id, role (admin/usuario/revendedor/suporte) |
 | `saldos` | Saldos financeiros | user_id, tipo (revenda/pessoal), valor |
 
 ## Tabelas de Negócio
