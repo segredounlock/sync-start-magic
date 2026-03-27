@@ -79,15 +79,13 @@ function generateGrid(cardId: string, isWon: boolean, prizeAmount: number): numb
       grid[p] = others[Math.floor(rng() * others.length)];
     }
   } else {
-    // No 3 should match - pick values ensuring max 2 of same
+    // NEVER allow 3 of the same value when player lost
     const counts: Record<number, number> = {};
     for (let i = 0; i < 9; i++) {
-      let val: number;
-      let attempts = 0;
-      do {
-        val = POSSIBLE_VALUES[Math.floor(rng() * POSSIBLE_VALUES.length)];
-        attempts++;
-      } while ((counts[val] || 0) >= 2 && attempts < 50);
+      // Filter to only values that appear less than 2 times
+      const available = POSSIBLE_VALUES.filter(v => (counts[v] || 0) < 2);
+      const pool = available.length > 0 ? available : POSSIBLE_VALUES;
+      const val = pool[Math.floor(rng() * pool.length)];
       grid[i] = val;
       counts[val] = (counts[val] || 0) + 1;
     }
