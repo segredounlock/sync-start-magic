@@ -154,10 +154,15 @@ function ComeBackTomorrow() {
 export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [revealedCells, setRevealedCells] = useState<Set<number>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [result, setResult] = useState<{ prize_amount: number; is_won: boolean } | null>(null);
   const [history, setHistory] = useState<HistoryCard[]>([]);
+  const [topWinners, setTopWinners] = useState<WinnerEntry[]>([]);
+  const [recentWinners, setRecentWinners] = useState<WinnerEntry[]>([]);
+  const [balance, setBalance] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<"diaria" | "dourada">("diaria");
+  const [spendingBlock, setSpendingBlock] = useState<{ totalSpent: number; minRequired: number } | null>(null);
+  const finishingRef = useRef(false);
   const [topWinners, setTopWinners] = useState<WinnerEntry[]>([]);
   const [recentWinners, setRecentWinners] = useState<WinnerEntry[]>([]);
   const [balance, setBalance] = useState<number>(0);
