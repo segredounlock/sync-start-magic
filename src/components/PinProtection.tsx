@@ -191,20 +191,32 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
   }
 
   const renderPinInputs = (values: string[], refs: React.MutableRefObject<(HTMLInputElement | null)[]>, isConfirm = false) => (
-    <div className="flex gap-3 justify-center">
+    <div className="flex gap-4 justify-center">
       {values.map((digit, i) => (
-        <input
-          key={i}
-          ref={el => { refs.current[i] = el; }}
-          type="password"
-          inputMode="numeric"
-          maxLength={1}
-          value={digit}
-          onChange={e => handleDigit(i, e.target.value, isConfirm)}
-          onKeyDown={e => handleKeyDown(i, e, isConfirm)}
-          className="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-border bg-muted/50 text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all"
-          autoFocus={i === 0}
-        />
+        <div key={i} className="relative w-14 h-14">
+          <input
+            ref={el => { refs.current[i] = el; }}
+            type="text"
+            inputMode="numeric"
+            maxLength={1}
+            value={digit}
+            onChange={e => handleDigit(i, e.target.value, isConfirm)}
+            onKeyDown={e => handleKeyDown(i, e, isConfirm)}
+            className="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-border bg-muted/50 text-transparent caret-transparent focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all selection:bg-transparent"
+            autoFocus={i === 0}
+            autoComplete="off"
+          />
+          {/* Dot indicator */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div
+              className={`rounded-full bg-primary transition-all duration-300 ${
+                digit
+                  ? "w-3.5 h-3.5 opacity-100 scale-100"
+                  : "w-0 h-0 opacity-0 scale-0"
+              }`}
+            />
+          </div>
+        </div>
       ))}
     </div>
   );
