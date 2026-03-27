@@ -198,6 +198,7 @@ export default function Principal() {
   const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [changingRole, setChangingRole] = useState(false);
+  const [showBadgeDropdown, setShowBadgeDropdown] = useState(false);
 
   // Broadcast state - restore from localStorage if a broadcast was running
   const [broadcastSending, setBroadcastSending] = useState(false);
@@ -2239,7 +2240,7 @@ export default function Principal() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute left-full top-0 ml-1 sm:left-full sm:top-0 sm:ml-1 max-sm:left-0 max-sm:top-full max-sm:mt-1 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden min-w-[140px]"
+                                className="absolute left-0 top-full mt-1 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden min-w-[140px]"
                               >
                                 {([
                                   { value: "admin", label: "Admin", color: "text-primary" },
@@ -2328,39 +2329,75 @@ export default function Principal() {
                     )}
                 </div>
 
-                {/* Badge de Verificação */}
+                {/* Badge de Verificação - Dropdown */}
                 <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border/50">
                   <span className="text-xs text-muted-foreground font-medium block mb-2">Selo de Verificação</span>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="relative inline-block">
                     <button
-                      onClick={async () => {
-                        await supabase.from("profiles").update({ verification_badge: null }).eq("id", selectedRev.id);
-                        setSelectedRev({ ...selectedRev, verification_badge: null });
-                        setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: null } : r));
-                        toast.success("Selo removido");
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!selectedRev.verification_badge ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                      onClick={() => setShowBadgeDropdown?.(!showBadgeDropdown)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                        selectedRev.verification_badge
+                          ? "bg-primary/20 text-primary ring-1 ring-primary/40"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      }`}
                     >
-                      Nenhum
+                      {(() => {
+                        const bk = selectedRev.verification_badge as BadgeType | null;
+                        if (bk && BADGE_CONFIG[bk]) {
+                          const Ic = BADGE_CONFIG[bk].icon;
+                          return <><Ic className={`h-3.5 w-3.5 ${BADGE_CONFIG[bk].color} ${BADGE_CONFIG[bk].fill}`} />{BADGE_CONFIG[bk].label}</>;
+                        }
+                        return "Nenhum";
+                      })()}
+                      <ChevronDown className={`h-3 w-3 transition-transform ${showBadgeDropdown ? "rotate-180" : ""}`} />
                     </button>
-                    {Object.entries(BADGE_CONFIG).map(([key, cfg]) => {
-                      const Icon = cfg.icon;
-                      return (
-                        <button
-                          key={key}
-                          onClick={async () => {
-                            await supabase.from("profiles").update({ verification_badge: key }).eq("id", selectedRev.id);
-                            setSelectedRev({ ...selectedRev, verification_badge: key });
-                            setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: key } : r));
-                            toast.success(`Selo "${cfg.label}" atribuído!`);
-                          }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${selectedRev.verification_badge === key ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
-                        >
-                          <Icon className={`h-3.5 w-3.5 ${cfg.color} ${cfg.fill}`} />
-                          {cfg.label}
-                        </button>
-                      );
-                    })}
+                    <AnimatePresence>
+                      {showBadgeDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowBadgeDropdown(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="absolute sm:left-full sm:top-0 sm:ml-1 max-sm:left-0 max-sm:top-full max-sm:mt-1 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden min-w-[150px]"
+                          >
+                            <button
+                              onClick={async () => {
+                                setShowBadgeDropdown(false);
+                                await supabase.from("profiles").update({ verification_badge: null }).eq("id", selectedRev.id);
+                                setSelectedRev({ ...selectedRev, verification_badge: null });
+                                setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: null } : r));
+                                toast.success("Selo removido");
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${!selectedRev.verification_badge ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-foreground"}`}
+                            >
+                              Nenhum
+                              {!selectedRev.verification_badge && <Check className="h-3 w-3 ml-auto text-primary" />}
+                            </button>
+                            {Object.entries(BADGE_CONFIG).map(([key, cfg]) => {
+                              const Icon = cfg.icon;
+                              return (
+                                <button
+                                  key={key}
+                                  onClick={async () => {
+                                    setShowBadgeDropdown(false);
+                                    await supabase.from("profiles").update({ verification_badge: key }).eq("id", selectedRev.id);
+                                    setSelectedRev({ ...selectedRev, verification_badge: key });
+                                    setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: key } : r));
+                                    toast.success(`Selo "${cfg.label}" atribuído!`);
+                                  }}
+                                  className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${selectedRev.verification_badge === key ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-foreground"}`}
+                                >
+                                  <Icon className={`h-3.5 w-3.5 ${cfg.color} ${cfg.fill}`} />
+                                  {cfg.label}
+                                  {selectedRev.verification_badge === key && <Check className="h-3 w-3 ml-auto text-primary" />}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </motion.div>
