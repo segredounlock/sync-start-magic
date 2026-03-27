@@ -306,12 +306,14 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
           <p className="text-2xl sm:text-3xl font-bold mt-1">
             {loading ? <SkeletonValue width="w-24" className="h-7 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
           </p>
-          <div className="mt-2 pt-2 border-t border-white/20">
-            <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Comissões (Saque)</p>
-            <p className="text-base font-bold">
-              {loading ? <SkeletonValue width="w-16" className="h-4 bg-white/20" /> : fmt(comissaoSaque)}
-            </p>
-          </div>
+          {isRevendedor && (
+            <div className="mt-2 pt-2 border-t border-white/20">
+              <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Comissões (Saque)</p>
+              <p className="text-base font-bold">
+                {loading ? <SkeletonValue width="w-16" className="h-4 bg-white/20" /> : fmt(comissaoSaque)}
+              </p>
+            </div>
+          )}
           <button
             onClick={() => onNavigateTab("addSaldo")}
             className="mt-3 w-full py-2 rounded-xl bg-background text-primary font-bold text-sm hover:bg-background/90 transition-colors flex items-center justify-center gap-1"
