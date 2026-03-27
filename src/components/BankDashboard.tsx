@@ -63,7 +63,7 @@ export default function AdminBankDashboard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 cursor-pointer"
+        className="relative overflow-hidden rounded-2xl bg-card border border-border p-6 cursor-pointer"
         onClick={onShowLucroModal}
       >
         {/* Top glow */}
