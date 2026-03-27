@@ -2215,7 +2215,7 @@ export default function Principal() {
                       {selectedRev.isRevendedor ? "Revenda Ativa" : "Ativar Revenda"}
                     </button>
                     {/* Role Dropdown */}
-                    <div className="relative z-50">
+                    <div className="flex flex-col gap-2 min-w-[160px]">
                       <button
                         onClick={() => setShowRoleDropdown(!showRoleDropdown)}
                         disabled={isTargetMaster(selectedRev.id) || changingRole}
@@ -2233,10 +2233,10 @@ export default function Principal() {
                       <AnimatePresence>
                         {showRoleDropdown && (
                           <motion.div
-                            initial={{ opacity: 0, y: -4, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                            className="absolute bottom-full left-0 mb-1 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden min-w-[160px]"
+                            initial={{ opacity: 0, y: -6, height: 0 }}
+                            animate={{ opacity: 1, y: 0, height: "auto" }}
+                            exit={{ opacity: 0, y: -6, height: 0 }}
+                            className="bg-card border border-border rounded-xl shadow-lg overflow-hidden w-full"
                           >
                             {([
                               { value: "admin", label: "Admin", color: "text-primary" },
