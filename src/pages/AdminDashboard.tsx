@@ -1877,9 +1877,12 @@ export default function AdminDashboard() {
                 </motion.div>
               )}
             </AnimatePresence>
-            </>)}
+            </>)
 
-                {/* Pagamentos - Gateway Individual */}
+          </motion.div>
+        )}
+
+
                 {configSubTab === "pagamentos" && (
                   <div className="space-y-5">
                     <div className="glass-card rounded-xl p-6">
