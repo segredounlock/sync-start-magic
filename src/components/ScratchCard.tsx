@@ -203,7 +203,6 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
       setCard(cardData);
       if (d.is_scratched) {
         setGameOver(true);
-        setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
         setResult({ prize_amount: d.prize_amount, is_won: d.is_won });
       }
     }
