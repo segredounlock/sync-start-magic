@@ -1614,7 +1614,7 @@ export default function Principal() {
                     <RefreshCw className={`h-3.5 w-3.5 ${providerBalance.loading ? "animate-spin" : ""}`} />
                   </button>
                 </div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Saldo Provedor</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Saldo Provedor</p>
                 {providerBalance.loading ? (
                   <div className="mt-1"><SkeletonCard /></div>
                 ) : providerBalance.error ? (
