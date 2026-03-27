@@ -249,7 +249,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
   const opTotal = opData.reduce((s, o) => s + o.value, 0) || 1;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Greeting + Date */}
       <div>
         <p className="text-xs text-muted-foreground">{dateLabel}</p>
