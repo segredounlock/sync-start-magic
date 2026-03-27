@@ -46,6 +46,7 @@ interface Message {
 interface SenderProfile {
   id: string;
   nome: string | null;
+  email: string | null;
   avatar_url: string | null;
   verification_badge: string | null;
 }
@@ -137,7 +138,7 @@ function AdminMessageBubble({ msg, profile, isAdmin }: { msg: Message; profile?:
 
   const isStaff = isAdmin;
   const roleCfg = ROLE_CONFIG[msg.sender_role];
-  const senderName = profile?.nome || "Usuário";
+  const senderName = profile?.nome || (profile?.email ? profile.email.split("@")[0] : null) || "Usuário";
 
   // Parse images
   const parts: (string | { type: "img"; url: string })[] = [];
@@ -269,7 +270,7 @@ export default function AdminSupport() {
     const userIds = [...new Set((sortedTickets as Ticket[]).map(t => t.user_id).filter(Boolean))] as string[];
     if (userIds.length > 0) {
       const { data: profiles } = await supabase.from("profiles")
-        .select("id, nome, avatar_url, verification_badge")
+        .select("id, nome, email, avatar_url, verification_badge")
         .in("id", userIds);
       const map: Record<string, SenderProfile> = {};
       (profiles || []).forEach((p: any) => { map[p.id] = p; });
@@ -294,7 +295,7 @@ export default function AdminSupport() {
     const senderIds = [...new Set(msgs.map((m: Message) => m.sender_id))];
     if (senderIds.length > 0) {
       const { data: profiles } = await supabase.from("profiles")
-        .select("id, nome, avatar_url, verification_badge")
+        .select("id, nome, email, avatar_url, verification_badge")
         .in("id", senderIds as string[]);
       const map: Record<string, SenderProfile> = {};
       (profiles || []).forEach((p: any) => { map[p.id] = p; });
@@ -386,7 +387,7 @@ export default function AdminSupport() {
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
         // Fetch profile if needed
         if (!senderProfiles[newMsg.sender_id]) {
-          supabase.from("profiles").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).single().then(({ data }) => {
+          supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").eq("id", newMsg.sender_id).single().then(({ data }) => {
             if (data) setSenderProfiles(prev => ({ ...prev, [data.id]: data as SenderProfile }));
           });
         }
