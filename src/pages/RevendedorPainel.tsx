@@ -922,16 +922,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   ];
 
   const isAdmin = role === "admin";
+  const isRevendedor = isAdmin || role === "revendedor" || hasNetwork;
   const showSalesTools = isAdmin || salesToolsEnabled;
 
   const salesMenuItems: MenuItem[] = (() => {
-    if (isClientMode || !showSalesTools) return [];
+    if (isClientMode || !showSalesTools || !isRevendedor) return [];
     const items: MenuItem[] = [];
-    // Meus Preços: only for admins, revendedores, or users with their own network
-    if (isAdmin || role === "revendedor" || hasNetwork) {
-      items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
-    }
-    // Minha Rede: visible to all authenticated users
+    items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
     items.push({ key: "minharede", label: "Minha Rede", icon: UsersIcon, color: "text-indigo-400" });
     return items;
   })();
@@ -1092,7 +1089,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 </>
               )}
 
-              {!isClientMode && (
+              {!isClientMode && isRevendedor && (
                 <a
                   href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${referralCode || user?.id}`}
                   target="_blank"
@@ -1138,7 +1135,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <h1 className="font-display text-xl font-bold shimmer-letters truncate">
               {siteName}
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold mt-1.5">Revendedor</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold mt-1.5">{isRevendedor ? "Revendedor" : "Cliente"}</p>
           </div>
 
           <div className="p-4 space-y-3 border-b border-border relative">
@@ -1415,6 +1412,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               isClientMode={isClientMode}
               salesToolsEnabled={salesToolsEnabled}
               userRole={role}
+              isRevendedor={isRevendedor}
             />
           )}
 
@@ -2650,12 +2648,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         }}
         mainCount={4}
         userLabel={user?.email || userLabel}
-        userRole={role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário"}
+        userRole={role === "admin" ? "Administrador" : isRevendedor ? "Revendedor" : "Cliente"}
         userAvatarUrl={avatarUrl}
         onSignOut={signOut}
         panelLinks={[
           ...(!isClientMode && (role === "admin" || role === "revendedor") ? [{ label: "Painel Admin", path: "/admin", icon: Shield, color: "text-primary" }] : []),
           ...(role === "admin" ? [{ label: "Principal", path: "/principal", icon: Landmark, color: "text-success" }] : []),
+          ...(!isClientMode && isRevendedor ? [{ label: "Minha Loja", path: profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${referralCode || user?.id}`, icon: Store, color: "text-accent" }] : []),
         ]}
       />
 

@@ -24,6 +24,7 @@ interface DashboardSectionProps {
   isClientMode?: boolean;
   salesToolsEnabled?: boolean;
   userRole?: string | null;
+  isRevendedor?: boolean;
 }
 
 type Period = "hoje" | "mes" | "outro";
@@ -38,7 +39,7 @@ const OP_COLORS: Record<string, string> = {
   oi: "hsl(35 90% 55%)",
 };
 
-export function DashboardSection({ saldo, loading, userId, userName, badge, onNavigateTab, isClientMode, salesToolsEnabled = true, userRole }: DashboardSectionProps) {
+export function DashboardSection({ saldo, loading, userId, userName, badge, onNavigateTab, isClientMode, salesToolsEnabled = true, userRole, isRevendedor = false }: DashboardSectionProps) {
   const [period, setPeriod] = useState<Period>("mes");
   const [stats, setStats] = useState({ faturamento: 0, comissoes: 0, vendas: 0, novosClientes: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -215,7 +216,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
   };
 
   const isAdmin = userRole === "admin";
-  const showSalesTools = isAdmin || salesToolsEnabled;
+  const showSalesTools = (isAdmin || salesToolsEnabled) && isRevendedor;
 
   const quickActions = [
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
@@ -234,9 +235,11 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
 
   const kpis = [
     { icon: DollarSign, label: "Seu Lucro", value: stats.faturamento, isCurrency: true, color: "text-primary", bg: "bg-primary/10" },
-    { icon: TrendingUp, label: "Comissões", value: stats.comissoes, isCurrency: true, color: "text-success", bg: "bg-success/10" },
+    ...(isRevendedor ? [
+      { icon: TrendingUp, label: "Comissões", value: stats.comissoes, isCurrency: true, color: "text-success", bg: "bg-success/10" },
+    ] : []),
     { icon: ShoppingCart, label: "Vendas Realizadas", value: stats.vendas, isCurrency: false, color: "text-accent-foreground", bg: "bg-accent/10" },
-    ...(!isClientMode ? [
+    ...(!isClientMode && isRevendedor ? [
       { icon: UserPlus, label: "Novos Clientes", value: stats.novosClientes, isCurrency: false, color: "text-warning", bg: "bg-warning/10" },
     ] : []),
   ];
@@ -258,9 +261,9 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
 
       <InfoCard title="Visão Geral" items={[
         { icon: DollarSign, label: "Lucro", description: "Total de lucro das suas vendas no período selecionado." },
-        { icon: TrendingUp, label: "Comissões", description: "Ganhos por indicações diretas e indiretas da sua rede." },
+        ...(isRevendedor ? [{ icon: TrendingUp, label: "Comissões", description: "Ganhos por indicações diretas e indiretas da sua rede." }] : []),
         { icon: BarChart3, label: "Período", description: "Use os filtros para ver dados de hoje, do mês ou de outra data." },
-        ...(!isClientMode ? [{ icon: UserPlus, label: "Indicação", description: "Compartilhe seu link para expandir sua rede e ganhar comissões." }] : []),
+        ...(!isClientMode && isRevendedor ? [{ icon: UserPlus, label: "Indicação", description: "Compartilhe seu link para expandir sua rede e ganhar comissões." }] : []),
       ]} />
 
       {/* Pending Prices Alert */}
@@ -303,12 +306,14 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
           <p className="text-2xl sm:text-3xl font-bold mt-1">
             {loading ? <SkeletonValue width="w-24" className="h-7 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
           </p>
-          <div className="mt-2 pt-2 border-t border-white/20">
-            <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Comissões (Saque)</p>
-            <p className="text-base font-bold">
-              {loading ? <SkeletonValue width="w-16" className="h-4 bg-white/20" /> : fmt(comissaoSaque)}
-            </p>
-          </div>
+          {isRevendedor && (
+            <div className="mt-2 pt-2 border-t border-white/20">
+              <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Comissões (Saque)</p>
+              <p className="text-base font-bold">
+                {loading ? <SkeletonValue width="w-16" className="h-4 bg-white/20" /> : fmt(comissaoSaque)}
+              </p>
+            </div>
+          )}
           <button
             onClick={() => onNavigateTab("addSaldo")}
             className="mt-3 w-full py-2 rounded-xl bg-background text-primary font-bold text-sm hover:bg-background/90 transition-colors flex items-center justify-center gap-1"
