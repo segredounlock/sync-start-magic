@@ -655,8 +655,13 @@ serve(async (req) => {
                 user_id: ticket.user_id || null,
               });
               // ✅ Write admin reply to support_messages (unified history)
-              // Use a placeholder admin UUID — the actual admin user
-              const adminUserId = ticket.assigned_to || "00000000-0000-0000-0000-000000000001";
+              // Resolve actual admin user by telegram_id
+              let adminUserId = ticket.assigned_to || "00000000-0000-0000-0000-000000000001";
+              const { data: adminProfile } = await supabase.from("profiles")
+                .select("id")
+                .eq("telegram_id", chatId)
+                .maybeSingle();
+              if (adminProfile?.id) adminUserId = adminProfile.id;
               await supabase.from("support_messages").insert({
                 ticket_id: ticket.id,
                 sender_id: adminUserId,
