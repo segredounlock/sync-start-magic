@@ -30,9 +30,9 @@ import { ProfileTab } from "@/components/ProfileTab";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Wallet, Smartphone, History, Send, Clock, MessageCircle,
-  Menu, X, User, Activity, Landmark, CreditCard, DollarSign, CheckCircle2, XCircle,
-  Wifi, Database, Shield, Server, AlertTriangle, Loader2, Eye, EyeOff, Save,
-  QrCode, Copy, ExternalLink, RefreshCw, Store, Pencil, Search, Filter, Camera, ChevronRight, FileText,
+  X, User, Activity, Landmark, CreditCard, DollarSign, CheckCircle2, XCircle,
+  Shield, Server, AlertTriangle, Loader2, Eye, 
+  QrCode, Copy, ExternalLink, RefreshCw, Store, Search, Filter, ChevronRight, FileText,
   Tag, Users as UsersIcon, Settings, Star, ArrowRightLeft, Banknote, Ticket, Info, Headphones, HeadphoneOff, Trophy,
 } from "lucide-react";
 import { MeusPrecos } from "@/components/MeusPrecos";

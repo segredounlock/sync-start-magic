@@ -41,11 +41,11 @@ import {
   LogOut, Users, DollarSign, Smartphone, BarChart3, Plus, Search,
   ToggleLeft, ToggleRight, History, Landmark, TrendingUp,
   Wallet, Menu, X, Shield, Eye, Phone, Mail, Calendar, ChevronRight,
-  ArrowLeft, UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
-  Globe, Bot, RefreshCw, Wifi, WifiOff, CheckCircle2, AtSign, Trash2, AlertTriangle,
+  UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
+  Globe, Bot, RefreshCw, Wifi, CheckCircle2, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
-  Download, Upload, Database, CheckSquare, Square, Server, Send, Megaphone, MessageCircle,
-  Trophy, Check, KeyRound, Banknote, Network, XCircle, Image, ArrowRight, ArrowDown, Headphones, User,
+  Upload, Database, Server, Send, Megaphone, MessageCircle,
+  Trophy, Check, KeyRound, Banknote, Network, Image, Headphones, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAll";
