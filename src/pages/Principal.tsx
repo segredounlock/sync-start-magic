@@ -2205,14 +2205,21 @@ export default function Principal() {
                       <DollarSign className="h-4 w-4 inline mr-1" /> Saldo
                     </button>
                     <button onClick={() => toggleRevendedorRole(selectedRev)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${selectedRev.isRevendedor ? "bg-success/10 text-success hover:bg-success/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                      disabled={isTargetMaster(selectedRev.id)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground" : selectedRev.isRevendedor ? "bg-success/10 text-success hover:bg-success/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                      title={isTargetMaster(selectedRev.id) ? "Admin principal protegido" : ""}
                     >
                       {selectedRev.isRevendedor ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                       {selectedRev.isRevendedor ? "Revenda Ativa" : "Ativar Revenda"}
                     </button>
-                    <button onClick={() => toggleActive(selectedRev)} className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedRev.active ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}>
+                    <button onClick={() => toggleActive(selectedRev)}
+                      disabled={isTargetMaster(selectedRev.id)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed" : selectedRev.active ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}
+                      title={isTargetMaster(selectedRev.id) ? "Admin principal protegido" : ""}
+                    >
                       {selectedRev.active ? <><UserX className="h-4 w-4 inline mr-1" /> Desativar</> : <><UserCheck className="h-4 w-4 inline mr-1" /> Ativar</>}
                     </button>
+                    {!isTargetMaster(selectedRev.id) && (
                     <button
                       onClick={async () => {
                         const ok = await confirm(`Tem certeza que deseja DELETAR permanentemente o usuário "${selectedRev.nome || selectedRev.email}"? Esta ação não pode ser desfeita.`, { destructive: true, confirmText: "Deletar" });
@@ -2235,12 +2242,18 @@ export default function Principal() {
                     >
                       <Trash2 className="h-4 w-4 inline mr-1" /> Deletar
                     </button>
+                    )}
                     <button
                       onClick={() => setShowPasswordModal(selectedRev)}
                       className="px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-warning/10 text-warning hover:bg-warning/20"
                     >
                       <KeyRound className="h-4 w-4 inline mr-1" /> Redefinir Senha
                     </button>
+                    {isTargetMaster(selectedRev.id) && (
+                      <div className="w-full mt-1 px-3 py-2 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs font-medium flex items-center gap-1.5">
+                        <Shield className="h-3.5 w-3.5" /> Administrador principal — protegido contra alterações
+                      </div>
+                    )}
                 </div>
 
                 {/* Badge de Verificação */}
