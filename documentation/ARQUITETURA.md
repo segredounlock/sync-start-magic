@@ -17,11 +17,11 @@
                     │  Supabase   │
                     │   Cloud     │
                     ├─────────────┤
-                    │ PostgreSQL  │ ← 42 tabelas + RLS
+                    │ PostgreSQL  │ ← 45 tabelas + RLS
                     │ Auth        │ ← JWT + Roles
                     │ Storage     │ ← 8 buckets
                     │ Realtime    │ ← WebSocket
-                    │ Edge Funcs  │ ← 32 funções Deno
+                    │ Edge Funcs  │ ← 33 funções Deno
                     └──────┬──────┘
                            │
               ┌────────────┼────────────┐
@@ -49,10 +49,11 @@
 │   │   ├── settings/       # Abas de configurações (4 arquivos)
 │   │   ├── support/        # Suporte ao cliente (4 arquivos)
 │   │   └── ui/             # Componentes de UI base (5 arquivos)
-│   ├── hooks/              # Custom hooks (18 arquivos)
+│   ├── hooks/              # Custom hooks (20 arquivos)
 │   ├── integrations/
 │   │   └── supabase/       # Client e types (auto-gerado)
-│   ├── lib/                # Utilitários e helpers (14 arquivos)
+│   ├── lib/                # Utilitários e helpers (15 arquivos)
+│   │   └── domain.ts       # URLs dinâmicas (white-label)
 │   ├── pages/              # Páginas da aplicação (16+ arquivos)
 │   │   └── docs/           # Documentação interna (2 arquivos)
 │   ├── styles/             # Estilos globais
@@ -62,7 +63,7 @@
 │   └── index.css           # Estilos base + Tailwind
 ├── supabase/
 │   ├── config.toml         # Configuração do Supabase
-│   ├── functions/          # 32 Edge Functions
+│   ├── functions/          # 33 Edge Functions
 │   │   ├── _shared/        # Templates de email compartilhados
 │   │   │   └── email-templates/  # 6 templates (signup, recovery, etc.)
 │   │   ├── admin-create-user/
@@ -84,6 +85,7 @@
 │   │   ├── efi-setup/
 │   │   ├── expire-pending-deposits/
 │   │   ├── github-sync/
+│   │   ├── init-mirror/        # Inicializa ambiente espelho
 │   │   ├── og-store/
 │   │   ├── pix-webhook/
 │   │   ├── recarga-express/
@@ -97,13 +99,29 @@
 │   │   ├── telegram-notify/
 │   │   ├── telegram-setup/
 │   │   └── vapid-setup/
-│   └── migrations/         # SQL migrations (187+ arquivos)
+│   └── migrations/         # SQL migrations (198+ arquivos)
 ├── index.html              # HTML entry
 ├── vite.config.ts          # Configuração Vite + PWA + Source Hash Plugin
 ├── tailwind.config.ts      # Configuração Tailwind
 ├── tsconfig.json           # TypeScript config
 └── package.json            # Dependências
 ```
+
+## Componentes de Proteção de Rota
+
+| Componente | Descrição |
+|-----------|-----------|
+| `ProtectedRoute.tsx` | Protege rotas por auth + role (admin, usuario) |
+| `MasterOnlyRoute.tsx` | Protege `/principal` — apenas admin master (valida `masterAdminId` em `system_config`) |
+
+## URLs Dinâmicas (White-Label)
+
+O arquivo `src/lib/domain.ts` fornece URLs dinâmicas usando `window.location.origin`:
+- `getBaseUrl()` — retorna o domínio atual
+- `buildUrl(path)` — constrói URL completa com o domínio atual
+- `fixExternalUrl(url)` — substitui domínios lovable.app pelo domínio atual
+
+Isso permite que o sistema funcione em qualquer domínio sem alterações de código.
 
 ## Fluxo de Dados
 
@@ -112,6 +130,7 @@
 Usuário → Auth.tsx → Supabase Auth → JWT Token
   → handle_new_user trigger → profiles + saldos + user_roles
   → ProtectedRoute verifica role → Redireciona para painel correto
+  → MasterOnlyRoute (para /principal) → Verifica masterAdminId
 ```
 
 ### Recarga

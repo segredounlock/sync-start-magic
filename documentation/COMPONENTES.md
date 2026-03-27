@@ -6,8 +6,8 @@
 |---------|------|-----------|
 | `Auth.tsx` | `/auth` | Login, cadastro e recuperação de senha |
 | `ResetPassword.tsx` | `/reset-password` | Redefinição de senha via link |
-| `Principal.tsx` | `/principal` | Painel Master (admin completo) |
-| `AdminDashboard.tsx` | `/admin` | Painel Admin/Revendedor |
+| `Principal.tsx` | `/principal` | Painel Master (admin master exclusivo, protegido por MasterOnlyRoute) |
+| `AdminDashboard.tsx` | `/admin` | Painel Admin |
 | `RevendedorPainel.tsx` | `/revendedor` | Painel do revendedor |
 | `ClientePortal.tsx` | `/cliente` | Portal do cliente final |
 | `LandingPage.tsx` | `/` | Página pública inicial |
@@ -24,7 +24,7 @@
 | `MaintenancePage.tsx` | — | Página de manutenção |
 | `NotFound.tsx` | `*` | Página 404 |
 
-## Componentes Principais (`src/components/`) — ~60 arquivos
+## Componentes Principais (`src/components/`) — ~65 arquivos
 
 ### Core
 | Arquivo | Descrição |
@@ -34,6 +34,7 @@
 | `AnimatedIcon.tsx` | Ícones com animação de entrada |
 | `AnimatedPage.tsx` | Wrapper de página com transição fade |
 | `ProtectedRoute.tsx` | Rota protegida por auth + role |
+| `MasterOnlyRoute.tsx` | Rota exclusiva do Admin Master (valida `masterAdminId` em `system_config`) |
 | `MobileBottomNav.tsx` | Navegação inferior mobile |
 | `FloatingMenuIcon.tsx` | Menu flutuante |
 | `PullToRefresh.tsx` | Pull to refresh mobile |
@@ -65,6 +66,8 @@
 | `ChatRoomManager.tsx` | Gerenciador de salas de chat |
 | `NetworkCommissionConfig.tsx` | Config de comissões da rede |
 | `ResellerFeeConfig.tsx` | Config de taxas do revendedor |
+| `SupportAdminSelector.tsx` | Seletor de admin de suporte |
+| `MirrorSyncPanel.tsx` | Painel de sincronização espelho |
 
 ### Revendedor
 | Arquivo | Descrição |
@@ -79,7 +82,7 @@
 | Arquivo | Descrição |
 |---------|-----------|
 | `RecargaReceipt.tsx` | Comprovante de recarga |
-| `RecargasTicker.tsx` | Ticker de recargas recentes |
+| `RecargasTicker.tsx` | Ticker de recargas recentes (com animação soft-pulse no ícone Live) |
 | `TopRankingPodium.tsx` | Pódio de ranking |
 | `BrandedQRCode.tsx` | QR Code personalizado |
 
@@ -96,7 +99,7 @@
 ### Segurança
 | Arquivo | Descrição |
 |---------|-----------|
-| `PinProtection.tsx` | Proteção por PIN |
+| `PinProtection.tsx` | Proteção por PIN (dígitos com efeito blur) |
 | `PasswordStrengthMeter.tsx` | Medidor de força de senha |
 | `VerificationBadge.tsx` | Badge de verificação |
 
@@ -141,7 +144,7 @@
 
 ---
 
-## Hooks (`src/hooks/`) — 18 arquivos
+## Hooks (`src/hooks/`) — 20 arquivos
 
 | Hook | Descrição |
 |------|-----------|
@@ -160,6 +163,9 @@
 | `usePresence.ts` | Presença online do usuário (Supabase Presence) |
 | `usePushNotifications.ts` | Push notifications web (VAPID) |
 | `useSeasonalTheme.ts` | Tema sazonal (natal, carnaval, etc.) |
+| `useSiteLogo.ts` | Logo dinâmico do site (lê de system_config key: siteLogo) |
+| `useSiteName.ts` | Nome dinâmico do site (lê de system_config key: siteName) |
+| `useSupportAdminId.ts` | ID do admin de suporte (lê de system_config) |
 | `useSupportChannels.ts` | Canais de suporte |
 | `useTheme.tsx` | Tema light/dark |
 | `useTypingIndicator.ts` | Indicador de digitação no chat |
@@ -179,7 +185,7 @@ O sistema utiliza múltiplas camadas para evitar notificações duplicadas:
 
 ---
 
-## Libs (`src/lib/`) — 14 arquivos
+## Libs (`src/lib/`) — 15 arquivos
 
 | Lib | Descrição |
 |-----|-----------|
@@ -187,6 +193,7 @@ O sistema utiliza múltiplas camadas para evitar notificações duplicadas:
 | `confirm.tsx` | Modal de confirmação |
 | `currencyMask.ts` | Máscara de moeda BRL |
 | `deviceFingerprint.ts` | Coleta de fingerprint do dispositivo |
+| `domain.ts` | URLs dinâmicas via `window.location.origin` (white-label) |
 | `fetchAll.ts` | Fetch com paginação automática (>1000 rows) |
 | `inputValidation.ts` | Validação de inputs (telefone, email) |
 | `passwordValidation.ts` | Validação de força de senha |

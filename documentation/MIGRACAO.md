@@ -26,21 +26,22 @@
 
 ## 3. Banco de Dados
 
-### 3.1 Tabelas (criar na ordem)
+### 3.1 Tabelas (criar na ordem) — 45 tabelas
 - [ ] Tabelas sem FK: `operadoras`, `system_config`, `bot_settings`, `notifications`, `login_attempts`, `banners`, `polls`, `support_templates`
 - [ ] `profiles` (FK para auth.users)
 - [ ] Tabelas com FK para profiles: `user_roles`, `saldos`, `recargas`, `transactions`, `referral_commissions`, etc.
 - [ ] Tabelas de chat: `chat_conversations`, `chat_members`, `chat_messages`, `chat_message_reads`, `chat_reactions`
 - [ ] Tabelas de suporte: `support_tickets`, `support_messages`
 - [ ] Tabelas Telegram: `telegram_users`, `telegram_sessions`, `terms_acceptance`
+- [ ] Tabelas de mirror: `mirror_sync_state`, `mirror_file_state`, `mirror_sync_logs`
 - [ ] Demais tabelas
 
-### 3.2 Funções (criar todas — 35 funções)
+### 3.2 Funções (criar todas — ~38 funções)
 - [ ] `has_role` (SECURITY DEFINER)
 - [ ] `has_verification_badge`
 - [ ] `increment_saldo`
 - [ ] `claim_transaction`
-- [ ] `handle_new_user` (trigger)
+- [ ] `handle_new_user` (trigger — inclui auto-promoção de admin master)
 - [ ] `generate_unique_slug`
 - [ ] `generate_referral_code` (trigger)
 - [ ] `update_updated_at_column` (trigger)
@@ -76,8 +77,8 @@
 - [ ] `get_user_reseller_id`
 
 ### 3.3 RLS Policies
-- [ ] Configurar RLS em TODAS as 42 tabelas
-- [ ] Testar acesso por role (admin, usuario)
+- [ ] Configurar RLS em TODAS as 45 tabelas
+- [ ] Testar acesso por role (admin, usuario, suporte)
 
 ### 3.4 Realtime
 - [ ] Habilitar realtime: `chat_conversations`, `chat_messages`, `chat_reactions`
@@ -100,13 +101,14 @@
 
 ## 5. Edge Functions
 
-- [ ] Deploy das 32 edge functions
+- [ ] Deploy das 33 edge functions
 - [ ] Verificar `verify_jwt` para webhooks:
   - `telegram-bot` → false
   - `pix-webhook` → false
   - `auth-email-hook` → false
   - `og-store` → false
   - `client-register` → false
+  - `init-mirror` → false
 
 ## 6. Dados
 
@@ -124,14 +126,17 @@
   - User_roles existem para todos os profiles?
   - Dados do Telegram preservados? (telegram_id, telegram_username em profiles)
   - telegram_users, telegram_sessions, terms_acceptance restaurados?
+  - masterAdminId configurado em system_config?
 - [ ] Reconfigurar configs:
   - Gateway de pagamento ativo
   - Webhook do Telegram
   - Chaves VAPID
+  - masterAdminId (se necessário)
 
 ## 7. Validação
 
 - [ ] Testar login com senha existente (sem reset)
+- [ ] Testar acesso do admin master ao /principal
 - [ ] Testar cadastro de novo usuário
 - [ ] Testar recuperação de senha
 - [ ] Testar depósito PIX (todos os gateways)
@@ -167,7 +172,7 @@ Se o destino for um projeto espelho com Lovable Cloud próprio:
 ### 9.2 Banco de Dados
 - [ ] Os **arquivos** de migration são sincronizados via git, mas **NÃO são aplicados automaticamente** ao banco do espelho
 - [ ] Após o primeiro sync, forçar uma publicação/re-deploy no projeto espelho para que o Lovable Cloud execute as migrations
-- [ ] Verificar que as 42 tabelas foram criadas: acessar Lovable Cloud → Database → Tables
+- [ ] Verificar que as 45 tabelas foram criadas
 - [ ] Se o banco continuar vazio, aplicar o SQL manualmente via Lovable Cloud → Run SQL (usar o schema completo documentado em [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md))
 - [ ] O `types.ts` é regenerado pelo Lovable Cloud do espelho **somente após** as migrations serem aplicadas
 
@@ -177,7 +182,7 @@ Se o destino for um projeto espelho com Lovable Cloud próprio:
 - [ ] Configurar gateway de pagamento em `system_config`
 - [ ] Configurar bot Telegram (token + webhook)
 - [ ] Gerar chaves VAPID via `vapid-setup`
-- [ ] Criar primeiro usuário admin
+- [ ] Criar primeiro usuário admin (será auto-promovido a admin master)
 - [ ] Definir PIN master
 
 ### 9.4 Dados

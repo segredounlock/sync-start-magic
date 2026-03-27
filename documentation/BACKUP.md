@@ -2,10 +2,10 @@
 
 ## Visão Geral
 
-O sistema de backup cobre 4 áreas:
-1. **Banco de dados** — Todas as 42 tabelas do schema `public`
+O sistema de backup (v3.3) cobre 4 áreas:
+1. **Banco de dados** — Todas as 45 tabelas do schema `public`
 2. **Autenticação** — Todos os usuários de `auth.users` com senhas criptografadas
-3. **Código fonte** — Todos os 172+ arquivos do projeto
+3. **Código fonte** — Todos os 203+ arquivos do projeto (inclui `MasterOnlyRoute.tsx`)
 4. **GitHub Sync** — Sincronização com repositório GitHub
 
 ## Backup de Dados (Export)
@@ -49,10 +49,13 @@ backup-YYYY-MM-DD.zip
 │   ├── telegram_users.json
 │   ├── telegram_sessions.json
 │   ├── terms_acceptance.json
-│   ├── ... (42 tabelas)
+│   ├── mirror_sync_state.json
+│   ├── mirror_file_state.json
+│   ├── mirror_sync_logs.json
+│   ├── ... (45 tabelas)
 │   └── update_history.json
 ├── schema/ (opcional)
-│   ├── functions.sql       # Todas as funções SQL
+│   ├── functions.sql       # Todas as funções SQL (~38 funções)
 │   ├── rls-policies.json   # Políticas RLS
 │   ├── triggers.json       # Triggers
 │   ├── enums.json          # Enums customizados
@@ -90,6 +93,12 @@ backup-YYYY-MM-DD.zip
 
 **Resultado:** Usuários migrados fazem login com a mesma senha, sem precisar resetar.
 
+#### Restauração Segura (Safe Restore)
+Modo `?mode=safe` para ambientes espelhos:
+- Ignora `auth.users`, `system_config` e `bot_settings`
+- Usa `INSERT ... ON CONFLICT DO NOTHING` para demais tabelas
+- Preserva dados existentes no banco de destino
+
 #### Restauração de Tabelas
 - Restaura tabelas na ordem correta de dependência
 - Valida foreign keys (filtra registros órfãos)
@@ -106,7 +115,8 @@ backup-YYYY-MM-DD.zip
 7. `pricing_rules`, `reseller_*` (dependem de operadoras/profiles)
 8. `recargas`, `transactions` (dependem de profiles)
 9. `chat_*`, `support_*` (dependem de profiles)
-10. Demais tabelas
+10. `mirror_*` (tabelas de espelhamento)
+11. Demais tabelas
 
 ### Conflict Targets Especiais
 
@@ -124,15 +134,15 @@ backup-YYYY-MM-DD.zip
 O `BackupSection.tsx` mantém lista explícita de todos os arquivos (`SOURCE_PATHS`) e também usa `sourceManifest.ts` para descoberta dinâmica via Vite plugin.
 
 ### Categorias Cobertas
-- Páginas (16 arquivos)
-- Componentes (~60 arquivos)
-- Hooks (18 arquivos)
-- Libs (14 arquivos)
+- Páginas (16+ arquivos)
+- Componentes (~65 arquivos, inclui `MasterOnlyRoute.tsx`)
+- Hooks (20 arquivos)
+- Libs (15 arquivos)
 - Types e integrations
-- Edge Functions (32 funções)
+- Edge Functions (33 funções)
 - Email templates (6 templates)
 - Configs raiz (vite, tailwind, tsconfig, etc.)
-- Documentação (12 arquivos)
+- Documentação (13 arquivos)
 
 ### Hash de Integridade
 O `sourceHashPlugin` no `vite.config.ts` calcula SHA-256 de cada arquivo fonte, permitindo verificar integridade no backup.
@@ -158,6 +168,7 @@ O `sourceHashPlugin` no `vite.config.ts` calcula SHA-256 de cada arquivo fonte, 
 > 1. `supabase/functions/backup-export/index.ts` — fallback de tabelas
 > 2. `supabase/functions/backup-restore/index.ts` — knownOrder
 > 3. `src/components/BackupSection.tsx` — SOURCE_PATHS
+> 4. `documentation/` — atualizar docs relevantes
 
 ## Segurança
 
@@ -180,4 +191,4 @@ O sistema de [espelhamento automático](./MIRROR_SYNC.md) via GitHub Actions man
 
 Use o `backup-export` no projeto espelho para verificar se o schema está correto:
 - Se a exportação retornar 0 tabelas, o banco está vazio e as migrations precisam ser aplicadas
-- Compare a contagem de tabelas (deve ser 42) com o projeto de origem
+- Compare a contagem de tabelas (deve ser 45) com o projeto de origem

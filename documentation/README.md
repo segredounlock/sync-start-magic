@@ -1,7 +1,7 @@
 # 📚 Documentação Completa — Recargas Brasil v2
 
-> **Última atualização:** 2026-03-26  
-> **Versão:** 2.2  
+> **Última atualização:** 2026-03-27  
+> **Versão:** 2.3  
 > **Propósito:** Documentação completa do sistema para migração, restauração e manutenção.
 
 ---
@@ -11,10 +11,10 @@
 | Documento | Descrição |
 |-----------|-----------|
 | [ARQUITETURA.md](./ARQUITETURA.md) | Arquitetura geral, stack tecnológico e estrutura de pastas |
-| [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md) | Todas as 42 tabelas, RLS policies, funções e triggers |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Todas as 32 Edge Functions com descrição e autenticação |
+| [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md) | Todas as 45 tabelas, RLS policies, funções e triggers |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Todas as 33 Edge Functions com descrição e autenticação |
 | [COMPONENTES.md](./COMPONENTES.md) | Todos os componentes, páginas, hooks e libs |
-| [AUTENTICACAO.md](./AUTENTICACAO.md) | Sistema de auth, roles, hierarquia e segurança |
+| [AUTENTICACAO.md](./AUTENTICACAO.md) | Sistema de auth, roles, hierarquia, Admin Master e segurança |
 | [PAGAMENTOS.md](./PAGAMENTOS.md) | Gateways de pagamento, PIX, webhooks |
 | [CHAT.md](./CHAT.md) | Sistema de chat, realtime, áudio, reações |
 | [TELEGRAM.md](./TELEGRAM.md) | Bot Telegram, mini app, broadcasts |
@@ -33,8 +33,8 @@
 | Frontend | React 18 + TypeScript + Vite 5 |
 | Estilização | Tailwind CSS + Framer Motion |
 | Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno (Supabase Edge Functions) — 32 funções |
-| Banco de Dados | PostgreSQL com RLS — 42 tabelas |
+| Edge Functions | Deno (Supabase Edge Functions) — 33 funções |
+| Banco de Dados | PostgreSQL com RLS — 45 tabelas |
 | Pagamentos | Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay |
 | Bot | Telegram Bot API |
 | Armazenamento | Supabase Storage — 8 buckets |
@@ -45,6 +45,21 @@
 ---
 
 ## 🔄 Changelog Recente
+
+### v2.3 (2026-03-27)
+- **Admin Master** — Novo cargo exclusivo com acesso total via `MasterOnlyRoute`
+  - `masterAdminId` salvo em `system_config`
+  - Primeiro usuário do sistema é auto-promovido a Admin Master
+  - Admin Master não pode ter cargo removido por nenhum outro admin
+  - `/principal` protegido exclusivamente por `MasterOnlyRoute.tsx`
+- **Cargo `suporte`** — Novo role para agentes de suporte com acesso a tickets
+- **PIN com blur** — Dígitos do PIN ficam desfocados imediatamente após digitação
+- **Animação soft-pulse** — Ícone de celular no ticker Live com animação contínua
+- **URLs dinâmicas** — `src/lib/domain.ts` usa `window.location.origin` (white-label)
+- **Branding dinâmico** — `useSiteName`, `useSiteLogo` leem de `system_config`
+- **33 Edge Functions** — Adicionada `init-mirror`
+- **45 tabelas** — Inclui mirror tables (`mirror_sync_state`, `mirror_file_state`, `mirror_sync_logs`)
+- **198 migrations** — Contagem atualizada
 
 ### v2.2 (2026-03-26)
 - **Sistema de espelhamento (Mirror Sync)** — Sincronização automática via GitHub Actions para repo espelho
