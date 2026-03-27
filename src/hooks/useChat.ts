@@ -542,7 +542,7 @@ export function useChatMessages(conversationId: string | null) {
         // For other users' messages, append locally with cached sender info
         let cached = senderCache.get(newMsg.sender_id);
         if (!cached) {
-          const { data } = await supabase.from("profiles").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).maybeSingle();
+          const { data } = await supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).maybeSingle();
           if (data) {
             cached = { nome: data.nome, avatar_url: data.avatar_url, verification_badge: data.verification_badge };
             senderCache.set(data.id, cached);
