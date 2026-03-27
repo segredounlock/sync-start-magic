@@ -145,8 +145,8 @@ export default function AdminBankDashboard({
             <Wallet className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
-            <p className="text-lg font-bold text-foreground">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
+            <p className="text-xl font-bold text-foreground">
               <Currency value={meuSaldo} loading={loading} hidden={!showBalance} skeletonWidth="w-20" skeletonHeight="h-5" />
             </p>
           </div>
