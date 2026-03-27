@@ -138,7 +138,7 @@ function AdminMessageBubble({ msg, profile, isAdmin }: { msg: Message; profile?:
 
   const isStaff = isAdmin;
   const roleCfg = ROLE_CONFIG[msg.sender_role];
-  const senderName = profile?.nome || "Usuário";
+  const senderName = profile?.nome || (profile?.email ? profile.email.split("@")[0] : null) || "Usuário";
 
   // Parse images
   const parts: (string | { type: "img"; url: string })[] = [];
