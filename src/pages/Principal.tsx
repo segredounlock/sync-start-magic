@@ -3518,7 +3518,7 @@ export default function Principal() {
                       { icon: Zap, iconColor: "text-accent-foreground", label: "Temas Sazonais", description: "ativa efeitos visuais especiais para datas comemorativas." },
                     ]} />
 
-                    {/* Nome do Site */}
+                    {/* Nome do Site + Logo */}
                     <div className="glass-card rounded-xl p-5 space-y-4">
                       <h4 className="font-semibold text-foreground flex items-center gap-2">
                         <Globe className="h-4 w-4 text-primary" /> Configurações Gerais
@@ -3528,6 +3528,66 @@ export default function Principal() {
                         <input type="text" value={globalConfig.siteTitle || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteTitle: e.target.value }))}
                           className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Nome da sua empresa" />
                       </div>
+
+                      {/* Logo do Site */}
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1">Logo do Site</label>
+                        <p className="text-xs text-muted-foreground mb-2">Aparece na splash screen, login, instalação e mini app. Recomendado: 256×256px.</p>
+                        <div className="flex items-center gap-4">
+                          {globalConfig.siteLogo && (
+                            <img src={globalConfig.siteLogo} alt="Logo atual" className="w-16 h-16 rounded-xl object-cover border border-border shadow-sm" />
+                          )}
+                          <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 border border-border text-sm font-medium text-foreground hover:bg-muted/80 transition-colors">
+                            <Upload className="h-4 w-4" />
+                            {logoUploading ? "Enviando…" : "Trocar Logo"}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              disabled={logoUploading}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                if (file.size > 2 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 2MB"); return; }
+                                setLogoUploading(true);
+                                try {
+                                  const ext = file.name.split('.').pop() || 'png';
+                                  const path = `site/logo.${ext}`;
+                                  const { error: upErr } = await supabase.storage.from("store-logos").upload(path, file, { upsert: true, contentType: file.type });
+                                  if (upErr) throw upErr;
+                                  const { data: urlData } = supabase.storage.from("store-logos").getPublicUrl(path);
+                                  const publicUrl = urlData.publicUrl + '?v=' + Date.now();
+                                  setGlobalConfig(prev => ({ ...prev, siteLogo: publicUrl }));
+                                  // Save immediately
+                                  await supabase.from("system_config").upsert({ key: "siteLogo", value: publicUrl, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                                  // Clear cache
+                                  try { localStorage.removeItem("cached_site_logo"); } catch {}
+                                  toast.success("Logo atualizada com sucesso!");
+                                } catch (err: any) {
+                                  toast.error(err.message || "Erro ao enviar logo");
+                                } finally {
+                                  setLogoUploading(false);
+                                  e.target.value = "";
+                                }
+                              }}
+                            />
+                          </label>
+                          {globalConfig.siteLogo && (
+                            <button
+                              onClick={async () => {
+                                setGlobalConfig(prev => ({ ...prev, siteLogo: "" }));
+                                await supabase.from("system_config").upsert({ key: "siteLogo", value: "", updated_at: new Date().toISOString() }, { onConflict: "key" });
+                                try { localStorage.removeItem("cached_site_logo"); } catch {}
+                                toast.success("Logo removida — voltou ao padrão.");
+                              }}
+                              className="text-xs text-destructive hover:underline"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-1">URL do Site</label>
                         <input type="text" value={globalConfig.siteUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteUrl: e.target.value }))}
