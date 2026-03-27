@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
+import { invalidateSiteNameCache } from "@/hooks/useSiteName";
+import { invalidateSiteLogoCache } from "@/hooks/useSiteLogo";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 import { renderTelegramHtml } from "@/components/TextFormatToolbar";

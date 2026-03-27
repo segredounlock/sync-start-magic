@@ -13,18 +13,16 @@ export function invalidateSiteNameCache() {
   try { localStorage.removeItem(CACHE_KEY); } catch {}
 }
 
-function fetchSiteName(): Promise<string> {
-  return supabase
+async function fetchSiteName(): Promise<string> {
+  const { data } = await supabase
     .from("system_config")
     .select("value")
     .eq("key", "siteTitle")
-    .maybeSingle()
-    .then(({ data }) => {
-      const val = data?.value || DEFAULT_SITE_NAME;
-      memoryCache = { value: val, time: Date.now() };
-      try { localStorage.setItem(CACHE_KEY, JSON.stringify(memoryCache)); } catch {}
-      return val;
-    });
+    .maybeSingle();
+  const val = data?.value || DEFAULT_SITE_NAME;
+  memoryCache = { value: val, time: Date.now() };
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(memoryCache)); } catch {}
+  return val;
 }
 
 export function useSiteName(): string {
