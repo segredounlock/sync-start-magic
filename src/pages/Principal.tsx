@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
+import { invalidateSiteNameCache } from "@/hooks/useSiteName";
+import { invalidateSiteLogoCache } from "@/hooks/useSiteLogo";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 import { renderTelegramHtml } from "@/components/TextFormatToolbar";
@@ -355,6 +357,10 @@ export default function Principal() {
       for (const [key, value] of Object.entries(globalConfig)) {
         await supabase.from("system_config").upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
       }
+      // Invalidate branding caches so all components refresh immediately
+      invalidateSiteNameCache();
+      invalidateSiteLogoCache();
+      window.dispatchEvent(new Event("site-branding-updated"));
       toast.success("Configurações salvas com sucesso!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");
