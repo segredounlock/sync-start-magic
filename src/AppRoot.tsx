@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { MasterOnlyRoute } from "@/components/MasterOnlyRoute";
 import { lazy, Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { collectFingerprint, captureLoginSelfie } from "@/lib/deviceFingerprint";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -235,9 +236,9 @@ function App() {
             <Route
               path="/principal"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <MasterOnlyRoute>
                   <LazyPage><Principal /></LazyPage>
-                </ProtectedRoute>
+                </MasterOnlyRoute>
               }
             />
             <Route
