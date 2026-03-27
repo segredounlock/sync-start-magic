@@ -316,7 +316,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
           )}
           <button
             onClick={() => onNavigateTab("addSaldo")}
-            className="mt-3 w-full py-2 rounded-xl bg-background text-primary font-bold text-sm hover:bg-background/90 transition-colors flex items-center justify-center gap-1"
+            className="mt-3 w-full py-2.5 rounded-xl bg-background text-primary font-bold text-base hover:bg-background/90 transition-colors flex items-center justify-center gap-1"
           >
             + Depositar
           </button>
