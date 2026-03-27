@@ -182,7 +182,7 @@ export default function AdminBankDashboard({
       </div>
 
       {/* ── Stats Grid (2x2) ── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         {[
           {
             label: "Total Depósitos",
