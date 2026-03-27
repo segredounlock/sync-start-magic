@@ -387,7 +387,7 @@ export default function AdminSupport() {
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
         // Fetch profile if needed
         if (!senderProfiles[newMsg.sender_id]) {
-          supabase.from("profiles").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).single().then(({ data }) => {
+          supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").eq("id", newMsg.sender_id).single().then(({ data }) => {
             if (data) setSenderProfiles(prev => ({ ...prev, [data.id]: data as SenderProfile }));
           });
         }
