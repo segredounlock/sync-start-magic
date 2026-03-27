@@ -5386,7 +5386,8 @@ function ResetPasswordModal({ rev, onClose }: { rev: Revendedor; onClose: () => 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const isValid = newPassword.length >= 6 && newPassword === confirmPassword;
+  const pwCheck = validatePassword(newPassword);
+  const isValid = pwCheck.valid && newPassword === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
