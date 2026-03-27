@@ -249,11 +249,11 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
   const opTotal = opData.reduce((s, o) => s + o.value, 0) || 1;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Greeting + Date */}
       <div>
-        <p className="text-xs text-muted-foreground">{dateLabel}</p>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <p className="text-sm text-muted-foreground">{dateLabel}</p>
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
           Olá, <span className={badge ? "shimmer-letters" : ""}>{userName}</span>!
           <VerificationBadge badge={badge ?? null} size="md" />
         </h1>
@@ -297,14 +297,14 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full sm:w-auto sm:min-w-[200px] sm:max-w-[240px] shrink-0 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 text-primary-foreground shadow-lg"
+          className="w-full sm:w-auto sm:min-w-[200px] sm:max-w-[240px] shrink-0 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 text-primary-foreground shadow-lg"
         >
           <div className="absolute top-3 right-3 opacity-20">
-            <Wallet className="h-8 w-8" />
+            <Wallet className="h-10 w-10" />
           </div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Saldo de Recargas</p>
-          <p className="text-2xl sm:text-3xl font-bold mt-1">
-            {loading ? <SkeletonValue width="w-24" className="h-7 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
+          <p className="text-xs uppercase tracking-widest font-semibold opacity-80">Saldo de Recargas</p>
+          <p className="text-3xl sm:text-3xl font-bold mt-1">
+            {loading ? <SkeletonValue width="w-24" className="h-8 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
           </p>
           {isRevendedor && (
             <div className="mt-2 pt-2 border-t border-white/20">
@@ -316,7 +316,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
           )}
           <button
             onClick={() => onNavigateTab("addSaldo")}
-            className="mt-3 w-full py-2 rounded-xl bg-background text-primary font-bold text-sm hover:bg-background/90 transition-colors flex items-center justify-center gap-1"
+            className="mt-3 w-full py-2.5 rounded-xl bg-background text-primary font-bold text-base hover:bg-background/90 transition-colors flex items-center justify-center gap-1"
           >
             + Depositar
           </button>
@@ -331,14 +331,14 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => a.tab === "__saque__" ? setShowSaqueModal(true) : a.tab === "__convidar__" ? setShowConvidarModal(true) : onNavigateTab(a.tab)}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
+              className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all active:scale-95"
             >
-              <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
-                <a.icon className={`h-5 w-5 ${a.color}`} />
+              <div className={`w-12 h-12 rounded-xl ${a.bg} flex items-center justify-center`}>
+                <a.icon className={`h-6 w-6 ${a.color}`} />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-foreground">{a.label}</p>
-                <p className="text-[10px] text-muted-foreground">{a.sub}</p>
+                <p className="text-base font-semibold text-foreground">{a.label}</p>
+                <p className="text-xs text-muted-foreground">{a.sub}</p>
               </div>
             </motion.button>
           ))}
@@ -352,8 +352,8 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Relatório de Desempenho</h2>
-            <p className="text-xs text-muted-foreground">Acompanhe suas vendas e comissões no período selecionado.</p>
+            <h2 className="text-xl font-bold text-foreground">Relatório de Desempenho</h2>
+            <p className="text-sm text-muted-foreground">Acompanhe suas vendas e comissões no período selecionado.</p>
           </div>
           <div className="flex items-center gap-1 bg-muted rounded-xl p-1 self-start sm:self-auto">
             {([
@@ -364,7 +364,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
               <button
                 key={p.key}
                 onClick={() => setPeriod(p.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   period === p.key
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -383,15 +383,15 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="p-4 rounded-2xl border border-border bg-card"
+              className="p-5 rounded-2xl border border-border bg-card"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-8 h-8 rounded-lg ${kpi.bg} flex items-center justify-center`}>
-                  <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center`}>
+                  <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
                 </div>
-                <span className="text-xs text-muted-foreground font-medium">{kpi.label}</span>
+                <span className="text-sm text-muted-foreground font-medium">{kpi.label}</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-3xl font-bold text-foreground">
                 {statsLoading
                   ? <SkeletonValue width="w-16" className="h-7" />
                   : kpi.isCurrency
