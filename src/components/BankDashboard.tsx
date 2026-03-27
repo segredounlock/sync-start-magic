@@ -91,7 +91,7 @@ export default function AdminBankDashboard({
                   animate={{ opacity: 1, filter: "blur(0px)" }}
                   exit={{ opacity: 0, filter: "blur(8px)" }}
                   transition={{ duration: 0.25 }}
-                  className={`text-3xl sm:text-4xl font-bold tracking-tight ${lucro >= 0 ? "text-success" : "text-destructive"}`}
+                  className={`text-4xl sm:text-4xl font-bold tracking-tight ${lucro >= 0 ? "text-success" : "text-destructive"}`}
                 >
                   <Currency value={lucro} loading={loading} skeletonWidth="w-36" skeletonHeight="h-9" />
                 </motion.p>
