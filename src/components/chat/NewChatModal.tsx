@@ -86,9 +86,9 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
         const adminIds = (adminRoles || []).map(r => r.user_id);
 
         if (adminIds.length > 0) {
-          let query = supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", adminIds).eq("active", true);
+          let query = supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", adminIds).eq("active", true);
           if (search.trim()) {
-            query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+            query = query.ilike("nome", `%${search}%`);
           }
           const { data } = await query.limit(50);
           (data || []).forEach(u => {
