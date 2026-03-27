@@ -134,7 +134,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
     setMemberCount(memberIds.length);
 
     const [{ data }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", memberIds),
+      supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", memberIds),
       supabase.from("user_roles").select("user_id, role").in("user_id", memberIds),
     ]);
 
