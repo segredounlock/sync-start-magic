@@ -543,7 +543,7 @@ export function useChatMessages(conversationId: string | null) {
         let cached = senderCache.get(newMsg.sender_id);
         if (!cached) {
           const { data } = await supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).maybeSingle();
-          if (data) {
+          if (data && data.id) {
             cached = { nome: data.nome, avatar_url: data.avatar_url, verification_badge: data.verification_badge };
             senderCache.set(data.id, cached);
             cacheTimestamp = Date.now();
