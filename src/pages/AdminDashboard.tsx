@@ -869,7 +869,7 @@ export default function AdminDashboard() {
 
   useEffect(() => { if (tab === "gateway") fetchGatewayConfig(); }, [tab, fetchGatewayConfig]);
   useEffect(() => { if (tab === "loja") fetchStoreConfig(); }, [tab, fetchStoreConfig]);
-  useEffect(() => { if (tab === "usuarios" && userSubTab === "clientes") fetchClients(); }, [tab, userSubTab, fetchClients]);
+  
 
   const [menuOpen, setMenuOpen] = useState(false);
 
