@@ -1626,7 +1626,7 @@ export default function Principal() {
                 ) : (
                   <p className="text-xl md:text-2xl font-bold text-muted-foreground mt-0.5">—</p>
                 )}
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {providerBalance.error ? "Falha ao consultar API" : "API Recarga Express"}
                 </p>
               </motion.div>
