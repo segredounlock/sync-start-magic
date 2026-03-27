@@ -1970,17 +1970,11 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
 
 async function handleAjuda(supabase: any, token: string, chatId: number, telegramId: string) {
   await sendMessageWithKeyboard(token, chatId,
-    `❓ <b>Menu de Ajuda</b>\n\n<b>Recarga:</b> use o botão 📱 Fazer Recarga\n<b>Depósito:</b> /deposito\n\n💬 Precisa falar com o suporte? Clique no botão abaixo:`,
+    `❓ <b>Ajuda & Suporte</b>\n\n💬 Precisa de ajuda? Fale diretamente com nossa equipe de suporte clicando no botão abaixo:`,
     [[
       { text: "💬 Falar com Suporte", callback_data: "support_talk" },
     ], [
-      { text: "💰 Ver Saldo", callback_data: "menu_saldo" },
-      { text: "📱 Fazer Recarga", callback_data: "menu_recarga" },
-    ], [
-      { text: "📋 Histórico", callback_data: "menu_recargas" },
-      { text: "💳 Depositar PIX", callback_data: "menu_deposito" },
-    ], [
-      { text: "📖 Menu", callback_data: "menu_main" },
+      { text: "⬅️ Voltar ao Menu", callback_data: "menu_main" },
     ]]
   );
 }
