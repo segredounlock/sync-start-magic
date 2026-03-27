@@ -74,8 +74,15 @@ Consulte a pasta `documentation/` para guias completos:
 - **Sem fallback:** `MasterOnlyRoute.tsx` consulta apenas `system_config` — se ausente, bloqueia acesso total ao `/principal`
 - **Correção manual:** `INSERT INTO system_config (key, value) VALUES ('masterAdminId', 'UUID') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;`
 
+### Auditoria de Segurança RLS (v2.4)
+- **`user_roles`** — Policy `Only admins can manage roles` corrigida de `TO public` para `TO authenticated`
+- **`profiles`** — Policy de resellers mantida restritiva (`reseller_id = auth.uid()`); dados sensíveis (email, telefone) acessíveis apenas via RPC `get_network_members_v2` (SECURITY DEFINER)
+- **`saldos`** — INSERT já restrito a admins (sem vulnerabilidade)
+- **`pricing_rules`** — SELECT já restrito a admins/revendedores (sem vulnerabilidade)
+- **`reseller_base_pricing_rules`** — SELECT restrito a donos e clientes (sem vulnerabilidade)
+
 ### Outras
-- **200 migrations** — Contagem atualizada
+- **201 migrations** — Contagem atualizada
 - **Roles do sistema:** `admin`, `usuario`, `revendedor`, `suporte`
 
 ---
