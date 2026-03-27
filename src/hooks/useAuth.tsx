@@ -64,28 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isMountedRef.current = true;
 
     const hydrateSession = async () => {
-      try {
-        const result = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("getSession timeout")), 5000)
-          ),
-        ]);
-        if (!isMountedRef.current) return;
+      const result = await supabase.auth.getSession();
+      if (!isMountedRef.current) return;
 
-        const currentSession = result.data.session;
-        setSession(currentSession);
-        if (currentSession?.user) {
-          setRoleLoaded(false);
-          void fetchRole(currentSession.user.id);
-        } else {
-          setRole(null);
-          setRoleLoaded(true);
-        }
-      } catch {
-        // Timeout or error — release the app with no session
-        if (!isMountedRef.current) return;
-        setSession(null);
+      const currentSession = result.data.session;
+      setSession(currentSession);
+      if (currentSession?.user) {
+        setRoleLoaded(false);
+        void fetchRole(currentSession.user.id);
+      } else {
         setRole(null);
         setRoleLoaded(true);
       }
