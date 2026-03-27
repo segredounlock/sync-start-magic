@@ -325,12 +325,13 @@ export default function ClientSupport() {
       if (error) throw error;
 
       // Notify admin via Telegram (fire-and-forget)
-      const adminChatId = 1901426549;
+      const { getSupportAdminTelegramId } = await import("@/hooks/useSupportAdminId");
+      const adminChatId = await getSupportAdminTelegramId();
       const plainText = sanitizeText(text).replace(/\[img:[^\]]+\]/g, "").trim();
       if (plainText || imageUrl) {
         supabase.functions.invoke("telegram-notify", {
           body: {
-            chat_id: String(adminChatId),
+            chat_id: adminChatId,
             message: `📩 <b>Nova mensagem no Suporte</b>\n\n👤 ${selectedTicket.subject || "Ticket"}\n\n💬 <i>${plainText.slice(0, 300)}</i>${imageUrl ? "\n📷 <i>Com imagem</i>" : ""}`,
           },
         }).catch(() => {});

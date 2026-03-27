@@ -5070,7 +5070,12 @@ export default function Principal() {
           {view === "redes" && <RedesSection />}
 
           {/* ===== SUPORTE ===== */}
-           {view === "suporte" && <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>}
+           {view === "suporte" && (
+             <>
+               <SupportAdminSelector />
+               <Suspense fallback={<SkeletonCard />}><AdminSupport /></Suspense>
+             </>
+           )}
 
            {/* ===== ANTIFRAUDE ===== */}
            {view === "antifraude" && <Suspense fallback={<SkeletonCard />}><PinProtection configKey="adminPin"><AntifraudSection /></PinProtection></Suspense>}
