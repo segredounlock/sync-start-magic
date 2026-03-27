@@ -2215,7 +2215,7 @@ export default function Principal() {
                       {selectedRev.isRevendedor ? "Revenda Ativa" : "Ativar Revenda"}
                     </button>
                     {/* Role Dropdown */}
-                    <div className="relative">
+                    <div className="relative z-50">
                       <button
                         onClick={() => setShowRoleDropdown(!showRoleDropdown)}
                         disabled={isTargetMaster(selectedRev.id) || changingRole}
