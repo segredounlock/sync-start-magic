@@ -57,6 +57,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Protect master admin
+    const { data: masterCfg } = await adminClient.from("system_config").select("value").eq("key", "masterAdminId").maybeSingle();
+    const masterAdminId = masterCfg?.value || "f5501acc-79f3-460f-bc3e-493280ea84f0";
+    if (user_id === masterAdminId && user.id !== masterAdminId) {
+      return new Response(JSON.stringify({ error: "O administrador principal não pode ser deletado" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Prevent self-deletion
     if (user_id === user.id) {
       return new Response(JSON.stringify({ error: "Você não pode deletar sua própria conta" }), {
