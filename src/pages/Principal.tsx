@@ -1876,9 +1876,8 @@ export default function Principal() {
                     { key: "admin", label: "Admin", count: revendedores.filter(r => r.role === "admin").length },
                     { key: "revendedor", label: "Revendedor", count: revendedores.filter(r => r.role === "revendedor").length },
                     { key: "usuario", label: "Usuário", count: revendedores.filter(r => r.role === "usuario").length },
-                    { key: "cliente", label: "Cliente", count: revendedores.filter(r => r.role === "cliente").length },
                     { key: "sem_role", label: "Sem função", count: revendedores.filter(r => r.role === "sem_role").length },
-                  ] as const).filter(f => ["todos", "admin", "revendedor", "usuario", "cliente"].includes(f.key) || f.count > 0).map(f => (
+                  ] as const).filter(f => ["todos", "admin", "revendedor", "usuario"].includes(f.key) || f.count > 0).map(f => (
                     <button
                       key={f.key}
                       onClick={() => setRoleFilter(f.key)}
