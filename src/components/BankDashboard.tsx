@@ -174,7 +174,7 @@ export default function AdminBankDashboard({
             <div className={`w-12 h-12 rounded-xl ${action.bg} flex items-center justify-center`}>
               <action.icon className={`h-6 w-6 ${action.color}`} />
             </div>
-            <span className="text-[11px] font-semibold text-foreground leading-tight text-center">
+            <span className="text-xs font-semibold text-foreground leading-tight text-center">
               {action.label}
             </span>
           </motion.button>
