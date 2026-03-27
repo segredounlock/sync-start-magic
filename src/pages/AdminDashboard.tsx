@@ -1491,31 +1491,6 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Sub-tabs - only for admin */}
-            {role === "admin" && (
-            <div className="flex gap-1 p-1 rounded-lg bg-muted/40 w-fit">
-              <button
-                onClick={() => setUserSubTab("revendedores")}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-                  userSubTab === "revendedores"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Revendedores
-              </button>
-              <button
-                onClick={() => setUserSubTab("clientes")}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-                  userSubTab === "clientes"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Clientes
-              </button>
-            </div>
-            )}
 
             {userSubTab === "revendedores" && (<>
 
