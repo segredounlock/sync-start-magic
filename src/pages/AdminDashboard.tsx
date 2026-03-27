@@ -39,7 +39,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area,
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 
 import type { Revendedor, RecargaHistorico, Operadora, PricingRule, Period } from "@/types";
