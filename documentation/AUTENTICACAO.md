@@ -159,6 +159,39 @@ O sistema de backup exporta `encrypted_password` (hash bcrypt) de `auth.users` v
 | **VAPID Push** | Push notifications web |
 | **Senha Forte** | Mín. 8 chars, maiúscula, número, especial, sem senhas comuns |
 
+## Troubleshooting
+
+### `masterAdminId` ausente — Admin não acessa `/principal`
+
+**Sintoma:** O admin master é redirecionado para `/painel` em vez de `/principal`.
+
+**Causa:** A chave `masterAdminId` não existe na tabela `system_config`. Isso pode acontecer quando:
+- O banco foi restaurado via backup que não incluiu `system_config`
+- O ambiente foi migrado sem rodar o trigger `handle_new_user`
+- O banco foi recriado manualmente sem cadastrar o primeiro usuário
+
+**Como verificar:**
+```sql
+SELECT * FROM system_config WHERE key = 'masterAdminId';
+```
+
+**Solução 1 — INSERT manual:**
+```sql
+INSERT INTO system_config (key, value)
+VALUES ('masterAdminId', 'UUID-DO-ADMIN-MASTER')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+```
+
+**Solução 2 — Novo cadastro:**
+Em um banco completamente limpo (sem nenhum admin), o primeiro usuário cadastrado será automaticamente promovido a admin master pelo trigger `handle_new_user`.
+
+**Fallback de segurança:**
+As edge functions `admin-toggle-role` e `admin-delete-user` possuem fallback hardcoded (`f5501acc-79f3-460f-bc3e-493280ea84f0`) para proteger o admin master mesmo sem a chave no `system_config`. O componente `Principal.tsx` também usa esse fallback via `MASTER_ADMIN_ID`.
+
+> ⚠️ O `MasterOnlyRoute.tsx` **não** tem fallback — ele consulta exclusivamente o `system_config`. Se a chave não existir, **ninguém** acessa `/principal`.
+
+---
+
 ## Email Templates (6 templates)
 
 | Template | Descrição |

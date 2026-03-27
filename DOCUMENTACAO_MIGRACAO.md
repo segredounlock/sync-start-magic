@@ -67,6 +67,13 @@ Consulte a pasta `documentation/` para guias completos:
 - Proteção contra 3 valores iguais em derrotas
 - Melhor suporte a touch no iOS Safari
 
+### masterAdminId — Auto-Criação e Verificação
+- **Auto-criação:** O trigger `handle_new_user` cria automaticamente a chave `masterAdminId` em `system_config` quando o **primeiro usuário** se cadastra (sem nenhum admin existente)
+- **Em migrações:** Verificar se a chave existe após restauração — sem ela, ninguém acessa `/principal`
+- **Fallback:** Edge functions `admin-toggle-role` e `admin-delete-user` têm fallback hardcoded (`f5501acc-...`)
+- **Sem fallback:** `MasterOnlyRoute.tsx` consulta apenas `system_config` — se ausente, bloqueia acesso total ao `/principal`
+- **Correção manual:** `INSERT INTO system_config (key, value) VALUES ('masterAdminId', 'UUID') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;`
+
 ### Outras
 - **200 migrations** — Contagem atualizada
 - **Roles do sistema:** `admin`, `usuario`, `revendedor`, `suporte`
