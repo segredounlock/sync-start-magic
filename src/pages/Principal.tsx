@@ -1635,7 +1635,7 @@ export default function Principal() {
                 {/* Recent Activity */}
                 <div className="glass-card rounded-xl p-4 md:p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                       <History className="h-4 w-4 text-muted-foreground" /> Atividade Recente
                     </h3>
                     <button onClick={() => setView("relatorios")} className="text-xs text-primary font-medium hover:underline">Ver tudo</button>
