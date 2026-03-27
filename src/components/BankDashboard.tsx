@@ -232,12 +232,12 @@ export default function AdminBankDashboard({
             transition={{ delay: 0.12 + i * 0.05, type: "spring", stiffness: 180 }}
             className="kpi-card"
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                 {card.label}
               </span>
-              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center`}>
-                <card.icon className={`h-4 w-4 ${card.color}`} />
+              <div className={`w-10 h-10 rounded-lg ${card.bg} flex items-center justify-center`}>
+                <card.icon className={`h-5 w-5 ${card.color}`} />
               </div>
             </div>
             <p className={`text-xl sm:text-2xl font-bold ${card.color} truncate`}>
