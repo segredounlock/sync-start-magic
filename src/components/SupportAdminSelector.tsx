@@ -113,44 +113,49 @@ export function SupportAdminSelector() {
               key={admin.id}
               onClick={() => handleSelect(admin)}
               disabled={saving || isSelected}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
+              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 transition-all text-left ${
                 isSelected
-                  ? "border-primary bg-primary/5"
+                  ? "border-primary bg-primary/10 shadow-sm shadow-primary/10"
                   : hasTelegram
-                    ? "border-border hover:border-primary/50 hover:bg-muted/30"
-                    : "border-border opacity-50 cursor-not-allowed"
+                    ? "border-border/60 hover:border-primary/50 hover:bg-muted/30"
+                    : "border-border/40 opacity-40 cursor-not-allowed"
               }`}
             >
               {admin.avatar_url ? (
-                <img src={admin.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
+                <img src={admin.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-offset-1 ring-offset-card ring-border" />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                  <User className="h-4 w-4 text-muted-foreground" />
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 ring-2 ring-offset-1 ring-offset-card ring-border">
+                  <User className="h-4.5 w-4.5 text-muted-foreground" />
                 </div>
               )}
 
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-foreground truncate">
+              <div className="flex-1 min-w-0 space-y-0.5">
+                <p className="text-sm font-bold text-foreground truncate">
                   {admin.nome || "Sem nome"}
                 </p>
-                <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
-                  <AtSign className="h-3 w-3 shrink-0" />
-                  {admin.email || "—"}
+                <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1.5">
+                  <AtSign className="h-3 w-3 shrink-0 text-primary/60" />
+                  <span className="font-medium">{admin.email || "—"}</span>
                 </p>
-                <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                  <SendIcon className="h-3 w-3 shrink-0" />
-                  {hasTelegram
-                    ? `@${admin.telegram_username || admin.telegram_id}`
-                    : "Telegram não configurado"
-                  }
+                <p className="text-[11px] truncate flex items-center gap-1.5">
+                  <SendIcon className="h-3 w-3 shrink-0 text-primary/60" />
+                  <span className={hasTelegram ? "font-medium text-foreground/80" : "text-destructive/70 font-medium"}>
+                    {hasTelegram
+                      ? `@${admin.telegram_username || admin.telegram_id}`
+                      : "⚠ Telegram não configurado"
+                    }
+                  </span>
                 </p>
               </div>
 
-              {isSelected && (
-                <div className="shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                  <Check className="h-3.5 w-3.5 text-primary-foreground" />
-                </div>
-              )}
+              <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                isSelected ? "bg-primary" : "bg-muted/50 border border-border"
+              }`}>
+                {isSelected
+                  ? <Check className="h-4 w-4 text-primary-foreground" />
+                  : <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                }
+              </div>
             </button>
           );
         })}
