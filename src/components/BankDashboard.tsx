@@ -111,10 +111,10 @@ export default function AdminBankDashboard({
 
           {/* Lucro percentage badge */}
           <div className="flex items-center gap-2 mt-2">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${lucro >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${lucro >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
               {lucro >= 0 ? "↑" : "↓"} {lucroPct.toFixed(1)}% margem
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               sobre {showBalance ? fmt(totalCobrado) : "••••"} cobrado
             </span>
           </div>
