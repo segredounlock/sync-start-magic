@@ -169,7 +169,7 @@ export default function AdminBankDashboard({
             transition={{ delay: 0.08 + i * 0.04, type: "spring", stiffness: 200 }}
             whileTap={{ scale: 0.93 }}
             onClick={() => action.key === "addSaldo" ? onAddSaldo() : onNavigate(action.key)}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border hover:border-primary/20 transition-all"
+            className="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-card border border-border hover:border-primary/20 transition-all"
           >
             <div className={`w-11 h-11 rounded-xl ${action.bg} flex items-center justify-center`}>
               <action.icon className={`h-5 w-5 ${action.color}`} />
