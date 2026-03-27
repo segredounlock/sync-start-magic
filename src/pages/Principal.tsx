@@ -1392,7 +1392,7 @@ export default function Principal() {
                       }
                       setMenuOpen(false);
                     }}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium transition-all group ${
+                    className={`flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-medium transition-all group ${
                       isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/40"
                     }`}>
                     <div className="relative">
