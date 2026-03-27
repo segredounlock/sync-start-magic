@@ -2244,7 +2244,6 @@ export default function Principal() {
                                 {([
                                   { value: "admin", label: "Admin", color: "text-primary" },
                                   { value: "suporte", label: "Suporte", color: "text-blue-500" },
-                                  { value: "cliente", label: "Cliente", color: "text-warning" },
                                   { value: "usuario", label: "Usuário", color: "text-muted-foreground" },
                                 ] as const).map((opt) => (
                                   <button
