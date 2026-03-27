@@ -1406,12 +1406,12 @@ export default function Principal() {
                 );
               })}
               <button onClick={() => { navigate("/admin"); setMenuOpen(false); }}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-all">
+                className="flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-all">
                 <BarChart3 className="h-5 w-5 text-primary" />
                 <span className="text-center leading-tight">Painel Admin</span>
               </button>
               <button onClick={() => { navigate("/painel"); setMenuOpen(false); }}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-all">
+                className="flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-all">
                 <Landmark className="h-5 w-5 text-success" />
                 <span className="text-center leading-tight">Painel Cliente</span>
               </button>
