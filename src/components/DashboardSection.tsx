@@ -297,14 +297,14 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full sm:w-auto sm:min-w-[200px] sm:max-w-[240px] shrink-0 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 text-primary-foreground shadow-lg"
+          className="w-full sm:w-auto sm:min-w-[200px] sm:max-w-[240px] shrink-0 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 text-primary-foreground shadow-lg"
         >
           <div className="absolute top-3 right-3 opacity-20">
-            <Wallet className="h-8 w-8" />
+            <Wallet className="h-10 w-10" />
           </div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold opacity-80">Saldo de Recargas</p>
-          <p className="text-2xl sm:text-3xl font-bold mt-1">
-            {loading ? <SkeletonValue width="w-24" className="h-7 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
+          <p className="text-xs uppercase tracking-widest font-semibold opacity-80">Saldo de Recargas</p>
+          <p className="text-3xl sm:text-3xl font-bold mt-1">
+            {loading ? <SkeletonValue width="w-24" className="h-8 bg-white/20" /> : <AnimatedCounter value={saldo} prefix="R$&nbsp;" />}
           </p>
           {isRevendedor && (
             <div className="mt-2 pt-2 border-t border-white/20">
