@@ -2341,12 +2341,14 @@ export default function Principal() {
                           : "bg-muted/50 text-muted-foreground hover:bg-muted"
                       }`}
                     >
-                      {selectedRev.verification_badge && BADGE_CONFIG[selectedRev.verification_badge as BadgeType] ? (
-                        <>
-                          {(() => { const Ic = BADGE_CONFIG[selectedRev.verification_badge as BadgeType].icon; return <Ic className={`h-3.5 w-3.5 ${BADGE_CONFIG[selectedRev.verification_badge as BadgeType].color} ${BADGE_CONFIG[selectedRev.verification_badge as BadgeType].fill}`} />; })()}
-                          {BADGE_CONFIG[selectedRev.verification_badge as BadgeType].label}
-                        </>
-                      ) : "Nenhum"}
+                      {(() => {
+                        const bk = selectedRev.verification_badge as BadgeType | null;
+                        if (bk && BADGE_CONFIG[bk]) {
+                          const Ic = BADGE_CONFIG[bk].icon;
+                          return <><Ic className={`h-3.5 w-3.5 ${BADGE_CONFIG[bk].color} ${BADGE_CONFIG[bk].fill}`} />{BADGE_CONFIG[bk].label}</>;
+                        }
+                        return "Nenhum";
+                      })()}
                       <ChevronDown className={`h-3 w-3 transition-transform ${showBadgeDropdown ? "rotate-180" : ""}`} />
                     </button>
                     <AnimatePresence>
