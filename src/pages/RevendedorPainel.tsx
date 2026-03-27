@@ -1412,6 +1412,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
               isClientMode={isClientMode}
               salesToolsEnabled={salesToolsEnabled}
               userRole={role}
+              isRevendedor={isRevendedor}
             />
           )}
 
