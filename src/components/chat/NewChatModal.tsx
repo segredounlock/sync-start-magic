@@ -13,7 +13,7 @@ interface NewChatModalProps {
 interface UserItem {
   id: string;
   nome: string | null;
-  email: string | null;
+  email?: string | null;
   avatar_url: string | null;
   role?: string;
   verification_badge?: string | null;
