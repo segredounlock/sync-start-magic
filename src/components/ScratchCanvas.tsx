@@ -9,7 +9,7 @@ interface ScratchCanvasProps {
 const COLS = 3;
 const ROWS = 3;
 const CELL_PAD = 4;
-const BRUSH = 24;
+const BRUSH = 26;
 const SCRATCH_THRESHOLD = 0.35;
 
 export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanvasProps) {
@@ -21,13 +21,14 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   const [revealed, setRevealed] = useState(false);
   const hasCompleted = useRef(false);
   const lastProgressCheckRef = useRef(0);
+  const dprRef = useRef(window.devicePixelRatio || 1);
 
+  // Measure container
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
       const { width } = entries[0].contentRect;
-      // Make cells more compact/square
       const maxW = Math.min(width, 380);
       const cellW = (maxW - CELL_PAD * (COLS + 1)) / COLS;
       const cellH = cellW * 0.75;
@@ -38,7 +39,7 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     return () => ro.disconnect();
   }, []);
 
-  // Reset state when a new grid/card is loaded
+  // Reset on new grid
   useEffect(() => {
     setRevealed(false);
     hasCompleted.current = false;
@@ -49,18 +50,17 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
   useEffect(() => {
     const cvs = underlayRef.current;
     if (!cvs || size.w === 0 || grid.length === 0) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = dprRef.current;
     cvs.width = size.w * dpr;
     cvs.height = size.h * dpr;
     cvs.style.width = `${size.w}px`;
     cvs.style.height = `${size.h}px`;
     const ctx = cvs.getContext("2d")!;
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const cellW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
     const cellH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
 
-    // Background - match card bg
     ctx.fillStyle = "#f1f5f9";
     roundRect(ctx, 0, 0, size.w, size.h, 14);
     ctx.fill();
@@ -71,7 +71,6 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
       const x = CELL_PAD + col * (cellW + CELL_PAD);
       const y = CELL_PAD + row * (cellH + CELL_PAD);
 
-      // Cell bg with subtle gradient
       const cellGrad = ctx.createLinearGradient(x, y, x, y + cellH);
       cellGrad.addColorStop(0, "#ffffff");
       cellGrad.addColorStop(1, "#f0fdf4");
@@ -79,39 +78,36 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
       roundRect(ctx, x, y, cellW, cellH, 8);
       ctx.fill();
 
-      // Cell border
       ctx.strokeStyle = "#e2e8f0";
       ctx.lineWidth = 1;
       roundRect(ctx, x, y, cellW, cellH, 8);
       ctx.stroke();
 
-      // Money emoji - smaller
       const minDim = Math.min(cellW, cellH);
       ctx.font = `${minDim * 0.18}px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("💰", x + cellW / 2, y + cellH * 0.32);
 
-      // Value - smaller font
       ctx.fillStyle = "#16a34a";
       ctx.font = `bold ${minDim * 0.20}px system-ui, -apple-system, sans-serif`;
       ctx.fillText(`R$${grid[i].toFixed(2)}`, x + cellW / 2, y + cellH * 0.66);
     }
   }, [size, grid]);
 
-  // Draw scratch overlay (silver layer)
+  // Draw scratch overlay
   useEffect(() => {
     const cvs = canvasRef.current;
     if (!cvs || size.w === 0 || revealed) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = dprRef.current;
+    // Setting width/height resets the canvas state (clears transforms)
     cvs.width = size.w * dpr;
     cvs.height = size.h * dpr;
     cvs.style.width = `${size.w}px`;
     cvs.style.height = `${size.h}px`;
     const ctx = cvs.getContext("2d")!;
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Fill entire canvas as one solid scratch layer
     const grad = ctx.createLinearGradient(0, 0, size.w, size.h);
     grad.addColorStop(0, "#b8b8b8");
     grad.addColorStop(0.2, "#d4d4d4");
@@ -123,7 +119,6 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     roundRect(ctx, 0, 0, size.w, size.h, 14);
     ctx.fill();
 
-    // Top highlight
     const highlight = ctx.createLinearGradient(0, 0, 0, size.h * 0.3);
     highlight.addColorStop(0, "rgba(255,255,255,0.3)");
     highlight.addColorStop(1, "rgba(255,255,255,0)");
@@ -131,7 +126,6 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     roundRect(ctx, 0, 0, size.w, size.h * 0.3, 14);
     ctx.fill();
 
-    // Draw question marks on cells
     const cW = (size.w - CELL_PAD * (COLS + 1)) / COLS;
     const cH = (size.h - CELL_PAD * (ROWS + 1)) / ROWS;
     for (let i = 0; i < 9; i++) {
@@ -147,7 +141,6 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
       ctx.fillText("?", x + cW / 2, y + cH / 2);
     }
 
-    // Shimmer dots
     for (let i = 0; i < 20; i++) {
       const sx = CELL_PAD + Math.random() * (size.w - CELL_PAD * 2);
       const sy = CELL_PAD + Math.random() * (size.h - CELL_PAD * 2);
@@ -158,87 +151,105 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
     }
   }, [size, revealed]);
 
-  const getPos = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    const cvs = canvasRef.current;
-    if (!cvs) return null;
-    const rect = cvs.getBoundingClientRect();
-    let clientX: number, clientY: number;
-    if ("touches" in e) {
-      if (e.touches.length === 0) return null;
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-    };
-  }, []);
-
-  const scratch = useCallback((x: number, y: number) => {
+  // ─── Touch / mouse handlers via native addEventListener ({ passive: false }) ───
+  // This prevents iOS Safari from scrolling while the user scratches.
+  useEffect(() => {
     const cvs = canvasRef.current;
     if (!cvs || revealed || disabled) return;
-    const ctx = cvs.getContext("2d")!;
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    // Context já está em pixels CSS (ctx.scale aplicado), sem multiplicar por DPR
-    ctx.arc(x, y, BRUSH, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = "source-over";
-  }, [revealed, disabled]);
 
-  const checkProgress = useCallback(() => {
-    const cvs = canvasRef.current;
-    if (!cvs || hasCompleted.current || revealed) return;
-    const ctx = cvs.getContext("2d")!;
-    const imageData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-    const pixels = imageData.data;
-    let transparent = 0;
-    const total = pixels.length / 4;
+    const getPos = (e: TouchEvent | MouseEvent) => {
+      const rect = cvs.getBoundingClientRect();
+      let clientX: number, clientY: number;
+      if ("touches" in e) {
+        if (e.touches.length === 0) return null;
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = (e as MouseEvent).clientX;
+        clientY = (e as MouseEvent).clientY;
+      }
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    };
 
-    // Considera pixels quase transparentes também
-    for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] <= 24) transparent++;
-    }
+    const scratch = (x: number, y: number) => {
+      const ctx = cvs.getContext("2d")!;
+      // Reset transform to DPR scale before drawing
+      const dpr = dprRef.current;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.arc(x, y, BRUSH, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+    };
 
-    const ratio = transparent / total;
-    if (ratio >= SCRATCH_THRESHOLD) {
-      hasCompleted.current = true;
-      setRevealed(true);
-      onScratchComplete();
-    }
-  }, [revealed, onScratchComplete]);
+    const checkProgress = () => {
+      if (hasCompleted.current || revealed) return;
+      const ctx = cvs.getContext("2d")!;
+      const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+      const pixels = imgData.data;
+      let transparent = 0;
+      const total = pixels.length / 4;
+      // Sample every 4th pixel for performance (still accurate enough)
+      for (let i = 3; i < pixels.length; i += 16) {
+        if (pixels[i] <= 24) transparent++;
+      }
+      const ratio = transparent / (total / 4);
+      if (ratio >= SCRATCH_THRESHOLD) {
+        hasCompleted.current = true;
+        setRevealed(true);
+        onScratchComplete();
+      }
+    };
 
-  const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (disabled || revealed) return;
-    e.preventDefault();
-    isDrawing.current = true;
-    const pos = getPos(e);
-    if (pos) scratch(pos.x, pos.y);
-  }, [disabled, revealed, getPos, scratch]);
+    const onStart = (e: TouchEvent | MouseEvent) => {
+      e.preventDefault();
+      isDrawing.current = true;
+      const pos = getPos(e);
+      if (pos) scratch(pos.x, pos.y);
+    };
 
-  const handleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (!isDrawing.current || disabled || revealed) return;
-    e.preventDefault();
-    const pos = getPos(e);
-    if (!pos) return;
+    const onMove = (e: TouchEvent | MouseEvent) => {
+      if (!isDrawing.current) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      if (!pos) return;
+      scratch(pos.x, pos.y);
+      const now = Date.now();
+      if (now - lastProgressCheckRef.current > 120) {
+        lastProgressCheckRef.current = now;
+        checkProgress();
+      }
+    };
 
-    scratch(pos.x, pos.y);
-
-    const now = Date.now();
-    if (now - lastProgressCheckRef.current > 120) {
-      lastProgressCheckRef.current = now;
+    const onEnd = () => {
+      if (!isDrawing.current) return;
+      isDrawing.current = false;
       checkProgress();
-    }
-  }, [disabled, revealed, getPos, scratch, checkProgress]);
+    };
 
-  const handleEnd = useCallback(() => {
-    if (!isDrawing.current) return;
-    isDrawing.current = false;
-    checkProgress();
-  }, [checkProgress]);
+    // Touch events with { passive: false } to prevent iOS scroll
+    cvs.addEventListener("touchstart", onStart, { passive: false });
+    cvs.addEventListener("touchmove", onMove, { passive: false });
+    cvs.addEventListener("touchend", onEnd);
+    cvs.addEventListener("touchcancel", onEnd);
+    // Mouse events
+    cvs.addEventListener("mousedown", onStart);
+    cvs.addEventListener("mousemove", onMove);
+    cvs.addEventListener("mouseup", onEnd);
+    cvs.addEventListener("mouseleave", onEnd);
+
+    return () => {
+      cvs.removeEventListener("touchstart", onStart);
+      cvs.removeEventListener("touchmove", onMove);
+      cvs.removeEventListener("touchend", onEnd);
+      cvs.removeEventListener("touchcancel", onEnd);
+      cvs.removeEventListener("mousedown", onStart);
+      cvs.removeEventListener("mousemove", onMove);
+      cvs.removeEventListener("mouseup", onEnd);
+      cvs.removeEventListener("mouseleave", onEnd);
+    };
+  }, [size, revealed, disabled, onScratchComplete]);
 
   return (
     <div ref={containerRef} className="w-full select-none flex justify-center">
@@ -254,14 +265,6 @@ export function ScratchCanvas({ grid, onScratchComplete, disabled }: ScratchCanv
               ref={canvasRef}
               className="absolute inset-0 cursor-pointer"
               style={{ width: size.w, height: size.h, touchAction: "none" }}
-              onMouseDown={handleStart}
-              onMouseMove={handleMove}
-              onMouseUp={handleEnd}
-              onMouseLeave={handleEnd}
-              onTouchStart={handleStart}
-              onTouchMove={handleMove}
-              onTouchEnd={handleEnd}
-              onTouchCancel={handleEnd}
             />
           )}
         </div>
