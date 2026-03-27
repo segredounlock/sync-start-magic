@@ -263,6 +263,7 @@ export default function Principal() {
   const [globalConfigSaving, setGlobalConfigSaving] = useState(false);
   const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [masterAdminId, setMasterAdminId] = useState<string | null>(null);
   const [configSection, setConfigSection] = useState<"geral" | "rede" | "jogos" | "notificacoes" | "banners">("geral");
 
   // Bot status
