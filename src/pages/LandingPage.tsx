@@ -206,7 +206,7 @@ export default function LandingPage() {
             className="max-w-6xl mx-auto glass rounded-2xl px-5 py-2.5 flex items-center justify-between"
           >
             <h1 className="font-display text-lg font-bold shimmer-letters tracking-tight">
-              Recargas <span className="brasil-word">Brasil</span>
+              {siteName}
             </h1>
             <div className="flex items-center gap-2">
               <ThemeToggle />
