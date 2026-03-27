@@ -196,6 +196,8 @@ export default function Principal() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
 
   // Broadcast state - restore from localStorage if a broadcast was running
   const [broadcastSending, setBroadcastSending] = useState(false);
