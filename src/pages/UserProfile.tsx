@@ -114,7 +114,7 @@ export default function UserProfile() {
     setLoading(true);
     try {
       const [{ data: profileData }, { data: counts }, recargaResult, { data: followData }, { data: roleRows }] = await Promise.all([
-        supabase.from("profiles").select("id, nome, email, avatar_url, bio, slug, verification_badge, created_at, telegram_username, whatsapp_number, active").eq("id", resolvedId).single(),
+        supabase.from("profiles_public").select("id, nome, avatar_url, bio, slug, verification_badge, created_at, active").eq("id", resolvedId).single(),
         supabase.rpc("get_follow_counts", { _user_id: resolvedId }),
         supabase.rpc("get_user_recargas_count" as any, { _user_id: resolvedId }),
         user?.id && user.id !== resolvedId

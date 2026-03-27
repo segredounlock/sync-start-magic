@@ -163,7 +163,7 @@ export function ProfileTab({
       const { data } = await supabase.from("follows").select("follower_id").eq("following_id", user.id);
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.follower_id);
-        const { data: profiles } = await supabase.from("profiles").select("id, nome, avatar_url, slug").in("id", ids);
+        const { data: profiles } = await supabase.from("profiles_public").select("id, nome, avatar_url, slug").in("id", ids);
         setFollowersList((profiles as any) || []);
       } else { setFollowersList([]); }
     } catch { setFollowersList([]); }
@@ -176,7 +176,7 @@ export function ProfileTab({
       const { data } = await supabase.from("follows").select("following_id").eq("follower_id", user.id);
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.following_id);
-        const { data: profiles } = await supabase.from("profiles").select("id, nome, avatar_url, slug").in("id", ids);
+        const { data: profiles } = await supabase.from("profiles_public").select("id, nome, avatar_url, slug").in("id", ids);
         setFollowingList((profiles as any) || []);
       } else { setFollowingList([]); }
     } catch { setFollowingList([]); }

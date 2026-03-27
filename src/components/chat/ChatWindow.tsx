@@ -134,7 +134,7 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
     setMemberCount(memberIds.length);
 
     const [{ data }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", memberIds),
+      supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", memberIds),
       supabase.from("user_roles").select("user_id, role").in("user_id", memberIds),
     ]);
 
@@ -143,7 +143,8 @@ export function ChatWindow({ conversationId, otherUser, isGroup, isBlocked: init
     const roleMap = new Map<string, string>();
     roles?.forEach(r => { if (r.role === "admin") roleMap.set(r.user_id, r.role); });
 
-    const sorted = data.map(p => ({ ...p, role: roleMap.get(p.id) }))
+    const validData = data.filter(p => p.id != null) as { id: string; nome: string | null; avatar_url: string | null; verification_badge: string | null }[];
+    const sorted = validData.map(p => ({ ...p, role: roleMap.get(p.id) }))
       .sort((a, b) => {
         const aAdmin = a.role === "admin" ? 0 : 1;
         const bAdmin = b.role === "admin" ? 0 : 1;

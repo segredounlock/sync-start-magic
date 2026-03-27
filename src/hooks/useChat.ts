@@ -107,7 +107,7 @@ export function useConversations() {
 
       const [profiles, roleData, unreadData] = await Promise.all([
         uniqueIds.length > 0
-          ? supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", uniqueIds).then(r => r.data || [])
+          ? supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", uniqueIds).then(r => (r.data || []).filter(p => p.id != null) as { id: string; nome: string | null; avatar_url: string | null; verification_badge: string | null }[])
           : Promise.resolve([]),
         uniqueIds.length > 0
           ? supabase.from("user_roles").select("user_id, role").in("user_id", uniqueIds).then(r => r.data || [])
@@ -300,7 +300,7 @@ export function useChatMessages(conversationId: string | null) {
         ? supabase.from("chat_reactions").select("*").in("message_id", msgIds).then(r => r.data || [])
         : Promise.resolve([]),
       needsFetch && senderIds.length > 0
-        ? supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", senderIds).then(r => r.data || [])
+        ? supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", senderIds).then(r => (r.data || []).filter(p => p.id != null) as { id: string; nome: string | null; avatar_url: string | null; verification_badge: string | null }[])
         : Promise.resolve(null),
       needsFetch && senderIds.length > 0
         ? supabase.from("user_roles").select("user_id").in("user_id", senderIds).eq("role", "admin").then(r => r.data || [])
@@ -542,8 +542,8 @@ export function useChatMessages(conversationId: string | null) {
         // For other users' messages, append locally with cached sender info
         let cached = senderCache.get(newMsg.sender_id);
         if (!cached) {
-          const { data } = await supabase.from("profiles").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).maybeSingle();
-          if (data) {
+          const { data } = await supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").eq("id", newMsg.sender_id).maybeSingle();
+          if (data && data.id) {
             cached = { nome: data.nome, avatar_url: data.avatar_url, verification_badge: data.verification_badge };
             senderCache.set(data.id, cached);
             cacheTimestamp = Date.now();

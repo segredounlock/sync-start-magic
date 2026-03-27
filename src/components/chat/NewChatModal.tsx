@@ -13,7 +13,7 @@ interface NewChatModalProps {
 interface UserItem {
   id: string;
   nome: string | null;
-  email: string | null;
+  email?: string | null;
   avatar_url: string | null;
   role?: string;
   verification_badge?: string | null;
@@ -86,40 +86,41 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
         const adminIds = (adminRoles || []).map(r => r.user_id);
 
         if (adminIds.length > 0) {
-          let query = supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", adminIds).eq("active", true);
+          let query = supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", adminIds).eq("active", true);
           if (search.trim()) {
-            query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+            query = query.ilike("nome", `%${search}%`);
           }
           const { data } = await query.limit(50);
-          (data || []).forEach(u => {
-            userMap.set(u.id, { ...u, role: "admin", verification_badge: (u as any).verification_badge || null });
+          (data || []).filter(u => u.id != null).forEach(u => {
+            userMap.set(u.id!, { ...u, id: u.id!, role: "admin", verification_badge: u.verification_badge || null });
           });
         }
 
         // If admin_badge, also fetch users with verification badges
         if (filter === "admin_badge") {
           let badgeQuery = supabase
-            .from("profiles")
-            .select("id, nome, email, avatar_url, verification_badge")
+            .from("profiles_public")
+            .select("id, nome, avatar_url, verification_badge")
             .eq("active", true)
             .neq("id", user.id)
             .not("verification_badge", "is", null)
             .neq("verification_badge", "");
           if (search.trim()) {
-            badgeQuery = badgeQuery.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+            badgeQuery = badgeQuery.ilike("nome", `%${search}%`);
           }
           const { data: badgeUsers } = await badgeQuery.limit(50);
 
           // Get roles for badge users
-          const badgeIds = (badgeUsers || []).filter(u => !userMap.has(u.id)).map(u => u.id);
+          const validBadgeUsers = (badgeUsers || []).filter(u => u.id != null) as { id: string; nome: string | null; avatar_url: string | null; verification_badge: string | null }[];
+          const badgeIds = validBadgeUsers.filter(u => !userMap.has(u.id)).map(u => u.id);
           const { data: badgeRoles } = badgeIds.length > 0
             ? await supabase.from("user_roles").select("user_id, role").in("user_id", badgeIds)
             : { data: [] };
           const roleMap = new Map((badgeRoles || []).map(r => [r.user_id, r.role]));
 
-          (badgeUsers || []).forEach(u => {
+          validBadgeUsers.forEach(u => {
             if (!userMap.has(u.id)) {
-              userMap.set(u.id, { ...u, role: roleMap.get(u.id) || "usuario", verification_badge: (u as any).verification_badge || null });
+              userMap.set(u.id, { ...u, role: roleMap.get(u.id) || "usuario", verification_badge: u.verification_badge || null });
             }
           });
         }
