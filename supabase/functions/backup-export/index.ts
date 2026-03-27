@@ -296,7 +296,7 @@ serve(async (req) => {
 
     // Metadata (after all data collected)
     zip.file("backup-info.json", JSON.stringify({
-      version: "3.1",
+      version: "3.2",
       created_at: new Date().toISOString(),
       created_by: user.email,
       include_database: includeDatabase,
