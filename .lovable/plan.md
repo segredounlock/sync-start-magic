@@ -1,46 +1,42 @@
 
 
-# Corrigir sender_role do Admin no Suporte via Telegram
+# Melhorar Tamanho e Espaçamento do Dashboard Mobile
 
 ## Problema
-Quando o admin responde pelo Telegram no fluxo de suporte, a mensagem é salva com `sender_role: "client"` porque o `handleSupportMessage` sempre usa esse valor fixo (linha 2063). O admin deveria aparecer como "admin".
-
-## Causa Raiz
-A função `handleSupportMessage` em `telegram-bot/index.ts` hardcoda `sender_role: "client"` sem verificar se o remetente é um admin.
+Na tela inicial (Dashboard) do mobile, os elementos como botões de ação rápida, KPIs, textos e ícones estão pequenos e parecem distantes/comprimidos, dificultando a interação em telas touch.
 
 ## Solução
+Aumentar tamanhos de fonte, ícones, padding e espaçamento dos componentes principais do `DashboardSection.tsx` para telas mobile (viewport ~430px).
 
-**Arquivo:** `supabase/functions/telegram-bot/index.ts`
+## Alterações no `src/components/DashboardSection.tsx`
 
-Na função `handleSupportMessage`, antes de inserir na `support_messages`:
+1. **Saudação**: Aumentar de `text-2xl` para `text-3xl` no nome do usuário; data de `text-xs` para `text-sm`
 
-1. Verificar se o `user` (linked user) tem role "admin" na tabela `user_roles`
-2. Se sim, usar `sender_role: "admin"`, senão manter `"client"`
+2. **Card de Saldo**: Aumentar padding de `p-5` para `p-6`, valor do saldo de `text-2xl` para `text-3xl`, ícone Wallet de `h-8 w-8` para `h-10 w-10`, botão Depositar de `py-2 text-sm` para `py-2.5 text-base`
 
-Alteração na área da linha ~2058-2066:
+3. **Quick Actions (Recarregar, Minha Rede, etc.)**:
+   - Ícone container de `w-10 h-10` para `w-12 h-12`
+   - Ícone de `h-5 w-5` para `h-6 w-6`
+   - Label de `text-sm` para `text-base`
+   - Sub-label de `text-[10px]` para `text-xs`
+   - Padding de `p-4` para `p-5`
 
-```ts
-// Determine sender role
-let senderRole = "client";
-if (user?.id) {
-  const { data: roleData } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (roleData) senderRole = "admin";
-}
+4. **KPI Cards (Lucro, Vendas, etc.)**:
+   - Padding de `p-4` para `p-5`
+   - Ícone container de `w-8 h-8` para `w-10 h-10`
+   - Ícone de `h-4 w-4` para `h-5 w-5`
+   - Label de `text-xs` para `text-sm`
+   - Valor de `text-2xl` para `text-3xl`
 
-const { error: msgError } = await supabase.from("support_messages").insert({
-  ticket_id: ticketId,
-  sender_id: senderId,
-  sender_role: senderRole,
-  message: messageText,
-  image_url: imageUrl,
-  origin: "telegram",
-});
-```
+5. **Relatório de Desempenho**:
+   - Título de `text-lg` para `text-xl`
+   - Subtítulo de `text-xs` para `text-sm`
+   - Filtros (Hoje/Mês/Outro) de `text-xs` para `text-sm`, padding de `px-3 py-1.5` para `px-4 py-2`
 
-Isso garante que quando um admin responde pelo Telegram via sessão de suporte, a mensagem aparece corretamente como "admin" no widget de suporte.
+6. **Espaçamento geral**: de `space-y-5` para `space-y-6`
+
+## Resultado Esperado
+- Botões e cards maiores e mais fáceis de tocar no mobile
+- Textos mais legíveis sem precisar se aproximar da tela
+- Layout mais "respirado" e profissional em telas pequenas
 
