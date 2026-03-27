@@ -216,7 +216,7 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
   };
 
   const isAdmin = userRole === "admin";
-  const showSalesTools = isAdmin || salesToolsEnabled;
+  const showSalesTools = (isAdmin || salesToolsEnabled) && isRevendedor;
 
   const quickActions = [
     { icon: Smartphone, label: "Recarregar", sub: "Vender créditos", tab: "recarga", color: "text-primary", bg: "bg-primary/10" },
@@ -235,9 +235,11 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
 
   const kpis = [
     { icon: DollarSign, label: "Seu Lucro", value: stats.faturamento, isCurrency: true, color: "text-primary", bg: "bg-primary/10" },
-    { icon: TrendingUp, label: "Comissões", value: stats.comissoes, isCurrency: true, color: "text-success", bg: "bg-success/10" },
+    ...(isRevendedor ? [
+      { icon: TrendingUp, label: "Comissões", value: stats.comissoes, isCurrency: true, color: "text-success", bg: "bg-success/10" },
+    ] : []),
     { icon: ShoppingCart, label: "Vendas Realizadas", value: stats.vendas, isCurrency: false, color: "text-accent-foreground", bg: "bg-accent/10" },
-    ...(!isClientMode ? [
+    ...(!isClientMode && isRevendedor ? [
       { icon: UserPlus, label: "Novos Clientes", value: stats.novosClientes, isCurrency: false, color: "text-warning", bg: "bg-warning/10" },
     ] : []),
   ];
