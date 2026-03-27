@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 import { renderTelegramHtml } from "@/components/TextFormatToolbar";
 import { PinProtection } from "@/components/PinProtection";
 import AdminBankDashboard from "@/components/BankDashboard";
