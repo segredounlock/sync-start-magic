@@ -1182,7 +1182,7 @@ export default function AdminDashboard() {
                   <button
                     key={p.key}
                     onClick={() => setPeriod(p.key)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${period === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${period === p.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     {p.label}
                   </button>
@@ -1216,12 +1216,12 @@ export default function AdminDashboard() {
               {/* Vendas & Lucro */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-7 h-7 rounded-lg bg-success/15 flex items-center justify-center">
-                    <BarChart3 className="h-4 w-4 text-success" />
+                  <div className="w-9 h-9 rounded-lg bg-success/15 flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground text-sm">Vendas & Lucro (7 dias)</h4>
-                    <p className="text-[10px] text-muted-foreground">Recargas realizadas pelo bot</p>
+                    <h4 className="font-semibold text-foreground text-base">Vendas & Lucro (7 dias)</h4>
+                    <p className="text-xs text-muted-foreground">Recargas realizadas pelo bot</p>
                   </div>
                 </div>
                 <div className="h-64 mt-2">
@@ -1259,12 +1259,12 @@ export default function AdminDashboard() {
               {/* Por Operadora */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="glass-card rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center">
-                    <Package className="h-4 w-4 text-primary" />
+                  <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <Package className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground text-sm">Por Operadora</h4>
-                    <p className="text-[10px] text-muted-foreground">Distribuição de vendas</p>
+                    <h4 className="font-semibold text-foreground text-base">Por Operadora</h4>
+                    <p className="text-xs text-muted-foreground">Distribuição de vendas</p>
                   </div>
                 </div>
                 <div className="h-52 mt-2">

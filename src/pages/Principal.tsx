@@ -1614,7 +1614,7 @@ export default function Principal() {
                     <RefreshCw className={`h-3.5 w-3.5 ${providerBalance.loading ? "animate-spin" : ""}`} />
                   </button>
                 </div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Saldo Provedor</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Saldo Provedor</p>
                 {providerBalance.loading ? (
                   <div className="mt-1"><SkeletonCard /></div>
                 ) : providerBalance.error ? (
@@ -1626,7 +1626,7 @@ export default function Principal() {
                 ) : (
                   <p className="text-xl md:text-2xl font-bold text-muted-foreground mt-0.5">—</p>
                 )}
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {providerBalance.error ? "Falha ao consultar API" : "API Recarga Express"}
                 </p>
               </motion.div>
@@ -1635,7 +1635,7 @@ export default function Principal() {
                 {/* Recent Activity */}
                 <div className="glass-card rounded-xl p-4 md:p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                       <History className="h-4 w-4 text-muted-foreground" /> Atividade Recente
                     </h3>
                     <button onClick={() => setView("relatorios")} className="text-xs text-primary font-medium hover:underline">Ver tudo</button>
@@ -1654,7 +1654,7 @@ export default function Principal() {
                               <p className="text-xs font-medium text-foreground truncate">
                                 {rev?.nome || rev?.email?.split("@")[0] || "—"} • <span className={r.operadora?.toLowerCase().includes("tim") ? "text-blue-400" : r.operadora?.toLowerCase().includes("vivo") ? "text-purple-400" : r.operadora?.toLowerCase().includes("claro") ? "text-red-400" : "text-foreground"}>{(r.operadora || "—").toUpperCase()}</span>
                               </p>
-                              <p className="text-[10px] text-muted-foreground">{r.telefone} • {getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
+                              <p className="text-xs text-muted-foreground">{r.telefone} • {getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
                             </div>
                             <span className="text-sm font-bold font-mono text-foreground shrink-0"><AnimatedCounter value={safeValor(r)} prefix="R$&nbsp;" duration={600} /></span>
                           </div>
@@ -1666,10 +1666,10 @@ export default function Principal() {
 
                 {/* Top Resellers Today */}
                 <div className="glass-card rounded-xl p-4 md:p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-success" /> Top Revendedores Hoje
                     {dashboardMetrics.totalActiveToday > 0 && (
-                      <span className="text-[10px] font-medium text-muted-foreground ml-auto">{dashboardMetrics.totalActiveToday} usuário{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""} ativo{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""}</span>
+                      <span className="text-xs font-medium text-muted-foreground ml-auto">{dashboardMetrics.totalActiveToday} usuário{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""} ativo{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""}</span>
                     )}
                   </h3>
                   {dashboardMetrics.topResellers.length === 0 ? (
