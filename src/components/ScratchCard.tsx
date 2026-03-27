@@ -310,6 +310,7 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
       loadLeaderboards();
     } catch (e) {
       console.error("Scratch error:", e);
+      finishingRef.current = false;
       setGameOver(false);
     }
   };
