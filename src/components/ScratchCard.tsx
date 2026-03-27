@@ -57,34 +57,34 @@ function seededRandom(seed: string) {
   };
 }
 
-const POSSIBLE_VALUES = [0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00, 20.00, 50.00, 100.00];
+// Full range for winning grids, low range for losses to avoid misleading visuals
+const ALL_VALUES = [0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00, 20.00, 50.00, 100.00];
+const LOSS_VALUES = [0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00];
 
 function generateGrid(cardId: string, isWon: boolean, prizeAmount: number): number[] {
   const rng = seededRandom(cardId);
   const grid: number[] = new Array(9);
 
   if (isWon && prizeAmount > 0) {
-    // Place 3 winning cells
+    // Place 3 winning cells at random positions
     const positions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     const winPositions: number[] = [];
     for (let i = 0; i < 3; i++) {
       const idx = Math.floor(rng() * positions.length);
       winPositions.push(positions.splice(idx, 1)[0]);
     }
-    // Fill winning positions
     for (const p of winPositions) grid[p] = prizeAmount;
     // Fill rest with non-matching values
-    const others = POSSIBLE_VALUES.filter(v => v !== prizeAmount);
+    const others = ALL_VALUES.filter(v => v !== prizeAmount);
     for (const p of positions) {
       grid[p] = others[Math.floor(rng() * others.length)];
     }
   } else {
-    // NEVER allow 3 of the same value when player lost
+    // Loss grid: use only low values, max 2 of any value
     const counts: Record<number, number> = {};
     for (let i = 0; i < 9; i++) {
-      // Filter to only values that appear less than 2 times
-      const available = POSSIBLE_VALUES.filter(v => (counts[v] || 0) < 2);
-      const pool = available.length > 0 ? available : POSSIBLE_VALUES;
+      const available = LOSS_VALUES.filter(v => (counts[v] || 0) < 2);
+      const pool = available.length > 0 ? available : LOSS_VALUES;
       const val = pool[Math.floor(rng() * pool.length)];
       grid[i] = val;
       counts[val] = (counts[val] || 0) + 1;
