@@ -1216,12 +1216,12 @@ export default function AdminDashboard() {
               {/* Vendas & Lucro */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-7 h-7 rounded-lg bg-success/15 flex items-center justify-center">
-                    <BarChart3 className="h-4 w-4 text-success" />
+                  <div className="w-9 h-9 rounded-lg bg-success/15 flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground text-sm">Vendas & Lucro (7 dias)</h4>
-                    <p className="text-[10px] text-muted-foreground">Recargas realizadas pelo bot</p>
+                    <h4 className="font-semibold text-foreground text-base">Vendas & Lucro (7 dias)</h4>
+                    <p className="text-xs text-muted-foreground">Recargas realizadas pelo bot</p>
                   </div>
                 </div>
                 <div className="h-64 mt-2">
