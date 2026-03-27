@@ -2057,10 +2057,23 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
 
   // ✅ Write message to support_messages (unified history)
   const senderId = user?.id || "00000000-0000-0000-0000-000000000000";
+
+  // Determine sender role dynamically
+  let senderRole = "client";
+  if (user?.id) {
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleData) senderRole = "admin";
+  }
+
   const { error: msgError } = await supabase.from("support_messages").insert({
     ticket_id: ticketId,
     sender_id: senderId,
-    sender_role: "client",
+    sender_role: senderRole,
     message: messageText,
     image_url: imageUrl,
     origin: "telegram",
