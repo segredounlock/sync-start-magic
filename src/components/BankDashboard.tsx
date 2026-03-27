@@ -123,7 +123,7 @@ export default function AdminBankDashboard({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={(e) => { e.stopPropagation(); onAddSaldo(); }}
-            className="absolute right-5 top-5 w-11 h-11 rounded-full bg-success text-success-foreground flex items-center justify-center shadow-[0_0_20px_hsl(var(--success)/0.4)] hover:shadow-[0_0_28px_hsl(var(--success)/0.6)] transition-shadow"
+            className="absolute right-5 top-5 w-12 h-12 rounded-full bg-success text-success-foreground flex items-center justify-center shadow-[0_0_20px_hsl(var(--success)/0.4)] hover:shadow-[0_0_28px_hsl(var(--success)/0.6)] transition-shadow"
           >
             <Plus className="h-5 w-5" />
           </motion.button>
