@@ -2090,7 +2090,7 @@ async function handleSupportMessage(supabase: any, token: string, chatId: number
   // Notify admin via Telegram (fire-and-forget)
   const { data: adminCfgRow } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
   const adminChatId = Number(adminCfgRow?.value) || 1901426549;
-  const userName = session.data?.telegram_first_name || session.data?.telegram_username || "Usuário";
+  const userName = user?.nome || user?.email?.split("@")[0] || session.data?.telegram_first_name || session.data?.telegram_username || "Usuário";
   const userTag = session.data?.telegram_username ? ` (@${session.data.telegram_username})` : "";
   const photoTag = imageUrl ? "\n📷 <i>Com imagem anexada</i>" : "";
   const msgPreview = messageText.length > 300 ? messageText.slice(0, 300) + "…" : messageText;
