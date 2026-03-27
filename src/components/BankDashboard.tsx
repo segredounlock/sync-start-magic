@@ -57,13 +57,13 @@ export default function AdminBankDashboard({
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ── Balance Card (Seu Lucro) ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 cursor-pointer"
+        className="relative overflow-hidden rounded-2xl bg-card border border-border p-6 cursor-pointer"
         onClick={onShowLucroModal}
       >
         {/* Top glow */}
@@ -71,12 +71,12 @@ export default function AdminBankDashboard({
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            <span className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
               Seu Lucro
             </span>
             <button
               onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }}
-              className="w-8 h-8 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
               {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
@@ -91,7 +91,7 @@ export default function AdminBankDashboard({
                   animate={{ opacity: 1, filter: "blur(0px)" }}
                   exit={{ opacity: 0, filter: "blur(8px)" }}
                   transition={{ duration: 0.25 }}
-                  className={`text-3xl sm:text-4xl font-bold tracking-tight ${lucro >= 0 ? "text-success" : "text-destructive"}`}
+                  className={`text-4xl sm:text-4xl font-bold tracking-tight ${lucro >= 0 ? "text-success" : "text-destructive"}`}
                 >
                   <Currency value={lucro} loading={loading} skeletonWidth="w-36" skeletonHeight="h-9" />
                 </motion.p>
@@ -101,7 +101,7 @@ export default function AdminBankDashboard({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
+                  className="text-4xl sm:text-4xl font-bold text-foreground tracking-tight"
                 >
                   R${"\u00A0"}••••••
                 </motion.p>
@@ -111,10 +111,10 @@ export default function AdminBankDashboard({
 
           {/* Lucro percentage badge */}
           <div className="flex items-center gap-2 mt-2">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${lucro >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${lucro >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
               {lucro >= 0 ? "↑" : "↓"} {lucroPct.toFixed(1)}% margem
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               sobre {showBalance ? fmt(totalCobrado) : "••••"} cobrado
             </span>
           </div>
@@ -123,9 +123,9 @@ export default function AdminBankDashboard({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={(e) => { e.stopPropagation(); onAddSaldo(); }}
-            className="absolute right-5 top-5 w-11 h-11 rounded-full bg-success text-success-foreground flex items-center justify-center shadow-[0_0_20px_hsl(var(--success)/0.4)] hover:shadow-[0_0_28px_hsl(var(--success)/0.6)] transition-shadow"
+            className="absolute right-5 top-5 w-12 h-12 rounded-full bg-success text-success-foreground flex items-center justify-center shadow-[0_0_20px_hsl(var(--success)/0.4)] hover:shadow-[0_0_28px_hsl(var(--success)/0.6)] transition-shadow"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-6 w-6" />
           </motion.button>
         </div>
 
@@ -138,29 +138,29 @@ export default function AdminBankDashboard({
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05, type: "spring", stiffness: 200 }}
-        className="flex items-center justify-between rounded-xl bg-card border border-border px-4 py-3"
+        className="flex items-center justify-between rounded-xl bg-card border border-border px-5 py-4"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Wallet className="h-4 w-4 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Wallet className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
-            <p className="text-lg font-bold text-foreground">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Meu Saldo</p>
+            <p className="text-xl font-bold text-foreground">
               <Currency value={meuSaldo} loading={loading} hidden={!showBalance} skeletonWidth="w-20" skeletonHeight="h-5" />
             </p>
           </div>
         </div>
         <button
           onClick={onAddSaldo}
-          className="h-8 px-3 rounded-lg bg-success text-success-foreground flex items-center gap-1.5 text-xs font-bold shadow-[0_0_12px_hsl(var(--success)/0.3)] hover:shadow-[0_0_20px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all"
+          className="h-10 px-4 rounded-lg bg-success text-success-foreground flex items-center gap-1.5 text-sm font-bold shadow-[0_0_12px_hsl(var(--success)/0.3)] hover:shadow-[0_0_20px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all"
         >
           <Plus className="h-3.5 w-3.5" /> Adicionar
         </button>
       </motion.div>
 
       {/* ── Quick Actions ── */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-3">
         {quickActions.map((action, i) => (
           <motion.button
             key={action.key}
@@ -169,12 +169,12 @@ export default function AdminBankDashboard({
             transition={{ delay: 0.08 + i * 0.04, type: "spring", stiffness: 200 }}
             whileTap={{ scale: 0.93 }}
             onClick={() => action.key === "addSaldo" ? onAddSaldo() : onNavigate(action.key)}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border hover:border-primary/20 transition-all"
+            className="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-card border border-border hover:border-primary/20 transition-all"
           >
-            <div className={`w-11 h-11 rounded-xl ${action.bg} flex items-center justify-center`}>
-              <action.icon className={`h-5 w-5 ${action.color}`} />
+            <div className={`w-12 h-12 rounded-xl ${action.bg} flex items-center justify-center`}>
+              <action.icon className={`h-6 w-6 ${action.color}`} />
             </div>
-            <span className="text-[11px] font-semibold text-foreground leading-tight text-center">
+            <span className="text-xs font-semibold text-foreground leading-tight text-center">
               {action.label}
             </span>
           </motion.button>
@@ -182,7 +182,7 @@ export default function AdminBankDashboard({
       </div>
 
       {/* ── Stats Grid (2x2) ── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         {[
           {
             label: "Total Depósitos",
@@ -232,15 +232,15 @@ export default function AdminBankDashboard({
             transition={{ delay: 0.12 + i * 0.05, type: "spring", stiffness: 180 }}
             className="kpi-card"
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                 {card.label}
               </span>
-              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center`}>
-                <card.icon className={`h-4 w-4 ${card.color}`} />
+              <div className={`w-10 h-10 rounded-lg ${card.bg} flex items-center justify-center`}>
+                <card.icon className={`h-5 w-5 ${card.color}`} />
               </div>
             </div>
-            <p className={`text-xl sm:text-2xl font-bold ${card.color} truncate`}>
+            <p className={`text-2xl sm:text-3xl font-bold ${card.color} truncate`}>
               {card.isCurrency ? (
                 <Currency value={card.value} loading={loading} hidden={!showBalance} skeletonWidth="w-20" skeletonHeight="h-7" />
               ) : (
@@ -250,7 +250,7 @@ export default function AdminBankDashboard({
             {card.sub && (
               <div className="flex items-center gap-1 mt-1.5">
                 {card.trend === "up" && <TrendingUp className="h-3 w-3 text-success" />}
-                <span className="text-[10px] font-medium text-muted-foreground">
+                <span className="text-xs font-medium text-muted-foreground">
                   {card.sub}
                 </span>
               </div>
