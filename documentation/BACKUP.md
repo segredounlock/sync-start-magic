@@ -2,10 +2,10 @@
 
 ## Visão Geral
 
-O sistema de backup (v3.3) cobre 4 áreas:
+O sistema de backup (v3.4) cobre 4 áreas:
 1. **Banco de dados** — Todas as 45 tabelas do schema `public`
 2. **Autenticação** — Todos os usuários de `auth.users` com senhas criptografadas
-3. **Código fonte** — Todos os 203+ arquivos do projeto (inclui `MasterOnlyRoute.tsx`)
+3. **Código fonte** — Todos os 204+ arquivos do projeto
 4. **GitHub Sync** — Sincronização com repositório GitHub
 
 ## Backup de Dados (Export)

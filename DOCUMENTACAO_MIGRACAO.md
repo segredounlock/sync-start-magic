@@ -1,7 +1,7 @@
 # 📦 Documentação Completa — Recargas Brasil v2
 
 > **Última atualização:** 2026-03-27  
-> **Versão:** 2.3  
+> **Versão:** 2.4  
 > **Propósito:** Documentar TUDO necessário para migração, restauração e manutenção do sistema.
 
 > ⚠️ **Este arquivo é um resumo.** A documentação completa e detalhada está na pasta `documentation/`.
@@ -48,21 +48,39 @@ Consulte a pasta `documentation/` para guias completos:
 
 ---
 
-## 🔄 Principais Mudanças v2.3
+## 🔄 Principais Mudanças v2.4
 
-### Admin Master
+### Cargo `revendedor` Restaurado
+- Usuários sem vínculo de rede (`reseller_id = NULL`) recebem automaticamente `revendedor`
+- ~1.085 usuários existentes sem vínculo receberam o cargo via INSERT em massa
+- Trigger `handle_new_user` atualizado para auto-assign
+- Usuários com indicação continuam recebendo apenas `usuario`
+- Primeiro usuário (admin master) recebe `admin` + `usuario` + `revendedor`
+
+### Raspadinha Refatorada
+- **Sorteio mutuamente exclusivo** — single roll com faixas cumulativas (era multi-roll acumulativo)
+- **Distribuição cúbica** — `Math.pow(Math.random(), 3)` favorece valores menores
+- **Chance total: ~3,3%** (era ~8,7%)
+- **Tier 1:** 2% — R$0,10 a R$1,00
+- **Tier 2:** 1% — R$1,00 a R$5,00
+- **Tier 3:** 0,3% — R$3,00 a R$15,00
+- Proteção contra 3 valores iguais em derrotas
+- Melhor suporte a touch no iOS Safari
+
+### Outras
+- **200 migrations** — Contagem atualizada
+- **Roles do sistema:** `admin`, `usuario`, `revendedor`, `suporte`
+
+---
+
+## 🔄 Mudanças Anteriores
+
+### Admin Master (v2.3)
 - **Cargo exclusivo** com acesso total e irrevogável ao sistema
 - **`masterAdminId`** salvo em `system_config` — primeiro usuário é auto-promovido
 - **`MasterOnlyRoute.tsx`** protege `/principal` — verifica `user.id === masterAdminId`
 - **Proteção de cargo** — nenhum outro admin pode remover o cargo do admin master
 - **Sub-menu de decisão** ao atribuir cargo admin: "Admin com acesso ao Principal" ou "Admin comum"
-
-### Novas Features
-- **Cargo `suporte`** — Novo role para agentes de suporte
-- **PIN com blur** — Dígitos do PIN ficam desfocados após digitação
-- **Animação soft-pulse** — Ícone Live no ticker com animação contínua
-- **URLs dinâmicas** — `domain.ts` usa `window.location.origin` (white-label ready)
-- **Branding dinâmico** — `useSiteName`, `useSiteLogo` leem de `system_config`
 
 ### Sistema de Espelhamento (Mirror Sync) — v2.2
 - **GitHub Actions** sincroniza automaticamente código para repo espelho a cada push
