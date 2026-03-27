@@ -57,7 +57,7 @@ export default function AdminBankDashboard({
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ── Balance Card (Seu Lucro) ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
