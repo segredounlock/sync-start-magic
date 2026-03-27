@@ -264,8 +264,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/index" element={<Navigate to="/" replace />} />
-            <Route path="/index.html" element={<Navigate to="/" replace />} />
             <Route path="/auth" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
