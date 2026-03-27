@@ -24,6 +24,7 @@ interface DashboardSectionProps {
   isClientMode?: boolean;
   salesToolsEnabled?: boolean;
   userRole?: string | null;
+  isRevendedor?: boolean;
 }
 
 type Period = "hoje" | "mes" | "outro";
