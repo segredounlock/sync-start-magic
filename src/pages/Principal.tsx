@@ -2329,66 +2329,46 @@ export default function Principal() {
                     )}
                 </div>
 
-                {/* Badge de Verificação — slide expand */}
-                <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border/50 overflow-hidden">
-                  <button
-                    onClick={() => setShowBadgeDropdown(!showBadgeDropdown)}
-                    className="flex items-center gap-2 w-full"
-                  >
-                    <span className="text-xs text-muted-foreground font-medium">Selo de Verificação</span>
-                    {(() => {
-                      const bk = selectedRev.verification_badge as BadgeType | null;
-                      if (bk && BADGE_CONFIG[bk]) {
-                        const Ic = BADGE_CONFIG[bk].icon;
-                        return <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-medium flex items-center gap-1"><Ic className={`h-3 w-3 ${BADGE_CONFIG[bk].color} ${BADGE_CONFIG[bk].fill}`} />{BADGE_CONFIG[bk].label}</span>;
-                      }
-                      return <span className="text-[10px] text-muted-foreground">Nenhum</span>;
-                    })()}
-                    <ChevronRight className={`h-3.5 w-3.5 ml-auto text-muted-foreground transition-transform duration-300 ${showBadgeDropdown ? "rotate-90" : ""}`} />
-                  </button>
-                  <AnimatePresence>
-                    {showBadgeDropdown && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex flex-wrap gap-1.5 pt-3">
-                          <button
-                            onClick={async () => {
-                              await supabase.from("profiles").update({ verification_badge: null }).eq("id", selectedRev.id);
-                              setSelectedRev({ ...selectedRev, verification_badge: null });
-                              setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: null } : r));
-                              toast.success("Selo removido");
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!selectedRev.verification_badge ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
-                          >
-                            Nenhum
-                          </button>
-                          {Object.entries(BADGE_CONFIG).map(([key, cfg]) => {
-                            const Icon = cfg.icon;
-                            return (
-                              <button
-                                key={key}
-                                onClick={async () => {
-                                  await supabase.from("profiles").update({ verification_badge: key }).eq("id", selectedRev.id);
-                                  setSelectedRev({ ...selectedRev, verification_badge: key });
-                                  setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: key } : r));
-                                  toast.success(`Selo "${cfg.label}" atribuído!`);
-                                }}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${selectedRev.verification_badge === key ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
-                              >
-                                <Icon className={`h-3.5 w-3.5 ${cfg.color} ${cfg.fill}`} />
-                                {cfg.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                {/* Badge de Verificação — slide horizontal */}
+                <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <span className="text-xs text-muted-foreground font-medium block mb-2">Selo de Verificação</span>
+                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                    <motion.button
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0 * 0.05 }}
+                      onClick={async () => {
+                        await supabase.from("profiles").update({ verification_badge: null }).eq("id", selectedRev.id);
+                        setSelectedRev({ ...selectedRev, verification_badge: null });
+                        setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: null } : r));
+                        toast.success("Selo removido");
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${!selectedRev.verification_badge ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                    >
+                      Nenhum
+                    </motion.button>
+                    {Object.entries(BADGE_CONFIG).map(([key, cfg], i) => {
+                      const Icon = cfg.icon;
+                      return (
+                        <motion.button
+                          key={key}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: (i + 1) * 0.05 }}
+                          onClick={async () => {
+                            await supabase.from("profiles").update({ verification_badge: key }).eq("id", selectedRev.id);
+                            setSelectedRev({ ...selectedRev, verification_badge: key });
+                            setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, verification_badge: key } : r));
+                            toast.success(`Selo "${cfg.label}" atribuído!`);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 ${selectedRev.verification_badge === key ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                        >
+                          <Icon className={`h-3.5 w-3.5 ${cfg.color} ${cfg.fill}`} />
+                          {cfg.label}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
                 </div>
               </motion.div>
 
