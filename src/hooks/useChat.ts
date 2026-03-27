@@ -107,7 +107,7 @@ export function useConversations() {
 
       const [profiles, roleData, unreadData] = await Promise.all([
         uniqueIds.length > 0
-          ? supabase.from("profiles").select("id, nome, email, avatar_url, verification_badge").in("id", uniqueIds).then(r => r.data || [])
+          ? supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", uniqueIds).then(r => (r.data || []).filter(p => p.id != null) as { id: string; nome: string | null; avatar_url: string | null; verification_badge: string | null }[])
           : Promise.resolve([]),
         uniqueIds.length > 0
           ? supabase.from("user_roles").select("user_id, role").in("user_id", uniqueIds).then(r => r.data || [])
