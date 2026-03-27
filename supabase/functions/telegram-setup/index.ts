@@ -100,6 +100,28 @@ serve(async (req) => {
     const commandsResult = await commandsResp.json();
     if (!commandsResult?.ok) throw new Error(commandsResult?.description || "Falha ao configurar comandos do bot");
 
+    // Set bot short description (profile, 160 chars)
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyShortDescription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          short_description: "Recargas de celular com os melhores preços do Brasil! 📱💰",
+        }),
+      });
+    } catch (e) { console.log("setMyShortDescription error:", e); }
+
+    // Set bot description (start screen, 512 chars)
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: "🇧🇷 Recargas Brasil — Bot Oficial\n\n📱 Recargas de celular para todas as operadoras\n💰 Melhores preços do mercado\n⚡ Recarga instantânea\n🔒 Pagamento seguro via PIX\n\n✅ Clique em INICIAR para começar!",
+        }),
+      });
+    } catch (e) { console.log("setMyDescription error:", e); }
+
     return new Response(JSON.stringify({ success: true, webhook: webhookUrl, telegram: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
