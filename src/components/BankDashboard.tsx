@@ -71,7 +71,7 @@ export default function AdminBankDashboard({
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            <span className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
               Seu Lucro
             </span>
             <button
