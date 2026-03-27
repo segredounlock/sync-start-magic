@@ -1,36 +1,24 @@
 
 
-# Adicionar Seletor de Cargo no Painel Admin (Principal.tsx)
+# Adicionar Descrição e Texto Inicial do Bot Telegram
 
 ## Problema
-Na tela de detalhes do usuário no Painel Principal, não existe um seletor de cargo (Admin, Suporte, Cliente, Usuario). O perfil do usuário (`/perfil/:slug`) já tem esse dropdown, mas o painel admin não.
+Quando alguém abre o bot pela primeira vez, a tela está quase vazia — só mostra "O que este bot pode fazer?" com uma linha genérica. Não há descrição rica nem texto de boas-vindas.
 
 ## Solução
-Adicionar um dropdown de cargo na seção de ações do usuário selecionado em `Principal.tsx`, similar ao que já existe em `UserProfile.tsx`.
+Adicionar chamadas às APIs `setMyDescription` e `setMyShortDescription` do Telegram na função `telegram-setup`, que já roda ao configurar o bot.
 
-### Alterações em `src/pages/Principal.tsx`
+## Alteração
 
-1. **Adicionar estado** para controle do dropdown de cargo:
-   - `showRoleDropdown` (boolean)
-   - `changingRole` (boolean)
+**Arquivo:** `supabase/functions/telegram-setup/index.ts`
 
-2. **Adicionar a lista `AVAILABLE_ROLES`** (igual ao UserProfile):
-   - Admin, Suporte, Cliente, Usuario
+Após o bloco de `setMyCommands` (linha ~84), adicionar duas chamadas:
 
-3. **Adicionar função `handleChangeRole`** que:
-   - Remove o cargo antigo via `admin-toggle-role` (action: remove)
-   - Adiciona o novo cargo via `admin-toggle-role` (action: add)
-   - Atualiza o estado local do usuário selecionado
-   - Protege o master admin (já existe `isTargetMaster`)
+1. **`setMyShortDescription`** — texto curto que aparece no perfil do bot (160 chars):
+   - Ex: `"Recargas de celular com os melhores preços do Brasil! 📱💰"`
 
-4. **Adicionar o dropdown na UI**, entre o botão "Ativar Revenda" e "Desativar":
-   - Botão mostrando o cargo atual com ícone Shield + seta
-   - Dropdown animado com as opções de cargo
-   - Desabilitado para o master admin
-   - Usa as mesmas cores por cargo do UserProfile
+2. **`setMyDescription`** — texto longo que aparece na tela inicial antes do /start (512 chars):
+   - Ex: `"🇧🇷 Recargas Brasil — Bot Oficial\n\n📱 Recargas de celular para todas as operadoras\n💰 Melhores preços do mercado\n⚡ Recarga instantânea\n🔒 Pagamento seguro via PIX\n\n✅ Clique em INICIAR para começar!"`
 
-### Resultado
-- Admin pode alterar o cargo de qualquer usuário direto no painel, sem precisar ir ao perfil
-- Master admin continua protegido
-- Consistência visual com o seletor do perfil
+Ambas as chamadas seguem o mesmo padrão `fetch` já usado para `setMyCommands`. Erros não-fatais (apenas logados).
 
