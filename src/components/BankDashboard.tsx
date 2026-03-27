@@ -171,8 +171,8 @@ export default function AdminBankDashboard({
             onClick={() => action.key === "addSaldo" ? onAddSaldo() : onNavigate(action.key)}
             className="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-card border border-border hover:border-primary/20 transition-all"
           >
-            <div className={`w-11 h-11 rounded-xl ${action.bg} flex items-center justify-center`}>
-              <action.icon className={`h-5 w-5 ${action.color}`} />
+            <div className={`w-12 h-12 rounded-xl ${action.bg} flex items-center justify-center`}>
+              <action.icon className={`h-6 w-6 ${action.color}`} />
             </div>
             <span className="text-[11px] font-semibold text-foreground leading-tight text-center">
               {action.label}
