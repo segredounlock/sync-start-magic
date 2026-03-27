@@ -922,16 +922,13 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
   ];
 
   const isAdmin = role === "admin";
+  const isRevendedor = isAdmin || role === "revendedor" || hasNetwork;
   const showSalesTools = isAdmin || salesToolsEnabled;
 
   const salesMenuItems: MenuItem[] = (() => {
-    if (isClientMode || !showSalesTools) return [];
+    if (isClientMode || !showSalesTools || !isRevendedor) return [];
     const items: MenuItem[] = [];
-    // Meus Preços: only for admins, revendedores, or users with their own network
-    if (isAdmin || role === "revendedor" || hasNetwork) {
-      items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
-    }
-    // Minha Rede: visible to all authenticated users
+    items.push({ key: "meusprecos", label: "Meus Preços", icon: Tag, color: "text-amber-400" });
     items.push({ key: "minharede", label: "Minha Rede", icon: UsersIcon, color: "text-indigo-400" });
     return items;
   })();
