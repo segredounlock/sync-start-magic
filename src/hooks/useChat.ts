@@ -300,7 +300,7 @@ export function useChatMessages(conversationId: string | null) {
         ? supabase.from("chat_reactions").select("*").in("message_id", msgIds).then(r => r.data || [])
         : Promise.resolve([]),
       needsFetch && senderIds.length > 0
-        ? supabase.from("profiles").select("id, nome, avatar_url, verification_badge").in("id", senderIds).then(r => r.data || [])
+        ? supabase.from("profiles_public").select("id, nome, avatar_url, verification_badge").in("id", senderIds).then(r => (r.data || []).filter(p => p.id != null) as { id: string; nome: string | null; avatar_url: string | null; verification_badge: string | null }[])
         : Promise.resolve(null),
       needsFetch && senderIds.length > 0
         ? supabase.from("user_roles").select("user_id").in("user_id", senderIds).eq("role", "admin").then(r => r.data || [])
