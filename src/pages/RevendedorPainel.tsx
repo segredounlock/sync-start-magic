@@ -2647,7 +2647,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         }}
         mainCount={4}
         userLabel={user?.email || userLabel}
-        userRole={role === "admin" ? "Administrador" : role === "revendedor" ? "Revendedor" : role === "cliente" ? "Cliente" : "Usuário"}
+        userRole={role === "admin" ? "Administrador" : isRevendedor ? "Revendedor" : "Cliente"}
         userAvatarUrl={avatarUrl}
         onSignOut={signOut}
         panelLinks={[
