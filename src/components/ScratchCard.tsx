@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -57,34 +57,34 @@ function seededRandom(seed: string) {
   };
 }
 
-const POSSIBLE_VALUES = [0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00, 20.00, 50.00, 100.00];
+// Full range for winning grids, low range for losses to avoid misleading visuals
+const ALL_VALUES = [0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00, 20.00, 50.00, 100.00];
+const LOSS_VALUES = [0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00];
 
 function generateGrid(cardId: string, isWon: boolean, prizeAmount: number): number[] {
   const rng = seededRandom(cardId);
   const grid: number[] = new Array(9);
 
   if (isWon && prizeAmount > 0) {
-    // Place 3 winning cells
+    // Place 3 winning cells at random positions
     const positions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     const winPositions: number[] = [];
     for (let i = 0; i < 3; i++) {
       const idx = Math.floor(rng() * positions.length);
       winPositions.push(positions.splice(idx, 1)[0]);
     }
-    // Fill winning positions
     for (const p of winPositions) grid[p] = prizeAmount;
     // Fill rest with non-matching values
-    const others = POSSIBLE_VALUES.filter(v => v !== prizeAmount);
+    const others = ALL_VALUES.filter(v => v !== prizeAmount);
     for (const p of positions) {
       grid[p] = others[Math.floor(rng() * others.length)];
     }
   } else {
-    // NEVER allow 3 of the same value when player lost
+    // Loss grid: use only low values, max 2 of any value
     const counts: Record<number, number> = {};
     for (let i = 0; i < 9; i++) {
-      // Filter to only values that appear less than 2 times
-      const available = POSSIBLE_VALUES.filter(v => (counts[v] || 0) < 2);
-      const pool = available.length > 0 ? available : POSSIBLE_VALUES;
+      const available = LOSS_VALUES.filter(v => (counts[v] || 0) < 2);
+      const pool = available.length > 0 ? available : LOSS_VALUES;
       const val = pool[Math.floor(rng() * pool.length)];
       grid[i] = val;
       counts[val] = (counts[val] || 0) + 1;
@@ -154,7 +154,6 @@ function ComeBackTomorrow() {
 export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [revealedCells, setRevealedCells] = useState<Set<number>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [result, setResult] = useState<{ prize_amount: number; is_won: boolean } | null>(null);
   const [history, setHistory] = useState<HistoryCard[]>([]);
@@ -163,6 +162,7 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [balance, setBalance] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<"diaria" | "dourada">("diaria");
   const [spendingBlock, setSpendingBlock] = useState<{ totalSpent: number; minRequired: number } | null>(null);
+  const finishingRef = useRef(false);
 
   const grid = useMemo(() => {
     if (!card) return [];
@@ -203,7 +203,6 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
       setCard(cardData);
       if (d.is_scratched) {
         setGameOver(true);
-        setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
         setResult({ prize_amount: d.prize_amount, is_won: d.is_won });
       }
     }
@@ -252,7 +251,6 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
         setCard(c);
         if (c.is_scratched) {
           setGameOver(true);
-          setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
           setResult({ prize_amount: c.prize_amount ?? 0, is_won: Boolean(c.is_won) });
         }
         return;
@@ -266,14 +264,14 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   };
 
   const finishGame = async () => {
-    if (!card) return;
+    if (!card || finishingRef.current) return;
+    finishingRef.current = true;
 
     setGameOver(true);
-    setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
 
     const recoverFromNoCard = async () => {
+      finishingRef.current = false;
       setGameOver(false);
-      setRevealedCells(new Set());
       setResult(null);
       setCard(null);
       await checkTodayCard();
@@ -312,6 +310,7 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
       loadLeaderboards();
     } catch (e) {
       console.error("Scratch error:", e);
+      finishingRef.current = false;
       setGameOver(false);
     }
   };
