@@ -86,7 +86,8 @@ export default function RegrasPage() {
             Voltar
           </button>
           <h1 className="font-display text-lg font-bold shimmer-letters tracking-tight">
-            Recargas <span className="brasil-word">Brasil</span>
+            {siteName}
+          </h1>
           </h1>
         </motion.div>
       </header>
