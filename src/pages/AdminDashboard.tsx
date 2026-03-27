@@ -1460,10 +1460,10 @@ export default function AdminDashboard() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h2 className="font-display text-2xl font-bold text-foreground">{role === "revendedor" ? "Meus Clientes" : "Usuários"}</h2>
-                <p className="text-sm text-muted-foreground">{role === "revendedor" ? "Clientes cadastrados pela sua loja." : "Gerencie usuários e clientes."}</p>
+                <h2 className="font-display text-2xl font-bold text-foreground">"Usuários"</h2>
+                <p className="text-sm text-muted-foreground">"Gerencie usuários do sistema."</p>
               </div>
-              {role === "admin" && userSubTab === "revendedores" && (
+              {role === "admin" && (
                 <button onClick={() => setShowCreateUser(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-muted/30 text-foreground font-medium text-sm hover:bg-muted/60 transition-colors">
                   <Plus className="h-4 w-4" /> Novo Usuário
                 </button>
@@ -1483,20 +1483,11 @@ export default function AdminDashboard() {
               >
                 Revendedores
               </button>
-              <button
-                onClick={() => setUserSubTab("clientes")}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-                  userSubTab === "clientes"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Clientes
-              </button>
+
             </div>
             )}
 
-            {userSubTab === "revendedores" && (<>
+            <>
 
 
             {/* Modal criar usuário */}
@@ -1787,7 +1778,7 @@ export default function AdminDashboard() {
                                 className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Ver perfil">
                                 <Eye className="h-3.5 w-3.5" />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); setClientHistoryModal({ id: r.id, nome: r.nome, email: r.email }); fetchClientRecargas(r.id); }}
+                              <button onClick={(e) => { e.stopPropagation(); navigate(`/perfil/${(r as any).slug || r.id}`); }}
                                 className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Histórico">
                                 <History className="h-3.5 w-3.5" />
                               </button>
@@ -1882,9 +1873,7 @@ export default function AdminDashboard() {
                 </motion.div>
               )}
             </AnimatePresence>
-            </>)}
-
-            {/* === Clientes Sub-tab === */}
+            </>
             {userSubTab === "clientes" && (
               <>
                 <div className="flex items-center justify-between">
@@ -3280,102 +3269,7 @@ export default function AdminDashboard() {
 
 
 
-        {/* Credit Client Modal */}
-        {creditClientModal && (
-          <div className="fixed inset-0 bg-background/70 backdrop-blur-sm z-[70] flex items-center justify-center px-4" onClick={() => setCreditClientModal(null)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              className="glass-card rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}
-            >
-              <h3 className="font-display text-lg font-bold text-foreground mb-1">Creditar Saldo</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Para: <span className="font-semibold text-foreground">{creditClientModal.nome || creditClientModal.email}</span>
-              </p>
-              <p className="text-xs text-muted-foreground mb-1">Saldo atual</p>
-              <p className="text-xl font-bold text-success mb-4">{fmt(creditClientModal.saldo)}</p>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-foreground mb-1">Valor a creditar (R$)</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={creditAmount}
-                  onChange={e => setCreditAmount(e.target.value.replace(/[^0-9,.]/g, ""))}
-                  className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-lg font-bold focus:outline-none focus:ring-2 focus:ring-success/50"
-                  placeholder="0,00"
-                  autoFocus
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {[10, 20, 50, 100, 200, 500].map(v => (
-                  <button key={v} onClick={() => setCreditAmount(String(v))}
-                    className="py-2 rounded-lg border border-border text-sm font-bold text-foreground hover:bg-success/10 hover:border-success/30 transition-all">
-                    {fmt(v)}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setCreditClientModal(null)} className="flex-1 py-2.5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">
-                  Cancelar
-                </button>
-                <button onClick={handleCreditClient} disabled={creditSaving || !creditAmount}
-                  className="flex-1 py-2.5 rounded-lg bg-success text-success-foreground text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-                  {creditSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  Creditar
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
 
-        {/* Client History Modal */}
-        {clientHistoryModal && (
-          <div className="fixed inset-0 bg-background/70 backdrop-blur-sm z-[70] flex items-start justify-center pt-8 md:pt-16 px-4" onClick={() => setClientHistoryModal(null)}>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-              className="glass-card rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 md:p-6" onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4 border-b border-border pb-3">
-                <div>
-                  <h3 className="font-display text-lg font-bold text-foreground">Histórico de Recargas</h3>
-                  <p className="text-sm text-muted-foreground">{clientHistoryModal.nome || clientHistoryModal.email}</p>
-                </div>
-                <button onClick={() => setClientHistoryModal(null)} className="p-1 rounded-md hover:bg-destructive/15 text-destructive">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              {clientRecargasLoading ? (
-                <p className="text-center py-8 text-muted-foreground">Carregando...</p>
-              ) : clientRecargas.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">Nenhuma recarga encontrada</p>
-              ) : (
-                <div className="space-y-2">
-                  {clientRecargas.map((r, i) => (
-                    <motion.div key={r.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
-                      className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                          <Smartphone className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{r.operadora || "Operadora"}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{r.telefone}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-foreground text-sm">{fmt(r.valor)}</p>
-                        <span className={`text-xs font-medium ${
-                          r.status === "completed" ? "text-success" : r.status === "pending" ? "text-warning" : "text-destructive"
-                        }`}>
-                          {r.status === "completed" ? "Concluída" : r.status === "pending" ? "Processando" : r.status}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          </div>
-        )}
 
         {/* ===== BROADCAST ===== */}
         {tab === "broadcast" && (
