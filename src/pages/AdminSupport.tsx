@@ -46,6 +46,7 @@ interface Message {
 interface SenderProfile {
   id: string;
   nome: string | null;
+  email: string | null;
   avatar_url: string | null;
   verification_badge: string | null;
 }
