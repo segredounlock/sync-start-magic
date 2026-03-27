@@ -61,6 +61,7 @@ const rules = [
 
 export default function RegrasPage() {
   const navigate = useNavigate();
+  const siteName = useSiteName();
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
