@@ -153,7 +153,7 @@ export default function AdminBankDashboard({
         </div>
         <button
           onClick={onAddSaldo}
-          className="h-8 px-3 rounded-lg bg-success text-success-foreground flex items-center gap-1.5 text-xs font-bold shadow-[0_0_12px_hsl(var(--success)/0.3)] hover:shadow-[0_0_20px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all"
+          className="h-10 px-4 rounded-lg bg-success text-success-foreground flex items-center gap-1.5 text-sm font-bold shadow-[0_0_12px_hsl(var(--success)/0.3)] hover:shadow-[0_0_20px_hsl(var(--success)/0.5)] hover:scale-105 active:scale-95 transition-all"
         >
           <Plus className="h-3.5 w-3.5" /> Adicionar
         </button>
