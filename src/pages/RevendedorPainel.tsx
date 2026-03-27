@@ -1135,7 +1135,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
             <h1 className="font-display text-xl font-bold shimmer-letters truncate">
               {siteName}
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold mt-1.5">Revendedor</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold mt-1.5">{isRevendedor ? "Revendedor" : "Cliente"}</p>
           </div>
 
           <div className="p-4 space-y-3 border-b border-border relative">
