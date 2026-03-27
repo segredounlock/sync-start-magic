@@ -160,7 +160,7 @@ export default function AdminBankDashboard({
       </motion.div>
 
       {/* ── Quick Actions ── */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-3">
         {quickActions.map((action, i) => (
           <motion.button
             key={action.key}
