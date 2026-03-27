@@ -101,7 +101,7 @@ export default function AdminBankDashboard({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
+                  className="text-4xl sm:text-4xl font-bold text-foreground tracking-tight"
                 >
                   R${"\u00A0"}••••••
                 </motion.p>
