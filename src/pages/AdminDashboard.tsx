@@ -26,8 +26,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Users, DollarSign, Smartphone, BarChart3, Plus, Search,
   ToggleLeft, ToggleRight, History, Package, Landmark, TrendingUp,
-  Wallet, RefreshCw, CreditCard, FileText, ArrowUpRight, Settings, Tag,
-  Save, Eye, EyeOff, Globe, Key, Bot, Zap, Menu, X,
+  RefreshCw, CreditCard, ArrowUpRight, Settings, Tag,
+  Save, Eye, EyeOff, Globe, Bot, Zap, Menu, X,
   Wifi, WifiOff, Hash, AtSign, Trash2, AlertTriangle, CheckCircle2, ChevronDown, Link2, RotateCcw,
   Settings2, Store, Upload, Palette, Image, Copy, Loader2, QrCode, ExternalLink, Clock,
   Megaphone, Send, Check, Shield, UserX,
@@ -39,7 +39,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area,
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 
 import type { Revendedor, RecargaHistorico, Operadora, PricingRule, Period } from "@/types";
