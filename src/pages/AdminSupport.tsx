@@ -270,7 +270,7 @@ export default function AdminSupport() {
     const userIds = [...new Set((sortedTickets as Ticket[]).map(t => t.user_id).filter(Boolean))] as string[];
     if (userIds.length > 0) {
       const { data: profiles } = await supabase.from("profiles")
-        .select("id, nome, avatar_url, verification_badge")
+        .select("id, nome, email, avatar_url, verification_badge")
         .in("id", userIds);
       const map: Record<string, SenderProfile> = {};
       (profiles || []).forEach((p: any) => { map[p.id] = p; });
