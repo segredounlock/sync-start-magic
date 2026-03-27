@@ -1883,6 +1883,26 @@ export default function AdminDashboard() {
         )}
 
 
+        {/* ===== CONFIGURAÇÕES ===== */}
+        {tab === "configuracoes" && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h2 className="font-display text-2xl font-bold text-foreground">Configurações</h2>
+                <p className="text-sm text-muted-foreground">Configure a plataforma.</p>
+              </div>
+            </div>
+
+            {/* Config sub-tabs */}
+            <div className="flex gap-1 p-1 rounded-lg bg-muted/40 w-fit">
+              {(["geral", "pagamentos", "depositos"] as const).map(st => (
+                <button key={st} onClick={() => setConfigSubTab(st)}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${configSubTab === st ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                  {st === "geral" ? "Geral" : st === "pagamentos" ? "Pagamentos" : "Depósitos"}
+                </button>
+              ))}
+            </div>
+
                 {configSubTab === "pagamentos" && (
                   <div className="space-y-5">
                     <div className="glass-card rounded-xl p-6">
