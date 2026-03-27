@@ -11,6 +11,7 @@ import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const siteName = useSiteName();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
