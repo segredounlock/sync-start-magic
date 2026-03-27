@@ -383,15 +383,15 @@ export function DashboardSection({ saldo, loading, userId, userName, badge, onNa
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="p-4 rounded-2xl border border-border bg-card"
+              className="p-5 rounded-2xl border border-border bg-card"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-8 h-8 rounded-lg ${kpi.bg} flex items-center justify-center`}>
-                  <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center`}>
+                  <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
                 </div>
-                <span className="text-xs text-muted-foreground font-medium">{kpi.label}</span>
+                <span className="text-sm text-muted-foreground font-medium">{kpi.label}</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-3xl font-bold text-foreground">
                 {statsLoading
                   ? <SkeletonValue width="w-16" className="h-7" />
                   : kpi.isCurrency
