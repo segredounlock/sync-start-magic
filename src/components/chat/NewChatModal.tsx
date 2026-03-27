@@ -111,15 +111,16 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
           const { data: badgeUsers } = await badgeQuery.limit(50);
 
           // Get roles for badge users
-          const badgeIds = (badgeUsers || []).filter(u => !userMap.has(u.id)).map(u => u.id);
+          const validBadgeUsers = (badgeUsers || []).filter(u => u.id != null) as { id: string; nome: string | null; avatar_url: string | null; verification_badge: string | null }[];
+          const badgeIds = validBadgeUsers.filter(u => !userMap.has(u.id)).map(u => u.id);
           const { data: badgeRoles } = badgeIds.length > 0
             ? await supabase.from("user_roles").select("user_id, role").in("user_id", badgeIds)
             : { data: [] };
           const roleMap = new Map((badgeRoles || []).map(r => [r.user_id, r.role]));
 
-          (badgeUsers || []).forEach(u => {
+          validBadgeUsers.forEach(u => {
             if (!userMap.has(u.id)) {
-              userMap.set(u.id, { ...u, role: roleMap.get(u.id) || "usuario", verification_badge: (u as any).verification_badge || null });
+              userMap.set(u.id, { ...u, role: roleMap.get(u.id) || "usuario", verification_badge: u.verification_badge || null });
             }
           });
         }
