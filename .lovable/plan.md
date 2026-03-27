@@ -1,39 +1,36 @@
 
 
-# Corrigir: Nome/Logo do Site Não Atualiza Após Salvar
+# Adicionar Seletor de Cargo no Painel Admin (Principal.tsx)
 
 ## Problema
-O hook `useSiteName` (e `useSiteLogo`) usa cache em memória com TTL de 5 minutos. Quando o admin salva um novo nome em "Configurações Gerais", o cache não é invalidado — os componentes continuam mostrando o valor antigo.
+Na tela de detalhes do usuário no Painel Principal, não existe um seletor de cargo (Admin, Suporte, Cliente, Usuario). O perfil do usuário (`/perfil/:slug`) já tem esse dropdown, mas o painel admin não.
 
 ## Solução
-Adicionar funções de invalidação de cache nos hooks e chamá-las após salvar.
+Adicionar um dropdown de cargo na seção de ações do usuário selecionado em `Principal.tsx`, similar ao que já existe em `UserProfile.tsx`.
 
-### 1. `src/hooks/useSiteName.ts`
-Exportar função `invalidateSiteNameCache()` que:
-- Limpa o `memoryCache` (seta `null`)
-- Remove `cached_site_name` do localStorage
+### Alterações em `src/pages/Principal.tsx`
 
-### 2. `src/hooks/useSiteLogo.ts`
-Exportar função `invalidateSiteLogoCache()` que:
-- Limpa o `memoryCache` (seta `null`)
-- Remove `cached_site_logo` do localStorage
+1. **Adicionar estado** para controle do dropdown de cargo:
+   - `showRoleDropdown` (boolean)
+   - `changingRole` (boolean)
 
-### 3. `src/pages/Principal.tsx`
-Na função `saveGlobalConfig`, após o upsert com sucesso:
-- Chamar `invalidateSiteNameCache()`
-- Chamar `invalidateSiteLogoCache()`
-- Forçar re-render disparando um evento customizado (`window.dispatchEvent(new Event("site-branding-updated"))`)
+2. **Adicionar a lista `AVAILABLE_ROLES`** (igual ao UserProfile):
+   - Admin, Suporte, Cliente, Usuario
 
-### 4. Nos hooks, escutar o evento
-Adicionar listener para `"site-branding-updated"` que refaz o fetch do banco, ignorando o cache.
+3. **Adicionar função `handleChangeRole`** que:
+   - Remove o cargo antigo via `admin-toggle-role` (action: remove)
+   - Adiciona o novo cargo via `admin-toggle-role` (action: add)
+   - Atualiza o estado local do usuário selecionado
+   - Protege o master admin (já existe `isTargetMaster`)
 
-## Resultado
-- Admin salva nome → todos os componentes atualizam imediatamente
-- Admin faz upload de logo → mesma coisa
-- Sem necessidade de recarregar a página
+4. **Adicionar o dropdown na UI**, entre o botão "Ativar Revenda" e "Desativar":
+   - Botão mostrando o cargo atual com ícone Shield + seta
+   - Dropdown animado com as opções de cargo
+   - Desabilitado para o master admin
+   - Usa as mesmas cores por cargo do UserProfile
 
-## Arquivos
-1. `src/hooks/useSiteName.ts` — adicionar invalidação + listener de evento
-2. `src/hooks/useSiteLogo.ts` — adicionar invalidação + listener de evento
-3. `src/pages/Principal.tsx` — chamar invalidação após salvar
+### Resultado
+- Admin pode alterar o cargo de qualquer usuário direto no painel, sem precisar ir ao perfil
+- Master admin continua protegido
+- Consistência visual com o seletor do perfil
 
