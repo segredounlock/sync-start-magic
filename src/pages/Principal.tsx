@@ -1666,10 +1666,10 @@ export default function Principal() {
 
                 {/* Top Resellers Today */}
                 <div className="glass-card rounded-xl p-4 md:p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-success" /> Top Revendedores Hoje
                     {dashboardMetrics.totalActiveToday > 0 && (
-                      <span className="text-[10px] font-medium text-muted-foreground ml-auto">{dashboardMetrics.totalActiveToday} usuário{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""} ativo{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""}</span>
+                      <span className="text-xs font-medium text-muted-foreground ml-auto">{dashboardMetrics.totalActiveToday} usuário{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""} ativo{dashboardMetrics.totalActiveToday !== 1 ? "s" : ""}</span>
                     )}
                   </h3>
                   {dashboardMetrics.topResellers.length === 0 ? (
