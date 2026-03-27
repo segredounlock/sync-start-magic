@@ -2383,7 +2383,7 @@ export default function Principal() {
                                 }}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 ${selectedRev.verification_badge === key ? "bg-primary/20 text-primary ring-1 ring-primary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
                               >
-                                <Icon className={`h-3.5 w-3.5 ${cfg.color} ${cfg.fill}`} />
+                                {key === "estrela" ? <VerificationBadge badge="estrela" size="sm" /> : <Icon className={`h-3.5 w-3.5 ${cfg.color} ${cfg.fill}`} />}
                                 {cfg.label}
                               </motion.button>
                             );
