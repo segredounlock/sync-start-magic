@@ -2653,6 +2653,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
         panelLinks={[
           ...(!isClientMode && (role === "admin" || role === "revendedor") ? [{ label: "Painel Admin", path: "/admin", icon: Shield, color: "text-primary" }] : []),
           ...(role === "admin" ? [{ label: "Principal", path: "/principal", icon: Landmark, color: "text-success" }] : []),
+          ...(!isClientMode && isRevendedor ? [{ label: "Minha Loja", path: profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${referralCode || user?.id}`, icon: Store, color: "text-accent" }] : []),
         ]}
       />
 
