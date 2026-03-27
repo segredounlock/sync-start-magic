@@ -264,14 +264,14 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   };
 
   const finishGame = async () => {
-    if (!card) return;
+    if (!card || finishingRef.current) return;
+    finishingRef.current = true;
 
     setGameOver(true);
-    setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
 
     const recoverFromNoCard = async () => {
+      finishingRef.current = false;
       setGameOver(false);
-      setRevealedCells(new Set());
       setResult(null);
       setCard(null);
       await checkTodayCard();
