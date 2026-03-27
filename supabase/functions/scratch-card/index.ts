@@ -77,13 +77,27 @@ async function getConfig(supabaseAdmin: any) {
 }
 
 function rollPrize(tiers: Tier[]): { isWon: boolean; prizeAmount: number } {
-  // Try each tier from highest to lowest (reverse order = rarest first)
-  const sorted = [...tiers].sort((a, b) => a.chance - b.chance);
+  // Single roll — mutually exclusive tiers using weighted probability
+  // Sort by chance descending (most common first) to build cumulative ranges
+  const sorted = [...tiers].sort((a, b) => b.chance - a.chance);
 
+  // Calculate total chance (sum of all tier chances)
+  const totalChance = sorted.reduce((sum, t) => sum + t.chance, 0);
+
+  const roll = Math.random();
+
+  // If roll exceeds total chance, player loses (no prize)
+  if (roll >= totalChance) {
+    return { isWon: false, prizeAmount: 0 };
+  }
+
+  // Determine which tier was hit
+  let cumulative = 0;
   for (const tier of sorted) {
-    if (Math.random() < tier.chance) {
-      // Won this tier – generate prize within range
-      const rand = Math.pow(Math.random(), 2); // skew towards min
+    cumulative += tier.chance;
+    if (roll < cumulative) {
+      // Won this tier — skew heavily towards minimum with cubic distribution
+      const rand = Math.pow(Math.random(), 3);
       const raw = tier.min + rand * (tier.max - tier.min);
       const prizeAmount = Math.round(raw * 100) / 100;
       return { isWon: true, prizeAmount };
