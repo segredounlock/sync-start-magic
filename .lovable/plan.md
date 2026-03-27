@@ -1,17 +1,9 @@
 
 
-# Remover Rotas de Compatibilidade /index e /index.html
+# Animação Discreta no Ícone LIVE do Ticker
 
-## Alteração
-No `src/AppRoot.tsx`, remover estas duas linhas de rota:
+## Problema
+O ícone do celular (Smartphone) ao lado do "Live" na barra ticker não tem animação quando há dados, ficando estático.
 
-```tsx
-<Route path="/index" element={<Navigate to="/" replace />} />
-<Route path="/index.html" element={<Navigate to="/" replace />} />
-```
-
-A rota `/auth` → `/login` será mantida pois ainda pode ser útil.
-
-## Arquivo afetado
-- `src/AppRoot.tsx` — remover 2 linhas
-
+## Solução
+Adicionar
