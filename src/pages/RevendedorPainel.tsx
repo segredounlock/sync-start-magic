@@ -1089,7 +1089,7 @@ export default function RevendedorPainel({ resellerId, resellerBranding }: Reven
                 </>
               )}
 
-              {!isClientMode && (
+              {!isClientMode && isRevendedor && (
                 <a
                   href={profileSlug ? `/loja/${profileSlug}` : `/recarga?ref=${referralCode || user?.id}`}
                   target="_blank"
