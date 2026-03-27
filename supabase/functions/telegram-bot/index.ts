@@ -617,7 +617,8 @@ serve(async (req) => {
         const chatIdStr = String(chatId);
 
         // Admin reply-to-ticket: when admin replies to a ticket notification, forward to user
-        const ADMIN_CHAT_ID = 1901426549;
+        const { data: adminCfg } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
+        const ADMIN_CHAT_ID = Number(adminCfg?.value) || 1901426549;
         if (chatId === ADMIN_CHAT_ID && message.reply_to_message && text) {
           const repliedText = message.reply_to_message.text || message.reply_to_message.caption || "";
           if ((repliedText.includes("🆘") && repliedText.includes("Ticket de Suporte")) || (repliedText.includes("📩") && repliedText.includes("Suporte"))) {
