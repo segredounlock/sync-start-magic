@@ -163,11 +163,6 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
   const [activeTab, setActiveTab] = useState<"diaria" | "dourada">("diaria");
   const [spendingBlock, setSpendingBlock] = useState<{ totalSpent: number; minRequired: number } | null>(null);
   const finishingRef = useRef(false);
-  const [topWinners, setTopWinners] = useState<WinnerEntry[]>([]);
-  const [recentWinners, setRecentWinners] = useState<WinnerEntry[]>([]);
-  const [balance, setBalance] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<"diaria" | "dourada">("diaria");
-  const [spendingBlock, setSpendingBlock] = useState<{ totalSpent: number; minRequired: number } | null>(null);
 
   const grid = useMemo(() => {
     if (!card) return [];
