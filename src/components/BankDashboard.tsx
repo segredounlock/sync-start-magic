@@ -76,7 +76,7 @@ export default function AdminBankDashboard({
             </span>
             <button
               onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }}
-              className="w-8 h-8 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
               {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
