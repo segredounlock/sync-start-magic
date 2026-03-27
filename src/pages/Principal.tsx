@@ -196,6 +196,8 @@ export default function Principal() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSaldoModal, setShowSaldoModal] = useState<Revendedor | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<Revendedor | null>(null);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
 
   // Broadcast state - restore from localStorage if a broadcast was running
   const [broadcastSending, setBroadcastSending] = useState(false);
@@ -2212,6 +2214,79 @@ export default function Principal() {
                       {selectedRev.isRevendedor ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                       {selectedRev.isRevendedor ? "Revenda Ativa" : "Ativar Revenda"}
                     </button>
+                    {/* Role Dropdown */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                        disabled={isTargetMaster(selectedRev.id) || changingRole}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                          isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground" :
+                          selectedRev.role === "admin" ? "bg-primary/10 text-primary hover:bg-primary/20" :
+                          selectedRev.role === "suporte" ? "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" :
+                          "bg-muted/50 text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {changingRole ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                        {selectedRev.role === "admin" ? "Admin" : selectedRev.role === "suporte" ? "Suporte" : selectedRev.role === "cliente" ? "Cliente" : "Usuário"}
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
+                      </button>
+                      <AnimatePresence>
+                        {showRoleDropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                            className="absolute top-full left-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden min-w-[160px]"
+                          >
+                            {([
+                              { value: "admin", label: "Admin", color: "text-primary" },
+                              { value: "suporte", label: "Suporte", color: "text-blue-500" },
+                              { value: "cliente", label: "Cliente", color: "text-warning" },
+                              { value: "usuario", label: "Usuário", color: "text-muted-foreground" },
+                            ] as const).map((opt) => (
+                              <button
+                                key={opt.value}
+                                disabled={selectedRev.role === opt.value}
+                                onClick={async () => {
+                                  setShowRoleDropdown(false);
+                                  setChangingRole(true);
+                                  try {
+                                    // Remove old role
+                                    if (selectedRev.role && selectedRev.role !== "sem_role") {
+                                      const { data: d1 } = await supabase.functions.invoke("admin-toggle-role", {
+                                        body: { user_id: selectedRev.id, role: selectedRev.role, action: "remove" },
+                                      });
+                                      if (d1?.error) throw new Error(d1.error);
+                                    }
+                                    // Add new role
+                                    const { data: d2 } = await supabase.functions.invoke("admin-toggle-role", {
+                                      body: { user_id: selectedRev.id, role: opt.value },
+                                    });
+                                    if (d2?.error) throw new Error(d2.error);
+                                    setSelectedRev({ ...selectedRev, role: opt.value });
+                                    setRevendedores(prev => prev.map(r => r.id === selectedRev.id ? { ...r, role: opt.value } : r));
+                                    toast.success(`Cargo alterado para ${opt.label}`);
+                                  } catch (err: any) {
+                                    toast.error(err.message || "Erro ao alterar cargo");
+                                  } finally {
+                                    setChangingRole(false);
+                                  }
+                                }}
+                                className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${
+                                  selectedRev.role === opt.value
+                                    ? "bg-primary/10 text-primary cursor-default"
+                                    : "hover:bg-muted/50 text-foreground"
+                                }`}
+                              >
+                                <Shield className={`h-3.5 w-3.5 ${opt.color}`} />
+                                {opt.label}
+                                {selectedRev.role === opt.value && <Check className="h-3.5 w-3.5 ml-auto text-primary" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                     <button onClick={() => toggleActive(selectedRev)}
                       disabled={isTargetMaster(selectedRev.id)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isTargetMaster(selectedRev.id) ? "opacity-40 cursor-not-allowed" : selectedRev.active ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}
