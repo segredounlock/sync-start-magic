@@ -88,7 +88,6 @@ export default function RegrasPage() {
           <h1 className="font-display text-lg font-bold shimmer-letters tracking-tight">
             {siteName}
           </h1>
-          </h1>
         </motion.div>
       </header>
 

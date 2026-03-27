@@ -113,7 +113,6 @@ export default function ResetPassword() {
           <h1 className="font-display text-3xl font-bold shimmer-letters">
             {siteName}
           </h1>
-          </h1>
         </motion.div>
 
         <motion.div
