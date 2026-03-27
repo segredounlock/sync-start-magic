@@ -91,8 +91,8 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
             query = query.ilike("nome", `%${search}%`);
           }
           const { data } = await query.limit(50);
-          (data || []).forEach(u => {
-            userMap.set(u.id, { ...u, role: "admin", verification_badge: (u as any).verification_badge || null });
+          (data || []).filter(u => u.id != null).forEach(u => {
+            userMap.set(u.id!, { ...u, id: u.id!, role: "admin", verification_badge: u.verification_badge || null });
           });
         }
 
