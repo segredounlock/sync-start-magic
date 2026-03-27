@@ -1481,18 +1481,17 @@ export default function AdminDashboard() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h2 className="font-display text-2xl font-bold text-foreground">{role === "revendedor" ? "Meus Clientes" : "Usuários"}</h2>
-                <p className="text-sm text-muted-foreground">{role === "revendedor" ? "Clientes cadastrados pela sua loja." : "Gerencie usuários e clientes."}</p>
+                <h2 className="font-display text-2xl font-bold text-foreground">Usuários</h2>
+                <p className="text-sm text-muted-foreground">Gerencie usuários e clientes.</p>
               </div>
-              {role === "admin" && userSubTab === "revendedores" && (
+              {role === "admin" && (
                 <button onClick={() => setShowCreateUser(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-muted/30 text-foreground font-medium text-sm hover:bg-muted/60 transition-colors">
                   <Plus className="h-4 w-4" /> Novo Usuário
                 </button>
               )}
             </div>
 
-
-            {userSubTab === "revendedores" && (<>
+            <>
 
 
             {/* Modal criar usuário */}
