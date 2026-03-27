@@ -251,7 +251,6 @@ export function ScratchCard({ userId, noAuthMode }: ScratchCardProps) {
         setCard(c);
         if (c.is_scratched) {
           setGameOver(true);
-          setRevealedCells(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]));
           setResult({ prize_amount: c.prize_amount ?? 0, is_won: Boolean(c.is_won) });
         }
         return;
