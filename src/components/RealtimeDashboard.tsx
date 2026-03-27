@@ -323,7 +323,7 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
 
   // Group by operator for mini breakdown
   const opBreakdown = recargas.reduce((acc, r) => {
-    const key = r.operadora || "Outros";
+    const key = (r.operadora || "Outros").toUpperCase();
     if (!acc[key]) acc[key] = { count: 0, value: 0, completed: 0 };
     acc[key].count++;
     acc[key].value += Number(r.valor);
