@@ -62,7 +62,6 @@ export default function AdminDashboard() {
   const { loading, runFetch } = useResilientFetch();
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<"visao" | "historico" | "operadoras" | "usuarios" | "depositos" | "configuracoes" | "precificacao" | "meusprecos" | "bot" | "gateway" | "loja" | "addSaldo" | "broadcast" | "auditoria">("visao");
-  const [userSubTab, setUserSubTab] = useState<"revendedores" | "clientes">(role === "revendedor" ? "clientes" : "revendedores");
   const [configSubTab, setConfigSubTab] = useState<"geral" | "pagamentos" | "depositos">("geral");
   const [period, setPeriod] = useState<Period>("7dias");
   const [userSearch, setUserSearch] = useState("");
@@ -205,88 +204,9 @@ export default function AdminDashboard() {
   const [meuSaldo, setMeuSaldo] = useState(0);
   const [myTransactions, setMyTransactions] = useState<{ id: string; amount: number; type: string; status: string; created_at: string; module: string | null }[]>([]);
 
-  // Client management state
-  const [clientsList, setClientsList] = useState<{ id: string; nome: string | null; email: string | null; created_at: string; saldo: number }[]>([]);
-  const [clientsLoading, setClientsLoading] = useState(false);
-  const clientsLoaded = useRef(false);
-  const [clientSearch, setClientSearch] = useState("");
-  const [creditClientModal, setCreditClientModal] = useState<{ id: string; nome: string | null; email: string | null; saldo: number } | null>(null);
-  const [creditAmount, setCreditAmount] = useState("");
-  const [creditSaving, setCreditSaving] = useState(false);
-  const [clientHistoryModal, setClientHistoryModal] = useState<{ id: string; nome: string | null; email: string | null } | null>(null);
-  const [clientRecargas, setClientRecargas] = useState<{ id: string; telefone: string; operadora: string | null; valor: number; status: string; created_at: string }[]>([]);
-  const [clientRecargasLoading, setClientRecargasLoading] = useState(false);
 
-  const fetchClients = useCallback(async () => {
-    if (!user?.id) return;
-    if (!clientsLoaded.current) setClientsLoading(true);
-    try {
-      // Get profiles where reseller_id = current user
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, nome, email, created_at")
-        .eq("reseller_id" as any, user.id)
-        .order("created_at", { ascending: false });
-      
-      if (!profiles?.length) { setClientsList([]); clientsLoaded.current = true; setClientsLoading(false); return; }
-      
-      const clientIds = profiles.map(p => p.id);
-      const { data: saldos } = await supabase.from("saldos").select("user_id, valor").in("user_id", clientIds).eq("tipo", "revenda");
-      const saldoMap: Record<string, number> = {};
-      saldos?.forEach(s => { saldoMap[s.user_id] = Number(s.valor); });
-      
-      setClientsList(profiles.map(p => ({
-        id: p.id,
-        nome: p.nome,
-        email: p.email,
-        created_at: p.created_at,
-        saldo: saldoMap[p.id] ?? 0,
-      })));
-    } catch (err) { console.error(err); }
-    clientsLoaded.current = true;
-    setClientsLoading(false);
-  }, [user]);
 
-  const handleCreditClient = async () => {
-    if (!creditClientModal || !creditAmount) return;
-    const amount = parseFloat(creditAmount.replace(",", "."));
-    if (!amount || amount <= 0) { toast.error("Valor inválido"); return; }
-    setCreditSaving(true);
-    try {
-      const newSaldo = creditClientModal.saldo + amount;
-      const { error } = await supabase.from("saldos").update({ valor: newSaldo }).eq("user_id", creditClientModal.id).eq("tipo", "revenda");
-      if (error) throw error;
-      
-      // Record the transaction
-      await supabase.from("transactions").insert({
-        user_id: creditClientModal.id,
-        amount,
-        type: "deposit",
-        status: "completed",
-        module: "manual",
-        metadata: { credited_by: user?.id, credited_by_email: user?.email } as any,
-      });
-      
-      supabase.functions.invoke("telegram-notify", {
-        body: { type: "saldo_added", user_id: creditClientModal.id, data: { valor: amount, novo_saldo: newSaldo } },
-      }).catch(() => {});
-      toast.success(`${fmt(amount)} creditado para ${creditClientModal.nome || creditClientModal.email}!`);
-      setCreditClientModal(null);
-      setCreditAmount("");
-      fetchClients();
-    } catch (err: any) { toast.error(err.message || "Erro ao creditar"); }
-    setCreditSaving(false);
-  };
 
-  const fetchClientRecargas = async (clientId: string) => {
-    setClientRecargasLoading(true);
-    try {
-      const { data } = await supabase.from("recargas").select("id, telefone, operadora, valor, status, created_at")
-        .eq("user_id", clientId).order("created_at", { ascending: false }).limit(50);
-      setClientRecargas((data || []).map(r => ({ ...r, valor: Number(r.valor) })));
-    } catch { /* */ }
-    setClientRecargasLoading(false);
-  };
 
   const fetchMyTransactions = useCallback(async () => {
     if (!user?.id) return;
@@ -311,29 +231,6 @@ export default function AdminDashboard() {
   const fetchData = useCallback(async () => {
     const t0 = performance.now();
     await runFetch(async () => {
-      if (role === "revendedor") {
-        const [clientProfiles, ownSaldos, clientSaldos] = await Promise.all([
-          fetchAllRows("profiles", { filters: (q: any) => q.eq("reseller_id", user?.id) }),
-          fetchAllRows("saldos", { filters: (q: any) => q.eq("user_id", user?.id).eq("tipo", "revenda") }),
-          fetchAllRows("saldos", { filters: (q: any) => q.eq("tipo", "revenda") }),
-        ]);
-
-        const clientIds = (clientProfiles || []).map((p: any) => p.id);
-        if (user?.id && ownSaldos?.length) setMeuSaldo(Number(ownSaldos[0].valor) || 0);
-
-        const saldoMap: Record<string, number> = {};
-        clientSaldos?.forEach((s: any) => { if (clientIds.includes(s.user_id)) saldoMap[s.user_id] = Number(s.valor); });
-
-        const list: Revendedor[] = (clientProfiles || []).map((p: any) => ({
-          id: p.id, nome: p.nome, email: p.email, active: p.active, created_at: p.created_at,
-          saldo: saldoMap[p.id] ?? 0,
-          role: "cliente",
-          avatar_url: p.avatar_url || null,
-        }));
-        setRevendedores(list);
-
-        setAllProfiles((clientProfiles || []).map((p: any) => ({ id: p.id, telegram_id: p.telegram_id, telegram_username: p.telegram_username, created_at: p.created_at })));
-      } else {
         const [allRoles, allProfilesData, allSaldos] = await Promise.all([
           fetchAllRows("user_roles", { select: "user_id, role" }),
           fetchAllRows("profiles"),
@@ -952,7 +849,6 @@ export default function AdminDashboard() {
 
   useEffect(() => { if (tab === "gateway") fetchGatewayConfig(); }, [tab, fetchGatewayConfig]);
   useEffect(() => { if (tab === "loja") fetchStoreConfig(); }, [tab, fetchStoreConfig]);
-  useEffect(() => { if (tab === "usuarios" && userSubTab === "clientes") fetchClients(); }, [tab, userSubTab, fetchClients]);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
