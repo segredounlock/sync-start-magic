@@ -1,54 +1,50 @@
 
 
-# Tornar Revendedores os Usuários sem Vínculo de Rede
+# Documentar o Sistema de masterAdminId e Validar Auto-Criação
 
-## Resumo
-Adicionar o cargo `revendedor` aos ~1.085 usuários que possuem apenas `usuario` e não têm `reseller_id`, e garantir que novos cadastros sem vínculo também recebam `revendedor` automaticamente.
+## Contexto
+O usuário reportou (screenshot) que o `masterAdminId` não existia na tabela `system_config`, causando redirecionamento para `/painel` em vez de `/principal`. O sistema **já funciona automaticamente** via o trigger `handle_new_user` -- quando o primeiro usuário se cadastra, ele é auto-promovido a admin master e o `masterAdminId` é salvo. Porém, em ambientes migrados ou restaurados, essa chave pode não existir se o backup não a incluiu.
 
----
+## O que já funciona automaticamente
+1. **Trigger `handle_new_user`** -- ao cadastrar o primeiro usuário (sem admins no sistema), cria `masterAdminId` em `system_config`
+2. **Migrations SQL** -- já estão no repositório e são aplicadas automaticamente pelo Lovable Cloud ao fazer deploy
+3. **RLS Policy** -- `Authenticated can view master admin config` já permite leitura
 
-## 1. INSERT em massa via insert tool
-Adicionar `revendedor` a todos os usuários sem vínculo:
-```sql
-INSERT INTO user_roles (user_id, role)
-SELECT ur.user_id, 'revendedor'
-FROM user_roles ur
-JOIN profiles p ON p.id = ur.user_id
-WHERE ur.role = 'usuario'
-  AND (p.reseller_id IS NULL)
-  AND NOT EXISTS (
-    SELECT 1 FROM user_roles ur2
-    WHERE ur2.user_id = ur.user_id AND ur2.role = 'revendedor'
-  );
-```
+## O que falta documentar
+A documentação atual não explica claramente:
+- O que acontece se `masterAdminId` não existir no `system_config`
+- Como corrigir manualmente
+- Que em migrações/restaurações essa chave precisa ser verificada
 
-## 2. Atualizar trigger `handle_new_user` (migration)
-No fluxo normal (quando já existe admin), adicionar `revendedor` junto com `usuario` **apenas quando `reseller_id` é NULL**:
-```sql
-IF _reseller_id IS NULL THEN
-  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'usuario');
-  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'revendedor')
-    ON CONFLICT DO NOTHING;
-ELSE
-  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'usuario');
-END IF;
-```
+## Plano
 
-## 3. Edge Function `client-register` — sem alteração
-Esta função é usada quando um cliente se cadastra **via link de revendedor** (sempre tem `reseller_id`), então continua atribuindo apenas `usuario`.
+### 1. Atualizar `documentation/AUTENTICACAO.md`
+Adicionar seção "Troubleshooting" com:
+- Problema: `masterAdminId` ausente causa redirecionamento para `/painel`
+- Causa: backup/migração sem essa chave, ou banco limpo sem primeiro cadastro
+- Solução: INSERT manual ou novo cadastro como primeiro usuário
+- Fallback hardcoded nos edge functions (`f5501acc-...`) como segurança extra
 
-## 4. Edge Function `admin-create-user` — sem alteração
-O admin escolhe o cargo manualmente, não precisa de mudança automática.
+### 2. Atualizar `documentation/MIGRACAO.md`
+No checklist de restauração (seção 6.2), adicionar item explícito:
+- Verificar que `masterAdminId` existe em `system_config`
+- Se não existir, inserir manualmente com o UUID do admin principal
 
----
+### 3. Atualizar `documentation/BANCO_DE_DADOS.md`
+Documentar a chave `masterAdminId` na lista de chaves críticas do `system_config`
+
+### 4. Atualizar `DOCUMENTACAO_MIGRACAO.md`
+Adicionar nota sobre auto-criação do `masterAdminId` e verificação pós-migração
+
+## Detalhes Técnicos
+- O trigger `handle_new_user` usa `ON CONFLICT (key) DO UPDATE` -- seguro para re-execução
+- Edge functions `admin-toggle-role` e `admin-delete-user` têm fallback hardcoded para `f5501acc-...`
+- `MasterOnlyRoute.tsx` consulta `system_config` diretamente -- se a chave não existir, ninguém acessa `/principal`
+- `Principal.tsx` também tem fallback hardcoded no `MASTER_ADMIN_ID`
 
 ## Arquivos alterados
-1. **Banco de dados** — INSERT em massa (~1.085 registros) via insert tool
-2. **Trigger `handle_new_user`** — migration para adicionar `revendedor` quando sem vínculo
-
-## Impacto
-- ~1.085 usuários passam a ver "Meus Preços", "Minha Rede", "Minha Loja"
-- Novos cadastros sem indicação já vêm com `revendedor` + `usuario`
-- Cadastros via link de indicação continuam apenas com `usuario`
-- Zero impacto em admins e usuários já vinculados a redes
+1. `documentation/AUTENTICACAO.md` -- seção troubleshooting
+2. `documentation/MIGRACAO.md` -- item no checklist
+3. `documentation/BANCO_DE_DADOS.md` -- chaves críticas do system_config
+4. `DOCUMENTACAO_MIGRACAO.md` -- nota sobre masterAdminId
 
