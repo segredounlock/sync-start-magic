@@ -236,9 +236,9 @@ function App() {
             <Route
               path="/principal"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <MasterOnlyRoute>
                   <LazyPage><Principal /></LazyPage>
-                </ProtectedRoute>
+                </MasterOnlyRoute>
               }
             />
             <Route
