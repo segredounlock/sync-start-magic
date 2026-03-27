@@ -2228,7 +2228,7 @@ export default function Principal() {
                           }`}
                         >
                           {changingRole ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Shield className="h-3.5 w-3.5" />}
-                          {selectedRev.role === "admin" ? "Admin" : selectedRev.role === "suporte" ? "Suporte" : selectedRev.role === "cliente" ? "Cliente" : "Usuário"}
+                          {selectedRev.role === "admin" ? "Admin" : selectedRev.role === "suporte" ? "Suporte" : "Usuário"}
                           <ChevronDown className={`h-3 w-3 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`} />
                         </button>
                         <AnimatePresence>
