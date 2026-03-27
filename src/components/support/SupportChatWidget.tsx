@@ -243,10 +243,11 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
         }
       } else {
         // Client replying — notify admin on Telegram
-        const adminChatId = 1901426549;
+        const { getSupportAdminTelegramId } = await import("@/hooks/useSupportAdminId");
+        const adminChatId = await getSupportAdminTelegramId();
         supabase.functions.invoke("telegram-notify", {
           body: {
-            chat_id: String(adminChatId),
+            chat_id: adminChatId,
             message: `📩 <b>Nova mensagem no Suporte</b>\n\n👤 ${selectedTicket.subject || "Ticket"}\n\n💬 <i>${text.slice(0, 300)}</i>`,
           },
         }).catch(() => {});

@@ -891,7 +891,14 @@ Deno.serve(async (req) => {
               const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
               const authH = { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` };
 
-              const MASTER_TELEGRAM_ID = 1901426549;
+              let MASTER_TELEGRAM_ID = 1901426549;
+              try {
+                const cfgRes = await fetch(`${baseUrl}/rest/v1/system_config?key=eq.supportAdminTelegramId&select=value`, {
+                  headers: { ...authH, apikey: Deno.env.get("SUPABASE_ANON_KEY") || svcKey },
+                });
+                const cfgRows = await cfgRes.json();
+                if (cfgRows?.[0]?.value) MASTER_TELEGRAM_ID = Number(cfgRows[0].value) || 1901426549;
+              } catch { /* fallback */ }
               const alertMsg = `⚠️ <b>ALERTA CRÍTICO</b>\n\nSaldo na API de recargas baixo/esgotado.\n\n<b>Erro:</b> ${errMsg}\n\nRecarregue o saldo no provedor para evitar falhas nas recargas.`;
 
               fetch(`${baseUrl}/functions/v1/telegram-notify`, {
