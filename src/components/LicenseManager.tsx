@@ -45,7 +45,7 @@ function LicenseManagerContent() {
 
   const fetchLicenses = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("licenses")
       .select("*")
       .order("created_at", { ascending: false });
@@ -94,7 +94,7 @@ function LicenseManagerContent() {
     const ok = await confirm(`Deseja ${action} esta licença?`, { title: action === "revogar" ? "Revogar Licença" : "Reativar Licença", destructive: action === "revogar" });
     if (!ok) return;
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("licenses")
       .update({ is_active: !currentActive })
       .eq("id", id);
@@ -108,7 +108,7 @@ function LicenseManagerContent() {
     const ok = await confirm("Excluir permanentemente esta licença?", { title: "Excluir Licença", destructive: true });
     if (!ok) return;
 
-    const { error } = await supabase.from("licenses").delete().eq("id", id);
+    const { error } = await (supabase as any).from("licenses").delete().eq("id", id);
     if (error) { toast.error("Erro ao excluir"); return; }
     toast.success("Licença excluída");
     fetchLicenses();
