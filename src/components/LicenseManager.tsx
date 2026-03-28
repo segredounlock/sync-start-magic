@@ -66,7 +66,7 @@ function LicenseManagerContent() {
       const { data, error } = await supabase.functions.invoke("license-generate", {
         body: {
           mirror_name: formName.trim(),
-          mirror_domain: formDomain.trim() || null,
+          mirror_domain: formDomain.trim(),
           expires_at: expiresAt.toISOString(),
           max_users: formMaxUsers,
           features: ["all"],
