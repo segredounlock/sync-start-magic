@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, Loader2, CheckCircle2, XCircle, AlertTriangle,
   Database, Lock, Zap, HardDrive, Key, Radio, CreditCard, ChevronDown, ChevronRight,
-  RefreshCw, Server,
+  RefreshCw, Server, Wrench, Eye, Copy, Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -68,13 +68,81 @@ const PAYMENT_CONFIG_KEYS = [
   "pushinPayToken",
 ];
 
-type CheckStatus = "ok" | "warning" | "error";
+const EXPECTED_REALTIME = [
+  "admin_notifications","audit_logs","broadcast_progress","chat_conversations",
+  "chat_members","chat_message_reads","chat_messages","chat_reactions",
+  "license_logs","notifications","poll_votes","polls","profiles","recargas",
+  "saldos","support_messages","support_tickets","telegram_users","transactions","user_roles",
+];
+
+const EXPECTED_TRIGGERS = [
+  { table: "bot_settings", name: "update_bot_settings_updated_at" },
+  { table: "broadcast_progress", name: "update_broadcast_progress_updated_at" },
+  { table: "chat_conversations", name: "update_chat_conversations_updated_at" },
+  { table: "chat_messages", name: "update_chat_messages_updated_at" },
+  { table: "client_pricing_rules", name: "update_client_pricing_rules_updated_at" },
+  { table: "licenses", name: "update_licenses_updated_at" },
+  { table: "notifications", name: "update_notifications_updated_at" },
+  { table: "operadoras", name: "update_operadoras_updated_at" },
+  { table: "polls", name: "update_polls_updated_at" },
+  { table: "pricing_rules", name: "update_pricing_rules_updated_at" },
+  { table: "profiles", name: "update_profiles_updated_at" },
+  { table: "profiles", name: "trg_generate_referral_code" },
+  { table: "recargas", name: "update_recargas_updated_at" },
+  { table: "reseller_base_pricing_rules", name: "update_reseller_base_pricing_rules_updated_at" },
+  { table: "reseller_config", name: "update_reseller_config_updated_at" },
+  { table: "reseller_pricing_rules", name: "update_reseller_pricing_updated_at" },
+  { table: "saldos", name: "update_saldos_updated_at" },
+  { table: "system_config", name: "update_system_config_updated_at" },
+  { table: "telegram_users", name: "update_telegram_users_updated_at" },
+  { table: "transactions", name: "update_transactions_updated_at" },
+];
+
+/* ───── solution map ───── */
+const SOLUTIONS: Record<string, { fixable: boolean; instruction: string; sqlHint?: string }> = {
+  // Tables
+  "table:missing": { fixable: false, instruction: "Execute o Publish no Lovable Cloud para aplicar as migrations pendentes. Se for espelho, faça Publish no ambiente do espelho." },
+  // RLS
+  "rls:missing": { fixable: false, instruction: "Crie uma política RLS para esta tabela via migration SQL. Ex: CREATE POLICY \"...\" ON public.TABELA FOR ALL TO authenticated USING (...);" },
+  // Functions
+  "fn:missing": { fixable: false, instruction: "Esta função SQL precisa ser criada via migration. Faça Publish no Lovable Cloud para aplicar migrations pendentes." },
+  // Edge Functions
+  "edge:missing": { fixable: false, instruction: "Faça deploy das Edge Functions pelo Lovable Cloud (Publish). Em espelhos, verifique se o código foi sincronizado." },
+  // Storage
+  "bucket:missing": { fixable: true, instruction: "Clique em 'Criar' para criar este bucket automaticamente." },
+  // Config
+  "config:missing": { fixable: true, instruction: "Clique em 'Inicializar' para criar esta configuração com valor padrão." },
+  // Triggers
+  "trigger:missing": { fixable: false, instruction: "Este trigger precisa ser criado via migration SQL. Faça Publish para aplicar." },
+  // Payment
+  "payment:missing": { fixable: false, instruction: "Configure esta chave na aba Configurações > Pagamentos do painel admin." },
+};
+
+const CONFIG_DEFAULTS: Record<string, string> = {
+  maintenanceMode: "false",
+  chat_enabled: "true",
+  seasonalTheme: "",
+  defaultMarginEnabled: "false",
+  directCommissionEnabled: "true",
+  indirectCommissionEnabled: "true",
+  requireReferralCode: "true",
+  salesToolsEnabled: "true",
+};
+
+type CheckStatus = "ok" | "warning" | "error" | "info";
+type CheckItem = {
+  name: string;
+  status: CheckStatus;
+  detail?: string;
+  solutionKey?: string;
+  fixPayload?: any;
+};
 type CheckCategory = {
   id: string;
   label: string;
   icon: any;
   status: CheckStatus;
-  items: { name: string; status: CheckStatus; detail?: string }[];
+  items: CheckItem[];
   summary: string;
 };
 
@@ -84,48 +152,123 @@ export default function SystemVerification() {
   const [stage, setStage] = useState("");
   const [results, setResults] = useState<CheckCategory[] | null>(null);
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [fixing, setFixing] = useState<string | null>(null);
+  const [copiedSql, setCopiedSql] = useState<string | null>(null);
+  const [showSolution, setShowSolution] = useState<string | null>(null);
+
+  /* ─── auto-fix: create missing bucket ─── */
+  const fixBucket = useCallback(async (bucketName: string) => {
+    setFixing(bucketName);
+    try {
+      const isPublic = bucketName !== "login-selfies";
+      const { error } = await supabase.storage.createBucket(bucketName, { public: isPublic });
+      if (error) throw error;
+      // Update results
+      setResults(prev => prev?.map(cat => cat.id === "storage" ? {
+        ...cat,
+        items: cat.items.map(i => i.name === bucketName ? { ...i, status: "ok" as CheckStatus, detail: "✓ Criado agora" } : i),
+        status: cat.items.filter(i => i.name !== bucketName && i.status === "error").length > 0 ? "error" : "ok",
+        summary: cat.items.filter(i => i.name !== bucketName && i.status === "error").length > 0
+          ? `${cat.items.filter(i => i.name !== bucketName && i.status === "error").length} bucket(s) faltando`
+          : "Todos os buckets OK",
+      } : cat) || null);
+    } catch (err: any) {
+      console.error("[FixBucket]", err);
+    } finally {
+      setFixing(null);
+    }
+  }, []);
+
+  /* ─── auto-fix: create missing config ─── */
+  const fixConfig = useCallback(async (key: string) => {
+    setFixing(key);
+    try {
+      const defaultVal = CONFIG_DEFAULTS[key] ?? "";
+      const { error } = await supabase.from("system_config").upsert(
+        { key, value: defaultVal },
+        { onConflict: "key" }
+      );
+      if (error) throw error;
+      setResults(prev => prev?.map(cat => {
+        if (cat.id !== "config" && cat.id !== "payment") return cat;
+        return {
+          ...cat,
+          items: cat.items.map(i => i.name === key ? { ...i, status: "ok" as CheckStatus, detail: `✓ Inicializado: "${defaultVal || "(vazio)"}"` } : i),
+        };
+      }) || null);
+    } catch (err: any) {
+      console.error("[FixConfig]", err);
+    } finally {
+      setFixing(null);
+    }
+  }, []);
+
+  const copyToClipboard = useCallback((text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedSql(id);
+    setTimeout(() => setCopiedSql(null), 2000);
+  }, []);
 
   const runVerification = async () => {
     setRunning(true);
     setProgress(0);
     setResults(null);
+    setExpandedCat(null);
     const categories: CheckCategory[] = [];
 
     try {
-      // ─── 1. TABELAS ───
+      // ─── 1. TABELAS (com descoberta de novas) ───
       setStage("Verificando tabelas...");
-      setProgress(10);
+      setProgress(8);
       const { data: tables } = await supabase.rpc("get_public_tables");
       const existingTables = (tables || []).map((t: any) => t.table_name || t);
-      const tableItems = EXPECTED_TABLES.map(t => ({
+
+      const tableItems: CheckItem[] = EXPECTED_TABLES.map(t => ({
         name: t,
         status: (existingTables.includes(t) ? "ok" : "error") as CheckStatus,
         detail: existingTables.includes(t) ? "Existe" : "NÃO encontrada",
+        solutionKey: existingTables.includes(t) ? undefined : "table:missing",
       }));
+
+      // Discover unknown tables in DB
+      const knownSet = new Set(EXPECTED_TABLES);
+      const unknownTables = existingTables.filter((t: string) => !knownSet.has(t) && t !== "profiles_public");
+      unknownTables.forEach((t: string) => {
+        tableItems.push({
+          name: t,
+          status: "info",
+          detail: "⚡ Nova tabela detectada (não está no inventário)",
+        });
+      });
+
       const missingTables = tableItems.filter(i => i.status === "error").length;
       categories.push({
         id: "tables",
-        label: `Tabelas (${EXPECTED_TABLES.length})`,
+        label: `Tabelas (${existingTables.length}/${EXPECTED_TABLES.length})`,
         icon: Database,
-        status: missingTables > 0 ? "error" : "ok",
+        status: missingTables > 0 ? "error" : unknownTables.length > 0 ? "info" : "ok",
         items: tableItems,
-        summary: missingTables > 0 ? `${missingTables} tabela(s) faltando` : `Todas as ${EXPECTED_TABLES.length} tabelas encontradas`,
+        summary: missingTables > 0
+          ? `${missingTables} tabela(s) faltando` + (unknownTables.length > 0 ? ` · ${unknownTables.length} nova(s)` : "")
+          : unknownTables.length > 0
+          ? `✓ Todas presentes · ${unknownTables.length} tabela(s) extra detectada(s)`
+          : `Todas as ${EXPECTED_TABLES.length} tabelas OK`,
       });
 
       // ─── 2. RLS ───
       setStage("Verificando RLS...");
-      setProgress(25);
+      setProgress(20);
       const { data: schemaInfo } = await supabase.rpc("export_schema_info");
       const rlsPolicies = (schemaInfo as any)?.rls_policies || [];
       const tablesWithRls = new Set(rlsPolicies.map((p: any) => p.table));
-      const rlsItems = EXPECTED_TABLES.filter(t => t !== "profiles_public").map(t => {
+      const rlsItems: CheckItem[] = EXPECTED_TABLES.filter(t => t !== "profiles_public").map(t => {
         const hasPolicies = tablesWithRls.has(t);
+        const policyCount = rlsPolicies.filter((p: any) => p.table === t).length;
         return {
           name: t,
           status: (hasPolicies ? "ok" : "warning") as CheckStatus,
-          detail: hasPolicies
-            ? `${rlsPolicies.filter((p: any) => p.table === t).length} política(s)`
-            : "Sem políticas RLS",
+          detail: hasPolicies ? `${policyCount} política(s)` : "⚠️ Sem políticas RLS",
+          solutionKey: hasPolicies ? undefined : "rls:missing",
         };
       });
       const noRls = rlsItems.filter(i => i.status !== "ok").length;
@@ -140,14 +283,24 @@ export default function SystemVerification() {
 
       // ─── 3. FUNÇÕES SQL ───
       setStage("Verificando funções SQL...");
-      setProgress(40);
+      setProgress(35);
       const dbFunctions = (schemaInfo as any)?.functions || [];
       const existingFns = dbFunctions.map((f: any) => f.name);
-      const fnItems = EXPECTED_FUNCTIONS.map(fn => ({
+      const fnItems: CheckItem[] = EXPECTED_FUNCTIONS.map(fn => ({
         name: fn,
         status: (existingFns.includes(fn) ? "ok" : "error") as CheckStatus,
         detail: existingFns.includes(fn) ? "Existe" : "NÃO encontrada",
+        solutionKey: existingFns.includes(fn) ? undefined : "fn:missing",
       }));
+
+      // Discover extra functions
+      const knownFns = new Set(EXPECTED_FUNCTIONS);
+      const builtinFns = new Set(["unaccent", "unaccent_init", "unaccent_lexize"]);
+      const extraFns = existingFns.filter((f: string) => !knownFns.has(f) && !builtinFns.has(f));
+      extraFns.forEach((f: string) => {
+        fnItems.push({ name: f, status: "info", detail: "⚡ Função extra detectada" });
+      });
+
       const missingFns = fnItems.filter(i => i.status === "error").length;
       categories.push({
         id: "functions",
@@ -155,31 +308,34 @@ export default function SystemVerification() {
         icon: Server,
         status: missingFns > 0 ? "error" : "ok",
         items: fnItems,
-        summary: missingFns > 0 ? `${missingFns} função(ões) faltando` : `Todas as ${EXPECTED_FUNCTIONS.length} funções OK`,
+        summary: missingFns > 0
+          ? `${missingFns} função(ões) faltando`
+          : `Todas as ${EXPECTED_FUNCTIONS.length} funções OK` + (extraFns.length > 0 ? ` · ${extraFns.length} extra(s)` : ""),
       });
 
       // ─── 4. EDGE FUNCTIONS ───
       setStage("Verificando Edge Functions...");
-      setProgress(55);
-      // We can't directly list deployed edge functions from the client,
-      // so we test each one with an OPTIONS request
-      const edgeItems: { name: string; status: CheckStatus; detail?: string }[] = [];
+      setProgress(50);
+      const edgeItems: CheckItem[] = [];
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      for (const fn of EXPECTED_EDGE_FUNCTIONS) {
+      const edgeBatch = EXPECTED_EDGE_FUNCTIONS.map(async (fn) => {
         try {
           const resp = await fetch(`${supabaseUrl}/functions/v1/${fn}`, {
             method: "OPTIONS",
             headers: { "Content-Type": "application/json" },
           });
-          edgeItems.push({
+          return {
             name: fn,
-            status: resp.status < 500 ? "ok" : "error",
+            status: (resp.status < 500 ? "ok" : "error") as CheckStatus,
             detail: resp.status < 500 ? `HTTP ${resp.status}` : `HTTP ${resp.status} - não deployada`,
-          });
+            solutionKey: resp.status >= 500 ? "edge:missing" : undefined,
+          };
         } catch {
-          edgeItems.push({ name: fn, status: "error", detail: "Não acessível" });
+          return { name: fn, status: "error" as CheckStatus, detail: "Não acessível", solutionKey: "edge:missing" };
         }
-      }
+      });
+      const edgeResults = await Promise.all(edgeBatch);
+      edgeItems.push(...edgeResults);
       const failedEdge = edgeItems.filter(i => i.status === "error").length;
       categories.push({
         id: "edge",
@@ -187,19 +343,29 @@ export default function SystemVerification() {
         icon: Zap,
         status: failedEdge > 0 ? "warning" : "ok",
         items: edgeItems,
-        summary: failedEdge > 0 ? `${failedEdge} função(ões) com problema` : `Todas as ${EXPECTED_EDGE_FUNCTIONS.length} funções acessíveis`,
+        summary: failedEdge > 0 ? `${failedEdge} função(ões) com problema` : `Todas as ${EXPECTED_EDGE_FUNCTIONS.length} acessíveis`,
       });
 
       // ─── 5. STORAGE BUCKETS ───
       setStage("Verificando Storage...");
-      setProgress(70);
+      setProgress(65);
       const { data: buckets } = await supabase.storage.listBuckets();
       const existingBuckets = (buckets || []).map((b: any) => b.name);
-      const bucketItems = EXPECTED_BUCKETS.map(b => ({
+      const bucketItems: CheckItem[] = EXPECTED_BUCKETS.map(b => ({
         name: b,
         status: (existingBuckets.includes(b) ? "ok" : "error") as CheckStatus,
         detail: existingBuckets.includes(b) ? "Existe" : "NÃO encontrado",
+        solutionKey: existingBuckets.includes(b) ? undefined : "bucket:missing",
+        fixPayload: existingBuckets.includes(b) ? undefined : { bucket: b },
       }));
+
+      // Discover extra buckets
+      const knownBuckets = new Set(EXPECTED_BUCKETS);
+      const extraBuckets = existingBuckets.filter((b: string) => !knownBuckets.has(b));
+      extraBuckets.forEach((b: string) => {
+        bucketItems.push({ name: b, status: "info", detail: "⚡ Bucket extra detectado" });
+      });
+
       const missingBuckets = bucketItems.filter(i => i.status === "error").length;
       categories.push({
         id: "storage",
@@ -212,16 +378,18 @@ export default function SystemVerification() {
 
       // ─── 6. CONFIG DO SISTEMA ───
       setStage("Verificando configurações...");
-      setProgress(80);
+      setProgress(75);
       const { data: configs } = await supabase
         .from("system_config")
         .select("key, value")
         .in("key", [...CRITICAL_CONFIG_KEYS, ...PAYMENT_CONFIG_KEYS]);
       const configMap = new Map((configs || []).map((c: any) => [c.key, c.value]));
-      const configItems = CRITICAL_CONFIG_KEYS.map(k => ({
+      const configItems: CheckItem[] = CRITICAL_CONFIG_KEYS.map(k => ({
         name: k,
         status: (configMap.has(k) && configMap.get(k) ? "ok" : "warning") as CheckStatus,
         detail: configMap.has(k) && configMap.get(k) ? "✓ Configurado" : "Não configurado",
+        solutionKey: configMap.has(k) && configMap.get(k) ? undefined : "config:missing",
+        fixPayload: configMap.has(k) && configMap.get(k) ? undefined : { configKey: k },
       }));
       const missingConfig = configItems.filter(i => i.status !== "ok").length;
       categories.push({
@@ -235,15 +403,8 @@ export default function SystemVerification() {
 
       // ─── 7. REALTIME ───
       setStage("Verificando Realtime...");
-      setProgress(85);
-      const EXPECTED_REALTIME = [
-        "admin_notifications","audit_logs","broadcast_progress","chat_conversations",
-        "chat_members","chat_message_reads","chat_messages","chat_reactions",
-        "license_logs","notifications","poll_votes","polls","profiles","recargas",
-        "saldos","support_messages","support_tickets","telegram_users","transactions","user_roles",
-      ];
-      // Check which tables are in the realtime publication via schema info triggers
-      const realtimeItems = EXPECTED_REALTIME.map(t => ({
+      setProgress(82);
+      const realtimeItems: CheckItem[] = EXPECTED_REALTIME.map(t => ({
         name: t,
         status: "ok" as CheckStatus,
         detail: "Publicado no supabase_realtime",
@@ -259,35 +420,14 @@ export default function SystemVerification() {
 
       // ─── 8. TRIGGERS ───
       setStage("Verificando Triggers...");
-      setProgress(90);
-      const EXPECTED_TRIGGERS = [
-        { table: "bot_settings", name: "update_bot_settings_updated_at" },
-        { table: "broadcast_progress", name: "update_broadcast_progress_updated_at" },
-        { table: "chat_conversations", name: "update_chat_conversations_updated_at" },
-        { table: "chat_messages", name: "update_chat_messages_updated_at" },
-        { table: "client_pricing_rules", name: "update_client_pricing_rules_updated_at" },
-        { table: "licenses", name: "update_licenses_updated_at" },
-        { table: "notifications", name: "update_notifications_updated_at" },
-        { table: "operadoras", name: "update_operadoras_updated_at" },
-        { table: "polls", name: "update_polls_updated_at" },
-        { table: "pricing_rules", name: "update_pricing_rules_updated_at" },
-        { table: "profiles", name: "update_profiles_updated_at" },
-        { table: "profiles", name: "trg_generate_referral_code" },
-        { table: "recargas", name: "update_recargas_updated_at" },
-        { table: "reseller_base_pricing_rules", name: "update_reseller_base_pricing_rules_updated_at" },
-        { table: "reseller_config", name: "update_reseller_config_updated_at" },
-        { table: "reseller_pricing_rules", name: "update_reseller_pricing_updated_at" },
-        { table: "saldos", name: "update_saldos_updated_at" },
-        { table: "system_config", name: "update_system_config_updated_at" },
-        { table: "telegram_users", name: "update_telegram_users_updated_at" },
-        { table: "transactions", name: "update_transactions_updated_at" },
-      ];
+      setProgress(88);
       const dbTriggers = (schemaInfo as any)?.triggers || [];
       const existingTriggers = dbTriggers.map((t: any) => t.name);
-      const triggerItems = EXPECTED_TRIGGERS.map(tr => ({
+      const triggerItems: CheckItem[] = EXPECTED_TRIGGERS.map(tr => ({
         name: `${tr.name} → ${tr.table}`,
         status: (existingTriggers.includes(tr.name) ? "ok" : "error") as CheckStatus,
         detail: existingTriggers.includes(tr.name) ? "Ativo" : "NÃO encontrado",
+        solutionKey: existingTriggers.includes(tr.name) ? undefined : "trigger:missing",
       }));
       const missingTriggers = triggerItems.filter(i => i.status === "error").length;
       categories.push({
@@ -302,12 +442,13 @@ export default function SystemVerification() {
       // ─── 9. PAGAMENTO ───
       setStage("Verificando Pagamentos...");
       setProgress(95);
-      const payItems = PAYMENT_CONFIG_KEYS.map(k => ({
+      const payItems: CheckItem[] = PAYMENT_CONFIG_KEYS.map(k => ({
         name: k,
         status: (configMap.has(k) && configMap.get(k) ? "ok" : "warning") as CheckStatus,
         detail: configMap.has(k) && configMap.get(k)
           ? (k.includes("Key") || k.includes("Token") ? "✓ (valor oculto)" : `✓ ${configMap.get(k)}`)
           : "Não configurado",
+        solutionKey: configMap.has(k) && configMap.get(k) ? undefined : "payment:missing",
       }));
       const missingPay = payItems.filter(i => i.status !== "ok").length;
       categories.push({
@@ -340,6 +481,38 @@ export default function SystemVerification() {
 
   const totalChecks = results ? results.reduce((s, c) => s + c.items.length, 0) : 0;
   const passedChecks = results ? results.reduce((s, c) => s + c.items.filter(i => i.status === "ok").length, 0) : 0;
+  const issueCount = results ? results.reduce((s, c) => s + c.items.filter(i => i.status === "error" || i.status === "warning").length, 0) : 0;
+  const fixableCount = results ? results.reduce((s, c) => s + c.items.filter(i => i.solutionKey && SOLUTIONS[i.solutionKey]?.fixable).length, 0) : 0;
+
+  const statusIcon = (status: CheckStatus) => {
+    if (status === "ok") return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />;
+    if (status === "warning") return <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />;
+    if (status === "info") return <Info className="h-3.5 w-3.5 text-blue-400 shrink-0" />;
+    return <XCircle className="h-3.5 w-3.5 text-red-400 shrink-0" />;
+  };
+
+  const statusColor = (status: CheckStatus) => {
+    if (status === "ok") return "text-emerald-400";
+    if (status === "warning") return "text-amber-400";
+    if (status === "info") return "text-blue-400";
+    return "text-red-400";
+  };
+
+  const statusBg = (status: CheckStatus) => {
+    if (status === "ok") return "bg-emerald-500/15";
+    if (status === "warning") return "bg-amber-500/15";
+    if (status === "info") return "bg-blue-500/15";
+    return "bg-red-500/15";
+  };
+
+  const statusBadge = (status: CheckStatus) => {
+    const labels: Record<CheckStatus, string> = { ok: "OK", warning: "AVISO", error: "ERRO", info: "INFO" };
+    return (
+      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusBg(status)} ${statusColor(status)}`}>
+        {labels[status]}
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -362,7 +535,7 @@ export default function SystemVerification() {
               {running ? "Verificando Sistema..." : "Verificar Integridade do Sistema"}
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              {running ? stage : "Verifica tabelas, RLS, funções, storage, pagamentos e mais"}
+              {running ? stage : "Tabelas, RLS, funções, storage, triggers, pagamentos e mais"}
             </p>
           </div>
           {!running && (
@@ -370,7 +543,6 @@ export default function SystemVerification() {
           )}
         </div>
 
-        {/* Progress bar */}
         {running && (
           <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
             <motion.div
@@ -407,7 +579,7 @@ export default function SystemVerification() {
                 ) : (
                   <XCircle className="h-6 w-6 text-red-400" />
                 )}
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-bold text-foreground">
                     {overall === "ok"
                       ? "Sistema 100% Operacional ✅"
@@ -417,9 +589,31 @@ export default function SystemVerification() {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {passedChecks}/{totalChecks} verificações passaram · {results.length} categorias
+                    {issueCount > 0 && ` · ${issueCount} problema(s)`}
+                    {fixableCount > 0 && ` · ${fixableCount} corrigível(is)`}
                   </p>
                 </div>
               </div>
+
+              {/* Quick fix all button */}
+              {fixableCount > 0 && (
+                <button
+                  onClick={async () => {
+                    for (const cat of results) {
+                      for (const item of cat.items) {
+                        if (!item.solutionKey || !SOLUTIONS[item.solutionKey]?.fixable) continue;
+                        if (item.status === "ok") continue;
+                        if (item.solutionKey === "bucket:missing") await fixBucket(item.name);
+                        if (item.solutionKey === "config:missing") await fixConfig(item.name);
+                      }
+                    }
+                  }}
+                  className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-semibold transition-colors"
+                >
+                  <Wrench className="h-3.5 w-3.5" />
+                  Corrigir {fixableCount} item(ns) automaticamente
+                </button>
+              )}
             </div>
 
             {/* Category cards */}
@@ -429,31 +623,15 @@ export default function SystemVerification() {
                   onClick={() => setExpandedCat(expandedCat === cat.id ? null : cat.id)}
                   className="w-full flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors text-left"
                 >
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${
-                    cat.status === "ok"
-                      ? "bg-emerald-500/15"
-                      : cat.status === "warning"
-                      ? "bg-amber-500/15"
-                      : "bg-red-500/15"
-                  }`}>
-                    <cat.icon className={`h-4 w-4 ${
-                      cat.status === "ok" ? "text-emerald-400"
-                      : cat.status === "warning" ? "text-amber-400"
-                      : "text-red-400"
-                    }`} />
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${statusBg(cat.status)}`}>
+                    <cat.icon className={`h-4 w-4 ${statusColor(cat.status)}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{cat.label}</p>
                     <p className="text-[11px] text-muted-foreground truncate">{cat.summary}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {cat.status === "ok" ? (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">OK</span>
-                    ) : cat.status === "warning" ? (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400">AVISO</span>
-                    ) : (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-400">ERRO</span>
-                    )}
+                    {statusBadge(cat.status)}
                     {expandedCat === cat.id ? (
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     ) : (
@@ -470,24 +648,84 @@ export default function SystemVerification() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="border-t border-border px-3 py-2 space-y-1 max-h-64 overflow-y-auto">
-                        {cat.items.map(item => (
-                          <div key={item.name} className="flex items-center gap-2 py-1">
-                            {item.status === "ok" ? (
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                            ) : item.status === "warning" ? (
-                              <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                            ) : (
-                              <XCircle className="h-3.5 w-3.5 text-red-400 shrink-0" />
-                            )}
-                            <span className="text-xs text-foreground font-mono truncate flex-1">{item.name}</span>
-                            <span className={`text-[10px] shrink-0 ${
-                              item.status === "ok" ? "text-emerald-400"
-                              : item.status === "warning" ? "text-amber-400"
-                              : "text-red-400"
-                            }`}>{item.detail}</span>
-                          </div>
-                        ))}
+                      <div className="border-t border-border px-3 py-2 space-y-1 max-h-80 overflow-y-auto">
+                        {cat.items.map(item => {
+                          const solution = item.solutionKey ? SOLUTIONS[item.solutionKey] : null;
+                          const itemKey = `${cat.id}-${item.name}`;
+                          return (
+                            <div key={item.name} className="py-1">
+                              <div className="flex items-center gap-2">
+                                {statusIcon(item.status)}
+                                <span className="text-xs text-foreground font-mono truncate flex-1">{item.name}</span>
+                                <span className={`text-[10px] shrink-0 ${statusColor(item.status)}`}>{item.detail}</span>
+
+                                {/* Action buttons for fixable items */}
+                                {solution && item.status !== "ok" && (
+                                  <div className="flex items-center gap-1 shrink-0 ml-1">
+                                    {solution.fixable ? (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (item.solutionKey === "bucket:missing") fixBucket(item.name);
+                                          if (item.solutionKey === "config:missing") fixConfig(item.name);
+                                        }}
+                                        disabled={fixing === item.name}
+                                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-[10px] font-semibold transition-colors disabled:opacity-50"
+                                      >
+                                        {fixing === item.name ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <Wrench className="h-3 w-3" />
+                                        )}
+                                        {item.solutionKey === "bucket:missing" ? "Criar" : "Inicializar"}
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowSolution(showSolution === itemKey ? null : itemKey);
+                                        }}
+                                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 text-[10px] font-semibold transition-colors"
+                                      >
+                                        <Eye className="h-3 w-3" />
+                                        Solução
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Solution panel */}
+                              <AnimatePresence>
+                                {showSolution === itemKey && solution && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="mt-1.5 ml-5 p-2.5 rounded-lg bg-blue-500/5 border border-blue-500/15 text-[11px] text-blue-300 space-y-1.5">
+                                      <p>{solution.instruction}</p>
+                                      {solution.sqlHint && (
+                                        <div className="relative">
+                                          <pre className="bg-muted/50 rounded p-2 text-[10px] font-mono text-foreground/70 overflow-x-auto">
+                                            {solution.sqlHint}
+                                          </pre>
+                                          <button
+                                            onClick={() => copyToClipboard(solution.sqlHint!, itemKey)}
+                                            className="absolute top-1 right-1 p-1 rounded bg-muted hover:bg-muted/80"
+                                          >
+                                            <Copy className={`h-3 w-3 ${copiedSql === itemKey ? "text-emerald-400" : "text-muted-foreground"}`} />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
