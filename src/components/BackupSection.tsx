@@ -52,7 +52,7 @@ const SOURCE_PATHS = [
   "src/components/RedesSection.tsx","src/components/ResellerFeeConfig.tsx",
   "src/components/SaquesSection.tsx","src/components/ScratchCanvas.tsx","src/components/ScratchCard.tsx",
   "src/components/SeasonalEffects.tsx","src/components/Skeleton.tsx","src/components/SlideBanner.tsx",
-  "src/components/SplashScreen.tsx","src/components/SupportAdminSelector.tsx",
+  "src/components/SplashScreen.tsx","src/components/SupportAdminSelector.tsx","src/components/SystemVerification.tsx",
   "src/components/TextFormatToolbar.tsx","src/components/ThemeToggle.tsx",
   "src/components/TopRankingPodium.tsx","src/components/UpdatePrompt.tsx",
   "src/components/VerificationBadge.tsx",

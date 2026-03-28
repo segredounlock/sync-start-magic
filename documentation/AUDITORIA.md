@@ -1,7 +1,7 @@
 # 🔍 Auditoria Completa — Recargas Brasil v2
 
 > **Data da auditoria:** 2026-03-28  
-> **Versão do sistema:** 2.6  
+> **Versão do sistema:** 2.7  
 
 ---
 
@@ -9,15 +9,17 @@
 
 | Métrica | Quantidade |
 |---------|-----------|
-| Páginas | 18 |
-| Componentes | 68+ |
+| Páginas | 18 (+2 docs) |
+| Componentes | 76 |
 | Hooks customizados | 21 |
 | Libs utilitárias | 16 |
 | Edge Functions | 36 |
 | Tabelas no banco | 47 |
-| Migrations SQL | 209+ |
+| Migrations SQL | 210+ |
 | Buckets de Storage | 8 |
-| Funções PostgreSQL | ~38 |
+| Funções PostgreSQL | 39 |
+| Triggers | 20 |
+| Tabelas com Realtime | 20 |
 | Email templates | 6 |
 
 ---
@@ -61,13 +63,13 @@
 
 ---
 
-## 🧩 Componentes — 68+ arquivos
+## 🧩 Componentes — 76 arquivos
 
-### Core (16)
+### Core (17)
 `AnimatedCheck`, `AnimatedCounter`, `AnimatedIcon`, `AnimatedPage`, `ProtectedRoute`, `MasterOnlyRoute`, `MobileBottomNav`, `FloatingMenuIcon`, `PullToRefresh`, `SplashScreen`, `ThemeToggle`, `Skeleton`, `SeasonalEffects`, `UpdatePrompt`, `ImageCropper`, `TextFormatToolbar`, `InfoCard`
 
-### Admin (18)
-`BackupSection`, `DashboardSection`, `RealtimeDashboard`, `BankDashboard`, `AuditTab`, `BannersManager`, `BroadcastForm`, `BroadcastProgress`, `PollManager`, `AntifraudSection`, `AtualizacoesSection`, `SaquesSection`, `NotificationBell`, `ChatRoomManager`, `NetworkCommissionConfig`, `ResellerFeeConfig`, `SupportAdminSelector`, `MirrorSyncPanel`
+### Admin (19)
+`BackupSection`, `SystemVerification`, `DashboardSection`, `RealtimeDashboard`, `BankDashboard`, `AuditTab`, `BannersManager`, `BroadcastForm`, `BroadcastProgress`, `PollManager`, `AntifraudSection`, `AtualizacoesSection`, `SaquesSection`, `NotificationBell`, `ChatRoomManager`, `NetworkCommissionConfig`, `ResellerFeeConfig`, `SupportAdminSelector`, `MirrorSyncPanel`
 
 ### Revendedor (5)
 `MinhaRede`, `RedesSection`, `MeusPrecos`, `ClientPricingModal`, `ProfileTab`
@@ -247,7 +249,7 @@ Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay
 
 ---
 
-## 🔄 Funções PostgreSQL — ~38
+## 🔄 Funções PostgreSQL — 39
 
 Funções SECURITY DEFINER para:
 - Roles: `has_role`, `has_verification_badge`
@@ -256,13 +258,32 @@ Funções SECURITY DEFINER para:
 - Ranking: `get_recargas_ranking`, `get_ticker_recargas`
 - Saldo: `increment_saldo`, `claim_transaction`
 - Loja: `get_public_store_by_slug`, `get_public_reseller_pricing`
-- Config: `get_maintenance_mode`, `get_chat_enabled`, `get_seasonal_theme`, `get_notif_config`
-- Social: `get_follow_counts`, `get_user_recargas_count`
+- Config: `get_maintenance_mode`, `get_chat_enabled`, `get_seasonal_theme`, `get_notif_config`, `get_chat_new_conv_filter`, `get_require_referral_code`, `get_sales_tools_enabled`
+- Social: `get_follow_counts`, `get_user_recargas_count`, `get_user_verification_badge`
 - Raspadinha: `get_scratch_top_winners`, `get_scratch_recent_winners`
+- Operadoras: `get_operator_stats`
 - Licença: `is_license_valid`
 - Backup: `get_public_tables`, `export_schema_info`
 - Slugs: `generate_unique_slug`, `generate_referral_code`
 - Outros: `get_deposit_fee_for_user`, `get_user_reseller_id`, `get_user_by_referral_code`, `handle_new_user`, `update_updated_at_column`, `cleanup_old_login_attempts`
+
+---
+
+## ⏱️ Triggers — 20
+
+| Trigger | Tabela | Função |
+|---------|--------|--------|
+| `update_*_updated_at` | 18 tabelas | `update_updated_at_column` |
+| `trg_generate_referral_code` | `profiles` | `generate_referral_code` |
+
+Tabelas com trigger `updated_at`: `bot_settings`, `broadcast_progress`, `chat_conversations`, `chat_messages`, `client_pricing_rules`, `licenses`, `notifications`, `operadoras`, `polls`, `pricing_rules`, `profiles`, `recargas`, `reseller_base_pricing_rules`, `reseller_config`, `reseller_pricing_rules`, `saldos`, `system_config`, `telegram_users`, `transactions`
+
+---
+
+## 📡 Realtime — 20 tabelas
+
+Tabelas com publicação `supabase_realtime` ativa:
+`admin_notifications`, `audit_logs`, `broadcast_progress`, `chat_conversations`, `chat_members`, `chat_message_reads`, `chat_messages`, `chat_reactions`, `license_logs`, `notifications`, `poll_votes`, `polls`, `profiles`, `recargas`, `saldos`, `support_messages`, `support_tickets`, `telegram_users`, `transactions`, `user_roles`
 
 ---
 
@@ -287,13 +308,14 @@ Funções SECURITY DEFINER para:
 
 ---
 
-## 📦 Backup v3.5
+## 📦 Backup & Ferramentas v3.5
 
 - Export: 47 tabelas + auth.users (SQL direto) + schema + código fonte
 - Restore: Ordem de dependência + validação FK + upsert em lotes
 - Safe mode: Ignora auth/config em ambientes espelho
 - GitHub Sync: Envio em lotes para repositório GitHub
-- Source backup: 210+ arquivos com hash SHA-256
+- Source backup: 215+ arquivos com hash SHA-256
+- **Verificação de Integridade**: 9 categorias (tabelas, RLS, funções SQL, edge functions, storage, config, realtime, triggers, pagamentos)
 
 ---
 
@@ -328,4 +350,4 @@ Funções SECURITY DEFINER para:
 
 ---
 
-*Auditoria realizada em 2026-03-28 — Recargas Brasil v2.6*
+*Auditoria realizada em 2026-03-28 — Recargas Brasil v2.7*
