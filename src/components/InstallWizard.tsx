@@ -120,11 +120,10 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         .upsert({ key: "license_key", value: data.licenseKey.trim() }, { onConflict: "key" });
       if (e1) throw e1;
 
-      if (data.masterUrl.trim()) {
-        await supabase
-          .from("system_config")
-          .upsert({ key: "license_master_url", value: masterUrl }, { onConflict: "key" });
-      }
+      // Always save master URL from env
+      await supabase
+        .from("system_config")
+        .upsert({ key: "license_master_url", value: masterUrl }, { onConflict: "key" });
 
       steps.push("✓ Licença salva!");
       setProgress([...steps]);
