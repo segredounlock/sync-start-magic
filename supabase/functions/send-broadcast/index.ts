@@ -139,7 +139,11 @@ async function sendTelegramMessage(
   let replyMarkup = undefined;
   if (buttons && buttons.length > 0) {
     replyMarkup = {
-      inline_keyboard: [buttons.map(btn => ({ text: btn.text, url: btn.url }))]
+      inline_keyboard: [buttons.map(btn => {
+        const b: Record<string, any> = { text: btn.text, url: btn.url };
+        if ((btn as any).style && (btn as any).style !== 'primary') b.style = (btn as any).style;
+        return b;
+      })]
     };
   }
 
