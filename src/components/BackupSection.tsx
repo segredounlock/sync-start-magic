@@ -40,6 +40,7 @@ const SOURCE_PATHS = [
   "src/components/ChatRoomManager.tsx","src/components/ClientPricingModal.tsx",
   "src/components/DashboardSection.tsx","src/components/FloatingMenuIcon.tsx","src/components/FloatingPoll.tsx",
   "src/components/ImageCropper.tsx","src/components/InfoCard.tsx",
+  "src/components/InstallWizard.tsx","src/components/LicenseGate.tsx","src/components/LicenseManager.tsx",
   "src/components/MeusPrecos.tsx","src/components/MinhaRede.tsx","src/components/MirrorSyncPanel.tsx",
   "src/components/MasterOnlyRoute.tsx","src/components/MobileBottomNav.tsx",
   "src/components/NetworkCommissionConfig.tsx","src/components/NotificationBell.tsx",
