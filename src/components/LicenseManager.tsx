@@ -57,6 +57,7 @@ function LicenseManagerContent() {
 
   const handleCreate = async () => {
     if (!formName.trim()) { toast.error("Nome do espelho é obrigatório"); return; }
+    if (!formDomain.trim()) { toast.error("Domínio é obrigatório — a licença só funciona para este domínio"); return; }
     setCreating(true);
     try {
       const expiresAt = new Date();
