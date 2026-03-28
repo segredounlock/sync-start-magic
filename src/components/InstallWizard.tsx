@@ -200,16 +200,17 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         <div className="rocket-container relative">
           {/* Custom rocket SVG with animated flame tail */}
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Rocket body - same as Lucide but without the bottom flame */}
-            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Rocket body */}
             <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Left fin */}
             <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Bottom fin */}
             <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            {/* Animated flame at the tail */}
+            {/* Animated flame replacing the green tail drop */}
             <g className="rocket-flame">
-              <ellipse cx="3.8" cy="20.2" rx="2.2" ry="3.5" transform="rotate(-45 3.8 20.2)" fill="#f97316" opacity="0.9"/>
-              <ellipse cx="3.8" cy="20.2" rx="1.4" ry="2.5" transform="rotate(-45 3.8 20.2)" fill="#fbbf24" opacity="0.95"/>
-              <ellipse cx="3.8" cy="20.2" rx="0.7" ry="1.5" transform="rotate(-45 3.8 20.2)" fill="#fef3c7"/>
+              <ellipse cx="5" cy="19" rx="2.8" ry="4" transform="rotate(-45 5 19)" fill="#f97316" opacity="0.9"/>
+              <ellipse cx="5" cy="19" rx="1.8" ry="2.8" transform="rotate(-45 5 19)" fill="#fbbf24" opacity="0.95"/>
+              <ellipse cx="5" cy="19" rx="0.9" ry="1.5" transform="rotate(-45 5 19)" fill="#fef3c7"/>
             </g>
             {/* Window */}
             <circle cx="15" cy="9" r="1" fill="hsl(var(--primary))"/>
