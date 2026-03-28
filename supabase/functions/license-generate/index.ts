@@ -71,8 +71,8 @@ serve(async (req) => {
     const body = await req.json();
     const { mirror_name, mirror_domain, expires_at, max_users, features } = body;
 
-    if (!mirror_name || !expires_at) {
-      throw new Error("mirror_name e expires_at são obrigatórios");
+    if (!mirror_name || !mirror_domain || !expires_at) {
+      throw new Error("mirror_name, mirror_domain e expires_at são obrigatórios");
     }
 
     const signingSecret = Deno.env.get("LICENSE_SIGNING_SECRET");
