@@ -237,6 +237,7 @@ export default function AdminSupport() {
   // Message input
   const [msgText, setMsgText] = useState("");
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
