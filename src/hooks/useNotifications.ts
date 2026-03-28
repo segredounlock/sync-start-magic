@@ -136,8 +136,8 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
       profileCache.current[userId] = { nome: rev.nome, email: rev.email };
       return profileCache.current[userId];
     }
-    const { data } = await supabase.from("profiles").select("nome, email").eq("id", userId).maybeSingle();
-    const result = { nome: data?.nome || null, email: data?.email || null };
+    const { data } = await supabase.from("profiles_public").select("nome").eq("id", userId).maybeSingle();
+    const result = { nome: data?.nome || null, email: null };
     profileCache.current[userId] = result;
     return result;
   }, []);

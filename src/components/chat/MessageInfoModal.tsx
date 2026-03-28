@@ -46,7 +46,7 @@ export function MessageInfoModal({ message, open, onClose }: MessageInfoModalPro
       // Fetch profiles
       const userIds = readData.map(r => r.user_id);
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, nome, avatar_url, verification_badge")
         .in("id", userIds);
 
