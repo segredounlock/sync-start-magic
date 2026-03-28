@@ -470,7 +470,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
             return (
               <motion.div
                 key={user.user_id}
-                className={`flex flex-col items-center gap-2 cursor-pointer ${isCenter ? "mb-4" : "mb-0"}`}
+                className={`flex flex-col items-center gap-2 cursor-pointer ${isCenter ? "mb-4 w-[100px] md:w-[160px]" : "mb-0 w-[80px] md:w-[130px]"}`}
                 style={{ flexShrink: 0 }}
                 initial={{ opacity: 0, y: 60, scale: 0.5 }}
                 animate={revealed ? { opacity: 1, y: 0, scale: 1 } : {}}
