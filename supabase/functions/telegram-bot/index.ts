@@ -2242,6 +2242,13 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
     keyboard.push([{ text: "❓ Ajuda / Suporte", callback_data: "menu_ajuda" }]);
   }
 
+  // Admin-only: show admin button
+  const telegramIdStr = String(chatId);
+  const isAdmin = await isAdminUser(supabase, telegramIdStr);
+  if (isAdmin) {
+    keyboard.push([{ text: "⚙️ Administração", callback_data: "menu_admin" }]);
+  }
+
   await sendMessageWithKeyboard(token, chatId,
     `👋 Olá, <b>${user.nome || user.email}</b>!\n💰 Saldo: <b>R$ ${saldoFmt}</b>\n\nEscolha uma opção:`,
     keyboard
