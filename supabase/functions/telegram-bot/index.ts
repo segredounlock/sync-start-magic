@@ -832,7 +832,7 @@ async function executeTelegramBroadcast(
       const titleMatch = plainText.match(/^(.{1,60})/);
       const notifTitle = titleMatch ? titleMatch[1].split('\n')[0].trim() : 'Broadcast';
 
-      await supabase.from('notifications').insert({
+      const { error: notifErr } = await supabase.from('notifications').insert({
         title: `📢 ${notifTitle}`,
         message: broadcastText,
         status: 'sent',
@@ -840,7 +840,11 @@ async function executeTelegramBroadcast(
         failed_count: failed,
       });
 
-      console.log('[BROADCAST-TG] Synced to chat + notifications (Novidades)');
+      if (notifErr) {
+        console.error('[BROADCAST-TG] Failed to insert notification:', JSON.stringify(notifErr));
+      } else {
+        console.log('[BROADCAST-TG] Synced to chat + notifications (Novidades)');
+      }
     }
   } catch (err) {
     console.error('[BROADCAST-TG] Failed to sync broadcast:', err);
