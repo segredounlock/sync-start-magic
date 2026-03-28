@@ -41,7 +41,7 @@ function LicenseManagerContent() {
   const [formName, setFormName] = useState("");
   const [formDomain, setFormDomain] = useState("");
   const [formExpDays, setFormExpDays] = useState(30);
-  const [formMaxUsers, setFormMaxUsers] = useState(100);
+  
 
   const fetchLicenses = useCallback(async () => {
     setLoading(true);
