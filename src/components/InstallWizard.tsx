@@ -20,46 +20,6 @@ interface InstallData {
   masterUrl: string;
 }
 
-/* ─── Internal crypto countdown: signs expiration data locally ─── */
-async function createLocalLicenseProof(expiresAt: string, licenseKey: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const payload = JSON.stringify({
-    exp: expiresAt,
-    lk: licenseKey.slice(-8), // last 8 chars as fingerprint
-    dom: window.location.hostname,
-    iat: new Date().toISOString(),
-  });
-  const data = encoder.encode(payload);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hash));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-  return btoa(JSON.stringify({ p: payload, h: hashHex }));
-}
-
-async function verifyLocalLicenseProof(proof: string): Promise<{ valid: boolean; expired: boolean; expiresAt?: string }> {
-  try {
-    const decoded = JSON.parse(atob(proof));
-    const { p, h } = decoded;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(p);
-    const hash = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hash));
-    const computedHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
-    if (computedHash !== h) return { valid: false, expired: false };
-
-    const payload = JSON.parse(p);
-    // Verify domain matches
-    if (payload.dom !== window.location.hostname) return { valid: false, expired: false };
-    // Check expiration
-    const expDate = new Date(payload.exp);
-    const now = new Date();
-    return { valid: true, expired: now > expDate, expiresAt: payload.exp };
-  } catch {
-    return { valid: false, expired: false };
-  }
-}
-
 async function callValidation(masterUrl: string, licenseKey: string) {
   const domain = window.location.hostname;
   const response = await fetch(`${masterUrl}/functions/v1/license-validate`, {
