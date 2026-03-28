@@ -14,6 +14,7 @@ import { styledToast as toast } from "@/lib/toast";
 import JSZip from "jszip";
 import { getKnownPaths, getFileHashes } from "@/lib/sourceManifest";
 import MirrorSyncPanel from "@/components/MirrorSyncPanel";
+import SystemVerification from "@/components/SystemVerification";
 
 // Tables are now discovered dynamically by the edge functions
 // This constant is only used for display fallback
