@@ -467,5 +467,3 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-/* ─── Export for LicenseGate ─── */
-export { InstallWizard };
