@@ -241,16 +241,41 @@ async function sendBroadcastInBackground(
       return;
     }
 
-    // Query ALL users (including previously blocked) — each broadcast re-verifies status
-    let usersQuery = supabase
-      .from('telegram_users')
-      .select('telegram_id, first_name, is_blocked');
+    // Query ALL users with pagination to bypass 1000-row default limit
+    const allUsers: any[] = [];
+    const PAGE_SIZE = 1000;
+    let page = 0;
+    let hasMore = true;
 
-    if (!includeUnregistered) {
-      usersQuery = usersQuery.eq('is_registered', true);
+    while (hasMore) {
+      let usersQuery = supabase
+        .from('telegram_users')
+        .select('telegram_id, first_name, is_blocked')
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (!includeUnregistered) {
+        usersQuery = usersQuery.eq('is_registered', true);
+      }
+
+      const { data: pageData, error: pageError } = await usersQuery;
+
+      if (pageError) {
+        await updateProgress(progressId, { status: 'failed', error_message: 'Erro ao buscar usuários' });
+        activeBroadcasts.delete(progressId);
+        return;
+      }
+
+      if (pageData && pageData.length > 0) {
+        allUsers.push(...pageData);
+        hasMore = pageData.length === PAGE_SIZE;
+        page++;
+      } else {
+        hasMore = false;
+      }
     }
 
-    const { data: users, error: usersError } = await usersQuery;
+    const users = allUsers;
+    const usersError = null;
 
     if (usersError) {
       await updateProgress(progressId, { status: 'failed', error_message: 'Erro ao buscar usuários' });
