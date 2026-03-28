@@ -254,6 +254,56 @@ export default function Principal() {
   const [allRecargasSearch, setAllRecargasSearch] = useState("");
   const [allRecargasPage, setAllRecargasPage] = useState(0);
   const ALL_RECARGAS_PER_PAGE = 20;
+  const [refundingId, setRefundingId] = useState<string | null>(null);
+
+  const handleRefundRecarga = useCallback(async (recarga: any) => {
+    const custoToRefund = Number(recarga.custo) || 0;
+    if (custoToRefund <= 0) { toast.error("Sem valor cobrado para estornar"); return; }
+    const ok = await confirm({
+      title: "Estornar recarga?",
+      description: `Devolver ${fmt(custoToRefund)} para o saldo do usuário ${recarga.user_nome || ""}?\n\nTelefone: ${recarga.telefone}\nOperadora: ${(recarga.operadora || "").toUpperCase()}\nValor Recarga: ${fmt(Number(recarga.valor))}`,
+      confirmText: "Estornar",
+      cancelText: "Cancelar",
+    });
+    if (!ok) return;
+    setRefundingId(recarga.id);
+    try {
+      // 1. Credit balance back
+      const { error: rpcErr } = await supabase.rpc("increment_saldo", {
+        p_user_id: recarga.user_id,
+        p_tipo: "revenda",
+        p_amount: custoToRefund,
+      });
+      if (rpcErr) throw rpcErr;
+      // 2. Mark recarga as refunded (status = 'estornada')
+      const { error: upErr } = await supabase.from("recargas").update({ status: "estornada" }).eq("id", recarga.id);
+      if (upErr) throw upErr;
+      // 3. Audit log
+      await supabase.from("audit_logs").insert({
+        admin_id: user?.id || "",
+        action: "refund_recarga",
+        target_type: "recarga",
+        target_id: recarga.id,
+        details: {
+          user_id: recarga.user_id,
+          user_nome: recarga.user_nome,
+          valor_recarga: recarga.valor,
+          custo_estornado: custoToRefund,
+          custo_api: recarga.custo_api,
+          operadora: recarga.operadora,
+          telefone: recarga.telefone,
+        },
+      });
+      toast.success(`Estorno de ${fmt(custoToRefund)} realizado com sucesso!`);
+      // Refresh list
+      setAllRecargasList(prev => prev.map(r => r.id === recarga.id ? { ...r, status: "estornada" } : r));
+    } catch (err: any) {
+      console.error("Refund error:", err);
+      toast.error("Erro ao estornar: " + (err.message || ""));
+    } finally {
+      setRefundingId(null);
+    }
+  }, [user?.id]);
 
   // Config API states
   const [apiConfig, setApiConfig] = useState<Record<string, string>>({});
