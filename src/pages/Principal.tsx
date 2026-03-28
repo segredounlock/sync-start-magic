@@ -259,9 +259,10 @@ export default function Principal() {
   const handleRefundRecarga = useCallback(async (recarga: any) => {
     const custoToRefund = Number(recarga.custo) || 0;
     if (custoToRefund <= 0) { toast.error("Sem valor cobrado para estornar"); return; }
-    const ok = await confirm({
-      title: "Estornar recarga?",
-      description: `Devolver ${fmt(custoToRefund)} para o saldo do usuário ${recarga.user_nome || ""}?\n\nTelefone: ${recarga.telefone}\nOperadora: ${(recarga.operadora || "").toUpperCase()}\nValor Recarga: ${fmt(Number(recarga.valor))}`,
+    const ok = await confirm(
+      `Devolver ${fmt(custoToRefund)} para o saldo do usuário ${recarga.user_nome || ""}?\n\nTelefone: ${recarga.telefone}\nOperadora: ${(recarga.operadora || "").toUpperCase()}\nValor Recarga: ${fmt(Number(recarga.valor))}`,
+      { title: "Estornar recarga?", confirmText: "Estornar" },
+    );
       confirmText: "Estornar",
       cancelText: "Cancelar",
     });
