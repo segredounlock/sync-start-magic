@@ -82,7 +82,7 @@ export default function LicenseManager() {
 
   const handleToggle = async (id: string, currentActive: boolean) => {
     const action = currentActive ? "revogar" : "reativar";
-    const ok = await confirm(`Deseja ${action} esta licença?`, `${action === "revogar" ? "⚠️" : "✅"} Confirmar`);
+    const ok = await confirm(`Deseja ${action} esta licença?`, { title: action === "revogar" ? "Revogar Licença" : "Reativar Licença", destructive: action === "revogar" });
     if (!ok) return;
 
     const { error } = await supabase
