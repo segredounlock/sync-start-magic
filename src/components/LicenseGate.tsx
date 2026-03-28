@@ -8,6 +8,8 @@ const HEARTBEAT_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
 
 const MASTER_SERVER_URL = import.meta.env.VITE_SUPABASE_URL;
 
+const MASTER_DOMAINS = ["recargasbrasill.com"];
+
 interface CachedValidation {
   valid: boolean;
   expires_at?: string;
@@ -204,6 +206,16 @@ export function LicenseGate({ children }: { children: ReactNode }) {
 
   const validate = async (mounted: { current: boolean }) => {
     try {
+      // 0. Check if running on master domain — bypass everything
+      const hostname = window.location.hostname.toLowerCase();
+      const isMasterDomain = MASTER_DOMAINS.some(d =>
+        hostname === d || hostname.endsWith(`.${d}`)
+      );
+      if (isMasterDomain) {
+        if (mounted.current) setStatus("master");
+        return;
+      }
+
       // 1. Check if the LOGGED-IN user is the masterAdmin
       const { data: { user } } = await supabase.auth.getUser();
 
