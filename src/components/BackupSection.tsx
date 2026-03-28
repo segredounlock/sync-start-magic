@@ -996,8 +996,8 @@ export default function BackupSection() {
           <Shield className="h-5 w-5 text-amber-400" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-foreground">Backup & Sync</h2>
-          <p className="text-xs text-muted-foreground">Tabelas dinâmicas · {formatDateFullBR(new Date())}</p>
+          <h2 className="text-lg font-bold text-foreground">Ferramentas</h2>
+          <p className="text-xs text-muted-foreground">Backup, Sync & Verificação · {formatDateFullBR(new Date())}</p>
         </div>
       </div>
 
