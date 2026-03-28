@@ -1,113 +1,90 @@
 
 
-# Sistema de Licenciamento para Espelhos
+# Proteger Arquivos de Licenciamento do Sync para Espelhos
 
-## O que é
-Um sistema onde cada espelho do seu projeto só funciona se tiver uma **licença válida** gerada por você no servidor principal. Sem licença ativa, o espelho mostra uma tela de "Licença expirada/inválida" e bloqueia o uso.
+## Contexto
+O sistema de licenciamento que vamos criar tem duas partes:
+- **LicenseGate** (validação/bloqueio) — DEVE ir para os espelhos
+- **LicenseManager** (painel de gestão) e **license-generate** (geração de licenças) — NÃO DEVEM ir para os espelhos, pois são exclusivos do servidor principal
 
-## Como funciona (visão simples)
+## O que proteger
 
-```text
-┌──────────────────┐                          ┌──────────────────┐
-│  SEU SERVIDOR    │   Gera licença (chave)   │   ESPELHO (X)    │
-│  (Principal)     │ ──────────────────────►   │                  │
-│                  │                           │  Salva a chave   │
-│  Painel de       │   Valida a cada 6h       │  no system_config│
-│  Licenças        │ ◄─────────────────────    │                  │
-│                  │   ✅ ou ❌               │  Se inválida:    │
-│  Pode revogar    │                           │  BLOQUEIA TUDO   │
-│  a qualquer hora │                           │                  │
-└──────────────────┘                           └──────────────────┘
+| Arquivo | Vai pro espelho? |
+|---------|:---:|
+| `src/components/LicenseGate.tsx` | SIM — bloqueia espelhos sem licença |
+| `src/components/LicenseManager.tsx` | NAO — painel de gestão exclusivo seu |
+| `supabase/functions/license-generate/index.ts` | NAO — só o principal gera licenças |
+| `supabase/functions/license-validate/index.ts` | SIM — espelhos precisam chamar validação (mas chamam no SEU servidor, não no deles) |
+| Tabela `licenses` (migration) | NAO precisa existir no espelho |
+
+## Como bloquear
+
+### 1. Atualizar o workflow do GitHub Actions
+No `.github/workflows/sync-mirror.yml`, na etapa "Preparar para mirror", adicionar remoção dos arquivos exclusivos:
+
+```yaml
+- name: Preparar para mirror
+  run: |
+    git config user.name "sync-bot"
+    git config user.email "sync@bot.com"
+    rm -f .env
+    rm -f supabase/config.toml
+    # Remover arquivos exclusivos do servidor principal
+    rm -rf src/components/LicenseManager.tsx
+    rm -rf supabase/functions/license-generate/
+    git add -A
+    git commit -m "chore: prepare mirror sync (remove env-specific files)" --allow-empty
 ```
 
-1. Você gera uma **chave de licença** no seu painel `/principal`
-2. A chave contém: ID do espelho, data de expiração, domínio permitido
-3. A chave é **assinada digitalmente** (JWT com secret só seu) — impossível falsificar
-4. O espelho salva a chave e a cada 6 horas chama seu servidor para validar
-5. Se a licença expirou, foi revogada ou o domínio não bate → **tela de bloqueio**
+### 2. Atualizar protected_paths no github-sync (Edge Function)
+O sistema de smart-sync já suporta `protected_paths`. Adicionar os caminhos do licenciamento à lista padrão:
 
-## Segurança máxima
-- **Assinatura JWT** — a licença é um token assinado com um secret que só existe no seu servidor
-- **Validação server-side** — o espelho chama uma edge function no SEU backend para confirmar
-- **Heartbeat periódico** — mesmo que a chave local pareça válida, o espelho confirma remotamente
-- **Domínio travado** — a licença só funciona no domínio autorizado
-- **Revogação instantânea** — você revoga no painel e na próxima verificação o espelho para
-
----
-
-## Implementação técnica
-
-### 1. Nova tabela `licenses` (no SEU servidor principal)
-
-```sql
-CREATE TABLE public.licenses (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  license_key text UNIQUE NOT NULL,        -- JWT assinado
-  mirror_name text NOT NULL,               -- Nome do cliente/espelho
-  mirror_domain text,                      -- Domínio autorizado
-  expires_at timestamptz NOT NULL,          -- Data de expiração
-  is_active boolean DEFAULT true,           -- Pode revogar
-  max_users integer DEFAULT 100,            -- Limite de usuários
-  features jsonb DEFAULT '["all"]',         -- Features permitidas
-  last_heartbeat_at timestamptz,            -- Último ping do espelho
-  created_by uuid NOT NULL,                 -- Admin que criou
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
+```typescript
+const protectedPaths: string[] = body.protected_paths || [
+  ".env",
+  "supabase/config.toml",
+  ".github/workflows/",
+  "src/components/LicenseManager.tsx",        // NOVO
+  "supabase/functions/license-generate/",      // NOVO
+];
 ```
 
-### 2. Edge Function `license-generate` (no servidor principal)
-- Recebe: nome do espelho, domínio, data de expiração, features
-- Gera um JWT assinado com HMAC-SHA256 usando um secret exclusivo
-- Salva na tabela `licenses`
-- Retorna a chave para você copiar e enviar ao espelho
+### 3. Atualizar o MirrorSyncPanel
+No painel de sincronização, garantir que os `protected_paths` enviados incluam os novos caminhos.
 
-### 3. Edge Function `license-validate` (no servidor principal, pública)
-- Recebe: license_key + domínio do chamador
-- Verifica assinatura JWT, expiração, domínio, se está ativa
-- Retorna: `{ valid: true, expires_at, features, max_users }` ou `{ valid: false, reason }`
-- Atualiza `last_heartbeat_at`
+### 4. Implementar o sistema de licenciamento completo
 
-### 4. Componente `LicenseGate` (no código compartilhado — vai pro espelho via sync)
-- No boot da aplicação, antes de renderizar qualquer rota
-- Verifica a chave salva em `system_config` (key: `license_key`)
-- Chama a edge function de validação no servidor principal
-- Se inválida → mostra tela de bloqueio com instruções
-- Se válida → renderiza o app normalmente
-- Cache de 6 horas para não sobrecarregar
+**Migration SQL** — tabela `licenses` com RLS (só admin)
 
-### 5. Painel de Gestão de Licenças (na página `/principal`)
-- Listar todas as licenças
-- Criar nova licença (nome, domínio, expiração, features)
-- Revogar/reativar licença
-- Ver último heartbeat de cada espelho
-- Indicador visual: ativo, expirado, sem heartbeat
+**Edge Functions:**
+- `license-generate/index.ts` — gera JWT assinado, salva na tabela (exclusivo principal)
+- `license-validate/index.ts` — valida licença (pública, chamada pelos espelhos no SEU servidor)
 
-### 6. Configuração no espelho
-- O admin do espelho cola a chave na tela de configuração
-- A chave é salva em `system_config` com key `license_key`
-- O `LicenseGate` faz o resto automaticamente
+**Componentes:**
+- `LicenseGate.tsx` — wrapper no AppRoot que bloqueia app sem licença válida; detecta servidor principal via `masterAdminId` e bypassa
+- `LicenseManager.tsx` — painel CRUD de licenças no `/principal` (não vai pro espelho)
 
----
+**Configuração:**
+- Secret `LICENSE_SIGNING_SECRET` — chave HMAC para assinar licenças
+
+**Integração:**
+- `AppRoot.tsx` — envolver rotas com `LicenseGate`
+- `Principal.tsx` — adicionar seção de Licenças
+
+## Resultado
+- O espelho recebe o `LicenseGate` (que bloqueia sem licença)
+- O espelho NÃO recebe o `LicenseManager` nem o `license-generate` (não pode gerar licenças)
+- O workflow do GitHub e o smart-sync garantem a proteção em ambos os métodos de sincronização
 
 ## Arquivos a criar/alterar
-
-| Arquivo | Ação |
-|---------|------|
-| **Migration SQL** | Criar tabela `licenses` + RLS (só admin) |
-| `supabase/functions/license-generate/index.ts` | Nova edge function — gera licenças JWT |
-| `supabase/functions/license-validate/index.ts` | Nova edge function — valida licenças (pública) |
-| `src/components/LicenseGate.tsx` | Novo — wrapper que bloqueia app sem licença válida |
-| `src/components/LicenseManager.tsx` | Novo — painel de gestão de licenças no /principal |
-| `src/pages/Principal.tsx` | Adicionar aba/seção de Licenças |
-| `src/AppRoot.tsx` | Envolver rotas com `LicenseGate` |
-| **Secret** | `LICENSE_SIGNING_SECRET` — chave HMAC para assinar licenças |
-
-## Lógica de bypass no servidor principal
-O `LicenseGate` detecta automaticamente se está no servidor principal (comparando `masterAdminId` ou domínio de origem) e pula a validação — o servidor principal nunca se bloqueia.
-
-## Impacto
-- Espelhos sem licença ficam completamente bloqueados
-- Servidor principal continua funcionando normalmente
-- Você tem controle total sobre quem usa seu sistema
+1. **Migration SQL** — tabela `licenses`
+2. `supabase/functions/license-generate/index.ts` — nova (protegida)
+3. `supabase/functions/license-validate/index.ts` — nova (pública)
+4. `src/components/LicenseGate.tsx` — novo
+5. `src/components/LicenseManager.tsx` — novo (protegido)
+6. `src/AppRoot.tsx` — envolver com LicenseGate
+7. `src/pages/Principal.tsx` — adicionar seção Licenças
+8. `.github/workflows/sync-mirror.yml` — adicionar remoção dos arquivos exclusivos
+9. `supabase/functions/github-sync/index.ts` — atualizar protected_paths padrão
+10. **Secret** `LICENSE_SIGNING_SECRET`
 
