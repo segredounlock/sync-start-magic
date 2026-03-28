@@ -2273,10 +2273,10 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
     keyboard.push([{ text: "❓ Ajuda / Suporte", callback_data: "menu_ajuda" }]);
   }
 
-  // Admin-only: show admin button
+  // Master admin only: show admin button
   const telegramIdStr = String(chatId);
-  const isAdmin = await isAdminUser(supabase, telegramIdStr);
-  if (isAdmin) {
+  const { data: masterTgCfg } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
+  if (masterTgCfg?.value === telegramIdStr) {
     keyboard.push([{ text: "⚙️ Administração", callback_data: "menu_admin" }]);
   }
 
