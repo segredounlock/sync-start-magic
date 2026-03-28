@@ -132,7 +132,7 @@ serve(async (req) => {
 
       const body = await req.json();
       const sourceHashes: Record<string, string> = body.source_hashes || {};
-      const protectedPaths: string[] = body.protected_paths || [".env", "supabase/config.toml", ".github/workflows/", "src/components/LicenseManager.tsx", "supabase/functions/license-generate/", ".lovable/plan.md", "ALTERACOES.md", "DOCUMENTACAO_MIGRACAO.md", "documentation/SECRETS.md", "documentation/MIRROR_SYNC.md", "documentation/BACKUP.md"];
+      const protectedPaths: string[] = body.protected_paths || [".env", "supabase/config.toml", ".github/workflows/", "supabase/functions/license-generate/", ".lovable/plan.md", "ALTERACOES.md", "DOCUMENTACAO_MIGRACAO.md", "documentation/SECRETS.md", "documentation/MIRROR_SYNC.md", "documentation/BACKUP.md"];
       const mirrorRepo: string = body.mirror_repo;
       const sourceRepoName: string = body.source_repo || "";
 

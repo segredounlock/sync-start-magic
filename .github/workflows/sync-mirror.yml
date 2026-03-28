@@ -24,7 +24,6 @@ jobs:
           rm -f .env
           rm -f supabase/config.toml
           # Remover arquivos exclusivos do servidor principal
-          rm -f src/components/LicenseManager.tsx
           rm -rf supabase/functions/license-generate/
           rm -f .lovable/plan.md
           rm -f ALTERACOES.md
