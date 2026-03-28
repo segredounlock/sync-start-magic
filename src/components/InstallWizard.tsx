@@ -467,5 +467,5 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-/* ─── Export crypto verification utilities for LicenseGate ─── */
-export { createLocalLicenseProof, verifyLocalLicenseProof };
+/* ─── Export for LicenseGate ─── */
+export { InstallWizard };
