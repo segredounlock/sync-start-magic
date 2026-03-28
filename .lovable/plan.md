@@ -1,50 +1,63 @@
 
-# Inserir a última mensagem do broadcast do Telegram em Novidades
 
-## O que encontrei
-- A última mensagem do broadcast do Telegram já foi sincronizada para o grupo interno de chat `Atualizações do Sistema`.
-- Ela não foi criada na tabela `notifications`, por isso não apareceu na seção `Novidades`.
-- O schema atual de `notifications` aceita os campos básicos já usados no bot, então o problema não parece ser coluna obrigatória faltando.
-- O fluxo do bot hoje já tenta inserir em `notifications`, mas precisa ficar mais robusto e também permitir corrigir esse caso pendente.
+# Atualização: Cores de Botões, Canal de Notícias e Configuração
 
-## Plano de correção
-### 1. Corrigir o item que faltou agora
-- Inserir a última mensagem enviada pelo bot na tabela `notifications`.
-- Usar um título limpo baseado na própria mensagem:
-  - `📢 ⬇️ AVISO IMPORTANTE ⬇️`
-- Manter o conteúdo completo da mensagem para aparecer corretamente em `Novidades`.
+## Novidades da API do Telegram
 
-### 2. Blindar o sync do `telegram-bot`
-No trecho que sincroniza broadcast para chat + novidades:
-- manter o insert em `notifications`
-- registrar erro detalhado se falhar
-- validar o resultado do insert
-- separar melhor os blocos de erro para que uma falha em `notifications` não masque o restante do fluxo
+A API do Telegram Bot agora suporta **estilos de cor nos botões inline**:
+- `"primary"` — Azul (padrão)
+- `"success"` — Verde
+- `"danger"` — Vermelho
 
-### 3. Evitar duplicação futura
-- Antes de inserir em `notifications`, verificar se já existe uma notificação muito recente com mesmo título/mensagem.
-- Isso evita duplicar avisos quando o bot for reenviado ou reprocessado.
+Também suporta `icon_custom_emoji_id` para colocar um emoji customizado antes do texto do botão (requer Telegram Premium do bot owner).
 
-### 4. Preservar compatibilidade
-- Não mexer na `AtualizacoesSection`
-- Não alterar filtros visuais nem realtime do frontend
-- Não mudar RLS nem estrutura da tabela
-- Não tocar nos filtros de storage nem em outras funções
+## O que será feito
 
-## Resultado esperado
-- A mensagem `⬇️ AVISO IMPORTANTE ⬇️` passa a aparecer em `Novidades`.
-- Próximos broadcasts do Telegram ficam sincronizados com muito menos risco de sumir.
-- Correção com baixo risco, concentrada só no fluxo do bot + backfill do item faltante.
+### 1. Adicionar seletor de cor por botão no BroadcastForm
+**Arquivo:** `src/components/BroadcastForm.tsx`
+- Cada botão do broadcast ganha um seletor de estilo (Azul/Verde/Vermelho)
+- Interface `BroadcastButton` passa a incluir `style?: "primary" | "success" | "danger"`
+- Preview atualizado para refletir a cor escolhida
+- Máximo de botões continua 2
 
-## Detalhes técnicos
-- Arquivo principal: `supabase/functions/telegram-bot/index.ts`
-- Dados confirmados:
-  - a mensagem existe em `chat_messages`
-  - ela não existe entre as notificações mais recentes em `notifications`
-- Ajuste recomendado no fluxo:
-  1. extrair texto
-  2. montar título
-  3. checar duplicidade
-  4. inserir notificação
-  5. logar sucesso/erro com contexto suficiente
+### 2. Enviar o style na API do Telegram
+**Arquivo:** `supabase/functions/send-broadcast/index.ts`
+- No `reply_markup.inline_keyboard`, incluir `style` em cada botão quando definido
+- Compatível: bots que não suportam simplesmente ignoram o campo
+
+**Arquivo:** `supabase/functions/telegram-bot/index.ts`
+- Mesma lógica para broadcasts enviados pelo bot
+
+### 3. Adicionar campo "Canal de Notícias" na aba Bot
+**Arquivo:** `src/pages/AdminDashboard.tsx`
+- Na seção "Links" da aba Bot, adicionar um campo para o link/username do canal (ex: `@CREDITOSO`)
+- Salvar em `system_config` com key `telegramNewsChannel`
+
+### 4. Enviar broadcast também para o canal
+**Arquivo:** `supabase/functions/send-broadcast/index.ts`
+- Após enviar para todos os usuários, buscar `telegramNewsChannel` em `system_config`
+- Se configurado, enviar a mesma mensagem para o canal (com imagem, botões e tudo)
+
+**Arquivo:** `supabase/functions/telegram-bot/index.ts`
+- Mesma lógica: após broadcast do bot, replicar para o canal configurado
+
+### 5. Atualizar configData no AdminDashboard/Principal
+- Adicionar `telegramNewsChannel` ao objeto `configData`
+- Incluir no `fetchConfig` e no `saveConfig`
+
+## Resumo das alterações
+
+| Arquivo | Mudança |
+|---------|---------|
+| `BroadcastForm.tsx` | Seletor de cor por botão + preview colorido |
+| `send-broadcast/index.ts` | Incluir `style` nos botões + enviar para canal |
+| `telegram-bot/index.ts` | Incluir `style` nos botões + enviar para canal |
+| `AdminDashboard.tsx` | Campo "Canal de Notícias" na aba Bot |
+| `Principal.tsx` | Mesmo campo na aba Bot (se existir) |
+
+## Impacto
+- Zero risco de quebra — `style` é ignorado por clientes antigos
+- Canal recebe as mesmas mensagens dos broadcasts
+- Admin configura tudo pelo painel, sem editar código
+- Revendedores podem ter canal próprio via `reseller_config`
 
