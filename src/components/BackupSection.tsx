@@ -14,6 +14,7 @@ import { styledToast as toast } from "@/lib/toast";
 import JSZip from "jszip";
 import { getKnownPaths, getFileHashes } from "@/lib/sourceManifest";
 import MirrorSyncPanel from "@/components/MirrorSyncPanel";
+import SystemVerification from "@/components/SystemVerification";
 
 // Tables are now discovered dynamically by the edge functions
 // This constant is only used for display fallback
@@ -137,7 +138,7 @@ const SOURCE_PATHS = [
   "documentation/SECRETS.md","documentation/MIRROR_SYNC.md","documentation/AUDITORIA.md",
 ];
 
-type TabKey = "dados" | "github" | "atualizacao";
+type TabKey = "dados" | "github" | "atualizacao" | "verificacao";
 
 export default function BackupSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("dados");
@@ -977,6 +978,7 @@ export default function BackupSection() {
     { key: "dados", label: "Dados", icon: Database },
     { key: "github", label: "GitHub", icon: Github },
     { key: "atualizacao", label: "Atualização", icon: PackageCheck },
+    { key: "verificacao", label: "Verificar", icon: Shield },
   ];
 
   return (
@@ -2059,6 +2061,12 @@ export default function BackupSection() {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+
+        {activeTab === "verificacao" && (
+          <motion.div key="verificacao" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="space-y-4">
+            <SystemVerification />
           </motion.div>
         )}
       </AnimatePresence>
