@@ -214,6 +214,7 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
     sendingRef.current = true;
     setSending(true);
     setMsgText("");
+    try {
       await (supabase.from("support_messages") as any).insert({
         ticket_id: selectedTicket.id,
         sender_id: userId,
@@ -224,7 +225,6 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
 
       // Forward to Telegram
       if (isAdmin) {
-        // Admin replying — forward to user's Telegram
         const { data: ticket } = await (supabase.from("support_tickets") as any)
           .select("telegram_chat_id, telegram_username, telegram_first_name, user_id")
           .eq("id", selectedTicket.id)
@@ -244,7 +244,6 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
           }).catch(() => {});
         }
       } else {
-        // Client replying — notify admin on Telegram
         const { getSupportAdminTelegramId } = await import("@/hooks/useSupportAdminId");
         const adminChatId = await getSupportAdminTelegramId();
         supabase.functions.invoke("telegram-notify", {
@@ -254,9 +253,8 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
           },
         }).catch(() => {});
       }
-
-      setMsgText("");
     } catch (e: any) { toast.error(e.message || "Erro"); }
+    sendingRef.current = false;
     setSending(false);
   };
 
