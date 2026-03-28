@@ -254,6 +254,54 @@ export default function Principal() {
   const [allRecargasSearch, setAllRecargasSearch] = useState("");
   const [allRecargasPage, setAllRecargasPage] = useState(0);
   const ALL_RECARGAS_PER_PAGE = 20;
+  const [refundingId, setRefundingId] = useState<string | null>(null);
+
+  const handleRefundRecarga = useCallback(async (recarga: any) => {
+    const custoToRefund = Number(recarga.custo) || 0;
+    if (custoToRefund <= 0) { toast.error("Sem valor cobrado para estornar"); return; }
+    const ok = await confirm(
+      `Devolver ${fmt(custoToRefund)} para o saldo do usuário ${recarga.user_nome || ""}?\n\nTelefone: ${recarga.telefone}\nOperadora: ${(recarga.operadora || "").toUpperCase()}\nValor Recarga: ${fmt(Number(recarga.valor))}`,
+      { title: "Estornar recarga?", confirmText: "Estornar" },
+    );
+    if (!ok) return;
+    setRefundingId(recarga.id);
+    try {
+      // 1. Credit balance back
+      const { error: rpcErr } = await supabase.rpc("increment_saldo", {
+        p_user_id: recarga.user_id,
+        p_tipo: "revenda",
+        p_amount: custoToRefund,
+      });
+      if (rpcErr) throw rpcErr;
+      // 2. Mark recarga as refunded (status = 'estornada')
+      const { error: upErr } = await supabase.from("recargas").update({ status: "estornada" }).eq("id", recarga.id);
+      if (upErr) throw upErr;
+      // 3. Audit log
+      await supabase.from("audit_logs").insert({
+        admin_id: user?.id || "",
+        action: "refund_recarga",
+        target_type: "recarga",
+        target_id: recarga.id,
+        details: {
+          user_id: recarga.user_id,
+          user_nome: recarga.user_nome,
+          valor_recarga: recarga.valor,
+          custo_estornado: custoToRefund,
+          custo_api: recarga.custo_api,
+          operadora: recarga.operadora,
+          telefone: recarga.telefone,
+        },
+      });
+      toast.success(`Estorno de ${fmt(custoToRefund)} realizado com sucesso!`);
+      // Refresh list
+      setAllRecargasList(prev => prev.map(r => r.id === recarga.id ? { ...r, status: "estornada" } : r));
+    } catch (err: any) {
+      console.error("Refund error:", err);
+      toast.error("Erro ao estornar: " + (err.message || ""));
+    } finally {
+      setRefundingId(null);
+    }
+  }, [user?.id]);
 
   // Config API states
   const [apiConfig, setApiConfig] = useState<Record<string, string>>({});
@@ -4653,6 +4701,7 @@ export default function Principal() {
                     if (s === "completed" || s === "concluida") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-success/15 text-success">Concluída</span>;
                     if (s === "pending") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-warning/15 text-warning">Pendente</span>;
                     if (s === "falha") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-destructive/15 text-destructive">Falha</span>;
+                    if (s === "estornada") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">Estornada</span>;
                     return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">{s}</span>;
                   };
 
@@ -4671,14 +4720,30 @@ export default function Principal() {
                               <span className="text-muted-foreground">{(r.operadora || "—").toUpperCase()} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
                               <span className="font-bold font-mono tabular-nums text-foreground">{fmt(Number(r.valor))}</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
+                            <div className="flex items-center justify-between text-[11px] mt-1">
+                              <span className="text-muted-foreground">Cobrado: <span className="font-mono font-semibold text-foreground">{fmt(Number(r.custo || 0))}</span></span>
+                              <span className="text-muted-foreground">API: <span className="font-mono font-semibold text-warning">{fmt(Number(r.custo_api || 0))}</span></span>
+                            </div>
+                            <div className="flex items-center justify-between mt-1.5">
+                              <p className="text-[10px] text-muted-foreground">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
+                              {(r.status === "completed" || r.status === "concluida") && (
+                                <button
+                                  onClick={() => handleRefundRecarga(r)}
+                                  disabled={refundingId === r.id}
+                                  className="flex items-center gap-1 text-[10px] font-semibold text-warning hover:text-warning/80 bg-warning/10 hover:bg-warning/20 px-2 py-0.5 rounded-md transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                  {refundingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                                  Estornar
+                                </button>
+                              )}
+                            </div>
                           </motion.div>
                         ))}
                       </div>
 
                       {/* Desktop table */}
                       <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full">
+                         <table className="w-full">
                           <thead>
                             <tr className="border-b border-border/60 bg-muted/20">
                               <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Data</th>
@@ -4686,7 +4751,10 @@ export default function Principal() {
                               <th className="text-left px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Telefone</th>
                               <th className="text-left px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Operadora</th>
                               <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Valor</th>
-                              <th className="text-center px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Status</th>
+                              <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Cobrado</th>
+                              <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Custo API</th>
+                              <th className="text-center px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Status</th>
+                              <th className="text-center px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Ação</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4700,7 +4768,23 @@ export default function Principal() {
                                 <td className="px-2 py-2 font-mono text-[12px] text-muted-foreground">{r.telefone}</td>
                                 <td className="px-2 py-2 text-[13px] text-foreground">{(r.operadora || "—").toUpperCase()}</td>
                                 <td className="px-2 py-2 text-right font-mono font-bold text-[13px] tabular-nums text-foreground">{fmt(Number(r.valor))}</td>
-                                <td className="px-3 py-2 text-center">{statusBadge(r.status)}</td>
+                                <td className="px-2 py-2 text-right font-mono font-semibold text-[12px] tabular-nums text-foreground">{fmt(Number(r.custo || 0))}</td>
+                                <td className="px-2 py-2 text-right font-mono font-semibold text-[12px] tabular-nums text-warning">{fmt(Number(r.custo_api || 0))}</td>
+                                <td className="px-2 py-2 text-center">{statusBadge(r.status)}</td>
+                                <td className="px-3 py-2 text-center">
+                                  {(r.status === "completed" || r.status === "concluida") ? (
+                                    <button
+                                      onClick={() => handleRefundRecarga(r)}
+                                      disabled={refundingId === r.id}
+                                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-warning hover:text-warning/80 bg-warning/10 hover:bg-warning/20 px-2 py-1 rounded-md transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                      {refundingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                                      Estornar
+                                    </button>
+                                  ) : r.status === "estornada" ? (
+                                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">Estornada</span>
+                                  ) : <span className="text-[10px] text-muted-foreground">—</span>}
+                                </td>
                               </motion.tr>
                             ))}
                           </tbody>
