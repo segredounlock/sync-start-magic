@@ -1,90 +1,44 @@
 
 
-# Proteger Arquivos de Licenciamento do Sync para Espelhos
+# Garantir que o Sistema de Licença Funcione no Espelho
 
-## Contexto
-O sistema de licenciamento que vamos criar tem duas partes:
-- **LicenseGate** (validação/bloqueio) — DEVE ir para os espelhos
-- **LicenseManager** (painel de gestão) e **license-generate** (geração de licenças) — NÃO DEVEM ir para os espelhos, pois são exclusivos do servidor principal
+## Diagnóstico
+O código do `LicenseGate.tsx` já vai pro espelho via sync. Porém, a lógica atual de bypass tem uma falha:
 
-## O que proteger
-
-| Arquivo | Vai pro espelho? |
-|---------|:---:|
-| `src/components/LicenseGate.tsx` | SIM — bloqueia espelhos sem licença |
-| `src/components/LicenseManager.tsx` | NAO — painel de gestão exclusivo seu |
-| `supabase/functions/license-generate/index.ts` | NAO — só o principal gera licenças |
-| `supabase/functions/license-validate/index.ts` | SIM — espelhos precisam chamar validação (mas chamam no SEU servidor, não no deles) |
-| Tabela `licenses` (migration) | NAO precisa existir no espelho |
-
-## Como bloquear
-
-### 1. Atualizar o workflow do GitHub Actions
-No `.github/workflows/sync-mirror.yml`, na etapa "Preparar para mirror", adicionar remoção dos arquivos exclusivos:
-
-```yaml
-- name: Preparar para mirror
-  run: |
-    git config user.name "sync-bot"
-    git config user.email "sync@bot.com"
-    rm -f .env
-    rm -f supabase/config.toml
-    # Remover arquivos exclusivos do servidor principal
-    rm -rf src/components/LicenseManager.tsx
-    rm -rf supabase/functions/license-generate/
-    git add -A
-    git commit -m "chore: prepare mirror sync (remove env-specific files)" --allow-empty
+```
+Se masterAdminId existe E license_key NÃO existe → bypass (assume que é o master)
 ```
 
-### 2. Atualizar protected_paths no github-sync (Edge Function)
-O sistema de smart-sync já suporta `protected_paths`. Adicionar os caminhos do licenciamento à lista padrão:
+No espelho, se o `masterAdminId` foi configurado pelo `init-mirror` ou pelo trigger `handle_new_user`, e o `license_key` ainda não foi inserido, o espelho **pula a validação** — ou seja, funciona sem licença.
 
-```typescript
-const protectedPaths: string[] = body.protected_paths || [
-  ".env",
-  "supabase/config.toml",
-  ".github/workflows/",
-  "src/components/LicenseManager.tsx",        // NOVO
-  "supabase/functions/license-generate/",      // NOVO
-];
+## Solução
+
+### 1. Corrigir a lógica de bypass no LicenseGate.tsx
+Mudar a detecção de "sou o master" para algo mais seguro. Em vez de checar apenas se `license_key` não existe, verificar se o **usuário logado É o masterAdminId** do servidor:
+
+```
+Se o user logado === masterAdminId → bypass (é o dono do master)
+Se não tem license_key → bloquear (espelho sem licença)
 ```
 
-### 3. Atualizar o MirrorSyncPanel
-No painel de sincronização, garantir que os `protected_paths` enviados incluam os novos caminhos.
+Isso garante que:
+- No SEU servidor: você (masterAdmin) entra sem licença
+- No espelho: mesmo que o primeiro user vire masterAdmin lá, ele precisa de licença porque o LicenseGate vai checar contra o servidor PRINCIPAL
 
-### 4. Implementar o sistema de licenciamento completo
+### 2. Atualizar o init-mirror para NÃO seedar masterAdminId
+O `init-mirror` atualmente pode estar inserindo `masterAdminId` no espelho. Isso confunde o LicenseGate. Devemos garantir que o `init-mirror` **não** insira essa chave, deixando o trigger `handle_new_user` criar o master do espelho.
 
-**Migration SQL** — tabela `licenses` com RLS (só admin)
+### 3. Adicionar license_master_url na documentação
+Documentar que o espelho precisa ter:
+- `license_key` em `system_config` (a chave gerada por você)
+- `license_master_url` em `system_config` (URL do seu backend principal)
 
-**Edge Functions:**
-- `license-generate/index.ts` — gera JWT assinado, salva na tabela (exclusivo principal)
-- `license-validate/index.ts` — valida licença (pública, chamada pelos espelhos no SEU servidor)
+## Arquivos alterados
+1. `src/components/LicenseGate.tsx` — corrigir lógica de bypass
+2. `supabase/functions/init-mirror/index.ts` — verificar seeds
+3. `documentation/MIGRACAO.md` — instruções para configurar licença no espelho
 
-**Componentes:**
-- `LicenseGate.tsx` — wrapper no AppRoot que bloqueia app sem licença válida; detecta servidor principal via `masterAdminId` e bypassa
-- `LicenseManager.tsx` — painel CRUD de licenças no `/principal` (não vai pro espelho)
-
-**Configuração:**
-- Secret `LICENSE_SIGNING_SECRET` — chave HMAC para assinar licenças
-
-**Integração:**
-- `AppRoot.tsx` — envolver rotas com `LicenseGate`
-- `Principal.tsx` — adicionar seção de Licenças
-
-## Resultado
-- O espelho recebe o `LicenseGate` (que bloqueia sem licença)
-- O espelho NÃO recebe o `LicenseManager` nem o `license-generate` (não pode gerar licenças)
-- O workflow do GitHub e o smart-sync garantem a proteção em ambos os métodos de sincronização
-
-## Arquivos a criar/alterar
-1. **Migration SQL** — tabela `licenses`
-2. `supabase/functions/license-generate/index.ts` — nova (protegida)
-3. `supabase/functions/license-validate/index.ts` — nova (pública)
-4. `src/components/LicenseGate.tsx` — novo
-5. `src/components/LicenseManager.tsx` — novo (protegido)
-6. `src/AppRoot.tsx` — envolver com LicenseGate
-7. `src/pages/Principal.tsx` — adicionar seção Licenças
-8. `.github/workflows/sync-mirror.yml` — adicionar remoção dos arquivos exclusivos
-9. `supabase/functions/github-sync/index.ts` — atualizar protected_paths padrão
-10. **Secret** `LICENSE_SIGNING_SECRET`
+## Impacto
+- Servidor principal: zero mudança, continua funcionando normalmente
+- Espelhos: passam a ser obrigados a ter licença válida configurada
 
