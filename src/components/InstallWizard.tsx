@@ -70,7 +70,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     setStep("finishing");
     setLoading(true);
 
-    const masterUrl = data.masterUrl.trim() || MASTER_SERVER_URL;
+    const masterUrl = MASTER_SERVER_URL;
     const steps: string[] = [];
 
     try {
