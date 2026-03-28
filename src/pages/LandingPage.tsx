@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRef, useEffect, useState } from "react";
 import {
-  Smartphone, Zap, Shield, Users, TrendingUp, CreditCard,
-  ArrowRight, Globe, Headphones, Sparkles, Activity,
+  Smartphone, ArrowRight, Headphones, Sparkles, Activity,
   Star, MessageCircle, Instagram, Send,
 } from "lucide-react";
 
