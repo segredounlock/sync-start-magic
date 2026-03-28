@@ -470,7 +470,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
             return (
               <motion.div
                 key={user.user_id}
-                className={`flex flex-col items-center gap-2 cursor-pointer ${isCenter ? "mb-4" : "mb-0"}`}
+                className={`flex flex-col items-center gap-2 cursor-pointer ${isCenter ? "mb-4 w-[100px] md:w-[160px]" : "mb-0 w-[80px] md:w-[130px]"}`}
                 style={{ flexShrink: 0 }}
                 initial={{ opacity: 0, y: 60, scale: 0.5 }}
                 animate={revealed ? { opacity: 1, y: 0, scale: 1 } : {}}
@@ -564,9 +564,8 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   animate={revealed ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: delay + 0.3, duration: 0.3 }}
                 >
-                  <p className={`flex items-center justify-center gap-1 font-semibold truncate ${isCenter ? "max-w-[140px] md:max-w-[200px] text-sm md:text-base text-foreground" : "max-w-[80px] md:max-w-[140px] text-xs md:text-sm text-muted-foreground"}`} title={user.nome}>
-                    <span className="truncate md:hidden">{isCenter ? user.nome : (user.nome?.length > 8 ? user.nome.slice(0, 8) + "…" : user.nome)}</span>
-                    <span className="truncate hidden md:inline">{user.nome}</span>
+                  <p className={`flex items-center justify-center gap-1 font-semibold ${isCenter ? "max-w-full text-sm md:text-base text-foreground" : "max-w-full text-xs md:text-sm text-muted-foreground"}`} title={user.nome}>
+                    <span className="truncate">{isCenter ? user.nome : (user.nome?.length > 12 ? user.nome.slice(0, 12) + "…" : user.nome)}</span>
                     {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
                   </p>
                   <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
