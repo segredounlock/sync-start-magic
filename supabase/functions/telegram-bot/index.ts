@@ -801,7 +801,7 @@ async function executeTelegramBroadcast(
 
   console.log(`[BROADCAST-TG] Done: sent=${sent} failed=${failed} blocked=${blocked} time=${totalTime}s`);
 
-  // Sync broadcast to "Atualizações do Sistema" chat group
+  // Sync broadcast to "Atualizações do Sistema" chat group AND "Novidades" (notifications table)
   try {
     const UPDATES_CONVERSATION_ID = '00000000-0000-0000-0000-000000000003';
     const SYSTEM_ADMIN_ID = 'f5501acc-79f3-460f-bc3e-493280ea84f0';
@@ -811,6 +811,7 @@ async function executeTelegramBroadcast(
     if (broadcastText) {
       const chatContent = `📢 <b>Broadcast via Telegram</b>\n\n${broadcastText}`;
 
+      // 1) Sync to chat group "Atualizações do Sistema"
       await supabase.from('chat_messages').insert({
         conversation_id: UPDATES_CONVERSATION_ID,
         sender_id: SYSTEM_ADMIN_ID,
@@ -826,10 +827,23 @@ async function executeTelegramBroadcast(
         updated_at: new Date().toISOString(),
       }).eq('id', UPDATES_CONVERSATION_ID);
 
-      console.log('[BROADCAST-TG] Synced to Atualizações do Sistema chat');
+      // 2) Sync to "Novidades" section (notifications table)
+      const plainText = broadcastText.replace(/<[^>]*>/g, '');
+      const titleMatch = plainText.match(/^(.{1,60})/);
+      const notifTitle = titleMatch ? titleMatch[1].split('\n')[0].trim() : 'Broadcast';
+
+      await supabase.from('notifications').insert({
+        title: `📢 ${notifTitle}`,
+        message: broadcastText,
+        status: 'sent',
+        sent_count: sent,
+        failed_count: failed,
+      });
+
+      console.log('[BROADCAST-TG] Synced to chat + notifications (Novidades)');
     }
   } catch (err) {
-    console.error('[BROADCAST-TG] Failed to sync to chat:', err);
+    console.error('[BROADCAST-TG] Failed to sync broadcast:', err);
   }
 }
 
