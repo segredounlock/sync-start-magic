@@ -210,9 +210,10 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
   const handleSend = async () => {
     if (!selectedTicket || !userId) return;
     const text = msgText.trim();
-    if (!text) return;
+    if (!text || sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
-    try {
+    setMsgText("");
       await (supabase.from("support_messages") as any).insert({
         ticket_id: selectedTicket.id,
         sender_id: userId,
