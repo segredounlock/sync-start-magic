@@ -224,11 +224,11 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     <div className="space-y-5">
       <div className="text-center space-y-2">
         <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <User className="w-7 h-7 text-primary" />
+          <Shield className="w-7 h-7 text-primary" />
         </div>
-        <h2 className="text-lg font-bold text-foreground">Criar Administrador</h2>
+        <h2 className="text-lg font-bold text-foreground">Criar Admin Master</h2>
         <p className="text-muted-foreground text-xs">
-          Este será o primeiro administrador do sistema.
+          Este será o <strong>administrador principal</strong> do sistema, com acesso total e irrevogável.
         </p>
       </div>
 
@@ -279,6 +279,19 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           </div>
           {data.adminPassword && <PasswordStrengthMeter password={data.adminPassword} />}
         </div>
+      </div>
+
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 space-y-2">
+        <div className="flex items-center gap-2 text-xs font-medium text-amber-600 dark:text-amber-400">
+          <Shield className="w-3.5 h-3.5" />
+          Informações importantes
+        </div>
+        <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+          <li>Este usuário terá <strong className="text-foreground">acesso total</strong> ao sistema</li>
+          <li>Será o <strong className="text-foreground">único</strong> com acesso ao Painel Principal</li>
+          <li>O cargo <strong className="text-foreground">não pode ser removido</strong> por nenhum outro administrador</li>
+          <li>Guarde o e-mail e senha em <strong className="text-foreground">local seguro</strong></li>
+        </ul>
       </div>
 
       {error && (
