@@ -88,6 +88,7 @@ serve(async (req) => {
           "push_subscriptions", "update_history",
           "login_fingerprints", "login_attempts", "banned_devices",
           "mirror_sync_state", "mirror_file_state", "mirror_sync_logs",
+          "licenses", "license_logs",
         ];
         for (const t of candidateTables) {
           const { error } = await supabaseAdmin.from(t).select("id").limit(0);

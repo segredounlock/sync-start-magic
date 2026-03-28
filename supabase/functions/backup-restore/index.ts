@@ -269,6 +269,7 @@ serve(async (req) => {
       "push_subscriptions", "update_history", "scratch_cards",
       "login_fingerprints", "banned_devices",
       "mirror_sync_state", "mirror_file_state", "mirror_sync_logs",
+      "licenses", "license_logs",
     ];
 
     // Build final restore order: known tables that exist in ZIP first, then unknown tables from ZIP

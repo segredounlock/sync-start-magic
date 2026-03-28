@@ -193,4 +193,4 @@ O sistema de [espelhamento automático](./MIRROR_SYNC.md) via GitHub Actions man
 
 Use o `backup-export` no projeto espelho para verificar se o schema está correto:
 - Se a exportação retornar 0 tabelas, o banco está vazio e as migrations precisam ser aplicadas
-- Compare a contagem de tabelas (deve ser 45) com o projeto de origem
+- Compare a contagem de tabelas (deve ser 47) com o projeto de origem

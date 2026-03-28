@@ -33,8 +33,8 @@ Consulte a pasta `documentation/` para guias completos:
 |-----------|-----------|
 | [README.md](documentation/README.md) | Índice geral e changelog |
 | [ARQUITETURA.md](documentation/ARQUITETURA.md) | Arquitetura, estrutura de pastas, fluxos |
-| [BANCO_DE_DADOS.md](documentation/BANCO_DE_DADOS.md) | 45 tabelas, ~38 funções, triggers, RLS |
-| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 33 Edge Functions |
+| [BANCO_DE_DADOS.md](documentation/BANCO_DE_DADOS.md) | 47 tabelas, ~38 funções, triggers, RLS |
+| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 36 Edge Functions |
 | [COMPONENTES.md](documentation/COMPONENTES.md) | Componentes, páginas, hooks, libs |
 | [AUTENTICACAO.md](documentation/AUTENTICACAO.md) | Auth, roles, Admin Master, segurança, migração de senhas |
 | [PAGAMENTOS.md](documentation/PAGAMENTOS.md) | Gateways PIX, taxas, webhooks |
