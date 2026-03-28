@@ -410,20 +410,6 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              URL do Servidor Principal
-              <span className="text-muted-foreground font-normal ml-1">(opcional)</span>
-            </label>
-            <input
-              type="url"
-              value={masterUrl}
-              onChange={(e) => setMasterUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              disabled={saving}
-            />
-          </div>
 
           {error && (
             <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">

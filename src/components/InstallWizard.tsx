@@ -424,23 +424,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           />
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            <Server className="w-3.5 h-3.5" /> URL do Servidor Principal
-            <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
-          </label>
-          <input
-            type="url"
-            value={data.masterUrl}
-            onChange={(e) => setData(p => ({ ...p, masterUrl: e.target.value }))}
-            placeholder="https://..."
-            className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            disabled={loading}
-          />
-          <p className="text-[11px] text-muted-foreground">
-            Deixe em branco para usar o servidor padrão.
-          </p>
-        </div>
       </div>
 
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 space-y-1">
