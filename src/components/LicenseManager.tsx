@@ -81,7 +81,7 @@ function LicenseManagerContent() {
       setFormName("");
       setFormDomain("");
       setFormExpDays(30);
-      setFormMaxUsers(100);
+      
       fetchLicenses();
     } catch (err: any) {
       toast.error(err.message || "Erro ao criar licença");
