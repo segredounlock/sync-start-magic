@@ -183,7 +183,7 @@ O `sourceHashPlugin` no `vite.config.ts` calcula SHA-256 de cada arquivo fonte, 
 
 O sistema de [espelhamento automático](./MIRROR_SYNC.md) via GitHub Actions mantém uma cópia atualizada do código-fonte no repositório espelho (`sync-start-magic`). Isso funciona como um **backup em tempo real** do código:
 
-- ✅ Cada push no `main` é automaticamente espelhado
+- ✅ Cada push no `main` é automaticamente espelhado (36 Edge Functions)
 - ✅ O espelho tem seu próprio backend independente
 - ✅ Código pode ser restaurado a partir do espelho se necessário
 - ⚠️ Apenas código é espelhado — dados do banco e storage **não** são sincronizados
