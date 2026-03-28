@@ -45,7 +45,7 @@ import {
   UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
   Globe, Bot, RefreshCw, Wifi, CheckCircle2, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
-  Upload, Database, Server, Send, Megaphone, MessageCircle,
+  Upload, Database, Server, Send, Megaphone, MessageCircle, Wrench,
   Trophy, Check, KeyRound, Banknote, Network, Image, Headphones, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,7 +64,7 @@ import { confirm } from "@/lib/confirm";
 import { safeValor } from "@/lib/utils";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "backup" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte" | "antifraude" | "auditoria" | "licencas";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "ferramentas" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte" | "antifraude" | "auditoria" | "licencas";
 
 type ReportPeriod = "hoje" | "7dias" | "mes" | "total";
 
@@ -1394,7 +1394,7 @@ export default function Principal() {
     { key: "enquetes", icon: BarChart3, label: "Enquetes", color: "text-accent" },
     { key: "batepapo", icon: Send, label: "Bate-Papo", color: "text-destructive" },
     { key: "suporte", icon: Headphones, label: "Suporte", color: "text-[hsl(30,90%,55%)]", badge: pendingSupportCount },
-    { key: "backup", icon: HardDrive, label: "Backup", color: "text-[hsl(40,80%,55%)]" },
+    { key: "ferramentas", icon: Wrench, label: "Ferramentas", color: "text-[hsl(40,80%,55%)]" },
     { key: "antifraude", icon: Shield, label: "Antifraude", color: "text-destructive" },
     { key: "auditoria", icon: FileText, label: "Auditoria", color: "text-primary" },
     { key: "licencas", icon: KeyRound, label: "Licenças", color: "text-primary" },
@@ -1579,7 +1579,7 @@ export default function Principal() {
               {view === "batepapo" && "Crie, edite e gerencie as salas de bate-papo."}
               {view === "saques" && "Gerencie solicitações de saque de toda a rede."}
               {view === "redes" && "Visão consolidada de todos os donos de rede."}
-              {view === "backup" && "Exportar e restaurar backup do sistema."}
+              {view === "ferramentas" && "Backup, verificação e ferramentas do sistema."}
               {view === "suporte" && "Gerencie tickets de suporte recebidos via Telegram."}
               {view === "antifraude" && "Monitore dispositivos, gerencie banimentos e logs de segurança."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
@@ -5376,8 +5376,8 @@ export default function Principal() {
            {/* ===== LICENÇAS ===== */}
            {view === "licencas" && <Suspense fallback={<SkeletonCard />}><LicenseManagerLazy /></Suspense>}
 
-           {/* ===== BACKUP ===== */}
-           {view === "backup" && <BackupSection />}
+           {/* ===== FERRAMENTAS ===== */}
+           {view === "ferramentas" && <BackupSection />}
         </main>
       </div>
 
