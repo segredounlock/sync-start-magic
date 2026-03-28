@@ -707,23 +707,11 @@ export function useChatMessages(conversationId: string | null) {
       await supabase.from("chat_messages").update({ is_deleted: true, deleted_by: user.id }).eq("id", messageId).eq("sender_id", user.id);
     }
 
-    // Update conversation preview if this was the last message
+    // Recompute conversation preview via backend function (skips deleted messages)
     if (msg?.conversation_id) {
-      const { data: lastMsg } = await supabase
-        .from("chat_messages")
-        .select("content, is_deleted")
-        .eq("conversation_id", msg.conversation_id)
-        .eq("is_deleted", false)
-        .neq("id", messageId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const newPreview = lastMsg?.content?.replace(/<[^>]*>/g, '').slice(0, 100) || "Mensagem apagada";
-      await supabase
-        .from("chat_conversations")
-        .update({ last_message_text: newPreview, updated_at: new Date().toISOString() })
-        .eq("id", msg.conversation_id);
+      await supabase.rpc("sync_chat_conversation_preview" as any, {
+        _conversation_id: msg.conversation_id,
+      });
     }
   }, [user, messages]);
 
