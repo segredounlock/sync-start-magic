@@ -4,19 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRef, useEffect, useState } from "react";
 import {
-  Smartphone, Zap, Shield, Users, TrendingUp, CreditCard,
-  ArrowRight, Globe, Headphones, Sparkles, Activity,
+  Smartphone, Zap, ArrowRight, Globe, Headphones, Sparkles, Activity,
   Star, MessageCircle, Instagram, Send,
 } from "lucide-react";
 
 /* ── Data ── */
 const features = [
-  { icon: Zap, title: "Instantânea", desc: "Recarga processada em menos de 3 segundos.", accent: "from-yellow-400 to-orange-500" },
-  { icon: Shield, title: "Blindada", desc: "Criptografia ponta-a-ponta. 100% seguro.", accent: "from-emerald-400 to-cyan-500" },
-  { icon: TrendingUp, title: "Inteligente", desc: "Dashboard com métricas em tempo real.", accent: "from-violet-400 to-purple-500" },
-  { icon: CreditCard, title: "Flexível", desc: "PIX, MercadoPago e mais integrados.", accent: "from-pink-400 to-rose-500" },
-  { icon: Users, title: "Escalável", desc: "Gerencie centenas de revendedores.", accent: "from-blue-400 to-indigo-500" },
-  { icon: Globe, title: "Universal", desc: "Desktop, tablet ou celular.", accent: "from-teal-400 to-green-500" },
+  { emoji: "⚡", title: "Instantânea", desc: "Recarga processada em menos de 3 segundos.", accent: "from-amber-400 to-orange-500" },
+  { emoji: "🛡️", title: "Blindada", desc: "Criptografia ponta-a-ponta. 100% seguro.", accent: "from-emerald-400 to-teal-500" },
+  { emoji: "📊", title: "Inteligente", desc: "Dashboard com métricas em tempo real.", accent: "from-violet-400 to-purple-500" },
+  { emoji: "💳", title: "Flexível", desc: "PIX, MercadoPago e mais integrados.", accent: "from-pink-400 to-rose-500" },
+  { emoji: "👥", title: "Escalável", desc: "Gerencie centenas de revendedores.", accent: "from-blue-400 to-indigo-500" },
+  { emoji: "🌐", title: "Universal", desc: "Desktop, tablet ou celular.", accent: "from-teal-400 to-emerald-500" },
 ];
 
 const operators = ["Vivo", "Claro", "Tim"];
@@ -370,7 +369,7 @@ export default function LandingPage() {
                 className="glass-card rounded-2xl p-7 group hover:border-primary/30 hover:shadow-[0_0_30px_-10px_hsl(var(--primary)/0.15)] hover:-translate-y-1 transition-all duration-300 text-center"
               >
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.accent} flex items-center justify-center mx-auto mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  <f.icon className="h-6 w-6 text-white" />
+                  <span className="text-2xl" role="img">{f.emoji}</span>
                 </div>
                 <h4 className="font-display text-xl font-bold text-foreground mb-2">{f.title}</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
