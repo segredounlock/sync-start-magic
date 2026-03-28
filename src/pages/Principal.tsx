@@ -1579,7 +1579,7 @@ export default function Principal() {
               {view === "batepapo" && "Crie, edite e gerencie as salas de bate-papo."}
               {view === "saques" && "Gerencie solicitações de saque de toda a rede."}
               {view === "redes" && "Visão consolidada de todos os donos de rede."}
-              {view === "backup" && "Exportar e restaurar backup do sistema."}
+              {view === "ferramentas" && "Backup, verificação e ferramentas do sistema."}
               {view === "suporte" && "Gerencie tickets de suporte recebidos via Telegram."}
               {view === "antifraude" && "Monitore dispositivos, gerencie banimentos e logs de segurança."}
               {view === "detalhe" && "Detalhes e métricas do revendedor."}
