@@ -200,10 +200,38 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           0%, 100% { d: path("M4.5 16.5 C4 17, 3.2 18.5, 3.8 18.8 C4.2 19, 4.8 17.5, 4.5 16.5Z"); }
           50% { d: path("M4.5 16.5 C3.8 17.2, 3 19, 3.5 19.2 C4 19.5, 5 17.8, 4.5 16.5Z"); }
         }
+        @keyframes shield-pulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }
+          50% { transform: scale(1.08); filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.4)); }
+        }
+        @keyframes shield-ring {
+          0% { r: 22; opacity: 0.6; stroke-width: 2; }
+          100% { r: 32; opacity: 0; stroke-width: 0.5; }
+        }
+        @keyframes key-glow {
+          0%, 100% { filter: drop-shadow(0 0 2px #f59e0b); }
+          50% { filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 0 20px #f59e0b44); }
+        }
+        @keyframes key-sparkle {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes done-burst {
+          0% { r: 8; opacity: 0.5; }
+          100% { r: 38; opacity: 0; }
+        }
+        @keyframes done-check-pop {
+          0% { transform: scale(0.5); opacity: 0; }
+          60% { transform: scale(1.15); }
+          100% { transform: scale(1); opacity: 1; }
+        }
         .rocket-container { animation: rocket-float 2.5s ease-in-out infinite; }
         .flame-outer { animation: flame-outer 0.3s ease-in-out infinite; }
         .flame-inner { animation: flame-inner 0.25s ease-in-out infinite; }
         .flame-core { animation: flame-core 0.2s ease-in-out infinite; }
+        .shield-icon { animation: shield-pulse 2s ease-in-out infinite; }
+        .key-icon { animation: key-glow 2s ease-in-out infinite; }
+        .done-icon { animation: done-check-pop 0.6s ease-out forwards; }
       `}</style>
       <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
         <div className="rocket-container relative">
@@ -263,8 +291,12 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   const renderAdmin = () => (
     <div className="space-y-5">
       <div className="text-center space-y-2">
-        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <Shield className="w-7 h-7 text-primary" />
+        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56">
+            <circle className="shield-ring-1" cx="28" cy="28" r="22" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" opacity="0.6" style={{ animation: "shield-ring 2s ease-out infinite" }} />
+            <circle className="shield-ring-2" cx="28" cy="28" r="22" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" opacity="0.6" style={{ animation: "shield-ring 2s ease-out infinite 1s" }} />
+          </svg>
+          <Shield className="w-7 h-7 text-primary shield-icon" />
         </div>
         <h2 className="text-lg font-bold text-foreground">Criar Admin Master</h2>
         <p className="text-muted-foreground text-xs">
@@ -361,8 +393,15 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   const renderLicense = () => (
     <div className="space-y-5">
       <div className="text-center space-y-2">
-        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <KeyRound className="w-7 h-7 text-primary" />
+        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative overflow-hidden">
+          {/* Sparkle effects */}
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56">
+            <circle cx="12" cy="10" r="1.5" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite" }} />
+            <circle cx="44" cy="14" r="1" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 0.5s" }} />
+            <circle cx="8" cy="38" r="1.2" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite 1s" }} />
+            <circle cx="46" cy="42" r="1.5" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 1.5s" }} />
+          </svg>
+          <KeyRound className="w-7 h-7 text-primary key-icon" />
         </div>
         <h2 className="text-lg font-bold text-foreground">Ativar Licença</h2>
         <p className="text-muted-foreground text-xs">
@@ -465,8 +504,13 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
 
   const renderDone = () => (
     <div className="space-y-6 text-center">
-      <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
-        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+      <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto relative">
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="8" fill="none" stroke="#10b981" strokeWidth="1.5" style={{ animation: "done-burst 1.5s ease-out infinite" }} />
+          <circle cx="40" cy="40" r="8" fill="none" stroke="#34d399" strokeWidth="1" style={{ animation: "done-burst 1.5s ease-out infinite 0.5s" }} />
+          <circle cx="40" cy="40" r="8" fill="none" stroke="#6ee7b7" strokeWidth="0.8" style={{ animation: "done-burst 1.5s ease-out infinite 1s" }} />
+        </svg>
+        <CheckCircle2 className="w-10 h-10 text-emerald-500 done-icon" />
       </div>
       <h1 className="text-2xl font-bold text-foreground">Instalação Concluída!</h1>
       <p className="text-muted-foreground text-sm">
