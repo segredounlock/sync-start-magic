@@ -134,6 +134,9 @@ export function useConversations() {
         const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
         const profile = (profiles as any[]).find((p: any) => p.id === otherId);
         const role = roleMap[otherId] || "usuario";
+        if (!profile) {
+          console.warn(`[CHAT] Profile not found for user ${otherId} in conversation ${c.id}`);
+        }
         return {
           ...c,
           other_user: profile
