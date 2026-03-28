@@ -11,8 +11,8 @@
 | Documento | Descrição |
 |-----------|-----------|
 | [ARQUITETURA.md](./ARQUITETURA.md) | Arquitetura geral, stack tecnológico e estrutura de pastas |
-| [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md) | Todas as 45 tabelas, RLS policies, funções e triggers |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Todas as 33 Edge Functions com descrição e autenticação |
+| [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md) | Todas as 47 tabelas, RLS policies, funções e triggers |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Todas as 36 Edge Functions com descrição e autenticação |
 | [COMPONENTES.md](./COMPONENTES.md) | Todos os componentes, páginas, hooks e libs |
 | [AUTENTICACAO.md](./AUTENTICACAO.md) | Sistema de auth, roles, hierarquia, Admin Master e segurança |
 | [PAGAMENTOS.md](./PAGAMENTOS.md) | Gateways de pagamento, PIX, webhooks |
