@@ -565,6 +565,58 @@ async function postNotificationToChat(notification: any) {
   }
 }
 
+async function postToNewsChannel(botToken: string, notification: any) {
+  try {
+    const { data: channelConfig } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'telegramNewsChannel')
+      .maybeSingle();
+
+    const channelId = channelConfig?.value?.trim();
+    if (!channelId) return;
+
+    const message = `📢 <b>${notification.title}</b>\n\n${notification.message}`;
+    const hasImage = notification.image_url && notification.image_url.trim().length > 0;
+    const rawButtons = Array.isArray(notification.buttons) ? notification.buttons : [];
+    const buttons = rawButtons.filter((btn: any) => btn && (btn.text || btn.label) && btn.url);
+
+    let replyMarkup = undefined;
+    if (buttons.length > 0) {
+      replyMarkup = {
+        inline_keyboard: [buttons.map((btn: any) => {
+          const b: Record<string, any> = { text: btn.text || btn.label, url: btn.url };
+          if (btn.style && btn.style !== 'primary') b.style = btn.style;
+          return b;
+        })]
+      };
+    }
+
+    const url = hasImage
+      ? `https://api.telegram.org/bot${botToken}/sendPhoto`
+      : `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    const body = hasImage
+      ? { chat_id: channelId, photo: notification.image_url, caption: message, parse_mode: 'HTML', ...(replyMarkup && { reply_markup: replyMarkup }) }
+      : { chat_id: channelId, text: message, parse_mode: 'HTML', disable_web_page_preview: true, ...(replyMarkup && { reply_markup: replyMarkup }) };
+
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const result = await resp.json();
+    if (result.ok) {
+      console.log(`[BROADCAST] Posted to news channel ${channelId}`);
+    } else {
+      console.error(`[BROADCAST] Failed to post to channel ${channelId}:`, result.description);
+    }
+  } catch (err) {
+    console.error('[BROADCAST] News channel post error:', err);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
