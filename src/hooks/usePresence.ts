@@ -165,7 +165,7 @@ export function useUserPresence(userId: string | undefined) {
 
     // Fetch last_seen_at initially
     supabase
-      .from("profiles")
+      .from("profiles_public")
       .select("last_seen_at")
       .eq("id", userId)
       .maybeSingle()
