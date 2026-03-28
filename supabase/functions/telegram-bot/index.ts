@@ -662,12 +662,6 @@ async function executeTelegramBroadcast(
     return;
   }
 
-  if (usersError || !users?.length) {
-    await sendMessage(token, adminChatId,
-      `❌ ${usersError ? "Erro ao buscar usuários." : "Nenhum usuário encontrado para o filtro."}`
-    );
-    return;
-  }
 
   const total = users.length;
 
