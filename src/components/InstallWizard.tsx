@@ -180,90 +180,41 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   };
 
   /* ─── Renders ─── */
-  const rocketCanvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = rocketCanvasRef.current;
-    if (!canvas || step !== "welcome") return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const particles: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; size: number; color: string }[] = [];
-    let animId: number;
-
-    const colors = ["#f97316", "#eab308", "#ef4444", "#fb923c", "#fbbf24", "#fde047"];
-
-    // Rocket is rotated -45deg, so exhaust goes toward bottom-right
-    // Canvas center = 60,60 (120x120), rocket center is there
-    // Exhaust origin: bottom-right of the rocket tail
-    const exhaustX = 72;
-    const exhaustY = 72;
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Spawn 2-4 particles per frame from the tail
-      const count = 2 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < count; i++) {
-        const angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.8; // ~45deg spread
-        const speed = 1.5 + Math.random() * 2.5;
-        particles.push({
-          x: exhaustX + (Math.random() - 0.5) * 6,
-          y: exhaustY + (Math.random() - 0.5) * 6,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: 0,
-          maxLife: 12 + Math.random() * 18,
-          size: 1.5 + Math.random() * 3.5,
-          color: colors[Math.floor(Math.random() * colors.length)],
-        });
-      }
-
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vx *= 0.97;
-        p.vy *= 0.97;
-        p.life++;
-        const alpha = 1 - p.life / p.maxLife;
-        if (alpha <= 0) { particles.splice(i, 1); continue; }
-        ctx.globalAlpha = alpha * 0.85;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * (0.3 + alpha * 0.7), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-
-      // Inner glow at exhaust point
-      const grd = ctx.createRadialGradient(exhaustX, exhaustY, 0, exhaustX, exhaustY, 10);
-      grd.addColorStop(0, "rgba(251,191,36,0.4)");
-      grd.addColorStop(1, "rgba(251,191,36,0)");
-      ctx.fillStyle = grd;
-      ctx.beginPath();
-      ctx.arc(exhaustX, exhaustY, 10, 0, Math.PI * 2);
-      ctx.fill();
-
-      animId = requestAnimationFrame(animate);
-    };
-
-    animate();
-    return () => cancelAnimationFrame(animId);
-  }, [step]);
-
   const renderWelcome = () => (
     <div className="space-y-6 text-center">
-      <div className="w-[120px] h-[120px] relative mx-auto">
-        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center absolute top-2 left-1/2 -translate-x-1/2 z-10">
-          <Rocket className="w-10 h-10 text-primary -rotate-45" />
+      <style>{`
+        @keyframes rocket-float {
+          0%, 100% { transform: rotate(-35deg) translateY(0px); }
+          50% { transform: rotate(-35deg) translateY(-6px); }
+        }
+        @keyframes flame-flicker {
+          0%, 100% { opacity: 0.9; transform: scaleY(1) scaleX(1); }
+          25% { opacity: 1; transform: scaleY(1.3) scaleX(0.8); }
+          50% { opacity: 0.7; transform: scaleY(0.9) scaleX(1.1); }
+          75% { opacity: 1; transform: scaleY(1.2) scaleX(0.9); }
+        }
+        .rocket-container { animation: rocket-float 2.5s ease-in-out infinite; }
+        .rocket-flame { animation: flame-flicker 0.4s ease-in-out infinite; transform-origin: top center; }
+      `}</style>
+      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
+        <div className="rocket-container relative">
+          {/* Custom rocket SVG with animated flame tail */}
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Rocket body - same as Lucide but without the bottom flame */}
+            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Animated flame at the tail */}
+            <g className="rocket-flame">
+              <ellipse cx="3.8" cy="20.2" rx="2.2" ry="3.5" transform="rotate(-45 3.8 20.2)" fill="#f97316" opacity="0.9"/>
+              <ellipse cx="3.8" cy="20.2" rx="1.4" ry="2.5" transform="rotate(-45 3.8 20.2)" fill="#fbbf24" opacity="0.95"/>
+              <ellipse cx="3.8" cy="20.2" rx="0.7" ry="1.5" transform="rotate(-45 3.8 20.2)" fill="#fef3c7"/>
+            </g>
+            {/* Window */}
+            <circle cx="15" cy="9" r="1" fill="hsl(var(--primary))"/>
+          </svg>
         </div>
-        <canvas
-          ref={rocketCanvasRef}
-          width={120}
-          height={120}
-          className="absolute inset-0 z-20 pointer-events-none"
-        />
       </div>
       <h1 className="text-2xl font-bold text-foreground">Instalação do Sistema</h1>
       <p className="text-muted-foreground text-sm max-w-sm mx-auto">
