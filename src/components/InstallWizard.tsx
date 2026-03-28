@@ -37,7 +37,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     adminPassword: "",
     adminName: "",
     licenseKey: "",
-    masterUrl: "",
+    masterUrl: "", // kept for type compat but always uses default
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
