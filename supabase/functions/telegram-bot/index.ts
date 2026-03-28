@@ -771,6 +771,16 @@ serve(async (req) => {
           return;
         }
 
+        // Broadcast message flow — admin sends content to broadcast
+        if (!isCommand && session?.step === "awaiting_broadcast_message") {
+          const isAdmin = await isAdminUser(supabase, telegramId);
+          if (isAdmin) {
+            await clearSession(supabase, chatIdStr);
+            await executeTelegramBroadcast(supabase, BOT_TOKEN, chatId, message, session.data?.filter || "all");
+            return;
+          }
+        }
+
         if (text === "/saldo") {
           await handleSaldo(supabase, BOT_TOKEN, chatId, linkedUser);
         } else if (text === "/recargas" || text === "/historico") {
