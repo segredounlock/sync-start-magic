@@ -281,6 +281,24 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
                     type="url"
                     className="w-full px-3 py-2 rounded-lg glass-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Cor:</span>
+                    {BUTTON_STYLES.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => {
+                          const nb = [...formData.buttons];
+                          nb[index].style = s.value;
+                          setFormData({ ...formData, buttons: nb });
+                        }}
+                        className={`w-6 h-6 rounded-full ${s.color} border-2 transition-all ${
+                          (button.style || 'primary') === s.value ? 'border-foreground scale-110' : 'border-transparent opacity-60 hover:opacity-100'
+                        }`}
+                        title={s.label}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <button type="button" onClick={() => handleRemoveButton(index)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
                   <Trash2 className="w-4 h-4" />
