@@ -1,54 +1,65 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Clock, XCircle, Smartphone } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Smartphone, Sparkles } from "lucide-react";
 import { formatTimeBR } from "@/lib/timezone";
 
-interface TickerRecarga {
+interface TickerItem {
   id: string;
-  telefone: string;
-  operadora: string | null;
+  type: "recarga" | "scratch";
+  // recarga fields
+  telefone?: string;
+  operadora?: string | null;
   valor: number;
-  status: string;
+  status?: string;
   created_at: string;
-  user_id: string;
+  user_id?: string;
   userName?: string;
+  // scratch fields
+  nome?: string;
 }
 
-async function fetchAllRecargas(): Promise<TickerRecarga[]> {
+async function fetchAllRecargas(): Promise<TickerItem[]> {
   const { data, error } = await supabase.rpc("get_ticker_recargas");
   if (error) {
     console.error("Ticker fetch error:", error.message);
     return [];
   }
-  return (data || []) as TickerRecarga[];
+  return (data || []).map((r: any) => ({ ...r, type: "recarga" as const }));
+}
+
+async function fetchScratchWinners(): Promise<TickerItem[]> {
+  const { data, error } = await supabase.rpc("get_scratch_recent_winners");
+  if (error) return [];
+  return (data || []).map((w: any, i: number) => ({
+    id: `scratch-${i}-${w.card_date}`,
+    type: "scratch" as const,
+    nome: w.nome,
+    valor: Number(w.prize_amount),
+    created_at: w.card_date,
+    userName: w.nome,
+  }));
 }
 
 export default function RecargasTicker() {
   const navigate = useNavigate();
-  const [recargas, setRecargas] = useState<TickerRecarga[]>([]);
+  const [items, setItems] = useState<TickerItem[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const nameCache = useRef<Map<string, string>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number | null>(null);
   const offsetRef = useRef(0);
   const isPaused = useRef(false);
-  const speedPx = 1.2; // pixels per frame
+  const speedPx = 1.2;
 
-  const fetchRecargas = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     try {
-      const data = await fetchAllRecargas();
+      const [recargas, winners] = await Promise.all([fetchAllRecargas(), fetchScratchWinners()]);
 
-      if (!data || data.length === 0) {
-        setRecargas([]);
-        setInitialLoading(false);
-        return;
-      }
-
-      const userIds = [...new Set(data.map(r => r.user_id))];
+      // Resolve names for recargas
+      const userIds = [...new Set(recargas.filter(r => r.user_id).map(r => r.user_id!))];
       const uncachedIds = userIds.filter(id => !nameCache.current.has(id));
 
-      // Fetch in batches of 50 to avoid too-large IN queries
       for (let i = 0; i < uncachedIds.length; i += 50) {
         const batch = uncachedIds.slice(i, i + 50);
         const { data: profiles } = await supabase
@@ -58,30 +69,47 @@ export default function RecargasTicker() {
         (profiles || []).forEach(p => { if (p.id) nameCache.current.set(p.id, p.nome || "Usuário"); });
       }
 
-      setRecargas(data.map(r => ({
+      const recargasWithNames = recargas.map(r => ({
         ...r,
-        userName: nameCache.current.get(r.user_id) || "Usuário",
-      })));
+        userName: nameCache.current.get(r.user_id!) || "Usuário",
+      }));
+
+      // Intercale winners entre as recargas (a cada ~15 itens)
+      const merged: TickerItem[] = [];
+      let wi = 0;
+      for (let i = 0; i < recargasWithNames.length; i++) {
+        merged.push(recargasWithNames[i]);
+        if ((i + 1) % 15 === 0 && wi < winners.length) {
+          merged.push(winners[wi++]);
+        }
+      }
+      // Adiciona winners restantes no final
+      while (wi < winners.length) {
+        merged.push(winners[wi++]);
+      }
+
+      setItems(merged);
     } catch {
       // silent
     }
     setInitialLoading(false);
   }, []);
 
-  useEffect(() => { fetchRecargas(); }, [fetchRecargas]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   useEffect(() => {
     const ch = supabase
       .channel("ticker-global")
-      .on("postgres_changes", { event: "*", schema: "public", table: "recargas" }, () => fetchRecargas())
+      .on("postgres_changes", { event: "*", schema: "public", table: "recargas" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "scratch_cards" }, () => fetchAll())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [fetchRecargas]);
+  }, [fetchAll]);
 
   // JS-based smooth infinite scroll
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || recargas.length < 3) return;
+    if (!el || items.length < 3) return;
 
     const animate = () => {
       if (!isPaused.current && el) {
@@ -99,7 +127,7 @@ export default function RecargasTicker() {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [recargas]);
+  }, [items]);
 
   const statusIcon = (s: string) => {
     if (s === "completed" || s === "concluida") return <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />;
@@ -114,7 +142,6 @@ export default function RecargasTicker() {
     if (n.includes("claro")) return "text-red-400";
     if (n.includes("tim")) return "text-blue-400";
     if (n.includes("vivo")) return "text-purple-400";
-    
     return "text-primary";
   };
 
@@ -140,7 +167,7 @@ export default function RecargasTicker() {
     );
   }
 
-  if (recargas.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="bg-card backdrop-blur-md border-b border-border">
         <div className="flex items-center h-8">
@@ -156,21 +183,40 @@ export default function RecargasTicker() {
     );
   }
 
-  const renderItem = (r: TickerRecarga, suffix = "") => (
-    <span key={r.id + suffix} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
-      <button
-        onClick={(e) => { e.stopPropagation(); isPaused.current = false; navigate(`/perfil/${r.user_id}`); }}
-        className="text-xs font-semibold text-primary hover:underline cursor-pointer"
-      >
-        {r.userName} recarregou
-      </button>
-      {statusIcon(r.status)}
-      <span className={`font-semibold text-xs ${opColor(r.operadora)}`}>{(r.operadora || "—").toUpperCase()}</span>
-      <span className="text-xs text-muted-foreground font-mono">{r.telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")}</span>
-      <span className="text-xs font-bold text-foreground">R$ {Number(r.valor).toFixed(2)}</span>
-      <span className="text-[10px] text-muted-foreground">{fmtTime(r.created_at)}</span>
-    </span>
-  );
+  const renderItem = (item: TickerItem, suffix = "") => {
+    if (item.type === "scratch") {
+      return (
+        <span key={item.id + suffix} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 bg-amber-500/15 text-amber-400 rounded-full px-2 py-0.5">
+            <Sparkles className="h-3 w-3 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Raspadinha</span>
+          </span>
+          <span className="text-xs font-semibold text-amber-400">
+            {item.userName}
+          </span>
+          <span className="text-xs text-muted-foreground">ganhou</span>
+          <span className="text-xs font-bold text-amber-300">R$ {Number(item.valor).toFixed(2)}</span>
+          <span className="text-[10px] text-amber-400/60">🎉</span>
+        </span>
+      );
+    }
+
+    return (
+      <span key={item.id + suffix} className="inline-flex items-center gap-1.5 px-3 whitespace-nowrap">
+        <button
+          onClick={(e) => { e.stopPropagation(); isPaused.current = false; navigate(`/perfil/${item.user_id}`); }}
+          className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+        >
+          {item.userName} recarregou
+        </button>
+        {statusIcon(item.status || "")}
+        <span className={`font-semibold text-xs ${opColor(item.operadora || null)}`}>{(item.operadora || "—").toUpperCase()}</span>
+        <span className="text-xs text-muted-foreground font-mono">{(item.telefone || "").replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")}</span>
+        <span className="text-xs font-bold text-foreground">R$ {Number(item.valor).toFixed(2)}</span>
+        <span className="text-[10px] text-muted-foreground">{fmtTime(item.created_at)}</span>
+      </span>
+    );
+  };
 
   return (
     <div
@@ -187,8 +233,8 @@ export default function RecargasTicker() {
         </div>
         <div className="overflow-hidden flex-1">
           <div ref={scrollRef} className="flex items-center will-change-transform" style={{ width: "max-content" }}>
-            {recargas.map(r => renderItem(r))}
-            {recargas.map(r => renderItem(r, "-dup"))}
+            {items.map(r => renderItem(r))}
+            {items.map(r => renderItem(r, "-dup"))}
           </div>
         </div>
       </div>
