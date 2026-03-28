@@ -108,7 +108,7 @@ function LicenseManagerContent() {
     const ok = await confirm("Excluir permanentemente esta licença?", { title: "Excluir Licença", destructive: true });
     if (!ok) return;
 
-    const { error } = await supabase.from("licenses").delete().eq("id", id);
+    const { error } = await (supabase as any).from("licenses").delete().eq("id", id);
     if (error) { toast.error("Erro ao excluir"); return; }
     toast.success("Licença excluída");
     fetchLicenses();
