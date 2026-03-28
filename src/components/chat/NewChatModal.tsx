@@ -59,12 +59,12 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
       if (filter === "all") {
         // Fetch all active profiles except self
         let query = supabase
-          .from("profiles")
-          .select("id, nome, email, avatar_url, verification_badge")
+          .from("profiles_public")
+          .select("id, nome, avatar_url, verification_badge")
           .eq("active", true)
           .neq("id", user.id);
         if (search.trim()) {
-          query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+          query = query.ilike("nome", `%${search}%`);
         }
         const { data } = await query.limit(50);
         // Get roles for these users

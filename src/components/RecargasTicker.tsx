@@ -52,7 +52,7 @@ export default function RecargasTicker() {
       for (let i = 0; i < uncachedIds.length; i += 50) {
         const batch = uncachedIds.slice(i, i + 50);
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("id, nome")
           .in("id", batch);
         (profiles || []).forEach(p => nameCache.current.set(p.id, p.nome || "Usuário"));

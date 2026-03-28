@@ -248,7 +248,7 @@ export default function UserProfile() {
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.following_id);
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("id, nome, avatar_url, slug")
           .in("id", ids);
         setFollowingList((profiles as any) || []);
