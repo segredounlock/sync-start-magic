@@ -63,13 +63,13 @@
 
 ---
 
-## 🧩 Componentes — 68+ arquivos
+## 🧩 Componentes — 76 arquivos
 
-### Core (16)
+### Core (17)
 `AnimatedCheck`, `AnimatedCounter`, `AnimatedIcon`, `AnimatedPage`, `ProtectedRoute`, `MasterOnlyRoute`, `MobileBottomNav`, `FloatingMenuIcon`, `PullToRefresh`, `SplashScreen`, `ThemeToggle`, `Skeleton`, `SeasonalEffects`, `UpdatePrompt`, `ImageCropper`, `TextFormatToolbar`, `InfoCard`
 
-### Admin (18)
-`BackupSection`, `DashboardSection`, `RealtimeDashboard`, `BankDashboard`, `AuditTab`, `BannersManager`, `BroadcastForm`, `BroadcastProgress`, `PollManager`, `AntifraudSection`, `AtualizacoesSection`, `SaquesSection`, `NotificationBell`, `ChatRoomManager`, `NetworkCommissionConfig`, `ResellerFeeConfig`, `SupportAdminSelector`, `MirrorSyncPanel`
+### Admin (19)
+`BackupSection`, `SystemVerification`, `DashboardSection`, `RealtimeDashboard`, `BankDashboard`, `AuditTab`, `BannersManager`, `BroadcastForm`, `BroadcastProgress`, `PollManager`, `AntifraudSection`, `AtualizacoesSection`, `SaquesSection`, `NotificationBell`, `ChatRoomManager`, `NetworkCommissionConfig`, `ResellerFeeConfig`, `SupportAdminSelector`, `MirrorSyncPanel`
 
 ### Revendedor (5)
 `MinhaRede`, `RedesSection`, `MeusPrecos`, `ClientPricingModal`, `ProfileTab`
