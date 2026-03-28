@@ -1,44 +1,49 @@
 
 
-# Garantir que o Sistema de Licença Funcione no Espelho
+# Adicionar Bypass por Dominio Principal no LicenseGate
 
-## Diagnóstico
-O código do `LicenseGate.tsx` já vai pro espelho via sync. Porém, a lógica atual de bypass tem uma falha:
+## O que muda
+O dominio `recargasbrasill.com` (e seus subdomínios) será reconhecido automaticamente como servidor principal e nunca precisará de licença — independente de quem estiver logado.
 
-```
-Se masterAdminId existe E license_key NÃO existe → bypass (assume que é o master)
-```
-
-No espelho, se o `masterAdminId` foi configurado pelo `init-mirror` ou pelo trigger `handle_new_user`, e o `license_key` ainda não foi inserido, o espelho **pula a validação** — ou seja, funciona sem licença.
+## Como funciona hoje
+O bypass atual só funciona se o **usuário logado for o masterAdminId**. Outros usuários no seu servidor principal ainda passam pela validação de licença (que funciona porque não tem `license_key` configurada e o status vira `no_license`).
 
 ## Solução
-
-### 1. Corrigir a lógica de bypass no LicenseGate.tsx
-Mudar a detecção de "sou o master" para algo mais seguro. Em vez de checar apenas se `license_key` não existe, verificar se o **usuário logado É o masterAdminId** do servidor:
+Adicionar uma checagem de domínio **antes** de qualquer validação no `LicenseGate.tsx`:
 
 ```
-Se o user logado === masterAdminId → bypass (é o dono do master)
-Se não tem license_key → bloquear (espelho sem licença)
+Se hostname contém "recargasbrasill.com" → bypass direto (status = "master")
+Senão → segue fluxo normal (masterAdmin check → license check → etc)
 ```
 
-Isso garante que:
-- No SEU servidor: você (masterAdmin) entra sem licença
-- No espelho: mesmo que o primeiro user vire masterAdmin lá, ele precisa de licença porque o LicenseGate vai checar contra o servidor PRINCIPAL
+Isso garante:
+- **recargasbrasill.com** — acesso livre sempre, para todos os usuários
+- **Qualquer outro domínio** (espelhos) — precisa de licença válida
+- O masterAdminId continua funcionando como bypass extra (para caso você acesse de outro domínio)
 
-### 2. Atualizar o init-mirror para NÃO seedar masterAdminId
-O `init-mirror` atualmente pode estar inserindo `masterAdminId` no espelho. Isso confunde o LicenseGate. Devemos garantir que o `init-mirror` **não** insira essa chave, deixando o trigger `handle_new_user` criar o master do espelho.
+## Segurança
+- Esse código **vai para os espelhos** via sync, mas como o espelho roda em outro domínio, a checagem não libera nada para eles
+- O domínio é verificado via `window.location.hostname` que não pode ser falsificado pelo usuário
 
-### 3. Adicionar license_master_url na documentação
-Documentar que o espelho precisa ter:
-- `license_key` em `system_config` (a chave gerada por você)
-- `license_master_url` em `system_config` (URL do seu backend principal)
+## Arquivo alterado
+1. `src/components/LicenseGate.tsx` — adicionar lista de domínios principais e checagem no início do `validate()`
 
-## Arquivos alterados
-1. `src/components/LicenseGate.tsx` — corrigir lógica de bypass
-2. `supabase/functions/init-mirror/index.ts` — verificar seeds
-3. `documentation/MIGRACAO.md` — instruções para configurar licença no espelho
+## Detalhe técnico
+```typescript
+const MASTER_DOMAINS = ["recargasbrasill.com"];
+
+// No início do validate():
+const hostname = window.location.hostname.toLowerCase();
+const isMasterDomain = MASTER_DOMAINS.some(d => 
+  hostname === d || hostname.endsWith(`.${d}`)
+);
+if (isMasterDomain) {
+  setStatus("master");
+  return;
+}
+```
 
 ## Impacto
-- Servidor principal: zero mudança, continua funcionando normalmente
-- Espelhos: passam a ser obrigados a ter licença válida configurada
+- Servidor principal: sempre livre, sem nenhuma validação
+- Espelhos: sem alteração, continuam precisando de licença
 
