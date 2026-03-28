@@ -4722,6 +4722,8 @@ export default function Principal() {
                             </div>
                             <div className="flex items-center justify-between text-[11px] mt-1">
                               <span className="text-muted-foreground">Cobrado: <span className="font-mono font-semibold text-foreground">{fmt(Number(r.custo || 0))}</span></span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] mt-0.5">
                               <span className="text-muted-foreground">API: <span className="font-mono font-semibold text-warning">{fmt(Number(r.custo_api || 0))}</span></span>
                             </div>
                             <div className="flex items-center justify-between mt-1.5">
