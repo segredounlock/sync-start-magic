@@ -45,7 +45,7 @@ function LicenseManagerContent() {
 
   const fetchLicenses = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("licenses")
       .select("*")
       .order("created_at", { ascending: false });
