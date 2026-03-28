@@ -552,11 +552,10 @@ export default function AdminSupport() {
         }).catch((e: any) => console.error("Telegram forward failed:", e));
       }
 
-      setMsgText("");
-      setImageUrl(null);
     } catch (e: any) {
       toast.error(e.message || "Erro ao enviar");
     }
+    sendingRef.current = false;
     setSending(false);
   };
 
