@@ -191,21 +191,30 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     const particles: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; size: number; color: string }[] = [];
     let animId: number;
 
-    const colors = ["#f97316", "#eab308", "#ef4444", "#fb923c", "#fbbf24"];
+    const colors = ["#f97316", "#eab308", "#ef4444", "#fb923c", "#fbbf24", "#fde047"];
+
+    // Rocket is rotated -45deg, so exhaust goes toward bottom-right
+    // Canvas center = 60,60 (120x120), rocket center is there
+    // Exhaust origin: bottom-right of the rocket tail
+    const exhaustX = 72;
+    const exhaustY = 72;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Spawn particles from bottom-right (exhaust area)
-      for (let i = 0; i < 3; i++) {
+      // Spawn 2-4 particles per frame from the tail
+      const count = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.8; // ~45deg spread
+        const speed = 1.5 + Math.random() * 2.5;
         particles.push({
-          x: 62 + Math.random() * 6,
-          y: 68 + Math.random() * 4,
-          vx: 1.5 + Math.random() * 2,
-          vy: 1 + Math.random() * 1.5,
+          x: exhaustX + (Math.random() - 0.5) * 6,
+          y: exhaustY + (Math.random() - 0.5) * 6,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
           life: 0,
-          maxLife: 15 + Math.random() * 15,
-          size: 2 + Math.random() * 4,
+          maxLife: 12 + Math.random() * 18,
+          size: 1.5 + Math.random() * 3.5,
           color: colors[Math.floor(Math.random() * colors.length)],
         });
       }
@@ -214,16 +223,28 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
+        p.vx *= 0.97;
+        p.vy *= 0.97;
         p.life++;
         const alpha = 1 - p.life / p.maxLife;
         if (alpha <= 0) { particles.splice(i, 1); continue; }
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = alpha * 0.85;
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size * (0.3 + alpha * 0.7), 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+
+      // Inner glow at exhaust point
+      const grd = ctx.createRadialGradient(exhaustX, exhaustY, 0, exhaustX, exhaustY, 10);
+      grd.addColorStop(0, "rgba(251,191,36,0.4)");
+      grd.addColorStop(1, "rgba(251,191,36,0)");
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(exhaustX, exhaustY, 10, 0, Math.PI * 2);
+      ctx.fill();
+
       animId = requestAnimationFrame(animate);
     };
 
@@ -233,15 +254,15 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
 
   const renderWelcome = () => (
     <div className="space-y-6 text-center">
-      <div className="w-24 h-24 relative mx-auto">
-        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto absolute top-0 left-1/2 -translate-x-1/2 z-10">
+      <div className="w-[120px] h-[120px] relative mx-auto">
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center absolute top-2 left-1/2 -translate-x-1/2 z-10">
           <Rocket className="w-10 h-10 text-primary -rotate-45" />
         </div>
         <canvas
           ref={rocketCanvasRef}
-          width={96}
-          height={96}
-          className="absolute inset-0 z-0 pointer-events-none"
+          width={120}
+          height={120}
+          className="absolute inset-0 z-20 pointer-events-none"
         />
       </div>
       <h1 className="text-2xl font-bold text-foreground">Instalação do Sistema</h1>
