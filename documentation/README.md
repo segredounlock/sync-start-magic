@@ -23,6 +23,7 @@
 | [STORAGE.md](./STORAGE.md) | Buckets de armazenamento e políticas |
 | [SECRETS.md](./SECRETS.md) | Variáveis de ambiente e secrets necessárias |
 | [MIRROR_SYNC.md](./MIRROR_SYNC.md) | Sistema de espelhamento automático com GitHub Actions |
+| [AUDITORIA.md](./AUDITORIA.md) | Auditoria completa do projeto (módulos, contagens, segurança) |
 
 ---
 
