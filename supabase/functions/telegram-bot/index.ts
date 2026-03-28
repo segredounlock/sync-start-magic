@@ -858,6 +858,47 @@ async function executeTelegramBroadcast(
         }
       }
     }
+
+    // Post to news channel if configured
+    try {
+      const { data: channelConfig } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'telegramNewsChannel')
+        .maybeSingle();
+
+      const channelId = channelConfig?.value?.trim();
+      if (channelId && broadcastText) {
+        // If original message had media, copy it to channel; otherwise send text
+        if (originalMessage.photo || originalMessage.video || originalMessage.document || originalMessage.animation || originalMessage.audio || originalMessage.voice || originalMessage.sticker || originalMessage.video_note) {
+          const copyResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/copyMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: channelId, from_chat_id: adminChatId, message_id: originalMessage.message_id }),
+          });
+          const copyResult = await copyResp.json();
+          if (copyResult.ok) {
+            console.log(`[BROADCAST-TG] Copied to news channel ${channelId}`);
+          } else {
+            console.error(`[BROADCAST-TG] Failed to copy to channel: ${copyResult.description}`);
+          }
+        } else {
+          const sendResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: channelId, text: `📢 ${broadcastText}`, parse_mode: 'HTML', disable_web_page_preview: true }),
+          });
+          const sendResult = await sendResp.json();
+          if (sendResult.ok) {
+            console.log(`[BROADCAST-TG] Sent to news channel ${channelId}`);
+          } else {
+            console.error(`[BROADCAST-TG] Failed to send to channel: ${sendResult.description}`);
+          }
+        }
+      }
+    } catch (channelErr) {
+      console.error('[BROADCAST-TG] News channel error:', channelErr);
+    }
   } catch (err) {
     console.error('[BROADCAST-TG] Failed to sync broadcast:', err);
   }

@@ -5,10 +5,19 @@ import { Loader2, Send, Image, Plus, Trash2, Link, Upload, X, Sparkles, Tag, Zap
 import { fixExternalUrl } from '@/lib/domain';
 import { TextFormatToolbar, renderTelegramHtml } from './TextFormatToolbar';
 
+type ButtonStyle = 'primary' | 'success' | 'danger';
+
 interface BroadcastButton {
   text: string;
   url: string;
+  style?: ButtonStyle;
 }
+
+const BUTTON_STYLES: { value: ButtonStyle; label: string; color: string; preview: string }[] = [
+  { value: 'primary', label: 'Azul', color: 'bg-blue-500', preview: 'bg-blue-500/20 text-blue-400' },
+  { value: 'success', label: 'Verde', color: 'bg-green-500', preview: 'bg-green-500/20 text-green-400' },
+  { value: 'danger', label: 'Vermelho', color: 'bg-red-500', preview: 'bg-red-500/20 text-red-400' },
+];
 
 interface BroadcastFormData {
   title: string;
@@ -272,6 +281,24 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
                     type="url"
                     className="w-full px-3 py-2 rounded-lg glass-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Cor:</span>
+                    {BUTTON_STYLES.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => {
+                          const nb = [...formData.buttons];
+                          nb[index].style = s.value;
+                          setFormData({ ...formData, buttons: nb });
+                        }}
+                        className={`w-6 h-6 rounded-full ${s.color} border-2 transition-all ${
+                          (button.style || 'primary') === s.value ? 'border-foreground scale-110' : 'border-transparent opacity-60 hover:opacity-100'
+                        }`}
+                        title={s.label}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <button type="button" onClick={() => handleRemoveButton(index)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
                   <Trash2 className="w-4 h-4" />
@@ -298,9 +325,12 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
               <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderTelegramHtml(formData.message || 'Sua mensagem aqui...') }} />
               {enableButtons && formData.buttons.filter(b => b.text).length > 0 && (
                 <div className="mt-3 flex gap-2">
-                  {formData.buttons.filter(b => b.text).map((b, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-medium">{b.text}</span>
-                  ))}
+                  {formData.buttons.filter(b => b.text).map((b, i) => {
+                    const styleObj = BUTTON_STYLES.find(s => s.value === (b.style || 'primary'));
+                    return (
+                      <span key={i} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${styleObj?.preview || 'bg-blue-500/20 text-blue-400'}`}>{b.text}</span>
+                    );
+                  })}
                 </div>
               )}
             </div>
