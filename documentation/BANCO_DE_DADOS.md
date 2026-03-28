@@ -1,6 +1,6 @@
 # 🗄️ Banco de Dados — 45 Tabelas + 1 View
 
-> **Última atualização:** 2026-03-27 | **Versão:** v2.4
+> **Última atualização:** 2026-03-28 | **Versão:** v2.5 | **Migrations:** 201+
 
 ## Tabelas Core
 

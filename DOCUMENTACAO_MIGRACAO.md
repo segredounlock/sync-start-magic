@@ -85,7 +85,15 @@ Consulte a pasta `documentation/` para guias completos:
 
 ---
 
-## 🔄 Mudanças Anteriores
+### Cargo `revendedor` Restaurado (v2.4)
+- Usuários sem vínculo de rede recebem automaticamente `revendedor`
+- Trigger `handle_new_user` atualizado para auto-assign
+- Primeiro usuário (admin master) recebe `admin` + `usuario` + `revendedor`
+
+### masterAdminId — Auto-Criação e Verificação (v2.4)
+- O trigger `handle_new_user` cria automaticamente a chave `masterAdminId` quando o primeiro usuário se cadastra
+- Em migrações: verificar se a chave existe após restauração
+- Correção manual: `INSERT INTO system_config (key, value) VALUES ('masterAdminId', 'UUID') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;`
 
 ### Admin Master (v2.3)
 - **Cargo exclusivo** com acesso total e irrevogável ao sistema

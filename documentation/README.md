@@ -51,6 +51,15 @@
 
 ## 🔄 Changelog Recente
 
+### v2.5 (2026-03-28)
+- **Auto-confirm de e-mail ativado** — Novos usuários entram direto sem precisar confirmar e-mail
+- **Confirmação de e-mails pendentes** — Todos os usuários existentes com e-mail não confirmado foram confirmados
+- **Correção duplicação no suporte** — `useRef` adicionado para evitar envio duplicado ao pressionar Enter rápido
+- **Auditoria RLS corrigida** — `user_roles` policy corrigida de `TO public` para `TO authenticated`; `profiles` SELECT restrito a dono + admin + reseller
+- **Raspadinha refatorada** — Chance total reduzida para ~1.6%, distribuição cúbica, proteção contra valores iguais
+- **Backup v3.4** — Versão atualizada, candidateTables e knownOrder completos
+- **201+ migrations** — Contagem atualizada
+
 ### v2.4 (2026-03-27)
 - **Cargo `revendedor` restaurado** — Usuários sem vínculo de rede (`reseller_id = NULL`) recebem automaticamente o cargo `revendedor` ao se cadastrar
   - ~1.085 usuários existentes sem vínculo receberam o cargo via INSERT em massa
