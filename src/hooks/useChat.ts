@@ -697,12 +697,32 @@ export function useChatMessages(conversationId: string | null) {
 
   const deleteMessage = useCallback(async (messageId: string, isAdmin = false) => {
     if (!user) return;
+    const msg = messages.find(m => m.id === messageId);
     if (isAdmin) {
       await supabase.from("chat_messages").update({ is_deleted: true, deleted_by: user.id }).eq("id", messageId);
     } else {
       await supabase.from("chat_messages").update({ is_deleted: true, deleted_by: user.id }).eq("id", messageId).eq("sender_id", user.id);
     }
-  }, [user]);
+
+    // Update conversation preview if this was the last message
+    if (msg?.conversation_id) {
+      const { data: lastMsg } = await supabase
+        .from("chat_messages")
+        .select("content, is_deleted")
+        .eq("conversation_id", msg.conversation_id)
+        .eq("is_deleted", false)
+        .neq("id", messageId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const newPreview = lastMsg?.content?.replace(/<[^>]*>/g, '').slice(0, 100) || "Mensagem apagada";
+      await supabase
+        .from("chat_conversations")
+        .update({ last_message_text: newPreview, updated_at: new Date().toISOString() })
+        .eq("id", msg.conversation_id);
+    }
+  }, [user, messages]);
 
   const editMessage = useCallback(async (messageId: string, newContent: string, isAdmin = false) => {
     if (!user || !newContent.trim()) throw new Error("Mensagem inválida para edição.");
