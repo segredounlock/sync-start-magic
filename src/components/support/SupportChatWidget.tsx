@@ -65,6 +65,7 @@ export function SupportChatWidget({ onClose, onUnreadChange }: Props) {
   const [msgText, setMsgText] = useState("");
   const [sending, setSending] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const sendingRef = useRef(false);
 
   /* ─── Fetch tickets ─── */
   const fetchTickets = useCallback(async () => {
