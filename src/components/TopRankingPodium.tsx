@@ -784,7 +784,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
               <span className="text-[10px] md:text-xs bg-primary/20 text-primary px-1.5 md:px-2 py-0.5 rounded-full font-semibold">Você</span>
             </div>
           </motion.div>
-        )}
+        </div>{/* end content layer */}
       </motion.div>
     </AnimatePresence>
   );
