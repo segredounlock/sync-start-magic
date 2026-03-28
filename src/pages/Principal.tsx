@@ -4742,7 +4742,7 @@ export default function Principal() {
 
                       {/* Desktop table */}
                       <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full">
+                         <table className="w-full">
                           <thead>
                             <tr className="border-b border-border/60 bg-muted/20">
                               <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Data</th>
@@ -4750,7 +4750,10 @@ export default function Principal() {
                               <th className="text-left px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Telefone</th>
                               <th className="text-left px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Operadora</th>
                               <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Valor</th>
-                              <th className="text-center px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Status</th>
+                              <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Cobrado</th>
+                              <th className="text-right px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Custo API</th>
+                              <th className="text-center px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Status</th>
+                              <th className="text-center px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Ação</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4764,7 +4767,23 @@ export default function Principal() {
                                 <td className="px-2 py-2 font-mono text-[12px] text-muted-foreground">{r.telefone}</td>
                                 <td className="px-2 py-2 text-[13px] text-foreground">{(r.operadora || "—").toUpperCase()}</td>
                                 <td className="px-2 py-2 text-right font-mono font-bold text-[13px] tabular-nums text-foreground">{fmt(Number(r.valor))}</td>
-                                <td className="px-3 py-2 text-center">{statusBadge(r.status)}</td>
+                                <td className="px-2 py-2 text-right font-mono font-semibold text-[12px] tabular-nums text-foreground">{fmt(Number(r.custo || 0))}</td>
+                                <td className="px-2 py-2 text-right font-mono font-semibold text-[12px] tabular-nums text-warning">{fmt(Number(r.custo_api || 0))}</td>
+                                <td className="px-2 py-2 text-center">{statusBadge(r.status)}</td>
+                                <td className="px-3 py-2 text-center">
+                                  {(r.status === "completed" || r.status === "concluida") ? (
+                                    <button
+                                      onClick={() => handleRefundRecarga(r)}
+                                      disabled={refundingId === r.id}
+                                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-warning hover:text-warning/80 bg-warning/10 hover:bg-warning/20 px-2 py-1 rounded-md transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                      {refundingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                                      Estornar
+                                    </button>
+                                  ) : r.status === "estornada" ? (
+                                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">Estornada</span>
+                                  ) : <span className="text-[10px] text-muted-foreground">—</span>}
+                                </td>
                               </motion.tr>
                             ))}
                           </tbody>
