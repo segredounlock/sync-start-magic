@@ -984,10 +984,11 @@ export default function BackupSection() {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       {/* Info Card - Backup */}
-      <InfoCard title="Backup & Sincronização" items={[
+      <InfoCard title="Ferramentas do Sistema" items={[
         { icon: Download, iconColor: "text-primary", label: "Exportar", description: "gera um arquivo ZIP com todos os dados do banco e código-fonte." },
         { icon: Upload, iconColor: "text-success", label: "Restaurar", description: "importa um backup anterior para restaurar dados e configurações." },
         { icon: Github, iconColor: "text-warning", label: "GitHub Sync", description: "sincroniza o código-fonte com um repositório GitHub automaticamente." },
+        { icon: Shield, iconColor: "text-emerald-400", label: "Verificar", description: "audita a integridade completa do sistema: tabelas, RLS, funções, pagamentos." },
       ]} />
 
       {/* Header with stats */}

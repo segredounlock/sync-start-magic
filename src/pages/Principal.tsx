@@ -5376,8 +5376,8 @@ export default function Principal() {
            {/* ===== LICENÇAS ===== */}
            {view === "licencas" && <Suspense fallback={<SkeletonCard />}><LicenseManagerLazy /></Suspense>}
 
-           {/* ===== BACKUP ===== */}
-           {view === "backup" && <BackupSection />}
+           {/* ===== FERRAMENTAS ===== */}
+           {view === "ferramentas" && <BackupSection />}
         </main>
       </div>
 
