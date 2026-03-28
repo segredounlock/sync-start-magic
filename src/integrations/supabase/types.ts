@@ -607,6 +607,51 @@ export type Database = {
         }
         Relationships: []
       }
+      licenses: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          expires_at: string
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          last_heartbeat_at: string | null
+          license_key: string
+          max_users: number | null
+          mirror_domain: string | null
+          mirror_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          expires_at: string
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          last_heartbeat_at?: string | null
+          license_key: string
+          max_users?: number | null
+          mirror_domain?: string | null
+          mirror_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          expires_at?: string
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          last_heartbeat_at?: string | null
+          license_key?: string
+          max_users?: number | null
+          mirror_domain?: string | null
+          mirror_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
