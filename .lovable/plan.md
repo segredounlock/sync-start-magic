@@ -1,34 +1,30 @@
 
 
-# Corrigir Problemas de Sincronizacao no Espelho
+# Corrigir Erros de Build do LicenseManager no Espelho
 
 ## Problema
-O espelho recebeu erros de build porque:
-1. `Principal.tsx` importa `LicenseManager` via `lazy()`, mas o sync remove `LicenseManager.tsx` -- resultado: erro de modulo nao encontrado
-2. O Lovable do espelho tentou corrigir sozinho e criou um `LicenseManager` falso, alem de mexer em tipos de outros arquivos (`BannersManager`, `UserRecargasModal`, `AntifraudSection`, etc.)
+O espelho nao tem a tabela `licenses` no banco de dados. Como o `types.ts` e gerado automaticamente a partir do banco, `supabase.from("licenses")` causa erro de TypeScript no espelho porque `"licenses"` nao e um nome de tabela valido nos tipos dele. O Lovable do espelho tentou "corrigir" sozinho e acabou mexendo em `src/types/index.ts`, `UserRecargasModal.tsx`, `RevendedorPainel.tsx` etc., criando mais problemas.
 
 ## Solucao
+Fazer o `LicenseManager.tsx` usar queries "untyped" para a tabela `licenses`, evitando dependencia dos tipos gerados. Trocar:
 
-### Estrategia: Enviar um `LicenseManager.tsx` stub para o espelho
-Em vez de remover `LicenseManager.tsx` no sync, vamos **parar de remove-lo** e fazer com que ele **detecte automaticamente** se esta no servidor principal ou no espelho:
-- No servidor principal (`recargasbrasill.com`): mostra o painel completo de gestao de licencas (comportamento atual)
-- No espelho: mostra mensagem "Este recurso esta disponivel apenas no servidor principal"
+```typescript
+supabase.from("licenses")
+```
 
-Isso elimina o erro de build sem precisar modificar `Principal.tsx` e sem precisar de logica condicional no sync.
+Por:
 
-### Alteracoes
+```typescript
+(supabase as any).from("licenses")
+```
 
-1. **`src/components/LicenseManager.tsx`** -- Adicionar verificacao de dominio no inicio do componente. Se nao for `recargasbrasill.com`, renderizar uma mensagem informativa. Se for, renderizar o painel completo (codigo atual).
+Isso em **3 locais**: `fetchLicenses`, `handleToggle` e `handleDelete`. Com isso, mesmo que o espelho nao tenha a tabela `licenses` nos tipos, o TypeScript nao reclama. E como o componente so renderiza o conteudo no dominio principal, as queries nunca serao executadas no espelho.
 
-2. **`.github/workflows/sync-mirror.yml`** -- Remover a linha `rm -f src/components/LicenseManager.tsx` para que o espelho receba o componente.
-
-3. **`supabase/functions/github-sync/index.ts`** -- Remover `src/components/LicenseManager.tsx` da lista de `protectedPaths`.
-
-A edge function `license-generate/` continua sendo removida do espelho -- mesmo que alguem acesse o `LicenseManager` no espelho, ele nao tera o backend para gerar licencas.
+## Alteracoes
+1. **`src/components/LicenseManager.tsx`** -- Usar `(supabase as any).from("licenses")` nos 3 locais de query
 
 ## Resultado
-- Espelho compila sem erros
-- O componente existe mas e inutil no espelho (sem backend + mensagem informativa)
-- Servidor principal continua funcionando normalmente
-- Nenhuma alteracao em `Principal.tsx`
+- Build compila sem erros tanto no servidor principal quanto no espelho
+- Nenhum outro arquivo precisa ser alterado
+- O espelho do usuario precisara reverter as mudancas que o Lovable de la fez nos tipos/componentes (ou aguardar o proximo sync forcar)
 
