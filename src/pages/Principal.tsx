@@ -263,9 +263,6 @@ export default function Principal() {
       `Devolver ${fmt(custoToRefund)} para o saldo do usuário ${recarga.user_nome || ""}?\n\nTelefone: ${recarga.telefone}\nOperadora: ${(recarga.operadora || "").toUpperCase()}\nValor Recarga: ${fmt(Number(recarga.valor))}`,
       { title: "Estornar recarga?", confirmText: "Estornar" },
     );
-      confirmText: "Estornar",
-      cancelText: "Cancelar",
-    });
     if (!ok) return;
     setRefundingId(recarga.id);
     try {
