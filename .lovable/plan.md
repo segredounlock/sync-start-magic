@@ -1,47 +1,38 @@
 
 
-# Aplicar 3 Correções Seguras de RLS
+# Corrigir Sombra Escura na Coroa do Pódio
 
-## Correções
+## Problema
+Quando o efeito de brilho (stroke animado) passa pela coroa, aparece uma sombra escura/preta momentânea. Isso acontece porque o `drop-shadow` no SVG overlay cria uma sombra baseada no path — e durante a animação do `strokeDashoffset`, o browser renderiza a sombra do stroke visível como uma mancha escura.
 
-### 1. Migration SQL com as 3 correções
+## Correção
+No componente `GoldFloatingCrown` (linha ~110-132 de `TopRankingPodium.tsx`):
 
-**`license_logs`** — trocar `master` (inexistente) por `admin`:
-```sql
-DROP POLICY "Admins can view license logs" ON public.license_logs;
-CREATE POLICY "Admins can view license logs" ON public.license_logs
-FOR SELECT TO authenticated
-USING (has_role(auth.uid(), 'admin'));
+1. **Remover o `drop-shadow` do SVG overlay** — é ele que gera a sombra preta durante a animação do stroke
+2. **Adicionar `stroke="none"` explícito** no ícone `Crown` do Lucide para garantir zero artefato
+3. **Mover o glow dourado** para o container da coroa como `box-shadow`, não como `filter` no SVG
+
+### Alteração no código
+```tsx
+// Crown — forçar sem stroke
+<Crown
+  className="absolute inset-0 w-full h-full text-yellow-400"
+  fill="currentColor"
+  stroke="none"
+  strokeWidth={0}
+/>
+
+// SVG overlay — REMOVER o drop-shadow do filter
+<svg
+  viewBox="0 0 24 24"
+  className="absolute inset-0 w-full h-full pointer-events-none"
+  // sem filter aqui
+>
 ```
 
-**`broadcast-images`** — restringir DELETE a admins:
-```sql
-DROP POLICY IF EXISTS "Authenticated can delete broadcast images" ON storage.objects;
-CREATE POLICY "Admins can delete broadcast images" ON storage.objects
-FOR DELETE TO authenticated
-USING (bucket_id = 'broadcast-images' AND has_role(auth.uid(), 'admin'));
-```
-
-**`receipts`** — restringir DELETE/UPDATE ao dono:
-```sql
-DROP POLICY IF EXISTS "Authenticated users can delete receipts" ON storage.objects;
-CREATE POLICY "Users can delete own receipts" ON storage.objects
-FOR DELETE TO authenticated
-USING (bucket_id = 'receipts' AND (auth.uid())::text = (storage.foldername(name))[1]);
-
-DROP POLICY IF EXISTS "Authenticated users can update receipts" ON storage.objects;
-CREATE POLICY "Users can update own receipts" ON storage.objects
-FOR UPDATE TO authenticated
-USING (bucket_id = 'receipts' AND (auth.uid())::text = (storage.foldername(name))[1]);
-```
-
-### 2. Atualizar `documentation/AUDITORIA.md`
-
-Adicionar seção de correções aplicadas em 2026-03-28 com as 3 correções documentadas.
-
-### Garantias
-- Nenhum componente frontend alterado
-- Nenhuma edge function alterada
-- Nenhum filtro de path do storage alterado
-- Risco de quebra: ZERO nas 3 correções
+## Impacto
+- Apenas visual na coroa do 1º lugar
+- O brilho animado (stroke gradient) continua funcionando
+- A sombra preta desaparece
+- Zero risco de quebra
 
