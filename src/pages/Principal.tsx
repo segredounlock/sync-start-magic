@@ -4701,6 +4701,7 @@ export default function Principal() {
                     if (s === "completed" || s === "concluida") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-success/15 text-success">Concluída</span>;
                     if (s === "pending") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-warning/15 text-warning">Pendente</span>;
                     if (s === "falha") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-destructive/15 text-destructive">Falha</span>;
+                    if (s === "estornada") return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">Estornada</span>;
                     return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">{s}</span>;
                   };
 
