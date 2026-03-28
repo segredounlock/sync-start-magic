@@ -11,12 +11,12 @@ import {
 
 /* ── Data ── */
 const features = [
-  { icon: Zap, title: "Instantânea", desc: "Recarga processada em menos de 3 segundos.", accent: "from-yellow-400 to-orange-500" },
-  { icon: Shield, title: "Blindada", desc: "Criptografia ponta-a-ponta. 100% seguro.", accent: "from-emerald-400 to-cyan-500" },
-  { icon: TrendingUp, title: "Inteligente", desc: "Dashboard com métricas em tempo real.", accent: "from-violet-400 to-purple-500" },
-  { icon: CreditCard, title: "Flexível", desc: "PIX, MercadoPago e mais integrados.", accent: "from-pink-400 to-rose-500" },
-  { icon: Users, title: "Escalável", desc: "Gerencie centenas de revendedores.", accent: "from-blue-400 to-indigo-500" },
-  { icon: Globe, title: "Universal", desc: "Desktop, tablet ou celular.", accent: "from-teal-400 to-green-500" },
+  { emoji: "⚡", title: "Instantânea", desc: "Recarga processada em menos de 3 segundos.", accent: "from-amber-400 to-orange-500" },
+  { emoji: "🛡️", title: "Blindada", desc: "Criptografia ponta-a-ponta. 100% seguro.", accent: "from-emerald-400 to-teal-500" },
+  { emoji: "📊", title: "Inteligente", desc: "Dashboard com métricas em tempo real.", accent: "from-violet-400 to-purple-500" },
+  { emoji: "💳", title: "Flexível", desc: "PIX, MercadoPago e mais integrados.", accent: "from-pink-400 to-rose-500" },
+  { emoji: "👥", title: "Escalável", desc: "Gerencie centenas de revendedores.", accent: "from-blue-400 to-indigo-500" },
+  { emoji: "🌐", title: "Universal", desc: "Desktop, tablet ou celular.", accent: "from-teal-400 to-emerald-500" },
 ];
 
 const operators = ["Vivo", "Claro", "Tim"];
