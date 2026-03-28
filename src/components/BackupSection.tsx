@@ -137,7 +137,7 @@ const SOURCE_PATHS = [
   "documentation/SECRETS.md","documentation/MIRROR_SYNC.md","documentation/AUDITORIA.md",
 ];
 
-type TabKey = "dados" | "github" | "atualizacao";
+type TabKey = "dados" | "github" | "atualizacao" | "verificacao";
 
 export default function BackupSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("dados");
