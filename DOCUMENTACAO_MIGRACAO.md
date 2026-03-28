@@ -15,8 +15,8 @@
 | Frontend | React 18 + TypeScript + Vite 5 |
 | Estilização | Tailwind CSS + shadcn/ui + Framer Motion |
 | Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno — 33 funções |
-| Banco de Dados | PostgreSQL — 45 tabelas com RLS |
+| Edge Functions | Deno — 36 funções |
+| Banco de Dados | PostgreSQL — 47 tabelas com RLS |
 | Pagamentos | Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay |
 | Bot | Telegram Bot API |
 | Armazenamento | Supabase Storage — 8 buckets |
