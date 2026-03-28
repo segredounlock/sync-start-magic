@@ -1,53 +1,75 @@
 
 
-# Pontos que ainda usam `profiles` em vez de `profiles_public`
+# Atualização Completa do Sistema de Backup, Sincronização e Documentação
 
-## Análise
+## Problema Identificado
 
-Classifiquei todos os 25 arquivos que usam `.from("profiles")` em 3 categorias:
+O sistema de backup e a documentação estão desatualizados. Faltam tabelas, componentes, edge functions e arquivos recentes que foram adicionados ao projeto.
 
-### Categoria 1 — Leitura do PRÓPRIO perfil (funciona OK via RLS)
-Estes leem `auth.uid() = id`, então o RLS permite:
-- `ProfileTab.tsx` — lê bio, slug, nome, email, referral_code do próprio user
-- `ChatWindow.tsx` — lê próprio nome/badge
-- `DashboardSection.tsx` — lê próprio referral_code + conta clientes
-- `NotificationsTab.tsx` — atualiza próprio telegram_id
-- `SupportChatWidget.tsx` — lê próprio telegram_id
-- `ClientSupport.tsx` — lê próprio telegram_id
-- `Principal.tsx` (avatar) — lê próprio avatar_url
-- `AdminDashboard.tsx` (avatar) — lê próprio avatar_url
+## O que está faltando
 
-### Categoria 2 — Painéis de ADMIN (funciona OK via RLS de admin)
-Admins têm policy ALL, então funciona:
-- `Principal.tsx` (listagem de revendedores, badges)
-- `AdminDashboard.tsx` (recargas, transações)
-- `AdminSupport.tsx` (perfis de remetentes)
-- `AuditTab.tsx` (perfis de admins)
-- `SaquesSection.tsx` (perfis de saques)
-- `RedesSection.tsx` (perfis de revendedores)
-- `AntifraudSection.tsx` (perfis de fraude)
-- `SupportAdminSelector.tsx` (admins)
-- `RealtimeDashboard.tsx` (admin view)
-- `UserRecargasModal.tsx` (admin modifica badges)
+### 1. Tabelas ausentes nos fallbacks de backup
+- `licenses` e `license_logs` — não estão em `candidateTables` (export) nem em `knownOrder` (restore)
 
-### Categoria 3 — Leitura de OUTROS perfis por usuário COMUM (PROBLEMA)
-Estes falham silenciosamente para não-admins:
+### 2. Arquivos ausentes no SOURCE_PATHS (BackupSection.tsx)
+- `src/components/InstallWizard.tsx`
+- `src/components/LicenseGate.tsx`
+- `src/components/LicenseManager.tsx`
+- `supabase/functions/license-generate/index.ts`
+- `supabase/functions/license-validate/index.ts`
+- `supabase/functions/license-check-server/index.ts`
 
-1. **`src/components/chat/MessageInfoModal.tsx`** — "Visto por" nas mensagens do chat. Busca `nome, avatar_url, verification_badge` de quem leu a mensagem. Usuários comuns não conseguem ver os nomes → aparece vazio ou falha.
+### 3. Documentação desatualizada
+- `documentation/EDGE_FUNCTIONS.md` — diz "33 Funções", são 36
+- `documentation/COMPONENTES.md` — falta InstallWizard, LicenseGate, LicenseManager
+- `documentation/BACKUP.md` — diz "45 tabelas", falta licenses/license_logs (47 tabelas)
+- `DOCUMENTACAO_MIGRACAO.md` — contagens desatualizadas
 
-2. **`src/hooks/useNotifications.ts`** — Nome do remetente nas notificações. Busca `nome, email` de outros usuários para exibir quem gerou a notificação. Usuários comuns veem "Usuário" em vez do nome real.
+---
 
-## Plano de correção
+## Plano de Implementação
 
-### Arquivo 1: `src/components/chat/MessageInfoModal.tsx`
-- Trocar `.from("profiles")` por `.from("profiles_public")`
-- Ajustar select para `id, nome, avatar_url, verification_badge` (campos disponíveis na view)
+### Arquivo 1: `supabase/functions/backup-export/index.ts`
+- Adicionar `licenses` e `license_logs` ao array `candidateTables`
 
-### Arquivo 2: `src/hooks/useNotifications.ts`
-- Trocar `.from("profiles")` por `.from("profiles_public")`
-- Ajustar select para `nome` apenas (email não está na view pública, mas nome é suficiente para exibição)
-- Ajustar fallback: `{ nome: data?.nome || null, email: null }`
+### Arquivo 2: `supabase/functions/backup-restore/index.ts`
+- Adicionar `licenses` e `license_logs` ao array `knownOrder` (antes de `mirror_*`)
+- Adicionar `license_logs` ao `profileFkTables` se necessário (não tem FK para profiles, então não precisa)
 
-### Nenhuma alteração de banco necessária
-A view `profiles_public` já expõe `id, nome, avatar_url, verification_badge` — tudo que esses 2 componentes precisam.
+### Arquivo 3: `src/components/BackupSection.tsx`
+- Adicionar ao SOURCE_PATHS:
+  - `src/components/InstallWizard.tsx`
+  - `src/components/LicenseGate.tsx`
+  - `src/components/LicenseManager.tsx`
+  - `supabase/functions/license-generate/index.ts`
+  - `supabase/functions/license-validate/index.ts`
+  - `supabase/functions/license-check-server/index.ts`
+
+### Arquivo 4: `documentation/EDGE_FUNCTIONS.md`
+- Atualizar título para "36 Funções"
+- Adicionar seção "Funções de Licenciamento" com:
+  - `license-generate` — Gerar licença para espelho
+  - `license-validate` — Validar licença (chamada pelo espelho)
+  - `license-check-server` — Verificação server-side de licença
+
+### Arquivo 5: `documentation/COMPONENTES.md`
+- Adicionar na seção "Segurança":
+  - `InstallWizard.tsx` — Assistente de instalação para espelhos
+  - `LicenseGate.tsx` — Gate de validação de licença
+  - `LicenseManager.tsx` — Gerenciador de licenças (admin master)
+
+### Arquivo 6: `documentation/BACKUP.md`
+- Atualizar contagens: 47 tabelas, 36 Edge Functions, 209+ migrations
+- Adicionar `licenses` e `license_logs` à lista de tabelas
+- Atualizar versão do backup para 3.5
+
+### Arquivo 7: `DOCUMENTACAO_MIGRACAO.md`
+- Atualizar contagens gerais (47 tabelas, 36 edge functions, 209+ migrations)
+- Versão 2.6 com changelog das atualizações de backup
+
+### Detalhes Técnicos
+- Nenhuma migration SQL necessária
+- Nenhuma alteração de RLS
+- Apenas atualização de listas estáticas e documentação
+- O `get_public_tables()` RPC já descobre tabelas dinamicamente, mas os fallbacks precisam estar completos
 
