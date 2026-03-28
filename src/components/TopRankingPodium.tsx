@@ -397,20 +397,35 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
           {/* Corner accents */}
           <div className="absolute top-0 left-0 w-24 h-24" style={{ background: "radial-gradient(circle at top left, rgba(251,191,36,0.06) 0%, transparent 70%)" }} />
           <div className="absolute top-0 right-0 w-24 h-24" style={{ background: "radial-gradient(circle at top right, rgba(251,191,36,0.06) 0%, transparent 70%)" }} />
-          {/* Floating particles */}
-          {[...Array(5)].map((_, i) => (
+
+          {/* Floating emoji particles — coins, trophies, medals, stars */}
+          {["🪙", "🏆", "🥇", "💰", "🥈", "⭐", "🎖️", "🥉", "🪙", "🏅"].map((emoji, i) => (
             <motion.div
-              key={`bg-particle-${i}`}
-              className="absolute w-1 h-1 rounded-full bg-yellow-500/20"
-              style={{ left: `${15 + i * 18}%`, top: `${20 + (i % 3) * 25}%` }}
-              animate={{
-                y: [0, -15, 0],
-                opacity: [0.2, 0.5, 0.2],
-                scale: [0.8, 1.2, 0.8],
+              key={`emoji-particle-${i}`}
+              className="absolute text-[10px] md:text-xs select-none"
+              style={{
+                left: `${5 + i * 9.5}%`,
+                top: `${10 + ((i * 17) % 70)}%`,
+                filter: "grayscale(30%)",
               }}
-              transition={{ duration: 3 + i * 0.5, repeat: Infinity, delay: i * 0.6 }}
-            />
+              animate={{
+                y: [0, -20 - (i % 3) * 8, 0],
+                x: [0, (i % 2 === 0 ? 6 : -6), 0],
+                opacity: [0.04, 0.12, 0.04],
+                rotate: [0, (i % 2 === 0 ? 15 : -15), 0],
+                scale: [0.8, 1.1, 0.8],
+              }}
+              transition={{
+                duration: 4 + i * 0.7,
+                repeat: Infinity,
+                delay: i * 0.8,
+                ease: "easeInOut",
+              }}
+            >
+              {emoji}
+            </motion.div>
           ))}
+
           {/* Subtle horizontal shimmer line */}
           <motion.div
             className="absolute top-1/2 left-0 w-full h-px"
