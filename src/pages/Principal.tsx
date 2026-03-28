@@ -1394,7 +1394,7 @@ export default function Principal() {
     { key: "enquetes", icon: BarChart3, label: "Enquetes", color: "text-accent" },
     { key: "batepapo", icon: Send, label: "Bate-Papo", color: "text-destructive" },
     { key: "suporte", icon: Headphones, label: "Suporte", color: "text-[hsl(30,90%,55%)]", badge: pendingSupportCount },
-    { key: "ferramentas", icon: HardDrive, label: "Ferramentas", color: "text-[hsl(40,80%,55%)]" },
+    { key: "ferramentas", icon: Wrench, label: "Ferramentas", color: "text-[hsl(40,80%,55%)]" },
     { key: "antifraude", icon: Shield, label: "Antifraude", color: "text-destructive" },
     { key: "auditoria", icon: FileText, label: "Auditoria", color: "text-primary" },
     { key: "licencas", icon: KeyRound, label: "Licenças", color: "text-primary" },
