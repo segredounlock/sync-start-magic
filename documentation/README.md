@@ -90,8 +90,8 @@
 - **Animação soft-pulse** — Ícone de celular no ticker Live com animação contínua
 - **URLs dinâmicas** — `src/lib/domain.ts` usa `window.location.origin` (white-label)
 - **Branding dinâmico** — `useSiteName`, `useSiteLogo` leem de `system_config`
-- **33 Edge Functions** — Adicionada `init-mirror`
-- **45 tabelas** — Inclui mirror tables (`mirror_sync_state`, `mirror_file_state`, `mirror_sync_logs`)
+- **36 Edge Functions** — Inclui `init-mirror`, `license-generate`, `license-validate`, `license-check-server`
+- **47 tabelas** — Inclui mirror tables + `licenses` + `license_logs`
 
 ### v2.2 (2026-03-26)
 - **Sistema de espelhamento (Mirror Sync)** — Sincronização automática via GitHub Actions para repo espelho
