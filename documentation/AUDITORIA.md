@@ -350,4 +350,4 @@ Tabelas com publicação `supabase_realtime` ativa:
 
 ---
 
-*Auditoria realizada em 2026-03-28 — Recargas Brasil v2.6*
+*Auditoria realizada em 2026-03-28 — Recargas Brasil v2.7*
