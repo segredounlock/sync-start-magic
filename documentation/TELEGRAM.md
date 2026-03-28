@@ -33,7 +33,7 @@ Página: `TelegramMiniApp.tsx` — Interface web dentro do Telegram
 
 ## Broadcasts
 
-### Fluxo de Envio
+### Via Painel Web (React)
 ```
 1. Admin cria notificação (título, mensagem, imagem, botões)
 2. Clica em "Enviar Broadcast"
@@ -44,11 +44,33 @@ Página: `TelegramMiniApp.tsx` — Interface web dentro do Telegram
 4. Frontend mostra progresso em tempo real
 ```
 
+### Via Bot Telegram (Admin)
+```
+1. Admin envia /broadcast no bot
+2. Seleciona audiência: Todos / Apenas Registrados
+3. Bot salva estado "awaiting_broadcast_message"
+4. Admin envia mídia (foto/vídeo/áudio/GIF/doc) ou texto
+5. Bot detecta estado broadcast ativo
+6. executeTelegramBroadcast() é chamada:
+   a. Mídia → copyMessage (copia original sem re-upload)
+   b. Texto → sendMessage com HTML
+   c. Rate limit: pausa 1.1s a cada 25 mensagens
+   d. Progresso em tempo real via editMessageText
+7. Resumo final com estatísticas (enviados/falhas/bloqueados/tempo)
+```
+
+### Tipos de Mídia Suportados (Bot)
+| Tipo | Método |
+|------|--------|
+| Foto, Vídeo, Áudio, Voz, GIF, Documento, Sticker, Vídeo Circular | `copyMessage` |
+| Texto | `sendMessage` |
+
 ### Tabelas Envolvidas
-- `notifications` — Broadcast criado
-- `broadcast_progress` — Progresso do envio (sent_count, failed_count, speed)
+- `notifications` — Broadcast criado (painel web)
+- `broadcast_progress` — Progresso do envio (painel web)
 - `broadcast_messages` — Cada mensagem individual enviada
 - `telegram_users` — Destinatários
+- `telegram_sessions` — Estado de broadcast do bot
 
 ### Cleanup
 `cleanup-stuck-broadcasts` — Cancela broadcasts travados há >10 minutos
