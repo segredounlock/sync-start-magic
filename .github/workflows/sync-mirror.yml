@@ -23,6 +23,9 @@ jobs:
           git config user.email "sync@bot.com"
           rm -f .env
           rm -f supabase/config.toml
+          # Remover arquivos exclusivos do servidor principal (licenciamento)
+          rm -f src/components/LicenseManager.tsx
+          rm -rf supabase/functions/license-generate/
           git add -A
           git commit -m "chore: prepare mirror sync (remove env-specific files)" --allow-empty
 
