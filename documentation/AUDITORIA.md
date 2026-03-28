@@ -249,7 +249,7 @@ Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay
 
 ---
 
-## 🔄 Funções PostgreSQL — ~38
+## 🔄 Funções PostgreSQL — 39
 
 Funções SECURITY DEFINER para:
 - Roles: `has_role`, `has_verification_badge`
@@ -258,13 +258,32 @@ Funções SECURITY DEFINER para:
 - Ranking: `get_recargas_ranking`, `get_ticker_recargas`
 - Saldo: `increment_saldo`, `claim_transaction`
 - Loja: `get_public_store_by_slug`, `get_public_reseller_pricing`
-- Config: `get_maintenance_mode`, `get_chat_enabled`, `get_seasonal_theme`, `get_notif_config`
-- Social: `get_follow_counts`, `get_user_recargas_count`
+- Config: `get_maintenance_mode`, `get_chat_enabled`, `get_seasonal_theme`, `get_notif_config`, `get_chat_new_conv_filter`, `get_require_referral_code`, `get_sales_tools_enabled`
+- Social: `get_follow_counts`, `get_user_recargas_count`, `get_user_verification_badge`
 - Raspadinha: `get_scratch_top_winners`, `get_scratch_recent_winners`
+- Operadoras: `get_operator_stats`
 - Licença: `is_license_valid`
 - Backup: `get_public_tables`, `export_schema_info`
 - Slugs: `generate_unique_slug`, `generate_referral_code`
 - Outros: `get_deposit_fee_for_user`, `get_user_reseller_id`, `get_user_by_referral_code`, `handle_new_user`, `update_updated_at_column`, `cleanup_old_login_attempts`
+
+---
+
+## ⏱️ Triggers — 20
+
+| Trigger | Tabela | Função |
+|---------|--------|--------|
+| `update_*_updated_at` | 18 tabelas | `update_updated_at_column` |
+| `trg_generate_referral_code` | `profiles` | `generate_referral_code` |
+
+Tabelas com trigger `updated_at`: `bot_settings`, `broadcast_progress`, `chat_conversations`, `chat_messages`, `client_pricing_rules`, `licenses`, `notifications`, `operadoras`, `polls`, `pricing_rules`, `profiles`, `recargas`, `reseller_base_pricing_rules`, `reseller_config`, `reseller_pricing_rules`, `saldos`, `system_config`, `telegram_users`, `transactions`
+
+---
+
+## 📡 Realtime — 20 tabelas
+
+Tabelas com publicação `supabase_realtime` ativa:
+`admin_notifications`, `audit_logs`, `broadcast_progress`, `chat_conversations`, `chat_members`, `chat_message_reads`, `chat_messages`, `chat_reactions`, `license_logs`, `notifications`, `poll_votes`, `polls`, `profiles`, `recargas`, `saldos`, `support_messages`, `support_tickets`, `telegram_users`, `transactions`, `user_roles`
 
 ---
 
