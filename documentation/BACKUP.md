@@ -2,10 +2,10 @@
 
 ## Visão Geral
 
-O sistema de backup (v3.4) cobre 4 áreas:
-1. **Banco de dados** — Todas as 45 tabelas do schema `public`
+O sistema de backup (v3.5) cobre 4 áreas:
+1. **Banco de dados** — Todas as 47 tabelas do schema `public`
 2. **Autenticação** — Todos os usuários de `auth.users` com senhas criptografadas
-3. **Código fonte** — Todos os 204+ arquivos do projeto
+3. **Código fonte** — Todos os 210+ arquivos do projeto
 4. **GitHub Sync** — Sincronização com repositório GitHub
 
 ## Backup de Dados (Export)
@@ -52,7 +52,9 @@ backup-YYYY-MM-DD.zip
 │   ├── mirror_sync_state.json
 │   ├── mirror_file_state.json
 │   ├── mirror_sync_logs.json
-│   ├── ... (45 tabelas)
+│   ├── licenses.json
+│   ├── license_logs.json
+│   ├── ... (47 tabelas)
 │   └── update_history.json
 ├── schema/ (opcional)
 │   ├── functions.sql       # Todas as funções SQL (~38 funções)
@@ -181,7 +183,7 @@ O `sourceHashPlugin` no `vite.config.ts` calcula SHA-256 de cada arquivo fonte, 
 
 O sistema de [espelhamento automático](./MIRROR_SYNC.md) via GitHub Actions mantém uma cópia atualizada do código-fonte no repositório espelho (`sync-start-magic`). Isso funciona como um **backup em tempo real** do código:
 
-- ✅ Cada push no `main` é automaticamente espelhado
+- ✅ Cada push no `main` é automaticamente espelhado (36 Edge Functions)
 - ✅ O espelho tem seu próprio backend independente
 - ✅ Código pode ser restaurado a partir do espelho se necessário
 - ⚠️ Apenas código é espelhado — dados do banco e storage **não** são sincronizados
@@ -191,4 +193,4 @@ O sistema de [espelhamento automático](./MIRROR_SYNC.md) via GitHub Actions man
 
 Use o `backup-export` no projeto espelho para verificar se o schema está correto:
 - Se a exportação retornar 0 tabelas, o banco está vazio e as migrations precisam ser aplicadas
-- Compare a contagem de tabelas (deve ser 45) com o projeto de origem
+- Compare a contagem de tabelas (deve ser 47) com o projeto de origem

@@ -1,4 +1,4 @@
-# ⚡ Edge Functions — 33 Funções
+# ⚡ Edge Functions — 36 Funções
 
 ## Funções Administrativas
 
@@ -61,6 +61,14 @@
 |--------|-----------|------|
 | `ban-device` | Banir dispositivo por fingerprint | JWT + admin |
 | `check-device` | Verificar se dispositivo está banido | JWT |
+
+## Funções de Licenciamento
+
+| Função | Descrição | Auth |
+|--------|-----------|------|
+| `license-generate` | Gerar licença para espelho | JWT + admin (master) |
+| `license-validate` | Validar licença (chamada pelo espelho) | Public |
+| `license-check-server` | Verificação server-side de licença | Public |
 
 ## Funções de Sistema
 

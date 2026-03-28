@@ -96,12 +96,15 @@
 | `PromoBanner.tsx` | Banner promocional |
 | `SlideBanner.tsx` | Banner deslizante |
 
-### Segurança
+### Segurança e Licenciamento
 | Arquivo | Descrição |
 |---------|-----------|
 | `PinProtection.tsx` | Proteção por PIN (dígitos com efeito blur) |
 | `PasswordStrengthMeter.tsx` | Medidor de força de senha |
 | `VerificationBadge.tsx` | Badge de verificação |
+| `InstallWizard.tsx` | Assistente de instalação para espelhos |
+| `LicenseGate.tsx` | Gate de validação de licença |
+| `LicenseManager.tsx` | Gerenciador de licenças (admin master) |
 
 ### Chat (`src/components/chat/`) — 10 arquivos
 | Arquivo | Descrição |

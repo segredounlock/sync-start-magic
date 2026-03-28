@@ -1,7 +1,7 @@
 # 📦 Documentação Completa — Recargas Brasil v2
 
 > **Última atualização:** 2026-03-28  
-> **Versão:** 2.5  
+> **Versão:** 2.6  
 > **Propósito:** Documentar TUDO necessário para migração, restauração e manutenção do sistema.
 
 > ⚠️ **Este arquivo é um resumo.** A documentação completa e detalhada está na pasta `documentation/`.
@@ -15,8 +15,8 @@
 | Frontend | React 18 + TypeScript + Vite 5 |
 | Estilização | Tailwind CSS + shadcn/ui + Framer Motion |
 | Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno — 33 funções |
-| Banco de Dados | PostgreSQL — 45 tabelas com RLS |
+| Edge Functions | Deno — 36 funções |
+| Banco de Dados | PostgreSQL — 47 tabelas com RLS |
 | Pagamentos | Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay |
 | Bot | Telegram Bot API |
 | Armazenamento | Supabase Storage — 8 buckets |
@@ -33,8 +33,8 @@ Consulte a pasta `documentation/` para guias completos:
 |-----------|-----------|
 | [README.md](documentation/README.md) | Índice geral e changelog |
 | [ARQUITETURA.md](documentation/ARQUITETURA.md) | Arquitetura, estrutura de pastas, fluxos |
-| [BANCO_DE_DADOS.md](documentation/BANCO_DE_DADOS.md) | 45 tabelas, ~38 funções, triggers, RLS |
-| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 33 Edge Functions |
+| [BANCO_DE_DADOS.md](documentation/BANCO_DE_DADOS.md) | 47 tabelas, ~38 funções, triggers, RLS |
+| [EDGE_FUNCTIONS.md](documentation/EDGE_FUNCTIONS.md) | 36 Edge Functions |
 | [COMPONENTES.md](documentation/COMPONENTES.md) | Componentes, páginas, hooks, libs |
 | [AUTENTICACAO.md](documentation/AUTENTICACAO.md) | Auth, roles, Admin Master, segurança, migração de senhas |
 | [PAGAMENTOS.md](documentation/PAGAMENTOS.md) | Gateways PIX, taxas, webhooks |
