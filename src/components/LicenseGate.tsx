@@ -49,28 +49,23 @@ export function LicenseGate({ children }: { children: ReactNode }) {
 
     const validate = async () => {
       try {
-        // 1. Check if this is the master server
+        // 1. Check if the LOGGED-IN user is the masterAdmin
+        // This is more secure than checking if license_key is absent
+        const { data: { user } } = await supabase.auth.getUser();
+        
         const { data: masterConfig } = await supabase
           .from("system_config")
           .select("value")
           .eq("key", "masterAdminId")
           .maybeSingle();
 
-        // If masterAdminId exists AND we have the license-generate function available,
-        // this is the master server — bypass validation
-        if (masterConfig?.value) {
-          // Check if license_key is NOT set — means this is the master (it doesn't need a license)
-          const { data: licenseConfig } = await supabase
-            .from("system_config")
-            .select("value")
-            .eq("key", "license_key")
-            .maybeSingle();
-
-          if (!licenseConfig?.value) {
-            // No license_key configured = this is the master server
-            if (mounted) setStatus("master");
-            return;
-          }
+        // Only bypass if the CURRENT user is the masterAdmin
+        // On mirrors, even though a masterAdmin exists locally,
+        // they won't match the original server's masterAdmin
+        if (user && masterConfig?.value && user.id === masterConfig.value) {
+          // Current user IS the master admin — bypass license check
+          if (mounted) setStatus("master");
+          return;
         }
 
         // 2. Get the license key from system_config
