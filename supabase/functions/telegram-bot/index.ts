@@ -1587,6 +1587,37 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     return;
   }
 
+  // ===== ADMIN MENU =====
+  if (data === "menu_admin") {
+    const isAdmin = await isAdminUser(supabase, telegramId);
+    if (!isAdmin) {
+      await sendMessage(token, chatId, "❌ Acesso negado.");
+      return;
+    }
+    await editMessageWithKeyboard(token, chatId, msgId,
+      "⚙️ <b>Painel de Administração</b>\n\nEscolha uma opção:",
+      [
+        [{ text: "📢 Enviar Broadcast", callback_data: "admin_broadcast" }],
+        [{ text: "⬅️ Voltar ao Menu Principal", callback_data: "menu_main" }],
+      ]
+    );
+    return;
+  }
+
+  if (data === "admin_broadcast") {
+    const isAdmin = await isAdminUser(supabase, telegramId);
+    if (!isAdmin) return;
+    await editMessageWithKeyboard(token, chatId, msgId,
+      "📢 <b>Broadcast</b>\n\nEscolha o público-alvo:",
+      [
+        [{ text: "📢 Todos os Usuários", callback_data: "broadcast_all" }],
+        [{ text: "✅ Apenas Registrados", callback_data: "broadcast_registered" }],
+        [{ text: "⬅️ Voltar", callback_data: "menu_admin" }],
+      ]
+    );
+    return;
+  }
+
   if (data === "support_talk") {
     // Check if support is enabled
     const { data: supportCfg } = await supabase.from("system_config").select("value").eq("key", "supportEnabled").maybeSingle();
