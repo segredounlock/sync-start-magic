@@ -622,17 +622,45 @@ async function executeTelegramBroadcast(
     : hasVideoNote ? "⏺️ Vídeo circular"
     : "💬 Texto";
 
-  // Fetch users
-  let usersQuery = supabase
-    .from("telegram_users")
-    .select("telegram_id, first_name, is_blocked")
-    .eq("is_blocked", false);
+  // Fetch ALL users with pagination to bypass 1000-row limit
+  const allUsers: any[] = [];
+  const FETCH_PAGE = 1000;
+  let fetchPage = 0;
+  let fetchMore = true;
 
-  if (filter === "registered") {
-    usersQuery = usersQuery.eq("is_registered", true);
+  while (fetchMore) {
+    let usersQuery = supabase
+      .from("telegram_users")
+      .select("telegram_id, first_name, is_blocked")
+      .eq("is_blocked", false)
+      .range(fetchPage * FETCH_PAGE, (fetchPage + 1) * FETCH_PAGE - 1);
+
+    if (filter === "registered") {
+      usersQuery = usersQuery.eq("is_registered", true);
+    }
+
+    const { data: pageData, error: pageError } = await usersQuery;
+
+    if (pageError) {
+      await sendMessage(token, adminChatId, `❌ Erro ao buscar usuários.`);
+      return;
+    }
+
+    if (pageData && pageData.length > 0) {
+      allUsers.push(...pageData);
+      fetchMore = pageData.length === FETCH_PAGE;
+      fetchPage++;
+    } else {
+      fetchMore = false;
+    }
   }
 
-  const { data: users, error: usersError } = await usersQuery;
+  const users = allUsers;
+
+  if (!users.length) {
+    await sendMessage(token, adminChatId, `❌ Nenhum usuário encontrado para o filtro.`);
+    return;
+  }
 
   if (usersError || !users?.length) {
     await sendMessage(token, adminChatId,
