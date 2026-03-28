@@ -978,6 +978,7 @@ export default function BackupSection() {
     { key: "dados", label: "Dados", icon: Database },
     { key: "github", label: "GitHub", icon: Github },
     { key: "atualizacao", label: "Atualização", icon: PackageCheck },
+    { key: "verificacao", label: "Verificar", icon: Shield },
   ];
 
   return (
