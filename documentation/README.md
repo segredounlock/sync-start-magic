@@ -1,7 +1,7 @@
 # 📚 Documentação Completa — Recargas Brasil v2
 
 > **Última atualização:** 2026-03-28  
-> **Versão:** 2.5  
+> **Versão:** 2.6  
 > **Propósito:** Documentação completa do sistema para migração, restauração e manutenção.
 
 ---
@@ -11,8 +11,8 @@
 | Documento | Descrição |
 |-----------|-----------|
 | [ARQUITETURA.md](./ARQUITETURA.md) | Arquitetura geral, stack tecnológico e estrutura de pastas |
-| [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md) | Todas as 45 tabelas, RLS policies, funções e triggers |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Todas as 33 Edge Functions com descrição e autenticação |
+| [BANCO_DE_DADOS.md](./BANCO_DE_DADOS.md) | Todas as 47 tabelas, RLS policies, funções e triggers |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Todas as 36 Edge Functions com descrição e autenticação |
 | [COMPONENTES.md](./COMPONENTES.md) | Todos os componentes, páginas, hooks e libs |
 | [AUTENTICACAO.md](./AUTENTICACAO.md) | Sistema de auth, roles, hierarquia, Admin Master e segurança |
 | [PAGAMENTOS.md](./PAGAMENTOS.md) | Gateways de pagamento, PIX, webhooks |
@@ -23,6 +23,7 @@
 | [STORAGE.md](./STORAGE.md) | Buckets de armazenamento e políticas |
 | [SECRETS.md](./SECRETS.md) | Variáveis de ambiente e secrets necessárias |
 | [MIRROR_SYNC.md](./MIRROR_SYNC.md) | Sistema de espelhamento automático com GitHub Actions |
+| [AUDITORIA.md](./AUDITORIA.md) | Auditoria completa do projeto (módulos, contagens, segurança) |
 
 ---
 
@@ -33,23 +34,26 @@
 | Frontend | React 18 + TypeScript + Vite 5 |
 | Estilização | Tailwind CSS + Framer Motion |
 | Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno (Supabase Edge Functions) — 33 funções |
-| Banco de Dados | PostgreSQL com RLS — 45 tabelas |
+| Edge Functions | Deno (Supabase Edge Functions) — 36 funções |
+| Banco de Dados | PostgreSQL com RLS — 47 tabelas |
 | Pagamentos | Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay |
 | Bot | Telegram Bot API |
 | Armazenamento | Supabase Storage — 8 buckets |
 | PWA | vite-plugin-pwa + Service Worker |
 | Email | Lovable Auth Email Hook + React Email |
 | Espelhamento | GitHub Actions (sync automático para repo espelho) |
-| Migrations | 201+ SQL migrations |
-| Armazenamento | Supabase Storage — 8 buckets |
-| PWA | vite-plugin-pwa + Service Worker |
-| Email | Lovable Auth Email Hook + React Email |
-| Espelhamento | GitHub Actions (sync automático para repo espelho) |
+| Migrations | 209+ SQL migrations |
 
 ---
 
 ## 🔄 Changelog Recente
+
+### v2.6 (2026-03-28)
+- **Auditoria completa do projeto** — Documento `AUDITORIA.md` com inventário de todos os módulos
+- **Backup v3.5** — `licenses` e `license_logs` adicionadas ao export/restore
+- **SOURCE_PATHS atualizado** — `InstallWizard`, `LicenseGate`, `LicenseManager` + 3 edge functions de licenciamento
+- **Documentação atualizada** — 36 Edge Functions, 47 tabelas, 209+ migrations em todos os docs
+- **Componentes de licenciamento documentados** — `InstallWizard`, `LicenseGate`, `LicenseManager`
 
 ### v2.5 (2026-03-28)
 - **Auto-confirm de e-mail ativado** — Novos usuários entram direto sem precisar confirmar e-mail
@@ -86,8 +90,8 @@
 - **Animação soft-pulse** — Ícone de celular no ticker Live com animação contínua
 - **URLs dinâmicas** — `src/lib/domain.ts` usa `window.location.origin` (white-label)
 - **Branding dinâmico** — `useSiteName`, `useSiteLogo` leem de `system_config`
-- **33 Edge Functions** — Adicionada `init-mirror`
-- **45 tabelas** — Inclui mirror tables (`mirror_sync_state`, `mirror_file_state`, `mirror_sync_logs`)
+- **36 Edge Functions** — Inclui `init-mirror`, `license-generate`, `license-validate`, `license-check-server`
+- **47 tabelas** — Inclui mirror tables + `licenses` + `license_logs`
 
 ### v2.2 (2026-03-26)
 - **Sistema de espelhamento (Mirror Sync)** — Sincronização automática via GitHub Actions para repo espelho

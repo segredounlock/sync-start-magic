@@ -134,7 +134,7 @@ const SOURCE_PATHS = [
   "documentation/EDGE_FUNCTIONS.md","documentation/COMPONENTES.md","documentation/AUTENTICACAO.md",
   "documentation/PAGAMENTOS.md","documentation/CHAT.md","documentation/TELEGRAM.md",
   "documentation/BACKUP.md","documentation/MIGRACAO.md","documentation/STORAGE.md",
-  "documentation/SECRETS.md","documentation/MIRROR_SYNC.md",
+  "documentation/SECRETS.md","documentation/MIRROR_SYNC.md","documentation/AUDITORIA.md",
 ];
 
 type TabKey = "dados" | "github" | "atualizacao";
