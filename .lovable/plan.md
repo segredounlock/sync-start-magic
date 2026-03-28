@@ -1,44 +1,50 @@
 
+# Inserir a última mensagem do broadcast do Telegram em Novidades
 
-# Corrigir Sincronização de Broadcasts do Telegram com Novidades
+## O que encontrei
+- A última mensagem do broadcast do Telegram já foi sincronizada para o grupo interno de chat `Atualizações do Sistema`.
+- Ela não foi criada na tabela `notifications`, por isso não apareceu na seção `Novidades`.
+- O schema atual de `notifications` aceita os campos básicos já usados no bot, então o problema não parece ser coluna obrigatória faltando.
+- O fluxo do bot hoje já tenta inserir em `notifications`, mas precisa ficar mais robusto e também permitir corrigir esse caso pendente.
 
-## Problema
-Broadcasts enviados pelo bot do Telegram não estão aparecendo na seção "Novidades". A mensagem "⬇️ AVISO IMPORTANTE ⬇️" sobre instabilidade foi enviada pelo bot mas **não foi inserida na tabela `notifications`**.
+## Plano de correção
+### 1. Corrigir o item que faltou agora
+- Inserir a última mensagem enviada pelo bot na tabela `notifications`.
+- Usar um título limpo baseado na própria mensagem:
+  - `📢 ⬇️ AVISO IMPORTANTE ⬇️`
+- Manter o conteúdo completo da mensagem para aparecer corretamente em `Novidades`.
 
-O código de sincronização (linha 835 do `telegram-bot/index.ts`) já existe, mas o erro é silenciado pelo `catch` na linha 845, então não sabemos o motivo exato da falha.
+### 2. Blindar o sync do `telegram-bot`
+No trecho que sincroniza broadcast para chat + novidades:
+- manter o insert em `notifications`
+- registrar erro detalhado se falhar
+- validar o resultado do insert
+- separar melhor os blocos de erro para que uma falha em `notifications` não masque o restante do fluxo
 
-## Causa provável
-A tabela `notifications` pode ter colunas obrigatórias (como `type` ou `recipient_type`) que não estão sendo preenchidas no insert do bot. Ou a RLS está bloqueando o insert mesmo com service_role (improvável).
+### 3. Evitar duplicação futura
+- Antes de inserir em `notifications`, verificar se já existe uma notificação muito recente com mesmo título/mensagem.
+- Isso evita duplicar avisos quando o bot for reenviado ou reprocessado.
 
-## Correção
+### 4. Preservar compatibilidade
+- Não mexer na `AtualizacoesSection`
+- Não alterar filtros visuais nem realtime do frontend
+- Não mudar RLS nem estrutura da tabela
+- Não tocar nos filtros de storage nem em outras funções
 
-### 1. Verificar schema da tabela notifications
-Conferir quais colunas são obrigatórias e garantir que o insert do bot preenche todas.
+## Resultado esperado
+- A mensagem `⬇️ AVISO IMPORTANTE ⬇️` passa a aparecer em `Novidades`.
+- Próximos broadcasts do Telegram ficam sincronizados com muito menos risco de sumir.
+- Correção com baixo risco, concentrada só no fluxo do bot + backfill do item faltante.
 
-### 2. Atualizar o insert no `telegram-bot/index.ts`
-No bloco de sincronização (linhas 830-841), garantir que todos os campos obrigatórios estão sendo preenchidos. Adicionar campos como `type: 'broadcast'` ou `recipient_type` se necessários.
-
-### 3. Melhorar o log de erro
-Trocar o `catch` genérico por um log mais detalhado que mostre exatamente o erro do Supabase, para facilitar debug futuro.
-
-### Trecho atual (linha 835-841):
-```ts
-await supabase.from('notifications').insert({
-  title: `📢 ${notifTitle}`,
-  message: broadcastText,
-  status: 'sent',
-  sent_count: sent,
-  failed_count: failed,
-});
-```
-
-### O que será adicionado:
-- Campos obrigatórios que possam estar faltando
-- Log detalhado do erro em caso de falha
-- Nenhuma alteração no frontend ou em outras tabelas
-
-## Impacto
-- Apenas a edge function `telegram-bot` será atualizada
-- Zero risco de quebrar funcionalidades existentes
-- Broadcasts futuros pelo bot aparecerão nas Novidades
+## Detalhes técnicos
+- Arquivo principal: `supabase/functions/telegram-bot/index.ts`
+- Dados confirmados:
+  - a mensagem existe em `chat_messages`
+  - ela não existe entre as notificações mais recentes em `notifications`
+- Ajuste recomendado no fluxo:
+  1. extrair texto
+  2. montar título
+  3. checar duplicidade
+  4. inserir notificação
+  5. logar sucesso/erro com contexto suficiente
 
