@@ -1,7 +1,7 @@
 # 📦 Documentação Completa — Recargas Brasil v2
 
 > **Última atualização:** 2026-03-28  
-> **Versão:** 2.5  
+> **Versão:** 2.6  
 > **Propósito:** Documentar TUDO necessário para migração, restauração e manutenção do sistema.
 
 > ⚠️ **Este arquivo é um resumo.** A documentação completa e detalhada está na pasta `documentation/`.
