@@ -800,6 +800,37 @@ async function executeTelegramBroadcast(
   }
 
   console.log(`[BROADCAST-TG] Done: sent=${sent} failed=${failed} blocked=${blocked} time=${totalTime}s`);
+
+  // Sync broadcast to "Atualizações do Sistema" chat group
+  try {
+    const UPDATES_CONVERSATION_ID = '00000000-0000-0000-0000-000000000003';
+    const SYSTEM_ADMIN_ID = 'f5501acc-79f3-460f-bc3e-493280ea84f0';
+
+    // Extract text content from the original message
+    const broadcastText = originalMessage.text || originalMessage.caption || '';
+    if (broadcastText) {
+      const chatContent = `📢 <b>Broadcast via Telegram</b>\n\n${broadcastText}`;
+
+      await supabase.from('chat_messages').insert({
+        conversation_id: UPDATES_CONVERSATION_ID,
+        sender_id: SYSTEM_ADMIN_ID,
+        content: chatContent,
+        type: 'text',
+      });
+
+      // Update conversation preview
+      const previewText = `Admin: 📢 ${broadcastText.replace(/<[^>]*>/g, '').slice(0, 80)}`;
+      await supabase.from('chat_conversations').update({
+        last_message_text: previewText,
+        last_message_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq('id', UPDATES_CONVERSATION_ID);
+
+      console.log('[BROADCAST-TG] Synced to Atualizações do Sistema chat');
+    }
+  } catch (err) {
+    console.error('[BROADCAST-TG] Failed to sync to chat:', err);
+  }
 }
 
 // ===== MAIN HANDLER =====
