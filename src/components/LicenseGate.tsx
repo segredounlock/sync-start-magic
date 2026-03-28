@@ -8,6 +8,8 @@ const HEARTBEAT_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
 
 const MASTER_SERVER_URL = import.meta.env.VITE_SUPABASE_URL;
 
+const MASTER_DOMAINS = ["recargasbrasill.com"];
+
 interface CachedValidation {
   valid: boolean;
   expires_at?: string;
