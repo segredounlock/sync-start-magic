@@ -1311,6 +1311,39 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     return kb;
   };
 
+  // === Broadcast callbacks ===
+  if (data === "broadcast_all" || data === "broadcast_registered") {
+    const isAdmin = await isAdminUser(supabase, telegramId);
+    if (!isAdmin) return;
+    const filter = data === "broadcast_all" ? "all" : "registered";
+    const filterText = filter === "all" ? "todos os usuários" : "apenas registrados";
+    await setSession(supabase, String(chatId), "awaiting_broadcast_message", { filter });
+    await sendMessageWithKeyboard(token, chatId,
+      `📢 <b>BROADCAST</b>\n\n` +
+      `🎯 <b>Público:</b> ${filterText}\n\n` +
+      `📝 Agora envie a mensagem que deseja transmitir.\n\n` +
+      `💡 <b>Você pode enviar:</b>\n` +
+      `• Texto (com formatação HTML)\n` +
+      `• 📷 Foto com legenda\n` +
+      `• 🎬 Vídeo com legenda\n` +
+      `• 🎵 Áudio / Voz\n` +
+      `• 🎞️ GIF animado\n` +
+      `• 📎 Documento\n\n` +
+      `Use /cancelar para cancelar.`,
+      [[{ text: "❌ Cancelar", callback_data: "broadcast_cancel" }]]
+    );
+    return;
+  }
+
+  if (data === "broadcast_cancel") {
+    await clearSession(supabase, String(chatId));
+    await editMessageWithKeyboard(token, chatId, msgId,
+      "❌ Broadcast cancelado.",
+      [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+    );
+    return;
+  }
+
   // === Migration callbacks ===
   if (data === "migration_continue") {
     const chatIdStr = String(chatId);
