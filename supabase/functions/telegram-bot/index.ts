@@ -818,8 +818,9 @@ serve(async (req) => {
           return;
         }
 
-        // Support photo+text: allow messages with photo but no text
-        if (!message?.text && !message?.photo) return;
+        // Allow messages with text, photo, video, audio, voice, animation, document, sticker, video_note
+        const hasAnyContent = message?.text || message?.photo || message?.video || message?.audio || message?.voice || message?.animation || message?.document || message?.sticker || message?.video_note;
+        if (!hasAnyContent) return;
 
         const chatId = message.chat.id;
         const text = (message.text || message.caption || "").trim();
