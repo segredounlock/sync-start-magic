@@ -812,6 +812,26 @@ serve(async (req) => {
               [{ text: "⬅️ Voltar", callback_data: "menu_main" }]
             ]
           );
+        } else if (text === "/broadcast") {
+          const isAdmin = await isAdminUser(supabase, telegramId);
+          if (!isAdmin) {
+            await sendMessage(BOT_TOKEN, chatId, "❌ Apenas administradores podem usar este comando.");
+            return;
+          }
+          await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+            "📢 <b>BROADCAST</b>\n\n🎯 Selecione o público-alvo da mensagem:",
+            [
+              [{ text: "📢 Todos os Usuários", callback_data: "broadcast_all" }],
+              [{ text: "✅ Apenas Registrados", callback_data: "broadcast_registered" }],
+              [{ text: "❌ Cancelar", callback_data: "broadcast_cancel" }],
+            ]
+          );
+        } else if (text === "/cancelar") {
+          clearSession(supabase, chatIdStr);
+          await sendMessageWithKeyboard(BOT_TOKEN, chatId,
+            "❌ Operação cancelada.",
+            [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+          );
         } else if (text === "/ajuda" || text === "/help") {
           await handleAjuda(supabase, BOT_TOKEN, chatId, telegramId);
         } else {
