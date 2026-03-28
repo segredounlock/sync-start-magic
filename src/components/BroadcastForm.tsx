@@ -5,10 +5,19 @@ import { Loader2, Send, Image, Plus, Trash2, Link, Upload, X, Sparkles, Tag, Zap
 import { fixExternalUrl } from '@/lib/domain';
 import { TextFormatToolbar, renderTelegramHtml } from './TextFormatToolbar';
 
+type ButtonStyle = 'primary' | 'success' | 'danger';
+
 interface BroadcastButton {
   text: string;
   url: string;
+  style?: ButtonStyle;
 }
+
+const BUTTON_STYLES: { value: ButtonStyle; label: string; color: string; preview: string }[] = [
+  { value: 'primary', label: 'Azul', color: 'bg-blue-500', preview: 'bg-blue-500/20 text-blue-400' },
+  { value: 'success', label: 'Verde', color: 'bg-green-500', preview: 'bg-green-500/20 text-green-400' },
+  { value: 'danger', label: 'Vermelho', color: 'bg-red-500', preview: 'bg-red-500/20 text-red-400' },
+];
 
 interface BroadcastFormData {
   title: string;
