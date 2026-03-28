@@ -1,52 +1,67 @@
 import { useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, AlertTriangle, KeyRound, Loader2, CheckCircle2, Clock } from "lucide-react";
-import { InstallWizard, createLocalLicenseProof, verifyLocalLicenseProof } from "@/components/InstallWizard";
+import { InstallWizard } from "@/components/InstallWizard";
 
-const CACHE_KEY = "license_validation_cache";
-const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
-const HEARTBEAT_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
+const SESSION_KEY = "license_session";
+const SESSION_DURATION = 60 * 60 * 1000; // 1 hour
+const HEARTBEAT_INTERVAL = 55 * 60 * 1000; // 55 min (revalidate before session expires)
 
 const MASTER_SERVER_URL = import.meta.env.VITE_SUPABASE_URL;
-
 const MASTER_DOMAINS = ["recargasbrasill.com"];
 
-interface CachedValidation {
-  valid: boolean;
-  expires_at?: string;
-  features?: string[];
-  cached_at: number;
+/* ─── Anti-tampering: signed local session ─── */
+interface LocalSession {
+  token: string;
+  expires_at: string; // license expiration
+  session_expires: number; // epoch seconds
+  integrity: string; // HMAC of the above
+  ts: number; // timestamp when saved
 }
 
-function getCache(): CachedValidation | null {
+async function computeIntegrity(data: string): Promise<string> {
+  // Use a browser-derived key that changes per origin
+  const encoder = new TextEncoder();
+  const material = `${window.location.origin}::${navigator.userAgent}::license-gate-v2`;
+  const keyData = await crypto.subtle.digest("SHA-256", encoder.encode(material));
+  const key = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function saveSession(session: Omit<LocalSession, "integrity" | "ts">): Promise<void> {
+  const ts = Date.now();
+  const raw = JSON.stringify({ token: session.token, expires_at: session.expires_at, session_expires: session.session_expires, ts });
+  const integrity = await computeIntegrity(raw);
+  const full: LocalSession = { ...session, integrity, ts };
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify(full)); } catch {}
+}
+
+async function loadSession(): Promise<LocalSession | null> {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
-    const data: CachedValidation = JSON.parse(raw);
-    if (Date.now() - data.cached_at > CACHE_DURATION) {
-      localStorage.removeItem(CACHE_KEY);
+    const session: LocalSession = JSON.parse(raw);
+
+    // Verify integrity
+    const checkRaw = JSON.stringify({ token: session.token, expires_at: session.expires_at, session_expires: session.session_expires, ts: session.ts });
+    const expected = await computeIntegrity(checkRaw);
+    if (expected !== session.integrity) {
+      localStorage.removeItem(SESSION_KEY);
+      return null; // tampered
+    }
+
+    // Check if session expired
+    if (Date.now() / 1000 > session.session_expires) {
+      localStorage.removeItem(SESSION_KEY);
       return null;
     }
-    return data;
+
+    return session;
   } catch {
+    localStorage.removeItem(SESSION_KEY);
     return null;
   }
-}
-
-function setCache(data: CachedValidation) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-  } catch {}
-}
-
-async function callValidation(masterUrl: string, licenseKey: string) {
-  const domain = window.location.hostname;
-  const response = await fetch(`${masterUrl}/functions/v1/license-validate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ license_key: licenseKey, domain }),
-  });
-  return await response.json();
 }
 
 /* ─── License Expiration Countdown ─── */
@@ -58,10 +73,7 @@ function LicenseCountdown({ expiresAt }: { expiresAt: string }) {
       const now = new Date().getTime();
       const exp = new Date(expiresAt).getTime();
       const diff = exp - now;
-      if (diff <= 0) {
-        setTimeLeft("Expirada");
-        return;
-      }
+      if (diff <= 0) { setTimeLeft("Expirada"); return; }
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -79,6 +91,25 @@ function LicenseCountdown({ expiresAt }: { expiresAt: string }) {
       <span className="font-mono font-bold text-foreground">{timeLeft}</span>
     </div>
   );
+}
+
+/* ─── Server-side validation call ─── */
+async function callServerCheck(domain: string): Promise<{
+  valid: boolean;
+  reason?: string;
+  expires_at?: string;
+  session_token?: string;
+  session_expires?: number;
+  features?: string[];
+  code?: string;
+}> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const resp = await fetch(`${supabaseUrl}/functions/v1/license-check-server`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ domain }),
+  });
+  return resp.json();
 }
 
 /* ─── Main Gate ─── */
@@ -107,135 +138,70 @@ export function LicenseGate({ children }: { children: ReactNode }) {
         .eq("key", "install_completed")
         .maybeSingle();
 
-      // Check if there are ANY users (if no users, this is a fresh install)
       const { data: masterConfig } = await supabase
         .from("system_config")
         .select("value")
         .eq("key", "masterAdminId")
         .maybeSingle();
 
-      // If no install completed AND no masterAdmin → fresh install, show wizard
+      // Fresh install → show wizard
       if (!installConfig?.value && !masterConfig?.value) {
         if (mounted.current) setStatus("install");
         return;
       }
 
-      // 2. Check if the LOGGED-IN user is the masterAdmin
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user && masterConfig?.value && user.id === masterConfig.value) {
-        if (mounted.current) setStatus("master");
-        return;
-      }
-
-      // 3. Get license key
-      const { data: keyConfig } = await supabase
-        .from("system_config")
-        .select("value")
-        .eq("key", "license_key")
-        .maybeSingle();
-
-      if (!keyConfig?.value) {
-        // No license configured — if install was done, show activation form
-        // If not, show install wizard
-        if (installConfig?.value === "true") {
-          if (mounted.current) setStatus("no_license");
-        } else {
-          if (mounted.current) setStatus("install");
-        }
-        return;
-      }
-
-      // 4. Verify local crypto proof (prevents moving to another domain)
-      const localProof = localStorage.getItem("license_crypto_proof");
-      if (localProof) {
-        const proofResult = await verifyLocalLicenseProof(localProof);
-        if (proofResult.valid && proofResult.expired) {
-          // Crypto proof says expired — block immediately, don't even call server
-          if (mounted.current) {
-            setStatus("invalid");
-            setReason("Licença expirada. Entre em contato com o administrador do sistema principal.");
-          }
-          return;
-        }
-        if (!proofResult.valid) {
-          // Domain mismatch or tampered — this is a copied system
-          if (mounted.current) {
-            setStatus("invalid");
-            setReason("Licença inválida para este domínio. Esta cópia não é autorizada.");
-          }
-          return;
-        }
-        if (proofResult.expiresAt) {
-          setExpiresAt(proofResult.expiresAt);
-        }
-      }
-
-      // 5. Check cache
-      const cached = getCache();
-      if (cached?.valid) {
+      // 2. Check local session (anti-tampered)
+      const session = await loadSession();
+      if (session) {
+        // Session is valid and not tampered
         if (mounted.current) {
           setStatus("valid");
-          setExpiresAt(cached.expires_at || null);
+          setExpiresAt(session.expires_at);
         }
-        backgroundValidate(mounted, keyConfig.value);
+        // Background revalidation
+        backgroundValidate(mounted);
         return;
       }
 
-      // 6. Get master URL
-      const { data: masterUrlConfig } = await supabase
-        .from("system_config")
-        .select("value")
-        .eq("key", "license_master_url")
-        .maybeSingle();
+      // 3. No valid session → validate server-side
+      const result = await callServerCheck(hostname);
 
-      const masterUrl = masterUrlConfig?.value || MASTER_SERVER_URL;
+      if (!result.valid) {
+        if (result.code === "NO_LICENSE") {
+          if (installConfig?.value === "true") {
+            if (mounted.current) setStatus("no_license");
+          } else {
+            if (mounted.current) setStatus("install");
+          }
+        } else {
+          if (mounted.current) {
+            setStatus("invalid");
+            setReason(result.reason || "Licença inválida");
+          }
+        }
+        return;
+      }
 
-      // 7. Validate against master
-      const result = await callValidation(masterUrl, keyConfig.value);
+      // 4. Valid → save signed session
+      if (result.session_token && result.expires_at && result.session_expires) {
+        await saveSession({
+          token: result.session_token,
+          expires_at: result.expires_at,
+          session_expires: result.session_expires,
+        });
+      }
 
       if (mounted.current) {
-        if (result.valid) {
-          setStatus("valid");
-          setExpiresAt(result.expires_at || null);
-          setCache({ valid: true, expires_at: result.expires_at, features: result.features, cached_at: Date.now() });
-
-          // Update local crypto proof
-          const proof = await createLocalLicenseProof(result.expires_at, keyConfig.value);
-          localStorage.setItem("license_crypto_proof", proof);
-
-          // Update server-side expiration tracking
-          await supabase
-            .from("system_config")
-            .upsert({ key: "license_validated_at", value: new Date().toISOString() }, { onConflict: "key" });
-          await supabase
-            .from("system_config")
-            .upsert({ key: "license_expires_at", value: result.expires_at }, { onConflict: "key" });
-        } else {
-          setStatus("invalid");
-          setReason(result.reason || "Licença inválida");
-          setCache({ valid: false, cached_at: Date.now() });
-        }
+        setStatus("valid");
+        setExpiresAt(result.expires_at || null);
       }
     } catch {
-      // On network error, check local crypto proof as fallback
-      const localProof = localStorage.getItem("license_crypto_proof");
-      if (localProof) {
-        const proofResult = await verifyLocalLicenseProof(localProof);
-        if (proofResult.valid && !proofResult.expired) {
-          if (mounted.current) {
-            setStatus("valid");
-            setExpiresAt(proofResult.expiresAt || null);
-          }
-          return;
-        }
-      }
-
-      const cached = getCache();
-      if (cached?.valid) {
+      // On error, check local session
+      const session = await loadSession();
+      if (session) {
         if (mounted.current) {
           setStatus("valid");
-          setExpiresAt(cached.expires_at || null);
+          setExpiresAt(session.expires_at);
         }
       } else {
         if (mounted.current) {
@@ -246,24 +212,20 @@ export function LicenseGate({ children }: { children: ReactNode }) {
     }
   };
 
-  const backgroundValidate = async (mounted: { current: boolean }, licenseKey: string) => {
+  const backgroundValidate = async (mounted: { current: boolean }) => {
     try {
-      const { data: masterUrlConfig } = await supabase
-        .from("system_config")
-        .select("value")
-        .eq("key", "license_master_url")
-        .maybeSingle();
+      const hostname = window.location.hostname.toLowerCase();
+      const result = await callServerCheck(hostname);
 
-      const masterUrl = masterUrlConfig?.value || MASTER_SERVER_URL;
-      const result = await callValidation(masterUrl, licenseKey);
-
-      if (result.valid) {
-        setCache({ valid: true, expires_at: result.expires_at, features: result.features, cached_at: Date.now() });
-        const proof = await createLocalLicenseProof(result.expires_at, licenseKey);
-        localStorage.setItem("license_crypto_proof", proof);
-      } else {
-        localStorage.removeItem(CACHE_KEY);
-        localStorage.removeItem("license_crypto_proof");
+      if (result.valid && result.session_token && result.expires_at && result.session_expires) {
+        await saveSession({
+          token: result.session_token,
+          expires_at: result.expires_at,
+          session_expires: result.session_expires,
+        });
+        if (mounted.current) setExpiresAt(result.expires_at);
+      } else if (!result.valid) {
+        localStorage.removeItem(SESSION_KEY);
         if (mounted.current) {
           setStatus("invalid");
           setReason(result.reason || "Licença inválida");
@@ -296,20 +258,12 @@ export function LicenseGate({ children }: { children: ReactNode }) {
 
   // ─── Fresh install → show wizard ───
   if (status === "install") {
-    return (
-      <InstallWizard onComplete={() => setStatus("valid")} />
-    );
+    return <InstallWizard onComplete={() => setStatus("valid")} />;
   }
 
   // ─── No license (post-install) → show activation form ───
   if (status === "no_license") {
-    return (
-      <LicenseActivationForm
-        onActivated={() => {
-          setStatus("valid");
-        }}
-      />
-    );
+    return <LicenseActivationForm onActivated={() => { localStorage.removeItem(SESSION_KEY); setStatus("checking"); }} />;
   }
 
   // ─── Invalid / expired ───
@@ -347,7 +301,7 @@ export function LicenseGate({ children }: { children: ReactNode }) {
     );
   }
 
-  // valid or master — render children (with countdown for valid)
+  // valid or master — render children
   return (
     <>
       {children}
@@ -356,7 +310,7 @@ export function LicenseGate({ children }: { children: ReactNode }) {
   );
 }
 
-/* ─── Activation Form (for post-install license changes) ─── */
+/* ─── Activation Form ─── */
 function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
   const [licenseKey, setLicenseKey] = useState("");
   const [masterUrl, setMasterUrl] = useState("");
@@ -373,7 +327,15 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
 
     try {
       const url = masterUrl.trim() || MASTER_SERVER_URL;
-      const result = await callValidation(url, key);
+
+      // Validate against master
+      const domain = window.location.hostname;
+      const response = await fetch(`${url}/functions/v1/license-validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ license_key: key, domain }),
+      });
+      const result = await response.json();
 
       if (!result.valid) {
         setError(result.reason || "Licença inválida. Verifique a chave e tente novamente.");
@@ -381,6 +343,7 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
         return;
       }
 
+      // Save license key
       const { error: e1 } = await supabase
         .from("system_config")
         .upsert({ key: "license_key", value: key }, { onConflict: "key" });
@@ -392,24 +355,13 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
           .upsert({ key: "license_master_url", value: url }, { onConflict: "key" });
       }
 
-      // Create local crypto proof
-      const proof = await createLocalLicenseProof(result.expires_at, key);
-      localStorage.setItem("license_crypto_proof", proof);
-
-      // Update server-side tracking
+      // Update tracking
       await supabase
         .from("system_config")
         .upsert({ key: "license_validated_at", value: new Date().toISOString() }, { onConflict: "key" });
       await supabase
         .from("system_config")
         .upsert({ key: "license_expires_at", value: result.expires_at }, { onConflict: "key" });
-
-      setCache({
-        valid: true,
-        expires_at: result.expires_at,
-        features: result.features,
-        cached_at: Date.now(),
-      });
 
       setSuccess(true);
       setTimeout(() => onActivated(), 1500);

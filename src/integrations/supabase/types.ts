@@ -2080,6 +2080,7 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_license_valid: { Args: never; Returns: boolean }
       sync_chat_conversation_preview: {
         Args: { _conversation_id: string }
         Returns: undefined

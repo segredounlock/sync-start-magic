@@ -20,46 +20,6 @@ interface InstallData {
   masterUrl: string;
 }
 
-/* ─── Internal crypto countdown: signs expiration data locally ─── */
-async function createLocalLicenseProof(expiresAt: string, licenseKey: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const payload = JSON.stringify({
-    exp: expiresAt,
-    lk: licenseKey.slice(-8), // last 8 chars as fingerprint
-    dom: window.location.hostname,
-    iat: new Date().toISOString(),
-  });
-  const data = encoder.encode(payload);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hash));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-  return btoa(JSON.stringify({ p: payload, h: hashHex }));
-}
-
-async function verifyLocalLicenseProof(proof: string): Promise<{ valid: boolean; expired: boolean; expiresAt?: string }> {
-  try {
-    const decoded = JSON.parse(atob(proof));
-    const { p, h } = decoded;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(p);
-    const hash = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hash));
-    const computedHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
-    if (computedHash !== h) return { valid: false, expired: false };
-
-    const payload = JSON.parse(p);
-    // Verify domain matches
-    if (payload.dom !== window.location.hostname) return { valid: false, expired: false };
-    // Check expiration
-    const expDate = new Date(payload.exp);
-    const now = new Date();
-    return { valid: true, expired: now > expDate, expiresAt: payload.exp };
-  } catch {
-    return { valid: false, expired: false };
-  }
-}
-
 async function callValidation(masterUrl: string, licenseKey: string) {
   const domain = window.location.hostname;
   const response = await fetch(`${masterUrl}/functions/v1/license-validate`, {
@@ -169,14 +129,10 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Licença salva!");
       setProgress([...steps]);
 
-      // 4. Create local crypto proof
-      steps.push("Gerando prova criptográfica local...");
+      // 4. Save server-side tracking
+      steps.push("Configurando validação server-side...");
       setProgress([...steps]);
 
-      const proof = await createLocalLicenseProof(licResult.expires_at, data.licenseKey.trim());
-      localStorage.setItem("license_crypto_proof", proof);
-
-      // Also save validated_at and expires_at in system_config for server-side tracking
       await supabase
         .from("system_config")
         .upsert({ key: "license_validated_at", value: new Date().toISOString() }, { onConflict: "key" });
@@ -184,7 +140,13 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         .from("system_config")
         .upsert({ key: "license_expires_at", value: licResult.expires_at }, { onConflict: "key" });
 
-      steps.push("✓ Prova criptográfica gerada!");
+      // Generate install_secret for HMAC session tokens
+      const installSecret = crypto.randomUUID() + "-" + crypto.randomUUID();
+      await supabase
+        .from("system_config")
+        .upsert({ key: "install_secret", value: installSecret }, { onConflict: "key" });
+
+      steps.push("✓ Validação server-side configurada!");
       setProgress([...steps]);
 
       // 5. Mark installation complete
@@ -204,13 +166,9 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Instalação concluída!");
       setProgress([...steps]);
 
-      // Cache license validation
-      localStorage.setItem("license_validation_cache", JSON.stringify({
-        valid: true,
-        expires_at: licResult.expires_at,
-        features: licResult.features,
-        cached_at: Date.now(),
-      }));
+      // Clear any old cache - new system uses server-side sessions
+      localStorage.removeItem("license_validation_cache");
+      localStorage.removeItem("license_crypto_proof");
 
       setStep("done");
     } catch (err: any) {
@@ -509,5 +467,3 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-/* ─── Export crypto verification utilities for LicenseGate ─── */
-export { createLocalLicenseProof, verifyLocalLicenseProof };
