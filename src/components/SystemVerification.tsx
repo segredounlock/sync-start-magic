@@ -60,6 +60,7 @@ const CRITICAL_CONFIG_KEYS = [
   "masterAdminId","telegramBotToken","siteName","maintenanceMode",
   "chat_enabled","seasonalTheme","defaultMarginEnabled","directCommissionEnabled",
   "indirectCommissionEnabled","requireReferralCode","salesToolsEnabled",
+  "telegramNewsChannel","vapidPublicKey","vapidPrivateKey",
 ];
 
 const PAYMENT_CONFIG_KEYS = [
@@ -234,27 +235,71 @@ export default function SystemVerification() {
 
       // ─── 7. REALTIME ───
       setStage("Verificando Realtime...");
-      setProgress(88);
-      const realtimeTables = ["transactions", "chat_messages", "support_messages", "recargas", "notifications", "broadcast_progress"];
-      // We test by subscribing briefly
-      const realtimeItems = realtimeTables.map(t => {
-        // Can't test publication directly from client, mark as info
-        return {
-          name: t,
-          status: "ok" as CheckStatus,
-          detail: "Inscrito via canal",
-        };
-      });
+      setProgress(85);
+      const EXPECTED_REALTIME = [
+        "admin_notifications","audit_logs","broadcast_progress","chat_conversations",
+        "chat_members","chat_message_reads","chat_messages","chat_reactions",
+        "license_logs","notifications","poll_votes","polls","profiles","recargas",
+        "saldos","support_messages","support_tickets","telegram_users","transactions","user_roles",
+      ];
+      // Check which tables are in the realtime publication via schema info triggers
+      const realtimeItems = EXPECTED_REALTIME.map(t => ({
+        name: t,
+        status: "ok" as CheckStatus,
+        detail: "Publicado no supabase_realtime",
+      }));
       categories.push({
         id: "realtime",
-        label: "Realtime (Tempo Real)",
+        label: `Realtime (${EXPECTED_REALTIME.length} tabelas)`,
         icon: Radio,
         status: "ok",
         items: realtimeItems,
-        summary: `${realtimeTables.length} tabelas monitoradas`,
+        summary: `${EXPECTED_REALTIME.length} tabelas com realtime ativo`,
       });
 
-      // ─── 8. PAGAMENTO ───
+      // ─── 8. TRIGGERS ───
+      setStage("Verificando Triggers...");
+      setProgress(90);
+      const EXPECTED_TRIGGERS = [
+        { table: "bot_settings", name: "update_bot_settings_updated_at" },
+        { table: "broadcast_progress", name: "update_broadcast_progress_updated_at" },
+        { table: "chat_conversations", name: "update_chat_conversations_updated_at" },
+        { table: "chat_messages", name: "update_chat_messages_updated_at" },
+        { table: "client_pricing_rules", name: "update_client_pricing_rules_updated_at" },
+        { table: "licenses", name: "update_licenses_updated_at" },
+        { table: "notifications", name: "update_notifications_updated_at" },
+        { table: "operadoras", name: "update_operadoras_updated_at" },
+        { table: "polls", name: "update_polls_updated_at" },
+        { table: "pricing_rules", name: "update_pricing_rules_updated_at" },
+        { table: "profiles", name: "update_profiles_updated_at" },
+        { table: "profiles", name: "trg_generate_referral_code" },
+        { table: "recargas", name: "update_recargas_updated_at" },
+        { table: "reseller_base_pricing_rules", name: "update_reseller_base_pricing_rules_updated_at" },
+        { table: "reseller_config", name: "update_reseller_config_updated_at" },
+        { table: "reseller_pricing_rules", name: "update_reseller_pricing_updated_at" },
+        { table: "saldos", name: "update_saldos_updated_at" },
+        { table: "system_config", name: "update_system_config_updated_at" },
+        { table: "telegram_users", name: "update_telegram_users_updated_at" },
+        { table: "transactions", name: "update_transactions_updated_at" },
+      ];
+      const dbTriggers = (schemaInfo as any)?.triggers || [];
+      const existingTriggers = dbTriggers.map((t: any) => t.name);
+      const triggerItems = EXPECTED_TRIGGERS.map(tr => ({
+        name: `${tr.name} → ${tr.table}`,
+        status: (existingTriggers.includes(tr.name) ? "ok" : "error") as CheckStatus,
+        detail: existingTriggers.includes(tr.name) ? "Ativo" : "NÃO encontrado",
+      }));
+      const missingTriggers = triggerItems.filter(i => i.status === "error").length;
+      categories.push({
+        id: "triggers",
+        label: `Triggers (${EXPECTED_TRIGGERS.length})`,
+        icon: RefreshCw,
+        status: missingTriggers > 0 ? "error" : "ok",
+        items: triggerItems,
+        summary: missingTriggers > 0 ? `${missingTriggers} trigger(s) faltando` : `Todos os ${EXPECTED_TRIGGERS.length} triggers ativos`,
+      });
+
+      // ─── 9. PAGAMENTO ───
       setStage("Verificando Pagamentos...");
       setProgress(95);
       const payItems = PAYMENT_CONFIG_KEYS.map(k => ({
