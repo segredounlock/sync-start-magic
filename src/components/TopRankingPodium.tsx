@@ -564,8 +564,8 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
                   animate={revealed ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: delay + 0.3, duration: 0.3 }}
                 >
-                  <p className={`flex items-center justify-center gap-1 font-semibold ${isCenter ? "max-w-full text-sm md:text-base text-foreground" : "max-w-full text-xs md:text-sm text-muted-foreground"}`} title={user.nome}>
-                    <span className="truncate">{isCenter ? user.nome : (user.nome?.length > 12 ? user.nome.slice(0, 12) + "…" : user.nome)}</span>
+                  <p className={`flex items-center justify-center gap-1 font-semibold ${isCenter ? "max-w-full text-sm lg:text-base text-foreground" : "max-w-full text-xs lg:text-sm text-muted-foreground"}`} title={user.nome}>
+                    <span className="truncate">{isCenter ? user.nome : (user.nome?.length > 8 ? user.nome.slice(0, 8) + "…" : user.nome)}</span>
                     {user.verification_badge && <VerificationBadge badge={user.verification_badge as BadgeType} size="xs" />}
                   </p>
                   <span className={`text-xs ${isCenter ? "text-yellow-500 font-bold" : "text-muted-foreground"}`}>
