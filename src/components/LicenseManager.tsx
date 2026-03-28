@@ -262,7 +262,7 @@ function LicenseManagerContent() {
                       {lic.mirror_domain && (
                         <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{lic.mirror_domain}</span>
                       )}
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" />Máx {lic.max_users}</span>
+                      
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Exp: {new Date(lic.expires_at).toLocaleDateString("pt-BR")}</span>
                       <span className={`flex items-center gap-1 ${heartbeat.color}`}>
                         {heartbeat.label === "Online" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
