@@ -2063,6 +2063,12 @@ export default function BackupSection() {
             </motion.div>
           </motion.div>
         )}
+
+        {activeTab === "verificacao" && (
+          <motion.div key="verificacao" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="space-y-4">
+            <SystemVerification />
+          </motion.div>
+        )}
       </AnimatePresence>
     </motion.div>
   );
