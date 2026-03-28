@@ -151,6 +151,8 @@
 - [ ] Testar GitHub sync
 - [ ] Testar raspadinha
 - [ ] Testar suporte
+- [ ] Verificar auto-confirm de e-mail está ativo
+- [ ] Confirmar correções RLS aplicadas (user_roles `TO authenticated`, profiles restritiva)
 
 ## 8. Limitações Conhecidas
 

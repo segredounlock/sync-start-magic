@@ -1,7 +1,7 @@
 # 📚 Documentação Completa — Recargas Brasil v2
 
-> **Última atualização:** 2026-03-27  
-> **Versão:** 2.4  
+> **Última atualização:** 2026-03-28  
+> **Versão:** 2.5  
 > **Propósito:** Documentação completa do sistema para migração, restauração e manutenção.
 
 ---
@@ -41,10 +41,24 @@
 | PWA | vite-plugin-pwa + Service Worker |
 | Email | Lovable Auth Email Hook + React Email |
 | Espelhamento | GitHub Actions (sync automático para repo espelho) |
+| Migrations | 201+ SQL migrations |
+| Armazenamento | Supabase Storage — 8 buckets |
+| PWA | vite-plugin-pwa + Service Worker |
+| Email | Lovable Auth Email Hook + React Email |
+| Espelhamento | GitHub Actions (sync automático para repo espelho) |
 
 ---
 
 ## 🔄 Changelog Recente
+
+### v2.5 (2026-03-28)
+- **Auto-confirm de e-mail ativado** — Novos usuários entram direto sem precisar confirmar e-mail
+- **Confirmação de e-mails pendentes** — Todos os usuários existentes com e-mail não confirmado foram confirmados
+- **Correção duplicação no suporte** — `useRef` adicionado para evitar envio duplicado ao pressionar Enter rápido
+- **Auditoria RLS corrigida** — `user_roles` policy corrigida de `TO public` para `TO authenticated`; `profiles` SELECT restrito a dono + admin + reseller
+- **Raspadinha refatorada** — Chance total reduzida para ~1.6%, distribuição cúbica, proteção contra valores iguais
+- **Backup v3.4** — Versão atualizada, candidateTables e knownOrder completos
+- **201+ migrations** — Contagem atualizada
 
 ### v2.4 (2026-03-27)
 - **Cargo `revendedor` restaurado** — Usuários sem vínculo de rede (`reseller_id = NULL`) recebem automaticamente o cargo `revendedor` ao se cadastrar

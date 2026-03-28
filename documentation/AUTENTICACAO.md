@@ -192,6 +192,31 @@ As edge functions `admin-toggle-role` e `admin-delete-user` possuem fallback har
 
 ---
 
+## Confirmação de E-mail
+
+### Auto-Confirm (v2.5)
+O sistema está configurado com **auto-confirm de e-mail ativado** (`autoconfirm: true`). Isso significa:
+- Novos usuários entram direto sem precisar confirmar e-mail
+- O e-mail de confirmação NÃO é enviado no cadastro
+- Reduz fricção de entrada e elimina erros de "E-mail não confirmado"
+
+> ⚠️ Se desejar reativar a confirmação de e-mail, o admin master pode desativar esta opção no toggle do Painel Principal.
+
+---
+
+## Auditoria de Segurança RLS (v2.5)
+
+| Tabela | Correção | Impacto |
+|--------|----------|---------|
+| `user_roles` | Policy `Only admins can manage roles` corrigida de `TO public` para `TO authenticated` | Impede acesso anônimo |
+| `profiles` | SELECT restrito a `dono + admin + reseller` | Dados sensíveis (email, telefone) protegidos |
+| `pricing_rules` | SELECT restrito a admins e revendedores | Já estava seguro |
+| `saldos` | INSERT intencional com `USING: true` para trigger `handle_new_user` | Não alterado |
+
+> **Funcionalidades preservadas:** MinhaRede usa RPC `get_network_members_v2` (SECURITY DEFINER), perfis públicos usam view `profiles_public`, chat usa `profiles_public`.
+
+---
+
 ## Email Templates (6 templates)
 
 | Template | Descrição |
