@@ -108,8 +108,8 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="max-w-md w-full bg-card border border-green-500/30 rounded-2xl p-8 text-center space-y-4 shadow-2xl">
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto" />
+      <div className="max-w-md w-full bg-card border border-primary/30 rounded-2xl p-8 text-center space-y-4 shadow-2xl">
+          <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
           <h1 className="text-xl font-bold text-foreground">Licença Ativada!</h1>
           <p className="text-muted-foreground text-sm">Sistema sendo liberado...</p>
         </div>
