@@ -194,3 +194,38 @@ Se o destino for um projeto espelho com Lovable Cloud próprio:
 - [ ] Ou iniciar com banco limpo (novo ambiente)
 
 > Detalhes completos em [MIRROR_SYNC.md](./MIRROR_SYNC.md)
+
+## 10. Sistema de Licenciamento (Obrigatório para Espelhos)
+
+Cada espelho precisa de uma **licença válida** gerada no servidor principal para funcionar. Sem licença, o sistema exibe uma tela de bloqueio.
+
+### 10.1 Como funciona
+- O componente `LicenseGate` verifica no boot se existe uma licença válida
+- A validação é feita contra o **servidor principal** (não contra o próprio espelho)
+- O servidor principal detecta automaticamente que o usuário logado é o masterAdmin e pula a validação
+- Espelhos que não configurarem licença ficam **completamente bloqueados**
+
+### 10.2 Configuração no Espelho
+No `system_config` do espelho, inserir duas chaves:
+
+| Chave | Valor | Descrição |
+|-------|-------|-----------|
+| `license_key` | `lic_xxx...` | Chave de licença gerada pelo servidor principal |
+| `license_master_url` | `https://xtkqyjruyuydlbvwduuy.supabase.co` | URL do backend do servidor principal |
+
+### 10.3 Gerar uma Licença (No servidor principal)
+1. Acesse `/principal` → seção **Licenças**
+2. Clique em **"Nova Licença"**
+3. Preencha: nome do espelho, domínio, validade, max usuários
+4. Copie a `license_key` gerada
+5. Envie para o administrador do espelho configurar no `system_config`
+
+### 10.4 Bypass no Servidor Principal
+O `LicenseGate` verifica se o **usuário logado é o masterAdminId**. Se sim, pula toda a validação. Isso significa:
+- No servidor principal: o admin master entra normalmente sem licença
+- No espelho: mesmo que o primeiro usuário vire admin master local, ele **precisa de licença** porque a validação é feita contra o servidor principal
+
+### 10.5 Heartbeat
+- A cada 6 horas, o espelho revalida a licença automaticamente
+- Se a licença for revogada ou expirar, o espelho é bloqueado na próxima verificação
+- Cache local de 6 horas evita bloqueio por falhas temporárias de rede
