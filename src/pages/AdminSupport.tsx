@@ -508,12 +508,15 @@ export default function AdminSupport() {
     const text = msgText.trim();
     const imgTag = imageUrl ? `[img:${imageUrl}]` : "";
     const finalMsg = (text + (imgTag ? "\n" + imgTag : "")).trim();
-    if (!finalMsg) return;
+    if (!finalMsg || sendingRef.current) return;
 
     const v = validateTextInput(finalMsg, { max: 4096 });
     if (!v.valid) { toast.error(v.error!); return; }
 
+    sendingRef.current = true;
     setSending(true);
+    setMsgText("");
+    setImageUrl(null);
     try {
       await (supabase.from("support_messages") as any).insert({
         ticket_id: selectedTicket.id,
