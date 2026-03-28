@@ -2276,7 +2276,8 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
   // Master admin only: show admin button
   const telegramIdStr = String(chatId);
   const { data: masterTgCfg } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
-  if (masterTgCfg?.value === telegramIdStr) {
+  const masterTgIds = (masterTgCfg?.value || "").split(",").map((s: string) => s.trim());
+  if (masterTgIds.includes(telegramIdStr)) {
     keyboard.push([{ text: "⚙️ Administração", callback_data: "menu_admin" }]);
   }
 
