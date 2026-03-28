@@ -8,7 +8,7 @@ const SESSION_DURATION = 60 * 60 * 1000; // 1 hour
 const HEARTBEAT_INTERVAL = 55 * 60 * 1000; // 55 min (revalidate before session expires)
 
 const MASTER_SERVER_URL = import.meta.env.VITE_SUPABASE_URL;
-const MASTER_DOMAINS = ["recargasbrasill.com"];
+const MASTER_DOMAINS = ["recargasbrasill.com", "lovable.app", "lovableproject.com"];
 
 /* ─── Anti-tampering: signed local session ─── */
 interface LocalSession {
