@@ -504,8 +504,13 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
 
   const renderDone = () => (
     <div className="space-y-6 text-center">
-      <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
-        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+      <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto relative">
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="8" fill="none" stroke="#10b981" strokeWidth="1.5" style={{ animation: "done-burst 1.5s ease-out infinite" }} />
+          <circle cx="40" cy="40" r="8" fill="none" stroke="#34d399" strokeWidth="1" style={{ animation: "done-burst 1.5s ease-out infinite 0.5s" }} />
+          <circle cx="40" cy="40" r="8" fill="none" stroke="#6ee7b7" strokeWidth="0.8" style={{ animation: "done-burst 1.5s ease-out infinite 1s" }} />
+        </svg>
+        <CheckCircle2 className="w-10 h-10 text-emerald-500 done-icon" />
       </div>
       <h1 className="text-2xl font-bold text-foreground">Instalação Concluída!</h1>
       <p className="text-muted-foreground text-sm">
