@@ -37,7 +37,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     adminPassword: "",
     adminName: "",
     licenseKey: "",
-    masterUrl: "",
+    masterUrl: "", // kept for type compat but always uses default
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -70,7 +70,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     setStep("finishing");
     setLoading(true);
 
-    const masterUrl = data.masterUrl.trim() || MASTER_SERVER_URL;
+    const masterUrl = MASTER_SERVER_URL;
     const steps: string[] = [];
 
     try {
@@ -120,11 +120,10 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         .upsert({ key: "license_key", value: data.licenseKey.trim() }, { onConflict: "key" });
       if (e1) throw e1;
 
-      if (data.masterUrl.trim()) {
-        await supabase
-          .from("system_config")
-          .upsert({ key: "license_master_url", value: masterUrl }, { onConflict: "key" });
-      }
+      // Always save master URL from env
+      await supabase
+        .from("system_config")
+        .upsert({ key: "license_master_url", value: masterUrl }, { onConflict: "key" });
 
       steps.push("✓ Licença salva!");
       setProgress([...steps]);

@@ -607,6 +607,45 @@ export type Database = {
         }
         Relationships: []
       }
+      license_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          domain: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          license_id: string | null
+          mirror_name: string | null
+          reason: string | null
+          result: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          domain?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          license_id?: string | null
+          mirror_name?: string | null
+          reason?: string | null
+          result?: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          domain?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          license_id?: string | null
+          mirror_name?: string | null
+          reason?: string | null
+          result?: string
+        }
+        Relationships: []
+      }
       licenses: {
         Row: {
           created_at: string | null
