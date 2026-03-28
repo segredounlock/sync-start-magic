@@ -45,7 +45,7 @@ import {
   UserCheck, UserX, Hash, Activity, CreditCard, Settings, Save, Loader2,
   Globe, Bot, RefreshCw, Wifi, CheckCircle2, Trash2, AlertTriangle,
   ChevronDown, Link2, EyeOff, Tag, FileText, Copy, Zap, RotateCcw, Clock, HardDrive, Package,
-  Upload, Database, Server, Send, Megaphone, MessageCircle,
+  Upload, Database, Server, Send, Megaphone, MessageCircle, Wrench,
   Trophy, Check, KeyRound, Banknote, Network, Image, Headphones, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
