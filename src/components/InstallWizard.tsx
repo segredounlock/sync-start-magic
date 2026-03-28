@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Shield, KeyRound, User, Mail, Lock, Eye, EyeOff,
@@ -180,16 +180,69 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   };
 
   /* ─── Renders ─── */
+  const rocketCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = rocketCanvasRef.current;
+    if (!canvas || step !== "welcome") return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const particles: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; size: number; color: string }[] = [];
+    let animId: number;
+
+    const colors = ["#f97316", "#eab308", "#ef4444", "#fb923c", "#fbbf24"];
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Spawn particles from bottom-right (exhaust area)
+      for (let i = 0; i < 3; i++) {
+        particles.push({
+          x: 62 + Math.random() * 6,
+          y: 68 + Math.random() * 4,
+          vx: 1.5 + Math.random() * 2,
+          vy: 1 + Math.random() * 1.5,
+          life: 0,
+          maxLife: 15 + Math.random() * 15,
+          size: 2 + Math.random() * 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        });
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life++;
+        const alpha = 1 - p.life / p.maxLife;
+        if (alpha <= 0) { particles.splice(i, 1); continue; }
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      animId = requestAnimationFrame(animate);
+    };
+
+    animate();
+    return () => cancelAnimationFrame(animId);
+  }, [step]);
+
   const renderWelcome = () => (
     <div className="space-y-6 text-center">
-      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative animate-bounce">
-        <Rocket className="w-10 h-10 text-primary -rotate-45" />
-        {/* Flame effect */}
-        <div className="absolute bottom-1 right-1 flex flex-col items-center">
-          <span className="block w-3 h-3 bg-orange-500 rounded-full opacity-80 animate-pulse" />
-          <span className="block w-2 h-4 bg-yellow-400 rounded-full opacity-60 animate-pulse -mt-1.5" style={{ animationDelay: "0.15s" }} />
-          <span className="block w-1.5 h-3 bg-red-500 rounded-full opacity-50 animate-pulse -mt-1.5" style={{ animationDelay: "0.3s" }} />
+      <div className="w-24 h-24 relative mx-auto">
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto absolute top-0 left-1/2 -translate-x-1/2 z-10">
+          <Rocket className="w-10 h-10 text-primary -rotate-45" />
         </div>
+        <canvas
+          ref={rocketCanvasRef}
+          width={96}
+          height={96}
+          className="absolute inset-0 z-0 pointer-events-none"
+        />
       </div>
       <h1 className="text-2xl font-bold text-foreground">Instalação do Sistema</h1>
       <p className="text-muted-foreground text-sm max-w-sm mx-auto">
