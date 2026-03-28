@@ -41,7 +41,7 @@ function LicenseManagerContent() {
   const [formName, setFormName] = useState("");
   const [formDomain, setFormDomain] = useState("");
   const [formExpDays, setFormExpDays] = useState(30);
-  const [formMaxUsers, setFormMaxUsers] = useState(100);
+  
 
   const fetchLicenses = useCallback(async () => {
     setLoading(true);
@@ -68,7 +68,7 @@ function LicenseManagerContent() {
           mirror_name: formName.trim(),
           mirror_domain: formDomain.trim(),
           expires_at: expiresAt.toISOString(),
-          max_users: formMaxUsers,
+          max_users: 999999,
           features: ["all"],
         },
       });
@@ -81,7 +81,7 @@ function LicenseManagerContent() {
       setFormName("");
       setFormDomain("");
       setFormExpDays(30);
-      setFormMaxUsers(100);
+      
       fetchLicenses();
     } catch (err: any) {
       toast.error(err.message || "Erro ao criar licença");
@@ -198,16 +198,6 @@ function LicenseManagerContent() {
                 className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground"
               />
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Máx. Usuários</label>
-              <input
-                type="number"
-                value={formMaxUsers}
-                onChange={e => setFormMaxUsers(Number(e.target.value))}
-                min={1}
-                className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground"
-              />
-            </div>
           </div>
           <div className="flex gap-2 justify-end">
             <button
@@ -272,7 +262,7 @@ function LicenseManagerContent() {
                       {lic.mirror_domain && (
                         <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{lic.mirror_domain}</span>
                       )}
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" />Máx {lic.max_users}</span>
+                      
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Exp: {new Date(lic.expires_at).toLocaleDateString("pt-BR")}</span>
                       <span className={`flex items-center gap-1 ${heartbeat.color}`}>
                         {heartbeat.label === "Online" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
