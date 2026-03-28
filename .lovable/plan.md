@@ -1,30 +1,29 @@
 
 
-# Corrigir Erros de Build do LicenseManager no Espelho
+# Melhorias no Step 2 do InstallWizard — Informar sobre Admin Master
 
-## Problema
-O espelho nao tem a tabela `licenses` no banco de dados. Como o `types.ts` e gerado automaticamente a partir do banco, `supabase.from("licenses")` causa erro de TypeScript no espelho porque `"licenses"` nao e um nome de tabela valido nos tipos dele. O Lovable do espelho tentou "corrigir" sozinho e acabou mexendo em `src/types/index.ts`, `UserRecargasModal.tsx`, `RevendedorPainel.tsx` etc., criando mais problemas.
+## O que muda
+O passo "Criar Administrador" (step 2) precisa deixar claro que este usuario sera o **Admin Master** do sistema, com acesso total e irrevogavel.
 
-## Solucao
-Fazer o `LicenseManager.tsx` usar queries "untyped" para a tabela `licenses`, evitando dependencia dos tipos gerados. Trocar:
+## Alteracoes em `src/components/InstallWizard.tsx`
 
-```typescript
-supabase.from("licenses")
-```
+### 1. Titulo e descricao mais claros
+- Titulo: "Criar Administrador" → **"Criar Admin Master"**
+- Subtitulo: informar que este sera o administrador principal com acesso total e irrevogavel ao sistema
+- Icone: trocar `User` por `Shield` (ja importado) para reforcar autoridade
 
-Por:
+### 2. Card informativo abaixo dos campos
+Adicionar um box informativo (estilo similar ao box "Protecao ativa" do step 3) explicando:
+- Este usuario tera acesso total ao sistema
+- Sera o unico com acesso ao Painel Principal
+- O cargo nao pode ser removido por nenhum outro administrador
+- Guarde o e-mail e senha em local seguro
 
-```typescript
-(supabase as any).from("licenses")
-```
-
-Isso em **3 locais**: `fetchLicenses`, `handleToggle` e `handleDelete`. Com isso, mesmo que o espelho nao tenha a tabela `licenses` nos tipos, o TypeScript nao reclama. E como o componente so renderiza o conteudo no dominio principal, as queries nunca serao executadas no espelho.
-
-## Alteracoes
-1. **`src/components/LicenseManager.tsx`** -- Usar `(supabase as any).from("licenses")` nos 3 locais de query
+### 3. Icone do step indicator
+Atualizar para usar icone de escudo em vez de usuario generico
 
 ## Resultado
-- Build compila sem erros tanto no servidor principal quanto no espelho
-- Nenhum outro arquivo precisa ser alterado
-- O espelho do usuario precisara reverter as mudancas que o Lovable de la fez nos tipos/componentes (ou aguardar o proximo sync forcar)
+- O usuario entende claramente que esta criando a conta mais importante do sistema
+- Alinhado com a hierarquia documentada em `AUTENTICACAO.md`
+- Nenhuma mudanca funcional, apenas visual/informativa
 
