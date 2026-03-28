@@ -831,19 +831,31 @@ async function executeTelegramBroadcast(
       const plainText = broadcastText.replace(/<[^>]*>/g, '');
       const titleMatch = plainText.match(/^(.{1,60})/);
       const notifTitle = titleMatch ? titleMatch[1].split('\n')[0].trim() : 'Broadcast';
+      const notifTitleFull = `📢 ${notifTitle}`;
 
-      const { error: notifErr } = await supabase.from('notifications').insert({
-        title: `📢 ${notifTitle}`,
-        message: broadcastText,
-        status: 'sent',
-        sent_count: sent,
-        failed_count: failed,
-      });
+      // Check for duplicate before inserting
+      const { data: existing } = await supabase.from('notifications')
+        .select('id')
+        .eq('title', notifTitleFull)
+        .gte('created_at', new Date(Date.now() - 3600_000).toISOString())
+        .limit(1);
 
-      if (notifErr) {
-        console.error('[BROADCAST-TG] Failed to insert notification:', JSON.stringify(notifErr));
+      if (existing && existing.length > 0) {
+        console.log('[BROADCAST-TG] Notification already exists, skipping duplicate:', notifTitleFull);
       } else {
-        console.log('[BROADCAST-TG] Synced to chat + notifications (Novidades)');
+        const { error: notifErr } = await supabase.from('notifications').insert({
+          title: notifTitleFull,
+          message: broadcastText,
+          status: 'sent',
+          sent_count: sent,
+          failed_count: failed,
+        });
+
+        if (notifErr) {
+          console.error('[BROADCAST-TG] Failed to insert notification:', JSON.stringify(notifErr));
+        } else {
+          console.log('[BROADCAST-TG] Synced to notifications (Novidades) ok');
+        }
       }
     }
   } catch (err) {
