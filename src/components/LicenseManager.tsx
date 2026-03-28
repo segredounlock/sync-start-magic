@@ -94,7 +94,7 @@ function LicenseManagerContent() {
     const ok = await confirm(`Deseja ${action} esta licença?`, { title: action === "revogar" ? "Revogar Licença" : "Reativar Licença", destructive: action === "revogar" });
     if (!ok) return;
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("licenses")
       .update({ is_active: !currentActive })
       .eq("id", id);
