@@ -23,9 +23,16 @@ jobs:
           git config user.email "sync@bot.com"
           rm -f .env
           rm -f supabase/config.toml
-          # Remover arquivos exclusivos do servidor principal (licenciamento)
+          # Remover arquivos exclusivos do servidor principal
           rm -f src/components/LicenseManager.tsx
           rm -rf supabase/functions/license-generate/
+          rm -f .lovable/plan.md
+          rm -f ALTERACOES.md
+          rm -f DOCUMENTACAO_MIGRACAO.md
+          # Remover documentação de secrets e arquitetura interna
+          rm -f documentation/SECRETS.md
+          rm -f documentation/MIRROR_SYNC.md
+          rm -f documentation/BACKUP.md
           git add -A
           git commit -m "chore: prepare mirror sync (remove env-specific files)" --allow-empty
 
