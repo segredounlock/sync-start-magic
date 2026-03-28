@@ -68,13 +68,14 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
         }
         const { data } = await query.limit(50);
         // Get roles for these users
-        const ids = (data || []).map(u => u.id);
+        const ids = (data || []).map(u => u.id).filter((id): id is string => !!id);
         const { data: roles } = ids.length > 0
           ? await supabase.from("user_roles").select("user_id, role").in("user_id", ids)
           : { data: [] };
         const roleMap = new Map((roles || []).map(r => [r.user_id, r.role]));
         (data || []).forEach(u => {
-          userMap.set(u.id, { ...u, role: roleMap.get(u.id) || "usuario", verification_badge: (u as any).verification_badge || null });
+          if (!u.id) return;
+          userMap.set(u.id, { ...u, id: u.id, role: roleMap.get(u.id) || "usuario", verification_badge: (u as any).verification_badge || null } as any);
         });
       } else {
         // Fetch admins

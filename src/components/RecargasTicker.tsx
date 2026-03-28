@@ -55,7 +55,7 @@ export default function RecargasTicker() {
           .from("profiles_public")
           .select("id, nome")
           .in("id", batch);
-        (profiles || []).forEach(p => nameCache.current.set(p.id, p.nome || "Usuário"));
+        (profiles || []).forEach(p => { if (p.id) nameCache.current.set(p.id, p.nome || "Usuário"); });
       }
 
       setRecargas(data.map(r => ({
