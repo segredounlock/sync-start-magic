@@ -198,16 +198,6 @@ function LicenseManagerContent() {
                 className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground"
               />
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Máx. Usuários</label>
-              <input
-                type="number"
-                value={formMaxUsers}
-                onChange={e => setFormMaxUsers(Number(e.target.value))}
-                min={1}
-                className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground"
-              />
-            </div>
           </div>
           <div className="flex gap-2 justify-end">
             <button
