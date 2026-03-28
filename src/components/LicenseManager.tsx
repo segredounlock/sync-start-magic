@@ -57,6 +57,7 @@ function LicenseManagerContent() {
 
   const handleCreate = async () => {
     if (!formName.trim()) { toast.error("Nome do espelho é obrigatório"); return; }
+    if (!formDomain.trim()) { toast.error("Domínio é obrigatório — a licença só funciona para este domínio"); return; }
     setCreating(true);
     try {
       const expiresAt = new Date();
@@ -65,7 +66,7 @@ function LicenseManagerContent() {
       const { data, error } = await supabase.functions.invoke("license-generate", {
         body: {
           mirror_name: formName.trim(),
-          mirror_domain: formDomain.trim() || null,
+          mirror_domain: formDomain.trim(),
           expires_at: expiresAt.toISOString(),
           max_users: formMaxUsers,
           features: ["all"],
@@ -177,8 +178,9 @@ function LicenseManagerContent() {
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Domínio (opcional)</label>
+              <label className="text-xs text-foreground font-medium mb-1 block">Domínio <span className="text-destructive">*</span></label>
               <input
+                required
                 value={formDomain}
                 onChange={e => setFormDomain(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground"
