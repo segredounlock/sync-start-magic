@@ -464,6 +464,9 @@ async function sendBroadcastInBackground(
 
       // Post to "Atualizações do Sistema" chat group
       await postNotificationToChat(notification);
+
+      // Replicate to news channel if configured
+      await postToNewsChannel(botToken, notification);
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

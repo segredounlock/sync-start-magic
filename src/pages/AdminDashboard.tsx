@@ -3374,6 +3374,12 @@ export default function AdminDashboard() {
                       <input type="url" value={configData.supportUrl || ""} onChange={e => setConfigData(prev => ({ ...prev, supportUrl: e.target.value }))}
                         className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://t.me/seusuporte" />
                     </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-foreground mb-1">📢 Canal de Notícias</label>
+                      <input type="text" value={configData.telegramNewsChannel || ""} onChange={e => setConfigData(prev => ({ ...prev, telegramNewsChannel: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="@CREDITOSO ou https://t.me/CREDITOSO" />
+                      <p className="text-xs text-muted-foreground mt-1">Broadcasts serão replicados automaticamente neste canal. O bot precisa ser administrador do canal.</p>
+                    </div>
                   </div>
                 </div>
               </>

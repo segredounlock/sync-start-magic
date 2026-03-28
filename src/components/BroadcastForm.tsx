@@ -325,9 +325,12 @@ export function BroadcastForm({ userCount, sending, onSubmit, onClose }: Broadca
               <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderTelegramHtml(formData.message || 'Sua mensagem aqui...') }} />
               {enableButtons && formData.buttons.filter(b => b.text).length > 0 && (
                 <div className="mt-3 flex gap-2">
-                  {formData.buttons.filter(b => b.text).map((b, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-medium">{b.text}</span>
-                  ))}
+                  {formData.buttons.filter(b => b.text).map((b, i) => {
+                    const styleObj = BUTTON_STYLES.find(s => s.value === (b.style || 'primary'));
+                    return (
+                      <span key={i} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${styleObj?.preview || 'bg-blue-500/20 text-blue-400'}`}>{b.text}</span>
+                    );
+                  })}
                 </div>
               )}
             </div>
