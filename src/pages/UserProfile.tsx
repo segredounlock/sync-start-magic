@@ -98,7 +98,7 @@ export default function UserProfile() {
       setResolvedId(paramId);
     } else {
       // It's a slug, resolve to UUID
-      supabase.from("profiles").select("id").eq("slug", paramId).maybeSingle().then(({ data }) => {
+      supabase.from("profiles_public").select("id").eq("slug", paramId).maybeSingle().then(({ data }) => {
         if (data?.id) {
           setResolvedId(data.id);
         } else {
@@ -226,7 +226,7 @@ export default function UserProfile() {
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.follower_id);
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("id, nome, avatar_url, slug")
           .in("id", ids);
         setFollowersList((profiles as any) || []);
@@ -248,7 +248,7 @@ export default function UserProfile() {
       if (data && data.length > 0) {
         const ids = data.map((d: any) => d.following_id);
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("id, nome, avatar_url, slug")
           .in("id", ids);
         setFollowingList((profiles as any) || []);

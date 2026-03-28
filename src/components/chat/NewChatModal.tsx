@@ -59,22 +59,23 @@ export function NewChatModal({ onClose, onSelectUser }: NewChatModalProps) {
       if (filter === "all") {
         // Fetch all active profiles except self
         let query = supabase
-          .from("profiles")
-          .select("id, nome, email, avatar_url, verification_badge")
+          .from("profiles_public")
+          .select("id, nome, avatar_url, verification_badge")
           .eq("active", true)
           .neq("id", user.id);
         if (search.trim()) {
-          query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+          query = query.ilike("nome", `%${search}%`);
         }
         const { data } = await query.limit(50);
         // Get roles for these users
-        const ids = (data || []).map(u => u.id);
+        const ids = (data || []).map(u => u.id).filter((id): id is string => !!id);
         const { data: roles } = ids.length > 0
           ? await supabase.from("user_roles").select("user_id, role").in("user_id", ids)
           : { data: [] };
         const roleMap = new Map((roles || []).map(r => [r.user_id, r.role]));
         (data || []).forEach(u => {
-          userMap.set(u.id, { ...u, role: roleMap.get(u.id) || "usuario", verification_badge: (u as any).verification_badge || null });
+          if (!u.id) return;
+          userMap.set(u.id, { ...u, id: u.id, role: roleMap.get(u.id) || "usuario", verification_badge: (u as any).verification_badge || null } as any);
         });
       } else {
         // Fetch admins

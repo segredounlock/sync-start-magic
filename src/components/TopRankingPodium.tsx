@@ -304,7 +304,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
           const count = Number(countData);
           const approxRank = all.filter((r) => r.total_recargas > count).length;
           const { data: profile } = await supabase
-            .from("profiles")
+            .from("profiles_public")
             .select("nome, avatar_url, verification_badge")
             .eq("id", userId)
             .maybeSingle();
