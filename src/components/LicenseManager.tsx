@@ -178,8 +178,9 @@ function LicenseManagerContent() {
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Domínio (opcional)</label>
+              <label className="text-xs text-foreground font-medium mb-1 block">Domínio <span className="text-destructive">*</span></label>
               <input
+                required
                 value={formDomain}
                 onChange={e => setFormDomain(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground"
