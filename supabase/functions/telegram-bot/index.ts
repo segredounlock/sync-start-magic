@@ -569,6 +569,217 @@ async function sendPendingNotifications(supabase: any, token: string, chatId: nu
   }
 }
 
+// ===== ADMIN CHECK =====
+async function isAdminUser(supabase: any, telegramId: string): Promise<boolean> {
+  // Check if this telegram user is master admin
+  const { data: masterCfg } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
+  if (masterCfg?.value === telegramId) return true;
+
+  // Check if linked profile has admin role
+  const profile = await findUserByTelegram(supabase, telegramId);
+  if (!profile) return false;
+  const role = await resolveUserRole(supabase, profile.id, "usuario");
+  return role === "admin";
+}
+
+// ===== BROADCAST VIA TELEGRAM =====
+const BROADCAST_BATCH_SIZE = 25;
+const BROADCAST_BATCH_DELAY = 1100;
+
+function broadcastProgressBar(current: number, total: number): string {
+  const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+  const filled = Math.round(pct / 5);
+  return "▓".repeat(filled) + "░".repeat(20 - filled) + ` ${pct}%`;
+}
+
+async function executeTelegramBroadcast(
+  supabase: any,
+  token: string,
+  adminChatId: number,
+  originalMessage: any,
+  filter: string
+) {
+  const filterText = filter === "all" ? "todos" : "registrados";
+
+  // Detect media type
+  const hasPhoto = !!originalMessage.photo;
+  const hasVideo = !!originalMessage.video;
+  const hasAudio = !!originalMessage.audio;
+  const hasVoice = !!originalMessage.voice;
+  const hasAnimation = !!originalMessage.animation;
+  const hasDocument = !!originalMessage.document;
+  const hasSticker = !!originalMessage.sticker;
+  const hasVideoNote = !!originalMessage.video_note;
+  const hasMedia = hasPhoto || hasVideo || hasAudio || hasVoice || hasAnimation || hasDocument || hasSticker || hasVideoNote;
+
+  const mediaType = hasPhoto ? "📷 Foto"
+    : hasVideo ? "🎬 Vídeo"
+    : hasAudio ? "🎵 Áudio"
+    : hasVoice ? "🎙️ Voz"
+    : hasAnimation ? "🎞️ GIF"
+    : hasDocument ? "📎 Documento"
+    : hasSticker ? "🏷️ Sticker"
+    : hasVideoNote ? "⏺️ Vídeo circular"
+    : "💬 Texto";
+
+  // Fetch users
+  let usersQuery = supabase
+    .from("telegram_users")
+    .select("telegram_id, first_name, is_blocked")
+    .eq("is_blocked", false);
+
+  if (filter === "registered") {
+    usersQuery = usersQuery.eq("is_registered", true);
+  }
+
+  const { data: users, error: usersError } = await usersQuery;
+
+  if (usersError || !users?.length) {
+    await sendMessage(token, adminChatId,
+      `❌ ${usersError ? "Erro ao buscar usuários." : "Nenhum usuário encontrado para o filtro."}`
+    );
+    return;
+  }
+
+  const total = users.length;
+
+  // Send initial progress message
+  const statusMsg = await sendMessage(token, adminChatId,
+    `📡 <b>BROADCAST INICIADO</b>\n\n` +
+    `${mediaType} → ${total} usuários (${filterText})\n\n` +
+    `${broadcastProgressBar(0, total)}\n\n` +
+    `⏳ Enviando...`
+  );
+
+  let sent = 0;
+  let failed = 0;
+  let blocked = 0;
+  const startTime = Date.now();
+  const UPDATE_INTERVAL = Math.max(5, Math.floor(total / 10));
+
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+    try {
+      let result: any;
+
+      if (hasMedia) {
+        // copyMessage preserves all media, captions, formatting
+        const resp = await fetch(`${TELEGRAM_API}${token}/copyMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: user.telegram_id,
+            from_chat_id: adminChatId,
+            message_id: originalMessage.message_id,
+          }),
+        });
+        result = await resp.json();
+      } else if (originalMessage.text) {
+        // Text only — sendMessage with HTML
+        const resp = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: user.telegram_id,
+            text: originalMessage.text,
+            parse_mode: "HTML",
+            entities: originalMessage.entities,
+          }),
+        });
+        result = await resp.json();
+      } else {
+        failed++;
+        continue;
+      }
+
+      if (result?.ok) {
+        sent++;
+      } else {
+        failed++;
+        const desc = (result?.description || "").toLowerCase();
+        if (desc.includes("blocked") || desc.includes("deactivated") || desc.includes("chat not found")) {
+          blocked++;
+          // Mark as blocked
+          supabase.from("telegram_users")
+            .update({ is_blocked: true, block_reason: desc.includes("blocked") ? "telegram_blocked" : "user_deactivated" })
+            .eq("telegram_id", user.telegram_id)
+            .then(() => {});
+        }
+      }
+    } catch {
+      failed++;
+    }
+
+    // Rate limiting
+    if ((sent + failed) % BROADCAST_BATCH_SIZE === 0 && i < users.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, BROADCAST_BATCH_DELAY));
+    }
+
+    // Update progress
+    if (statusMsg && ((sent + failed) % UPDATE_INTERVAL === 0 || i === users.length - 1)) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+      const processed = sent + failed;
+      try {
+        await fetch(`${TELEGRAM_API}${token}/editMessageText`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: adminChatId,
+            message_id: statusMsg,
+            text:
+              `📡 <b>BROADCAST EM ANDAMENTO</b>\n\n` +
+              `${mediaType} → ${filterText}\n\n` +
+              `${broadcastProgressBar(processed, total)}\n\n` +
+              `✅ Enviados: <b>${sent}</b>\n` +
+              `❌ Falhas: <b>${failed}</b>${blocked > 0 ? ` (🚫 ${blocked} bloqueados)` : ""}\n` +
+              `📊 Processados: <b>${processed}/${total}</b>\n` +
+              `⏱️ Tempo: <b>${elapsed}s</b>`,
+            parse_mode: "HTML",
+          }),
+        }).catch(() => {});
+      } catch { /* ignore edit errors */ }
+    }
+  }
+
+  // Final summary
+  const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+  const successRate = total > 0 ? Math.round((sent / total) * 100) : 0;
+
+  const finalText =
+    `📢 <b>BROADCAST CONCLUÍDO!</b>\n\n` +
+    `┌ ${mediaType}\n` +
+    `├ 🎯 Audiência: <b>${filterText}</b>\n` +
+    `├ ✅ Enviados: <b>${sent}</b>\n` +
+    `├ ❌ Falhas: <b>${failed}</b>${blocked > 0 ? ` (🚫 ${blocked} bloqueados)` : ""}\n` +
+    `├ 📊 Taxa: <b>${successRate}%</b>\n` +
+    `└ ⏱️ Tempo: <b>${totalTime}s</b>\n\n` +
+    `${broadcastProgressBar(total, total)}`;
+
+  if (statusMsg) {
+    try {
+      await fetch(`${TELEGRAM_API}${token}/editMessageText`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: adminChatId,
+          message_id: statusMsg,
+          text: finalText,
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [[{ text: "📖 Menu", callback_data: "menu_main" }]],
+          },
+        }),
+      });
+    } catch {
+      await sendMessageWithKeyboard(token, adminChatId, finalText,
+        [[{ text: "📖 Menu", callback_data: "menu_main" }]]
+      );
+    }
+  }
+
+  console.log(`[BROADCAST-TG] Done: sent=${sent} failed=${failed} blocked=${blocked} time=${totalTime}s`);
+}
+
 // ===== MAIN HANDLER =====
 
 serve(async (req) => {
