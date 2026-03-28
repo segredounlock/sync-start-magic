@@ -29,18 +29,7 @@ function isMasterDomain(): boolean {
   return MASTER_DOMAINS.some(d => hostname === d || hostname.endsWith(`.${d}`));
 }
 
-export default function LicenseManager() {
-  if (!isMasterDomain()) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-        <Shield className="w-12 h-12 text-muted-foreground/50" />
-        <h2 className="text-lg font-bold text-foreground">Recurso Indisponível</h2>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          O gerenciamento de licenças está disponível apenas no servidor principal.
-        </p>
-      </div>
-    );
-  }
+function LicenseManagerContent() {
 
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
