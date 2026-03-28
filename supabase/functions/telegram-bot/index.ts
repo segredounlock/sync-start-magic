@@ -1590,7 +1590,8 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   // ===== ADMIN MENU (Master only) =====
   if (data === "menu_admin") {
     const { data: mCfg } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
-    if (mCfg?.value !== telegramId) {
+    const mIds = (mCfg?.value || "").split(",").map((s: string) => s.trim());
+    if (!mIds.includes(telegramId)) {
       await sendMessage(token, chatId, "❌ Acesso negado.");
       return;
     }
@@ -1606,7 +1607,8 @@ async function handleCallback(supabase: any, token: string, callback: any) {
 
   if (data === "admin_broadcast") {
     const { data: mCfg2 } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
-    if (mCfg2?.value !== telegramId) return;
+    const mIds2 = (mCfg2?.value || "").split(",").map((s: string) => s.trim());
+    if (!mIds2.includes(telegramId)) return;
     await editMessageWithKeyboard(token, chatId, msgId,
       "📢 <b>Broadcast</b>\n\nEscolha o público-alvo:",
       [
