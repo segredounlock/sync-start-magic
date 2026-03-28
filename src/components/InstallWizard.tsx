@@ -129,14 +129,10 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Licença salva!");
       setProgress([...steps]);
 
-      // 4. Create local crypto proof
-      steps.push("Gerando prova criptográfica local...");
+      // 4. Save server-side tracking
+      steps.push("Configurando validação server-side...");
       setProgress([...steps]);
 
-      const proof = await createLocalLicenseProof(licResult.expires_at, data.licenseKey.trim());
-      localStorage.setItem("license_crypto_proof", proof);
-
-      // Also save validated_at and expires_at in system_config for server-side tracking
       await supabase
         .from("system_config")
         .upsert({ key: "license_validated_at", value: new Date().toISOString() }, { onConflict: "key" });
@@ -144,7 +140,13 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         .from("system_config")
         .upsert({ key: "license_expires_at", value: licResult.expires_at }, { onConflict: "key" });
 
-      steps.push("✓ Prova criptográfica gerada!");
+      // Generate install_secret for HMAC session tokens
+      const installSecret = crypto.randomUUID() + "-" + crypto.randomUUID();
+      await supabase
+        .from("system_config")
+        .upsert({ key: "install_secret", value: installSecret }, { onConflict: "key" });
+
+      steps.push("✓ Validação server-side configurada!");
       setProgress([...steps]);
 
       // 5. Mark installation complete
