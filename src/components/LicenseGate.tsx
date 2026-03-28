@@ -127,7 +127,10 @@ export function LicenseGate({ children }: { children: ReactNode }) {
       const isMasterDomain = MASTER_DOMAINS.some(d =>
         hostname === d || hostname.endsWith(`.${d}`)
       );
-      if (isMasterDomain) {
+      // Also bypass for this specific Lovable project (preview & published)
+      const isMasterLovable = hostname.includes(MASTER_PROJECT_ID) || 
+        hostname === "recargas-brasil-v2.lovable.app";
+      if (isMasterDomain || isMasterLovable) {
         if (mounted.current) setStatus("master");
         return;
       }
