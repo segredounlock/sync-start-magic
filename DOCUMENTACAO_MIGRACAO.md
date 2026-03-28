@@ -48,42 +48,40 @@ Consulte a pasta `documentation/` para guias completos:
 
 ---
 
-## 🔄 Principais Mudanças v2.4
+## 🔄 Principais Mudanças v2.5
 
-### Cargo `revendedor` Restaurado
-- Usuários sem vínculo de rede (`reseller_id = NULL`) recebem automaticamente `revendedor`
-- ~1.085 usuários existentes sem vínculo receberam o cargo via INSERT em massa
-- Trigger `handle_new_user` atualizado para auto-assign
-- Usuários com indicação continuam recebendo apenas `usuario`
-- Primeiro usuário (admin master) recebe `admin` + `usuario` + `revendedor`
+### Auto-Confirm de E-mail
+- **Ativado globalmente** — Novos usuários entram direto sem precisar confirmar e-mail
+- Todos os e-mails pendentes de confirmação foram confirmados via SQL
+- Toggle no Painel Principal continua funcionando para controle visual
+
+### Correção de Duplicação no Suporte
+- `useRef` adicionado em `SupportChatWidget.tsx` e `AdminSupport.tsx`
+- Previne envio duplicado ao pressionar Enter rapidamente
+
+### Auditoria de Segurança RLS
+- **`user_roles`** — Policy `Only admins can manage roles` corrigida de `TO public` para `TO authenticated`
+- **`profiles`** — SELECT restrito a dono + admin + reseller (dados sensíveis protegidos)
+- Funcionalidades preservadas: MinhaRede (RPC), chat (view `profiles_public`), perfis públicos
 
 ### Raspadinha Refatorada
-- **Sorteio mutuamente exclusivo** — single roll com faixas cumulativas (era multi-roll acumulativo)
+- **Sorteio mutuamente exclusivo** — single roll com faixas cumulativas
 - **Distribuição cúbica** — `Math.pow(Math.random(), 3)` favorece valores menores
-- **Chance total: ~3,3%** (era ~8,7%)
-- **Tier 1:** 2% — R$0,10 a R$1,00
-- **Tier 2:** 1% — R$1,00 a R$5,00
-- **Tier 3:** 0,3% — R$3,00 a R$15,00
+- **Chance total: ~1,6%** (era ~3,3%)
+- **Tier 1:** 1% — R$0,10 a R$0,50
+- **Tier 2:** 0,5% — R$0,50 a R$2,00
+- **Tier 3:** 0,1% — R$2,00 a R$5,00
 - Proteção contra 3 valores iguais em derrotas
-- Melhor suporte a touch no iOS Safari
 
-### masterAdminId — Auto-Criação e Verificação
-- **Auto-criação:** O trigger `handle_new_user` cria automaticamente a chave `masterAdminId` em `system_config` quando o **primeiro usuário** se cadastra (sem nenhum admin existente)
-- **Em migrações:** Verificar se a chave existe após restauração — sem ela, ninguém acessa `/principal`
-- **Fallback:** Edge functions `admin-toggle-role` e `admin-delete-user` têm fallback hardcoded (`f5501acc-...`)
-- **Sem fallback:** `MasterOnlyRoute.tsx` consulta apenas `system_config` — se ausente, bloqueia acesso total ao `/principal`
-- **Correção manual:** `INSERT INTO system_config (key, value) VALUES ('masterAdminId', 'UUID') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;`
-
-### Auditoria de Segurança RLS (v2.4)
-- **`user_roles`** — Policy `Only admins can manage roles` corrigida de `TO public` para `TO authenticated`
-- **`profiles`** — Policy de resellers mantida restritiva (`reseller_id = auth.uid()`); dados sensíveis (email, telefone) acessíveis apenas via RPC `get_network_members_v2` (SECURITY DEFINER)
-- **`saldos`** — INSERT já restrito a admins (sem vulnerabilidade)
-- **`pricing_rules`** — SELECT já restrito a admins/revendedores (sem vulnerabilidade)
-- **`reseller_base_pricing_rules`** — SELECT restrito a donos e clientes (sem vulnerabilidade)
+### Backup v3.4
+- Versão do backup atualizada para 3.4
+- candidateTables e knownOrder completos (45 tabelas)
 
 ### Outras
-- **201 migrations** — Contagem atualizada
+- **201+ migrations** — Contagem atualizada
 - **Roles do sistema:** `admin`, `usuario`, `revendedor`, `suporte`
+
+## 🔄 Mudanças v2.4
 
 ---
 
