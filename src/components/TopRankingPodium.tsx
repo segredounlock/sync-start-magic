@@ -377,11 +377,50 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
   return (
     <AnimatePresence>
       <motion.div
-        className="glass-card rounded-xl p-4 space-y-4 overflow-visible"
+        className="relative rounded-xl p-4 space-y-4 overflow-hidden border border-yellow-500/20"
+        style={{
+          background: "linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.8) 50%, hsl(var(--card)) 100%)",
+        }}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
+        {/* Animated background effects */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+          {/* Subtle radial glow from top center */}
+          <motion.div
+            className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%)" }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Corner accents */}
+          <div className="absolute top-0 left-0 w-24 h-24" style={{ background: "radial-gradient(circle at top left, rgba(251,191,36,0.06) 0%, transparent 70%)" }} />
+          <div className="absolute top-0 right-0 w-24 h-24" style={{ background: "radial-gradient(circle at top right, rgba(251,191,36,0.06) 0%, transparent 70%)" }} />
+          {/* Floating particles */}
+          {[...Array(5)].map((_, i) => (
+            <motion.div
+              key={`bg-particle-${i}`}
+              className="absolute w-1 h-1 rounded-full bg-yellow-500/20"
+              style={{ left: `${15 + i * 18}%`, top: `${20 + (i % 3) * 25}%` }}
+              animate={{
+                y: [0, -15, 0],
+                opacity: [0.2, 0.5, 0.2],
+                scale: [0.8, 1.2, 0.8],
+              }}
+              transition={{ duration: 3 + i * 0.5, repeat: Infinity, delay: i * 0.6 }}
+            />
+          ))}
+          {/* Subtle horizontal shimmer line */}
+          <motion.div
+            className="absolute top-1/2 left-0 w-full h-px"
+            style={{ background: "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.15) 50%, transparent 100%)" }}
+            animate={{ opacity: [0, 0.6, 0], x: ["-100%", "100%"] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "linear", repeatDelay: 3 }}
+          />
+        </div>
+        {/* Content layer */}
+        <div className="relative z-10 space-y-4">
         {/* Title bar */}
         <motion.div
           className="flex items-center justify-center gap-3"
