@@ -200,10 +200,38 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           0%, 100% { d: path("M4.5 16.5 C4 17, 3.2 18.5, 3.8 18.8 C4.2 19, 4.8 17.5, 4.5 16.5Z"); }
           50% { d: path("M4.5 16.5 C3.8 17.2, 3 19, 3.5 19.2 C4 19.5, 5 17.8, 4.5 16.5Z"); }
         }
+        @keyframes shield-pulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }
+          50% { transform: scale(1.08); filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.4)); }
+        }
+        @keyframes shield-ring {
+          0% { r: 22; opacity: 0.6; stroke-width: 2; }
+          100% { r: 32; opacity: 0; stroke-width: 0.5; }
+        }
+        @keyframes key-glow {
+          0%, 100% { filter: drop-shadow(0 0 2px #f59e0b); }
+          50% { filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 0 20px #f59e0b44); }
+        }
+        @keyframes key-sparkle {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes done-burst {
+          0% { r: 8; opacity: 0.5; }
+          100% { r: 38; opacity: 0; }
+        }
+        @keyframes done-check-pop {
+          0% { transform: scale(0.5); opacity: 0; }
+          60% { transform: scale(1.15); }
+          100% { transform: scale(1); opacity: 1; }
+        }
         .rocket-container { animation: rocket-float 2.5s ease-in-out infinite; }
         .flame-outer { animation: flame-outer 0.3s ease-in-out infinite; }
         .flame-inner { animation: flame-inner 0.25s ease-in-out infinite; }
         .flame-core { animation: flame-core 0.2s ease-in-out infinite; }
+        .shield-icon { animation: shield-pulse 2s ease-in-out infinite; }
+        .key-icon { animation: key-glow 2s ease-in-out infinite; }
+        .done-icon { animation: done-check-pop 0.6s ease-out forwards; }
       `}</style>
       <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
         <div className="rocket-container relative">
