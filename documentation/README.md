@@ -48,6 +48,13 @@
 
 ## 🔄 Changelog Recente
 
+### v2.6 (2026-03-28)
+- **Auditoria completa do projeto** — Documento `AUDITORIA.md` com inventário de todos os módulos
+- **Backup v3.5** — `licenses` e `license_logs` adicionadas ao export/restore
+- **SOURCE_PATHS atualizado** — `InstallWizard`, `LicenseGate`, `LicenseManager` + 3 edge functions de licenciamento
+- **Documentação atualizada** — 36 Edge Functions, 47 tabelas, 209+ migrations em todos os docs
+- **Componentes de licenciamento documentados** — `InstallWizard`, `LicenseGate`, `LicenseManager`
+
 ### v2.5 (2026-03-28)
 - **Auto-confirm de e-mail ativado** — Novos usuários entram direto sem precisar confirmar e-mail
 - **Confirmação de e-mails pendentes** — Todos os usuários existentes com e-mail não confirmado foram confirmados
