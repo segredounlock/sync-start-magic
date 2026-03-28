@@ -98,7 +98,7 @@ export default function UserProfile() {
       setResolvedId(paramId);
     } else {
       // It's a slug, resolve to UUID
-      supabase.from("profiles").select("id").eq("slug", paramId).maybeSingle().then(({ data }) => {
+      supabase.from("profiles_public").select("id").eq("slug", paramId).maybeSingle().then(({ data }) => {
         if (data?.id) {
           setResolvedId(data.id);
         } else {
