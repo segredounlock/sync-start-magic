@@ -187,31 +187,39 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           0%, 100% { transform: rotate(-35deg) translateY(0px); }
           50% { transform: rotate(-35deg) translateY(-6px); }
         }
-        @keyframes flame-flicker {
-          0%, 100% { opacity: 0.9; transform: scaleY(1) scaleX(1); }
-          25% { opacity: 1; transform: scaleY(1.3) scaleX(0.8); }
-          50% { opacity: 0.7; transform: scaleY(0.9) scaleX(1.1); }
-          75% { opacity: 1; transform: scaleY(1.2) scaleX(0.9); }
+        @keyframes flame-outer {
+          0%, 100% { d: path("M4.5 16.5 C3 18, 1.5 21, 2.5 21.5 C3 22, 5 20, 4.5 16.5Z"); opacity: 0.9; }
+          33% { d: path("M4.5 16.5 C2.5 18.5, 0.8 22, 2 22.5 C3.2 23, 5.5 19.5, 4.5 16.5Z"); opacity: 1; }
+          66% { d: path("M4.5 16.5 C3.5 17.5, 2 20.5, 3 21 C3.5 21.5, 4.8 19.8, 4.5 16.5Z"); opacity: 0.8; }
+        }
+        @keyframes flame-inner {
+          0%, 100% { d: path("M4.5 16.5 C3.5 17.5, 2.5 19.5, 3.2 20 C3.8 20.5, 5 18.5, 4.5 16.5Z"); opacity: 0.95; }
+          50% { d: path("M4.5 16.5 C3.2 18, 2 20, 3 20.5 C3.5 21, 4.5 19, 4.5 16.5Z"); opacity: 1; }
+        }
+        @keyframes flame-core {
+          0%, 100% { d: path("M4.5 16.5 C4 17, 3.2 18.5, 3.8 18.8 C4.2 19, 4.8 17.5, 4.5 16.5Z"); }
+          50% { d: path("M4.5 16.5 C3.8 17.2, 3 19, 3.5 19.2 C4 19.5, 5 17.8, 4.5 16.5Z"); }
         }
         .rocket-container { animation: rocket-float 2.5s ease-in-out infinite; }
-        .rocket-flame { animation: flame-flicker 0.4s ease-in-out infinite; transform-origin: top center; }
+        .flame-outer { animation: flame-outer 0.3s ease-in-out infinite; }
+        .flame-inner { animation: flame-inner 0.25s ease-in-out infinite; }
+        .flame-core { animation: flame-core 0.2s ease-in-out infinite; }
       `}</style>
       <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
         <div className="rocket-container relative">
-          {/* Custom rocket SVG with animated flame tail */}
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Flame layers - behind rocket, originating from tail point (4.5, 16.5) */}
+            <path className="flame-outer" d="M4.5 16.5 C3 18, 1.5 21, 2.5 21.5 C3 22, 5 20, 4.5 16.5Z" fill="#ef4444" opacity="0.7"/>
+            <path className="flame-inner" d="M4.5 16.5 C3.5 17.5, 2.5 19.5, 3.2 20 C3.8 20.5, 5 18.5, 4.5 16.5Z" fill="#f97316" opacity="0.9"/>
+            <path className="flame-core" d="M4.5 16.5 C4 17, 3.2 18.5, 3.8 18.8 C4.2 19, 4.8 17.5, 4.5 16.5Z" fill="#fbbf24"/>
             {/* Rocket body */}
             <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             {/* Left fin */}
             <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             {/* Bottom fin */}
             <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            {/* Animated flame replacing the green tail drop */}
-            <g className="rocket-flame">
-              <ellipse cx="5" cy="19" rx="2.8" ry="4" transform="rotate(-45 5 19)" fill="#f97316" opacity="0.9"/>
-              <ellipse cx="5" cy="19" rx="1.8" ry="2.8" transform="rotate(-45 5 19)" fill="#fbbf24" opacity="0.95"/>
-              <ellipse cx="5" cy="19" rx="0.9" ry="1.5" transform="rotate(-45 5 19)" fill="#fef3c7"/>
-            </g>
+            {/* Tail nozzle - the original "pingo" but as flame base */}
+            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" fill="#f97316" stroke="#ea580c" strokeWidth="0.5" opacity="0.95"/>
             {/* Window */}
             <circle cx="15" cy="9" r="1" fill="hsl(var(--primary))"/>
           </svg>
