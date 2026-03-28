@@ -182,8 +182,14 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   /* ─── Renders ─── */
   const renderWelcome = () => (
     <div className="space-y-6 text-center">
-      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-        <Rocket className="w-10 h-10 text-primary" />
+      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative animate-bounce">
+        <Rocket className="w-10 h-10 text-primary -rotate-45" />
+        {/* Flame effect */}
+        <div className="absolute bottom-1 right-1 flex flex-col items-center">
+          <span className="block w-3 h-3 bg-orange-500 rounded-full opacity-80 animate-pulse" />
+          <span className="block w-2 h-4 bg-yellow-400 rounded-full opacity-60 animate-pulse -mt-1.5" style={{ animationDelay: "0.15s" }} />
+          <span className="block w-1.5 h-3 bg-red-500 rounded-full opacity-50 animate-pulse -mt-1.5" style={{ animationDelay: "0.3s" }} />
+        </div>
       </div>
       <h1 className="text-2xl font-bold text-foreground">Instalação do Sistema</h1>
       <p className="text-muted-foreground text-sm max-w-sm mx-auto">
