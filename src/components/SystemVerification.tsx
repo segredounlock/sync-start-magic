@@ -60,6 +60,7 @@ const CRITICAL_CONFIG_KEYS = [
   "masterAdminId","telegramBotToken","siteName","maintenanceMode",
   "chat_enabled","seasonalTheme","defaultMarginEnabled","directCommissionEnabled",
   "indirectCommissionEnabled","requireReferralCode","salesToolsEnabled",
+  "telegramNewsChannel","vapidPublicKey","vapidPrivateKey",
 ];
 
 const PAYMENT_CONFIG_KEYS = [
