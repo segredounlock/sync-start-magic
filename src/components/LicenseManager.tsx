@@ -96,7 +96,7 @@ export default function LicenseManager() {
   };
 
   const handleDelete = async (id: string) => {
-    const ok = await confirm("Excluir permanentemente esta licença?", "🗑️ Excluir");
+    const ok = await confirm("Excluir permanentemente esta licença?", { title: "Excluir Licença", destructive: true });
     if (!ok) return;
 
     const { error } = await supabase.from("licenses").delete().eq("id", id);
