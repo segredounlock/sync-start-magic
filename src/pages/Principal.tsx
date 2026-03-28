@@ -4719,7 +4719,23 @@ export default function Principal() {
                               <span className="text-muted-foreground">{(r.operadora || "—").toUpperCase()} · {r.telefone?.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")}</span>
                               <span className="font-bold font-mono tabular-nums text-foreground">{fmt(Number(r.valor))}</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
+                            <div className="flex items-center justify-between text-[11px] mt-1">
+                              <span className="text-muted-foreground">Cobrado: <span className="font-mono font-semibold text-foreground">{fmt(Number(r.custo || 0))}</span></span>
+                              <span className="text-muted-foreground">API: <span className="font-mono font-semibold text-warning">{fmt(Number(r.custo_api || 0))}</span></span>
+                            </div>
+                            <div className="flex items-center justify-between mt-1.5">
+                              <p className="text-[10px] text-muted-foreground">{getRecargaTimeLabel(r)} {fmtDate(getRecargaTime(r))}</p>
+                              {(r.status === "completed" || r.status === "concluida") && (
+                                <button
+                                  onClick={() => handleRefundRecarga(r)}
+                                  disabled={refundingId === r.id}
+                                  className="flex items-center gap-1 text-[10px] font-semibold text-warning hover:text-warning/80 bg-warning/10 hover:bg-warning/20 px-2 py-0.5 rounded-md transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                  {refundingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                                  Estornar
+                                </button>
+                              )}
+                            </div>
                           </motion.div>
                         ))}
                       </div>
