@@ -308,13 +308,14 @@ Tabelas com publicação `supabase_realtime` ativa:
 
 ---
 
-## 📦 Backup v3.5
+## 📦 Backup & Ferramentas v3.5
 
 - Export: 47 tabelas + auth.users (SQL direto) + schema + código fonte
 - Restore: Ordem de dependência + validação FK + upsert em lotes
 - Safe mode: Ignora auth/config em ambientes espelho
 - GitHub Sync: Envio em lotes para repositório GitHub
-- Source backup: 210+ arquivos com hash SHA-256
+- Source backup: 215+ arquivos com hash SHA-256
+- **Verificação de Integridade**: 9 categorias (tabelas, RLS, funções SQL, edge functions, storage, config, realtime, triggers, pagamentos)
 
 ---
 
