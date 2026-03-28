@@ -270,7 +270,7 @@ export default function LandingPage() {
           <motion.div {...fadeUp}>
             <div className="flex items-center justify-center gap-0.5 mb-4">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                <Star key={i} className="h-5 w-5 text-primary fill-primary" />
               ))}
             </div>
             <p className="text-sm text-muted-foreground mb-8">Avaliação 5.0 · Confiança máxima</p>
