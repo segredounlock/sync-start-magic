@@ -291,8 +291,12 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   const renderAdmin = () => (
     <div className="space-y-5">
       <div className="text-center space-y-2">
-        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <Shield className="w-7 h-7 text-primary" />
+        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56">
+            <circle className="shield-ring-1" cx="28" cy="28" r="22" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" opacity="0.6" style={{ animation: "shield-ring 2s ease-out infinite" }} />
+            <circle className="shield-ring-2" cx="28" cy="28" r="22" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" opacity="0.6" style={{ animation: "shield-ring 2s ease-out infinite 1s" }} />
+          </svg>
+          <Shield className="w-7 h-7 text-primary shield-icon" />
         </div>
         <h2 className="text-lg font-bold text-foreground">Criar Admin Master</h2>
         <p className="text-muted-foreground text-xs">
