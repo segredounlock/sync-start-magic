@@ -166,13 +166,9 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Instalação concluída!");
       setProgress([...steps]);
 
-      // Cache license validation
-      localStorage.setItem("license_validation_cache", JSON.stringify({
-        valid: true,
-        expires_at: licResult.expires_at,
-        features: licResult.features,
-        cached_at: Date.now(),
-      }));
+      // Clear any old cache - new system uses server-side sessions
+      localStorage.removeItem("license_validation_cache");
+      localStorage.removeItem("license_crypto_proof");
 
       setStep("done");
     } catch (err: any) {
