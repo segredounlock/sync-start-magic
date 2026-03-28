@@ -1587,10 +1587,10 @@ async function handleCallback(supabase: any, token: string, callback: any) {
     return;
   }
 
-  // ===== ADMIN MENU =====
+  // ===== ADMIN MENU (Master only) =====
   if (data === "menu_admin") {
-    const isAdmin = await isAdminUser(supabase, telegramId);
-    if (!isAdmin) {
+    const { data: mCfg } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
+    if (mCfg?.value !== telegramId) {
       await sendMessage(token, chatId, "❌ Acesso negado.");
       return;
     }
@@ -1605,8 +1605,8 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   }
 
   if (data === "admin_broadcast") {
-    const isAdmin = await isAdminUser(supabase, telegramId);
-    if (!isAdmin) return;
+    const { data: mCfg2 } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
+    if (mCfg2?.value !== telegramId) return;
     await editMessageWithKeyboard(token, chatId, msgId,
       "📢 <b>Broadcast</b>\n\nEscolha o público-alvo:",
       [
@@ -2273,10 +2273,10 @@ async function sendMainMenu(token: string, chatId: number, user: any, supabase?:
     keyboard.push([{ text: "❓ Ajuda / Suporte", callback_data: "menu_ajuda" }]);
   }
 
-  // Admin-only: show admin button
+  // Master admin only: show admin button
   const telegramIdStr = String(chatId);
-  const isAdmin = await isAdminUser(supabase, telegramIdStr);
-  if (isAdmin) {
+  const { data: masterTgCfg } = await supabase.from("system_config").select("value").eq("key", "supportAdminTelegramId").maybeSingle();
+  if (masterTgCfg?.value === telegramIdStr) {
     keyboard.push([{ text: "⚙️ Administração", callback_data: "menu_admin" }]);
   }
 
