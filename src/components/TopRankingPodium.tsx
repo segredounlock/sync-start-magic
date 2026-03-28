@@ -105,12 +105,12 @@ function GoldFloatingCrown({ size = 48 }: { size?: number }) {
         <Crown
           className="absolute inset-0 w-full h-full text-yellow-400"
           fill="currentColor"
+          stroke="none"
           strokeWidth={0}
         />
         <svg
           viewBox="0 0 24 24"
           className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ filter: "drop-shadow(0 0 8px rgba(253, 224, 71, 0.9))" }}
         >
           <defs>
             <linearGradient id="crownGradient" x1="0%" y1="0%" x2="100%" y2="0%">
