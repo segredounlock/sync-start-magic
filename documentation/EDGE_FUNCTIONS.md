@@ -1,4 +1,4 @@
-# ⚡ Edge Functions — 33 Funções
+# ⚡ Edge Functions — 36 Funções
 
 ## Funções Administrativas
 
