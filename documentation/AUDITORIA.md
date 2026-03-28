@@ -1,7 +1,7 @@
 # 🔍 Auditoria Completa — Recargas Brasil v2
 
 > **Data da auditoria:** 2026-03-28  
-> **Versão do sistema:** 2.6  
+> **Versão do sistema:** 2.7  
 
 ---
 
@@ -9,15 +9,17 @@
 
 | Métrica | Quantidade |
 |---------|-----------|
-| Páginas | 18 |
-| Componentes | 68+ |
+| Páginas | 18 (+2 docs) |
+| Componentes | 76 |
 | Hooks customizados | 21 |
 | Libs utilitárias | 16 |
 | Edge Functions | 36 |
 | Tabelas no banco | 47 |
-| Migrations SQL | 209+ |
+| Migrations SQL | 210+ |
 | Buckets de Storage | 8 |
-| Funções PostgreSQL | ~38 |
+| Funções PostgreSQL | 39 |
+| Triggers | 20 |
+| Tabelas com Realtime | 20 |
 | Email templates | 6 |
 
 ---
