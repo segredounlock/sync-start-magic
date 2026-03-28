@@ -393,8 +393,15 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   const renderLicense = () => (
     <div className="space-y-5">
       <div className="text-center space-y-2">
-        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <KeyRound className="w-7 h-7 text-primary" />
+        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative overflow-hidden">
+          {/* Sparkle effects */}
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56">
+            <circle cx="12" cy="10" r="1.5" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite" }} />
+            <circle cx="44" cy="14" r="1" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 0.5s" }} />
+            <circle cx="8" cy="38" r="1.2" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite 1s" }} />
+            <circle cx="46" cy="42" r="1.5" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 1.5s" }} />
+          </svg>
+          <KeyRound className="w-7 h-7 text-primary key-icon" />
         </div>
         <h2 className="text-lg font-bold text-foreground">Ativar Licença</h2>
         <p className="text-muted-foreground text-xs">
