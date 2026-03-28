@@ -297,4 +297,35 @@ Funções SECURITY DEFINER para:
 
 ---
 
+---
+
+## 🔧 Correções RLS Aplicadas — 2026-03-28
+
+### Correção 1: `license_logs` — Policy com role inexistente
+- **Problema:** Policy usava `has_role(auth.uid(), 'master')`, mas o role `master` não existe no sistema
+- **Impacto:** Nenhum admin conseguia visualizar os logs de licenciamento
+- **Correção:** Trocado para `has_role(auth.uid(), 'admin')`
+- **Risco de quebra:** Zero — corrige algo que já não funcionava
+
+### Correção 2: `broadcast-images` — DELETE aberto
+- **Problema:** Qualquer usuário autenticado podia deletar imagens de broadcast
+- **Impacto:** Risco de exclusão maliciosa de imagens de notificações
+- **Correção:** DELETE restrito a admins via `has_role(auth.uid(), 'admin')`
+- **Risco de quebra:** Zero — apenas admins gerenciam broadcasts
+
+### Correção 3: `receipts` — DELETE/UPDATE sem restrição de dono
+- **Problema:** Qualquer autenticado podia deletar/atualizar comprovantes de qualquer usuário
+- **Impacto:** Risco de manipulação de comprovantes alheios
+- **Correção:** DELETE e UPDATE restritos ao dono via `(auth.uid())::text = (storage.foldername(name))[1]`
+- **Risco de quebra:** Zero — o frontend nunca faz delete/update de receipts
+
+### O que NÃO foi alterado
+- `chat_members` — grupos funcionam como canais obrigatórios, sem opção de sair
+- Filtros de path no storage
+- Nenhum componente frontend
+- Nenhuma edge function
+- Nenhuma tabela de dados
+
+---
+
 *Auditoria realizada em 2026-03-28 — Recargas Brasil v2.6*
