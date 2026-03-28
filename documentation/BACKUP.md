@@ -52,7 +52,9 @@ backup-YYYY-MM-DD.zip
 │   ├── mirror_sync_state.json
 │   ├── mirror_file_state.json
 │   ├── mirror_sync_logs.json
-│   ├── ... (45 tabelas)
+│   ├── licenses.json
+│   ├── license_logs.json
+│   ├── ... (47 tabelas)
 │   └── update_history.json
 ├── schema/ (opcional)
 │   ├── functions.sql       # Todas as funções SQL (~38 funções)
