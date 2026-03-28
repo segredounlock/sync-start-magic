@@ -41,6 +41,11 @@
 | PWA | vite-plugin-pwa + Service Worker |
 | Email | Lovable Auth Email Hook + React Email |
 | Espelhamento | GitHub Actions (sync automático para repo espelho) |
+| Migrations | 201+ SQL migrations |
+| Armazenamento | Supabase Storage — 8 buckets |
+| PWA | vite-plugin-pwa + Service Worker |
+| Email | Lovable Auth Email Hook + React Email |
+| Espelhamento | GitHub Actions (sync automático para repo espelho) |
 
 ---
 
