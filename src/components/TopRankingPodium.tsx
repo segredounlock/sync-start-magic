@@ -461,7 +461,7 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
 
         {/* Podium: [2nd, 1st, 3rd] with dramatic entrance */}
         {showPodium && (
-        <div className="flex items-end justify-center gap-3 sm:gap-6 md:gap-10 pt-4 pb-2">
+        <div className="flex items-end justify-center gap-2 sm:gap-6 lg:gap-10 pt-4 pb-2">
           {podiumOrder.map((user, displayIndex) => {
             const config = getPodiumConfig(displayIndex);
             const isCenter = displayIndex === 1;
