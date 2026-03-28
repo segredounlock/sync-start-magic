@@ -34,19 +34,15 @@
 | Frontend | React 18 + TypeScript + Vite 5 |
 | Estilização | Tailwind CSS + Framer Motion |
 | Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno (Supabase Edge Functions) — 33 funções |
-| Banco de Dados | PostgreSQL com RLS — 45 tabelas |
+| Edge Functions | Deno (Supabase Edge Functions) — 36 funções |
+| Banco de Dados | PostgreSQL com RLS — 47 tabelas |
 | Pagamentos | Mercado Pago, PushinPay, VirtualPay, EfiPay, MisticPay |
 | Bot | Telegram Bot API |
 | Armazenamento | Supabase Storage — 8 buckets |
 | PWA | vite-plugin-pwa + Service Worker |
 | Email | Lovable Auth Email Hook + React Email |
 | Espelhamento | GitHub Actions (sync automático para repo espelho) |
-| Migrations | 201+ SQL migrations |
-| Armazenamento | Supabase Storage — 8 buckets |
-| PWA | vite-plugin-pwa + Service Worker |
-| Email | Lovable Auth Email Hook + React Email |
-| Espelhamento | GitHub Actions (sync automático para repo espelho) |
+| Migrations | 209+ SQL migrations |
 
 ---
 
