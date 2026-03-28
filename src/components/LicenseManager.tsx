@@ -68,7 +68,7 @@ function LicenseManagerContent() {
           mirror_name: formName.trim(),
           mirror_domain: formDomain.trim(),
           expires_at: expiresAt.toISOString(),
-          max_users: formMaxUsers,
+          max_users: 999999,
           features: ["all"],
         },
       });
