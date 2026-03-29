@@ -610,7 +610,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         )}
 
         {step === "welcome" && renderWelcome()}
-        {step === "dependencies" && renderDependencies()}
+        {step === "admin" && renderAdmin()}
         {step === "admin" && renderAdmin()}
         {step === "license" && renderLicense()}
         {step === "finishing" && renderFinishing()}
