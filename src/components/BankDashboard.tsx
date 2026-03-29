@@ -240,7 +240,7 @@ export default function AdminBankDashboard({
                 <card.icon className={`h-5 w-5 ${card.color}`} />
               </div>
             </div>
-            <p className={`text-2xl sm:text-3xl font-bold ${card.color} truncate`}>
+            <p className={`font-bold ${card.color}`} style={{ fontSize: 'clamp(0.95rem, 3.5vw, 1.875rem)' }}>
               {card.isCurrency ? (
                 <Currency value={card.value} loading={loading} hidden={!showBalance} skeletonWidth="w-20" skeletonHeight="h-7" />
               ) : (
