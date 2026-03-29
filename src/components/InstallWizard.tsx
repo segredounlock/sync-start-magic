@@ -186,7 +186,42 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Validação server-side configurada!");
       setProgress([...steps]);
 
-      // 7. Mark installation complete
+      // 7. Seed all default system_config keys via init-mirror
+      steps.push("Inserindo configurações padrão no banco de dados...");
+      setProgress([...steps]);
+
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+        if (token) {
+          const initResp = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (initResp.ok) {
+            const initResult = await initResp.json();
+            steps.push(`✓ ${initResult.results?.[0]?.detail || "Configurações padrão inseridas!"}`);
+          } else {
+            steps.push("⚠ Init-mirror falhou — configs padrão serão criadas no próximo acesso");
+          }
+        }
+      } catch {
+        steps.push("⚠ Init-mirror indisponível — configs serão criadas manualmente");
+      }
+      setProgress([...steps]);
+
+      // 8. Set siteUrl automatically
+      await supabase
+        .from("system_config")
+        .upsert({ key: "siteUrl", value: window.location.origin + "/" }, { onConflict: "key" });
+
+      // 9. Mark installation complete
       steps.push("Finalizando instalação...");
       setProgress([...steps]);
 

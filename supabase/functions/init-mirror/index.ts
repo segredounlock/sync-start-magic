@@ -7,23 +7,46 @@ const corsHeaders = {
 };
 
 const DEFAULT_CONFIGS: Record<string, string> = {
+  // ── Identidade ──
   siteName: "Sistema de Recargas",
   siteTitle: "Sistema de Recargas",
   siteSubtitle: "Recargas rápidas e seguras",
+  siteUrl: "",
+  // ── Gateway / Pagamentos ──
   activeGateway: "none",
+  paymentModule: "",
+  pushinPayToken: "",
+  // ── Taxas ──
   taxaTipo: "fixo",
   taxaValor: "0",
+  // ── Segurança ──
   masterPin: "1234",
+  adminPin: "",
   maintenanceMode: "false",
+  // ── Chat & Suporte ──
   chat_enabled: "true",
+  chat_new_conv_filter: "all",
   supportEnabled: "true",
+  // ── Funcionalidades ──
   salesToolsEnabled: "true",
   requireReferralCode: "false",
   seasonalTheme: "",
+  // ── Margem padrão ──
   defaultMarginEnabled: "false",
   defaultMarginType: "fixo",
   defaultMarginValue: "0",
-  chat_new_conv_filter: "all",
+  margemLucro: "",
+  // ── API de Recargas ──
+  apiBaseURL: "",
+  apiKey: "",
+  // ── Consulta Operadora ──
+  consultaOperadoraURL: "",
+  consultaOperadoraKey: "",
+  // ── Alertas ──
+  alertaSaldoBaixo: "",
+  // ── Push Notifications (VAPID) ──
+  vapid_public_key: "",
+  vapid_private_key: "",
 };
 
 // Essential keys that MUST exist for the app to load without white screen
