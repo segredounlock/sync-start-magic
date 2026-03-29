@@ -153,8 +153,8 @@ Deno.serve(async (req) => {
                 fetch(`${baseUrl}/functions/v1/send-push`, {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
-                    title: `👤 ${userName}`,
-                    body: `⏳ ${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}\n💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}\n📞 ${recarga.telefone}`,
+                    title: `⏳ ${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}`,
+                    body: `👤 ${userName}\n💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}\n📞 ${recarga.telefone}`,
                   }),
                 }).catch(() => {});
 
@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
                     title: `❌ ${failOp} R$ ${Number(recarga.valor).toFixed(2)}`,
-                    body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
+                    body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)}\n💰 Saldo: R$ ${newBalance.toFixed(2)}`,
                   }),
                 }).catch(() => {});
 
@@ -275,7 +275,7 @@ Deno.serve(async (req) => {
               method: "POST", headers: authHeaders,
               body: JSON.stringify({
                 title: `❌ ${expOp} R$ ${Number(recarga.valor).toFixed(2)}`,
-                body: `👤 ${expName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
+                body: `👤 ${expName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)}\n💰 Saldo: R$ ${newBalance.toFixed(2)}`,
               }),
             }).catch(() => {});
 
