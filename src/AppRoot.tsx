@@ -241,17 +241,18 @@ function App() {
   useCacheCleanup();
   usePrefetchRoutes();
 
-  // Show splash for minimum 10 seconds on first load
+  // Show splash for 10s, then fade out
   const [splashDone, setSplashDone] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
   const splashStarted = useRef(false);
   useEffect(() => {
     if (splashStarted.current) return;
     splashStarted.current = true;
-    const timer = setTimeout(() => setSplashDone(true), 10_000);
-    return () => clearTimeout(timer);
+    // At 10s start fade-out, at 10.6s remove splash
+    const fadeTimer = setTimeout(() => setSplashVisible(false), 10_000);
+    const removeTimer = setTimeout(() => setSplashDone(true), 10_600);
+    return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
   }, []);
-
-  if (!splashDone) return <SplashScreen />;
 
   return (
     <ThemeProvider>
