@@ -139,11 +139,6 @@ Deno.serve(async (req) => {
       { key: "install_domain", value: "" },
       { key: "install_secret", value: crypto.randomUUID() + "-" + crypto.randomUUID() },
     ];
-    // Try to read siteUrl for domain
-    try {
-      const body2 = licenseData ? {} : {};
-      // siteUrl already set in DEFAULT_CONFIGS if provided
-    } catch {}
 
     await admin.from("system_config").upsert(installMeta, { onConflict: "key" });
     results.push({
