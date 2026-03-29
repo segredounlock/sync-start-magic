@@ -7,18 +7,10 @@ import {
 } from "lucide-react";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
+import { MASTER_SUPABASE_URL, MASTER_PROJECT_URL, normalizeUrl } from "@/utils/licenseConfig";
+import { validateMasterServerConnection, isValidLicenseResponse } from "@/utils/licenseValidation";
 
-const MASTER_SERVER_URL = import.meta.env.VITE_SUPABASE_URL;
-
-type Step = "welcome" | "admin" | "license" | "finishing" | "done";
-
-interface InstallData {
-  adminEmail: string;
-  adminPassword: string;
-  adminName: string;
-  licenseKey: string;
-  masterUrl: string;
-}
+const MASTER_SERVER_URL = MASTER_SUPABASE_URL;
 
 async function callValidation(masterUrl: string, licenseKey: string) {
   const domain = window.location.hostname;
