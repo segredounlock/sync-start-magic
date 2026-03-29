@@ -7,49 +7,37 @@ const corsHeaders = {
 };
 
 const DEFAULT_CONFIGS: Record<string, string> = {
-  // ── Identidade ──
   siteName: "Sistema de Recargas",
   siteTitle: "Sistema de Recargas",
   siteSubtitle: "Recargas rápidas e seguras",
   siteUrl: "",
-  // ── Gateway / Pagamentos ──
   activeGateway: "none",
   paymentModule: "",
   pushinPayToken: "",
-  // ── Taxas ──
   taxaTipo: "fixo",
   taxaValor: "0",
-  // ── Segurança ──
   masterPin: "1234",
   adminPin: "",
   maintenanceMode: "false",
-  // ── Chat & Suporte ──
   chat_enabled: "true",
   chat_new_conv_filter: "all",
   supportEnabled: "true",
-  // ── Funcionalidades ──
   salesToolsEnabled: "true",
   requireReferralCode: "false",
   seasonalTheme: "",
-  // ── Margem padrão ──
   defaultMarginEnabled: "false",
   defaultMarginType: "fixo",
   defaultMarginValue: "0",
   margemLucro: "",
-  // ── API de Recargas ──
   apiBaseURL: "",
   apiKey: "",
-  // ── Consulta Operadora ──
   consultaOperadoraURL: "",
   consultaOperadoraKey: "",
-  // ── Alertas ──
   alertaSaldoBaixo: "",
-  // ── Push Notifications (VAPID) ──
   vapid_public_key: "",
   vapid_private_key: "",
 };
 
-// Essential keys that MUST exist for the app to load without white screen
 const CRITICAL_KEYS = ["siteTitle", "siteName", "maintenanceMode", "activeGateway"];
 
 Deno.serve(async (req) => {
@@ -93,8 +81,76 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ═══════════════════════════════════════════════════
+    // Parse optional license data from body
+    // ═══════════════════════════════════════════════════
+    let licenseData: Record<string, string> | null = null;
+    try {
+      const body = await req.json();
+      if (body?.license_key) {
+        licenseData = {
+          license_key: body.license_key,
+          license_status: body.license_status || "active",
+          license_start_date: body.license_start_date || "",
+          license_end_date: body.license_end_date || "",
+          license_grace_days: String(body.license_grace_days ?? "0"),
+        };
+      }
+      // Also accept install metadata
+      if (body?.siteUrl) {
+        DEFAULT_CONFIGS.siteUrl = body.siteUrl;
+      }
+      if (body?.install_completed) {
+        // Will be saved below
+      }
+    } catch {
+      // No body or invalid JSON — that's fine
+    }
+
     const results: { step: string; status: string; detail?: string }[] = [];
     const health: { key: string; ok: boolean; detail: string }[] = [];
+
+    // ═══════════════════════════════════════════════════
+    // Step 0: Save license config if provided (service_role bypasses RLS)
+    // ═══════════════════════════════════════════════════
+    if (licenseData) {
+      const licenseRows = Object.entries(licenseData).map(([key, value]) => ({
+        key,
+        value,
+      }));
+      const { error: licErr } = await admin
+        .from("system_config")
+        .upsert(licenseRows, { onConflict: "key" });
+
+      if (licErr) {
+        return new Response(
+          JSON.stringify({ error: `Falha ao salvar licença: ${licErr.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify persistence
+      const keysToVerify = ["license_key", "license_status", "license_start_date", "license_end_date"];
+      for (const k of keysToVerify) {
+        const { data: row } = await admin
+          .from("system_config")
+          .select("value")
+          .eq("key", k)
+          .maybeSingle();
+        if (!row?.value) {
+          return new Response(
+            JSON.stringify({ error: `Falha ao confirmar persistência de ${k}` }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      results.push({
+        step: "Licença",
+        status: "ok",
+        detail: `Licença salva e verificada (${licenseData.license_start_date} → ${licenseData.license_end_date})`,
+      });
+    }
 
     // ═══════════════════════════════════════════════════
     // Step 1: Insert ALL default configs (idempotent)
@@ -122,6 +178,28 @@ Deno.serve(async (req) => {
     });
 
     // ═══════════════════════════════════════════════════
+    // Step 1b: Save install metadata (service_role)
+    // ═══════════════════════════════════════════════════
+    const installMeta = [
+      { key: "install_completed", value: "true" },
+      { key: "install_completed_at", value: new Date().toISOString() },
+      { key: "install_domain", value: "" },
+      { key: "install_secret", value: crypto.randomUUID() + "-" + crypto.randomUUID() },
+    ];
+    // Try to read siteUrl for domain
+    try {
+      const body2 = licenseData ? {} : {};
+      // siteUrl already set in DEFAULT_CONFIGS if provided
+    } catch {}
+
+    await admin.from("system_config").upsert(installMeta, { onConflict: "key" });
+    results.push({
+      step: "Metadados de instalação",
+      status: "ok",
+      detail: "install_completed, install_secret salvos",
+    });
+
+    // ═══════════════════════════════════════════════════
     // Step 2: Health check — verify critical keys exist
     // ═══════════════════════════════════════════════════
     for (const key of CRITICAL_KEYS) {
@@ -132,7 +210,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
       health.push({
         key,
-        ok: !!data?.value !== undefined && data !== null,
+        ok: data !== null && data?.value !== undefined,
         detail: data ? `"${data.value}"` : "AUSENTE ⚠️",
       });
     }
@@ -281,7 +359,7 @@ Deno.serve(async (req) => {
       issues.push("Configs críticas ausentes no system_config");
     }
     if (!rpcHealthOk) {
-      readiness = "broken";
+      readiness = readiness === "broken" ? "broken" : "partial";
       issues.push("RPC get_maintenance_mode() não funciona — publique o projeto para aplicar migrations");
     }
     if (!hasAdmin) {
