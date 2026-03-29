@@ -10,7 +10,7 @@ const CACHE_VERSION = "v2-recargas-brasil";
 
 // ── Push Event ──
 self.addEventListener("push", (event) => {
-  let data = { title: "Sistema de Recargas", body: "Nova notificação" };
+  let data = { title: "Recargas Brasil", body: "Nova notificação" };
 
   try {
     if (event.data) {
