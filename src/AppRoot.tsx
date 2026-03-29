@@ -255,7 +255,24 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider>
+    <>
+      {/* Splash overlay with fade-out */}
+      {!splashDone && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          opacity: splashVisible ? 1 : 0,
+          transition: 'opacity 0.6s ease-out',
+          pointerEvents: splashVisible ? 'auto' : 'none',
+        }}>
+          <SplashScreen />
+        </div>
+      )}
+      {/* App content with fade-in */}
+      <div style={{
+        opacity: splashDone ? 1 : 0,
+        transition: 'opacity 0.5s ease-in',
+      }}>
+      <ThemeProvider>
       <AuthProvider>
         <Suspense fallback={null}>
           <InstallGate>
