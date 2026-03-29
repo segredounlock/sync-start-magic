@@ -403,47 +403,22 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
         <Server className="w-7 h-7 text-primary" />
       </div>
-      <h2 className="text-lg font-bold text-foreground">Instalar Dependências</h2>
+      <h2 className="text-lg font-bold text-foreground">Configurar Sistema</h2>
       <p className="text-muted-foreground text-xs max-w-sm mx-auto">
-        Antes de continuar, precisamos configurar as dependências essenciais no banco de dados.
+        Clique no botão abaixo para configurar as dependências essenciais do sistema.
       </p>
-
-      <div className="bg-muted/50 rounded-xl p-4 space-y-3 text-left">
-        <div className="text-xs font-medium text-foreground mb-2">Configurações necessárias:</div>
-        {[
-          { key: "license_master_url", value: MASTER_SUPABASE_URL },
-          { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
-        ].map((dep) => (
-          <div key={dep.key} className="flex items-start gap-2 text-xs">
-            {depStatus === "success" ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-            ) : depStatus === "running" ? (
-              <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0 mt-0.5" />
-            ) : (
-              <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-            )}
-            <div>
-              <span className="font-mono text-foreground">{dep.key}</span>
-              <p className="text-muted-foreground text-[10px] truncate max-w-[280px]">{dep.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {depStatus === "error" && depError && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2 text-left">
           <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-          <div>
-            <p className="text-xs font-medium text-destructive mb-1">Erro ao instalar dependências</p>
-            <p className="text-[11px] text-destructive/80">{depError}</p>
-          </div>
+          <p className="text-xs text-destructive/90">{depError}</p>
         </div>
       )}
 
       {depStatus === "success" && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Dependências instaladas com sucesso!</p>
+        <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-xs text-foreground font-medium">Configurado com sucesso!</p>
         </div>
       )}
 
@@ -467,7 +442,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           ) : depStatus === "success" ? (
             <><CheckCircle2 className="w-4 h-4" /> Instalado</>
           ) : (
-            <><Server className="w-4 h-4" /> Instalar Dependências</>
+            <><Server className="w-4 h-4" /> Instalar</>
           )}
         </button>
       </div>
