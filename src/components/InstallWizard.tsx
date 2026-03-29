@@ -102,101 +102,53 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       // 2. Wait for trigger to create profile/roles
       steps.push("Aguardando configuração do perfil...");
       setProgress([...steps]);
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 3000));
 
       steps.push("✓ Perfil configurado!");
       setProgress([...steps]);
 
-      // 3. Save license config
-      steps.push("Salvando licença...");
+      // 3. Call init-mirror with license data (uses service_role, bypasses RLS)
+      steps.push("Salvando licença e inicializando...");
       setProgress([...steps]);
 
-      const { error: e1 } = await supabase
-        .from("system_config")
-        .upsert([
-          { key: "license_key", value: data.licenseKey.trim() },
-          { key: "license_status", value: "active" },
-          { key: "license_start_date", value: data.licenseStartDate },
-          { key: "license_end_date", value: data.licenseEndDate },
-          { key: "license_grace_days", value: String(data.licenseGraceDays) },
-        ], { onConflict: "key" });
-      if (e1) throw e1;
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) throw new Error("Sessão não disponível. Tente fazer login e reinstalar.");
 
-      // 4. Confirm persistence
-      steps.push("Verificando persistência...");
-      setProgress([...steps]);
-
-      const keysToVerify = ["license_key", "license_status", "license_start_date", "license_end_date"];
-      for (const k of keysToVerify) {
-        const { data: row, error: rowErr } = await supabase
-          .from("system_config")
-          .select("value")
-          .eq("key", k)
-          .maybeSingle();
-
-        if (rowErr || !row?.value) {
-          throw new Error(`Falha ao confirmar persistência de ${k}. Tente novamente.`);
+      const initResp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            license_key: data.licenseKey.trim(),
+            license_status: "active",
+            license_start_date: data.licenseStartDate,
+            license_end_date: data.licenseEndDate,
+            license_grace_days: data.licenseGraceDays,
+            siteUrl: window.location.origin + "/",
+            install_completed: true,
+          }),
         }
+      );
+
+      const initResult = await initResp.json();
+      if (!initResp.ok) {
+        throw new Error(initResult.error || "Falha na inicialização do sistema");
       }
 
-      steps.push("✓ Licença salva e verificada!");
+      steps.push("✓ Licença salva e sistema inicializado!");
       setProgress([...steps]);
 
-      // 5. Set siteUrl
-      await supabase
-        .from("system_config")
-        .upsert({ key: "siteUrl", value: window.location.origin + "/" }, { onConflict: "key" });
-
-      // 6. Generate install_secret
-      const installSecret = crypto.randomUUID() + "-" + crypto.randomUUID();
-      await supabase
-        .from("system_config")
-        .upsert({ key: "install_secret", value: installSecret }, { onConflict: "key" });
-
-      // 7. Initialize via init-mirror (optional, best-effort)
-      steps.push("Inicializando banco de dados...");
-      setProgress([...steps]);
-
-      try {
-        const { data: session } = await supabase.auth.getSession();
-        const token = session?.session?.access_token;
-        if (token) {
-          const initResp = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          if (initResp.ok) {
-            steps.push("✓ Banco de dados inicializado!");
-          } else {
-            steps.push("⚠ Inicialização parcial (não crítico)");
-          }
-        } else {
-          steps.push("⚠ Sessão não disponível para init (não crítico)");
-        }
-      } catch {
-        steps.push("⚠ Init-mirror indisponível (não crítico)");
+      // Show readiness info
+      if (initResult.readiness === "ready") {
+        steps.push("✓ Sistema 100% operacional!");
+      } else if (initResult.readiness === "partial") {
+        steps.push("⚠ Sistema parcialmente configurado");
       }
-      setProgress([...steps]);
-
-      // 8. Mark installation complete
-      steps.push("Finalizando instalação...");
-      setProgress([...steps]);
-
-      await supabase
-        .from("system_config")
-        .upsert([
-          { key: "install_completed", value: "true" },
-          { key: "install_completed_at", value: new Date().toISOString() },
-          { key: "install_domain", value: window.location.hostname },
-        ], { onConflict: "key" });
-
-      steps.push("✓ Instalação concluída!");
       setProgress([...steps]);
 
       // Clear old cache
