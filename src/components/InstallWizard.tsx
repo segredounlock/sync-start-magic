@@ -187,33 +187,39 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       setProgress([...steps]);
 
       // 7. Seed all default system_config keys via init-mirror
-      steps.push("Inserindo configurações padrão no banco de dados...");
+      steps.push("Inicializando banco de dados...");
       setProgress([...steps]);
 
-      try {
-        const { data: session } = await supabase.auth.getSession();
-        const token = session?.session?.access_token;
-        if (token) {
-          const initResp = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          if (initResp.ok) {
-            const initResult = await initResp.json();
-            steps.push(`✓ ${initResult.results?.[0]?.detail || "Configurações padrão inseridas!"}`);
-          } else {
-            steps.push("⚠ Init-mirror falhou — configs padrão serão criadas no próximo acesso");
-          }
-        }
-      } catch {
-        steps.push("⚠ Init-mirror indisponível — configs serão criadas manualmente");
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) {
+        throw new Error("Sessão não encontrada após criação do admin. Tente novamente.");
       }
+
+      const initResp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!initResp.ok) {
+        const initErr = await initResp.json().catch(() => ({ error: "Erro desconhecido" }));
+        throw new Error(`Falha ao inicializar banco: ${initErr.error || initResp.statusText}`);
+      }
+
+      const initResult = await initResp.json();
+      
+      if (initResult.readiness === "broken") {
+        const issues = initResult.issues?.join("; ") || "Problemas estruturais detectados";
+        throw new Error(`Inicialização incompleta: ${issues}`);
+      }
+
+      steps.push(`✓ ${initResult.results?.[0]?.detail || "Banco de dados inicializado!"}`);
       setProgress([...steps]);
 
       // 8. Set siteUrl automatically
@@ -610,7 +616,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         )}
 
         {step === "welcome" && renderWelcome()}
-        {step === "admin" && renderAdmin()}
         {step === "admin" && renderAdmin()}
         {step === "license" && renderLicense()}
         {step === "finishing" && renderFinishing()}
