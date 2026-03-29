@@ -125,13 +125,6 @@ Deno.serve(async (req) => {
                   .eq("tipo", "revenda")
                   .single();
 
-                const { data: userProfile } = await adminClient
-                  .from("profiles")
-                  .select("nome, email")
-                  .eq("id", recarga.user_id)
-                  .single();
-
-                const userName = userProfile?.nome || userProfile?.email || recarga.user_id.slice(0, 8);
                 const operadoraUp = (recarga.operadora || "").toUpperCase();
 
                 const notifyPayload = {
