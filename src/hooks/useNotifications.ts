@@ -208,6 +208,8 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             event: "INSERT", schema: "public", table: "recargas",
           }, async (payload) => {
             const r = payload.new as any;
+            // Skip INSERT toast for final statuses — the UPDATE handler will cover them
+            const isFinal = ["completed", "concluida", "falha", "cancelled"].includes(r.status);
             const profile = await getProfile(r.user_id);
             const insertStatusMap: Record<string, string> = {
               completed: "Concluída", concluida: "Concluída",
@@ -227,10 +229,14 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               created_at: r.created_at,
               is_read: false,
             });
-            try { playSuccessSound(); } catch {}
-            if (showRecargaRef.current) {
-              showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
-              appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+            // Only show toast/sound for non-final statuses (processing/pending)
+            // Final statuses will be handled by the UPDATE listener to avoid duplicates
+            if (!isFinal) {
+              try { playSuccessSound(); } catch {}
+              if (showRecargaRef.current) {
+                showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
+                appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+              }
             }
           })
           .on("postgres_changes", {
