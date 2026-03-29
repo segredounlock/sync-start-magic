@@ -2,6 +2,57 @@
  * Local license date helpers — no remote server dependency.
  */
 
+/** Decode a JWT payload without verifying the signature */
+export function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const body = parts[1];
+    const padded = body + "=".repeat((4 - body.length % 4) % 4);
+    const decoded = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+/** Extract license dates from a JWT license key */
+export function extractLicenseFromKey(licenseKey: string): {
+  valid: boolean;
+  startDate: string;
+  endDate: string;
+  graceDays: number;
+  mirrorName?: string;
+  error?: string;
+} {
+  const payload = decodeJwtPayload(licenseKey);
+  if (!payload) {
+    return { valid: false, startDate: "", endDate: "", graceDays: 0, error: "Chave de licença inválida — formato não reconhecido." };
+  }
+
+  // iat = issued at (start), exp = expiration
+  const iat = payload.iat;
+  const exp = payload.exp;
+
+  if (!exp || typeof exp !== "number") {
+    return { valid: false, startDate: "", endDate: "", graceDays: 0, error: "Chave não contém data de expiração." };
+  }
+
+  const startDate = iat
+    ? new Date(iat * 1000).toISOString().split("T")[0]
+    : new Date().toISOString().split("T")[0];
+
+  const endDate = new Date(exp * 1000).toISOString().split("T")[0];
+
+  return {
+    valid: true,
+    startDate,
+    endDate,
+    graceDays: payload.gd ?? 0,
+    mirrorName: payload.mn || undefined,
+  };
+}
+
 /** Check if a string is a valid ISO date */
 export function isValidDateString(value: string | null | undefined): boolean {
   if (!value) return false;
