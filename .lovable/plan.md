@@ -1,30 +1,32 @@
 
 
-# Corrigir ReinstallBanner: Mostrar apenas no iOS
+# Corrigir PIN disparando indevidamente + Permissão de câmera repetida
 
-## Problema
-O banner de reinstalação aparece para todos os usuários em modo standalone, mas no Android/Chrome o nome/ícone do PWA atualiza automaticamente via WebAPK. Só o iOS precisa do aviso manual.
+## Problema 1: PIN dispara quando outro usuário entra/sai
+O `PinProtection` observa `user?.id` e re-bloqueia quando muda. Como o PIN está em `system_config` (tabela compartilhada), qualquer mudança de sessão (inclusive de outro usuário) faz o PIN ser reexigido. Além disso, o realtime do `useAuth` pode emitir múltiplos eventos de `onAuthStateChange`, causando falsos disparos.
 
-## Alteração
+**Correção**: Só re-bloquear quando o usuário efetivamente **troca** (ID diferente não-nulo → outro ID não-nulo), não quando o auth emite eventos intermediários (ex: token refresh). Ignorar transições `null → user` (login inicial — nesse caso, verificar sessão normalmente sem forçar re-lock).
 
-### `src/components/ReinstallBanner.tsx`
-- No `useEffect`, adicionar verificação: se **não** for iOS, retornar sem mostrar o banner
-- Manter toda a lógica atual, apenas filtrar para exibir somente em dispositivos iOS
+### `src/components/PinProtection.tsx`
+- Mudar lógica do `useEffect([user?.id])`:
+  - Se `prevUserId` era um ID válido **e** o novo ID é **diferente e também válido** → re-lock (troca de conta)
+  - Se `prevUserId` era `null` e agora tem user → primeiro login, checar PIN normalmente sem forçar clear
+  - Se user ficou `null` → logout, limpar sessão
+  - Ignorar quando `prevUserId === newUserId` (token refresh)
 
-```tsx
-useEffect(() => {
-  const isStandalone = ...;
-  if (!isStandalone) return;
-  
-  // Android auto-updates via WebAPK — only iOS needs this
-  if (!isIOS) return;
-  
-  const dismissed = localStorage.getItem(DISMISS_KEY);
-  if (dismissed === CURRENT_APP_VERSION) return;
-  setShow(true);
-}, []);
-```
+## Problema 2: Câmera pedindo permissão toda hora
+A função `captureLoginSelfie()` chama `getUserMedia` sem verificar se a permissão já foi negada ou concedida. Isso causa o prompt de permissão repetidamente.
 
-- Remover a lógica condicional de texto/botão para Android (só iOS será exibido)
-- Simplificar as mensagens para focar no fluxo iOS
+**Correção**: Usar `navigator.permissions.query({ name: "camera" })` antes de chamar `getUserMedia`. Se o estado for `"denied"`, retornar `null` imediatamente sem pedir. Se for `"granted"`, prosseguir. Se for `"prompt"`, verificar se o usuário já negou anteriormente (flag em `localStorage`).
+
+### `src/lib/deviceFingerprint.ts` — função `captureLoginSelfie`
+- No início, checar `navigator.permissions.query({ name: "camera" })`:
+  - `"denied"` → retorna `null` sem prompt
+  - `"granted"` → prossegue normalmente
+  - `"prompt"` → checar `localStorage.getItem("selfie_camera_declined")`. Se existir, retorna `null`
+- No `catch` do `getUserMedia`, setar `localStorage.setItem("selfie_camera_declined", "1")` para não pedir de novo na sessão
+
+## Arquivos alterados
+1. `src/components/PinProtection.tsx` — lógica de detecção de troca de usuário
+2. `src/lib/deviceFingerprint.ts` — checar permissão antes de pedir câmera
 
