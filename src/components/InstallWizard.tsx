@@ -12,6 +12,16 @@ import { validateMasterServerConnection, isValidLicenseResponse } from "@/utils/
 
 const MASTER_SERVER_URL = MASTER_SUPABASE_URL;
 
+type Step = "welcome" | "admin" | "license" | "finishing" | "done";
+
+interface InstallData {
+  adminEmail: string;
+  adminPassword: string;
+  adminName: string;
+  licenseKey: string;
+  masterUrl: string;
+}
+
 async function callValidation(masterUrl: string, licenseKey: string) {
   const domain = window.location.hostname;
   const response = await fetch(`${masterUrl}/functions/v1/license-validate`, {
