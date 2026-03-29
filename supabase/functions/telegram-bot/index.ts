@@ -916,19 +916,19 @@ serve(async (req) => {
   try {
     const supabase = getSupabase();
 
-    // License check — block if license expired (skip on master domain)
-    const { data: licenseValid } = await supabase.rpc("is_license_valid");
-    const { data: masterCfg } = await supabase
+    // License check — block if license expired (only for mirror/slave instances)
+    const { data: mirrorCfg } = await supabase
       .from("system_config")
       .select("value")
-      .eq("key", "masterAdminId")
+      .eq("key", "masterProjectUrl")
       .maybeSingle();
-    // If masterAdminId exists (not master server) and license is invalid, block
-    const isMirror = !!masterCfg?.value;
-    if (isMirror && licenseValid === false) {
-      console.log("[TELEGRAM-BOT] License expired or invalid — blocking requests");
-      // Return 200 to Telegram to avoid retries, but don't process
-      return new Response("ok", { headers: corsHeaders });
+    const isMirror = !!mirrorCfg?.value;
+    if (isMirror) {
+      const { data: licenseValid } = await supabase.rpc("is_license_valid");
+      if (licenseValid === false) {
+        console.log("[TELEGRAM-BOT] License expired or invalid — blocking requests");
+        return new Response("ok", { headers: corsHeaders });
+      }
     }
 
     // Extract bot_id from URL
