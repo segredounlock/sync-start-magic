@@ -95,7 +95,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push(token ? "✓ Autenticado!" : "⚠ Sessão pendente");
       setProgress([...steps]);
 
-      // 4. Call init-mirror for basic config (NO license data)
+      // 4. Call init-mirror for basic config
       steps.push("Inicializando sistema...");
       setProgress([...steps]);
 

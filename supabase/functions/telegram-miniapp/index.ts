@@ -46,20 +46,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // License check — block if license expired on mirrors
-    const { data: licenseValid } = await supabase.rpc("is_license_valid");
-    const { data: masterCfg } = await supabase
-      .from("system_config")
-      .select("value")
-      .eq("key", "masterAdminId")
-      .maybeSingle();
-    const isMirror = !!masterCfg?.value;
-    if (isMirror && licenseValid === false) {
-      return new Response(JSON.stringify({ error: "license_expired", message: "Licença expirada. Contate o administrador." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     // Action: lookup - Find user by telegram_id
     if (action === "lookup" || !action) {
