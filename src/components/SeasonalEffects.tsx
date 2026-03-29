@@ -392,16 +392,28 @@ function CanvasParticles({ theme }: { theme: SeasonalThemeKey }) {
 
         // Recycle if off-screen or expired
         if (p.life > p.maxLife || p.y > canvas.height + 50 || p.y < -100 || p.x < -50 || p.x > canvas.width + 50) {
-          // Reset
-          p.x = Math.random() * canvas.width;
           p.life = 0;
-          p.maxLife = 600 + Math.random() * 400;
-          if (p.type === "ember" || p.type === "balloon") {
-            p.y = canvas.height + Math.random() * 50;
-          } else {
-            p.y = -20 - Math.random() * 50;
+          p.maxLife = 500 + Math.random() * 500;
+          // Respawn from a random edge
+          const edge = Math.floor(Math.random() * 4);
+          switch (edge) {
+            case 0: // top
+              p.x = Math.random() * canvas.width; p.y = -20 - Math.random() * 50;
+              p.vx = (Math.random() - 0.5) * 1.5; p.vy = 0.3 + Math.random() * 1;
+              break;
+            case 1: // bottom
+              p.x = Math.random() * canvas.width; p.y = canvas.height + 20 + Math.random() * 50;
+              p.vx = (Math.random() - 0.5) * 1.5; p.vy = -(0.3 + Math.random() * 1);
+              break;
+            case 2: // left
+              p.x = -20 - Math.random() * 40; p.y = Math.random() * canvas.height;
+              p.vx = 0.3 + Math.random() * 1; p.vy = (Math.random() - 0.5) * 1;
+              break;
+            default: // right
+              p.x = canvas.width + 20 + Math.random() * 40; p.y = Math.random() * canvas.height;
+              p.vx = -(0.3 + Math.random() * 1); p.vy = (Math.random() - 0.5) * 1;
+              break;
           }
-          p.vx = (Math.random() - 0.5) * (p.type === "confetti" ? 2 : 0.8);
         }
 
         drawParticle(ctx, p);
