@@ -49,35 +49,46 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(supabaseUrl, serviceRoleKey);
 
-  // Verify caller is admin
-  const authHeader = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Token ausente" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const { data: { user } } = await admin.auth.getUser(authHeader);
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Token inválido" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const { data: roleCheck } = await admin
+  // Check if this is the very first install (no admin exists yet)
+  const { count: existingAdmins } = await admin
     .from("user_roles")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .maybeSingle();
+    .select("id", { count: "exact", head: true })
+    .eq("role", "admin");
 
-  if (!roleCheck) {
-    return new Response(JSON.stringify({ error: "Apenas admins" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const isFirstInstall = (existingAdmins || 0) === 0;
+
+  const authHeader = req.headers.get("authorization")?.replace("Bearer ", "");
+
+  // During first install, auth is optional (user may not have confirmed email yet)
+  if (!isFirstInstall) {
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Token ausente" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: { user } } = await admin.auth.getUser(authHeader);
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Token inválido" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: roleCheck } = await admin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleCheck) {
+      return new Response(JSON.stringify({ error: "Apenas admins" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   try {
