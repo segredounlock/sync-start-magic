@@ -21,6 +21,9 @@ export default function ReinstallBanner() {
 
     if (!isStandalone) return;
 
+    // Android auto-updates via WebAPK — only iOS needs this
+    if (!isIOS) return;
+
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed === CURRENT_APP_VERSION) return;
 
