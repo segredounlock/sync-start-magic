@@ -156,7 +156,19 @@ async function encryptPayload(
 
 async function sendPush(
   sub: { endpoint: string; p256dh: string; auth: string },
-  payload: { title: string; body: string; icon?: string },
+  payload: {
+    title: string;
+    body: string;
+    icon?: string;
+    image?: string;
+    url?: string;
+    type?: string;
+    tag?: string;
+    id?: string;
+    requireInteraction?: boolean;
+    actions?: { action: string; title: string }[];
+    timestamp?: string;
+  },
   vapidPublicKey: CryptoKey, vapidPrivateKey: CryptoKey, vapidSubject: string
 ): Promise<Response> {
   const authorization = await createVapidJwt(sub.endpoint, vapidPublicKey, vapidPrivateKey, vapidSubject);
