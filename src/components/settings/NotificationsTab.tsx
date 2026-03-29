@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { Bell, Send, BellOff, CheckCircle2, Loader2, LinkIcon } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { Bell, Send, BellOff, CheckCircle2, Loader2, LinkIcon, Smartphone, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { styledToast as toast } from "@/lib/toast";
 
@@ -14,8 +14,21 @@ export function NotificationsTab({ userId, telegramLinked, telegramUsername }: N
   const [pushLoading, setPushLoading] = useState(true);
   const [activating, setActivating] = useState(false);
 
+  // Detect iOS not in standalone
+  const iosNotInstalled = useMemo(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (!isIOS) return false;
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+      || (navigator as any).standalone === true;
+    return !isStandalone;
+  }, []);
+
+  const pushSupported = useMemo(() =>
+    "serviceWorker" in navigator && "PushManager" in window,
+  []);
+
   const checkPushStatus = useCallback(async () => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    if (!pushSupported) {
       setPushLoading(false);
       return;
     }
@@ -27,7 +40,7 @@ export function NotificationsTab({ userId, telegramLinked, telegramUsername }: N
       }
     } catch {}
     setPushLoading(false);
-  }, []);
+  }, [pushSupported]);
 
   useEffect(() => {
     checkPushStatus();
@@ -116,6 +129,8 @@ export function NotificationsTab({ userId, telegramLinked, telegramUsername }: N
     }
   };
 
+  const canActivatePush = pushSupported && !iosNotInstalled;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Push Notifications */}
@@ -126,6 +141,7 @@ export function NotificationsTab({ userId, telegramLinked, telegramUsername }: N
         </div>
         <p className="text-xs text-muted-foreground">Receba alertas no navegador ou celular.</p>
 
+        {/* Status card */}
         <div className="p-4 rounded-xl bg-muted/30 flex items-center gap-3">
           {pushLoading ? (
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -152,6 +168,37 @@ export function NotificationsTab({ userId, telegramLinked, telegramUsername }: N
           )}
         </div>
 
+        {/* Soft ask - benefits card (only when not enabled) */}
+        {!pushEnabled && !pushLoading && (
+          <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-2">
+            <div className="flex items-center gap-2 text-primary">
+              <Bell className="h-4 w-4" />
+              <span className="text-xs font-semibold">Por que ativar?</span>
+            </div>
+            <ul className="text-xs text-muted-foreground space-y-1 ml-6 list-disc">
+              <li>Saiba <strong className="text-foreground">instantaneamente</strong> quando seu depósito for confirmado</li>
+              <li>Receba alertas de <strong className="text-foreground">recargas concluídas</strong></li>
+              <li>Fique por dentro de <strong className="text-foreground">promoções exclusivas</strong></li>
+            </ul>
+          </div>
+        )}
+
+        {/* iOS warning */}
+        {iosNotInstalled && !pushEnabled && !pushLoading && (
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+            <div className="text-xs text-muted-foreground">
+              <p className="font-semibold text-amber-600 dark:text-amber-400">Necessário instalar o app</p>
+              <p className="mt-1">
+                No iPhone, as notificações push só funcionam se o app estiver{" "}
+                <strong className="text-foreground">instalado na tela inicial</strong>.
+                Toque em <Smartphone className="h-3 w-3 inline-block mx-0.5" /> Compartilhar → "Adicionar à Tela de Início" e depois ative aqui.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Action button */}
         {pushEnabled ? (
           <button
             onClick={handleDeactivatePush}
@@ -162,11 +209,11 @@ export function NotificationsTab({ userId, telegramLinked, telegramUsername }: N
         ) : (
           <button
             onClick={handleActivatePush}
-            disabled={activating}
+            disabled={activating || !canActivatePush}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {activating && <Loader2 className="h-4 w-4 animate-spin" />}
-            Ativar Agora
+            {iosNotInstalled ? "Instale o app primeiro" : "Ativar Agora"}
           </button>
         )}
       </div>

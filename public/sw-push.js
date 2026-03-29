@@ -5,6 +5,7 @@
 // ══════════════════════════════════════════════════════════════════
 
 const APP_ICON = "/favicon.png";
+const BADGE_ICON = "/badge-mono.png";
 const DEFAULT_URL = "/";
 const CACHE_VERSION = "v2-recargas-brasil";
 
