@@ -303,7 +303,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               // New notification — show toast and sound
               try { playSuccessSound(); } catch {}
               if (showRecargaRef.current) {
-                showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`);
+                showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`, { tag: `recarga-${r.id}`, type: "recarga" });
                 const toastMethod = r.status === "completed" || r.status === "concluida"
                   ? appToast.recargaCompleted
                   : r.status === "falha" || r.status === "cancelled"
