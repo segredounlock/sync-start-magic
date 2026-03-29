@@ -13,23 +13,33 @@ function requestNotifPermission() {
   }
 }
 
-async function showSystemNotification(title: string, body: string) {
+async function showSystemNotification(title: string, body: string, options?: {
+  tag?: string;
+  url?: string;
+  type?: string;
+  requireInteraction?: boolean;
+}) {
   try {
     if (typeof Notification === "undefined" || _notifPermission !== "granted") return;
-    // Use ServiceWorker showNotification for background support
+    const tag = options?.tag || `notif-${Date.now()}`;
+    const notifOptions: any = {
+      body,
+      icon: "/favicon.png",
+      badge: "/favicon.png",
+      tag,
+      renotify: true,
+      vibrate: [200, 100, 200],
+      requireInteraction: options?.requireInteraction || false,
+      data: {
+        url: options?.url || "/",
+        type: options?.type || "general",
+      },
+    };
     if ("serviceWorker" in navigator) {
       const reg = await navigator.serviceWorker.ready;
-      (reg as any).showNotification(title, {
-        body,
-        icon: "/favicon.png",
-        badge: "/favicon.png",
-        tag: `notif-${Date.now()}`,
-        renotify: true,
-        vibrate: [200, 100, 200],
-        requireInteraction: false,
-      } as any);
+      reg.showNotification(title, notifOptions);
     } else {
-      new Notification(title, { body, icon: "/favicon.png", tag: body });
+      new Notification(title, { body, icon: "/favicon.png", tag });
     }
   } catch { /* ignore */ }
 }
@@ -188,7 +198,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               });
               try { playCashRegisterSound(); } catch {}
               if (showDepositRef.current) {
-                showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
+                showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`, { tag: `deposit-${newRow.id}`, type: "deposit", url: "/" });
                 appToast.depositConfirmed(`Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
               }
             }
@@ -234,7 +244,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             if (!isFinal) {
               try { playSuccessSound(); } catch {}
               if (showRecargaRef.current) {
-                showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
+                showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { tag: `recarga-${r.id}`, type: "recarga" });
                 appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
               }
             }
@@ -293,7 +303,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               // New notification — show toast and sound
               try { playSuccessSound(); } catch {}
               if (showRecargaRef.current) {
-                showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`);
+                showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`, { tag: `recarga-${r.id}`, type: "recarga" });
                 const toastMethod = r.status === "completed" || r.status === "concluida"
                   ? appToast.recargaCompleted
                   : r.status === "falha" || r.status === "cancelled"
@@ -346,7 +356,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             });
             try { playWebSignupSound(); } catch {}
             if (showNewUserRef.current) {
-              showSystemNotification("🆕 Novo cadastro", label);
+              showSystemNotification("🆕 Novo cadastro", label, { tag: `new-user-${row.id}`, type: "new_user" });
               appToast.newUserWeb(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
             }
           })
@@ -399,7 +409,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             });
             try { playTelegramSignupSound(); } catch {}
             if (showNewUserRef.current) {
-              showSystemNotification("🤖 Novo Telegram", label);
+              showSystemNotification("🤖 Novo Telegram", label, { tag: `new-tg-${row.id}`, type: "new_user" });
               appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
             }
           })

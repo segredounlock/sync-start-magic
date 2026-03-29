@@ -156,7 +156,19 @@ async function encryptPayload(
 
 async function sendPush(
   sub: { endpoint: string; p256dh: string; auth: string },
-  payload: { title: string; body: string; icon?: string },
+  payload: {
+    title: string;
+    body: string;
+    icon?: string;
+    image?: string;
+    url?: string;
+    type?: string;
+    tag?: string;
+    id?: string;
+    requireInteraction?: boolean;
+    actions?: { action: string; title: string }[];
+    timestamp?: string;
+  },
   vapidPublicKey: CryptoKey, vapidPrivateKey: CryptoKey, vapidSubject: string
 ): Promise<Response> {
   const authorization = await createVapidJwt(sub.endpoint, vapidPublicKey, vapidPrivateKey, vapidSubject);
@@ -202,7 +214,7 @@ serve(async (req) => {
       );
     }
 
-    const { title, body: msgBody, icon, user_ids } = await req.json();
+    const { title, body: msgBody, icon, image, url, type, tag, id, requireInteraction, actions, user_ids } = await req.json();
     if (!title || !msgBody) {
       return new Response(
         JSON.stringify({ error: "title and body required" }),
@@ -229,7 +241,19 @@ serve(async (req) => {
     }
 
     const { publicKey, privateKey } = await importVapidKeys(configMap.vapid_public_key, configMap.vapid_private_key);
-    const payload = { title, body: msgBody, icon: icon || "/favicon.png" };
+    const payload = {
+      title,
+      body: msgBody,
+      icon: icon || "/favicon.png",
+      image: image || undefined,
+      url: url || "/",
+      type: type || "general",
+      tag: tag || type || "general",
+      id: id || undefined,
+      requireInteraction: requireInteraction || false,
+      actions: actions || undefined,
+      timestamp: new Date().toISOString(),
+    };
 
     console.log(`[Push] Sending to ${subs.length} subscriptions for ${targetIds.length} users`);
 
