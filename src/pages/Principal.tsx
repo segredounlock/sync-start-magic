@@ -64,7 +64,7 @@ import { confirm } from "@/lib/confirm";
 import { safeValor } from "@/lib/utils";
 import { useDisabledValues } from "@/hooks/useDisabledValues";
 
-type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "ferramentas" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte" | "antifraude" | "auditoria" | "licencas";
+type PrincipalView = "dashboard" | "lista" | "detalhe" | "config-api" | "pagamentos" | "depositos" | "bot" | "geral" | "relatorios" | "ferramentas" | "precificacao" | "broadcast" | "enquetes" | "batepapo" | "saques" | "redes" | "suporte" | "antifraude" | "auditoria";
 
 type ReportPeriod = "hoje" | "7dias" | "mes" | "total";
 
