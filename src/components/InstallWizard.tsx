@@ -3,11 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Shield, KeyRound, User, Mail, Lock, Eye, EyeOff,
   Loader2, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft,
-  Calendar
+  Info
 } from "lucide-react";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
-import { validateLicenseDatesBeforeSave } from "@/utils/licenseValidation";
+import { extractLicenseFromKey } from "@/utils/licenseDates";
 
 type Step = "welcome" | "admin" | "license" | "finishing" | "done";
 
