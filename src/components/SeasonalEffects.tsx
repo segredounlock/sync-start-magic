@@ -27,16 +27,16 @@ export interface SeasonalThemeConfig {
 
 export const SEASONAL_THEMES: SeasonalThemeConfig[] = [
   { key: "none", label: "Nenhum", emoji: "⚪", description: "Tema padrão sem efeitos sazonais", particles: [], accentGradient: "", glowColor: "" },
-  { key: "ano_novo", label: "Feliz Ano Novo", emoji: "🎆", description: "Réveillon — Fogos e champagne", particles: ["🎆", "✨", "🥂", "🎇", "⭐", "💫"], accentGradient: "from-yellow-400 via-amber-500 to-purple-600", glowColor: "rgba(234, 179, 8, 0.15)" },
-  { key: "carnaval", label: "Feliz Carnaval", emoji: "🎭", description: "Folia, confete e serpentina", particles: ["🎭", "🎉", "🎊", "💃", "🪇", "🌈"], accentGradient: "from-green-400 via-yellow-400 to-pink-500", glowColor: "rgba(168, 85, 247, 0.15)" },
-  { key: "pascoa", label: "Feliz Páscoa", emoji: "🐰", description: "Coelhinhos e ovos de chocolate", particles: ["🐰", "🥚", "🌸", "🐣", "🍫", "🌷"], accentGradient: "from-pink-300 via-purple-300 to-blue-300", glowColor: "rgba(196, 181, 253, 0.15)" },
-  { key: "dia_maes", label: "Feliz Dia das Mães", emoji: "💐", description: "Flores e amor materno", particles: ["💐", "🌹", "❤️", "🌸", "💕", "🌺"], accentGradient: "from-pink-400 via-rose-400 to-red-400", glowColor: "rgba(244, 114, 182, 0.15)" },
-  { key: "dia_namorados", label: "Feliz Dia dos Namorados", emoji: "💕", description: "Corações e romance", particles: ["💕", "💘", "❤️", "💖", "💝", "🥰"], accentGradient: "from-red-400 via-pink-500 to-rose-500", glowColor: "rgba(239, 68, 68, 0.12)" },
-  { key: "festa_junina", label: "Feliz Festa Junina", emoji: "🎪", description: "Bandeirinhas e fogueira", particles: ["🎪", "🌽", "🔥", "🪗", "🎏", "⛺"], accentGradient: "from-orange-400 via-yellow-500 to-red-500", glowColor: "rgba(249, 115, 22, 0.15)" },
-  { key: "dia_pais", label: "Feliz Dia dos Pais", emoji: "👔", description: "Homenagem aos pais", particles: ["👔", "⭐", "🏆", "💪", "🎖️", "💙"], accentGradient: "from-blue-400 via-sky-500 to-indigo-500", glowColor: "rgba(59, 130, 246, 0.12)" },
-  { key: "dia_criancas", label: "Feliz Dia das Crianças", emoji: "🎈", description: "Balões e diversão", particles: ["🎈", "🎮", "🌈", "🧸", "🎠", "🍭"], accentGradient: "from-cyan-400 via-green-400 to-yellow-400", glowColor: "rgba(34, 211, 238, 0.12)" },
-  { key: "black_friday", label: "Black Friday", emoji: "🏷️", description: "Ofertas e descontos", particles: ["🏷️", "💰", "🔥", "⚡", "💸", "🤑"], accentGradient: "from-gray-900 via-yellow-500 to-gray-900", glowColor: "rgba(234, 179, 8, 0.1)" },
-  { key: "natal", label: "Feliz Natal", emoji: "🎄", description: "Papai Noel e neve", particles: ["🎄", "❄️", "🎅", "⭐", "🎁", "☃️"], accentGradient: "from-red-500 via-green-500 to-red-500", glowColor: "rgba(34, 197, 94, 0.12)" },
+  { key: "ano_novo", label: "Feliz Ano Novo", emoji: "🎆", description: "Réveillon — Fogos e champagne", particles: ["🎆", "✨", "🥂", "🎇", "⭐", "💫"], accentGradient: "from-indigo-900 via-purple-700 to-amber-500", glowColor: "rgba(234, 179, 8, 0.2)" },
+  { key: "carnaval", label: "Feliz Carnaval", emoji: "🎭", description: "Folia, confete e serpentina", particles: ["🎭", "🎉", "🎊", "💃", "🪇", "🌈"], accentGradient: "from-fuchsia-600 via-yellow-400 to-cyan-400", glowColor: "rgba(168, 85, 247, 0.2)" },
+  { key: "pascoa", label: "Feliz Páscoa", emoji: "🐰", description: "Coelhinhos e ovos de chocolate", particles: ["🐰", "🥚", "🌸", "🐣", "🍫", "🌷"], accentGradient: "from-violet-400 via-pink-300 to-sky-300", glowColor: "rgba(196, 181, 253, 0.2)" },
+  { key: "dia_maes", label: "Feliz Dia das Mães", emoji: "💐", description: "Flores e amor materno", particles: ["💐", "🌹", "❤️", "🌸", "💕", "🌺"], accentGradient: "from-rose-600 via-pink-400 to-rose-300", glowColor: "rgba(244, 114, 182, 0.2)" },
+  { key: "dia_namorados", label: "Feliz Dia dos Namorados", emoji: "💕", description: "Corações e romance", particles: ["💕", "💘", "❤️", "💖", "💝", "🥰"], accentGradient: "from-red-700 via-rose-500 to-pink-400", glowColor: "rgba(239, 68, 68, 0.18)" },
+  { key: "festa_junina", label: "Feliz Festa Junina", emoji: "🎪", description: "Bandeirinhas e fogueira", particles: ["🎪", "🌽", "🔥", "🪗", "🎏", "⛺"], accentGradient: "from-amber-700 via-orange-500 to-red-600", glowColor: "rgba(249, 115, 22, 0.2)" },
+  { key: "dia_pais", label: "Feliz Dia dos Pais", emoji: "👔", description: "Homenagem aos pais", particles: ["👔", "⭐", "🏆", "💪", "🎖️", "💙"], accentGradient: "from-blue-800 via-sky-500 to-blue-400", glowColor: "rgba(59, 130, 246, 0.18)" },
+  { key: "dia_criancas", label: "Feliz Dia das Crianças", emoji: "🎈", description: "Balões e diversão", particles: ["🎈", "🎮", "🌈", "🧸", "🎠", "🍭"], accentGradient: "from-emerald-400 via-yellow-400 to-pink-400", glowColor: "rgba(34, 211, 238, 0.18)" },
+  { key: "black_friday", label: "Black Friday", emoji: "🏷️", description: "Ofertas e descontos", particles: ["🏷️", "💰", "🔥", "⚡", "💸", "🤑"], accentGradient: "from-gray-900 via-yellow-500 to-gray-900", glowColor: "rgba(234, 179, 8, 0.15)" },
+  { key: "natal", label: "Feliz Natal", emoji: "🎄", description: "Papai Noel e neve", particles: ["🎄", "❄️", "🎅", "⭐", "🎁", "☃️"], accentGradient: "from-red-700 via-green-600 to-red-700", glowColor: "rgba(34, 197, 94, 0.18)" },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -58,7 +58,7 @@ interface CanvasParticle {
 
 function createParticlesForTheme(theme: SeasonalThemeKey, w: number, h: number): CanvasParticle[] {
   const particles: CanvasParticle[] = [];
-  const count = Math.min(Math.floor(w / 40), 30); // responsive count
+  const count = Math.min(Math.floor(w / 30), 40); // more particles
 
   const makeBase = (): Omit<CanvasParticle, "color" | "type"> => ({
     x: Math.random() * w,
@@ -66,63 +66,135 @@ function createParticlesForTheme(theme: SeasonalThemeKey, w: number, h: number):
     vx: (Math.random() - 0.5) * 0.5,
     vy: 0.3 + Math.random() * 1,
     size: 3 + Math.random() * 4,
-    opacity: 0.3 + Math.random() * 0.7,
+    opacity: 0.4 + Math.random() * 0.6,
     rotation: Math.random() * Math.PI * 2,
     rotationSpeed: (Math.random() - 0.5) * 0.03,
     life: 0,
-    maxLife: 600 + Math.random() * 400,
+    maxLife: 500 + Math.random() * 500,
   });
 
   switch (theme) {
-    case "natal": // Snowflakes
+    case "natal": // Snowflakes + red/green sparkles
       for (let i = 0; i < count; i++) {
-        particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 0.8, vy: 0.3 + Math.random() * 0.8, size: 2 + Math.random() * 4, color: `rgba(255,255,255,${0.4 + Math.random() * 0.6})`, type: "snow" });
+        const isSnow = Math.random() > 0.3;
+        if (isSnow) {
+          particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 0.8, vy: 0.2 + Math.random() * 0.6, size: 2 + Math.random() * 5, color: `rgba(255,255,255,${0.5 + Math.random() * 0.5})`, type: "snow" });
+        } else {
+          const c = Math.random() > 0.5 ? `hsla(0, 80%, 55%, ${0.5 + Math.random() * 0.5})` : `hsla(140, 70%, 45%, ${0.5 + Math.random() * 0.5})`;
+          particles.push({ ...makeBase(), size: 1.5 + Math.random() * 3, color: c, type: "sparkle" });
+        }
       }
       break;
-    case "ano_novo": // Firework sparkles
+    case "ano_novo": // Multi-color firework sparkles + gold trails
+      for (let i = 0; i < count * 1.3; i++) {
+        const hues = [45, 50, 280, 320, 200, 0, 180];
+        const hue = hues[Math.floor(Math.random() * hues.length)];
+        const isBig = Math.random() > 0.7;
+        particles.push({
+          ...makeBase(),
+          vy: -0.8 + Math.random() * 2,
+          vx: (Math.random() - 0.5) * 3,
+          size: isBig ? 3 + Math.random() * 5 : 1 + Math.random() * 3,
+          color: `hsla(${hue}, 100%, ${60 + Math.random() * 30}%, ${0.6 + Math.random() * 0.4})`,
+          type: isBig ? "sparkle" : "spark",
+        });
+      }
+      break;
+    case "carnaval": // Confetti in vivid colors + serpentina
+      for (let i = 0; i < count * 1.8; i++) {
+        const colors = ["#ff0080", "#ff8c00", "#40e0d0", "#ff1493", "#7b68ee", "#ffd700", "#00ff7f", "#ff4500", "#00bfff"];
+        particles.push({
+          ...makeBase(),
+          vx: (Math.random() - 0.5) * 2.5,
+          vy: 0.5 + Math.random() * 2,
+          size: 3 + Math.random() * 6,
+          rotationSpeed: (Math.random() - 0.5) * 0.08,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          type: "confetti",
+        });
+      }
+      break;
+    case "pascoa": // Pastel eggs + flower petals + chocolate
       for (let i = 0; i < count; i++) {
-        const hue = [45, 50, 280, 320, 0][Math.floor(Math.random() * 5)];
-        particles.push({ ...makeBase(), vy: -0.5 + Math.random() * 1.5, vx: (Math.random() - 0.5) * 2, size: 1 + Math.random() * 3, color: `hsla(${hue}, 100%, 70%, ${0.5 + Math.random() * 0.5})`, type: "sparkle" });
+        const r = Math.random();
+        if (r < 0.4) {
+          // Pastel colored eggs
+          const eggColors = ["#c4b5fd", "#fbcfe8", "#a5f3fc", "#bef264", "#fde68a", "#fca5a5"];
+          particles.push({ ...makeBase(), vy: 0.15 + Math.random() * 0.5, size: 4 + Math.random() * 6, color: eggColors[Math.floor(Math.random() * eggColors.length)], type: "bubble" });
+        } else if (r < 0.7) {
+          // Pink/white petals
+          const petalColors = ["#f9a8d4", "#fbcfe8", "#fce7f3", "#f472b6"];
+          particles.push({ ...makeBase(), vy: 0.1 + Math.random() * 0.4, vx: (Math.random() - 0.5) * 0.8, size: 3 + Math.random() * 5, color: petalColors[Math.floor(Math.random() * petalColors.length)], type: "petal" });
+        } else {
+          // Chocolate sparkles
+          particles.push({ ...makeBase(), size: 2 + Math.random() * 3, color: `hsla(25, 60%, ${35 + Math.random() * 20}%, ${0.4 + Math.random() * 0.4})`, type: "spark" });
+        }
       }
       break;
-    case "carnaval": // Confetti
-      for (let i = 0; i < count * 1.5; i++) {
-        const colors = ["#ff0080", "#ff8c00", "#40e0d0", "#ff1493", "#7b68ee", "#ffd700", "#00ff7f"];
-        particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 2, vy: 0.5 + Math.random() * 1.5, size: 3 + Math.random() * 5, color: colors[Math.floor(Math.random() * colors.length)], type: "confetti" });
+    case "dia_namorados": // Hearts of various sizes + rose petals
+      for (let i = 0; i < count * 1.2; i++) {
+        const isHeart = Math.random() > 0.3;
+        const colors = ["#ff4d6d", "#ff758f", "#ff87ab", "#c9184a", "#e11d48", "#fb7185"];
+        if (isHeart) {
+          particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 0.6, vy: 0.15 + Math.random() * 0.5, size: 3 + Math.random() * 8, color: colors[Math.floor(Math.random() * colors.length)], type: "heart" });
+        } else {
+          particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 0.8, vy: 0.1 + Math.random() * 0.4, size: 3 + Math.random() * 5, color: colors[Math.floor(Math.random() * colors.length)], type: "petal" });
+        }
       }
       break;
-    case "dia_namorados":
-    case "dia_maes": // Floating hearts / petals
+    case "dia_maes": // Flower petals + soft hearts
       for (let i = 0; i < count; i++) {
-        const colors = theme === "dia_namorados" ? ["#ff4d6d", "#ff758f", "#ff87ab", "#c9184a"] : ["#f472b6", "#fb7185", "#fda4af", "#e11d48"];
-        particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.6, size: 4 + Math.random() * 6, color: colors[Math.floor(Math.random() * colors.length)], type: theme === "dia_namorados" ? "heart" : "petal" });
+        const r = Math.random();
+        const colors = ["#f472b6", "#fb7185", "#fda4af", "#e11d48", "#ec4899", "#f9a8d4"];
+        if (r < 0.5) {
+          particles.push({ ...makeBase(), vy: 0.1 + Math.random() * 0.4, size: 4 + Math.random() * 6, color: colors[Math.floor(Math.random() * colors.length)], type: "petal" });
+        } else {
+          particles.push({ ...makeBase(), vy: 0.15 + Math.random() * 0.4, size: 3 + Math.random() * 6, color: colors[Math.floor(Math.random() * colors.length)], type: "heart" });
+        }
       }
       break;
-    case "festa_junina": // Fire embers
+    case "festa_junina": // Fire embers + colorful flag-like confetti
+      for (let i = 0; i < count * 1.3; i++) {
+        const r = Math.random();
+        if (r < 0.5) {
+          // Embers rising
+          particles.push({ ...makeBase(), vy: -(0.4 + Math.random() * 1.2), vx: (Math.random() - 0.5) * 1.5, y: h + Math.random() * 50, size: 1.5 + Math.random() * 3.5, color: `hsla(${15 + Math.random() * 35}, 100%, ${50 + Math.random() * 30}%, ${0.6 + Math.random() * 0.4})`, type: "ember" });
+        } else {
+          // Bandeirinhas (flag-colored confetti)
+          const flagColors = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899"];
+          particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 1.5, vy: 0.3 + Math.random() * 1, size: 4 + Math.random() * 5, color: flagColors[Math.floor(Math.random() * flagColors.length)], type: "confetti" });
+        }
+      }
+      break;
+    case "dia_pais": // Blue/gold stars + subtle sparkles
       for (let i = 0; i < count; i++) {
-        particles.push({ ...makeBase(), vy: -(0.3 + Math.random() * 1), vx: (Math.random() - 0.5) * 1.5, y: h + Math.random() * 50, size: 1.5 + Math.random() * 3, color: `hsla(${20 + Math.random() * 30}, 100%, ${50 + Math.random() * 30}%, ${0.5 + Math.random() * 0.5})`, type: "ember" });
+        const r = Math.random();
+        if (r < 0.5) {
+          particles.push({ ...makeBase(), vy: 0.1 + Math.random() * 0.3, size: 3 + Math.random() * 5, color: `hsla(${210 + Math.random() * 20}, 80%, ${55 + Math.random() * 25}%, ${0.4 + Math.random() * 0.5})`, type: "star" });
+        } else {
+          particles.push({ ...makeBase(), size: 2 + Math.random() * 3, color: `hsla(45, 90%, ${60 + Math.random() * 20}%, ${0.4 + Math.random() * 0.4})`, type: "sparkle" });
+        }
       }
       break;
-    case "pascoa": // Gentle bubbles/petals
-      for (let i = 0; i < count * 0.7; i++) {
-        const colors = ["#c4b5fd", "#f0abfc", "#fbcfe8", "#a5b4fc", "#bef264"];
-        particles.push({ ...makeBase(), vy: 0.15 + Math.random() * 0.5, size: 3 + Math.random() * 5, color: colors[Math.floor(Math.random() * colors.length)], type: "bubble" });
+    case "dia_criancas": // Colorful balloons + rainbow sparkles
+      for (let i = 0; i < count * 1.2; i++) {
+        const colors = ["#22d3ee", "#4ade80", "#facc15", "#f97316", "#a855f7", "#ec4899", "#ef4444", "#3b82f6"];
+        const r = Math.random();
+        if (r < 0.6) {
+          particles.push({ ...makeBase(), vy: -(0.15 + Math.random() * 0.5), y: h + Math.random() * 100, vx: (Math.random() - 0.5) * 0.8, size: 5 + Math.random() * 10, color: colors[Math.floor(Math.random() * colors.length)], type: "balloon" });
+        } else {
+          particles.push({ ...makeBase(), size: 2 + Math.random() * 3, color: colors[Math.floor(Math.random() * colors.length)], type: "sparkle" });
+        }
       }
       break;
-    case "black_friday": // Gold sparks
-      for (let i = 0; i < count; i++) {
-        particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 1.5, vy: 0.5 + Math.random(), size: 1.5 + Math.random() * 2.5, color: `hsla(${45 + Math.random() * 15}, 100%, ${60 + Math.random() * 20}%, ${0.5 + Math.random() * 0.5})`, type: "spark" });
-      }
-      break;
-    case "dia_criancas": // Colorful floating bubbles
-      for (let i = 0; i < count; i++) {
-        const colors = ["#22d3ee", "#4ade80", "#facc15", "#f97316", "#a855f7", "#ec4899"];
-        particles.push({ ...makeBase(), vy: -(0.1 + Math.random() * 0.4), y: h + Math.random() * 100, vx: (Math.random() - 0.5) * 0.8, size: 4 + Math.random() * 8, color: colors[Math.floor(Math.random() * colors.length)], type: "balloon" });
-      }
-      break;
-    case "dia_pais": // Stars
-      for (let i = 0; i < count * 0.6; i++) {
-        particles.push({ ...makeBase(), vy: 0.1 + Math.random() * 0.3, size: 2 + Math.random() * 4, color: `hsla(${210 + Math.random() * 30}, 80%, ${60 + Math.random() * 20}%, ${0.3 + Math.random() * 0.5})`, type: "star" });
+    case "black_friday": // Gold/yellow sparks + price tag shapes
+      for (let i = 0; i < count * 1.2; i++) {
+        const r = Math.random();
+        if (r < 0.6) {
+          particles.push({ ...makeBase(), vx: (Math.random() - 0.5) * 2, vy: 0.5 + Math.random() * 1.5, size: 1.5 + Math.random() * 3, color: `hsla(${40 + Math.random() * 20}, 100%, ${55 + Math.random() * 25}%, ${0.6 + Math.random() * 0.4})`, type: "spark" });
+        } else {
+          particles.push({ ...makeBase(), size: 2 + Math.random() * 4, color: `hsla(0, 0%, ${80 + Math.random() * 20}%, ${0.3 + Math.random() * 0.3})`, type: "sparkle" });
+        }
       }
       break;
     default:
@@ -335,8 +407,25 @@ function CanvasParticles({ theme }: { theme: SeasonalThemeKey }) {
   );
 }
 
+// ── Theme-specific decorative icons for the banner ──
+const THEME_BANNER_ICONS: Record<SeasonalThemeKey, string[]> = {
+  none: [],
+  ano_novo: ["🎆", "🥂", "🎇", "✨", "🍾"],
+  carnaval: ["🎭", "🎊", "💃", "🪇", "🌈"],
+  pascoa: ["🐰", "🥚", "🐣", "🍫", "🌷"],
+  dia_maes: ["💐", "🌹", "❤️", "🌺", "💕"],
+  dia_namorados: ["💘", "❤️", "💖", "💝", "🥰"],
+  festa_junina: ["🔥", "🌽", "🎏", "🪗", "⛺"],
+  dia_pais: ["👔", "🏆", "💪", "⭐", "💙"],
+  dia_criancas: ["🎈", "🧸", "🌈", "🎮", "🍭"],
+  black_friday: ["🏷️", "💰", "⚡", "🔥", "💸"],
+  natal: ["🎄", "❄️", "🎅", "🎁", "☃️"],
+};
+
 // ── Banner ──
 function SeasonalBanner({ theme }: { theme: SeasonalThemeConfig }) {
+  const icons = THEME_BANNER_ICONS[theme.key] || [];
+
   return (
     <motion.div
       key={theme.key}
@@ -344,20 +433,67 @@ function SeasonalBanner({ theme }: { theme: SeasonalThemeConfig }) {
       animate={{ height: "auto", opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
       transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-      className={`w-full bg-gradient-to-r ${theme.accentGradient} overflow-hidden`}
+      className={`w-full bg-gradient-to-r ${theme.accentGradient} overflow-hidden relative`}
     >
+      {/* Floating decorative icons */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {icons.map((icon, i) => (
+          <motion.span
+            key={i}
+            className="absolute text-lg select-none opacity-20"
+            style={{
+              left: `${8 + i * 20}%`,
+              top: "50%",
+            }}
+            animate={{
+              y: [0, -6, 0],
+              rotate: [0, i % 2 === 0 ? 12 : -12, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 2.5 + i * 0.3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.4,
+            }}
+          >
+            {icon}
+          </motion.span>
+        ))}
+      </div>
+
+      {/* Shimmer effect */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        animate={{ x: ["-100%", "200%"] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
+      />
+
+      {/* Content */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -20, opacity: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex items-center justify-center gap-2 py-1.5 px-4"
+        className="relative flex items-center justify-center gap-3 py-2 px-4"
       >
-        <span className="text-sm">{theme.emoji}</span>
-        <span className="text-xs font-bold text-white drop-shadow-sm tracking-wide">
-          {theme.label.toUpperCase()}
+        <motion.span
+          className="text-xl"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {theme.emoji}
+        </motion.span>
+        <span className="text-xs font-black text-white drop-shadow-md tracking-[0.15em] uppercase">
+          {theme.label}
         </span>
-        <span className="text-sm">{theme.emoji}</span>
+        <motion.span
+          className="text-xl"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        >
+          {theme.emoji}
+        </motion.span>
       </motion.div>
     </motion.div>
   );
