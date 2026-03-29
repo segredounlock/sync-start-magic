@@ -1627,6 +1627,15 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   if (data === "terms_accept") {
     await recordTermsAcceptance(supabase, telegramId);
     const user = await findUserByTelegram(supabase, telegramId);
+    // Notify admin about terms acceptance
+    const termsLabel = user
+      ? (user.nome || user.email || `Telegram ID ${telegramId}`)
+      : `Novo usuário Telegram (ID ${telegramId})`;
+    notifyAdminTelegramActivity(supabase, "new_user_telegram", `🤖 Termos aceitos: ${termsLabel}`, {
+      user_id: user?.id || null,
+      user_nome: termsLabel,
+      status: "new",
+    }).catch(() => {});
     if (user) {
       await sendMessage(token, chatId, "✅ <b>Termos aceitos!</b> Bem-vindo de volta!");
       await sendMainMenu(token, chatId, user, supabase);
