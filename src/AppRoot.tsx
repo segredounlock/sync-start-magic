@@ -201,6 +201,42 @@ function InactivityGuard() {
   return null;
 }
 
+function InstallGate({ children }: { children: React.ReactNode }) {
+  const [status, setStatus] = useState<"checking" | "install" | "ready">("checking");
+
+  useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      try {
+        const { data } = await supabase
+          .from("system_config")
+          .select("value")
+          .eq("key", "install_completed")
+          .maybeSingle();
+        const local = localStorage.getItem("mirror_install_completed") === "true";
+        if (mounted) setStatus(data?.value === "true" || local ? "ready" : "install");
+      } catch {
+        if (mounted) setStatus(localStorage.getItem("mirror_install_completed") === "true" ? "ready" : "install");
+      }
+    };
+    check();
+    return () => { mounted = false; };
+  }, []);
+
+  if (status === "checking") return null;
+  if (status === "install") {
+    return (
+      <InstallWizard onComplete={() => {
+        localStorage.setItem("mirror_install_completed", "true");
+        setStatus("ready");
+      }} />
+    );
+  }
+  return <>{children}</>;
+}
+
+const InstallWizard = lazy(() => import("@/components/InstallWizard").then(m => ({ default: m.InstallWizard })));
+
 function App() {
   useCacheCleanup();
   usePrefetchRoutes();
@@ -208,70 +244,72 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        
-          <GlobalPresence />
-          <SilentFingerprintCollector />
-          <InactivityGuard />
-          <DynamicTitle />
-          <DeferredEffects />
-          <MaintenanceGuard>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Auth />} />
-              <Route path="/registrar" element={<RegisterRedirect />} />
-              <Route path="/recarga" element={<LazyPage><RecargaPublica /></LazyPage>} />
-              <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
-              <Route path="/loja/:slug" element={<LazyPage><ClientePortal /></LazyPage>} />
-              <Route path="/p/:slug" element={<LazyPage><PublicProfile /></LazyPage>} />
-              <Route path="/miniapp" element={<LazyPage><TelegramMiniApp /></LazyPage>} />
-              <Route path="/regras" element={<LazyPage><RegrasPage /></LazyPage>} />
-              <Route path="/instalar" element={<LazyPage><InstallApp /></LazyPage>} />
-              <Route path="/docs/rede" element={<LazyPage><DocsRede /></LazyPage>} />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute allowedRoles={["admin"]}>
-                    <LazyPage><AdminDashboard /></LazyPage>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/principal"
-                element={
-                  <MasterOnlyRoute>
-                    <LazyPage><Principal /></LazyPage>
-                  </MasterOnlyRoute>
-                }
-              />
-              <Route
-                path="/painel"
-                element={
-                  <ProtectedRoute>
-                    <LazyPage><RevendedorPainel /></LazyPage>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/chat"
-                element={
-                  <ProtectedRoute>
-                    <LazyPage><ChatApp /></LazyPage>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/perfil/:userId"
-                element={
-                  <ProtectedRoute>
-                    <LazyPage><UserProfile /></LazyPage>
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/auth" element={<Navigate to="/login" replace />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </MaintenanceGuard>
-        
+        <Suspense fallback={null}>
+          <InstallGate>
+            <GlobalPresence />
+            <SilentFingerprintCollector />
+            <InactivityGuard />
+            <DynamicTitle />
+            <DeferredEffects />
+            <MaintenanceGuard>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<Auth />} />
+                <Route path="/registrar" element={<RegisterRedirect />} />
+                <Route path="/recarga" element={<LazyPage><RecargaPublica /></LazyPage>} />
+                <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
+                <Route path="/loja/:slug" element={<LazyPage><ClientePortal /></LazyPage>} />
+                <Route path="/p/:slug" element={<LazyPage><PublicProfile /></LazyPage>} />
+                <Route path="/miniapp" element={<LazyPage><TelegramMiniApp /></LazyPage>} />
+                <Route path="/regras" element={<LazyPage><RegrasPage /></LazyPage>} />
+                <Route path="/instalar" element={<LazyPage><InstallApp /></LazyPage>} />
+                <Route path="/docs/rede" element={<LazyPage><DocsRede /></LazyPage>} />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                      <LazyPage><AdminDashboard /></LazyPage>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/principal"
+                  element={
+                    <MasterOnlyRoute>
+                      <LazyPage><Principal /></LazyPage>
+                    </MasterOnlyRoute>
+                  }
+                />
+                <Route
+                  path="/painel"
+                  element={
+                    <ProtectedRoute>
+                      <LazyPage><RevendedorPainel /></LazyPage>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chat"
+                  element={
+                    <ProtectedRoute>
+                      <LazyPage><ChatApp /></LazyPage>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/perfil/:userId"
+                  element={
+                    <ProtectedRoute>
+                      <LazyPage><UserProfile /></LazyPage>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/auth" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </MaintenanceGuard>
+          </InstallGate>
+        </Suspense>
       </AuthProvider>
     </ThemeProvider>
   );
