@@ -198,7 +198,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               });
               try { playCashRegisterSound(); } catch {}
               if (showDepositRef.current) {
-                showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`);
+                showSystemNotification("💰 Depósito confirmado", `R$ ${Number(newRow.amount).toFixed(2)} — ${profile.nome || profile.email || "Usuário"}`, { tag: `deposit-${newRow.id}`, type: "deposit", url: "/" });
                 appToast.depositConfirmed(`Depósito confirmado: R$ ${Number(newRow.amount).toFixed(2)}`, { id: `deposit-${newRow.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(newRow.updated_at || newRow.created_at)}` });
               }
             }
