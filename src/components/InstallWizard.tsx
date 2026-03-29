@@ -146,10 +146,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({
             license_key: data.licenseKey.trim(),
             license_status: "active",
