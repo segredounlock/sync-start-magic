@@ -131,13 +131,6 @@ export function SplashScreen() {
       </div>
 
       <div className="relative z-10" style={{ animation: "splash-logo-enter 0.8s cubic-bezier(0.16,1,0.3,1) both, splash-float 3s ease-in-out 1s infinite" }}>
-        <svg className="absolute -inset-3" viewBox="0 0 140 140"
-          style={{ animation: "splash-ring-spin 4s linear infinite", opacity: disintegrating ? 0 : 1, transition: "opacity 0.6s" }}>
-          <defs><linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsla(152,72%,46%,0.8)" /><stop offset="50%" stopColor="hsla(152,72%,46%,0)" /><stop offset="100%" stopColor="hsla(152,72%,46%,0.4)" />
-          </linearGradient></defs>
-          <circle cx="70" cy="70" r="64" fill="none" stroke="url(#ring-grad)" strokeWidth="2" strokeLinecap="round" strokeDasharray="120 280" />
-        </svg>
 
         <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border border-border/30"
           style={{ boxShadow: "0 0 40px hsla(152,72%,46%,0.15), 0 8px 32px rgba(0,0,0,0.4)", opacity: disintegrating ? 0 : 1, transition: "opacity 0.5s" }}>
