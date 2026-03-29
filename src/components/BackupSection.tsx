@@ -225,6 +225,7 @@ export default function BackupSection() {
     verifiable: number;
     fingerprint: string;
     hashes: Record<string, string>;
+    newFiles?: string[];
   } | null>(null);
   const [showChecksums, setShowChecksums] = useState(false);
 
