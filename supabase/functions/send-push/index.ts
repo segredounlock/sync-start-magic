@@ -214,7 +214,7 @@ serve(async (req) => {
       );
     }
 
-    const { title, body: msgBody, icon, user_ids } = await req.json();
+    const { title, body: msgBody, icon, image, url, type, tag, id, requireInteraction, actions, user_ids } = await req.json();
     if (!title || !msgBody) {
       return new Response(
         JSON.stringify({ error: "title and body required" }),
@@ -241,7 +241,19 @@ serve(async (req) => {
     }
 
     const { publicKey, privateKey } = await importVapidKeys(configMap.vapid_public_key, configMap.vapid_private_key);
-    const payload = { title, body: msgBody, icon: icon || "/favicon.png" };
+    const payload = {
+      title,
+      body: msgBody,
+      icon: icon || "/favicon.png",
+      image: image || undefined,
+      url: url || "/",
+      type: type || "general",
+      tag: tag || type || "general",
+      id: id || undefined,
+      requireInteraction: requireInteraction || false,
+      actions: actions || undefined,
+      timestamp: new Date().toISOString(),
+    };
 
     console.log(`[Push] Sending to ${subs.length} subscriptions for ${targetIds.length} users`);
 
