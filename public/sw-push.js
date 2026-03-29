@@ -25,7 +25,7 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body,
     icon: data.icon || APP_ICON,
-    badge: APP_ICON,
+    badge: BADGE_ICON,
     image: data.image || undefined,
     vibrate: [200, 100, 200, 100, 200],
     tag: data.tag || data.type || "general",
