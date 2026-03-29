@@ -381,17 +381,23 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">1</span>
           </div>
-          <span className="text-foreground">Criar conta de administrador</span>
+          <span className="text-foreground">Instalar dependências do sistema</span>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">2</span>
           </div>
-          <span className="text-foreground">Ativar licença do sistema</span>
+          <span className="text-foreground">Criar conta de administrador</span>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">3</span>
+          </div>
+          <span className="text-foreground">Ativar licença do sistema</span>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
+            <span className="text-primary font-bold text-xs">4</span>
           </div>
           <span className="text-foreground">Finalizar configuração</span>
         </div>
