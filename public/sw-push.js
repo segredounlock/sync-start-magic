@@ -6,6 +6,7 @@
 
 const APP_ICON = "/favicon.png";
 const DEFAULT_URL = "/";
+const CACHE_VERSION = "v2-recargas-brasil";
 
 // ── Push Event ──
 self.addEventListener("push", (event) => {
