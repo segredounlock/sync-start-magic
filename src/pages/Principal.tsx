@@ -22,7 +22,7 @@ const AdminSupport = lazy(() => import("@/pages/AdminSupport"));
 import { SupportAdminSelector } from "@/components/SupportAdminSelector";
 const AntifraudSection = lazy(() => import("@/components/AntifraudSection"));
 const AuditTab = lazy(() => import("@/components/AuditTab"));
-const LicenseManagerLazy = lazy(() => import("@/components/LicenseManager"));
+
 import { BannersManager } from "@/components/BannersManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
