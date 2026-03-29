@@ -153,8 +153,8 @@ Deno.serve(async (req) => {
                 fetch(`${baseUrl}/functions/v1/send-push`, {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
-                    title: `✅ ${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}`,
-                    body: `👤 ${userName}\n📞 ${recarga.telefone}\n💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}`,
+                    title: `👤 ${userName}`,
+                    body: `⏳ ${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}\n💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}\n📞 ${recarga.telefone}`,
                   }),
                 }).catch(() => {});
 
