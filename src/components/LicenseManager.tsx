@@ -237,7 +237,42 @@ function LicenseManagerContent() {
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<"licenses" | "logs">("licenses");
+  const [activeTab, setActiveTab] = useState<"licenses" | "logs" | "integrity">("licenses");
+  const [integrityResults, setIntegrityResults] = useState<any[] | null>(null);
+  const [integrityLoading, setIntegrityLoading] = useState(false);
+  const [heartbeatLoading, setHeartbeatLoading] = useState(false);
+  const [heartbeatResults, setHeartbeatResults] = useState<any | null>(null);
+
+  const runHeartbeatCheck = async () => {
+    setHeartbeatLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("license-heartbeat-check");
+      if (error) throw error;
+      setHeartbeatResults(data);
+      toast.success(`Verificado: ${data?.checked || 0} licenças`);
+      fetchLicenses();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao verificar heartbeats");
+    } finally {
+      setHeartbeatLoading(false);
+    }
+  };
+
+  const runIntegrityCheck = async (licenseId?: string) => {
+    setIntegrityLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("license-integrity-check", {
+        body: licenseId ? { license_id: licenseId } : {},
+      });
+      if (error) throw error;
+      setIntegrityResults(data?.results || []);
+      toast.success(`Integridade verificada: ${data?.checked || 0} espelhos`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao verificar integridade");
+    } finally {
+      setIntegrityLoading(false);
+    }
+  };
 
   // Form state
   const [formName, setFormName] = useState("");
