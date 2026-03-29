@@ -27,16 +27,16 @@ export interface SeasonalThemeConfig {
 
 export const SEASONAL_THEMES: SeasonalThemeConfig[] = [
   { key: "none", label: "Nenhum", emoji: "⚪", description: "Tema padrão sem efeitos sazonais", particles: [], accentGradient: "", glowColor: "" },
-  { key: "ano_novo", label: "Feliz Ano Novo", emoji: "🎆", description: "Réveillon — Fogos e champagne", particles: ["🎆", "✨", "🥂", "🎇", "⭐", "💫"], accentGradient: "from-yellow-400 via-amber-500 to-purple-600", glowColor: "rgba(234, 179, 8, 0.15)" },
-  { key: "carnaval", label: "Feliz Carnaval", emoji: "🎭", description: "Folia, confete e serpentina", particles: ["🎭", "🎉", "🎊", "💃", "🪇", "🌈"], accentGradient: "from-green-400 via-yellow-400 to-pink-500", glowColor: "rgba(168, 85, 247, 0.15)" },
-  { key: "pascoa", label: "Feliz Páscoa", emoji: "🐰", description: "Coelhinhos e ovos de chocolate", particles: ["🐰", "🥚", "🌸", "🐣", "🍫", "🌷"], accentGradient: "from-pink-300 via-purple-300 to-blue-300", glowColor: "rgba(196, 181, 253, 0.15)" },
-  { key: "dia_maes", label: "Feliz Dia das Mães", emoji: "💐", description: "Flores e amor materno", particles: ["💐", "🌹", "❤️", "🌸", "💕", "🌺"], accentGradient: "from-pink-400 via-rose-400 to-red-400", glowColor: "rgba(244, 114, 182, 0.15)" },
-  { key: "dia_namorados", label: "Feliz Dia dos Namorados", emoji: "💕", description: "Corações e romance", particles: ["💕", "💘", "❤️", "💖", "💝", "🥰"], accentGradient: "from-red-400 via-pink-500 to-rose-500", glowColor: "rgba(239, 68, 68, 0.12)" },
-  { key: "festa_junina", label: "Feliz Festa Junina", emoji: "🎪", description: "Bandeirinhas e fogueira", particles: ["🎪", "🌽", "🔥", "🪗", "🎏", "⛺"], accentGradient: "from-orange-400 via-yellow-500 to-red-500", glowColor: "rgba(249, 115, 22, 0.15)" },
-  { key: "dia_pais", label: "Feliz Dia dos Pais", emoji: "👔", description: "Homenagem aos pais", particles: ["👔", "⭐", "🏆", "💪", "🎖️", "💙"], accentGradient: "from-blue-400 via-sky-500 to-indigo-500", glowColor: "rgba(59, 130, 246, 0.12)" },
-  { key: "dia_criancas", label: "Feliz Dia das Crianças", emoji: "🎈", description: "Balões e diversão", particles: ["🎈", "🎮", "🌈", "🧸", "🎠", "🍭"], accentGradient: "from-cyan-400 via-green-400 to-yellow-400", glowColor: "rgba(34, 211, 238, 0.12)" },
-  { key: "black_friday", label: "Black Friday", emoji: "🏷️", description: "Ofertas e descontos", particles: ["🏷️", "💰", "🔥", "⚡", "💸", "🤑"], accentGradient: "from-gray-900 via-yellow-500 to-gray-900", glowColor: "rgba(234, 179, 8, 0.1)" },
-  { key: "natal", label: "Feliz Natal", emoji: "🎄", description: "Papai Noel e neve", particles: ["🎄", "❄️", "🎅", "⭐", "🎁", "☃️"], accentGradient: "from-red-500 via-green-500 to-red-500", glowColor: "rgba(34, 197, 94, 0.12)" },
+  { key: "ano_novo", label: "Feliz Ano Novo", emoji: "🎆", description: "Réveillon — Fogos e champagne", particles: ["🎆", "✨", "🥂", "🎇", "⭐", "💫"], accentGradient: "from-indigo-900 via-purple-700 to-amber-500", glowColor: "rgba(234, 179, 8, 0.2)" },
+  { key: "carnaval", label: "Feliz Carnaval", emoji: "🎭", description: "Folia, confete e serpentina", particles: ["🎭", "🎉", "🎊", "💃", "🪇", "🌈"], accentGradient: "from-fuchsia-600 via-yellow-400 to-cyan-400", glowColor: "rgba(168, 85, 247, 0.2)" },
+  { key: "pascoa", label: "Feliz Páscoa", emoji: "🐰", description: "Coelhinhos e ovos de chocolate", particles: ["🐰", "🥚", "🌸", "🐣", "🍫", "🌷"], accentGradient: "from-violet-400 via-pink-300 to-sky-300", glowColor: "rgba(196, 181, 253, 0.2)" },
+  { key: "dia_maes", label: "Feliz Dia das Mães", emoji: "💐", description: "Flores e amor materno", particles: ["💐", "🌹", "❤️", "🌸", "💕", "🌺"], accentGradient: "from-rose-600 via-pink-400 to-rose-300", glowColor: "rgba(244, 114, 182, 0.2)" },
+  { key: "dia_namorados", label: "Feliz Dia dos Namorados", emoji: "💕", description: "Corações e romance", particles: ["💕", "💘", "❤️", "💖", "💝", "🥰"], accentGradient: "from-red-700 via-rose-500 to-pink-400", glowColor: "rgba(239, 68, 68, 0.18)" },
+  { key: "festa_junina", label: "Feliz Festa Junina", emoji: "🎪", description: "Bandeirinhas e fogueira", particles: ["🎪", "🌽", "🔥", "🪗", "🎏", "⛺"], accentGradient: "from-amber-700 via-orange-500 to-red-600", glowColor: "rgba(249, 115, 22, 0.2)" },
+  { key: "dia_pais", label: "Feliz Dia dos Pais", emoji: "👔", description: "Homenagem aos pais", particles: ["👔", "⭐", "🏆", "💪", "🎖️", "💙"], accentGradient: "from-blue-800 via-sky-500 to-blue-400", glowColor: "rgba(59, 130, 246, 0.18)" },
+  { key: "dia_criancas", label: "Feliz Dia das Crianças", emoji: "🎈", description: "Balões e diversão", particles: ["🎈", "🎮", "🌈", "🧸", "🎠", "🍭"], accentGradient: "from-emerald-400 via-yellow-400 to-pink-400", glowColor: "rgba(34, 211, 238, 0.18)" },
+  { key: "black_friday", label: "Black Friday", emoji: "🏷️", description: "Ofertas e descontos", particles: ["🏷️", "💰", "🔥", "⚡", "💸", "🤑"], accentGradient: "from-gray-900 via-yellow-500 to-gray-900", glowColor: "rgba(234, 179, 8, 0.15)" },
+  { key: "natal", label: "Feliz Natal", emoji: "🎄", description: "Papai Noel e neve", particles: ["🎄", "❄️", "🎅", "⭐", "🎁", "☃️"], accentGradient: "from-red-700 via-green-600 to-red-700", glowColor: "rgba(34, 197, 94, 0.18)" },
 ];
 
 // ═══════════════════════════════════════════════════════════
