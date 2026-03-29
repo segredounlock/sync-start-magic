@@ -208,7 +208,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <LicenseGate>
+        
           <GlobalPresence />
           <SilentFingerprintCollector />
           <InactivityGuard />
