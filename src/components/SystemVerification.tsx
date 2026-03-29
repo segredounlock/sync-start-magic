@@ -153,8 +153,11 @@ export default function SystemVerification() {
               </AnimatePresence>
             </div>
 
-            {/* Category cards */}
-            {results.map(cat => {
+            {/* Category cards — sorted by severity: error → warning → ok */}
+            {[...results].sort((a, b) => {
+              const priority = (s: CheckStatus) => s === "error" ? 0 : s === "warning" ? 1 : s === "info" ? 2 : 3;
+              return priority(a.status) - priority(b.status);
+            }).map(cat => {
               const catIssues = cat.items.filter(i => i.status === "error" || i.status === "warning").length;
               const catFixable = cat.items.filter(i => i.status !== "ok" && i.solutionKey && SOLUTIONS[i.solutionKey]?.fixable).length;
               return (
