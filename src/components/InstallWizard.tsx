@@ -107,31 +107,40 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Perfil configurado!");
       setProgress([...steps]);
 
-      // 3. Ensure we have a session (signUp may not return one if email confirmation is on)
+      // 3. Try to get session (may fail if email confirmation is required on mirror)
       steps.push("Autenticando...");
       setProgress([...steps]);
 
-      let { data: sessionData } = await supabase.auth.getSession();
-      let token = sessionData?.session?.access_token;
+      let token: string | undefined;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        token = sessionData?.session?.access_token;
 
-      if (!token) {
-        // Try signing in with the credentials we just created
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: data.adminEmail.trim(),
-          password: data.adminPassword,
-        });
-        if (signInError) throw new Error("Não foi possível autenticar. Verifique se o e-mail foi confirmado ou tente novamente.");
-        token = signInData?.session?.access_token;
+        if (!token) {
+          // Try signing in with the credentials we just created
+          const { data: signInData } = await supabase.auth.signInWithPassword({
+            email: data.adminEmail.trim(),
+            password: data.adminPassword,
+          });
+          token = signInData?.session?.access_token;
+        }
+      } catch {
+        // Session not available — first install allows unauthenticated init-mirror
       }
 
-      if (!token) throw new Error("Sessão não disponível. Tente fazer login manualmente e reinstalar.");
-
-      steps.push("✓ Autenticado!");
+      steps.push(token ? "✓ Autenticado!" : "⚠ Sem sessão — instalação inicial permitida");
       setProgress([...steps]);
 
-      // 4. Call init-mirror with license data (uses service_role, bypasses RLS)
+      // 4. Call init-mirror with license data (first install allows no auth)
       steps.push("Salvando licença e inicializando...");
       setProgress([...steps]);
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
 
       const initResp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
