@@ -241,6 +241,18 @@ function App() {
   useCacheCleanup();
   usePrefetchRoutes();
 
+  // Show splash for minimum 10 seconds on first load
+  const [splashDone, setSplashDone] = useState(false);
+  const splashStarted = useRef(false);
+  useEffect(() => {
+    if (splashStarted.current) return;
+    splashStarted.current = true;
+    const timer = setTimeout(() => setSplashDone(true), 10_000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!splashDone) return <SplashScreen />;
+
   return (
     <ThemeProvider>
       <AuthProvider>
