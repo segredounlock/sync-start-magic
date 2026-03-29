@@ -5510,9 +5510,6 @@ export default function Principal() {
            {/* ===== AUDITORIA ===== */}
            {view === "auditoria" && <Suspense fallback={<SkeletonCard />}><AuditTab /></Suspense>}
 
-           {/* ===== LICENÇAS ===== */}
-           {view === "licencas" && <Suspense fallback={<SkeletonCard />}><LicenseManagerLazy /></Suspense>}
-
            {/* ===== FERRAMENTAS ===== */}
            {view === "ferramentas" && <BackupSection />}
         </main>
