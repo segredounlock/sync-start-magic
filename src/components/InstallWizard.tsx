@@ -12,7 +12,7 @@ import { validateMasterServerConnection, isValidLicenseResponse } from "@/utils/
 
 const MASTER_SERVER_URL = MASTER_SUPABASE_URL;
 
-type Step = "welcome" | "admin" | "license" | "finishing" | "done";
+type Step = "welcome" | "dependencies" | "admin" | "license" | "finishing" | "done";
 
 interface InstallData {
   adminEmail: string;
