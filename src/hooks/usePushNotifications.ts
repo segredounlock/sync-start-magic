@@ -65,9 +65,11 @@ export function usePushNotifications(userId: string | undefined) {
       throw new Error("VAPID setup failed");
     }
 
+    const applicationServerKey = new Uint8Array(urlBase64ToUint8Array(setupData.publicKey));
+
     const subscription = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(setupData.publicKey),
+      applicationServerKey,
     });
 
     await saveSubscription(uid, subscription.toJSON());

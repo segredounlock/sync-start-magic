@@ -214,13 +214,12 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
 
   const fetchTelegramActivity = useCallback(async () => {
     try {
-      const { data } = await supabase
-        .from("admin_notifications" as any)
+      const { data } = await (supabase.from("admin_notifications" as any) as any)
         .select("id, type, message, status, created_at")
         .order("created_at", { ascending: false })
         .limit(30);
 
-      if (data) {
+      if (Array.isArray(data)) {
         setTelegramActivity((data as TelegramActivityItem[]).filter(isTelegramActivity).slice(0, 8));
       }
     } catch (err) {

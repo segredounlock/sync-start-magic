@@ -576,14 +576,13 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
           }
         }
 
-        const { data: adminRows } = await supabase
-          .from("admin_notifications" as any)
+        const { data: adminRows } = await (supabase.from("admin_notifications" as any) as any)
           .select("*")
           .gt("created_at", since)
           .order("created_at", { ascending: false })
           .limit(20);
 
-        if (adminRows) {
+        if (Array.isArray(adminRows)) {
           for (const row of adminRows) {
             if (!knownIds.current.has(row.id)) {
               addNotification(mapDbNotification(row));
