@@ -419,109 +419,117 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     </div>
   );
 
-  const renderLicense = () => (
-    <div className="space-y-5">
-      <style>{animCSS}</style>
-      <div className="text-center space-y-2">
-        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative overflow-hidden">
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56">
-            <circle cx="12" cy="10" r="1.5" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite" }} />
-            <circle cx="44" cy="14" r="1" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 0.5s" }} />
-            <circle cx="8" cy="38" r="1.2" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite 1s" }} />
-            <circle cx="46" cy="42" r="1.5" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 1.5s" }} />
-          </svg>
-          <KeyRound className="w-7 h-7 text-primary key-icon" />
-        </div>
-        <h2 className="text-lg font-bold text-foreground">Configurar Licença</h2>
-        <p className="text-muted-foreground text-xs">
-          Configure a chave e o período de validade da licença.
-        </p>
-      </div>
+  const renderLicense = () => {
+    // Try to decode current key for preview
+    const preview = data.licenseKey.trim() ? extractLicenseFromKey(data.licenseKey.trim()) : null;
 
-      <div className="space-y-3">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            <KeyRound className="w-3.5 h-3.5" /> Chave de Licença *
-          </label>
-          <input
-            type="text"
-            value={data.licenseKey}
-            onChange={(e) => setData(p => ({ ...p, licenseKey: e.target.value }))}
-            placeholder="Cole a chave aqui..."
-            className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-xs"
-            disabled={loading}
-          />
+    return (
+      <div className="space-y-5">
+        <style>{animCSS}</style>
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative overflow-hidden">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56">
+              <circle cx="12" cy="10" r="1.5" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite" }} />
+              <circle cx="44" cy="14" r="1" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 0.5s" }} />
+              <circle cx="8" cy="38" r="1.2" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite 1s" }} />
+              <circle cx="46" cy="42" r="1.5" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 1.5s" }} />
+            </svg>
+            <KeyRound className="w-7 h-7 text-primary key-icon" />
+          </div>
+          <h2 className="text-lg font-bold text-foreground">Ativar Licença</h2>
+          <p className="text-muted-foreground text-xs">
+            Cole a chave de licença fornecida pelo administrador master.
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" /> Início *
+              <KeyRound className="w-3.5 h-3.5" /> Chave de Licença *
             </label>
-            <input
-              type="date"
-              value={data.licenseStartDate}
-              onChange={(e) => setData(p => ({ ...p, licenseStartDate: e.target.value }))}
-              className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            <textarea
+              value={data.licenseKey}
+              onChange={(e) => setData(p => ({ ...p, licenseKey: e.target.value }))}
+              placeholder="Cole a chave JWT aqui..."
+              rows={3}
+              className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-xs resize-none"
               disabled={loading}
             />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" /> Expiração *
-            </label>
-            <input
-              type="date"
-              value={data.licenseEndDate}
-              onChange={(e) => setData(p => ({ ...p, licenseEndDate: e.target.value }))}
-              className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              disabled={loading}
-            />
+
+          {/* Auto-detected info from key */}
+          {preview?.valid && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Licença reconhecida
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                <div>
+                  <span className="text-foreground font-medium">Início:</span>{" "}
+                  {new Date(preview.startDate + "T00:00:00").toLocaleDateString("pt-BR")}
+                </div>
+                <div>
+                  <span className="text-foreground font-medium">Expiração:</span>{" "}
+                  {new Date(preview.endDate + "T00:00:00").toLocaleDateString("pt-BR")}
+                </div>
+                {preview.mirrorName && (
+                  <div className="col-span-2">
+                    <span className="text-foreground font-medium">Mirror:</span> {preview.mirrorName}
+                  </div>
+                )}
+                {preview.graceDays > 0 && (
+                  <div className="col-span-2">
+                    <span className="text-foreground font-medium">Carência:</span> {preview.graceDays} dias
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {preview && !preview.valid && data.licenseKey.trim() && (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-xs text-destructive">{preview.error}</p>
+            </div>
+          )}
+
+          <div className="bg-muted/30 border border-border/50 rounded-xl p-3 flex items-start gap-2">
+            <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground">
+              A chave contém todas as informações da licença (datas, permissões). 
+              Solicite ao administrador master caso não possua uma.
+            </p>
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            Dias de Carência (opcional)
-          </label>
-          <input
-            type="number"
-            min="0"
-            max="90"
-            value={data.licenseGraceDays}
-            onChange={(e) => setData(p => ({ ...p, licenseGraceDays: Math.max(0, parseInt(e.target.value) || 0) }))}
-            className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        {error && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+            <p className="text-xs text-destructive">{error}</p>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setError(""); setStep("admin"); }}
             disabled={loading}
-          />
+            className="flex-1 py-2.5 bg-muted text-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
+          >
+            <ArrowLeft className="w-4 h-4" /> Voltar
+          </button>
+          <button
+            onClick={handleFinish}
+            disabled={loading || !data.licenseKey.trim() || !preview?.valid}
+            className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+            {loading ? "Instalando..." : "Instalar"}
+          </button>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-          <p className="text-xs text-destructive">{error}</p>
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <button
-          onClick={() => { setError(""); setStep("admin"); }}
-          disabled={loading}
-          className="flex-1 py-2.5 bg-muted text-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
-        >
-          <ArrowLeft className="w-4 h-4" /> Voltar
-        </button>
-        <button
-          onClick={handleFinish}
-          disabled={loading || !data.licenseKey.trim()}
-          className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
-        >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-          {loading ? "Instalando..." : "Instalar"}
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderFinishing = () => (
     <div className="space-y-6 text-center">
