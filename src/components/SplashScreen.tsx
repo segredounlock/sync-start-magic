@@ -99,10 +99,17 @@ export function SplashScreen() {
   useEffect(() => {
     const DURATION = 10_000; const INTERVAL = 150;
     const TOTAL = DURATION / INTERVAL; let tick = 0;
+    let triggered = false;
     const iv = setInterval(() => {
       tick++;
       const eased = 1 - Math.pow(1 - tick / TOTAL, 2.5);
-      setProgress(Math.min(100, eased * 100));
+      const value = Math.min(100, eased * 100);
+      setProgress(value);
+      // Trigger explosion exactly when reaching 100%
+      if (value >= 99.9 && !triggered) {
+        triggered = true;
+        setDisintegrating(true);
+      }
       if (tick >= TOTAL) clearInterval(iv);
     }, INTERVAL);
     return () => clearInterval(iv);
