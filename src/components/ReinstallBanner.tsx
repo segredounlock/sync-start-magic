@@ -21,6 +21,9 @@ export default function ReinstallBanner() {
 
     if (!isStandalone) return;
 
+    // Android auto-updates via WebAPK — only iOS needs this
+    if (!isIOS) return;
+
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed === CURRENT_APP_VERSION) return;
 
@@ -58,16 +61,14 @@ export default function ReinstallBanner() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold">Atualização disponível!</p>
                 <p className="text-xs opacity-90 mt-0.5">
-                  {isIOS
-                    ? "O nome/ícone do app mudou. Remova o atalho atual da tela inicial e adicione novamente pelo Safari."
-                    : "O nome/ícone do app foi atualizado. Toque para reinstalar com as novas informações."}
+                  O nome/ícone do app mudou. Remova o atalho atual da tela inicial e adicione novamente pelo Safari.
                 </p>
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={handleReinstall}
                     className="text-xs font-bold bg-primary-foreground text-primary rounded-lg px-3 py-1.5 active:scale-95 transition-transform"
                   >
-                    {isIOS ? "Ver instruções" : "Reinstalar"}
+                    Ver instruções
                   </button>
                   <button
                     onClick={dismiss}
