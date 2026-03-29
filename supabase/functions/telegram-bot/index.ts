@@ -88,6 +88,29 @@ async function getMigrationConfig(supabase: any): Promise<{ enabled: boolean; ur
   return result;
 }
 
+// ── Admin push notification for Telegram activity ──
+async function notifyAdminTelegramActivity(supabase: any, type: string, message: string, extra: Record<string, any> = {}) {
+  try {
+    await supabase.from("admin_notifications").insert({
+      type,
+      message,
+      amount: extra.amount || 0,
+      user_id: extra.user_id || null,
+      user_nome: extra.user_nome || null,
+      user_email: extra.user_email || null,
+      status: extra.status || "new",
+    });
+    // Also trigger web push to all admin subscriptions
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    fetch(`${supabaseUrl}/functions/v1/send-push`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+      body: JSON.stringify({ title: "🤖 Telegram", body: message, topic: "telegram_activity" }),
+    }).catch(() => {});
+  } catch { /* silent */ }
+}
+
 // Default margin cache
 let defaultMarginCache: { enabled: boolean; type: string; value: number; time: number } | null = null;
 const DEFAULT_MARGIN_CACHE_TTL = 30_000; // 30s
