@@ -12,7 +12,7 @@ import { validateMasterServerConnection, isValidLicenseResponse } from "@/utils/
 
 const MASTER_SERVER_URL = MASTER_SUPABASE_URL;
 
-type Step = "welcome" | "admin" | "license" | "finishing" | "done";
+type Step = "welcome" | "dependencies" | "admin" | "license" | "finishing" | "done";
 
 interface InstallData {
   adminEmail: string;
@@ -45,8 +45,55 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState<string[]>([]);
+  const [depStatus, setDepStatus] = useState<"idle" | "running" | "success" | "error">("idle");
+  const [depError, setDepError] = useState("");
 
   const pwCheck = validatePassword(data.adminPassword);
+
+  /* ─── Install dependencies (master URLs into DB) ─── */
+  const handleInstallDeps = async () => {
+    setDepStatus("running");
+    setDepError("");
+
+    const DEPS: { key: string; value: string }[] = [
+      { key: "license_master_url", value: MASTER_SUPABASE_URL },
+      { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
+    ];
+
+    try {
+      // 1. Prevent self-reference
+      const currentUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (currentUrl && normalizeUrl(MASTER_SUPABASE_URL) === normalizeUrl(currentUrl)) {
+        throw new Error("Configuração inválida: o servidor mestre não pode ser o mesmo projeto atual.");
+      }
+
+      // 2. Upsert keys
+      const { error: upsertErr } = await supabase
+        .from("system_config")
+        .upsert(DEPS, { onConflict: "key" });
+      if (upsertErr) throw new Error(`Erro ao salvar: ${upsertErr.message}`);
+
+      // 3. Verify persistence
+      for (const dep of DEPS) {
+        const { data: row, error: readErr } = await supabase
+          .from("system_config")
+          .select("value")
+          .eq("key", dep.key)
+          .maybeSingle();
+        if (readErr) throw new Error(`Erro ao verificar ${dep.key}: ${readErr.message}`);
+        if (!row || row.value !== dep.value) {
+          throw new Error(`Falha ao confirmar persistência de ${dep.key}. Valor esperado: ${dep.value}`);
+        }
+      }
+
+      setDepStatus("success");
+      // Auto-advance after brief delay
+      setTimeout(() => setStep("admin"), 800);
+    } catch (err: any) {
+      setDepStatus("error");
+      setDepError(err.message || "Erro desconhecido ao instalar dependências");
+    }
+  };
 
   /* ─── Step handlers ─── */
   const handleAdminStep = () => {
@@ -334,28 +381,110 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">1</span>
           </div>
-          <span className="text-foreground">Criar conta de administrador</span>
+          <span className="text-foreground">Instalar dependências do sistema</span>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">2</span>
           </div>
-          <span className="text-foreground">Ativar licença do sistema</span>
+          <span className="text-foreground">Criar conta de administrador</span>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">3</span>
           </div>
+          <span className="text-foreground">Ativar licença do sistema</span>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
+            <span className="text-primary font-bold text-xs">4</span>
+          </div>
           <span className="text-foreground">Finalizar configuração</span>
         </div>
       </div>
       <button
-        onClick={() => setStep("admin")}
+        onClick={() => setStep("dependencies")}
         className="w-full py-3 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
         Começar Instalação
         <ArrowRight className="w-4 h-4" />
       </button>
+    </div>
+  );
+
+  const renderDependencies = () => (
+    <div className="space-y-6 text-center">
+      <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+        <Server className="w-7 h-7 text-primary" />
+      </div>
+      <h2 className="text-lg font-bold text-foreground">Instalar Dependências</h2>
+      <p className="text-muted-foreground text-xs max-w-sm mx-auto">
+        Antes de continuar, precisamos configurar as dependências essenciais no banco de dados.
+      </p>
+
+      <div className="bg-muted/50 rounded-xl p-4 space-y-3 text-left">
+        <div className="text-xs font-medium text-foreground mb-2">Configurações necessárias:</div>
+        {[
+          { key: "license_master_url", value: MASTER_SUPABASE_URL },
+          { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
+        ].map((dep) => (
+          <div key={dep.key} className="flex items-start gap-2 text-xs">
+            {depStatus === "success" ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+            ) : depStatus === "running" ? (
+              <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0 mt-0.5" />
+            ) : (
+              <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+            )}
+            <div>
+              <span className="font-mono text-foreground">{dep.key}</span>
+              <p className="text-muted-foreground text-[10px] truncate max-w-[280px]">{dep.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {depStatus === "error" && depError && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2 text-left">
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-medium text-destructive mb-1">Erro ao instalar dependências</p>
+            <p className="text-[11px] text-destructive/80">{depError}</p>
+          </div>
+        </div>
+      )}
+
+      {depStatus === "success" && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Dependências instaladas com sucesso!</p>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => { setStep("welcome"); setDepStatus("idle"); setDepError(""); }}
+          disabled={depStatus === "running"}
+          className="flex-1 py-2.5 bg-muted text-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </button>
+        <button
+          onClick={handleInstallDeps}
+          disabled={depStatus === "running" || depStatus === "success"}
+          className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
+        >
+          {depStatus === "running" ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Instalando...</>
+          ) : depStatus === "error" ? (
+            <><AlertTriangle className="w-4 h-4" /> Tentar Novamente</>
+          ) : depStatus === "success" ? (
+            <><CheckCircle2 className="w-4 h-4" /> Instalado</>
+          ) : (
+            <><Server className="w-4 h-4" /> Instalar Dependências</>
+          )}
+        </button>
+      </div>
     </div>
   );
 
@@ -593,22 +722,23 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         {/* Step indicator */}
         {step !== "finishing" && step !== "done" && (
           <div className="flex items-center justify-center gap-2 mb-6">
-            {(["welcome", "admin", "license"] as Step[]).map((s, i) => (
+            {(["welcome", "dependencies", "admin", "license"] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                   step === s ? "bg-primary text-primary-foreground" :
-                  (["welcome", "admin", "license"].indexOf(step) > i) ? "bg-emerald-500 text-white" :
+                  (["welcome", "dependencies", "admin", "license"].indexOf(step) > i) ? "bg-emerald-500 text-white" :
                   "bg-muted text-muted-foreground"
                 }`}>
-                  {(["welcome", "admin", "license"].indexOf(step) > i) ? "✓" : i + 1}
+                  {(["welcome", "dependencies", "admin", "license"].indexOf(step) > i) ? "✓" : i + 1}
                 </div>
-                {i < 2 && <div className="w-8 h-0.5 bg-border" />}
+                {i < 3 && <div className="w-6 h-0.5 bg-border" />}
               </div>
             ))}
           </div>
         )}
 
         {step === "welcome" && renderWelcome()}
+        {step === "dependencies" && renderDependencies()}
         {step === "admin" && renderAdmin()}
         {step === "license" && renderLicense()}
         {step === "finishing" && renderFinishing()}
