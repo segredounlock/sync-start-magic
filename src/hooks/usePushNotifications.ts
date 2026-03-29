@@ -45,10 +45,21 @@ export function usePushNotifications(userId: string | undefined) {
 
       const vapidPublicKey = setupData.publicKey;
 
-      // 2. Request notification permission
+      // 2. Check notification permission — don't re-prompt if already denied
+      if (Notification.permission === "denied") {
+        console.log("[Push] Notification permission previously denied");
+        return;
+      }
+      if (Notification.permission === "default" && localStorage.getItem("notif_permission_declined")) {
+        console.log("[Push] Notification permission previously declined by user");
+        return;
+      }
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         console.log("[Push] Notification permission denied");
+        if (permission === "denied") {
+          try { localStorage.setItem("notif_permission_declined", "1"); } catch {}
+        }
         return;
       }
 

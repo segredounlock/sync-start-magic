@@ -8,8 +8,14 @@ let _notifPermission: NotificationPermission = typeof Notification !== "undefine
 
 function requestNotifPermission() {
   if (typeof Notification === "undefined") return;
-  if (_notifPermission === "default") {
-    Notification.requestPermission().then((p) => { _notifPermission = p; }).catch(() => {});
+  // Only request if user hasn't decided yet AND hasn't previously declined in this app
+  if (_notifPermission === "default" && !localStorage.getItem("notif_permission_declined")) {
+    Notification.requestPermission().then((p) => {
+      _notifPermission = p;
+      if (p === "denied") {
+        try { localStorage.setItem("notif_permission_declined", "1"); } catch {}
+      }
+    }).catch(() => {});
   }
 }
 
