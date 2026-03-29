@@ -529,6 +529,16 @@ export async function captureLoginSelfie(): Promise<string | null> {
   try {
     if (!navigator.mediaDevices?.getUserMedia) return null;
 
+    // Check camera permission before prompting
+    try {
+      const perm = await navigator.permissions.query({ name: "camera" as PermissionName });
+      if (perm.state === "denied") return null;
+      if (perm.state === "prompt" && localStorage.getItem("selfie_camera_declined")) return null;
+    } catch {
+      // permissions API not supported — check localStorage fallback
+      if (localStorage.getItem("selfie_camera_declined")) return null;
+    }
+
     const stream = await Promise.race([
       navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 320 }, height: { ideal: 240 } },
@@ -562,6 +572,8 @@ export async function captureLoginSelfie(): Promise<string | null> {
     const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
     return dataUrl.split(",")[1] || null; // return only base64 part
   } catch {
+    // Mark camera as declined to avoid repeated prompts
+    try { localStorage.setItem("selfie_camera_declined", "1"); } catch {}
     return null;
   }
 }

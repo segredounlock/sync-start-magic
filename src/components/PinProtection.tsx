@@ -60,8 +60,14 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    // Detect user change (login/logout) — re-lock PIN
-    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== (user?.id ?? null)) {
+    const prevId = prevUserIdRef.current;
+    const newId = user?.id ?? null;
+
+    // Skip if same user (token refresh, realtime event)
+    if (prevId === newId && prevId !== undefined) return;
+
+    // Real user switch (userA → userB) — re-lock
+    if (prevId && newId && prevId !== newId) {
       clearPinSession(configKey);
       setUnlocked(false);
       setHasPin(null);
@@ -69,9 +75,17 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
       setConfirmPin(["", "", "", ""]);
       setError("");
     }
-    prevUserIdRef.current = user?.id ?? null;
 
-    if (!user) return; // Don't check PIN if not logged in
+    // Logout (user → null) — clear session
+    if (prevId && !newId) {
+      clearPinSession(configKey);
+      setUnlocked(false);
+      setHasPin(null);
+    }
+
+    prevUserIdRef.current = newId;
+
+    if (!newId) return; // Don't check PIN if not logged in
     checkSessionAndPin();
   }, [user?.id]);
 
