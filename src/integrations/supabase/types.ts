@@ -2079,6 +2079,7 @@ export type Database = {
         }[]
       }
       get_seasonal_theme: { Args: never; Returns: string }
+      get_table_columns_info: { Args: never; Returns: Json }
       get_ticker_recargas: {
         Args: never
         Returns: {
