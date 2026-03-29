@@ -39,7 +39,7 @@ function RankingSkeleton() {
               transition={{ delay: i * 0.1 }}
             >
               {isCenter && <div className="w-9 h-9 -mb-3" />}
-              <div className={`${isCenter ? "w-20 h-20 md:w-24 md:h-24" : "w-16 h-16 md:w-20 md:h-20"} rounded-full bg-muted/40 animate-pulse`} />
+              <div className={`${isCenter ? "w-24 h-24 md:w-24 md:h-24" : "w-20 h-20 md:w-20 md:h-20"} rounded-full bg-muted/40 animate-pulse`} />
               <div className="flex flex-col items-center gap-1">
                 <div className={`${isCenter ? "w-20" : "w-16"} h-3 bg-muted/40 rounded animate-pulse`} />
                 <div className="w-14 h-2.5 bg-muted/30 rounded animate-pulse" />
