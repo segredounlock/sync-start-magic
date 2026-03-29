@@ -293,7 +293,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
           <li>Este usuário terá <strong className="text-foreground">acesso total</strong> ao sistema</li>
           <li>Guarde o e-mail e senha em <strong className="text-foreground">local seguro</strong></li>
-          <li>Após criar, você fará login e ativará a <strong className="text-foreground">licença</strong></li>
+          <li>Após criar, você poderá acessar o <strong className="text-foreground">painel administrativo</strong></li>
         </ul>
       </div>
 
