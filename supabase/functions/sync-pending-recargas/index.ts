@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
                     title: `⏳ ${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}`,
-                    body: `👤 ${userName}\n💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}\n📞 ${recarga.telefone}`,
+                    body: `💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}\n📞 ${recarga.telefone}`,
                   }),
                 }).catch(() => {});
 
