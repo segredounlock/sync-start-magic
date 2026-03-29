@@ -1,33 +1,35 @@
 
 
-# Tornar KPI Cards Responsivos (sem truncar valores)
+# Corrigir Nome do App PWA + Forçar Atualização
 
-## Problema
-O valor "R$ 50.359..." está sendo cortado pelo `truncate` (CSS `text-overflow: ellipsis`) nos cards do Stats Grid. Com o crescimento da plataforma, valores maiores serão cada vez mais comuns.
+## Problema identificado
 
-## Solução
+1. **Nome errado no manifest**: O `vite.config.ts` tem `name: "Sistema de Recargas"` e `short_name: "Recargas"` — deveria ser `"Recargas Brasil"` em ambos
+2. **Logo com erro de digitação na imagem**: A imagem do ícone do app (screenshot) mostra "Reecargas" com dois "e" — isso é da imagem/favicon, não do código. Preciso verificar o `favicon.png`
+3. **Atualização para quem já instalou**: O Service Worker precisa forçar a atualização do manifest para que o nome mude em dispositivos que já instalaram
 
-### 1. Remover `truncate` e usar texto auto-ajustável
-Em todos os locais onde valores monetários/numéricos aparecem em cards, substituir `truncate` por tamanho de fonte responsivo que diminui automaticamente conforme o valor cresce.
+## Alterações
 
-### 2. Arquivos a alterar
+### 1. `vite.config.ts` — Corrigir nome no manifest
+```
+name: "Recargas Brasil"
+short_name: "Recargas Brasil"  
+description: "Sistema de recargas de celular para revendedores"
+```
 
-**`src/components/BankDashboard.tsx`** (Stats Grid, linha 243)
-- Remover `truncate` da classe do `<p>` de valor
-- Usar classes responsivas: `text-lg sm:text-2xl md:text-3xl` para que o texto se adapte
-- Adicionar `break-all` ou `whitespace-nowrap` com `overflow-hidden` + `text-[clamp(0.9rem,4vw,1.875rem)]` para escalar automaticamente
+### 2. `index.html` — Corrigir título e meta tags
+- `<title>Recargas Brasil</title>`
+- `og:title` → "Recargas Brasil"
+- `twitter:title` → "Recargas Brasil"
 
-**`src/components/ui/KpiCard.tsx`** (linha 72)
-- Mesmo ajuste: remover `truncate`, usar `text-[clamp(1rem,4vw,1.5rem)]` para auto-scale
-- Garantir que funcione em todos os contextos onde `KpiCard` é usado
+### 3. `public/sw-push.js` — Forçar atualização do manifest
+- Adicionar lógica no `activate` event para limpar caches antigos e forçar o navegador a re-processar o manifest atualizado
+- Usar `self.skipWaiting()` + `clients.claim()` para aplicar imediatamente
 
-### 3. Abordagem técnica
-Usar CSS `clamp()` para auto-escalar o font-size:
-- Cards 2-col (BankDashboard): `font-size: clamp(0.95rem, 3.5vw, 1.875rem)` — nunca corta, apenas diminui
-- KpiCard genérico: similar com breakpoints adequados
+### 4. Favicon/Ícone
+- O ícone mostrado no screenshot com "Reecargas" (dois e) parece ser a imagem do `favicon.png`. Verificar e, se necessário, o usuário precisará fornecer uma imagem corrigida, pois não é possível editar imagens PNG pelo código
 
-### Resultado
-- Valores como R$ 50.359,00 ou R$ 150.000,00 aparecem completos
-- O tamanho da fonte diminui automaticamente em telas menores
-- Nenhum card trunca valores independente do tamanho
+## Limitação importante
+- **iOS**: O nome do ícone na home screen é definido no momento da instalação e **não atualiza automaticamente** mesmo com novo manifest — o usuário precisaria remover e reinstalar
+- **Android/Chrome**: O nome pode ser atualizado automaticamente pelo Chrome quando detecta mudança no manifest (WebAPK update)
 
