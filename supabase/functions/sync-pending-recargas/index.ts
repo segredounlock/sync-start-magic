@@ -125,6 +125,15 @@ Deno.serve(async (req) => {
                   .eq("tipo", "revenda")
                   .single();
 
+                const { data: userProfile } = await adminClient
+                  .from("profiles")
+                  .select("nome, email")
+                  .eq("id", recarga.user_id)
+                  .single();
+
+                const userName = userProfile?.nome || userProfile?.email || recarga.user_id.slice(0, 8);
+                const operadoraUp = (recarga.operadora || "").toUpperCase();
+
                 const notifyPayload = {
                   telefone: recarga.telefone,
                   operadora: recarga.operadora,
@@ -140,12 +149,12 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({ type: "recarga_completed", user_id: recarga.user_id, data: notifyPayload }),
                 }).catch(() => {});
 
-                // Push notification (PWA)
+                // Push notification (PWA) — rich info
                 fetch(`${baseUrl}/functions/v1/send-push`, {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
-                    title: "✅ Recarga Concluída!",
-                    body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} foi realizada com sucesso.`,
+                    title: `✅ ${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}`,
+                    body: `👤 ${userName}\n📞 ${recarga.telefone}\n💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}`,
                     user_ids: [recarga.user_id],
                   }),
                 }).catch(() => {});
@@ -181,12 +190,15 @@ Deno.serve(async (req) => {
                   }),
                 }).catch(() => {});
 
-                // Push notification for failure (PWA)
+                // Push notification for failure (PWA) — rich info
+                const { data: failProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
+                const failName = failProfile?.nome || failProfile?.email || recarga.user_id.slice(0, 8);
+                const failOp = (recarga.operadora || "").toUpperCase();
                 fetch(`${baseUrl}/functions/v1/send-push`, {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
-                    title: "❌ Recarga Falhou",
-                    body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} falhou. Saldo estornado automaticamente.`,
+                    title: `❌ ${failOp} R$ ${Number(recarga.valor).toFixed(2)}`,
+                    body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
                     user_ids: [recarga.user_id],
                   }),
                 }).catch(() => {});
@@ -237,12 +249,15 @@ Deno.serve(async (req) => {
               }),
             }).catch(() => {});
 
-            // Push notification
+            // Push notification — rich info
+            const { data: expProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
+            const expName = expProfile?.nome || expProfile?.email || recarga.user_id.slice(0, 8);
+            const expOp = (recarga.operadora || "").toUpperCase();
             fetch(`${baseUrl}/functions/v1/send-push`, {
               method: "POST", headers: authHeaders,
               body: JSON.stringify({
-                title: "❌ Recarga Falhou",
-                body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} falhou. Saldo estornado automaticamente.`,
+                title: `❌ ${expOp} R$ ${Number(recarga.valor).toFixed(2)}`,
+                body: `👤 ${expName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
                 user_ids: [recarga.user_id],
               }),
             }).catch(() => {});

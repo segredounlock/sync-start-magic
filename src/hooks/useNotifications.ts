@@ -233,10 +233,16 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               processing: "Processando", cancelled: "Cancelada",
             };
             const insertLabel = insertStatusMap[r.status] || r.status;
+            const operadoraIns = (r.operadora || "").toUpperCase();
+            const valorIns = Number(r.valor || 0).toFixed(2);
+            const custoIns = Number(r.custo || 0).toFixed(2);
+            const custoApiIns = Number(r.custo_api || 0).toFixed(2);
+            const nomeIns = profile.nome || profile.email || "Usuário";
+            const richMsgIns = `${insertLabel} — ${operadoraIns} R$ ${valorIns} • ${nomeIns} • Custo: R$ ${custoIns} • API: R$ ${custoApiIns}`;
             addNotification({
               id: r.id,
               type: "recarga",
-              message: `Recarga ${insertLabel} — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`,
+              message: richMsgIns,
               amount: Number(r.valor),
               user_id: r.user_id,
               user_nome: profile.nome || undefined,
@@ -250,8 +256,8 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             if (!isFinal) {
               try { playSuccessSound(); } catch {}
               if (showRecargaRef.current) {
-                showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { tag: `recarga-${r.id}`, type: "recarga" });
-                appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+                showSystemNotification(`⏳ ${operadoraIns} R$ ${valorIns}`, `👤 ${nomeIns}\n💰 Custo: R$ ${custoIns} | API: R$ ${custoApiIns}`, { tag: `recarga-${r.id}`, type: "recarga" });
+                appToast.recargaProcessing(richMsgIns, { id: `recarga-${r.id}`, description: `${nomeIns} · ${formatTimeBR(r.created_at)}` });
               }
             }
           })
@@ -276,7 +282,10 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             const label = statusMap[r.status] || r.status;
             const operadora = (r.operadora || "").toUpperCase();
             const valor = Number(r.valor || 0).toFixed(2);
-            const updatedMsg = `Recarga ${label} — ${operadora} R$ ${valor}`;
+            const custo = Number(r.custo || 0).toFixed(2);
+            const custoApi = Number(r.custo_api || 0).toFixed(2);
+            const nome = profile.nome || profile.email || "Usuário";
+            const updatedMsg = `${label} — ${operadora} R$ ${valor} • ${nome} • Custo: R$ ${custo} • API: R$ ${custoApi}`;
             const originalTime = r.created_at;
 
             // Validate message is not empty before proceeding
@@ -286,6 +295,9 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             }
 
             const originalId = r.id;
+            const pushTitle = `${label.replace(/^[✅❌⏳⚙️🚫]\s*/, "")} ${operadora} R$ ${valor}`;
+            const pushBody = `👤 ${nome}\n💰 Custo: R$ ${custo} | API: R$ ${custoApi}`;
+            const statusEmoji = r.status === "completed" || r.status === "concluida" ? "✅" : r.status === "falha" ? "❌" : "📱";
 
             if (knownIds.current.has(originalId)) {
               // Already known — just update the existing notification silently (no toast/sound)
@@ -300,22 +312,23 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
                 .then(() => {});
               // Only show toast for final status changes (completed/failed), not intermediate
               if (showRecargaRef.current && (r.status === "completed" || r.status === "concluida" || r.status === "falha" || r.status === "cancelled")) {
+                showSystemNotification(`${statusEmoji} ${operadora} R$ ${valor}`, pushBody, { tag: `recarga-${r.id}`, type: "recarga" });
                 const toastMethod = r.status === "completed" || r.status === "concluida"
                   ? appToast.recargaCompleted
                   : appToast.recargaFailed;
-                toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.updated_at || r.created_at)}` });
+                toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${nome} · ${formatTimeBR(r.updated_at || r.created_at)}` });
               }
             } else {
               // New notification — show toast and sound
               try { playSuccessSound(); } catch {}
               if (showRecargaRef.current) {
-                showSystemNotification("📱 Recarga", `${label} — ${operadora} R$ ${valor}`, { tag: `recarga-${r.id}`, type: "recarga" });
+                showSystemNotification(`${statusEmoji} ${operadora} R$ ${valor}`, pushBody, { tag: `recarga-${r.id}`, type: "recarga" });
                 const toastMethod = r.status === "completed" || r.status === "concluida"
                   ? appToast.recargaCompleted
                   : r.status === "falha" || r.status === "cancelled"
                     ? appToast.recargaFailed
                     : appToast.recargaProcessing;
-                toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.updated_at || r.created_at)}` });
+                toastMethod(updatedMsg, { id: `recarga-upd-${r.id}`, description: `${nome} · ${formatTimeBR(r.updated_at || r.created_at)}` });
               }
               addNotification({
                 id: originalId,
