@@ -85,7 +85,7 @@ export const PAYMENT_CONFIG_KEYS = [
 export const EXPECTED_REALTIME = [
   "admin_notifications","audit_logs","broadcast_progress","chat_conversations",
   "chat_members","chat_message_reads","chat_messages","chat_reactions",
-  "license_logs","notifications","poll_votes","polls","profiles","recargas",
+  "notifications","poll_votes","polls","profiles","recargas",
   "saldos","support_messages","support_tickets","telegram_users","transactions","user_roles",
 ];
 
