@@ -123,6 +123,15 @@ export function LicenseGate({ children }: { children: ReactNode }) {
 
   // ─── License Activation (installed but no license) ───
   if (status === "activate") {
+    // Allow access to login/auth routes so user can authenticate
+    const currentPath = window.location.pathname;
+    const isAuthRoute = ["/login", "/auth", "/reset-password"].some(r => currentPath.startsWith(r));
+    
+    if (isAuthRoute || (authReady && !user)) {
+      // Let the app render normally so login page is accessible
+      return <>{children}</>;
+    }
+
     return (
       <LicenseActivation
         user={user}
