@@ -2,8 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { useSiteName } from "@/hooks/useSiteName";
 import { useSiteLogo } from "@/hooks/useSiteLogo";
 
-/** Floating particle spawned by the canvas */
 interface Particle {
+  x: number;
+  y: number;
+  originX: number;
+  originY: number;
+  vx: number;
+  vy: number;
+  r: number;
+  alpha: number;
+  decay: number;
+  color: string;
+}
+
+interface BgParticle {
   x: number;
   y: number;
   vx: number;
@@ -16,21 +28,25 @@ interface Particle {
 export function SplashScreen() {
   const logo = useSiteLogo();
   const siteName = useSiteName();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
+  const disintCanvasRef = useRef<HTMLCanvasElement>(null);
   const [visible, setVisible] = useState(true);
   const [logoLoaded, setLogoLoaded] = useState(false);
-  const frameRef = useRef(0);
+  const [disintegrating, setDisintegrating] = useState(false);
+  const [particlesReady, setParticlesReady] = useState(false);
+  const logoRef = useRef<HTMLImageElement>(null);
+  const disintParticlesRef = useRef<Particle[]>([]);
 
-  /* ── Canvas particle system ── */
+  /* ── Background particle system ── */
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = bgCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let w = (canvas.width = window.innerWidth);
     let h = (canvas.height = window.innerHeight);
-    const particles: Particle[] = [];
+    const particles: BgParticle[] = [];
     let raf = 0;
 
     const resize = () => {
@@ -57,25 +73,18 @@ export function SplashScreen() {
 
     const loop = () => {
       ctx.clearRect(0, 0, w, h);
-
-      // spawn 1-2 particles per frame
       if (particles.length < 60) {
         spawn();
         if (Math.random() > 0.5) spawn();
       }
-
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
         p.alpha -= p.decay;
-        if (p.alpha <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
+        if (p.alpha <= 0) { particles.splice(i, 1); continue; }
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        // primary green glow
         ctx.fillStyle = `hsla(152, 72%, 46%, ${p.alpha})`;
         ctx.shadowColor = "hsla(152, 72%, 46%, 0.6)";
         ctx.shadowBlur = 8;
@@ -84,24 +93,153 @@ export function SplashScreen() {
       ctx.shadowBlur = 0;
       raf = requestAnimationFrame(loop);
     };
-
     loop();
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-    };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
   }, []);
 
-  /* ── Progress counter — ~10s total duration ── */
+  /* ── Build disintegration particles from logo pixels ── */
+  useEffect(() => {
+    if (!logoLoaded || !logoRef.current) return;
+
+    const img = logoRef.current;
+    const size = 112; // canvas sample size
+    const offscreen = document.createElement("canvas");
+    offscreen.width = size;
+    offscreen.height = size;
+    const octx = offscreen.getContext("2d");
+    if (!octx) return;
+
+    // Need crossOrigin — draw may fail for external URLs, fallback gracefully
+    const drawImg = new Image();
+    drawImg.crossOrigin = "anonymous";
+    drawImg.onload = () => {
+      octx.drawImage(drawImg, 0, 0, size, size);
+      let imageData: ImageData;
+      try {
+        imageData = octx.getImageData(0, 0, size, size);
+      } catch {
+        // tainted canvas — use solid color particles as fallback
+        const particles: Particle[] = [];
+        const step = 3;
+        for (let y = 0; y < size; y += step) {
+          for (let x = 0; x < size; x += step) {
+            particles.push({
+              x, y, originX: x, originY: y,
+              vx: 0, vy: 0, r: step / 2,
+              alpha: 1, decay: 0,
+              color: "hsl(152, 72%, 46%)",
+            });
+          }
+        }
+        disintParticlesRef.current = particles;
+        setParticlesReady(true);
+        return;
+      }
+
+      const pixels = imageData.data;
+      const particles: Particle[] = [];
+      const step = 3;
+
+      for (let y = 0; y < size; y += step) {
+        for (let x = 0; x < size; x += step) {
+          const i = (y * size + x) * 4;
+          const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
+          if (a < 30) continue; // skip transparent
+          particles.push({
+            x, y, originX: x, originY: y,
+            vx: 0, vy: 0, r: step / 2,
+            alpha: 1, decay: 0,
+            color: `rgba(${r},${g},${b},${a / 255})`,
+          });
+        }
+      }
+      disintParticlesRef.current = particles;
+      setParticlesReady(true);
+    };
+    drawImg.onerror = () => {
+      // fallback: green particles in a square
+      const particles: Particle[] = [];
+      const step = 3;
+      for (let y = 0; y < size; y += step) {
+        for (let x = 0; x < size; x += step) {
+          particles.push({
+            x, y, originX: x, originY: y,
+            vx: 0, vy: 0, r: step / 2,
+            alpha: 1, decay: 0,
+            color: "hsl(152, 72%, 46%)",
+          });
+        }
+      }
+      disintParticlesRef.current = particles;
+      setParticlesReady(true);
+    };
+    drawImg.src = img.src;
+  }, [logoLoaded]);
+
+  /* ── Trigger disintegration at ~7s ── */
+  useEffect(() => {
+    const timer = setTimeout(() => setDisintegrating(true), 7000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  /* ── Disintegration animation ── */
+  useEffect(() => {
+    if (!disintegrating || !particlesReady) return;
+    const canvas = disintCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const size = 112;
+    canvas.width = size;
+    canvas.height = size;
+
+    const particles = disintParticlesRef.current;
+
+    // Assign random velocities for disintegration
+    for (const p of particles) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1 + Math.random() * 3;
+      p.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 2;
+      p.vy = Math.sin(angle) * speed - Math.random() * 1.5;
+      p.decay = 0.008 + Math.random() * 0.012;
+    }
+
+    let raf = 0;
+    const loop = () => {
+      ctx.clearRect(0, 0, size, size);
+      let alive = 0;
+      for (const p of particles) {
+        if (p.alpha <= 0) continue;
+        alive++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.02; // slight gravity
+        p.vx *= 0.99;
+        p.alpha -= p.decay;
+        if (p.alpha <= 0) continue;
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.r * 2, p.r * 2);
+      }
+      ctx.globalAlpha = 1;
+      if (alive > 0) {
+        raf = requestAnimationFrame(loop);
+      }
+    };
+    loop();
+    return () => cancelAnimationFrame(raf);
+  }, [disintegrating, particlesReady]);
+
+  /* ── Progress counter — ~10s ── */
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    const DURATION = 10_000; // 10 seconds
-    const INTERVAL = 150;   // update every 150ms
+    const DURATION = 10_000;
+    const INTERVAL = 150;
     const TOTAL_TICKS = DURATION / INTERVAL;
     let tick = 0;
     const interval = setInterval(() => {
       tick++;
-      // ease-out curve: fast start, slow end
       const ratio = tick / TOTAL_TICKS;
       const eased = 1 - Math.pow(1 - ratio, 2.5);
       const value = Math.min(100, eased * 100);
@@ -111,50 +249,34 @@ export function SplashScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  /* ── Frame counter for subtle oscillation ── */
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      frameRef.current++;
-      raf = requestAnimationFrame(tick);
-    };
-    tick();
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
   if (!visible) return null;
+
+  const showDisintCanvas = disintegrating && particlesReady;
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
       style={{ background: "hsl(160 30% 4%)" }}
     >
-      {/* Particle canvas */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 pointer-events-none"
-        style={{ opacity: 0.7 }}
-      />
+      {/* Background particle canvas */}
+      <canvas ref={bgCanvasRef} className="absolute inset-0 pointer-events-none" style={{ opacity: 0.7 }} />
 
       {/* Ambient radial glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
-            width: 340,
-            height: 340,
+            width: 340, height: 340,
             background: "radial-gradient(circle, hsla(152,72%,46%,0.12) 0%, transparent 70%)",
             animation: "splash-glow-pulse 3s ease-in-out infinite",
           }}
         />
       </div>
 
-      {/* Logo with ring animation */}
+      {/* Logo with ring + disintegration */}
       <div className="relative z-10" style={{ animation: "splash-logo-enter 0.8s cubic-bezier(0.16,1,0.3,1) both" }}>
         {/* Spinning ring */}
-        <svg
-          className="absolute -inset-3"
-          viewBox="0 0 140 140"
-          style={{ animation: "splash-ring-spin 4s linear infinite" }}
+        <svg className="absolute -inset-3" viewBox="0 0 140 140"
+          style={{ animation: "splash-ring-spin 4s linear infinite", opacity: showDisintCanvas ? 0 : 1, transition: "opacity 0.5s" }}
         >
           <defs>
             <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -163,35 +285,39 @@ export function SplashScreen() {
               <stop offset="100%" stopColor="hsla(152,72%,46%,0.4)" />
             </linearGradient>
           </defs>
-          <circle
-            cx="70" cy="70" r="64"
-            fill="none"
-            stroke="url(#ring-grad)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeDasharray="120 280"
-          />
+          <circle cx="70" cy="70" r="64" fill="none" stroke="url(#ring-grad)"
+            strokeWidth="2" strokeLinecap="round" strokeDasharray="120 280" />
         </svg>
 
-        {/* Logo container */}
+        {/* Logo image (hidden when disintegrating) */}
         <div
           className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border border-border/30"
           style={{
             boxShadow: "0 0 40px hsla(152,72%,46%,0.15), 0 8px 32px rgba(0,0,0,0.4)",
+            opacity: showDisintCanvas ? 0 : 1,
+            transition: "opacity 0.3s",
           }}
         >
           <img
+            ref={logoRef}
             src={logo}
             alt={siteName}
             className="w-full h-full object-cover"
+            crossOrigin="anonymous"
             loading="eager"
             onLoad={() => setLogoLoaded(true)}
-            style={{
-              opacity: logoLoaded ? 1 : 0,
-              transition: "opacity 0.4s ease",
-            }}
+            style={{ opacity: logoLoaded ? 1 : 0, transition: "opacity 0.4s ease" }}
           />
         </div>
+
+        {/* Disintegration canvas (same size as logo) */}
+        {showDisintCanvas && (
+          <canvas
+            ref={disintCanvasRef}
+            className="absolute top-0 left-0 w-24 h-24 md:w-28 md:h-28 rounded-2xl"
+            style={{ imageRendering: "pixelated" }}
+          />
+        )}
       </div>
 
       {/* Brand name with shimmer */}
@@ -227,7 +353,7 @@ export function SplashScreen() {
         <div
           className="h-full rounded-full"
           style={{
-            width: `${progress}%`,
+            width: `${progress || 0}%`,
             background: "linear-gradient(90deg, hsl(152,72%,46%), hsl(152,85%,60%))",
             boxShadow: "0 0 12px hsla(152,72%,46%,0.5)",
             transition: "width 0.15s ease-out",
@@ -243,10 +369,9 @@ export function SplashScreen() {
           animation: "splash-text-enter 0.5s 0.6s cubic-bezier(0.16,1,0.3,1) both",
         }}
       >
-        Carregando… {Math.round(progress)}%
+        Carregando… {Math.round(progress || 0)}%
       </p>
 
-      {/* Inline keyframes */}
       <style>{`
         @keyframes splash-logo-enter {
           from { opacity: 0; transform: scale(0.7) translateY(20px); }
