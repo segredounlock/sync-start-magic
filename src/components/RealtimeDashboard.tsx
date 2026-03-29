@@ -5,7 +5,7 @@ import { styledToast as toast } from "@/lib/toast";
 import { playSuccessSound } from "@/lib/sounds";
 import { getLocalDayBoundsUTC, formatTimeBR } from "@/lib/timezone";
 import {
-  Smartphone, Clock, CheckCircle2, XCircle, AlertTriangle,
+  Smartphone, Clock, CheckCircle2, XCircle, AlertTriangle, Bot,
   TrendingUp, Activity, Zap, RefreshCw,
 } from "lucide-react";
 import { AnimatedCounter, AnimatedInt } from "@/components/AnimatedCounter";
@@ -31,6 +31,14 @@ interface DashboardStats {
   failed: number;
   totalValue: number;
   totalCost: number;
+}
+
+interface TelegramActivityItem {
+  id: string;
+  type: string;
+  message: string;
+  status: string;
+  created_at: string;
 }
 
 interface Props {
@@ -166,6 +174,7 @@ function CreditsFeed({
 
 export default function RealtimeDashboard({ userId, fmt }: Props) {
   const [recargas, setRecargas] = useState<Recarga[]>([]);
+  const [telegramActivity, setTelegramActivity] = useState<TelegramActivityItem[]>([]);
   const [userNames, setUserNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [liveIndicator, setLiveIndicator] = useState(false);
@@ -198,9 +207,30 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
     }
   }, [userId]);
 
+  const isTelegramActivity = useCallback((row: any) => {
+    const message = String(row?.message || "").toLowerCase();
+    return row?.type === "new_user_telegram" || row?.type === "telegram_activity" || message.includes("telegram");
+  }, []);
+
+  const fetchTelegramActivity = useCallback(async () => {
+    try {
+      const { data } = await (supabase.from("admin_notifications" as any) as any)
+        .select("id, type, message, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      if (Array.isArray(data)) {
+        setTelegramActivity((data as TelegramActivityItem[]).filter(isTelegramActivity).slice(0, 8));
+      }
+    } catch (err) {
+      console.error("RealtimeDashboard telegram activity error:", err);
+    }
+  }, [isTelegramActivity]);
+
   useEffect(() => {
     fetchRecargas();
-  }, [fetchRecargas]);
+    fetchTelegramActivity();
+  }, [fetchRecargas, fetchTelegramActivity]);
 
   // Fetch user names for display
   useEffect(() => {
@@ -249,18 +279,32 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
           playSuccessSound();
         }
       })
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "admin_notifications",
+      }, (payload: any) => {
+        const row = payload.new as any;
+        if (!isTelegramActivity(row)) return;
+
+        setTelegramActivity(prev => [row, ...prev.filter(item => item.id !== row.id)].slice(0, 8));
+        blinkLive();
+        toast.success(row.message || "Nova atividade no bot do Telegram");
+        try { playSuccessSound(); } catch {}
+      })
       .subscribe();
 
     // Polling fallback every 15s to catch missed realtime events
     const pollInterval = setInterval(() => {
       fetchRecargas();
+      fetchTelegramActivity();
     }, 15000);
 
     return () => {
       supabase.removeChannel(channel);
       clearInterval(pollInterval);
     };
-  }, [userId, fetchRecargas]);
+  }, [userId, fetchRecargas, fetchTelegramActivity, isTelegramActivity]);
 
   const blinkLive = () => {
     setLiveIndicator(true);
@@ -392,6 +436,43 @@ export default function RealtimeDashboard({ userId, fmt }: Props) {
           </div>
           <AnimatedCounter value={stats.totalValue - stats.totalCost} prefix="R$&nbsp;" className="text-xl font-bold text-primary" />
         </div>
+      </div>
+
+      <div className="glass-card rounded-xl p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Bot className="h-4 w-4 text-primary" />
+              Bot do Telegram em Tempo Real
+            </h3>
+            <p className="text-xs text-muted-foreground">Termos aceitos, entrada no fluxo de depósito e eventos críticos</p>
+          </div>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-semibold">
+            {telegramActivity.length} eventos
+          </span>
+        </div>
+
+        {telegramActivity.length === 0 ? (
+          <div className="rounded-lg bg-muted/30 px-3 py-4 text-xs text-muted-foreground">
+            As interações importantes do bot aparecerão aqui em tempo real.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {telegramActivity.map((item) => (
+              <div key={item.id} className="rounded-lg border border-border/60 bg-muted/20 px-3 py-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground break-words">{item.message}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{fmtTime(item.created_at)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Operator breakdown */}

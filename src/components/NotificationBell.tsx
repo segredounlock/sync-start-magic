@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2, ShieldAlert } from "lucide-react";
+import { Bell, X, DollarSign, Smartphone, UserPlus, Bot, CheckCheck, Trash2, ShieldAlert, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications, AppNotification, NotifConfig } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -18,6 +18,7 @@ const ICON_MAP: Record<string, typeof DollarSign> = {
   new_user_web: UserPlus,
   new_user_telegram: Bot,
   debt_collected: ShieldAlert,
+  telegram_activity: Radio,
 };
 
 const COLOR_MAP: Record<string, string> = {
@@ -26,6 +27,7 @@ const COLOR_MAP: Record<string, string> = {
   new_user_web: "bg-accent/15 text-accent-foreground",
   new_user_telegram: "bg-primary/15 text-primary",
   debt_collected: "bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/30",
+  telegram_activity: "bg-primary/10 text-primary",
 };
 
 const STATUS_LABEL: Record<string, { icon: string; cls: string }> = {
