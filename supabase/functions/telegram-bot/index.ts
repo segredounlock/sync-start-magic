@@ -927,6 +927,30 @@ serve(async (req) => {
       const { data: licenseValid } = await supabase.rpc("is_license_valid");
       if (licenseValid === false) {
         console.log("[TELEGRAM-BOT] License expired or invalid — blocking requests");
+        // Try to extract chat_id to send a friendly message
+        try {
+          const body = await req.clone().json();
+          const chatId = body?.message?.chat?.id || body?.callback_query?.message?.chat?.id;
+          if (chatId) {
+            const { data: tokenRow } = await supabase
+              .from("bot_settings")
+              .select("value")
+              .eq("key", "botToken")
+              .maybeSingle();
+            const token = tokenRow?.value;
+            if (token) {
+              await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  chat_id: chatId,
+                  text: "⚠️ *Sistema em atualização*\n\nNosso sistema está temporariamente indisponível para manutenção.\n\nPor favor, entre em contato com o administrador para mais informações. Pedimos desculpas pelo inconveniente! 🙏",
+                  parse_mode: "Markdown",
+                }),
+              });
+            }
+          }
+        } catch {}
         return new Response("ok", { headers: corsHeaders });
       }
     }
