@@ -3862,7 +3862,7 @@ export default function Principal() {
                               <img src={globalConfig.faviconUrl} alt="Favicon atual" className="w-full h-full object-contain p-1" />
                             ) : (
                               <div className="text-center">
-                                <ImageIcon className="h-6 w-6 text-muted-foreground mx-auto" />
+                                <Image className="h-6 w-6 text-muted-foreground mx-auto" />
                                 <span className="text-[9px] text-muted-foreground">Padrão</span>
                               </div>
                             )}
@@ -3935,7 +3935,7 @@ export default function Principal() {
                             </div>
                           ) : (
                             <div className="w-full h-32 rounded-xl border-2 border-dashed border-border bg-muted/20 flex flex-col items-center justify-center gap-1">
-                              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                              <Image className="h-8 w-8 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">Nenhuma OG Image configurada</span>
                             </div>
                           )}
