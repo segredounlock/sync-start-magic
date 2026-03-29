@@ -1,31 +1,53 @@
 
 
-## Corrigir NaN% e adicionar efeito de desintegração na logo
+## Corrigir splash travando em 0% no preview (React StrictMode)
 
-### Problema do NaN%
-O `Math.round(progress)` está mostrando NaN. Isso pode acontecer se o estado `progress` receber um valor `NaN` durante o cálculo. Vou adicionar uma proteção `|| 0` para garantir que nunca mostre NaN.
+### Causa raiz
+O `React.StrictMode` (em `main.tsx`) desmonta e remonta componentes no dev/preview. Quando o `SplashScreen` remonta, o `useState(0)` e o `useEffect` do progresso reiniciam do zero, criando loop infinito de 0%.
 
-### Efeito de desintegração da logo (Canvas + JS)
-A ideia é criar um efeito estilo "Thanos snap" onde a logo se desintegra em partículas:
+### Solução
+Usar **variáveis no escopo do módulo** (fora do componente) que sobrevivem ao remount do StrictMode.
 
-1. Quando a logo carrega, ela é desenhada num canvas oculto
-2. Os pixels da imagem são amostrados e convertidos em partículas coloridas
-3. Após uns 7 segundos, as partículas começam a se dispersar/desintegrar
-4. As partículas voam para fora com física realista (gravidade, vento, fade)
+### Mudanças em `src/components/SplashScreen.tsx`
 
-### Mudanças
+1. Adicionar no topo do arquivo (fora do componente, após os imports):
+```ts
+let moduleProgress = 0;
+let moduleStarted = false;
+let moduleDisintegrated = false;
+```
 
-**Arquivo:** `src/components/SplashScreen.tsx`
+2. Alterar os `useState` para usar os valores do módulo:
+```ts
+const [progress, setProgress] = useState(moduleProgress);
+const [disintegrating, setDisintegrating] = useState(moduleDisintegrated);
+```
 
-- Corrigir o NaN: `Math.round(progress || 0)`
-- Adicionar um segundo canvas dedicado ao efeito de desintegração
-- Quando `logoLoaded = true`, desenhar a imagem num canvas offscreen, amostrar pixels em grid (ex: cada 3px), criar partículas com a cor real de cada pixel
-- Nos primeiros ~7s: partículas ficam na posição original (logo visível como mosaico)
-- Aos ~7s: trigger da desintegração — partículas ganham velocidade aleatória e se dispersam com fade out
-- A logo `<img>` original fica escondida quando o canvas de partículas está ativo
+3. No `useEffect` do progresso (linhas 99-116), adicionar guard com `moduleStarted`:
+```ts
+useEffect(() => {
+  if (moduleStarted) return; // Não reiniciar se já rodou
+  moduleStarted = true;
+  const DURATION = 10_000; const INTERVAL = 150;
+  const TOTAL = DURATION / INTERVAL; let tick = 0;
+  const iv = setInterval(() => {
+    tick++;
+    const eased = 1 - Math.pow(1 - tick / TOTAL, 2.5);
+    const value = Math.min(100, eased * 100);
+    moduleProgress = value; // Salvar no módulo
+    setProgress(value);
+    if (value >= 99.9 && !moduleDisintegrated) {
+      moduleDisintegrated = true;
+      setDisintegrating(true);
+    }
+    if (tick >= TOTAL) clearInterval(iv);
+  }, INTERVAL);
+  return () => clearInterval(iv);
+}, []);
+```
 
 ### Resultado
-- Sem NaN% na tela
-- Logo aparece normalmente, depois se desintegra em partículas coloridas de forma cinematográfica
-- Tudo feito com Canvas API + requestAnimationFrame, sem libs extras
+- No preview (StrictMode): progresso não reseta, splash funciona normalmente
+- No site publicado: sem mudança de comportamento
+- Explosão de partículas continua sincronizada com 100%
 
