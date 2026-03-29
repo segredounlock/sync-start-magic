@@ -2,19 +2,41 @@ import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Hook that auto-generates VAPID keys (if needed) and registers
- * a Web Push subscription for the current user.
- * Re-subscribes every session to keep push tokens fresh.
+ * Enhanced Push Notifications hook.
+ * - Auto-generates VAPID keys via edge function
+ * - Registers Web Push subscription (per-device, multi-device support)
+ * - Listens for subscription changes from SW and re-saves
+ * - Requests periodic sync keep-alive for faster delivery
+ * - Re-subscribes every session to keep tokens fresh
  */
 export function usePushNotifications(userId: string | undefined) {
   const registeredRef = useRef(false);
+
+  const saveSubscription = useCallback(async (
+    uid: string,
+    json: PushSubscriptionJSON
+  ) => {
+    if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
+
+    // Use endpoint as unique key (supports multi-device)
+    const { error } = await (supabase.from("push_subscriptions" as any) as any).upsert({
+      user_id: uid,
+      endpoint: json.endpoint,
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth,
+    }, { onConflict: "user_id,endpoint" });
+
+    if (error) {
+      console.error("[Push] Failed to save subscription:", error);
+    }
+  }, []);
 
   const registerPush = useCallback(async () => {
     if (!userId || registeredRef.current) return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
     try {
-      // 1. Ensure VAPID keys exist (auto-generate if needed)
+      // 1. Ensure VAPID keys exist
       const { data: setupData, error: setupErr } = await supabase.functions.invoke("vapid-setup");
       if (setupErr || !setupData?.publicKey) {
         console.warn("[Push] Failed to setup VAPID keys:", setupErr);
@@ -48,44 +70,46 @@ export function usePushNotifications(userId: string | undefined) {
         return;
       }
 
-      // 4. Check existing subscription - unsubscribe if keys changed
+      // 4. Check existing subscription — re-subscribe if VAPID key changed
       const existingSub = await registration.pushManager.getSubscription();
       if (existingSub) {
         const existingKey = existingSub.options?.applicationServerKey;
         const newKeyArray = urlBase64ToUint8Array(vapidPublicKey);
         const existingKeyArray = existingKey ? new Uint8Array(existingKey as ArrayBuffer) : null;
-        
-        const keysMatch = existingKeyArray && 
+
+        const keysMatch = existingKeyArray &&
           existingKeyArray.length === newKeyArray.length &&
           existingKeyArray.every((v, i) => v === newKeyArray[i]);
-        
+
         if (!keysMatch) {
           console.log("[Push] VAPID key changed, re-subscribing...");
           await existingSub.unsubscribe();
         }
       }
 
-      // 5. Subscribe to push (reuses existing if valid, creates new if needed)
+      // 5. Subscribe to push
       const appServerKey = urlBase64ToUint8Array(vapidPublicKey);
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: appServerKey.buffer as ArrayBuffer,
       });
 
-      const json = subscription.toJSON();
-      if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
+      // 6. Save subscription to database
+      await saveSubscription(userId, subscription.toJSON());
 
-      // 6. Save/update subscription in database
-      const { error: upsertError } = await (supabase.from("push_subscriptions" as any) as any).upsert({
-        user_id: userId,
-        endpoint: json.endpoint,
-        p256dh: json.keys.p256dh,
-        auth: json.keys.auth,
-      }, { onConflict: "user_id,endpoint" });
-
-      if (upsertError) {
-        console.error("[Push] Failed to save subscription:", upsertError);
-        return;
+      // 7. Request periodic sync keep-alive (if supported)
+      try {
+        if ("periodicSync" in registration) {
+          const status = await navigator.permissions.query({ name: "periodic-background-sync" as any });
+          if (status.state === "granted") {
+            await (registration as any).periodicSync.register("push-keepalive", {
+              minInterval: 12 * 60 * 60 * 1000, // 12 hours
+            });
+            console.log("[Push] Periodic sync keep-alive registered");
+          }
+        }
+      } catch {
+        // Not supported — that's fine
       }
 
       registeredRef.current = true;
@@ -93,7 +117,22 @@ export function usePushNotifications(userId: string | undefined) {
     } catch (err) {
       console.error("[Push] Registration failed:", err);
     }
-  }, [userId]);
+  }, [userId, saveSubscription]);
+
+  // Listen for subscription changes from Service Worker
+  useEffect(() => {
+    if (!userId || !("serviceWorker" in navigator)) return;
+
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "PUSH_SUBSCRIPTION_CHANGED" && event.data.subscription) {
+        console.log("[Push] Subscription changed via SW, saving new keys...");
+        saveSubscription(userId, event.data.subscription);
+      }
+    };
+
+    navigator.serviceWorker.addEventListener("message", handler);
+    return () => navigator.serviceWorker.removeEventListener("message", handler);
+  }, [userId, saveSubscription]);
 
   useEffect(() => {
     registerPush();
