@@ -95,7 +95,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push(token ? "✓ Autenticado!" : "⚠ Sessão pendente");
       setProgress([...steps]);
 
-      // 4. Call init-mirror for basic config (NO license data)
+      // 4. Call init-mirror for basic config
       steps.push("Inicializando sistema...");
       setProgress([...steps]);
 
@@ -206,7 +206,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">2</span>
           </div>
-          <span className="text-foreground">Acessar e ativar licença</span>
+          <span className="text-foreground">Configurar o sistema</span>
         </div>
       </div>
       <button
@@ -293,7 +293,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
           <li>Este usuário terá <strong className="text-foreground">acesso total</strong> ao sistema</li>
           <li>Guarde o e-mail e senha em <strong className="text-foreground">local seguro</strong></li>
-          <li>Após criar, você fará login e ativará a <strong className="text-foreground">licença</strong></li>
+          <li>Após criar, você poderá acessar o <strong className="text-foreground">painel administrativo</strong></li>
         </ul>
       </div>
 
@@ -357,7 +357,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       </div>
       <h1 className="text-2xl font-bold text-foreground">Admin Criado!</h1>
       <p className="text-muted-foreground text-sm">
-        Faça login com sua conta e ative a licença para desbloquear o sistema.
+        Faça login com sua conta para acessar o sistema.
       </p>
       <div className="bg-muted/50 rounded-xl p-4 space-y-1 text-left">
         <p className="text-xs text-muted-foreground">E-mail: <strong className="text-foreground">{data.adminEmail}</strong></p>

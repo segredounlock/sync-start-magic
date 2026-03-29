@@ -92,27 +92,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ═══════════════════════════════════════════════════
-    // Parse optional license data from body
-    // ═══════════════════════════════════════════════════
-    let licenseData: Record<string, string> | null = null;
+    // Parse body for siteUrl/install metadata
     try {
       const body = await req.json();
-      if (body?.license_key) {
-        licenseData = {
-          license_key: body.license_key,
-          license_status: body.license_status || "active",
-          license_start_date: body.license_start_date || "",
-          license_end_date: body.license_end_date || "",
-          license_grace_days: String(body.license_grace_days ?? "0"),
-        };
-      }
-      // Also accept install metadata
       if (body?.siteUrl) {
         DEFAULT_CONFIGS.siteUrl = body.siteUrl;
-      }
-      if (body?.install_completed) {
-        // Will be saved below
       }
     } catch {
       // No body or invalid JSON — that's fine
@@ -120,48 +104,6 @@ Deno.serve(async (req) => {
 
     const results: { step: string; status: string; detail?: string }[] = [];
     const health: { key: string; ok: boolean; detail: string }[] = [];
-
-    // ═══════════════════════════════════════════════════
-    // Step 0: Save license config if provided (service_role bypasses RLS)
-    // ═══════════════════════════════════════════════════
-    if (licenseData) {
-      const licenseRows = Object.entries(licenseData).map(([key, value]) => ({
-        key,
-        value,
-      }));
-      const { error: licErr } = await admin
-        .from("system_config")
-        .upsert(licenseRows, { onConflict: "key" });
-
-      if (licErr) {
-        return new Response(
-          JSON.stringify({ error: `Falha ao salvar licença: ${licErr.message}` }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Verify persistence
-      const keysToVerify = ["license_key", "license_status", "license_start_date", "license_end_date"];
-      for (const k of keysToVerify) {
-        const { data: row } = await admin
-          .from("system_config")
-          .select("value")
-          .eq("key", k)
-          .maybeSingle();
-        if (!row?.value) {
-          return new Response(
-            JSON.stringify({ error: `Falha ao confirmar persistência de ${k}` }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
-
-      results.push({
-        step: "Licença",
-        status: "ok",
-        detail: `Licença salva e verificada (${licenseData.license_start_date} → ${licenseData.license_end_date})`,
-      });
-    }
 
     // ═══════════════════════════════════════════════════
     // Step 1: Insert ALL default configs (idempotent)
@@ -197,11 +139,6 @@ Deno.serve(async (req) => {
       { key: "install_domain", value: "" },
       { key: "install_secret", value: crypto.randomUUID() + "-" + crypto.randomUUID() },
     ];
-    // Try to read siteUrl for domain
-    try {
-      const body2 = licenseData ? {} : {};
-      // siteUrl already set in DEFAULT_CONFIGS if provided
-    } catch {}
 
     await admin.from("system_config").upsert(installMeta, { onConflict: "key" });
     results.push({
