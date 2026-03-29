@@ -95,19 +95,20 @@ export function SplashScreen() {
   }, [disintegrating]);
 
   /* ── Progress ── */
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(moduleProgress);
   useEffect(() => {
+    if (moduleStarted) return;
+    moduleStarted = true;
     const DURATION = 10_000; const INTERVAL = 150;
     const TOTAL = DURATION / INTERVAL; let tick = 0;
-    let triggered = false;
     const iv = setInterval(() => {
       tick++;
       const eased = 1 - Math.pow(1 - tick / TOTAL, 2.5);
       const value = Math.min(100, eased * 100);
+      moduleProgress = value;
       setProgress(value);
-      // Trigger explosion exactly when reaching 100%
-      if (value >= 99.9 && !triggered) {
-        triggered = true;
+      if (value >= 99.9 && !moduleDisintegrated) {
+        moduleDisintegrated = true;
         setDisintegrating(true);
       }
       if (tick >= TOTAL) clearInterval(iv);
