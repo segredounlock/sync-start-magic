@@ -716,22 +716,23 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         {/* Step indicator */}
         {step !== "finishing" && step !== "done" && (
           <div className="flex items-center justify-center gap-2 mb-6">
-            {(["welcome", "admin", "license"] as Step[]).map((s, i) => (
+            {(["welcome", "dependencies", "admin", "license"] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                   step === s ? "bg-primary text-primary-foreground" :
-                  (["welcome", "admin", "license"].indexOf(step) > i) ? "bg-emerald-500 text-white" :
+                  (["welcome", "dependencies", "admin", "license"].indexOf(step) > i) ? "bg-emerald-500 text-white" :
                   "bg-muted text-muted-foreground"
                 }`}>
-                  {(["welcome", "admin", "license"].indexOf(step) > i) ? "✓" : i + 1}
+                  {(["welcome", "dependencies", "admin", "license"].indexOf(step) > i) ? "✓" : i + 1}
                 </div>
-                {i < 2 && <div className="w-8 h-0.5 bg-border" />}
+                {i < 3 && <div className="w-6 h-0.5 bg-border" />}
               </div>
             ))}
           </div>
         )}
 
         {step === "welcome" && renderWelcome()}
+        {step === "dependencies" && renderDependencies()}
         {step === "admin" && renderAdmin()}
         {step === "license" && renderLicense()}
         {step === "finishing" && renderFinishing()}
