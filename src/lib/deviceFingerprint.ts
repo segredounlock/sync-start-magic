@@ -572,6 +572,8 @@ export async function captureLoginSelfie(): Promise<string | null> {
     const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
     return dataUrl.split(",")[1] || null; // return only base64 part
   } catch {
+    // Mark camera as declined to avoid repeated prompts
+    try { localStorage.setItem("selfie_camera_declined", "1"); } catch {}
     return null;
   }
 }
