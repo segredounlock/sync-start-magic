@@ -1399,7 +1399,7 @@ export default function Principal() {
     { key: "ferramentas", icon: Wrench, label: "Ferramentas", color: "text-[hsl(40,80%,55%)]" },
     { key: "antifraude", icon: Shield, label: "Antifraude", color: "text-destructive" },
     { key: "auditoria", icon: FileText, label: "Auditoria", color: "text-primary" },
-    { key: "licencas", icon: KeyRound, label: "Licenças", color: "text-primary" },
+    
     { key: "geral", icon: Globe, label: "Configurações", color: "text-muted-foreground" },
   ];
 
