@@ -249,12 +249,15 @@ Deno.serve(async (req) => {
               }),
             }).catch(() => {});
 
-            // Push notification
+            // Push notification — rich info
+            const { data: expProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
+            const expName = expProfile?.nome || expProfile?.email || recarga.user_id.slice(0, 8);
+            const expOp = (recarga.operadora || "").toUpperCase();
             fetch(`${baseUrl}/functions/v1/send-push`, {
               method: "POST", headers: authHeaders,
               body: JSON.stringify({
-                title: "❌ Recarga Falhou",
-                body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} falhou. Saldo estornado automaticamente.`,
+                title: `❌ ${expOp} R$ ${Number(recarga.valor).toFixed(2)}`,
+                body: `👤 ${expName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
                 user_ids: [recarga.user_id],
               }),
             }).catch(() => {});
