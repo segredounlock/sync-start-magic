@@ -48,37 +48,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
 
   const pwCheck = validatePassword(data.adminPassword);
 
-  /* ─── Install dependencies via edge function (bypasses RLS) ─── */
-  const handleInstallDeps = async () => {
-    setDepStatus("running");
-    setDepError("");
-
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-      // Prevent self-reference
-      if (supabaseUrl && normalizeUrl(MASTER_SUPABASE_URL) === normalizeUrl(supabaseUrl)) {
-        throw new Error("Configuração inválida: o servidor mestre não pode ser o mesmo projeto atual.");
-      }
-
-      const resp = await fetch(`${supabaseUrl}/functions/v1/seed-config`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const result = await resp.json();
-      if (!resp.ok || !result.success) {
-        throw new Error(result.error || "Falha ao instalar dependências");
-      }
-
-      setDepStatus("success");
-      setTimeout(() => setStep("admin"), 800);
-    } catch (err: any) {
-      setDepStatus("error");
-      setDepError(err.message || "Erro desconhecido ao instalar dependências");
-    }
-  };
-
   /* ─── Step handlers ─── */
   const handleAdminStep = () => {
     if (!data.adminEmail.trim() || !data.adminName.trim()) {
