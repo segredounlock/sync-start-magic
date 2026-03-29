@@ -69,7 +69,7 @@ export function KpiCard({
           </div>
         )}
       </div>
-      <p className={cn("text-xl sm:text-2xl font-bold truncate", color)}>
+      <p className={cn("font-bold", color)} style={{ fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>
         {isCurrency ? (
           <Currency
             value={value}
