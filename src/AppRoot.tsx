@@ -337,7 +337,6 @@ function App() {
         </Suspense>
       </AuthProvider>
     </ThemeProvider>
-    </div>
     </>
   );
 }
