@@ -7,8 +7,10 @@ import {
 } from "lucide-react";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
+import { MASTER_SUPABASE_URL, MASTER_PROJECT_URL, normalizeUrl } from "@/utils/licenseConfig";
+import { validateMasterServerConnection, isValidLicenseResponse } from "@/utils/licenseValidation";
 
-const MASTER_SERVER_URL = import.meta.env.VITE_SUPABASE_URL;
+const MASTER_SERVER_URL = MASTER_SUPABASE_URL;
 
 type Step = "welcome" | "admin" | "license" | "finishing" | "done";
 
@@ -74,13 +76,28 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     const steps: string[] = [];
 
     try {
-      // 1. Validate license FIRST
+      // 0. Prevent self-reference
+      const currentUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (currentUrl && normalizeUrl(masterUrl) === normalizeUrl(currentUrl)) {
+        throw new Error("Configuração inválida: o servidor mestre não pode ser o mesmo projeto atual.");
+      }
+
+      // 1. Validate connectivity to master server
+      steps.push("Verificando conexão com servidor principal...");
+      setProgress([...steps]);
+
+      await validateMasterServerConnection(masterUrl);
+
+      steps.push("✓ Servidor principal acessível!");
+      setProgress([...steps]);
+
+      // 2. Validate license
       steps.push("Validando licença no servidor principal...");
       setProgress([...steps]);
 
       const licResult = await callValidation(masterUrl, data.licenseKey.trim());
-      if (!licResult.valid) {
-        setError(licResult.reason || "Licença inválida");
+      if (!isValidLicenseResponse(licResult)) {
+        setError(licResult?.reason || "Licença inválida ou resposta incompleta do servidor.");
         setStep("license");
         setLoading(false);
         return;
@@ -89,7 +106,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Licença válida!");
       setProgress([...steps]);
 
-      // 2. Create admin user
+      // 3. Create admin user
       steps.push("Criando administrador...");
       setProgress([...steps]);
 
@@ -108,36 +125,57 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Administrador criado!");
       setProgress([...steps]);
 
-      // 3. Save license to system_config
-      steps.push("Salvando licença...");
+      // 4. Save license + master config atomically
+      steps.push("Salvando configuração...");
       setProgress([...steps]);
 
-      // Wait a moment for the trigger to create the profile/roles
+      // Wait for trigger to create profile/roles
       await new Promise(r => setTimeout(r, 2000));
 
       const { error: e1 } = await supabase
         .from("system_config")
-        .upsert({ key: "license_key", value: data.licenseKey.trim() }, { onConflict: "key" });
+        .upsert([
+          { key: "license_key", value: data.licenseKey.trim() },
+          { key: "license_master_url", value: masterUrl },
+          { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
+        ], { onConflict: "key" });
       if (e1) throw e1;
 
-      // Always save master URL from env
-      await supabase
+      // 5. Confirm persistence
+      const { data: masterUrlRow, error: masterUrlError } = await supabase
         .from("system_config")
-        .upsert({ key: "license_master_url", value: masterUrl }, { onConflict: "key" });
+        .select("value")
+        .eq("key", "license_master_url")
+        .single();
 
-      steps.push("✓ Licença salva!");
+      if (masterUrlError || !masterUrlRow || masterUrlRow.value !== masterUrl) {
+        throw new Error("Falha ao confirmar persistência de license_master_url. Tente novamente.");
+      }
+
+      const { data: projectUrlRow, error: projectUrlError } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "masterProjectUrl")
+        .single();
+
+      if (projectUrlError || !projectUrlRow || projectUrlRow.value !== MASTER_PROJECT_URL) {
+        throw new Error("Falha ao confirmar persistência de masterProjectUrl. Tente novamente.");
+      }
+
+      steps.push("✓ Configuração salva e verificada!");
       setProgress([...steps]);
 
-      // 4. Save server-side tracking
+      // 6. Save server-side tracking
       steps.push("Configurando validação server-side...");
       setProgress([...steps]);
 
       await supabase
         .from("system_config")
-        .upsert({ key: "license_validated_at", value: new Date().toISOString() }, { onConflict: "key" });
-      await supabase
-        .from("system_config")
-        .upsert({ key: "license_expires_at", value: licResult.expires_at }, { onConflict: "key" });
+        .upsert([
+          { key: "license_validated_at", value: new Date().toISOString() },
+          { key: "license_expires_at", value: licResult.expires_at },
+          { key: "license_status", value: "valid" },
+        ], { onConflict: "key" });
 
       // Generate install_secret for HMAC session tokens
       const installSecret = crypto.randomUUID() + "-" + crypto.randomUUID();
@@ -148,26 +186,25 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Validação server-side configurada!");
       setProgress([...steps]);
 
-      // 5. Mark installation complete
+      // 7. Mark installation complete
       steps.push("Finalizando instalação...");
       setProgress([...steps]);
 
       await supabase
         .from("system_config")
-        .upsert({ key: "install_completed", value: "true" }, { onConflict: "key" });
-      await supabase
-        .from("system_config")
-        .upsert({ key: "install_completed_at", value: new Date().toISOString() }, { onConflict: "key" });
-      await supabase
-        .from("system_config")
-        .upsert({ key: "install_domain", value: window.location.hostname }, { onConflict: "key" });
+        .upsert([
+          { key: "install_completed", value: "true" },
+          { key: "install_completed_at", value: new Date().toISOString() },
+          { key: "install_domain", value: window.location.hostname },
+        ], { onConflict: "key" });
 
       steps.push("✓ Instalação concluída!");
       setProgress([...steps]);
 
-      // Clear any old cache - new system uses server-side sessions
+      // Clear old cache
       localStorage.removeItem("license_validation_cache");
       localStorage.removeItem("license_crypto_proof");
+      localStorage.removeItem("license_session");
 
       setStep("done");
     } catch (err: any) {

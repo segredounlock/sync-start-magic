@@ -2,26 +2,31 @@ import { useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, AlertTriangle, KeyRound, Loader2, CheckCircle2, Clock } from "lucide-react";
 import { InstallWizard } from "@/components/InstallWizard";
+import {
+  MASTER_SUPABASE_URL,
+  MASTER_PROJECT_URL,
+  isMasterEnvironment,
+  getSystemConfigValue,
+  normalizeUrl,
+} from "@/utils/licenseConfig";
+import {
+  validateMirrorConfig,
+  isValidLicenseResponse,
+} from "@/utils/licenseValidation";
 
 const SESSION_KEY = "license_session";
-const SESSION_DURATION = 60 * 60 * 1000; // 1 hour
-const HEARTBEAT_INTERVAL = 55 * 60 * 1000; // 55 min (revalidate before session expires)
-
-const MASTER_SERVER_URL = import.meta.env.VITE_SUPABASE_URL;
-const MASTER_DOMAINS = ["recargasbrasill.com"];
-const MASTER_PROJECT_ID = "b6fd7b54-3351-4e9b-b4be-76be551257a7";
+const HEARTBEAT_INTERVAL = 55 * 60 * 1000; // 55 min
 
 /* ─── Anti-tampering: signed local session ─── */
 interface LocalSession {
   token: string;
-  expires_at: string; // license expiration
-  session_expires: number; // epoch seconds
-  integrity: string; // HMAC of the above
-  ts: number; // timestamp when saved
+  expires_at: string;
+  session_expires: number;
+  integrity: string;
+  ts: number;
 }
 
 async function computeIntegrity(data: string): Promise<string> {
-  // Use a browser-derived key that changes per origin
   const encoder = new TextEncoder();
   const material = `${window.location.origin}::${navigator.userAgent}::license-gate-v2`;
   const keyData = await crypto.subtle.digest("SHA-256", encoder.encode(material));
@@ -44,15 +49,13 @@ async function loadSession(): Promise<LocalSession | null> {
     if (!raw) return null;
     const session: LocalSession = JSON.parse(raw);
 
-    // Verify integrity
     const checkRaw = JSON.stringify({ token: session.token, expires_at: session.expires_at, session_expires: session.session_expires, ts: session.ts });
     const expected = await computeIntegrity(checkRaw);
     if (expected !== session.integrity) {
       localStorage.removeItem(SESSION_KEY);
-      return null; // tampered
+      return null;
     }
 
-    // Check if session expired
     if (Date.now() / 1000 > session.session_expires) {
       localStorage.removeItem(SESSION_KEY);
       return null;
@@ -105,32 +108,51 @@ async function callServerCheck(domain: string): Promise<{
   code?: string;
 }> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const resp = await fetch(`${supabaseUrl}/functions/v1/license-check-server`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ domain }),
-  });
-  return resp.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const resp = await fetch(`${supabaseUrl}/functions/v1/license-check-server`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    return resp.json();
+  } catch (err: any) {
+    clearTimeout(timeout);
+    // Fail closed: network error = invalid
+    throw new Error("Falha na comunicação com o servidor de licenças.");
+  }
+}
+
+/* ─── Error states ─── */
+type LicenseStatus =
+  | "checking"
+  | "valid"
+  | "invalid"
+  | "no_license"
+  | "master"
+  | "install"
+  | "config_error";
+
+interface LicenseError {
+  code: string;
+  message: string;
 }
 
 /* ─── Main Gate ─── */
 export function LicenseGate({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<"checking" | "valid" | "invalid" | "no_license" | "master" | "install">("checking");
-  const [reason, setReason] = useState("");
+  const [status, setStatus] = useState<LicenseStatus>("checking");
+  const [licenseError, setLicenseError] = useState<LicenseError>({ code: "", message: "" });
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval>>();
 
   const validate = async (mounted: { current: boolean }) => {
     try {
-      // 0. Check if running on master domain — bypass everything
-      const hostname = window.location.hostname.toLowerCase();
-      const isMasterDomain = MASTER_DOMAINS.some(d =>
-        hostname === d || hostname.endsWith(`.${d}`)
-      );
-      // Also bypass for this specific Lovable project (preview & published)
-      const isMasterLovable = hostname.includes(MASTER_PROJECT_ID) || 
-        hostname === "recargas-brasil-v2.lovable.app";
-      if (isMasterDomain || isMasterLovable) {
+      // 0. Check if running on master environment — bypass everything
+      if (isMasterEnvironment()) {
         if (mounted.current) setStatus("master");
         return;
       }
@@ -154,21 +176,49 @@ export function LicenseGate({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 2. Check local session (anti-tampered)
+      // 2. Load and validate mirror configuration
+      let storedMasterUrl: string | null = null;
+      let storedMasterProjectUrl: string | null = null;
+      try {
+        storedMasterUrl = await getSystemConfigValue(supabase, "license_master_url");
+        storedMasterProjectUrl = await getSystemConfigValue(supabase, "masterProjectUrl");
+      } catch {
+        // If we can't read config, fail closed
+      }
+
+      const configCheck = validateMirrorConfig({
+        licenseMasterUrl: storedMasterUrl,
+        masterProjectUrl: storedMasterProjectUrl,
+        currentSupabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+      });
+
+      if (!configCheck.valid) {
+        // If install was completed but config is bad, show config error
+        if (installConfig?.value === "true") {
+          if (mounted.current) {
+            setStatus("config_error");
+            setLicenseError({ code: configCheck.errorCode, message: configCheck.message });
+          }
+          return;
+        }
+        // Otherwise show install wizard
+        if (mounted.current) setStatus("install");
+        return;
+      }
+
+      // 3. Check local session (anti-tampered)
       const session = await loadSession();
       if (session) {
-        // Session is valid and not tampered
         if (mounted.current) {
           setStatus("valid");
           setExpiresAt(session.expires_at);
         }
-        // Background revalidation
         backgroundValidate(mounted);
         return;
       }
 
-      // 3. No valid session → validate server-side
-      const result = await callServerCheck(hostname);
+      // 4. No valid session → validate server-side
+      const result = await callServerCheck(window.location.hostname.toLowerCase());
 
       if (!result.valid) {
         if (result.code === "NO_LICENSE") {
@@ -180,27 +230,40 @@ export function LicenseGate({ children }: { children: ReactNode }) {
         } else {
           if (mounted.current) {
             setStatus("invalid");
-            setReason(result.reason || "Licença inválida");
+            setLicenseError({
+              code: result.code || "LICENSE_VALIDATION_FAILED",
+              message: result.reason || "Licença inválida",
+            });
           }
         }
         return;
       }
 
-      // 4. Valid → save signed session
-      if (result.session_token && result.expires_at && result.session_expires) {
-        await saveSession({
-          token: result.session_token,
-          expires_at: result.expires_at,
-          session_expires: result.session_expires,
-        });
+      // 5. Validate response structure
+      if (!result.session_token || !result.expires_at || !result.session_expires) {
+        if (mounted.current) {
+          setStatus("invalid");
+          setLicenseError({
+            code: "LICENSE_RESPONSE_INCOMPLETE",
+            message: "Resposta de validação incompleta do servidor.",
+          });
+        }
+        return;
       }
+
+      // 6. Valid → save signed session
+      await saveSession({
+        token: result.session_token,
+        expires_at: result.expires_at,
+        session_expires: result.session_expires,
+      });
 
       if (mounted.current) {
         setStatus("valid");
-        setExpiresAt(result.expires_at || null);
+        setExpiresAt(result.expires_at);
       }
-    } catch {
-      // On error, check local session
+    } catch (err: any) {
+      // On error, check local session as fallback
       const session = await loadSession();
       if (session) {
         if (mounted.current) {
@@ -208,9 +271,13 @@ export function LicenseGate({ children }: { children: ReactNode }) {
           setExpiresAt(session.expires_at);
         }
       } else {
+        // Fail closed
         if (mounted.current) {
           setStatus("invalid");
-          setReason("Erro ao validar licença. Verifique sua conexão.");
+          setLicenseError({
+            code: "MASTER_SERVER_UNREACHABLE",
+            message: err?.message || "Erro ao validar licença. Verifique sua conexão.",
+          });
         }
       }
     }
@@ -232,7 +299,10 @@ export function LicenseGate({ children }: { children: ReactNode }) {
         localStorage.removeItem(SESSION_KEY);
         if (mounted.current) {
           setStatus("invalid");
-          setReason(result.reason || "Licença inválida");
+          setLicenseError({
+            code: result.code || "LICENSE_VALIDATION_FAILED",
+            message: result.reason || "Licença inválida",
+          });
         }
       }
     } catch {}
@@ -265,6 +335,41 @@ export function LicenseGate({ children }: { children: ReactNode }) {
     return <InstallWizard onComplete={() => setStatus("valid")} />;
   }
 
+  // ─── Config error (mirror misconfigured) ───
+  if (status === "config_error") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="max-w-md w-full bg-card border border-destructive/30 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-8 h-8 text-destructive" />
+          </div>
+          <h1 className="text-xl font-bold text-foreground">Erro de Configuração</h1>
+          <p className="text-muted-foreground text-sm">{licenseError.message}</p>
+          <div className="bg-muted/50 rounded-xl p-3 text-xs text-muted-foreground font-mono">
+            Código: {licenseError.code}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                localStorage.removeItem(SESSION_KEY);
+                setStatus("install");
+              }}
+              className="flex-1 py-3 bg-muted text-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Reinstalar
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ─── No license (post-install) → show activation form ───
   if (status === "no_license") {
     return <LicenseActivationForm onActivated={() => { localStorage.removeItem(SESSION_KEY); setStatus("checking"); }} />;
@@ -279,7 +384,12 @@ export function LicenseGate({ children }: { children: ReactNode }) {
             <AlertTriangle className="w-8 h-8 text-destructive" />
           </div>
           <h1 className="text-xl font-bold text-foreground">Sistema Bloqueado</h1>
-          <p className="text-muted-foreground text-sm">{reason}</p>
+          <p className="text-muted-foreground text-sm">{licenseError.message}</p>
+          {licenseError.code && (
+            <div className="bg-muted/50 rounded-xl p-3 text-xs text-muted-foreground font-mono">
+              Código: {licenseError.code}
+            </div>
+          )}
           <div className="bg-muted/50 rounded-xl p-4 space-y-2">
             <div className="flex items-center gap-2 justify-center text-xs text-muted-foreground">
               <KeyRound className="w-4 h-4" />
@@ -317,7 +427,6 @@ export function LicenseGate({ children }: { children: ReactNode }) {
 /* ─── Activation Form ─── */
 function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
   const [licenseKey, setLicenseKey] = useState("");
-  const [masterUrl, setMasterUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -330,7 +439,7 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
     setError("");
 
     try {
-      const url = masterUrl.trim() || MASTER_SERVER_URL;
+      const url = MASTER_SUPABASE_URL;
 
       // Validate against master
       const domain = window.location.hostname;
@@ -347,25 +456,18 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
         return;
       }
 
-      // Save license key
+      // Save license key + master config atomically
       const { error: e1 } = await supabase
         .from("system_config")
-        .upsert({ key: "license_key", value: key }, { onConflict: "key" });
+        .upsert([
+          { key: "license_key", value: key },
+          { key: "license_master_url", value: url },
+          { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
+          { key: "license_validated_at", value: new Date().toISOString() },
+          { key: "license_expires_at", value: result.expires_at },
+          { key: "license_status", value: "valid" },
+        ], { onConflict: "key" });
       if (e1) throw e1;
-
-      if (masterUrl.trim()) {
-        await supabase
-          .from("system_config")
-          .upsert({ key: "license_master_url", value: url }, { onConflict: "key" });
-      }
-
-      // Update tracking
-      await supabase
-        .from("system_config")
-        .upsert({ key: "license_validated_at", value: new Date().toISOString() }, { onConflict: "key" });
-      await supabase
-        .from("system_config")
-        .upsert({ key: "license_expires_at", value: result.expires_at }, { onConflict: "key" });
 
       setSuccess(true);
       setTimeout(() => onActivated(), 1500);
@@ -413,7 +515,6 @@ function LicenseActivationForm({ onActivated }: { onActivated: () => void }) {
               disabled={saving}
             />
           </div>
-
 
           {error && (
             <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">
