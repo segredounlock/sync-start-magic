@@ -39,7 +39,7 @@ function RankingSkeleton() {
               transition={{ delay: i * 0.1 }}
             >
               {isCenter && <div className="w-9 h-9 -mb-3" />}
-              <div className={`${isCenter ? "w-20 h-20 md:w-24 md:h-24" : "w-16 h-16 md:w-20 md:h-20"} rounded-full bg-muted/40 animate-pulse`} />
+              <div className={`${isCenter ? "w-24 h-24 md:w-24 md:h-24" : "w-20 h-20 md:w-20 md:h-20"} rounded-full bg-muted/40 animate-pulse`} />
               <div className="flex flex-col items-center gap-1">
                 <div className={`${isCenter ? "w-20" : "w-16"} h-3 bg-muted/40 rounded animate-pulse`} />
                 <div className="w-14 h-2.5 bg-muted/30 rounded animate-pulse" />
@@ -363,9 +363,9 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
 
   const getPodiumConfig = (displayIndex: number) => {
     switch (displayIndex) {
-      case 0: return { position: 2, avatarSize: "w-16 h-16 md:w-20 md:h-20", ringColor: "ring-gray-300/60", badge: <SilverIceBadge size={24} /> };
-      case 1: return { position: 1, avatarSize: "w-20 h-20 md:w-24 md:h-24", ringColor: "ring-yellow-500/70", badge: <GoldFloatingCrown size={36} /> };
-      case 2: return { position: 3, avatarSize: "w-16 h-16 md:w-20 md:h-20", ringColor: "ring-orange-600/60", badge: <BronzeFireBadge size={24} /> };
+      case 0: return { position: 2, avatarSize: "w-20 h-20 md:w-20 md:h-20", ringColor: "ring-gray-300/60", badge: <SilverIceBadge size={28} /> };
+      case 1: return { position: 1, avatarSize: "w-24 h-24 md:w-24 md:h-24", ringColor: "ring-yellow-500/70", badge: <GoldFloatingCrown size={40} /> };
+      case 2: return { position: 3, avatarSize: "w-20 h-20 md:w-20 md:h-20", ringColor: "ring-orange-600/60", badge: <BronzeFireBadge size={28} /> };
       default: return { position: 0, avatarSize: "w-16 h-16", ringColor: "ring-muted", badge: null };
     }
   };
