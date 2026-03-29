@@ -409,7 +409,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             });
             try { playTelegramSignupSound(); } catch {}
             if (showNewUserRef.current) {
-              showSystemNotification("🤖 Novo Telegram", label);
+              showSystemNotification("🤖 Novo Telegram", label, { tag: `new-tg-${row.id}`, type: "new_user" });
               appToast.newUserTelegram(`Novo cadastro Telegram: ${label}`, { description: `${label} · ${formatTimeBR(row.updated_at || row.created_at)}` });
             }
           })
