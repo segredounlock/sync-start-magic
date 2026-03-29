@@ -170,8 +170,11 @@ export function LicenseGate({ children }: { children: ReactNode }) {
         .eq("key", "masterAdminId")
         .maybeSingle();
 
+      const installCompleted = installConfig?.value === "true";
+      const hasMasterAdmin = !!masterConfig?.value;
+
       // Fresh install → show wizard
-      if (!installConfig?.value && !masterConfig?.value) {
+      if (!installCompleted && !hasMasterAdmin) {
         if (mounted.current) setStatus("install");
         return;
       }
@@ -193,16 +196,16 @@ export function LicenseGate({ children }: { children: ReactNode }) {
       });
 
       if (!configCheck.valid) {
-        // If install was completed but config is bad, show config error
-        if (installConfig?.value === "true") {
-          if (mounted.current) {
-            setStatus("config_error");
-            setLicenseError({ code: configCheck.errorCode, message: configCheck.message });
-          }
+        // Has admin but config incomplete = partial install, show wizard to retry
+        if (!installCompleted) {
+          if (mounted.current) setStatus("install");
           return;
         }
-        // Otherwise show install wizard
-        if (mounted.current) setStatus("install");
+        // Install was completed but config got corrupted
+        if (mounted.current) {
+          setStatus("config_error");
+          setLicenseError({ code: configCheck.errorCode, message: configCheck.message });
+        }
         return;
       }
 
