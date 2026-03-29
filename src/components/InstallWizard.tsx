@@ -357,7 +357,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       </div>
       <h1 className="text-2xl font-bold text-foreground">Admin Criado!</h1>
       <p className="text-muted-foreground text-sm">
-        Faça login com sua conta e ative a licença para desbloquear o sistema.
+        Faça login com sua conta para acessar o sistema.
       </p>
       <div className="bg-muted/50 rounded-xl p-4 space-y-1 text-left">
         <p className="text-xs text-muted-foreground">E-mail: <strong className="text-foreground">{data.adminEmail}</strong></p>
