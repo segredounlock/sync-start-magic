@@ -149,12 +149,21 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({ type: "recarga_completed", user_id: recarga.user_id, data: notifyPayload }),
                 }).catch(() => {});
 
-                // Push notification (PWA) — rich info
+                // Push notification — admin (full info with costs)
                 fetch(`${baseUrl}/functions/v1/send-push`, {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
                     title: `✅ ${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}`,
                     body: `👤 ${userName}\n📞 ${recarga.telefone}\n💰 Custo: R$ ${Number(recarga.custo).toFixed(2)} | API: R$ ${Number(recarga.custo_api || 0).toFixed(2)}`,
+                  }),
+                }).catch(() => {});
+
+                // Push notification — reseller (simple, no cost info)
+                fetch(`${baseUrl}/functions/v1/send-push`, {
+                  method: "POST", headers: authHeaders,
+                  body: JSON.stringify({
+                    title: `✅ Recarga Confirmada`,
+                    body: `📞 ${recarga.telefone}\n${operadoraUp} R$ ${Number(recarga.valor).toFixed(2)}`,
                     user_ids: [recarga.user_id],
                   }),
                 }).catch(() => {});
@@ -190,7 +199,7 @@ Deno.serve(async (req) => {
                   }),
                 }).catch(() => {});
 
-                // Push notification for failure (PWA) — rich info
+                // Push notification — admin (full info)
                 const { data: failProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
                 const failName = failProfile?.nome || failProfile?.email || recarga.user_id.slice(0, 8);
                 const failOp = (recarga.operadora || "").toUpperCase();
@@ -199,6 +208,15 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({
                     title: `❌ ${failOp} R$ ${Number(recarga.valor).toFixed(2)}`,
                     body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
+                  }),
+                }).catch(() => {});
+
+                // Push notification — reseller (simple)
+                fetch(`${baseUrl}/functions/v1/send-push`, {
+                  method: "POST", headers: authHeaders,
+                  body: JSON.stringify({
+                    title: `❌ Recarga Falhou`,
+                    body: `📞 ${recarga.telefone}\n${failOp} R$ ${Number(recarga.valor).toFixed(2)}\n💸 Saldo estornado automaticamente`,
                     user_ids: [recarga.user_id],
                   }),
                 }).catch(() => {});
@@ -249,7 +267,7 @@ Deno.serve(async (req) => {
               }),
             }).catch(() => {});
 
-            // Push notification — rich info
+            // Push notification — admin (full info)
             const { data: expProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
             const expName = expProfile?.nome || expProfile?.email || recarga.user_id.slice(0, 8);
             const expOp = (recarga.operadora || "").toUpperCase();
@@ -258,8 +276,18 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 title: `❌ ${expOp} R$ ${Number(recarga.valor).toFixed(2)}`,
                 body: `👤 ${expName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
+              }),
+            }).catch(() => {});
+
+            // Push notification — reseller (simple)
+            fetch(`${baseUrl}/functions/v1/send-push`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                title: `❌ Recarga Expirada`,
+                body: `📞 ${recarga.telefone}\n${expOp} R$ ${Number(recarga.valor).toFixed(2)}\n💸 Saldo estornado automaticamente`,
                 user_ids: [recarga.user_id],
               }),
+            }).catch(() => {});
             }).catch(() => {});
           } catch { /* ignore */ }
 
