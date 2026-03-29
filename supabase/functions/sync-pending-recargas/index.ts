@@ -259,8 +259,6 @@ Deno.serve(async (req) => {
             }).catch(() => {});
 
             // Push notification — admin (full info)
-            const { data: expProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
-            const expName = expProfile?.nome || expProfile?.email || recarga.user_id.slice(0, 8);
             const expOp = (recarga.operadora || "").toUpperCase();
             fetch(`${baseUrl}/functions/v1/send-push`, {
               method: "POST", headers: authHeaders,
