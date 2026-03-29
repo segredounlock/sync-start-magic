@@ -61,16 +61,17 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       return;
     }
 
-    // Validate dates
-    const dateCheck = validateLicenseDatesBeforeSave({
-      startDate: data.licenseStartDate,
-      endDate: data.licenseEndDate,
-      graceDays: data.licenseGraceDays,
-    });
-    if (!dateCheck.valid) {
-      setError(dateCheck.error);
+    // Extract dates from JWT key
+    const extracted = extractLicenseFromKey(data.licenseKey.trim());
+    if (!extracted.valid) {
+      setError(extracted.error || "Chave de licença inválida");
       return;
     }
+
+    // Update data with extracted values
+    data.licenseStartDate = extracted.startDate;
+    data.licenseEndDate = extracted.endDate;
+    data.licenseGraceDays = extracted.graceDays;
 
     setError("");
     setStep("finishing");
