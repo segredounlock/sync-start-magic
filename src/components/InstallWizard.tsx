@@ -50,6 +50,51 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
 
   const pwCheck = validatePassword(data.adminPassword);
 
+  /* ─── Install dependencies (master URLs into DB) ─── */
+  const handleInstallDeps = async () => {
+    setDepStatus("running");
+    setDepError("");
+
+    const DEPS: { key: string; value: string }[] = [
+      { key: "license_master_url", value: MASTER_SUPABASE_URL },
+      { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
+    ];
+
+    try {
+      // 1. Prevent self-reference
+      const currentUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (currentUrl && normalizeUrl(MASTER_SUPABASE_URL) === normalizeUrl(currentUrl)) {
+        throw new Error("Configuração inválida: o servidor mestre não pode ser o mesmo projeto atual.");
+      }
+
+      // 2. Upsert keys
+      const { error: upsertErr } = await supabase
+        .from("system_config")
+        .upsert(DEPS, { onConflict: "key" });
+      if (upsertErr) throw new Error(`Erro ao salvar: ${upsertErr.message}`);
+
+      // 3. Verify persistence
+      for (const dep of DEPS) {
+        const { data: row, error: readErr } = await supabase
+          .from("system_config")
+          .select("value")
+          .eq("key", dep.key)
+          .maybeSingle();
+        if (readErr) throw new Error(`Erro ao verificar ${dep.key}: ${readErr.message}`);
+        if (!row || row.value !== dep.value) {
+          throw new Error(`Falha ao confirmar persistência de ${dep.key}. Valor esperado: ${dep.value}`);
+        }
+      }
+
+      setDepStatus("success");
+      // Auto-advance after brief delay
+      setTimeout(() => setStep("admin"), 800);
+    } catch (err: any) {
+      setDepStatus("error");
+      setDepError(err.message || "Erro desconhecido ao instalar dependências");
+    }
+  };
+
   /* ─── Step handlers ─── */
   const handleAdminStep = () => {
     if (!data.adminEmail.trim() || !data.adminName.trim()) {
