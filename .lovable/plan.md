@@ -1,52 +1,33 @@
 
 
-# Investigação: Falso Positivo do `sourceManifest.ts`
+# Tornar KPI Cards Responsivos (sem truncar valores)
 
-## O que descobri
+## Problema
+O valor "R$ 50.359..." está sendo cortado pelo `truncate` (CSS `text-overflow: ellipsis`) nos cards do Stats Grid. Com o crescimento da plataforma, valores maiores serão cada vez mais comuns.
 
-O alerta de "1 arquivo faltando" na verificação de integridade é um **falso positivo causado por dessincronia entre duas listas**:
+## Solução
 
-1. **`SOURCE_PATHS`** (hardcoded, ~120+ arquivos) — lista fixa no código de `BackupSection.tsx`
-2. **`knownPaths`** (dinâmico) — gerado pelo `import.meta.glob` no build do Vite
+### 1. Remover `truncate` e usar texto auto-ajustável
+Em todos os locais onde valores monetários/numéricos aparecem em cards, substituir `truncate` por tamanho de fonte responsivo que diminui automaticamente conforme o valor cresce.
 
-### Como funciona a verificação
-```text
-effectivePaths (SOURCE_PATHS ou DB)
-        ↓
-Para cada arquivo em effectivePaths:
-  → Está em knownPaths (glob)?
-    SIM → found++
-    NÃO → missing.push(arquivo)
-```
+### 2. Arquivos a alterar
 
-### Causa raiz
-O `import.meta.glob` captura apenas `src/**/*.{tsx,ts,css}` e `public/sw-push.js`. Porém `SOURCE_PATHS` inclui arquivos fora desse escopo como `tailwind.config.ts`, `vite.config.ts`, `package.json`, `README.md`, edge functions em `supabase/functions/`, etc.
+**`src/components/BankDashboard.tsx`** (Stats Grid, linha 243)
+- Remover `truncate` da classe do `<p>` de valor
+- Usar classes responsivas: `text-lg sm:text-2xl md:text-3xl` para que o texto se adapte
+- Adicionar `break-all` ou `whitespace-nowrap` com `overflow-hidden` + `text-[clamp(0.9rem,4vw,1.875rem)]` para escalar automaticamente
 
-Esses arquivos **existem no projeto** mas **não são capturados pelo glob**, então aparecem como "faltando" — um falso positivo.
+**`src/components/ui/KpiCard.tsx`** (linha 72)
+- Mesmo ajuste: remover `truncate`, usar `text-[clamp(1rem,4vw,1.5rem)]` para auto-scale
+- Garantir que funcione em todos os contextos onde `KpiCard` é usado
 
-O `sourceManifest.ts` em si provavelmente está OK (está dentro de `src/`). O arquivo faltando real pode ser outro que foi adicionado recentemente ao projeto mas não à lista `SOURCE_PATHS`, ou vice-versa.
+### 3. Abordagem técnica
+Usar CSS `clamp()` para auto-escalar o font-size:
+- Cards 2-col (BankDashboard): `font-size: clamp(0.95rem, 3.5vw, 1.875rem)` — nunca corta, apenas diminui
+- KpiCard genérico: similar com breakpoints adequados
 
-## Correção proposta
-
-### 1. Separar verificação por escopo
-No `runIntegrityCheck`, já existe separação entre `verifiablePaths` (src/ e public/) e `externalPaths`. Mas os `externalPaths` não são contados como "encontrados" — eles são simplesmente ignorados. O problema é que arquivos **verificáveis** que estão em `SOURCE_PATHS` mas não no glob geram falso positivo.
-
-### 2. Sincronizar `SOURCE_PATHS` automaticamente
-Em vez de hardcoded, usar `getKnownPaths()` como fonte primária e apenas complementar com os caminhos externos (configs, edge functions).
-
-### Mudanças concretas
-
-**Arquivo: `src/components/BackupSection.tsx`**
-- Na função `runIntegrityCheck`: inverter a lógica — verificar quais arquivos do glob **não estão** em `SOURCE_PATHS` (novos) e quais de `SOURCE_PATHS` não estão no glob (removidos ou externos)
-- Tratar `externalPaths` como "não verificáveis" em vez de "faltando"
-- Resultado: zero falsos positivos
-
-**Arquivo: `src/lib/sourceManifest.ts`**
-- Expandir o glob para incluir arquivos de config na raiz (`/*.{ts,js,json}`)
-- Ou adicionar função `getExternalPaths()` para listar caminhos fora do escopo do glob
-
-### Resultado esperado
-- Verificação de integridade mostra **0 faltando** quando todos os arquivos reais existem
-- Arquivos externos (configs, edge functions) aparecem como "não verificáveis" em vez de "faltando"
-- Novos arquivos adicionados ao projeto são detectados automaticamente
+### Resultado
+- Valores como R$ 50.359,00 ou R$ 150.000,00 aparecem completos
+- O tamanho da fonte diminui automaticamente em telas menores
+- Nenhum card trunca valores independente do tamanho
 
