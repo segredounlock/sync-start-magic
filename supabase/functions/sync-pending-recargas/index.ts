@@ -288,7 +288,6 @@ Deno.serve(async (req) => {
                 user_ids: [recarga.user_id],
               }),
             }).catch(() => {});
-            }).catch(() => {});
           } catch { /* ignore */ }
 
           notFound++;
