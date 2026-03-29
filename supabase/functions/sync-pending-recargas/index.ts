@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
                   }),
                 }).catch(() => {});
 
-                // Push notification for failure (PWA) — rich info
+                // Push notification — admin (full info)
                 const { data: failProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
                 const failName = failProfile?.nome || failProfile?.email || recarga.user_id.slice(0, 8);
                 const failOp = (recarga.operadora || "").toUpperCase();
@@ -208,6 +208,15 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({
                     title: `❌ ${failOp} R$ ${Number(recarga.valor).toFixed(2)}`,
                     body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
+                  }),
+                }).catch(() => {});
+
+                // Push notification — reseller (simple)
+                fetch(`${baseUrl}/functions/v1/send-push`, {
+                  method: "POST", headers: authHeaders,
+                  body: JSON.stringify({
+                    title: `❌ Recarga Falhou`,
+                    body: `📞 ${recarga.telefone}\n${failOp} R$ ${Number(recarga.valor).toFixed(2)}\n💸 Saldo estornado automaticamente`,
                     user_ids: [recarga.user_id],
                   }),
                 }).catch(() => {});
