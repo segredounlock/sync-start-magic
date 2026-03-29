@@ -68,7 +68,7 @@ export default function ReinstallBanner() {
                     onClick={handleReinstall}
                     className="text-xs font-bold bg-primary-foreground text-primary rounded-lg px-3 py-1.5 active:scale-95 transition-transform"
                   >
-                    {isIOS ? "Ver instruções" : "Reinstalar"}
+                    Ver instruções
                   </button>
                   <button
                     onClick={dismiss}
