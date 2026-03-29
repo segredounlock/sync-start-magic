@@ -50,44 +50,30 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
 
   const pwCheck = validatePassword(data.adminPassword);
 
-  /* ─── Install dependencies (master URLs into DB) ─── */
+  /* ─── Install dependencies via edge function (bypasses RLS) ─── */
   const handleInstallDeps = async () => {
     setDepStatus("running");
     setDepError("");
 
-    const DEPS: { key: string; value: string }[] = [
-      { key: "license_master_url", value: MASTER_SUPABASE_URL },
-      { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
-    ];
-
     try {
-      // 1. Prevent self-reference
-      const currentUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (currentUrl && normalizeUrl(MASTER_SUPABASE_URL) === normalizeUrl(currentUrl)) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+      // Prevent self-reference
+      if (supabaseUrl && normalizeUrl(MASTER_SUPABASE_URL) === normalizeUrl(supabaseUrl)) {
         throw new Error("Configuração inválida: o servidor mestre não pode ser o mesmo projeto atual.");
       }
 
-      // 2. Upsert keys
-      const { error: upsertErr } = await supabase
-        .from("system_config")
-        .upsert(DEPS, { onConflict: "key" });
-      if (upsertErr) throw new Error(`Erro ao salvar: ${upsertErr.message}`);
+      const resp = await fetch(`${supabaseUrl}/functions/v1/seed-config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
 
-      // 3. Verify persistence
-      for (const dep of DEPS) {
-        const { data: row, error: readErr } = await supabase
-          .from("system_config")
-          .select("value")
-          .eq("key", dep.key)
-          .maybeSingle();
-        if (readErr) throw new Error(`Erro ao verificar ${dep.key}: ${readErr.message}`);
-        if (!row || row.value !== dep.value) {
-          throw new Error(`Falha ao confirmar persistência de ${dep.key}. Valor esperado: ${dep.value}`);
-        }
+      const result = await resp.json();
+      if (!resp.ok || !result.success) {
+        throw new Error(result.error || "Falha ao instalar dependências");
       }
 
       setDepStatus("success");
-      // Auto-advance after brief delay
       setTimeout(() => setStep("admin"), 800);
     } catch (err: any) {
       setDepStatus("error");
@@ -417,47 +403,22 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
         <Server className="w-7 h-7 text-primary" />
       </div>
-      <h2 className="text-lg font-bold text-foreground">Instalar Dependências</h2>
+      <h2 className="text-lg font-bold text-foreground">Configurar Sistema</h2>
       <p className="text-muted-foreground text-xs max-w-sm mx-auto">
-        Antes de continuar, precisamos configurar as dependências essenciais no banco de dados.
+        Clique no botão abaixo para configurar as dependências essenciais do sistema.
       </p>
-
-      <div className="bg-muted/50 rounded-xl p-4 space-y-3 text-left">
-        <div className="text-xs font-medium text-foreground mb-2">Configurações necessárias:</div>
-        {[
-          { key: "license_master_url", value: MASTER_SUPABASE_URL },
-          { key: "masterProjectUrl", value: MASTER_PROJECT_URL },
-        ].map((dep) => (
-          <div key={dep.key} className="flex items-start gap-2 text-xs">
-            {depStatus === "success" ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-            ) : depStatus === "running" ? (
-              <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0 mt-0.5" />
-            ) : (
-              <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-            )}
-            <div>
-              <span className="font-mono text-foreground">{dep.key}</span>
-              <p className="text-muted-foreground text-[10px] truncate max-w-[280px]">{dep.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {depStatus === "error" && depError && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2 text-left">
           <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-          <div>
-            <p className="text-xs font-medium text-destructive mb-1">Erro ao instalar dependências</p>
-            <p className="text-[11px] text-destructive/80">{depError}</p>
-          </div>
+          <p className="text-xs text-destructive/90">{depError}</p>
         </div>
       )}
 
       {depStatus === "success" && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Dependências instaladas com sucesso!</p>
+        <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-xs text-foreground font-medium">Configurado com sucesso!</p>
         </div>
       )}
 
@@ -481,7 +442,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           ) : depStatus === "success" ? (
             <><CheckCircle2 className="w-4 h-4" /> Instalado</>
           ) : (
-            <><Server className="w-4 h-4" /> Instalar Dependências</>
+            <><Server className="w-4 h-4" /> Instalar</>
           )}
         </button>
       </div>
