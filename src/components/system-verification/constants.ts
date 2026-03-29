@@ -4,7 +4,7 @@ export const EXPECTED_TABLES = [
   "admin_notifications","audit_logs","banned_devices","banners","bot_settings",
   "broadcast_messages","broadcast_progress","chat_conversations","chat_members",
   "chat_message_reads","chat_messages","chat_reactions","client_pricing_rules",
-  "disabled_recharge_values","follows","license_logs","licenses","login_attempts",
+  "disabled_recharge_values","follows","login_attempts",
   "login_fingerprints","mirror_file_state","mirror_sync_logs","mirror_sync_state",
   "notifications","operadoras","poll_votes","polls","pricing_rules","profiles",
   "push_subscriptions","recargas","referral_commissions","reseller_base_pricing_rules",
@@ -27,7 +27,7 @@ export const EXPECTED_COLUMNS: Record<string, string[]> = {
   notifications: ["id","title","message","status","sent_count","failed_count","image_url","buttons","message_effect_id","created_at","updated_at"],
   chat_messages: ["id","conversation_id","sender_id","content","type","audio_url","image_url","is_read","is_delivered","is_deleted","is_pinned","reply_to_id","created_at","updated_at"],
   chat_conversations: ["id","type","participant_1","participant_2","name","category","description","icon","is_blocked","is_private","last_message_text","last_message_at","created_at","updated_at"],
-  licenses: ["id","license_key","mirror_name","mirror_domain","expires_at","is_active","max_users","features","last_heartbeat_at","created_by","created_at","updated_at"],
+  
   support_tickets: ["id","user_id","telegram_chat_id","message","status","priority","department","subject","assigned_to","admin_reply","image_url","replied_at","resolved_at","created_at","updated_at"],
   scratch_cards: ["id","user_id","prize_amount","is_scratched","is_won","scratched_at","card_date","created_at"],
   banners: ["id","type","title","subtitle","link","icon_url","position","enabled","created_at","updated_at"],
@@ -85,7 +85,7 @@ export const PAYMENT_CONFIG_KEYS = [
 export const EXPECTED_REALTIME = [
   "admin_notifications","audit_logs","broadcast_progress","chat_conversations",
   "chat_members","chat_message_reads","chat_messages","chat_reactions",
-  "license_logs","notifications","poll_votes","polls","profiles","recargas",
+  "notifications","poll_votes","polls","profiles","recargas",
   "saldos","support_messages","support_tickets","telegram_users","transactions","user_roles",
 ];
 
@@ -95,7 +95,7 @@ export const EXPECTED_TRIGGERS = [
   { table: "chat_conversations", name: "update_chat_conversations_updated_at" },
   { table: "chat_messages", name: "update_chat_messages_updated_at" },
   { table: "client_pricing_rules", name: "update_client_pricing_rules_updated_at" },
-  { table: "licenses", name: "update_licenses_updated_at" },
+  
   { table: "notifications", name: "update_notifications_updated_at" },
   { table: "operadoras", name: "update_operadoras_updated_at" },
   { table: "polls", name: "update_polls_updated_at" },
