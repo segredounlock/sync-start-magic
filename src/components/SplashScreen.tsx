@@ -16,10 +16,7 @@ export function SplashScreen() {
   const [logoLoaded, setLogoLoaded] = useState(false);
   const [disintegrating, setDisintegrating] = useState(false);
 
-  useEffect(() => {
-    const t = setTimeout(() => setDisintegrating(true), 7000);
-    return () => clearTimeout(t);
-  }, []);
+  // disintegrating is triggered when progress reaches 100%
 
   /* ── Canvas particle system ── */
   useEffect(() => {
