@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Shield, Lock } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 
