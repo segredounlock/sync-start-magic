@@ -316,6 +316,8 @@ export default function Principal() {
   const [globalConfigSaving, setGlobalConfigSaving] = useState(false);
   const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [faviconUploading, setFaviconUploading] = useState(false);
+  const [ogImageUploading, setOgImageUploading] = useState(false);
   const [configSection, setConfigSection] = useState<"geral" | "rede" | "jogos" | "notificacoes" | "banners">("geral");
   const MASTER_ADMIN_ID = globalConfig.masterAdminId || "f5501acc-79f3-460f-bc3e-493280ea84f0";
   const isMasterAdmin = user?.id === MASTER_ADMIN_ID;
@@ -3850,8 +3852,143 @@ export default function Principal() {
                         </div>
                       </div>
 
+                      {/* Favicon / Ícone do App */}
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-1">URL do Site</label>
+                        <label className="block text-sm font-medium text-foreground mb-1">Favicon / Ícone do App</label>
+                        <p className="text-xs text-muted-foreground mb-2">Ícone exibido na aba do navegador e como ícone do PWA. Recomendado: 512×512px PNG.</p>
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <div className="relative w-20 h-20 rounded-xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden group">
+                            {globalConfig.faviconUrl ? (
+                              <img src={globalConfig.faviconUrl} alt="Favicon atual" className="w-full h-full object-contain p-1" />
+                            ) : (
+                              <div className="text-center">
+                                <Image className="h-6 w-6 text-muted-foreground mx-auto" />
+                                <span className="text-[9px] text-muted-foreground">Padrão</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 border border-border text-sm font-medium text-foreground hover:bg-muted/80 transition-colors">
+                              <Upload className="h-4 w-4" />
+                              {faviconUploading ? "Enviando…" : "Trocar Favicon"}
+                              <input
+                                type="file"
+                                accept="image/png,image/ico,image/x-icon,image/svg+xml"
+                                className="hidden"
+                                disabled={faviconUploading}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  if (file.size > 2 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 2MB"); return; }
+                                  setFaviconUploading(true);
+                                  try {
+                                    const ext = file.name.split('.').pop() || 'png';
+                                    const path = `site/favicon.${ext}`;
+                                    const { error: upErr } = await supabase.storage.from("store-logos").upload(path, file, { upsert: true, contentType: file.type });
+                                    if (upErr) throw upErr;
+                                    const { data: urlData } = supabase.storage.from("store-logos").getPublicUrl(path);
+                                    const publicUrl = urlData.publicUrl + '?v=' + Date.now();
+                                    setGlobalConfig(prev => ({ ...prev, faviconUrl: publicUrl }));
+                                    await supabase.from("system_config").upsert({ key: "faviconUrl", value: publicUrl, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                                    // Update favicon in current page
+                                    const linkEl = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+                                    if (linkEl) linkEl.href = publicUrl;
+                                    toast.success("Favicon atualizado!");
+                                  } catch (err: any) {
+                                    toast.error(err.message || "Erro ao enviar favicon");
+                                  } finally {
+                                    setFaviconUploading(false);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
+                            {globalConfig.faviconUrl && (
+                              <button
+                                onClick={async () => {
+                                  setGlobalConfig(prev => ({ ...prev, faviconUrl: "" }));
+                                  await supabase.from("system_config").upsert({ key: "faviconUrl", value: "", updated_at: new Date().toISOString() }, { onConflict: "key" });
+                                  const linkEl = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+                                  if (linkEl) linkEl.href = "/favicon.png";
+                                  toast.success("Favicon removido — voltou ao padrão.");
+                                }}
+                                className="text-xs text-destructive hover:underline text-left"
+                              >
+                                Remover
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* OG Image — Imagem de Compartilhamento */}
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1">OG Image (Compartilhamento)</label>
+                        <p className="text-xs text-muted-foreground mb-2">Imagem exibida ao compartilhar links em redes sociais e WhatsApp. Recomendado: 1200×630px.</p>
+                        <div className="space-y-3">
+                          {globalConfig.ogImageUrl ? (
+                            <div className="relative rounded-xl border border-border overflow-hidden bg-muted/20 group">
+                              <img src={globalConfig.ogImageUrl} alt="OG Image atual" className="w-full max-h-48 object-cover" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="text-white text-xs font-medium">Imagem atual</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="w-full h-32 rounded-xl border-2 border-dashed border-border bg-muted/20 flex flex-col items-center justify-center gap-1">
+                              <Image className="h-8 w-8 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">Nenhuma OG Image configurada</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 border border-border text-sm font-medium text-foreground hover:bg-muted/80 transition-colors">
+                              <Upload className="h-4 w-4" />
+                              {ogImageUploading ? "Enviando…" : "Trocar OG Image"}
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                disabled={ogImageUploading}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  if (file.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB"); return; }
+                                  setOgImageUploading(true);
+                                  try {
+                                    const ext = file.name.split('.').pop() || 'jpg';
+                                    const path = `site/og-image.${ext}`;
+                                    const { error: upErr } = await supabase.storage.from("store-logos").upload(path, file, { upsert: true, contentType: file.type });
+                                    if (upErr) throw upErr;
+                                    const { data: urlData } = supabase.storage.from("store-logos").getPublicUrl(path);
+                                    const publicUrl = urlData.publicUrl + '?v=' + Date.now();
+                                    setGlobalConfig(prev => ({ ...prev, ogImageUrl: publicUrl }));
+                                    await supabase.from("system_config").upsert({ key: "ogImageUrl", value: publicUrl, updated_at: new Date().toISOString() }, { onConflict: "key" });
+                                    // Update meta tag in current page
+                                    let metaOg = document.querySelector("meta[property='og:image']") as HTMLMetaElement;
+                                    if (metaOg) metaOg.content = publicUrl;
+                                    toast.success("OG Image atualizada!");
+                                  } catch (err: any) {
+                                    toast.error(err.message || "Erro ao enviar OG Image");
+                                  } finally {
+                                    setOgImageUploading(false);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
+                            {globalConfig.ogImageUrl && (
+                              <button
+                                onClick={async () => {
+                                  setGlobalConfig(prev => ({ ...prev, ogImageUrl: "" }));
+                                  await supabase.from("system_config").upsert({ key: "ogImageUrl", value: "", updated_at: new Date().toISOString() }, { onConflict: "key" });
+                                  toast.success("OG Image removida.");
+                                }}
+                                className="text-xs text-destructive hover:underline"
+                              >
+                                Remover
+                              </button>
+                            )}
+                          </div>
+                        </div>
                         <input type="text" value={globalConfig.siteUrl || ""} onChange={e => setGlobalConfig(prev => ({ ...prev, siteUrl: e.target.value }))}
                           className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="https://seudominio.com" />
                         <p className="text-xs text-muted-foreground mt-1">Domínio principal usado em links do bot, emails e OG tags</p>
