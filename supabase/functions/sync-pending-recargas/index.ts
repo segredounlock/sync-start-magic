@@ -267,7 +267,7 @@ Deno.serve(async (req) => {
               }),
             }).catch(() => {});
 
-            // Push notification — rich info
+            // Push notification — admin (full info)
             const { data: expProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
             const expName = expProfile?.nome || expProfile?.email || recarga.user_id.slice(0, 8);
             const expOp = (recarga.operadora || "").toUpperCase();
@@ -276,8 +276,18 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 title: `❌ ${expOp} R$ ${Number(recarga.valor).toFixed(2)}`,
                 body: `👤 ${expName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
+              }),
+            }).catch(() => {});
+
+            // Push notification — reseller (simple)
+            fetch(`${baseUrl}/functions/v1/send-push`, {
+              method: "POST", headers: authHeaders,
+              body: JSON.stringify({
+                title: `❌ Recarga Expirada`,
+                body: `📞 ${recarga.telefone}\n${expOp} R$ ${Number(recarga.valor).toFixed(2)}\n💸 Saldo estornado automaticamente`,
                 user_ids: [recarga.user_id],
               }),
+            }).catch(() => {});
             }).catch(() => {});
           } catch { /* ignore */ }
 
