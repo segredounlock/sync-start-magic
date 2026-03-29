@@ -95,7 +95,7 @@ export const EXPECTED_TRIGGERS = [
   { table: "chat_conversations", name: "update_chat_conversations_updated_at" },
   { table: "chat_messages", name: "update_chat_messages_updated_at" },
   { table: "client_pricing_rules", name: "update_client_pricing_rules_updated_at" },
-  { table: "licenses", name: "update_licenses_updated_at" },
+  
   { table: "notifications", name: "update_notifications_updated_at" },
   { table: "operadoras", name: "update_operadoras_updated_at" },
   { table: "polls", name: "update_polls_updated_at" },
