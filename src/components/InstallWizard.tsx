@@ -571,7 +571,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       </p>
       <div className="bg-muted/50 rounded-xl p-4 space-y-1 text-left">
         <p className="text-xs text-muted-foreground">E-mail: <strong className="text-foreground">{data.adminEmail}</strong></p>
-        <p className="text-xs text-muted-foreground">Válido: <strong className="text-foreground">{data.licenseStartDate} até {data.licenseEndDate}</strong></p>
+        <p className="text-xs text-muted-foreground">Válido: <strong className="text-foreground">{new Date(data.licenseStartDate + "T00:00:00").toLocaleDateString("pt-BR")} até {new Date(data.licenseEndDate + "T00:00:00").toLocaleDateString("pt-BR")}</strong></p>
         <p className="text-xs text-muted-foreground">Domínio: <strong className="text-foreground">{window.location.hostname}</strong></p>
       </div>
       <button
