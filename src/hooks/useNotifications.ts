@@ -13,23 +13,33 @@ function requestNotifPermission() {
   }
 }
 
-async function showSystemNotification(title: string, body: string) {
+async function showSystemNotification(title: string, body: string, options?: {
+  tag?: string;
+  url?: string;
+  type?: string;
+  requireInteraction?: boolean;
+}) {
   try {
     if (typeof Notification === "undefined" || _notifPermission !== "granted") return;
-    // Use ServiceWorker showNotification for background support
+    const tag = options?.tag || `notif-${Date.now()}`;
+    const notifOptions: any = {
+      body,
+      icon: "/favicon.png",
+      badge: "/favicon.png",
+      tag,
+      renotify: true,
+      vibrate: [200, 100, 200],
+      requireInteraction: options?.requireInteraction || false,
+      data: {
+        url: options?.url || "/",
+        type: options?.type || "general",
+      },
+    };
     if ("serviceWorker" in navigator) {
       const reg = await navigator.serviceWorker.ready;
-      (reg as any).showNotification(title, {
-        body,
-        icon: "/favicon.png",
-        badge: "/favicon.png",
-        tag: `notif-${Date.now()}`,
-        renotify: true,
-        vibrate: [200, 100, 200],
-        requireInteraction: false,
-      } as any);
+      reg.showNotification(title, notifOptions);
     } else {
-      new Notification(title, { body, icon: "/favicon.png", tag: body });
+      new Notification(title, { body, icon: "/favicon.png", tag });
     }
   } catch { /* ignore */ }
 }
