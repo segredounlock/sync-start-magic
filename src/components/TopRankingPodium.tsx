@@ -363,9 +363,9 @@ export function TopRankingPodium({ userId, onViewFull, showPodium = true, hideLi
 
   const getPodiumConfig = (displayIndex: number) => {
     switch (displayIndex) {
-      case 0: return { position: 2, avatarSize: "w-16 h-16 md:w-20 md:h-20", ringColor: "ring-gray-300/60", badge: <SilverIceBadge size={24} /> };
-      case 1: return { position: 1, avatarSize: "w-20 h-20 md:w-24 md:h-24", ringColor: "ring-yellow-500/70", badge: <GoldFloatingCrown size={36} /> };
-      case 2: return { position: 3, avatarSize: "w-16 h-16 md:w-20 md:h-20", ringColor: "ring-orange-600/60", badge: <BronzeFireBadge size={24} /> };
+      case 0: return { position: 2, avatarSize: "w-20 h-20 md:w-20 md:h-20", ringColor: "ring-gray-300/60", badge: <SilverIceBadge size={28} /> };
+      case 1: return { position: 1, avatarSize: "w-24 h-24 md:w-24 md:h-24", ringColor: "ring-yellow-500/70", badge: <GoldFloatingCrown size={40} /> };
+      case 2: return { position: 3, avatarSize: "w-20 h-20 md:w-20 md:h-20", ringColor: "ring-orange-600/60", badge: <BronzeFireBadge size={28} /> };
       default: return { position: 0, avatarSize: "w-16 h-16", ringColor: "ring-muted", badge: null };
     }
   };
