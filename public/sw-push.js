@@ -6,10 +6,11 @@
 
 const APP_ICON = "/favicon.png";
 const DEFAULT_URL = "/";
+const CACHE_VERSION = "v2-recargas-brasil";
 
 // ── Push Event ──
 self.addEventListener("push", (event) => {
-  let data = { title: "Sistema de Recargas", body: "Nova notificação" };
+  let data = { title: "Recargas Brasil", body: "Nova notificação" };
 
   try {
     if (event.data) {
@@ -162,5 +163,13 @@ self.addEventListener("install", () => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_VERSION)
+          .map((name) => caches.delete(name))
+      );
+    }).then(() => self.clients.claim())
+  );
 });
