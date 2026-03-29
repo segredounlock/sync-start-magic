@@ -335,8 +335,25 @@ function CanvasParticles({ theme }: { theme: SeasonalThemeKey }) {
   );
 }
 
+// ── Theme-specific decorative icons for the banner ──
+const THEME_BANNER_ICONS: Record<SeasonalThemeKey, string[]> = {
+  none: [],
+  ano_novo: ["🎆", "🥂", "🎇", "✨", "🍾"],
+  carnaval: ["🎭", "🎊", "💃", "🪇", "🌈"],
+  pascoa: ["🐰", "🥚", "🐣", "🍫", "🌷"],
+  dia_maes: ["💐", "🌹", "❤️", "🌺", "💕"],
+  dia_namorados: ["💘", "❤️", "💖", "💝", "🥰"],
+  festa_junina: ["🔥", "🌽", "🎏", "🪗", "⛺"],
+  dia_pais: ["👔", "🏆", "💪", "⭐", "💙"],
+  dia_criancas: ["🎈", "🧸", "🌈", "🎮", "🍭"],
+  black_friday: ["🏷️", "💰", "⚡", "🔥", "💸"],
+  natal: ["🎄", "❄️", "🎅", "🎁", "☃️"],
+};
+
 // ── Banner ──
 function SeasonalBanner({ theme }: { theme: SeasonalThemeConfig }) {
+  const icons = THEME_BANNER_ICONS[theme.key] || [];
+
   return (
     <motion.div
       key={theme.key}
@@ -344,20 +361,67 @@ function SeasonalBanner({ theme }: { theme: SeasonalThemeConfig }) {
       animate={{ height: "auto", opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
       transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-      className={`w-full bg-gradient-to-r ${theme.accentGradient} overflow-hidden`}
+      className={`w-full bg-gradient-to-r ${theme.accentGradient} overflow-hidden relative`}
     >
+      {/* Floating decorative icons */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {icons.map((icon, i) => (
+          <motion.span
+            key={i}
+            className="absolute text-lg select-none opacity-20"
+            style={{
+              left: `${8 + i * 20}%`,
+              top: "50%",
+            }}
+            animate={{
+              y: [0, -6, 0],
+              rotate: [0, i % 2 === 0 ? 12 : -12, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 2.5 + i * 0.3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.4,
+            }}
+          >
+            {icon}
+          </motion.span>
+        ))}
+      </div>
+
+      {/* Shimmer effect */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        animate={{ x: ["-100%", "200%"] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
+      />
+
+      {/* Content */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -20, opacity: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex items-center justify-center gap-2 py-1.5 px-4"
+        className="relative flex items-center justify-center gap-3 py-2 px-4"
       >
-        <span className="text-sm">{theme.emoji}</span>
-        <span className="text-xs font-bold text-white drop-shadow-sm tracking-wide">
-          {theme.label.toUpperCase()}
+        <motion.span
+          className="text-xl"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {theme.emoji}
+        </motion.span>
+        <span className="text-xs font-black text-white drop-shadow-md tracking-[0.15em] uppercase">
+          {theme.label}
         </span>
-        <span className="text-sm">{theme.emoji}</span>
+        <motion.span
+          className="text-xl"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        >
+          {theme.emoji}
+        </motion.span>
       </motion.div>
     </motion.div>
   );
