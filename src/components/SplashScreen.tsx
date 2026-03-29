@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useSiteName } from "@/hooks/useSiteName";
 import { useSiteLogo } from "@/hooks/useSiteLogo";
 
+// Module-level state to survive StrictMode remounts
+let moduleProgress = 0;
+let moduleStarted = false;
+let moduleDisintegrated = false;
+
 interface Particle {
   x: number; y: number;
   vx: number; vy: number;
