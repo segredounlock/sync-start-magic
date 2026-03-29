@@ -47,7 +47,7 @@ export const EXPECTED_FUNCTIONS = [
   "get_user_reseller_id","get_user_recargas_count","get_user_verification_badge",
   "has_verification_badge","get_follow_counts","get_chat_new_conv_filter",
   "get_require_referral_code","get_sales_tools_enabled","get_poll_vote_counts",
-  "get_scratch_recent_winners","get_scratch_top_winners","is_license_valid",
+  "get_scratch_recent_winners","get_scratch_top_winners",
   "sync_chat_conversation_preview","export_schema_info","generate_unique_slug",
   "generate_referral_code","cleanup_old_login_attempts","update_updated_at_column",
   "get_table_columns_info",
