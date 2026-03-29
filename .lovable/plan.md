@@ -1,96 +1,71 @@
 
+Objetivo: ajustar o instalador do espelho para inicializar automaticamente a configuração necessária, salvar com segurança no banco e eliminar os problemas de duplicação/erros no fluxo.
 
-# Análise de Segurança do Sistema de Licenças
+1. Corrigir a duplicação visual imediata
+- Remover a segunda renderização de `renderAdmin()` em `src/components/InstallWizard.tsx`.
+- Revisar o passo `admin` para garantir que o formulário apareça só uma vez e que o step indicator continue correto.
 
-## Situação atual
+2. Trocar a ideia de “rodar migrations no frontend” por inicialização backend segura
+- Não depender de o frontend “aplicar migrations”, porque isso não é confiável nem permitido como fluxo de instalação.
+- Usar o `init-mirror` como etapa automática obrigatória de bootstrap do espelho.
+- Fazer o instalador chamar essa função no momento certo, após criar o admin e já com sessão/token válidos.
 
-### O que está no código (frontend — manipulável)
-- `MASTER_SUPABASE_URL` e `MASTER_PROJECT_URL` em `src/utils/licenseConfig.ts`
-- `LicenseGate` e `InstallWizard` como portões visuais
-- Detecção master/mirror via `isMasterEnvironment()`
+3. Reordenar o fluxo de instalação para salvar sem quebrar RLS
+- Fluxo alvo:
+  1. criar admin
+  2. aguardar sessão estar pronta
+  3. persistir chaves críticas (`license_key`, `license_master_url`, `masterProjectUrl`)
+  4. chamar `init-mirror`
+  5. validar retorno da inicialização
+  6. marcar `install_completed`
+- Se qualquer etapa crítica falhar, a instalação não conclui.
 
-### O que está no servidor (protegido)
-- `license-validate` no master — valida JWT com `LICENSE_SIGNING_SECRET`
-- `license-check-server` no espelho — chama o master
-- `is_license_valid()` no banco — verifica status + expiração
-- RLS policies em tabelas críticas usando `is_license_valid()`
+4. Melhorar a robustez do salvamento
+- Confirmar via leitura imediata que `license_master_url` e `masterProjectUrl` ficaram gravadas corretamente.
+- Salvar também um status claro de inicialização para evitar estado “meio instalado”.
+- Exibir erro real retornado pelo backend quando `init-mirror` falhar, em vez de mensagem genérica.
 
-## Cenário de ataque: usuário remove LicenseGate no Lovable
+5. Corrigir erros de duplicidade lógica no fluxo
+- Revisar se o instalador está:
+  - executando `upsert` repetido sem necessidade,
+  - voltando para `license` em erro sem limpar estado,
+  - disparando operações em sequência sem checar autenticação pronta.
+- Garantir que o botão “Instalar” não possa disparar duas vezes enquanto estiver carregando.
 
-| Camada | Bypassed? | Por quê |
-|--------|-----------|---------|
-| Frontend (LicenseGate) | Sim | Código editável |
-| Edge Functions | Não | Deploy separado, não depende do frontend |
-| RLS no banco | Não | `is_license_valid()` roda no Postgres |
-| LICENSE_SIGNING_SECRET | Não | Espelho não tem, não pode forjar licenças |
+6. Alinhar com o gate de licença
+- Ajustar a leitura em `LicenseGate.tsx` para reconhecer melhor:
+  - instalação não iniciada,
+  - instalação incompleta,
+  - configuração mestre ausente/inválida,
+  - licença ausente,
+  - licença válida.
+- Evitar cair em telas erradas por conta de configuração parcial.
 
-**Resultado**: O app abre visualmente, mas todas as queries de dados falham por RLS.
+7. Melhorar o feedback do usuário
+- Manter a UI simples como você pediu: sem lista técnica de “dependências”.
+- Mostrar somente:
+  - carregando,
+  - sucesso,
+  - erro exato do backend,
+  - opção de tentar novamente.
+- Se `init-mirror` detectar problema estrutural, mostrar mensagem objetiva sobre o que faltou.
 
-## O que NÃO vale a pena fazer
-- Criptografar URLs no banco — o espelho tem `SERVICE_ROLE_KEY`, descriptografa tudo
-- Ofuscar o código — Lovable regenera, e JS é inspecionável
-
-## O que VALE a pena fazer (reforço adicional)
-
-### 1. Expandir RLS com `is_license_valid()` para TODAS as tabelas críticas
-Hoje nem todas as tabelas usam essa verificação. Adicionar a check em:
-- `recargas` (SELECT/INSERT)
-- `transactions` (SELECT/INSERT)
-- `saldos` (SELECT)
-- `profiles` (SELECT próprio)
-
-Isso garante que sem licença válida, **zero dados** são acessíveis.
-
-### 2. Adicionar verificação de licença no `telegram-bot`
-O bot do Telegram roda server-side. Adicionar check de `is_license_valid()` antes de processar qualquer comando. Se expirada, responder "Sistema em manutenção".
-
-### 3. Adicionar heartbeat obrigatório
-Criar um cron (pg_cron ou edge function schedulada) que invalida `license_status` se `license_validated_at` for > 24h atrás. Isso força revalidação periódica e impede que alguém desconecte do master e continue usando.
-
-### 4. Proteger `system_config` contra adulteração de license keys
-Adicionar uma RLS policy que **impede UPDATE** nas keys de licença (`license_key`, `license_master_url`, `license_status`, `license_expires_at`) exceto via `service_role`. Hoje o admin do espelho pode alterar esses valores diretamente.
-
-## Implementação proposta
-
-### Migration SQL
-```sql
--- Policy: bloquear alteração manual das keys de licença por usuários
-CREATE POLICY "Block license config tampering"
-ON public.system_config
-FOR UPDATE
-TO authenticated
-USING (
-  key NOT IN ('license_key', 'license_master_url', 'license_status', 
-              'license_expires_at', 'license_validated_at', 'masterProjectUrl', 'install_secret')
-  OR has_role(auth.uid(), 'admin')
-)
-WITH CHECK (
-  key NOT IN ('license_key', 'license_master_url', 'license_status', 
-              'license_expires_at', 'license_validated_at', 'masterProjectUrl', 'install_secret')
-  OR has_role(auth.uid(), 'admin')
-);
-
--- Adicionar is_license_valid() nas tabelas mais críticas
--- (apenas para espelhos — no master a função retorna true naturalmente)
-```
-
-### Arquivo: nenhuma alteração de código necessária
-A proteção real já está server-side. O reforço é apenas no banco.
-
-## Resumo
-
-```text
-Camada          Quem controla     Bypass possível?
-─────────────   ──────────────    ────────────────
-Frontend        Dono do espelho   Sim (editável)
-Edge Functions  Lovable Cloud     Não (deploy independente)
-RLS/Postgres    Lovable Cloud     Não (precisa de migration)
-Signing Secret  Só o master       Não (espelho não tem)
-```
-
-**Conclusão**: As constantes no código são "portas visuais". A segurança real está no banco e nas edge functions. O reforço proposto é expandir RLS para cobrir 100% das tabelas e impedir adulteração das keys de licença no `system_config`.
-
-## Arquivos alterados
-1. **Migration SQL** — novas RLS policies para proteger keys de licença no `system_config`
-2. **Nenhum arquivo de código** — a arquitetura atual já é correta
-
+Seção técnica
+- Arquivos principais:
+  - `src/components/InstallWizard.tsx`
+  - `src/components/LicenseGate.tsx`
+  - `supabase/functions/init-mirror/index.ts`
+  - possivelmente `src/utils/licenseValidation.ts`
+- Correção concreta já confirmada no código:
+  - existe duplicação em `InstallWizard.tsx`:
+    - `{step === "admin" && renderAdmin()}`
+    - `{step === "admin" && renderAdmin()}`
+- Direção recomendada:
+  - usar `init-mirror` como bootstrap idempotente,
+  - não tentar “rodar migration automática” pelo cliente,
+  - tratar bootstrap como requisito de instalação e validar resposta antes de finalizar.
+- Resultado esperado:
+  - sem formulário duplicado,
+  - sem instalação incompleta silenciosa,
+  - sem erro genérico quando o backend falhar,
+  - persistência confiável das chaves críticas do espelho.
