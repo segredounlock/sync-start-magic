@@ -92,20 +92,22 @@ export function SplashScreen() {
     };
   }, []);
 
-  /* ── Progress counter ── */
+  /* ── Progress counter — ~10s total duration ── */
   const [progress, setProgress] = useState(0);
   useEffect(() => {
+    const DURATION = 10_000; // 10 seconds
+    const INTERVAL = 150;   // update every 150ms
+    const TOTAL_TICKS = DURATION / INTERVAL;
+    let tick = 0;
     const interval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        // accelerate near the end
-        const step = p < 70 ? Math.random() * 8 + 2 : Math.random() * 4 + 1;
-        return Math.min(100, p + step);
-      });
-    }, 120);
+      tick++;
+      // ease-out curve: fast start, slow end
+      const ratio = tick / TOTAL_TICKS;
+      const eased = 1 - Math.pow(1 - ratio, 2.5);
+      const value = Math.min(100, eased * 100);
+      setProgress(value);
+      if (tick >= TOTAL_TICKS) clearInterval(interval);
+    }, INTERVAL);
     return () => clearInterval(interval);
   }, []);
 
