@@ -332,30 +332,39 @@ interface GeoResult {
 
 /** Try GPS with high accuracy first, then fall back to coarse GPS */
 function getGeolocation(): Promise<GeoResult> {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
+    const empty: GeoResult = { lat: null, lng: null, accuracy: null, source: null, city: null, region: null, country: null, isp: null };
+
     if (!navigator.geolocation) {
-      resolve({ lat: null, lng: null, accuracy: null, source: null, city: null, region: null, country: null, isp: null });
+      resolve(empty);
       return;
+    }
+
+    // Check permission first — avoid prompting
+    try {
+      const perm = await navigator.permissions.query({ name: "geolocation" });
+      if (perm.state === "denied") { resolve(empty); return; }
+      if (perm.state === "prompt" && localStorage.getItem("geo_permission_declined")) { resolve(empty); return; }
+    } catch {
+      if (localStorage.getItem("geo_permission_declined")) { resolve(empty); return; }
     }
 
     let resolved = false;
     const done = (lat: number | null, lng: number | null, accuracy: number | null) => {
       if (resolved) return;
       resolved = true;
-      resolve({ lat, lng, accuracy, source: lat ? "gps" : null, city: null, region: null, country: null, isp: null });
+      resolve({ ...empty, lat, lng, accuracy, source: lat ? "gps" : null });
     };
 
-    // Global timeout — never hang more than 10s total
     const globalTimeout = setTimeout(() => done(null, null, null), 10000);
 
-    // Try high accuracy first (GPS on mobile)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         clearTimeout(globalTimeout);
         done(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
       },
       () => {
-        // Fallback: try without high accuracy (WiFi/cell tower)
+        // Fallback: try without high accuracy
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             clearTimeout(globalTimeout);
@@ -363,6 +372,7 @@ function getGeolocation(): Promise<GeoResult> {
           },
           () => {
             clearTimeout(globalTimeout);
+            try { localStorage.setItem("geo_permission_declined", "1"); } catch {}
             done(null, null, null);
           },
           { timeout: 4000, maximumAge: 600000, enableHighAccuracy: false }
