@@ -206,7 +206,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">2</span>
           </div>
-          <span className="text-foreground">Acessar e ativar licença</span>
+          <span className="text-foreground">Configurar o sistema</span>
         </div>
       </div>
       <button
