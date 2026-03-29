@@ -31,6 +31,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <App />
         <UpdatePrompt />
+        <ReinstallBanner />
         <Toaster
           position="top-center"
           toastOptions={{
