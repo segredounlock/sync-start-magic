@@ -241,20 +241,38 @@ function App() {
   useCacheCleanup();
   usePrefetchRoutes();
 
-  // Show splash for minimum 10 seconds on first load
+  // Show splash for 10s, then fade out
   const [splashDone, setSplashDone] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
   const splashStarted = useRef(false);
   useEffect(() => {
     if (splashStarted.current) return;
     splashStarted.current = true;
-    const timer = setTimeout(() => setSplashDone(true), 10_000);
-    return () => clearTimeout(timer);
+    // At 10s start fade-out, at 10.6s remove splash
+    const fadeTimer = setTimeout(() => setSplashVisible(false), 10_000);
+    const removeTimer = setTimeout(() => setSplashDone(true), 10_600);
+    return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
   }, []);
 
-  if (!splashDone) return <SplashScreen />;
-
   return (
-    <ThemeProvider>
+    <>
+      {/* Splash overlay with fade-out */}
+      {!splashDone && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          opacity: splashVisible ? 1 : 0,
+          transition: 'opacity 0.6s ease-out',
+          pointerEvents: splashVisible ? 'auto' : 'none',
+        }}>
+          <SplashScreen />
+        </div>
+      )}
+      {/* App content with fade-in */}
+      <div style={{
+        opacity: splashDone ? 1 : 0,
+        transition: 'opacity 0.5s ease-in',
+      }}>
+      <ThemeProvider>
       <AuthProvider>
         <Suspense fallback={null}>
           <InstallGate>
@@ -324,6 +342,8 @@ function App() {
         </Suspense>
       </AuthProvider>
     </ThemeProvider>
+    </div>
+    </>
   );
 }
 
