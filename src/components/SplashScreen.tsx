@@ -14,7 +14,7 @@ export function SplashScreen() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const [logoLoaded, setLogoLoaded] = useState(false);
-  const [disintegrating, setDisintegrating] = useState(false);
+  const [disintegrating, setDisintegrating] = useState(moduleDisintegrated);
 
   // disintegrating is triggered when progress reaches 100%
 
