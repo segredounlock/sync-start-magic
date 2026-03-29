@@ -8,6 +8,8 @@ import { extractLicenseFromKey } from "@/utils/licenseDates";
 import type { LicenseStateResult } from "@/utils/licenseDates";
 import { useAuth } from "@/hooks/useAuth";
 
+const LOCAL_INSTALL_FLAG = "mirror_install_completed";
+
 type GateStatus = "checking" | "valid" | "denied" | "master" | "install" | "activate";
 
 export function LicenseGate({ children }: { children: ReactNode }) {
@@ -23,13 +25,27 @@ export function LicenseGate({ children }: { children: ReactNode }) {
         return;
       }
 
-      const [installCompleted, masterAdmin] = await Promise.all([
-        getSystemConfigValue(supabase, "install_completed"),
-        getSystemConfigValue(supabase, "masterAdminId"),
-      ]);
+      let installCompleted = false;
+      let masterAdmin = false;
+
+      const { data: installStatus, error: installStatusError } = await supabase.rpc("get_installation_status");
+
+      if (!installStatusError && installStatus?.length) {
+        installCompleted = installStatus[0].install_completed === true;
+        masterAdmin = installStatus[0].has_master_admin === true;
+      } else {
+        const localInstallCompleted = localStorage.getItem(LOCAL_INSTALL_FLAG) === "true";
+        const [installCompletedValue, masterAdminValue] = await Promise.all([
+          getSystemConfigValue(supabase, "install_completed"),
+          getSystemConfigValue(supabase, "masterAdminId"),
+        ]);
+
+        installCompleted = installCompletedValue === "true" || localInstallCompleted;
+        masterAdmin = !!masterAdminValue;
+      }
 
       // Not installed at all → show install wizard
-      if (installCompleted !== "true" && !masterAdmin) {
+      if (!installCompleted && !masterAdmin) {
         if (mounted.current) setStatus("install");
         return;
       }
@@ -99,7 +115,7 @@ export function LicenseGate({ children }: { children: ReactNode }) {
   // ─── Install wizard ───
   if (status === "install") {
     return <InstallWizard onComplete={() => {
-      // After install, recheck — will now show "activate" since no license yet
+      localStorage.setItem(LOCAL_INSTALL_FLAG, "true");
       const mounted = { current: true };
       validate(mounted);
     }} />;
