@@ -190,12 +190,15 @@ Deno.serve(async (req) => {
                   }),
                 }).catch(() => {});
 
-                // Push notification for failure (PWA)
+                // Push notification for failure (PWA) — rich info
+                const { data: failProfile } = await adminClient.from("profiles").select("nome, email").eq("id", recarga.user_id).single();
+                const failName = failProfile?.nome || failProfile?.email || recarga.user_id.slice(0, 8);
+                const failOp = (recarga.operadora || "").toUpperCase();
                 fetch(`${baseUrl}/functions/v1/send-push`, {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
-                    title: "❌ Recarga Falhou",
-                    body: `Recarga de R$ ${Number(recarga.valor).toFixed(2).replace(".", ",")} para ${recarga.telefone} falhou. Saldo estornado automaticamente.`,
+                    title: `❌ ${failOp} R$ ${Number(recarga.valor).toFixed(2)}`,
+                    body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
                     user_ids: [recarga.user_id],
                   }),
                 }).catch(() => {});
