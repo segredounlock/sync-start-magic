@@ -359,56 +359,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     </div>
   );
 
-  const renderDependencies = () => (
-    <div className="space-y-6 text-center">
-      <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-        <Server className="w-7 h-7 text-primary" />
-      </div>
-      <h2 className="text-lg font-bold text-foreground">Configurar Sistema</h2>
-      <p className="text-muted-foreground text-xs max-w-sm mx-auto">
-        Clique no botão abaixo para configurar as dependências essenciais do sistema.
-      </p>
-
-      {depStatus === "error" && depError && (
-        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2 text-left">
-          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-          <p className="text-xs text-destructive/90">{depError}</p>
-        </div>
-      )}
-
-      {depStatus === "success" && (
-        <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-          <p className="text-xs text-foreground font-medium">Configurado com sucesso!</p>
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <button
-          onClick={() => { setStep("welcome"); setDepStatus("idle"); setDepError(""); }}
-          disabled={depStatus === "running"}
-          className="flex-1 py-2.5 bg-muted text-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
-        >
-          <ArrowLeft className="w-4 h-4" /> Voltar
-        </button>
-        <button
-          onClick={handleInstallDeps}
-          disabled={depStatus === "running" || depStatus === "success"}
-          className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
-        >
-          {depStatus === "running" ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Instalando...</>
-          ) : depStatus === "error" ? (
-            <><AlertTriangle className="w-4 h-4" /> Tentar Novamente</>
-          ) : depStatus === "success" ? (
-            <><CheckCircle2 className="w-4 h-4" /> Instalado</>
-          ) : (
-            <><Server className="w-4 h-4" /> Instalar</>
-          )}
-        </button>
-      </div>
-    </div>
-  );
 
   const renderAdmin = () => (
     <div className="space-y-5">
