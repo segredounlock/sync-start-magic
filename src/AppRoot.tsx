@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MasterOnlyRoute } from "@/components/MasterOnlyRoute";
 import { lazy, Suspense, useEffect, useState, useCallback, useRef } from "react";
-import { LicenseGate } from "@/components/LicenseGate";
+
 import { collectFingerprint, captureLoginSelfie } from "@/lib/deviceFingerprint";
 import { SplashScreen } from "@/components/SplashScreen";
 import { PageSkeleton } from "@/components/Skeleton";
