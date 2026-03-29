@@ -241,37 +241,32 @@ function App() {
   useCacheCleanup();
   usePrefetchRoutes();
 
-  // Show splash for 10s, then fade out
+  // Splash overlay — app loads underneath
   const [splashDone, setSplashDone] = useState(false);
-  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
   const splashStarted = useRef(false);
   useEffect(() => {
     if (splashStarted.current) return;
     splashStarted.current = true;
-    // At 10s start fade-out, at 10.6s remove splash
-    const fadeTimer = setTimeout(() => setSplashVisible(false), 10_000);
+    const fadeTimer = setTimeout(() => setSplashFading(true), 10_000);
     const removeTimer = setTimeout(() => setSplashDone(true), 10_600);
     return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
   }, []);
 
   return (
     <>
-      {/* Splash overlay with fade-out */}
+      {/* Splash overlay — fades out after 10s */}
       {!splashDone && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9998,
-          opacity: splashVisible ? 1 : 0,
+          opacity: splashFading ? 0 : 1,
           transition: 'opacity 0.6s ease-out',
-          pointerEvents: splashVisible ? 'auto' : 'none',
+          pointerEvents: splashFading ? 'none' : 'auto',
         }}>
           <SplashScreen />
         </div>
       )}
-      {/* App content with fade-in */}
-      <div style={{
-        opacity: splashDone ? 1 : 0,
-        transition: 'opacity 0.5s ease-in',
-      }}>
+      {/* App content always renders underneath */}
       <ThemeProvider>
       <AuthProvider>
         <Suspense fallback={null}>
@@ -342,7 +337,6 @@ function App() {
         </Suspense>
       </AuthProvider>
     </ThemeProvider>
-    </div>
     </>
   );
 }
