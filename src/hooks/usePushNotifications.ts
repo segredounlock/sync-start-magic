@@ -2,13 +2,36 @@ import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Push Notifications hook (improved).
- * - Does NOT auto-request permission (soft ask pattern)
- * - Only re-subscribes silently if permission is already "granted"
- * - Listens for subscription changes from SW and re-saves
+ * Push Notifications hook.
+ * - Reativa o fluxo automático no login
+ * - Re-sincroniza subscriptions existentes
+ * - Escuta mudanças de subscription no Service Worker
  */
 export function usePushNotifications(userId: string | undefined) {
   const registeredRef = useRef(false);
+
+  const getOrRegisterServiceWorker = useCallback(async () => {
+    let reg = await navigator.serviceWorker.getRegistration("/sw-push.js");
+    if (reg) return reg;
+
+    reg = await navigator.serviceWorker.register("/sw-push.js");
+    await reg.update();
+
+    if (!reg.active) {
+      await new Promise<void>((resolve) => {
+        const sw = reg!.installing || reg!.waiting;
+        if (!sw) {
+          resolve();
+          return;
+        }
+        sw.addEventListener("statechange", () => {
+          if (sw.state === "activated") resolve();
+        });
+      });
+    }
+
+    return reg;
+  }, []);
 
   const saveSubscription = useCallback(async (
     uid: string,
@@ -28,27 +51,68 @@ export function usePushNotifications(userId: string | undefined) {
     }
   }, []);
 
-  // Silent re-subscribe only if permission already granted
-  const silentResubscribe = useCallback(async () => {
+  const ensurePushSubscription = useCallback(async (uid: string, reg: ServiceWorkerRegistration) => {
+    const existingSub = await reg.pushManager.getSubscription();
+    if (existingSub) {
+      await saveSubscription(uid, existingSub.toJSON());
+      registeredRef.current = true;
+      console.log("[Push] Existing subscription refreshed");
+      return;
+    }
+
+    const { data: setupData, error: setupErr } = await supabase.functions.invoke("vapid-setup");
+    if (setupErr || !setupData?.publicKey) {
+      throw new Error("VAPID setup failed");
+    }
+
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(setupData.publicKey),
+    });
+
+    await saveSubscription(uid, subscription.toJSON());
+    registeredRef.current = true;
+    console.log("[Push] New subscription created automatically");
+  }, [saveSubscription]);
+
+  const autoRegisterPush = useCallback(async () => {
     if (!userId || registeredRef.current) return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-    if (Notification.permission !== "granted") return;
 
     try {
-      const reg = await navigator.serviceWorker.getRegistration("/sw-push.js");
-      if (!reg) return;
+      const reg = await getOrRegisterServiceWorker();
+      const permission = Notification.permission;
 
-      const existingSub = await reg.pushManager.getSubscription();
-      if (existingSub) {
-        // Re-save to keep DB fresh
-        await saveSubscription(userId, existingSub.toJSON());
-        registeredRef.current = true;
-        console.log("[Push] Existing subscription refreshed");
+      if (permission === "granted") {
+        await ensurePushSubscription(userId, reg);
+        return;
+      }
+
+      if (permission === "denied") {
+        try { localStorage.setItem("notif_permission_declined", "1"); } catch {}
+        return;
+      }
+
+      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("push_auto_prompt_seen") === "1") {
+        return;
+      }
+
+      if (typeof localStorage !== "undefined" && localStorage.getItem("notif_permission_declined") === "1") {
+        return;
+      }
+
+      try { sessionStorage.setItem("push_auto_prompt_seen", "1"); } catch {}
+
+      const requested = await Notification.requestPermission();
+      if (requested === "granted") {
+        await ensurePushSubscription(userId, reg);
+      } else if (requested === "denied") {
+        try { localStorage.setItem("notif_permission_declined", "1"); } catch {}
       }
     } catch (err) {
-      console.error("[Push] Silent resubscribe failed:", err);
+      console.error("[Push] Auto register failed:", err);
     }
-  }, [userId, saveSubscription]);
+  }, [ensurePushSubscription, getOrRegisterServiceWorker, userId]);
 
   // Listen for subscription changes from Service Worker
   useEffect(() => {
@@ -66,8 +130,8 @@ export function usePushNotifications(userId: string | undefined) {
   }, [userId, saveSubscription]);
 
   useEffect(() => {
-    silentResubscribe();
-  }, [silentResubscribe]);
+    autoRegisterPush();
+  }, [autoRegisterPush]);
 }
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {

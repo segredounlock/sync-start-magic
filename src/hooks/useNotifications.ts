@@ -52,7 +52,7 @@ async function showSystemNotification(title: string, body: string, options?: {
 
 export interface AppNotification {
   id: string;
-  type: "deposit" | "recarga" | "new_user_web" | "new_user_telegram" | "debt_collected";
+  type: "deposit" | "recarga" | "new_user_web" | "new_user_telegram" | "debt_collected" | "telegram_activity";
   message: string;
   amount: number;
   user_id: string;
@@ -64,6 +64,32 @@ export interface AppNotification {
 }
 
 type ListenType = "deposit" | "recarga" | "new_user";
+
+function mapDbNotification(row: any): AppNotification {
+  const dbType = row?.type;
+  const normalizedType: AppNotification["type"] =
+    dbType === "deposit" ||
+    dbType === "recarga" ||
+    dbType === "new_user_web" ||
+    dbType === "new_user_telegram" ||
+    dbType === "debt_collected" ||
+    dbType === "telegram_activity"
+      ? dbType
+      : (String(row?.message || "").toLowerCase().includes("telegram") ? "telegram_activity" : "recarga");
+
+  return {
+    id: row.id,
+    type: normalizedType,
+    message: row.message,
+    amount: Number(row.amount || 0),
+    user_id: row.user_id || "",
+    user_nome: row.user_nome || undefined,
+    user_email: row.user_email || undefined,
+    status: row.status || "new",
+    created_at: row.created_at,
+    is_read: !!row.is_read,
+  };
+}
 
 export interface NotifConfig {
   showDepositToast?: boolean;
@@ -123,25 +149,12 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
         .limit(50) as any;
 
       if (data && Array.isArray(data)) {
-        const mapped: AppNotification[] = data.map((r: any) => ({
-          id: r.id,
-          type: r.type,
-          message: r.message,
-          amount: Number(r.amount),
-          user_id: r.user_id || "",
-          user_nome: r.user_nome || undefined,
-          user_email: r.user_email || undefined,
-          status: r.status,
-          created_at: r.created_at,
-          is_read: r.is_read,
-        }));
+        const mapped: AppNotification[] = data.map((r: any) => mapDbNotification(r));
         setNotifications(mapped);
         setUnreadCount(mapped.filter(n => !n.is_read).length);
         mapped.forEach(n => knownIds.current.add(n.id));
       }
       setLoading(false);
-    // Request system notification permission on mount
-    requestNotifPermission();
     })();
   }, []);
 
@@ -177,6 +190,53 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
       // Clean up old channels first
       channels.forEach(ch => supabase.removeChannel(ch));
       channels = [];
+
+      const adminChannel = supabase.channel(`notif-admin-persisted-${Date.now()}`)
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "admin_notifications",
+        }, (payload) => {
+          const row = payload.new as any;
+          if (!row?.id || knownIds.current.has(row.id)) return;
+
+          const notif = mapDbNotification(row);
+          addNotification(notif);
+
+          const createdLabel = formatTimeBR(row.created_at);
+          const message = String(row.message || "");
+
+          if (notif.type === "new_user_telegram") {
+            try { playTelegramSignupSound(); } catch {}
+            if (showNewUserRef.current) {
+              showSystemNotification("🤖 Telegram", message, { tag: `telegram-${row.id}`, type: "new_user", url: "/" });
+              appToast.newUserTelegram(message, { description: createdLabel });
+            }
+            return;
+          }
+
+          if (notif.type === "deposit" && message.toLowerCase().includes("telegram")) {
+            try { playCashRegisterSound(); } catch {}
+            if (showDepositRef.current) {
+              showSystemNotification("🤖 Depósito via Telegram", message, { tag: `telegram-deposit-${row.id}`, type: "deposit", url: "/" });
+              appToast.depositConfirmed(message, { description: createdLabel });
+            }
+            return;
+          }
+
+          if (notif.type === "telegram_activity") {
+            try { playSuccessSound(); } catch {}
+            if (showNewUserRef.current) {
+              showSystemNotification("🤖 Atividade no bot", message, { tag: `telegram-activity-${row.id}`, type: "new_user", url: "/" });
+              appToast.newUserTelegram(message, { description: createdLabel });
+            }
+          }
+        })
+        .subscribe((status) => {
+          console.log("[Notif] admin_notifications channel:", status);
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            setTimeout(() => { if (isActive) setupChannels(); }, 3000);
+          }
+        });
+      channels.push(adminChannel);
 
       if (stableListenTo.includes("deposit")) {
         const ch = supabase.channel(`notif-deposits-${Date.now()}`)
@@ -512,6 +572,21 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
                   is_read: false,
                 });
               }
+            }
+          }
+        }
+
+        const { data: adminRows } = await supabase
+          .from("admin_notifications" as any)
+          .select("*")
+          .gt("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (adminRows) {
+          for (const row of adminRows) {
+            if (!knownIds.current.has(row.id)) {
+              addNotification(mapDbNotification(row));
             }
           }
         }

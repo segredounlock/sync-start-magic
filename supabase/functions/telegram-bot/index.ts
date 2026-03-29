@@ -107,8 +107,10 @@ async function notifyAdminTelegramActivity(supabase: any, type: string, message:
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
       body: JSON.stringify({ title: "🤖 Telegram", body: message, topic: "telegram_activity" }),
-    }).catch(() => {});
-  } catch { /* silent */ }
+    }).catch((error) => console.error("[TELEGRAM_ACTIVITY] push dispatch failed:", error));
+  } catch (error) {
+    console.error("[TELEGRAM_ACTIVITY] failed to notify admin:", error);
+  }
 }
 
 // Default margin cache
@@ -2191,6 +2193,18 @@ async function handleCallback(supabase: any, token: string, callback: any) {
   if (data === "menu_deposito") {
     const user = await findUserByTelegram(supabase, telegramId);
     if (!user) return;
+
+    notifyAdminTelegramActivity(
+      supabase,
+      "telegram_activity",
+      `🤖 Bot Telegram: ${user.nome || user.email || "Usuário"} abriu o menu de depósito`,
+      {
+        user_id: user.id,
+        user_nome: user.nome || null,
+        user_email: user.email || null,
+        status: "clicked",
+      },
+    ).catch(() => {});
 
     // Check gateway + fee config in parallel
     const [resellerCfg, globalCfg, taxaTipoRow, taxaValorRow] = await Promise.all([
