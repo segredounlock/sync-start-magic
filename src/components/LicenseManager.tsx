@@ -380,24 +380,42 @@ function LicenseManagerContent() {
       <div className="flex items-center gap-1 bg-muted/50 rounded-xl p-1">
         <button
           onClick={() => setActiveTab("licenses")}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "licenses" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <Shield className="w-4 h-4" /> Licenças
         </button>
         <button
+          onClick={() => setActiveTab("integrity")}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "integrity" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Activity className="w-4 h-4" /> Integridade
+        </button>
+        <button
           onClick={() => setActiveTab("logs")}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "logs" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <FileText className="w-4 h-4" /> Logs de Ativação
+          <FileText className="w-4 h-4" /> Logs
         </button>
       </div>
 
       {activeTab === "logs" ? (
         <LicenseLogsViewer />
+      ) : activeTab === "integrity" ? (
+        <IntegrityCheckPanel
+          integrityResults={integrityResults}
+          integrityLoading={integrityLoading}
+          heartbeatResults={heartbeatResults}
+          heartbeatLoading={heartbeatLoading}
+          runIntegrityCheck={runIntegrityCheck}
+          runHeartbeatCheck={runHeartbeatCheck}
+          licenses={licenses}
+        />
       ) : (
         <>
           {/* Header */}
