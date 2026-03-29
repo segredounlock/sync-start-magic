@@ -233,10 +233,16 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
               processing: "Processando", cancelled: "Cancelada",
             };
             const insertLabel = insertStatusMap[r.status] || r.status;
+            const operadoraIns = (r.operadora || "").toUpperCase();
+            const valorIns = Number(r.valor || 0).toFixed(2);
+            const custoIns = Number(r.custo || 0).toFixed(2);
+            const custoApiIns = Number(r.custo_api || 0).toFixed(2);
+            const nomeIns = profile.nome || profile.email || "Usuário";
+            const richMsgIns = `${insertLabel} — ${operadoraIns} R$ ${valorIns} • ${nomeIns} • Custo: R$ ${custoIns} • API: R$ ${custoApiIns}`;
             addNotification({
               id: r.id,
               type: "recarga",
-              message: `Recarga ${insertLabel} — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`,
+              message: richMsgIns,
               amount: Number(r.valor),
               user_id: r.user_id,
               user_nome: profile.nome || undefined,
@@ -250,8 +256,8 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             if (!isFinal) {
               try { playSuccessSound(); } catch {}
               if (showRecargaRef.current) {
-                showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { tag: `recarga-${r.id}`, type: "recarga" });
-                appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
+                showSystemNotification(`⏳ ${operadoraIns} R$ ${valorIns}`, `👤 ${nomeIns}\n💰 Custo: R$ ${custoIns} | API: R$ ${custoApiIns}`, { tag: `recarga-${r.id}`, type: "recarga" });
+                appToast.recargaProcessing(richMsgIns, { id: `recarga-${r.id}`, description: `${nomeIns} · ${formatTimeBR(r.created_at)}` });
               }
             }
           })
