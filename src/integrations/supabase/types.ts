@@ -1983,15 +1983,6 @@ export type Database = {
           following_count: number
         }[]
       }
-      get_installation_status: {
-        Args: never
-        Returns: {
-          has_master_admin: boolean
-          install_completed: boolean
-          license_key_present: boolean
-          license_status: string
-        }[]
-      }
       get_maintenance_mode: { Args: never; Returns: boolean }
       get_network_members: {
         Args: { _filter?: string; _user_id: string }
@@ -2129,7 +2120,6 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
-      is_license_valid: { Args: never; Returns: boolean }
       sync_chat_conversation_preview: {
         Args: { _conversation_id: string }
         Returns: undefined
