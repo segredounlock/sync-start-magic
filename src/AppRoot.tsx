@@ -271,7 +271,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </MaintenanceGuard>
-        </LicenseGate>
+        
       </AuthProvider>
     </ThemeProvider>
   );
