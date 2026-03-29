@@ -356,7 +356,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             });
             try { playWebSignupSound(); } catch {}
             if (showNewUserRef.current) {
-              showSystemNotification("🆕 Novo cadastro", label);
+              showSystemNotification("🆕 Novo cadastro", label, { tag: `new-user-${row.id}`, type: "new_user" });
               appToast.newUserWeb(`Novo cadastro Web: ${label}`, { description: `${label} · ${formatTimeBR(row.created_at)}` });
             }
           })
