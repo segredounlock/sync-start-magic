@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Shield, Lock } from "lucide-react";
 import { styledToast as toast } from "@/lib/toast";
 
@@ -46,6 +47,7 @@ function isSessionValid(configKey: string, timeoutSeconds: number): boolean {
 }
 
 export function PinProtection({ children, configKey = "adminPin" }: PinProtectionProps) {
+  const { user } = useAuth();
   const [unlocked, setUnlocked] = useState(false);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
   const [pin, setPin] = useState(["", "", "", ""]);
@@ -55,10 +57,23 @@ export function PinProtection({ children, configKey = "adminPin" }: PinProtectio
   const [timeoutSeconds, setTimeoutSeconds] = useState(DEFAULT_PIN_TIMEOUT);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const confirmRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
+    // Detect user change (login/logout) — re-lock PIN
+    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== (user?.id ?? null)) {
+      clearPinSession(configKey);
+      setUnlocked(false);
+      setHasPin(null);
+      setPin(["", "", "", ""]);
+      setConfirmPin(["", "", "", ""]);
+      setError("");
+    }
+    prevUserIdRef.current = user?.id ?? null;
+
+    if (!user) return; // Don't check PIN if not logged in
     checkSessionAndPin();
-  }, []);
+  }, [user?.id]);
 
   const checkSessionAndPin = async () => {
     // Load timeout config
