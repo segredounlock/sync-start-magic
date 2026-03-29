@@ -1,32 +1,27 @@
 
 
-# Corrigir PIN disparando indevidamente + Permissão de câmera repetida
+# Melhorias de Push Notifications
 
-## Problema 1: PIN dispara quando outro usuário entra/sai
-O `PinProtection` observa `user?.id` e re-bloqueia quando muda. Como o PIN está em `system_config` (tabela compartilhada), qualquer mudança de sessão (inclusive de outro usuário) faz o PIN ser reexigido. Além disso, o realtime do `useAuth` pode emitir múltiplos eventos de `onAuthStateChange`, causando falsos disparos.
+## 1. Remover auto-request em `usePushNotifications.ts`
+O hook atual chama `Notification.requestPermission()` automaticamente no login. Isso vai contra a boa prática de "soft ask". A mudança:
+- Remover toda a lógica de `requestPermission` e registro automático do `registerPush`
+- Manter apenas: registro do SW, listener de `PUSH_SUBSCRIPTION_CHANGED`, e re-subscribe silencioso **se já tiver permissão granted**
+- O prompt nativo só será disparado pelo botão "Ativar Agora" na aba Notificações (soft ask)
 
-**Correção**: Só re-bloquear quando o usuário efetivamente **troca** (ID diferente não-nulo → outro ID não-nulo), não quando o auth emite eventos intermediários (ex: token refresh). Ignorar transições `null → user` (login inicial — nesse caso, verificar sessão normalmente sem forçar re-lock).
+## 2. Soft Ask + Aviso iOS em `NotificationsTab.tsx`
+- Quando push não está ativo, mostrar um card explicativo (soft ask) com benefícios antes do botão
+- Detectar iOS (`/iPad|iPhone|iPod/.test(navigator.userAgent)`) e, se não estiver em standalone (`!window.matchMedia('(display-mode: standalone)').matches`), exibir aviso:
+  > "No iPhone, as notificações push só funcionam se o app estiver instalado na tela inicial. Adicione primeiro e depois ative aqui."
+- Desabilitar o botão "Ativar Agora" nesse caso
 
-### `src/components/PinProtection.tsx`
-- Mudar lógica do `useEffect([user?.id])`:
-  - Se `prevUserId` era um ID válido **e** o novo ID é **diferente e também válido** → re-lock (troca de conta)
-  - Se `prevUserId` era `null` e agora tem user → primeiro login, checar PIN normalmente sem forçar clear
-  - Se user ficou `null` → logout, limpar sessão
-  - Ignorar quando `prevUserId === newUserId` (token refresh)
-
-## Problema 2: Câmera pedindo permissão toda hora
-A função `captureLoginSelfie()` chama `getUserMedia` sem verificar se a permissão já foi negada ou concedida. Isso causa o prompt de permissão repetidamente.
-
-**Correção**: Usar `navigator.permissions.query({ name: "camera" })` antes de chamar `getUserMedia`. Se o estado for `"denied"`, retornar `null` imediatamente sem pedir. Se for `"granted"`, prosseguir. Se for `"prompt"`, verificar se o usuário já negou anteriormente (flag em `localStorage`).
-
-### `src/lib/deviceFingerprint.ts` — função `captureLoginSelfie`
-- No início, checar `navigator.permissions.query({ name: "camera" })`:
-  - `"denied"` → retorna `null` sem prompt
-  - `"granted"` → prossegue normalmente
-  - `"prompt"` → checar `localStorage.getItem("selfie_camera_declined")`. Se existir, retorna `null`
-- No `catch` do `getUserMedia`, setar `localStorage.setItem("selfie_camera_declined", "1")` para não pedir de novo na sessão
+## 3. Badge monocromático em `sw-push.js`
+- Trocar `badge: APP_ICON` por `badge: "/badge-mono.png"`
+- Criar um ícone monocromático branco 96x96 em `/public/badge-mono.png` (ícone simples de sino ou "$" em branco sobre transparente)
+- O Android usa esse badge como ícone pequeno na barra de status; deve ser monocromático
 
 ## Arquivos alterados
-1. `src/components/PinProtection.tsx` — lógica de detecção de troca de usuário
-2. `src/lib/deviceFingerprint.ts` — checar permissão antes de pedir câmera
+1. `src/hooks/usePushNotifications.ts` — remover auto-request, só re-subscribe silencioso se já granted
+2. `src/components/settings/NotificationsTab.tsx` — adicionar soft ask card + aviso iOS standalone
+3. `public/sw-push.js` — badge monocromático
+4. `public/badge-mono.png` — novo ícone monocromático 96x96 (gerado via script)
 
