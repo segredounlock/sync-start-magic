@@ -120,10 +120,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Sistema inicializado!");
       setProgress([...steps]);
 
-      // Clear old cache
-      localStorage.removeItem("license_validation_cache");
-      localStorage.removeItem("license_crypto_proof");
-      localStorage.removeItem("license_session");
 
       setStep("done");
     } catch (err: any) {

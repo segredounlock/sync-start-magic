@@ -41,7 +41,7 @@ const SOURCE_PATHS = [
   "src/components/ChatRoomManager.tsx","src/components/ClientPricingModal.tsx",
   "src/components/DashboardSection.tsx","src/components/FloatingMenuIcon.tsx","src/components/FloatingPoll.tsx",
   "src/components/ImageCropper.tsx","src/components/InfoCard.tsx",
-  "src/components/InstallWizard.tsx","src/components/LicenseGate.tsx","src/components/LicenseManager.tsx",
+  "src/components/InstallWizard.tsx",
   "src/components/MeusPrecos.tsx","src/components/MinhaRede.tsx","src/components/MirrorSyncPanel.tsx",
   "src/components/MasterOnlyRoute.tsx","src/components/MobileBottomNav.tsx",
   "src/components/NetworkCommissionConfig.tsx","src/components/NotificationBell.tsx",
@@ -116,8 +116,6 @@ const SOURCE_PATHS = [
   "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
   "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
   "supabase/functions/vapid-setup/index.ts",
-  "supabase/functions/license-generate/index.ts","supabase/functions/license-validate/index.ts",
-  "supabase/functions/license-check-server/index.ts",
   // Email templates
   "supabase/functions/_shared/email-templates/signup.tsx",
   "supabase/functions/_shared/email-templates/recovery.tsx",
