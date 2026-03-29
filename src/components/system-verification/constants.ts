@@ -27,7 +27,7 @@ export const EXPECTED_COLUMNS: Record<string, string[]> = {
   notifications: ["id","title","message","status","sent_count","failed_count","image_url","buttons","message_effect_id","created_at","updated_at"],
   chat_messages: ["id","conversation_id","sender_id","content","type","audio_url","image_url","is_read","is_delivered","is_deleted","is_pinned","reply_to_id","created_at","updated_at"],
   chat_conversations: ["id","type","participant_1","participant_2","name","category","description","icon","is_blocked","is_private","last_message_text","last_message_at","created_at","updated_at"],
-  licenses: ["id","license_key","mirror_name","mirror_domain","expires_at","is_active","max_users","features","last_heartbeat_at","created_by","created_at","updated_at"],
+  
   support_tickets: ["id","user_id","telegram_chat_id","message","status","priority","department","subject","assigned_to","admin_reply","image_url","replied_at","resolved_at","created_at","updated_at"],
   scratch_cards: ["id","user_id","prize_amount","is_scratched","is_won","scratched_at","card_date","created_at"],
   banners: ["id","type","title","subtitle","link","icon_url","position","enabled","created_at","updated_at"],
