@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const CURRENT_APP_VERSION = "2.0.1"; // bump this when name/icon changes
 const DISMISS_KEY = "reinstall-banner-dismissed";
+const EXPECTED_APP_NAME = "Recargas Brasil";
 
 /**
  * Shows a banner inside standalone (installed) PWA when
  * the app version has changed (e.g. name/icon update).
- * Guides the user to reinstall for the latest branding.
+ * Only shows on iOS (Android auto-updates via WebAPK).
+ * Auto-dismisses if the installed shortcut already has the correct name.
  */
 export default function ReinstallBanner() {
   const [show, setShow] = useState(false);
@@ -26,6 +28,17 @@ export default function ReinstallBanner() {
 
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed === CURRENT_APP_VERSION) return;
+
+    // Check if the current installed app already has the correct title
+    // by reading document.title / meta tag — if it matches, auto-dismiss
+    const currentTitle = document.title || "";
+    const metaAppName = document.querySelector('meta[name="apple-mobile-web-app-title"]')?.getAttribute("content") || "";
+    
+    if (currentTitle.includes(EXPECTED_APP_NAME) || metaAppName === EXPECTED_APP_NAME) {
+      // App is already updated — auto-dismiss silently
+      localStorage.setItem(DISMISS_KEY, CURRENT_APP_VERSION);
+      return;
+    }
 
     setShow(true);
   }, []);
