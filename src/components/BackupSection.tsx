@@ -225,6 +225,7 @@ export default function BackupSection() {
     verifiable: number;
     fingerprint: string;
     hashes: Record<string, string>;
+    newFiles?: string[];
   } | null>(null);
   const [showChecksums, setShowChecksums] = useState(false);
 
@@ -907,34 +908,33 @@ export default function BackupSection() {
     setIntegrityProgress(10);
     setIntegrityStage("Coletando hashes...");
 
-    // Separate verifiable from external
-    const verifiablePaths: string[] = [];
-    const externalPaths: string[] = [];
-    for (const filePath of effectivePaths) {
-      if (filePath.startsWith("src/") || filePath.startsWith("public/")) {
-        verifiablePaths.push(filePath);
-      } else {
-        externalPaths.push(filePath);
-      }
-    }
+    // Use knownPaths (glob) as source of truth for verifiable files
+    // SOURCE_PATHS external items are "not verifiable", never "missing"
+    const knownSet = new Set(knownPaths);
+    const sourceSet = new Set(effectivePaths);
+
+    // Verifiable = all files found by glob (real files in src/ and public/)
+    const verifiablePaths = knownPaths.filter(p => p.startsWith("src/") || p.startsWith("public/"));
+    // External = SOURCE_PATHS items outside glob scope (configs, edge functions, docs)
+    const externalPaths = effectivePaths.filter(p => !p.startsWith("src/") && !p.startsWith("public/"));
+    // New files = in glob but NOT in SOURCE_PATHS (recently added, not yet cataloged)
+    const newFiles = knownPaths.filter(p => !sourceSet.has(p));
+    // Missing = in SOURCE_PATHS AND verifiable scope, but NOT in glob (truly missing)
+    const missing = effectivePaths.filter(p =>
+      (p.startsWith("src/") || p.startsWith("public/")) && !knownSet.has(p)
+    );
 
     await new Promise(r => setTimeout(r, 200));
     setIntegrityProgress(30);
     setIntegrityStage("Verificando arquivos...");
 
-    const missing: string[] = [];
     let found = 0;
     const verifiedHashes: Record<string, string> = {};
     const step = 60 / Math.max(verifiablePaths.length, 1);
     for (let i = 0; i < verifiablePaths.length; i++) {
       const filePath = verifiablePaths[i];
-      if (knownPaths.includes(filePath)) {
-        found++;
-        verifiedHashes[filePath] = fileHashes[filePath] || "--------";
-      } else {
-        missing.push(filePath);
-      }
-      // throttled progress updates
+      found++;
+      verifiedHashes[filePath] = fileHashes[filePath] || "--------";
       if (i % 10 === 0 || i === verifiablePaths.length - 1) {
         setIntegrityProgress(30 + Math.round(step * (i + 1)));
         setIntegrityStage(`Verificando ${i + 1}/${verifiablePaths.length}...`);
@@ -946,7 +946,6 @@ export default function BackupSection() {
     setIntegrityStage("Calculando fingerprint...");
     await new Promise(r => setTimeout(r, 250));
 
-    // Compute aggregate fingerprint
     const sortedHashValues = Object.keys(verifiedHashes).sort().map(k => verifiedHashes[k]).join("");
     let fp = 0x811c9dc5;
     for (let i = 0; i < sortedHashValues.length; i++) {
@@ -959,11 +958,17 @@ export default function BackupSection() {
     setIntegrityStage("Concluído!");
     await new Promise(r => setTimeout(r, 200));
 
-    setIntegrityResult({ missing, found, total: effectivePaths.length, external: externalPaths, verifiable: verifiablePaths.length, fingerprint, hashes: verifiedHashes });
+    setIntegrityResult({
+      missing, found, total: verifiablePaths.length + externalPaths.length,
+      external: externalPaths, verifiable: verifiablePaths.length,
+      fingerprint, hashes: verifiedHashes,
+      newFiles: newFiles.length > 0 ? newFiles : undefined,
+    });
     if (missing.length === 0) {
-      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} · Fingerprint: ${fingerprint}`);
+      const extra = newFiles.length > 0 ? ` · ${newFiles.length} novo(s)` : "";
+      toast.success(`✅ Integridade OK! ${found}/${verifiablePaths.length} · Fingerprint: ${fingerprint}${extra}`);
     } else {
-      toast.error(`⚠️ ${missing.length} arquivo(s) faltando no manifesto!`);
+      toast.error(`⚠️ ${missing.length} arquivo(s) realmente faltando!`);
     }
     setIntegrityChecking(false);
   };
