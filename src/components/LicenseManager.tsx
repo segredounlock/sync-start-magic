@@ -229,6 +229,175 @@ function LicenseLogsViewer() {
 }
 
 /* ═══════════════════════════════════════════════
+   Integrity Check Panel
+   ═══════════════════════════════════════════════ */
+function IntegrityCheckPanel({
+  integrityResults, integrityLoading, heartbeatResults, heartbeatLoading,
+  runIntegrityCheck, runHeartbeatCheck, licenses,
+}: {
+  integrityResults: any[] | null;
+  integrityLoading: boolean;
+  heartbeatResults: any | null;
+  heartbeatLoading: boolean;
+  runIntegrityCheck: (id?: string) => void;
+  runHeartbeatCheck: () => void;
+  licenses: License[];
+}) {
+  const overallColors: Record<string, string> = {
+    HEALTHY: "text-emerald-500 bg-emerald-500/10",
+    WARNING: "text-yellow-500 bg-yellow-500/10",
+    SUSPICIOUS: "text-orange-500 bg-orange-500/10",
+    COMPROMISED: "text-destructive bg-destructive/10",
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => runHeartbeatCheck()}
+          disabled={heartbeatLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+        >
+          {heartbeatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+          Verificar Heartbeats
+        </button>
+        <button
+          onClick={() => runIntegrityCheck()}
+          disabled={integrityLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-card border border-border text-foreground rounded-xl text-sm font-semibold hover:bg-muted disabled:opacity-50 transition-colors"
+        >
+          {integrityLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+          Verificar Integridade
+        </button>
+      </div>
+
+      {/* Heartbeat Results */}
+      {heartbeatResults && (
+        <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary" /> Resultado dos Heartbeats
+          </h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div className="bg-muted/30 rounded-xl p-3">
+              <div className="text-lg font-bold text-foreground">{heartbeatResults.checked}</div>
+              <div className="text-[10px] text-muted-foreground">Verificadas</div>
+            </div>
+            <div className="bg-emerald-500/10 rounded-xl p-3">
+              <div className="text-lg font-bold text-emerald-500">{heartbeatResults.healthy}</div>
+              <div className="text-[10px] text-emerald-600">Saudáveis</div>
+            </div>
+            <div className="bg-yellow-500/10 rounded-xl p-3">
+              <div className="text-lg font-bold text-yellow-500">{heartbeatResults.stale_warning}</div>
+              <div className="text-[10px] text-yellow-600">Alertas</div>
+            </div>
+            <div className="bg-destructive/10 rounded-xl p-3">
+              <div className="text-lg font-bold text-destructive">{heartbeatResults.auto_suspended}</div>
+              <div className="text-[10px] text-destructive">Suspensas</div>
+            </div>
+          </div>
+          {heartbeatResults.details?.length > 0 && (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {heartbeatResults.details.map((d: any, i: number) => (
+                <div key={i} className="flex items-center justify-between text-xs bg-muted/20 rounded-lg px-3 py-2">
+                  <span className="font-medium text-foreground">{d.mirror || "—"}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                    d.status === "healthy" ? "bg-emerald-500/10 text-emerald-600" :
+                    d.status === "auto_suspended" ? "bg-destructive/10 text-destructive" :
+                    "bg-yellow-500/10 text-yellow-600"
+                  }`}>
+                    {d.status === "healthy" ? "✓ Saudável" :
+                     d.status === "auto_suspended" ? "⛔ Suspensa" :
+                     d.status === "stale_warning" ? "⚠ Alerta" :
+                     d.status === "no_heartbeat" ? "❌ Sem heartbeat" :
+                     d.status === "expired" ? "⏰ Expirada" : d.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Integrity Results */}
+      {integrityResults && (
+        <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary" /> Resultado da Integridade
+          </h4>
+          {integrityResults.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nenhum espelho com domínio Supabase configurado para verificar.</p>
+          ) : (
+            <div className="space-y-2">
+              {integrityResults.map((r: any, i: number) => (
+                <div key={i} className="bg-muted/20 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm text-foreground">{r.mirror || "—"}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${overallColors[r.overall] || "text-muted-foreground bg-muted"}`}>
+                      {r.overall}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Servidor:</span>
+                      <span className={r.license_check_server === "active" ? "text-emerald-500" : "text-destructive"}>
+                        {r.license_check_server}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Dados:</span>
+                      <span className={r.anon_data_leak === "protected" ? "text-emerald-500" : r.anon_data_leak === "LEAK_DETECTED" ? "text-destructive font-bold" : "text-muted-foreground"}>
+                        {r.anon_data_leak === "protected" ? "🔒 Protegido" : r.anon_data_leak === "LEAK_DETECTED" ? "🚨 VAZAMENTO" : r.anon_data_leak}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Heartbeat:</span>
+                      <span className="text-foreground">{r.heartbeat_age}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Per-license check buttons */}
+      {licenses.filter(l => l.is_active && l.mirror_domain).length > 0 && (
+        <div className="bg-muted/30 rounded-2xl p-4 space-y-2">
+          <h4 className="text-xs font-semibold text-foreground">Verificar espelho individual</h4>
+          <div className="flex flex-wrap gap-2">
+            {licenses.filter(l => l.is_active && l.mirror_domain).map(l => (
+              <button
+                key={l.id}
+                onClick={() => runIntegrityCheck(l.id)}
+                disabled={integrityLoading}
+                className="text-xs px-3 py-1.5 bg-card border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                {l.mirror_name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Info */}
+      <div className="bg-muted/30 rounded-2xl p-4 space-y-2">
+        <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" /> Como funciona
+        </h4>
+        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+          <li><b>Heartbeat</b> — verifica se espelhos estão ativos. Suspende automaticamente após 48h sem contato.</li>
+          <li><b>Integridade</b> — testa remotamente se o espelho valida licenças, se dados estão protegidos por RLS, e a idade do último heartbeat.</li>
+          <li>Verificação de heartbeat roda automaticamente a cada 6 horas via cron.</li>
+          <li>Espelhos precisam ter <b>mirror_domain</b> como URL Supabase para verificação remota.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
    License Manager Content
    ═══════════════════════════════════════════════ */
 function LicenseManagerContent() {
