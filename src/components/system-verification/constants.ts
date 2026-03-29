@@ -4,7 +4,7 @@ export const EXPECTED_TABLES = [
   "admin_notifications","audit_logs","banned_devices","banners","bot_settings",
   "broadcast_messages","broadcast_progress","chat_conversations","chat_members",
   "chat_message_reads","chat_messages","chat_reactions","client_pricing_rules",
-  "disabled_recharge_values","follows","license_logs","licenses","login_attempts",
+  "disabled_recharge_values","follows","login_attempts",
   "login_fingerprints","mirror_file_state","mirror_sync_logs","mirror_sync_state",
   "notifications","operadoras","poll_votes","polls","pricing_rules","profiles",
   "push_subscriptions","recargas","referral_commissions","reseller_base_pricing_rules",
