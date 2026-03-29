@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import App from "./AppRoot";
 import UpdatePrompt from "./components/UpdatePrompt";
+import ReinstallBanner from "./components/ReinstallBanner";
 import { installSessionGuard } from "./lib/sessionGuard";
 import "./styles/app.css";
 
