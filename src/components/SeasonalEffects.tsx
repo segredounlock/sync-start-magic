@@ -60,18 +60,38 @@ function createParticlesForTheme(theme: SeasonalThemeKey, w: number, h: number):
   const particles: CanvasParticle[] = [];
   const count = Math.min(Math.floor(w / 30), 40); // more particles
 
-  const makeBase = (): Omit<CanvasParticle, "color" | "type"> => ({
-    x: Math.random() * w,
-    y: Math.random() * h - h,
-    vx: (Math.random() - 0.5) * 0.5,
-    vy: 0.3 + Math.random() * 1,
-    size: 3 + Math.random() * 4,
-    opacity: 0.4 + Math.random() * 0.6,
-    rotation: Math.random() * Math.PI * 2,
-    rotationSpeed: (Math.random() - 0.5) * 0.03,
-    life: 0,
-    maxLife: 500 + Math.random() * 500,
-  });
+  const makeBase = (): Omit<CanvasParticle, "color" | "type"> => {
+    // Spawn from random edges and positions across the full screen
+    const edge = Math.floor(Math.random() * 4); // 0=top, 1=bottom, 2=left, 3=right
+    let x: number, y: number, vx: number, vy: number;
+    switch (edge) {
+      case 0: // top
+        x = Math.random() * w; y = -20 - Math.random() * 60;
+        vx = (Math.random() - 0.5) * 1.5; vy = 0.3 + Math.random() * 1;
+        break;
+      case 1: // bottom
+        x = Math.random() * w; y = h + 20 + Math.random() * 60;
+        vx = (Math.random() - 0.5) * 1.5; vy = -(0.3 + Math.random() * 1);
+        break;
+      case 2: // left
+        x = -20 - Math.random() * 40; y = Math.random() * h;
+        vx = 0.3 + Math.random() * 1; vy = (Math.random() - 0.5) * 1;
+        break;
+      default: // right
+        x = w + 20 + Math.random() * 40; y = Math.random() * h;
+        vx = -(0.3 + Math.random() * 1); vy = (Math.random() - 0.5) * 1;
+        break;
+    }
+    return {
+      x, y, vx, vy,
+      size: 3 + Math.random() * 4,
+      opacity: 0.4 + Math.random() * 0.6,
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.03,
+      life: 0,
+      maxLife: 500 + Math.random() * 500,
+    };
+  };
 
   switch (theme) {
     case "natal": // Snowflakes + red/green sparkles
@@ -372,16 +392,28 @@ function CanvasParticles({ theme }: { theme: SeasonalThemeKey }) {
 
         // Recycle if off-screen or expired
         if (p.life > p.maxLife || p.y > canvas.height + 50 || p.y < -100 || p.x < -50 || p.x > canvas.width + 50) {
-          // Reset
-          p.x = Math.random() * canvas.width;
           p.life = 0;
-          p.maxLife = 600 + Math.random() * 400;
-          if (p.type === "ember" || p.type === "balloon") {
-            p.y = canvas.height + Math.random() * 50;
-          } else {
-            p.y = -20 - Math.random() * 50;
+          p.maxLife = 500 + Math.random() * 500;
+          // Respawn from a random edge
+          const edge = Math.floor(Math.random() * 4);
+          switch (edge) {
+            case 0: // top
+              p.x = Math.random() * canvas.width; p.y = -20 - Math.random() * 50;
+              p.vx = (Math.random() - 0.5) * 1.5; p.vy = 0.3 + Math.random() * 1;
+              break;
+            case 1: // bottom
+              p.x = Math.random() * canvas.width; p.y = canvas.height + 20 + Math.random() * 50;
+              p.vx = (Math.random() - 0.5) * 1.5; p.vy = -(0.3 + Math.random() * 1);
+              break;
+            case 2: // left
+              p.x = -20 - Math.random() * 40; p.y = Math.random() * canvas.height;
+              p.vx = 0.3 + Math.random() * 1; p.vy = (Math.random() - 0.5) * 1;
+              break;
+            default: // right
+              p.x = canvas.width + 20 + Math.random() * 40; p.y = Math.random() * canvas.height;
+              p.vx = -(0.3 + Math.random() * 1); p.vy = (Math.random() - 0.5) * 1;
+              break;
           }
-          p.vx = (Math.random() - 0.5) * (p.type === "confetti" ? 2 : 0.8);
         }
 
         drawParticle(ctx, p);
