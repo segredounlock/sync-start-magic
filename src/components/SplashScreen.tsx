@@ -130,7 +130,7 @@ export function SplashScreen() {
           style={{ width: 340, height: 340, background: "radial-gradient(circle, hsla(152,72%,46%,0.12) 0%, transparent 70%)", animation: "splash-glow-pulse 3s ease-in-out infinite" }} />
       </div>
 
-      <div className="relative z-10" style={{ animation: "splash-logo-enter 0.8s cubic-bezier(0.16,1,0.3,1) both" }}>
+      <div className="relative z-10" style={{ animation: "splash-logo-enter 0.8s cubic-bezier(0.16,1,0.3,1) both, splash-float 3s ease-in-out 1s infinite" }}>
         <svg className="absolute -inset-3" viewBox="0 0 140 140"
           style={{ animation: "splash-ring-spin 4s linear infinite", opacity: disintegrating ? 0 : 1, transition: "opacity 0.6s" }}>
           <defs><linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
