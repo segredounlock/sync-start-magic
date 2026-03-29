@@ -69,7 +69,6 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Fast timeout — don't block UI for more than 2s
     const timeout = setTimeout(() => {
       if (mounted) setMaintenance((prev) => prev === null ? false : prev);
     }, 2000);
@@ -78,7 +77,10 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
       try {
         const { data, error } = await supabase.rpc("get_maintenance_mode" as any);
         if (!mounted) return;
-        if (error) { setMaintenance(false); return; }
+        if (error) {
+          setMaintenance(false);
+          return;
+        }
         setMaintenance(data === true);
       } catch {
         if (mounted) setMaintenance(false);
@@ -86,7 +88,6 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     };
     check();
 
-    // Realtime changes
     const channel = supabase
       .channel("maintenance-mode")
       .on("postgres_changes", {
@@ -97,11 +98,14 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
       })
       .subscribe();
 
-    return () => { mounted = false; clearTimeout(timeout); supabase.removeChannel(channel); };
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  // Show nothing while checking (parent splash already covered initial load)
-  if (maintenance === null) return null;
+  if (maintenance === null) return <>{children}</>;
   if (maintenance && role === "admin") return <>{children}</>;
   if (maintenance) return <Suspense fallback={null}><MaintenancePage /></Suspense>;
   return <>{children}</>;
@@ -241,33 +245,20 @@ function App() {
   useCacheCleanup();
   usePrefetchRoutes();
 
-  // Splash overlay — app loads underneath
   const [splashDone, setSplashDone] = useState(false);
-  const [splashFading, setSplashFading] = useState(false);
   const splashStarted = useRef(false);
+
   useEffect(() => {
     if (splashStarted.current) return;
     splashStarted.current = true;
-    const fadeTimer = setTimeout(() => setSplashFading(true), 10_000);
-    const removeTimer = setTimeout(() => setSplashDone(true), 10_600);
-    return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
+    const timer = setTimeout(() => setSplashDone(true), 10_000);
+    return () => clearTimeout(timer);
   }, []);
 
+  if (!splashDone) return <SplashScreen />;
+
   return (
-    <>
-      {/* Splash overlay — fades out after 10s */}
-      {!splashDone && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9998,
-          opacity: splashFading ? 0 : 1,
-          transition: 'opacity 0.6s ease-out',
-          pointerEvents: splashFading ? 'none' : 'auto',
-        }}>
-          <SplashScreen />
-        </div>
-      )}
-      {/* App content always renders underneath */}
-      <ThemeProvider>
+    <ThemeProvider>
       <AuthProvider>
         <Suspense fallback={null}>
           <InstallGate>
@@ -337,7 +328,6 @@ function App() {
         </Suspense>
       </AuthProvider>
     </ThemeProvider>
-    </>
   );
 }
 
