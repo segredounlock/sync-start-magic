@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
                   method: "POST", headers: authHeaders,
                   body: JSON.stringify({
                     title: `❌ ${failOp} R$ ${Number(recarga.valor).toFixed(2)}`,
-                    body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)} | Saldo: R$ ${newBalance.toFixed(2)}`,
+                    body: `👤 ${failName}\n📞 ${recarga.telefone}\n💸 Estorno: R$ ${Number(recarga.custo).toFixed(2)}\n💰 Saldo: R$ ${newBalance.toFixed(2)}`,
                   }),
                 }).catch(() => {});
 
