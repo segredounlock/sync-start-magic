@@ -45,6 +45,8 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState<string[]>([]);
+  const [depStatus, setDepStatus] = useState<"idle" | "running" | "success" | "error">("idle");
+  const [depError, setDepError] = useState("");
 
   const pwCheck = validatePassword(data.adminPassword);
 
