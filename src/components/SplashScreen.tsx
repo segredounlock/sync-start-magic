@@ -166,6 +166,7 @@ export function SplashScreen() {
 
       <style>{`
         @keyframes splash-logo-enter { from { opacity:0; transform:scale(0.7) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        @keyframes splash-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
         @keyframes splash-text-enter { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
         @keyframes splash-ring-spin { to { transform:rotate(360deg); } }
         @keyframes splash-glow-pulse { 0%,100% { transform:translate(-50%,-50%) scale(1); opacity:0.7; } 50% { transform:translate(-50%,-50%) scale(1.15); opacity:1; } }
