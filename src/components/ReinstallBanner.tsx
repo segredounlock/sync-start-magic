@@ -61,9 +61,7 @@ export default function ReinstallBanner() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold">Atualização disponível!</p>
                 <p className="text-xs opacity-90 mt-0.5">
-                  {isIOS
-                    ? "O nome/ícone do app mudou. Remova o atalho atual da tela inicial e adicione novamente pelo Safari."
-                    : "O nome/ícone do app foi atualizado. Toque para reinstalar com as novas informações."}
+                  O nome/ícone do app mudou. Remova o atalho atual da tela inicial e adicione novamente pelo Safari.
                 </p>
                 <div className="flex gap-2 mt-2">
                   <button
