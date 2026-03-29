@@ -2681,6 +2681,16 @@ async function handleDepositAmount(supabase: any, token: string, chatId: number,
     }
 
     const pix = result.data;
+
+    // Notify admin about Telegram deposit
+    notifyAdminTelegramActivity(supabase, "deposit", `🤖 Depósito PIX via Telegram: R$ ${valor.toFixed(2)} — ${user.nome || user.email || "Usuário"}`, {
+      amount: valor,
+      user_id: user.id,
+      user_nome: user.nome || null,
+      user_email: user.email || null,
+      status: "pending",
+    }).catch(() => {});
+
     const buttons = [
       [{ text: "💰 Ver Saldo", callback_data: "menu_saldo" }],
       [{ text: "📖 Menu", callback_data: "menu_main" }],
