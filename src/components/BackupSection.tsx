@@ -116,8 +116,6 @@ const SOURCE_PATHS = [
   "supabase/functions/telegram-bot/index.ts","supabase/functions/telegram-miniapp/index.ts",
   "supabase/functions/telegram-notify/index.ts","supabase/functions/telegram-setup/index.ts",
   "supabase/functions/vapid-setup/index.ts",
-  "supabase/functions/license-generate/index.ts","supabase/functions/license-validate/index.ts",
-  "supabase/functions/license-check-server/index.ts",
   // Email templates
   "supabase/functions/_shared/email-templates/signup.tsx",
   "supabase/functions/_shared/email-templates/recovery.tsx",
