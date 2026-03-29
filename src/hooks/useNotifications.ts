@@ -244,7 +244,7 @@ export function useNotifications({ listenTo, revendedores, notifConfig }: UseNot
             if (!isFinal) {
               try { playSuccessSound(); } catch {}
               if (showRecargaRef.current) {
-                showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`);
+                showSystemNotification("📱 Recarga", `Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { tag: `recarga-${r.id}`, type: "recarga" });
                 appToast.recargaProcessing(`Recarga Processando — ${(r.operadora || "").toUpperCase()} R$ ${Number(r.valor).toFixed(2)}`, { id: `recarga-${r.id}`, description: `${profile.nome || profile.email || "Usuário"} · ${formatTimeBR(r.created_at)}` });
               }
             }
