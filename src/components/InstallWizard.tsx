@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Shield, KeyRound, User, Mail, Lock, Eye, EyeOff,
   Loader2, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft,
-  Server, Rocket, Clock
+  Rocket, Clock
 } from "lucide-react";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
