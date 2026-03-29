@@ -107,13 +107,31 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Perfil configurado!");
       setProgress([...steps]);
 
-      // 3. Call init-mirror with license data (uses service_role, bypasses RLS)
-      steps.push("Salvando licença e inicializando...");
+      // 3. Ensure we have a session (signUp may not return one if email confirmation is on)
+      steps.push("Autenticando...");
       setProgress([...steps]);
 
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
-      if (!token) throw new Error("Sessão não disponível. Tente fazer login e reinstalar.");
+      let { data: sessionData } = await supabase.auth.getSession();
+      let token = sessionData?.session?.access_token;
+
+      if (!token) {
+        // Try signing in with the credentials we just created
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.adminEmail.trim(),
+          password: data.adminPassword,
+        });
+        if (signInError) throw new Error("Não foi possível autenticar. Verifique se o e-mail foi confirmado ou tente novamente.");
+        token = signInData?.session?.access_token;
+      }
+
+      if (!token) throw new Error("Sessão não disponível. Tente fazer login manualmente e reinstalar.");
+
+      steps.push("✓ Autenticado!");
+      setProgress([...steps]);
+
+      // 4. Call init-mirror with license data (uses service_role, bypasses RLS)
+      steps.push("Salvando licença e inicializando...");
+      setProgress([...steps]);
 
       const initResp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
