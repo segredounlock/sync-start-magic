@@ -100,10 +100,10 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     return () => { mounted = false; clearTimeout(timeout); supabase.removeChannel(channel); };
   }, []);
 
-  // Show splash only briefly while checking maintenance
-  if (maintenance === null) return <SplashScreen />;
+  // Show nothing while checking (parent splash already covered initial load)
+  if (maintenance === null) return null;
   if (maintenance && role === "admin") return <>{children}</>;
-  if (maintenance) return <Suspense fallback={<SplashScreen />}><MaintenancePage /></Suspense>;
+  if (maintenance) return <Suspense fallback={null}><MaintenancePage /></Suspense>;
   return <>{children}</>;
 }
 
