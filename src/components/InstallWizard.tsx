@@ -1,39 +1,26 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Shield, KeyRound, User, Mail, Lock, Eye, EyeOff,
+  Shield, User, Mail, Lock, Eye, EyeOff,
   Loader2, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft,
-  Info
 } from "lucide-react";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
-import { extractLicenseFromKey } from "@/utils/licenseDates";
 
-type Step = "welcome" | "admin" | "license" | "finishing" | "done";
+type Step = "welcome" | "admin" | "finishing" | "done";
 
 interface InstallData {
   adminEmail: string;
   adminPassword: string;
   adminName: string;
-  licenseKey: string;
-  licenseStartDate: string;
-  licenseEndDate: string;
-  licenseGraceDays: number;
 }
 
 export function InstallWizard({ onComplete }: { onComplete: () => void }) {
-  const today = new Date().toISOString().split("T")[0];
-  const defaultEnd = new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0];
-
   const [step, setStep] = useState<Step>("welcome");
   const [data, setData] = useState<InstallData>({
     adminEmail: "",
     adminPassword: "",
     adminName: "",
-    licenseKey: "",
-    licenseStartDate: today,
-    licenseEndDate: defaultEnd,
-    licenseGraceDays: 0,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,31 +39,12 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       return;
     }
     setError("");
-    setStep("license");
+    setStep("finishing");
+    runInstall();
   };
 
-  const handleFinish = async () => {
-    if (!data.licenseKey.trim()) {
-      setError("A chave de licença é obrigatória");
-      return;
-    }
-
-    // Extract dates from JWT key
-    const extracted = extractLicenseFromKey(data.licenseKey.trim());
-    if (!extracted.valid) {
-      setError(extracted.error || "Chave de licença inválida");
-      return;
-    }
-
-    // Update data with extracted values
-    data.licenseStartDate = extracted.startDate;
-    data.licenseEndDate = extracted.endDate;
-    data.licenseGraceDays = extracted.graceDays;
-
-    setError("");
-    setStep("finishing");
+  const runInstall = async () => {
     setLoading(true);
-
     const steps: string[] = [];
 
     try {
@@ -107,7 +75,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       steps.push("✓ Perfil configurado!");
       setProgress([...steps]);
 
-      // 3. Try to get session (may fail if email confirmation is required on mirror)
+      // 3. Try to authenticate
       steps.push("Autenticando...");
       setProgress([...steps]);
 
@@ -115,32 +83,24 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         token = sessionData?.session?.access_token;
-
         if (!token) {
-          // Try signing in with the credentials we just created
           const { data: signInData } = await supabase.auth.signInWithPassword({
             email: data.adminEmail.trim(),
             password: data.adminPassword,
           });
           token = signInData?.session?.access_token;
         }
-      } catch {
-        // Session not available — first install allows unauthenticated init-mirror
-      }
+      } catch {}
 
-      steps.push(token ? "✓ Autenticado!" : "⚠ Sem sessão — instalação inicial permitida");
+      steps.push(token ? "✓ Autenticado!" : "⚠ Sessão pendente");
       setProgress([...steps]);
 
-      // 4. Call init-mirror with license data (first install allows no auth)
-      steps.push("Salvando licença e inicializando...");
+      // 4. Call init-mirror for basic config (NO license data)
+      steps.push("Inicializando sistema...");
       setProgress([...steps]);
 
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const initResp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/init-mirror`,
@@ -148,11 +108,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           method: "POST",
           headers,
           body: JSON.stringify({
-            license_key: data.licenseKey.trim(),
-            license_status: "active",
-            license_start_date: data.licenseStartDate,
-            license_end_date: data.licenseEndDate,
-            license_grace_days: data.licenseGraceDays,
             siteUrl: window.location.origin + "/",
             install_completed: true,
           }),
@@ -160,19 +115,9 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       );
 
       const initResult = await initResp.json();
-      if (!initResp.ok) {
-        throw new Error(initResult.error || "Falha na inicialização do sistema");
-      }
+      if (!initResp.ok) throw new Error(initResult.error || "Falha na inicialização");
 
-      steps.push("✓ Licença salva e sistema inicializado!");
-      setProgress([...steps]);
-
-      // Show readiness info
-      if (initResult.readiness === "ready") {
-        steps.push("✓ Sistema 100% operacional!");
-      } else if (initResult.readiness === "partial") {
-        steps.push("⚠ Sistema parcialmente configurado");
-      }
+      steps.push("✓ Sistema inicializado!");
       setProgress([...steps]);
 
       // Clear old cache
@@ -183,7 +128,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       setStep("done");
     } catch (err: any) {
       setError(err.message || "Erro durante a instalação");
-      setStep("license");
+      setStep("admin");
     } finally {
       setLoading(false);
     }
@@ -216,14 +161,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       0% { r: 22; opacity: 0.6; stroke-width: 2; }
       100% { r: 32; opacity: 0; stroke-width: 0.5; }
     }
-    @keyframes key-sparkle {
-      0%, 100% { opacity: 0; transform: scale(0); }
-      50% { opacity: 1; transform: scale(1); }
-    }
-    @keyframes key-glow {
-      0%, 100% { filter: drop-shadow(0 0 2px #f59e0b); }
-      50% { filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 0 20px #f59e0b44); }
-    }
     @keyframes done-burst {
       0% { r: 8; opacity: 0.5; }
       100% { r: 38; opacity: 0; }
@@ -238,11 +175,9 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
     .flame-inner { animation: flame-inner 0.25s ease-in-out infinite; }
     .flame-core { animation: flame-core 0.2s ease-in-out infinite; }
     .shield-icon { animation: shield-pulse 2s ease-in-out infinite; }
-    .key-icon { animation: key-glow 2s ease-in-out infinite; }
     .done-icon { animation: done-check-pop 0.6s ease-out forwards; }
   `;
 
-  /* ─── Renders ─── */
   const renderWelcome = () => (
     <div className="space-y-6 text-center">
       <style>{animCSS}</style>
@@ -262,7 +197,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       </div>
       <h1 className="text-2xl font-bold text-foreground">Instalação do Sistema</h1>
       <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-        Bem-vindo! Este assistente irá configurar seu sistema em poucos passos.
+        Configure o administrador master para começar a usar o sistema.
       </p>
       <div className="bg-muted/50 rounded-xl p-4 space-y-3 text-left">
         <div className="flex items-center gap-3 text-sm">
@@ -275,13 +210,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
             <span className="text-primary font-bold text-xs">2</span>
           </div>
-          <span className="text-foreground">Configurar licença do sistema</span>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
-            <span className="text-primary font-bold text-xs">3</span>
-          </div>
-          <span className="text-foreground">Finalizar configuração</span>
+          <span className="text-foreground">Acessar e ativar licença</span>
         </div>
       </div>
       <button
@@ -368,6 +297,7 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
           <li>Este usuário terá <strong className="text-foreground">acesso total</strong> ao sistema</li>
           <li>Guarde o e-mail e senha em <strong className="text-foreground">local seguro</strong></li>
+          <li>Após criar, você fará login e ativará a <strong className="text-foreground">licença</strong></li>
         </ul>
       </div>
 
@@ -389,123 +319,11 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
           onClick={handleAdminStep}
           className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
         >
-          Próximo <ArrowRight className="w-4 h-4" />
+          Criar Admin <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
-
-  const renderLicense = () => {
-    // Try to decode current key for preview
-    const preview = data.licenseKey.trim() ? extractLicenseFromKey(data.licenseKey.trim()) : null;
-
-    return (
-      <div className="space-y-5">
-        <style>{animCSS}</style>
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative overflow-hidden">
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56">
-              <circle cx="12" cy="10" r="1.5" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite" }} />
-              <circle cx="44" cy="14" r="1" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 0.5s" }} />
-              <circle cx="8" cy="38" r="1.2" fill="#f59e0b" style={{ animation: "key-sparkle 2s ease-in-out infinite 1s" }} />
-              <circle cx="46" cy="42" r="1.5" fill="#fbbf24" style={{ animation: "key-sparkle 2s ease-in-out infinite 1.5s" }} />
-            </svg>
-            <KeyRound className="w-7 h-7 text-primary key-icon" />
-          </div>
-          <h2 className="text-lg font-bold text-foreground">Ativar Licença</h2>
-          <p className="text-muted-foreground text-xs">
-            Cole a chave de licença fornecida pelo administrador master.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-              <KeyRound className="w-3.5 h-3.5" /> Chave de Licença *
-            </label>
-            <textarea
-              value={data.licenseKey}
-              onChange={(e) => setData(p => ({ ...p, licenseKey: e.target.value }))}
-              placeholder="Cole a chave JWT aqui..."
-              rows={3}
-              className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-xs resize-none"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Auto-detected info from key */}
-          {preview?.valid && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Licença reconhecida
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-                <div>
-                  <span className="text-foreground font-medium">Início:</span>{" "}
-                  {new Date(preview.startDate + "T00:00:00").toLocaleDateString("pt-BR")}
-                </div>
-                <div>
-                  <span className="text-foreground font-medium">Expiração:</span>{" "}
-                  {new Date(preview.endDate + "T00:00:00").toLocaleDateString("pt-BR")}
-                </div>
-                {preview.mirrorName && (
-                  <div className="col-span-2">
-                    <span className="text-foreground font-medium">Mirror:</span> {preview.mirrorName}
-                  </div>
-                )}
-                {preview.graceDays > 0 && (
-                  <div className="col-span-2">
-                    <span className="text-foreground font-medium">Carência:</span> {preview.graceDays} dias
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {preview && !preview.valid && data.licenseKey.trim() && (
-            <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-              <p className="text-xs text-destructive">{preview.error}</p>
-            </div>
-          )}
-
-          <div className="bg-muted/30 border border-border/50 rounded-xl p-3 flex items-start gap-2">
-            <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-[11px] text-muted-foreground">
-              A chave contém todas as informações da licença (datas, permissões). 
-              Solicite ao administrador master caso não possua uma.
-            </p>
-          </div>
-        </div>
-
-        {error && (
-          <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-            <p className="text-xs text-destructive">{error}</p>
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => { setError(""); setStep("admin"); }}
-            disabled={loading}
-            className="flex-1 py-2.5 bg-muted text-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
-          >
-            <ArrowLeft className="w-4 h-4" /> Voltar
-          </button>
-          <button
-            onClick={handleFinish}
-            disabled={loading || !data.licenseKey.trim() || !preview?.valid}
-            className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-            {loading ? "Instalando..." : "Instalar"}
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   const renderFinishing = () => (
     <div className="space-y-6 text-center">
@@ -541,24 +359,23 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
         </svg>
         <CheckCircle2 className="w-10 h-10 text-emerald-500 done-icon" />
       </div>
-      <h1 className="text-2xl font-bold text-foreground">Instalação Concluída!</h1>
+      <h1 className="text-2xl font-bold text-foreground">Admin Criado!</h1>
       <p className="text-muted-foreground text-sm">
-        Seu sistema está pronto para uso. Faça login com a conta de administrador.
+        Faça login com sua conta e ative a licença para desbloquear o sistema.
       </p>
       <div className="bg-muted/50 rounded-xl p-4 space-y-1 text-left">
         <p className="text-xs text-muted-foreground">E-mail: <strong className="text-foreground">{data.adminEmail}</strong></p>
-        <p className="text-xs text-muted-foreground">Válido: <strong className="text-foreground">{new Date(data.licenseStartDate + "T00:00:00").toLocaleDateString("pt-BR")} até {new Date(data.licenseEndDate + "T00:00:00").toLocaleDateString("pt-BR")}</strong></p>
         <p className="text-xs text-muted-foreground">Domínio: <strong className="text-foreground">{window.location.hostname}</strong></p>
       </div>
       <button
         onClick={() => {
           onComplete();
-          window.location.reload();
+          window.location.href = "/login";
         }}
         className="w-full py-3 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
         <ArrowRight className="w-4 h-4" />
-        Acessar o Sistema
+        Fazer Login
       </button>
     </div>
   );
@@ -568,16 +385,16 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
       <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 shadow-2xl">
         {step !== "finishing" && step !== "done" && (
           <div className="flex items-center justify-center gap-2 mb-6">
-            {(["welcome", "admin", "license"] as Step[]).map((s, i) => (
+            {(["welcome", "admin"] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                   step === s ? "bg-primary text-primary-foreground" :
-                  (["welcome", "admin", "license"].indexOf(step) > i) ? "bg-emerald-500 text-white" :
+                  (["welcome", "admin"].indexOf(step) > i) ? "bg-emerald-500 text-white" :
                   "bg-muted text-muted-foreground"
                 }`}>
-                  {(["welcome", "admin", "license"].indexOf(step) > i) ? "✓" : i + 1}
+                  {(["welcome", "admin"].indexOf(step) > i) ? "✓" : i + 1}
                 </div>
-                {i < 2 && <div className="w-6 h-0.5 bg-border" />}
+                {i < 1 && <div className="w-6 h-0.5 bg-border" />}
               </div>
             ))}
           </div>
@@ -585,7 +402,6 @@ export function InstallWizard({ onComplete }: { onComplete: () => void }) {
 
         {step === "welcome" && renderWelcome()}
         {step === "admin" && renderAdmin()}
-        {step === "license" && renderLicense()}
         {step === "finishing" && renderFinishing()}
         {step === "done" && renderDone()}
       </div>
